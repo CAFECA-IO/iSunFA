@@ -232,32 +232,20 @@ export async function findLatestSubAccountInPrisma(
   return latestSubAccount;
 }
 
-export async function easyFindManyAccountsInPrisma(
-  companyId: number,
-  type: AccountType,
-) {
+export async function easyFindManyAccountsInPrisma(companyId: number, type: AccountType) {
   const accounts: Account[] = await prisma.account.findMany({
     where: {
-      OR: [
-        { companyId },
-        { companyId: PUBLIC_COMPANY_ID },
-      ],
+      OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
       type,
     },
   });
   return accounts;
 }
 
-export async function findUniqueAccountByCodeInPrisma(
-  code: string,
-  companyId?: number,
-) {
+export async function findUniqueAccountByCodeInPrisma(code: string, companyId?: number) {
   const account: Account | null = await prisma.account.findUnique({
     where: {
-      OR: [
-        { companyId },
-        { companyId: PUBLIC_COMPANY_ID },
-      ],
+      OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
       code,
     },
   });

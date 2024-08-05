@@ -19,6 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiEdit } from 'react-icons/fi';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { KYCStatus } from '@/constants/kyc';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation('common');
@@ -55,6 +56,8 @@ const CompanyInfoPageBody = () => {
     },
     hasCompanyId
   );
+
+  const kycStatusDetail = companyData?.company.kycStatusDetail ?? null;
 
   const isEditNameAllowed = role?.name === RoleName.OWNER;
 
@@ -183,6 +186,7 @@ const CompanyInfoPageBody = () => {
   const displayedKYC =
     selectedCompany?.id !== FREE_COMPANY_ID ? (
       <>
+        {/* ===== KYC ===== */}
         <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
           <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
             <div className="my-auto">
@@ -207,125 +211,485 @@ const CompanyInfoPageBody = () => {
             <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
           </div>
         </div>
-        <div className="kycCardShadow mt-10 flex flex-col rounded-3xl bg-white pb-3.5">
-          <div className="max-md:max-w-full">
-            <div className="hidden w-100px min-w-100px lg:absolute lg:block">
-              <div className="relative">
-                {/* Info: desktop 圓形 (20240716 - Shirley) */}
-                <Image
-                  src="/elements/ellipse_16.png"
-                  width={100}
-                  height={100}
-                  alt="ellipse"
-                  className="rounded rounded-tl-lg"
-                />
-                <div className="absolute left-4 top-6">
-                  <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                    {t('COMPANY_BASIC_INFO.KYC')}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <div className="flex w-full justify-center lg:hidden">
-              <div className="flex items-center justify-center">
-                {/* Info: mobile 圓形 (20240716 - Shirley) */}
+        {/* KYC banner - 0 - 從未執行 KYC */}
+        {kycStatusDetail === KYCStatus.NOT_STARTED && (
+          <div className="kycCardShadow mt-10 flex flex-col rounded-3xl bg-white pb-3.5">
+            <div className="max-md:max-w-full">
+              <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
+                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
                   <Image
-                    src="/elements/ellipse_16_mobile.png"
-                    width={160}
-                    height={160}
+                    src="/elements/ellipse_16.png"
+                    width={100}
+                    height={100}
                     alt="ellipse"
-                    className=""
+                    className="rounded rounded-tl-lg"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute left-4 top-6">
                     <p className="text-3xl font-bold text-text-brand-primary-lv2">
                       {t('COMPANY_BASIC_INFO.KYC')}
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-0 max-lg:flex-col max-lg:gap-0 lg:ml-1/20">
-              <div className="flex w-100% flex-col">
-                <div className="grow">
-                  <div className="flex gap-0 max-md:flex-col max-md:gap-0">
-                    <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
-                      <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
-                        <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                          {t('COMPANY_BASIC_INFO.UNLOCK')}
-                        </span>
-                        <br />
-                        <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                          {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
-                        </span>
-                        <br />
-                        <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                          {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
-                        </span>
-                      </div>
+              <div className="flex w-full justify-center lg:hidden">
+                <div className="flex items-center justify-center">
+                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  <div className="relative">
+                    <Image
+                      src="/elements/ellipse_16_mobile.png"
+                      width={160}
+                      height={160}
+                      alt="ellipse"
+                      className=""
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                        {t('COMPANY_BASIC_INFO.KYC')}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="ml-5 flex w-100% flex-col max-lg:pb-10">
-                <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
-                  <div className="flex gap-5 max-lg:flex-col">
-                    <div className="flex w-100% flex-col max-lg:items-center">
-                      <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
-                        <ul className="list-disc pl-0 lg:pl-5">
-                          <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
-                          <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
-                          <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
-                        </ul>
+
+              <div className="flex gap-0 max-lg:flex-col max-lg:gap-0 lg:ml-1/20">
+                <div className="flex w-100% flex-col">
+                  <div className="grow">
+                    <div className="flex gap-0 max-md:flex-col max-md:gap-0">
+                      <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
+                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
+                          <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                          </span>
+                          <br />
+                          <span className="text-5xl leading-52px text-text-brand-primary-lv2">
+                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                          </span>
+                          <br />
+                          <span className="text-xl leading-8 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="hidden w-full justify-end lg:relative lg:flex">
-                      <Image
-                        src="/elements/padlock_square.svg"
-                        width={78}
-                        height={78}
-                        alt="padlock"
-                        className="ml-1 shrink-0 rounded-l rounded-tr-md"
-                      />
+                  </div>
+                </div>
+                <div className="ml-5 flex w-100% flex-col max-lg:pb-10">
+                  <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
+                    <div className="flex gap-5 max-lg:flex-col">
+                      <div className="flex w-100% flex-col gap-16px max-lg:items-center">
+                        <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
+                          <ul className="list-disc pl-0 lg:pl-5">
+                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="hidden w-full justify-end lg:relative lg:flex">
+                        <Image
+                          src="/elements/padlock_square.svg"
+                          width={78}
+                          height={78}
+                          alt="padlock"
+                          className="ml-1 shrink-0 rounded-l rounded-tr-md"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
-            <Button
-              onClick={goKYCClickHandler}
-              variant={'secondaryOutline'}
-              disabled={selectedCompany?.id === FREE_COMPANY_ID}
-              className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
-            >
-              <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
+            <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
+              <Button
+                onClick={goKYCClickHandler}
+                variant={'secondaryOutline'}
+                className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <path
-                  className="fill-current"
-                  fillRule="evenodd"
-                  d="M11.77 4.456c.44-.44 1.153-.44 1.592 0l6.75 6.75c.44.439.44 1.151 0 1.59l-6.75 6.75a1.125 1.125 0 01-1.591-1.59L17.725 12l-5.954-5.954a1.125 1.125 0 010-1.591z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  className="fill-current"
-                  fillRule="evenodd"
-                  d="M3.566 12.001c0-.621.504-1.125 1.125-1.125H18.38a1.125 1.125 0 010 2.25H4.69a1.125 1.125 0 01-1.125-1.125z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </Button>
+                <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    className="fill-current"
+                    fillRule="evenodd"
+                    d="M11.77 4.456c.44-.44 1.153-.44 1.592 0l6.75 6.75c.44.439.44 1.151 0 1.59l-6.75 6.75a1.125 1.125 0 01-1.591-1.59L17.725 12l-5.954-5.954a1.125 1.125 0 010-1.591z"
+                    clipRule="evenodd"
+                  ></path>
+                  <path
+                    className="fill-current"
+                    fillRule="evenodd"
+                    d="M3.566 12.001c0-.621.504-1.125 1.125-1.125H18.38a1.125 1.125 0 010 2.25H4.69a1.125 1.125 0 01-1.125-1.125z"
+                    clipRule="evenodd"
+                  ></path>
+                </svg>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* KYC banner - 1 - 已執行 KYC 但還在等待驗證 (Pending) */}
+
+        {kycStatusDetail === KYCStatus.PENDING && (
+          <div className="kycCardShadow mt-10 flex flex-col rounded-3xl bg-white pb-3.5">
+            <div className="max-md:max-w-full">
+              <div className="hidden w-100px min-w-100px lg:absolute lg:block">
+                <div className="relative">
+                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  <Image
+                    src="/elements/ellipse_16.png"
+                    width={100}
+                    height={100}
+                    alt="ellipse"
+                    className="rounded rounded-tl-lg"
+                  />
+                  <div className="absolute left-4 top-6">
+                    <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                      {t('COMPANY_BASIC_INFO.KYC')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex w-full justify-center lg:hidden">
+                <div className="flex items-center justify-center">
+                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  <div className="relative">
+                    <Image
+                      src="/elements/ellipse_16_mobile.png"
+                      width={160}
+                      height={160}
+                      alt="ellipse"
+                      className=""
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                        {t('COMPANY_BASIC_INFO.KYC')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-0 max-lg:flex-col max-lg:gap-0 lg:ml-1/20">
+                <div className="flex w-100% flex-col">
+                  <div className="grow">
+                    <div className="flex gap-0 max-md:flex-col max-md:gap-0">
+                      <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
+                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
+                          <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                          </span>
+                          <br />
+                          <span className="text-5xl leading-52px text-text-brand-primary-lv2">
+                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                          </span>
+                          <br />
+                          <span className="text-xl leading-8 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-5 flex w-100% flex-col max-lg:pb-10">
+                  <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
+                    <div className="flex gap-5 max-lg:flex-col">
+                      <div className="flex w-100% flex-col gap-16px max-lg:items-center">
+                        <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
+                          <ul className="list-disc pl-0 lg:pl-5">
+                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                          </ul>
+                        </div>
+                        {/* Status Tag // Info: (20240802 - Liz)  */}
+                        <p className="w-fit rounded-full bg-badge-surface-soft-primary px-10px py-8px text-xs text-badge-text-primary-solid">
+                          Pending
+                        </p>
+                      </div>
+                      <div className="hidden w-full justify-end lg:relative lg:flex">
+                        <Image
+                          src="/elements/circle_clock.svg"
+                          width={108}
+                          height={108}
+                          alt="clock"
+                          className="ml-1 shrink-0 rounded-l rounded-tr-md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
+              <Button
+                onClick={goKYCClickHandler}
+                variant={'disabledGray'}
+                disabled // Info: (20240802 - Liz) Pending 狀態不可點擊
+                className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
+              >
+                <p>{t('COMPANY_BASIC_INFO.UNDER_REVIEW')}</p>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* KYC banner - 2 - 已通過 KYC */}
+
+        {kycStatusDetail === KYCStatus.APPROVED && (
+          <div className="kycCardShadow mt-10 flex flex-col rounded-3xl bg-white pb-3.5">
+            <div className="max-md:max-w-full">
+              <div className="hidden w-100px min-w-100px lg:absolute lg:block">
+                <div className="relative">
+                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  <Image
+                    src="/elements/ellipse_16.png"
+                    width={100}
+                    height={100}
+                    alt="ellipse"
+                    className="rounded rounded-tl-lg"
+                  />
+                  <div className="absolute left-4 top-6">
+                    <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                      {t('COMPANY_BASIC_INFO.KYC')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex w-full justify-center lg:hidden">
+                <div className="flex items-center justify-center">
+                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  <div className="relative">
+                    <Image
+                      src="/elements/ellipse_16_mobile.png"
+                      width={160}
+                      height={160}
+                      alt="ellipse"
+                      className=""
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                        {t('COMPANY_BASIC_INFO.KYC')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-0 max-lg:flex-col max-lg:gap-0 lg:ml-1/20">
+                <div className="flex w-100% flex-col">
+                  <div className="grow">
+                    <div className="flex gap-0 max-md:flex-col max-md:gap-0">
+                      <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
+                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
+                          <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                          </span>
+                          <br />
+                          <span className="text-5xl leading-52px text-text-brand-primary-lv2">
+                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                          </span>
+                          <br />
+                          <span className="text-xl leading-8 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-5 flex w-100% flex-col max-lg:pb-10">
+                  <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
+                    <div className="flex gap-5 max-lg:flex-col">
+                      <div className="flex w-100% flex-col gap-16px max-lg:items-center">
+                        <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
+                          <ul className="list-disc pl-0 lg:pl-5">
+                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                          </ul>
+                        </div>
+                        {/* Status Tag // Info: (20240802 - Liz)  */}
+                        <p className="w-fit rounded-full bg-badge-surface-soft-success px-10px py-8px text-xs text-badge-text-success-solid">
+                          Complete KYC
+                        </p>
+                      </div>
+                      <div className="hidden w-full justify-end lg:relative lg:flex">
+                        <Image
+                          src="/elements/cloud_check.svg"
+                          width={108}
+                          height={108}
+                          alt="clock"
+                          className="ml-1 shrink-0 rounded-l rounded-tr-md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
+              <Button
+                onClick={goKYCClickHandler}
+                variant={'disabledYellow'}
+                disabled // Info: (20240802 - Liz) 已通過 KYC 不可點擊
+                className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
+              >
+                <p>{t('COMPANY_BASIC_INFO.VERIFIED')}</p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M20.5333 5.47065C20.8262 5.76354 20.8262 6.23841 20.5333 6.53131L9.53326 17.5313C9.24037 17.8242 8.76549 17.8242 8.4726 17.5313L3.4726 12.5313C3.17971 12.2384 3.17971 11.7635 3.4726 11.4706C3.76549 11.1778 4.24037 11.1778 4.53326 11.4706L9.00293 15.9403L19.4726 5.47065C19.7655 5.17775 20.2404 5.17775 20.5333 5.47065Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* KYC banner - 3 - KYC 驗證失敗 */}
+
+        {kycStatusDetail === KYCStatus.REJECTED && (
+          <div className="kycCardShadow mt-10 flex flex-col rounded-3xl bg-white pb-3.5">
+            <div className="max-md:max-w-full">
+              <div className="hidden w-100px min-w-100px lg:absolute lg:block">
+                <div className="relative">
+                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  <Image
+                    src="/elements/ellipse_16.png"
+                    width={100}
+                    height={100}
+                    alt="ellipse"
+                    className="rounded rounded-tl-lg"
+                  />
+                  <div className="absolute left-4 top-6">
+                    <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                      {t('COMPANY_BASIC_INFO.KYC')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex w-full justify-center lg:hidden">
+                <div className="flex items-center justify-center">
+                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  <div className="relative">
+                    <Image
+                      src="/elements/ellipse_16_mobile.png"
+                      width={160}
+                      height={160}
+                      alt="ellipse"
+                      className=""
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-3xl font-bold text-text-brand-primary-lv2">
+                        {t('COMPANY_BASIC_INFO.KYC')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-0 max-lg:flex-col max-lg:gap-0 lg:ml-1/20">
+                <div className="flex w-100% flex-col">
+                  <div className="grow">
+                    <div className="flex gap-0 max-md:flex-col max-md:gap-0">
+                      <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
+                        <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
+                          <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                          </span>
+                          <br />
+                          <span className="text-5xl leading-52px text-text-brand-primary-lv2">
+                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                          </span>
+                          <br />
+                          <span className="text-xl leading-8 text-text-brand-secondary-lv1">
+                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-5 flex w-100% flex-col max-lg:pb-10">
+                  <div className="mt-1.5 max-md:mt-10 max-md:max-w-full">
+                    <div className="flex gap-5 max-lg:flex-col">
+                      <div className="flex w-100% flex-col gap-16px max-lg:items-center">
+                        <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
+                          <ul className="list-disc pl-0 lg:pl-5">
+                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                          </ul>
+                        </div>
+                        {/* Status Tag // Info: (20240802 - Liz)  */}
+                        <p className="w-fit rounded-full bg-badge-surface-soft-error px-10px py-8px text-xs text-badge-text-error-solid">
+                          Verification failed, please re-upload.
+                        </p>
+                      </div>
+                      <div className="hidden w-full justify-end lg:relative lg:flex">
+                        <Image
+                          src="/elements/padlock_square.svg"
+                          width={78}
+                          height={78}
+                          alt="padlock"
+                          className="ml-1 shrink-0 rounded-l rounded-tr-md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mb-5 mr-2 mt-2 flex gap-2 self-center lg:mb-0 lg:self-end">
+              <Button
+                onClick={goKYCClickHandler}
+                variant={'secondaryOutline'}
+                className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
+              >
+                <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    className="fill-current"
+                    fillRule="evenodd"
+                    d="M11.77 4.456c.44-.44 1.153-.44 1.592 0l6.75 6.75c.44.439.44 1.151 0 1.59l-6.75 6.75a1.125 1.125 0 01-1.591-1.59L17.725 12l-5.954-5.954a1.125 1.125 0 010-1.591z"
+                    clipRule="evenodd"
+                  ></path>
+                  <path
+                    className="fill-current"
+                    fillRule="evenodd"
+                    d="M3.566 12.001c0-.621.504-1.125 1.125-1.125H18.38a1.125 1.125 0 010 2.25H4.69a1.125 1.125 0 01-1.125-1.125z"
+                    clipRule="evenodd"
+                  ></path>
+                </svg>
+              </Button>
+            </div>
+          </div>
+        )}
       </>
     ) : null;
 
@@ -389,27 +753,28 @@ const CompanyInfoPageBody = () => {
                 </div>
                 <div className="flex gap-0 text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:text-3xl">
                   <div>{company?.name ?? '-'} </div>
-                  <Button
-                    disabled={!isEditNameAllowed}
-                    onClick={editCompanyClickHandler}
-                    variant={'secondaryBorderless'}
-                    size={'extraSmall'}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="21"
-                      height="20"
-                      fill="none"
-                      viewBox="0 0 21 20"
+                  {isEditNameAllowed && (
+                    <Button
+                      onClick={editCompanyClickHandler}
+                      variant={'secondaryBorderless'}
+                      size={'extraSmall'}
                     >
-                      <path
-                        className="fill-current"
-                        fillRule="evenodd"
-                        d="M15.639 1.554a2.518 2.518 0 013.56 3.56l-7.969 7.97-.046.046c-.243.243-.447.448-.693.598-.216.133-.452.23-.698.29-.28.067-.57.067-.912.066H7.419a.75.75 0 01-.75-.75V11.94v-.066c0-.343 0-.632.067-.912.059-.247.157-.483.289-.699.15-.246.355-.45.598-.692l.047-.047 7.969-7.969zm2.5 1.06a1.018 1.018 0 00-1.44 0l-7.969 7.97c-.313.313-.38.387-.426.462a.917.917 0 00-.11.265c-.02.085-.025.185-.025.628v.645h.645c.444 0 .543-.004.629-.025a.917.917 0 00.265-.11c.074-.046.148-.113.462-.426l7.969-7.969a1.018 1.018 0 000-1.44zm-11.751-.03H9.919a.75.75 0 110 1.5h-3.5c-.712 0-1.202.001-1.581.032-.37.03-.57.086-.714.16a1.75 1.75 0 00-.764.764c-.074.144-.13.343-.16.713-.03.38-.031.869-.031 1.581v7c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.167.33.435.597.764.765.145.073.344.129.714.159.38.03.869.031 1.58.031h7c.713 0 1.203 0 1.582-.031.37-.03.57-.086.713-.16a1.75 1.75 0 00.765-.764c.074-.144.13-.343.16-.714.03-.379.03-.868.03-1.58v-3.5a.75.75 0 011.5 0v3.53c.001.674.001 1.225-.036 1.673-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.447.036-.998.036-1.672.036H6.388c-.674 0-1.225 0-1.672-.036-.463-.038-.882-.119-1.273-.318a3.25 3.25 0 01-1.42-1.42c-.199-.39-.28-.81-.318-1.272-.036-.448-.036-.999-.036-1.672V7.303c0-.673 0-1.224.036-1.672.038-.463.12-.881.318-1.272a3.25 3.25 0 011.42-1.42c.391-.2.81-.28 1.273-.318.447-.037.998-.037 1.672-.037z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                  </Button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="21"
+                        height="20"
+                        fill="none"
+                        viewBox="0 0 21 20"
+                      >
+                        <path
+                          className="fill-current"
+                          fillRule="evenodd"
+                          d="M15.639 1.554a2.518 2.518 0 013.56 3.56l-7.969 7.97-.046.046c-.243.243-.447.448-.693.598-.216.133-.452.23-.698.29-.28.067-.57.067-.912.066H7.419a.75.75 0 01-.75-.75V11.94v-.066c0-.343 0-.632.067-.912.059-.247.157-.483.289-.699.15-.246.355-.45.598-.692l.047-.047 7.969-7.969zm2.5 1.06a1.018 1.018 0 00-1.44 0l-7.969 7.97c-.313.313-.38.387-.426.462a.917.917 0 00-.11.265c-.02.085-.025.185-.025.628v.645h.645c.444 0 .543-.004.629-.025a.917.917 0 00.265-.11c.074-.046.148-.113.462-.426l7.969-7.969a1.018 1.018 0 000-1.44zm-11.751-.03H9.919a.75.75 0 110 1.5h-3.5c-.712 0-1.202.001-1.581.032-.37.03-.57.086-.714.16a1.75 1.75 0 00-.764.764c-.074.144-.13.343-.16.713-.03.38-.031.869-.031 1.581v7c0 .713 0 1.202.032 1.581.03.37.085.57.159.714.167.33.435.597.764.765.145.073.344.129.714.159.38.03.869.031 1.58.031h7c.713 0 1.203 0 1.582-.031.37-.03.57-.086.713-.16a1.75 1.75 0 00.765-.764c.074-.144.13-.343.16-.714.03-.379.03-.868.03-1.58v-3.5a.75.75 0 011.5 0v3.53c.001.674.001 1.225-.036 1.673-.038.463-.118.881-.317 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.447.036-.998.036-1.672.036H6.388c-.674 0-1.225 0-1.672-.036-.463-.038-.882-.119-1.273-.318a3.25 3.25 0 01-1.42-1.42c-.199-.39-.28-.81-.318-1.272-.036-.448-.036-.999-.036-1.672V7.303c0-.673 0-1.224.036-1.672.038-.463.12-.881.318-1.272a3.25 3.25 0 011.42-1.42c.391-.2.81-.28 1.273-.318.447-.037.998-.037 1.672-.037z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -468,7 +833,13 @@ const CompanyInfoPageBody = () => {
               </div>
             </div>
           </div>
+
+          {/* ===== KYC ===== */}
+
           {displayedKYC}
+
+          {/* ===== ACCOUNT ===== */}
+
           <div className="mt-10 flex gap-4 max-md:max-w-full max-md:flex-wrap">
             <div className="flex gap-2 whitespace-nowrap text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
               <div className="my-auto">
