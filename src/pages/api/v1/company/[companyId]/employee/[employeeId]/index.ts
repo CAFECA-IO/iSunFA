@@ -5,75 +5,66 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { updateEmployeeProject } from '@/lib/utils/repo/employee.repo';
-import prisma from '@/client';
+import {
+  updateEmployeeProject,
+  getEmployeeById,
+  getProjectsByEmployeeId,
+  updateEndDateByEmployeeId,
+  updateEmployeeById,
+} from '@/lib/utils/repo/employee.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
+function getTargetTime(): number {
+  const nowTime = new Date().getTime();
+  return timestampInSeconds(nowTime);
+}
+
+function composeEmployeeData(
+  employee: {
+    id: number;
+    name: string;
+    salary: number;
+    department: { name: string };
+    startDate: number;
+    bonus: number;
+    salaryPayMode: string;
+    payFrequency: string;
+    insurancePayment: number;
+  },
+  formatProjectIdsNames: { id: number; name: string }[]
+) {
+  return {
+    id: employee.id,
+    name: employee.name,
+    salary: employee.salary,
+    department: employee.department.name,
+    start_date: employee.startDate,
+    bonus: employee.bonus,
+    salary_payment_mode: employee.salaryPayMode,
+    pay_frequency: employee.payFrequency,
+    projects: formatProjectIdsNames,
+    insurance_payments: employee.insurancePayment,
+    additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
+  };
+}
+
 async function getEmployee(employeeIdNumber: number): Promise<IEmployeeData> {
-  const employee = await prisma.employee.findUnique({
-    where: {
-      id: employeeIdNumber,
-      endDate: null,
-    },
-    include: {
-      department: true,
-      employeeProjects: {
-        select: {
-          project: true,
-        },
-      },
-    },
-  });
-  const projects = await prisma.employeeProject.findMany({
-    where: {
-      employeeId: employeeIdNumber,
-      endDate: null,
-    },
-    select: {
-      project: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
+  const employee = await getEmployeeById(employeeIdNumber);
+  const projects = await getProjectsByEmployeeId(employeeIdNumber);
   const projectIdsNames = projects.map((project) => {
     return { id: project.project.id, name: project.project.name };
   });
   let employeeData = {} as IEmployeeData;
   if (employee) {
-    employeeData = {
-      id: employee.id,
-      name: employee.name,
-      salary: employee.salary,
-      department: employee.department.name,
-      start_date: employee.startDate,
-      bonus: employee.bonus,
-      salary_payment_mode: employee.salaryPayMode,
-      pay_frequency: employee.payFrequency,
-      projects: projectIdsNames,
-      insurance_payments: employee.insurancePayment,
-      additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
-    };
+    employeeData = composeEmployeeData(employee, projectIdsNames);
   }
   return employeeData;
 }
 
 async function deleteEmployee(employeeIdNumber: number): Promise<void> {
-  const nowTime = new Date().getTime();
-  const targetTime = timestampInSeconds(nowTime);
+  const targetTime = getTargetTime();
   try {
-    await prisma.employee.update({
-      where: {
-        id: employeeIdNumber,
-        endDate: null,
-      },
-      data: {
-        endDate: targetTime,
-        updatedAt: targetTime,
-      },
-    });
+    await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
     // Info: (20240627 - Gibbs) console error only
     // eslint-disable-next-line no-console
@@ -91,74 +82,30 @@ async function updateEmployee(
   projectIdsNames: { id: number; name: string }[]
 ): Promise<IEmployeeData> {
   try {
-    const nowTime = new Date().getTime();
-    const targetTime = timestampInSeconds(nowTime);
-    await prisma.employee.update({
-      where: {
-        id: employeeIdNumber,
-        endDate: null,
-      },
-      data: {
-        salary,
-        bonus,
-        insurancePayment,
-        salaryPayMode,
-        payFrequency,
-        updatedAt: targetTime,
-      },
-    });
+    const targetTime = getTargetTime();
+    await updateEmployeeById(
+      employeeIdNumber,
+      salary,
+      bonus,
+      insurancePayment,
+      salaryPayMode,
+      payFrequency,
+      targetTime
+    );
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
     // Info: (20240627 - Gibbs) console error only
     // eslint-disable-next-line no-console
     console.log(error);
   }
-  const employee = await prisma.employee.findUnique({
-    where: {
-      id: employeeIdNumber,
-      endDate: null,
-    },
-    include: {
-      department: true,
-      employeeProjects: {
-        select: {
-          project: true,
-        },
-      },
-    },
-  });
-  const projects = await prisma.employeeProject.findMany({
-    where: {
-      employeeId: employeeIdNumber,
-      endDate: null,
-    },
-    select: {
-      project: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
+  const employee = await getEmployeeById(employeeIdNumber);
+  const projects = await getProjectsByEmployeeId(employeeIdNumber);
   const formatProjectIdsNames = projects.map((project) => {
     return { id: project.project.id, name: project.project.name };
   });
   let employeeData = {} as IEmployeeData;
   if (employee) {
-    employeeData = {
-      id: employee.id,
-      name: employee.name,
-      salary: employee.salary,
-      department: employee.department.name,
-      start_date: employee.startDate,
-      bonus: employee.bonus,
-      salary_payment_mode: employee.salaryPayMode,
-      pay_frequency: employee.payFrequency,
-      projects: formatProjectIdsNames,
-      insurance_payments: employee.insurancePayment,
-      additionalOfTotal: employee.salary + employee.bonus + employee.insurancePayment,
-    };
+    employeeData = composeEmployeeData(employee, formatProjectIdsNames);
   }
   return employeeData;
 }
