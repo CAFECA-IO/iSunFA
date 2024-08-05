@@ -46,12 +46,18 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   /// //////////////////////////////////////////////////
   // Info: (20240729 - Murky) this special function is to temporally  close account from income statement to retain earning, but this won't effect income statement
   /// //////////////////////////////////////////////////
-  private async closeAccountFromIncomeStatement(curPeriod: boolean): Promise<ILineItemIncludeAccount[]> {
+  private async closeAccountFromIncomeStatement(
+    curPeriod: boolean
+  ): Promise<ILineItemIncludeAccount[]> {
     const incomeStatementContent =
-        await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
+      await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
 
-    const netIncome = incomeStatementContent.find((account) => account.code === '8200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const otherComprehensiveIncome = incomeStatementContent.find((account) => account.code === '8300') || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const netIncome =
+      incomeStatementContent.find((account) => account.code === '8200') ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const otherComprehensiveIncome =
+      incomeStatementContent.find((account) => account.code === '8300') ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     const closeAccount: ILineItemIncludeAccount[] = [];
 
@@ -71,7 +77,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       account: netIncomeAccount || {
         id: -1,
         companyId: this.companyId,
-        system: "IFRS",
+        system: 'IFRS',
         type: AccountType.EQUITY,
         debit: false,
         liquidity: false,
@@ -89,7 +95,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     closeAccount.push({
       id: -1,
-      amount: curPeriod ? otherComprehensiveIncome.curPeriodAmount : otherComprehensiveIncome.prePeriodAmount,
+      amount: curPeriod
+        ? otherComprehensiveIncome.curPeriodAmount
+        : otherComprehensiveIncome.prePeriodAmount,
       description: '其他權益-其他',
       debit: false,
       accountId: otherComprehensiveIncomeAccount?.id || -1,
@@ -100,7 +108,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       account: otherComprehensiveIncomeAccount || {
         id: -1,
         companyId: this.companyId,
-        system: "IFRS",
+        system: 'IFRS',
         type: AccountType.EQUITY,
         debit: false,
         liquidity: false,
@@ -403,7 +411,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
 
     const incomeStatementContent =
-        await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
+      await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
     return {
       content: balanceSheetContent,

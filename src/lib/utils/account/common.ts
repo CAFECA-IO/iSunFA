@@ -87,7 +87,8 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     updatedAt: account.updatedAt,
     level: account.level,
     deletedAt: account.deletedAt,
-    children: updatedChildren };
+    children: updatedChildren,
+  };
 
   // updatedAccount.amount = newAmount;
 
