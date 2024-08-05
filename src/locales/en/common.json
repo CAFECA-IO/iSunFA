@@ -779,11 +779,13 @@
     "GO_KYC": "Go to KYC",
     "ACCOUNT": "Account",
     "DELETE_COMPANY": "Delete Company",
-    "TRANSFER_ADMINISTRATION": "Transfer Administration",
     "DELETE": "Delete",
     "EXISTED_COMPANY": "Existed Company",
     "COMPANY_ALREADY_REGISTERED": "This company has already been registered.",
-    "PLEASE_COMPLETE_KYC": "If you are the owner of this company, please complete KYC to get access back. Error code:{{code}}"
+    "PLEASE_COMPLETE_KYC": "If you are the owner of this company, please complete KYC to get access back. Error code:{{code}}",
+    "TRANSFER_ADMINISTRATION": "Transfer Administration",
+    "UNDER_REVIEW": "Under Review",
+    "VERIFIED": "Verified"
   },
   "SETTING": {
     "PERSONAL_SETTING": "Personal Setting",

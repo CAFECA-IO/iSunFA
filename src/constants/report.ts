@@ -38,7 +38,12 @@ export const ReportUrlMap: {
 export const ReportSheetAccountTypeMap: {
   [key in ReportSheetType]: AccountType[];
 } = {
-  [ReportSheetType.BALANCE_SHEET]: [AccountType.EQUITY, AccountType.ASSET, AccountType.LIABILITY, AccountType.OTHER],
+  [ReportSheetType.BALANCE_SHEET]: [
+    AccountType.EQUITY,
+    AccountType.ASSET,
+    AccountType.LIABILITY,
+    AccountType.OTHER,
+  ],
   [ReportSheetType.INCOME_STATEMENT]: [
     AccountType.REVENUE,
     AccountType.COST,

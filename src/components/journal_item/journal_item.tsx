@@ -133,6 +133,7 @@ const JournalItem = ({
     account: lineItems,
     voucherId,
     voucherNo,
+    fromTo,
   } = journal;
 
   const defaultItem = {
@@ -274,7 +275,7 @@ const JournalItem = ({
         {truncateString(description ?? '', 10)}
       </td>
       {/* Info: (20240418 - Julian) From / To */}
-      <td className="px-16px text-left font-medium text-navyBlue2">{projectName}</td>
+      <td className="px-16px text-left font-medium text-navyBlue2">{fromTo}</td>
       {/* Info: (20240418 - Julian) 金額 */}
       <td className="px-16px">{displayedAmount}</td>
       {/* Info: (20240418 - Julian) 專案 */}
