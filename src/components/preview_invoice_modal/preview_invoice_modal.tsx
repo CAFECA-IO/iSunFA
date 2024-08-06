@@ -35,7 +35,7 @@ const PreviewInvoiceModal = ({
       title: 'Download Selected Voucher',
       content: 'Are you sure you want to download the selected items?',
       messageType: MessageType.INFO,
-      submitBtnStr: 'Download',
+      submitBtnStr: t('JOURNAL.DOWNLOAD'),
       // ToDo: (20240508 - Julian) 下載功能
       submitBtnFunction: () => {
         modalVisibilityHandler();

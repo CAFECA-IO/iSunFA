@@ -12,6 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
+import { useTranslation } from 'next-i18next';
 
 interface IEditAccountTitleModalProps {
   isModalVisible: boolean;
@@ -26,6 +27,7 @@ const EditAccountTitleModal = ({
   modalVisibilityHandler,
   modalData,
 }: IEditAccountTitleModalProps) => {
+  const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
@@ -132,17 +134,17 @@ const EditAccountTitleModal = ({
 
   const handleRemove = () => {
     messageModalDataHandler({
-      title: 'Remove Accounting title',
-      content: 'Are you sure you want to remove this accounting title?',
+      title: t('SETTING.REMOVE_ACCOUNTING_TITLE'),
+      content: t('SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: nameValue,
       messageType: MessageType.WARNING,
-      submitBtnStr: 'Remove',
+      submitBtnStr: t('SETTING.REMOVE'),
       submitBtnFunction: () => {
         if (!hasCompanyId) return;
         deleteOwnAccountTitle(selectedCompany?.id, accountId);
         modalVisibilityHandler();
       },
-      backBtnStr: 'Cancel',
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -153,7 +155,8 @@ const EditAccountTitleModal = ({
     <input
       id="input-accounting-type"
       type="text"
-      value={accountingType}
+      // value={accountingType}
+      value={t(`SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -165,7 +168,8 @@ const EditAccountTitleModal = ({
     <input
       id="input-liquidity"
       type="text"
-      value={liquidityText}
+      // value={liquidityText}
+      value={t(`SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -190,7 +194,7 @@ const EditAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          <h1>Edit My New Accounting Title</h1>
+          <h1>{t('SETTING.EDIT_MY_NEW_ACCOUNTING_TITLE')}</h1>
           <button
             type="button"
             onClick={modalVisibilityHandler}
@@ -203,28 +207,31 @@ const EditAccountTitleModal = ({
         <div className="grid grid-flow-row grid-cols-2 gap-x-20px gap-y-16px px-40px py-20px">
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Accounting Type</p>
+            <p className="font-semibold text-input-text-primary">{t('SETTING.ACCOUNTING_TYPE')}</p>
             {displayType}
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Liquidity</p>
+            <p className="font-semibold text-input-text-primary">{t('SETTING.LIQUIDITY')}</p>
             {displayLiquidity}
           </div>
           {/* Info: (20240717 - Julian) Current Liquidity */}
           <div className="col-span-2 flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Current Liquidity</p>
+            <p className="font-semibold text-input-text-primary">
+              {t('SETTING.CURRENT_LIQUIDITY')}
+            </p>
             {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">Name</p>
+            <p className="font-semibold text-input-text-primary">{t('SETTING.NAME')}</p>
             <input
               id="input-name"
               type="text"
               value={nameValue}
               onChange={handleNameChange}
-              placeholder="Enter name"
+              // placeholder="Enter name"
+              placeholder={t('SETTING.ENTER_NAME')}
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
@@ -236,14 +243,14 @@ const EditAccountTitleModal = ({
               variant="secondaryOutline"
               onClick={handleRemove}
             >
-              <RiDeleteBinLine /> <p>Remove Accounting Title</p>
+              <RiDeleteBinLine /> <p>{t('SETTING.REMOVE_ACCOUNTING_TITLE')}</p>
             </Button>
           </div>
         </div>
         {/* Info: (20240717 - Julian) Buttons */}
         <div className="flex items-center justify-end gap-12px px-20px py-16px text-sm">
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
-            Cancel
+            {t('REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button
             id="save-accounting-title-button"
@@ -252,7 +259,7 @@ const EditAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={handleSave}
           >
-            Save
+            {t('EDIT_BOOKMARK_MODAL.SAVE')}
           </Button>
         </div>
       </div>

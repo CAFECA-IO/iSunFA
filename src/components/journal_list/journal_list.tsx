@@ -117,7 +117,7 @@ const JournalList = ({
               <th className="whitespace-nowrap px-16px">{t('JOURNAL.TYPE')}</th>
               <th className="whitespace-nowrap px-16px">{t('JOURNAL.PARTICULARS')}</th>
               <th className="whitespace-nowrap px-16px">{t('JOURNAL.FROM_TO')}</th>
-              <th className="whitespace-nowrap px-16px">{t('ADD_ASSET_MODAL.AMOUNT')}</th>
+              <th className="whitespace-nowrap px-16px">{t('JOURNAL.AMOUNT')}</th>
               <th className="whitespace-nowrap px-16px">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
                 <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.VOUCHER_NO')}</th>

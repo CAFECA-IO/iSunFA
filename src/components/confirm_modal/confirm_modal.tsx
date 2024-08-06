@@ -162,10 +162,10 @@ const ConfirmModal = ({
       title: 'Replace Input',
       subMsg: 'Are you sure you want to use Ai information?',
       content: 'The text you entered will be replaced.',
-      submitBtnStr: 'Confirm',
+      submitBtnStr: t('JOURNAL.CONFIRM'),
       // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
-      backBtnStr: 'Cancel',
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
       backBtnFunction: () => {
         getAIStatusHandler(undefined, false);
         messageModalVisibilityHandler();
@@ -310,7 +310,7 @@ const ConfirmModal = ({
         subMsg: 'Please try again later',
         content: `Error code: ${getJournalCode}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();

@@ -123,6 +123,14 @@ function formatSearchKey(searchKey: unknown): string | undefined {
   return formattedSearchKey;
 }
 
+function formatIsDeleted(isDeleted: unknown): boolean | undefined {
+  let formattedIsDeleted: boolean | undefined;
+  if (isDeleted && typeof isDeleted === 'string') {
+    formattedIsDeleted = isDeleted === 'true' ? true : isDeleted === 'false' ? false : undefined;
+  }
+  return formattedIsDeleted;
+}
+
 export function formatGetQuery(companyId: number, req: NextApiRequest): IAccountQueryArgs {
   // ToDo: (20240613 - Murky) - need to move to type guard
   const {
@@ -137,6 +145,7 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
     sortBy,
     sortOrder,
     searchKey,
+    isDeleted,
   } = req.query;
 
   const formattedIncludeDefaultAccount = formatIncludeDefaultAccount(includeDefaultAccount);
@@ -150,7 +159,7 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
   const formattedSortBy = formatSortBy(sortBy);
   const formattedSortOrder = formatSortOrder(sortOrder);
   const formattedSearchKey = formatSearchKey(searchKey);
-
+  const formattedIsDeleted = formatIsDeleted(isDeleted);
   return {
     companyId,
     includeDefaultAccount: formattedIncludeDefaultAccount,
@@ -164,6 +173,7 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
     sortBy: formattedSortBy,
     sortOrder: formattedSortOrder,
     searchKey: formattedSearchKey,
+    isDeleted: formattedIsDeleted
   };
 }
 
@@ -221,7 +231,7 @@ export async function handlePostRequest(
   if (!parentAccount) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
-  const latestSubAccount = await findLatestSubAccountInPrisma(companyIdNumber, parentAccount);
+  const latestSubAccount = await findLatestSubAccountInPrisma(parentAccount);
   const newCode = setNewCode(parentAccount, latestSubAccount);
   const newOwnAccount = {
     companyId: companyIdNumber,
