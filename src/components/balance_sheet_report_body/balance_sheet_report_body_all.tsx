@@ -585,8 +585,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="font-normal">
-                  {reportFinancial.curDate.to} <br />
+                <p className="text-left text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+                  {/* {reportFinancial.curDate.to} */}
+                  {curDate}
+                  <br />
                   合併財務報告 - 資產負債表
                 </p>
               </>

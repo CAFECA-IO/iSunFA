@@ -185,8 +185,8 @@
     "UNPOPULAR": "Unpopular",
     "ALL": "All",
     "RELEVANCY": "Relevancy",
-    "HIGHEST_PAYMENT_PRICE": "Highest Payment Price",
-    "LOWEST_PAYMENT_PRICE": "Lowest Payment Price"
+    "HIGHEST_PAYMENT_PRICE": "Highest Price",
+    "LOWEST_PAYMENT_PRICE": "Lowest Price"
   },
   "FOOTER": {
     "POWERED_BY": "Powered by iSunFA",

@@ -100,7 +100,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </div>
 
       <header className="mb-[86px] flex justify-between text-white">
-        <div className="w-[30%] bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
+        <div className="w-30% bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
           <div className="">
             {reportFinancial && reportFinancial.company && (
               <>
@@ -119,13 +119,13 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="box-border w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
 
       <section className="text-text-neutral-secondary">
-        <div className="text-primary-surface-brand-secondary relative z-1 mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="relative z-1 mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">一、項目彙總格式</p>
           <p className="text-[12px] font-bold leading-[20px] tracking-[0.01em]">
             單位：新台幣仟元 每股盈餘單位：新台幣元
@@ -211,7 +211,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -304,7 +304,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -439,7 +439,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -530,7 +530,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -621,7 +621,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -712,7 +712,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -805,7 +805,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -932,7 +932,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         <div className="w-35% text-right">
           <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Income Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-[75%] bg-surface-brand-secondary"></span>
+            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
