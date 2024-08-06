@@ -773,18 +773,21 @@ const ConfirmModal = ({
 
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="my-24px flex flex-wrap justify-between gap-y-4px">
-            <p className="font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-navyBlue2">
               {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
               {t('CONFIRM_MODAL.ATTENTION')}
             </p>
-            <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
+            <label
+              htmlFor="addToBook"
+              className="ml-auto flex items-center gap-8px text-sm text-navyBlue2"
+            >
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
               <p>{t('CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
           </div>
 
           {/* Info: (20240730 - Julian) Verify Hints */}
-          <div className="mx-20px flex items-center justify-center gap-20px rounded-sm bg-surface-support-soft-maple px-20px py-5px text-sm font-semibold">
+          <div className="mx-20px flex flex-col items-center justify-center gap-20px rounded-sm bg-surface-support-soft-maple px-20px py-10px text-sm font-semibold md:flex-row md:py-5px">
             {/* Info: (20240730 - Julian) Verify all rows have account */}
             {displayVerifyAcc}
             {/* Info: (20240730 - Julian) Verify no empty row */}
