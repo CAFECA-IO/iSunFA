@@ -18,8 +18,8 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = '';
-  const oenToken = process.env.TEST_OEN_TOKEN;
-  const oenMerchantId = process.env.TEST_OEN_MERCHANT_ID ?? '';
+  const oenToken = process.env.PAYMENT_TOKEN;
+  const oenMerchantId = process.env.PAYMENT_ID ?? '';
   const session = await getSession(req, res);
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
@@ -58,8 +58,8 @@ async function handlePostRequest(req: NextApiRequest) {
   if (!oenReturn) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else if (oenReturn.purpose === 'token') {
-    const oenToken = process.env.TEST_OEN_TOKEN;
-    const oenMerchantId = process.env.TEST_OEN_MERCHANT_ID ?? '';
+    const oenToken = process.env.PAYMENT_TOKEN;
+    const oenMerchantId = process.env.PAYMENT_ID ?? '';
     const { token, customId } = oenReturn;
     const orderId = convertStringToNumber(customId);
     const getOrder = await getOrderDetailById(orderId);
