@@ -90,6 +90,8 @@ const ConfirmModal = ({
   const [isEveryRowHasAccount, setIsEveryRowHasAccount] = useState<boolean>(false);
   const [isNoEmptyRow, setIsNoEmptyRow] = useState<boolean>(false);
   const [isBalance, setIsBalance] = useState<boolean>(false);
+  const [isDebitBalanced, setIsDebitBalanced] = useState<boolean>(false);
+  const [isCreditBalanced, setIsCreditBalanced] = useState<boolean>(false);
 
   // Info: (20240730 - Julian)
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
@@ -345,16 +347,29 @@ const ConfirmModal = ({
 
   useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;
-    const isNotEmpty = accountingVoucher.every(
-      // Info: (20240530 - Julian) 檢查是否有 Debit 或 Credit
-      (voucher) => !!voucher.debit || !!voucher.credit
-    );
+    const isNotEmpty = accountingVoucher.every((voucher) => !!voucher.debit || !!voucher.credit);
     const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
+
+    // 計算借貸方科目加總
+    const totalDebitAmount = accountingVoucher.reduce(
+      (sum, voucher) => sum + (voucher.debit || 0),
+      0
+    );
+    const totalCreditAmount = accountingVoucher.reduce(
+      (sum, voucher) => sum + (voucher.credit || 0),
+      0
+    );
+
+    // 檢查借方總額和貸方總額是否分別等於總金額
+    const isDebitValid = Math.abs(totalDebitAmount - totalPrice) < 0.01; // 使用小於0.01來避免浮點數精度問題
+    const isCreditValid = Math.abs(totalCreditAmount - totalPrice) < 0.01;
 
     setIsBalance(isCreditEqualDebit);
     setIsNoEmptyRow(isNotEmpty);
     setIsEveryRowHasAccount(isEveryLineItemHasAccount);
-  }, [totalCredit, totalDebit, accountingVoucher]);
+    setIsDebitBalanced(isDebitValid);
+    setIsCreditBalanced(isCreditValid);
+  }, [totalCredit, totalDebit, accountingVoucher, totalPrice]);
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   // const displayType = <p className="text-lightRed">{eventType}</p>;
@@ -592,6 +607,32 @@ const ConfirmModal = ({
     </div>
   );
 
+  const displayVerifyDebitAmount = (
+    <div className="flex items-center gap-12px">
+      {isDebitBalanced ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isDebitBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
+        {t('JOURNAL.DEBIT_AMOUNT_BALANCED')}
+      </p>
+    </div>
+  );
+
+  const displayVerifyCreditAmount = (
+    <div className="flex items-center gap-12px">
+      {isCreditBalanced ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isCreditBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
+        {t('JOURNAL.CREDIT_AMOUNT_BALANCED')}
+      </p>
+    </div>
+  );
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
@@ -749,6 +790,9 @@ const ConfirmModal = ({
             {displayVerifyNoEmpty}
             {/* Info: (20240730 - Julian) Verify balancing debits and credits */}
             {displayVerifyBalance}
+            {/* Info: (20240806 - Shirley) Verify debit and credit amount */}
+            {displayVerifyDebitAmount}
+            {displayVerifyCreditAmount}
           </div>
         </div>
 
@@ -766,7 +810,15 @@ const ConfirmModal = ({
             id="confirm-btn"
             type="button"
             variant="tertiary"
-            disabled={!(isBalance && isNoEmptyRow && isEveryRowHasAccount)}
+            disabled={
+              !(
+                isBalance &&
+                isNoEmptyRow &&
+                isEveryRowHasAccount &&
+                isDebitBalanced &&
+                isCreditBalanced
+              )
+            }
             onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >
