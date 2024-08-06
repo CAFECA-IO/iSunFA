@@ -25,6 +25,7 @@ import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
+import { BUFFER_AMOUNT } from '@/constants/config';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -90,6 +91,8 @@ const ConfirmModal = ({
   const [isEveryRowHasAccount, setIsEveryRowHasAccount] = useState<boolean>(false);
   const [isNoEmptyRow, setIsNoEmptyRow] = useState<boolean>(false);
   const [isBalance, setIsBalance] = useState<boolean>(false);
+  const [isTotalDebitBalanced, setIsTotalDebitBalanced] = useState<boolean>(false);
+  const [isTotalCreditBalanced, setIsTotalCreditBalanced] = useState<boolean>(false);
 
   // Info: (20240730 - Julian)
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
@@ -345,16 +348,29 @@ const ConfirmModal = ({
 
   useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;
-    const isNotEmpty = accountingVoucher.every(
-      // Info: (20240530 - Julian) 檢查是否有 Debit 或 Credit
-      (voucher) => !!voucher.debit || !!voucher.credit
-    );
+    const isNotEmpty = accountingVoucher.every((voucher) => !!voucher.debit || !!voucher.credit);
     const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
+
+    // Info: 計算借貸方科目加總 (20240806 - Shirley)
+    const totalDebitAmount = accountingVoucher.reduce(
+      (sum, voucher) => sum + (voucher.debit || 0),
+      0
+    );
+    const totalCreditAmount = accountingVoucher.reduce(
+      (sum, voucher) => sum + (voucher.credit || 0),
+      0
+    );
+
+    // Info: 檢查借方總額和貸方總額是否分別等於總金額 (20240806 - Shirley)
+    const isDebitValid = Math.abs(totalDebitAmount - totalPrice) < BUFFER_AMOUNT; // Info: 使用小於0.01來避免浮點數精度問題 (20240806 - Shirley)
+    const isCreditValid = Math.abs(totalCreditAmount - totalPrice) < BUFFER_AMOUNT;
 
     setIsBalance(isCreditEqualDebit);
     setIsNoEmptyRow(isNotEmpty);
     setIsEveryRowHasAccount(isEveryLineItemHasAccount);
-  }, [totalCredit, totalDebit, accountingVoucher]);
+    setIsTotalDebitBalanced(isDebitValid);
+    setIsTotalCreditBalanced(isCreditValid);
+  }, [totalCredit, totalDebit, accountingVoucher, totalPrice]);
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   // const displayType = <p className="text-lightRed">{eventType}</p>;
@@ -592,6 +608,32 @@ const ConfirmModal = ({
     </div>
   );
 
+  const displayVerifyDebitAmount = (
+    <div className="flex items-center gap-12px">
+      {isTotalDebitBalanced ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isTotalDebitBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
+        {t('JOURNAL.DEBIT_AMOUNT_BALANCED')}
+      </p>
+    </div>
+  );
+
+  const displayVerifyCreditAmount = (
+    <div className="flex items-center gap-12px">
+      {isTotalCreditBalanced ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isTotalCreditBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
+        {t('JOURNAL.CREDIT_AMOUNT_BALANCED')}
+      </p>
+    </div>
+  );
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
@@ -731,24 +773,30 @@ const ConfirmModal = ({
 
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="my-24px flex flex-wrap justify-between gap-y-4px">
-            <p className="font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-navyBlue2">
               {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
               {t('CONFIRM_MODAL.ATTENTION')}
             </p>
-            <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
+            <label
+              htmlFor="addToBook"
+              className="ml-auto flex items-center gap-8px text-sm text-navyBlue2"
+            >
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
               <p>{t('CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
           </div>
 
           {/* Info: (20240730 - Julian) Verify Hints */}
-          <div className="mx-20px flex items-center justify-center gap-20px rounded-sm bg-surface-support-soft-maple px-20px py-5px text-sm font-semibold">
+          <div className="mx-20px flex flex-col items-center justify-center gap-20px rounded-sm bg-surface-support-soft-maple px-20px py-10px text-sm font-semibold md:flex-row md:py-5px">
             {/* Info: (20240730 - Julian) Verify all rows have account */}
             {displayVerifyAcc}
             {/* Info: (20240730 - Julian) Verify no empty row */}
             {displayVerifyNoEmpty}
             {/* Info: (20240730 - Julian) Verify balancing debits and credits */}
             {displayVerifyBalance}
+            {/* Info: (20240806 - Shirley) Verify debit and credit amount */}
+            {displayVerifyDebitAmount}
+            {displayVerifyCreditAmount}
           </div>
         </div>
 
@@ -766,7 +814,15 @@ const ConfirmModal = ({
             id="confirm-btn"
             type="button"
             variant="tertiary"
-            disabled={!(isBalance && isNoEmptyRow && isEveryRowHasAccount)}
+            disabled={
+              !(
+                isBalance &&
+                isNoEmptyRow &&
+                isEveryRowHasAccount &&
+                isTotalDebitBalanced &&
+                isTotalCreditBalanced
+              )
+            }
             onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >
