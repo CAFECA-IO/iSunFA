@@ -222,6 +222,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     sortBy?: string,
     sortOrder?: string,
     searchKey?: string
+    // isDeleted?: boolean
   ) => {
     getAccountList({
       params: { companyId },
@@ -238,6 +239,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         sortBy,
         sortOrder,
         searchKey,
+        isDeleted: false,
       },
     });
   };

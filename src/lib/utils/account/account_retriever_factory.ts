@@ -22,6 +22,7 @@ export default class AccountRetrieverFactory {
     sortBy,
     sortOrder,
     searchKey,
+    isDeleted
   }: IAccountQueryArgs) {
     const reportTypeLocal = type
       ? type !== AccountType.OTHER
@@ -45,7 +46,8 @@ export default class AccountRetrieverFactory {
               limit,
               sortBy,
               sortOrder,
-              searchKey
+              searchKey,
+              isDeleted
             );
           case AccountType.LIABILITY:
             return new LiabilityAccountRetriever(
@@ -60,7 +62,8 @@ export default class AccountRetrieverFactory {
               limit,
               sortBy,
               sortOrder,
-              searchKey
+              searchKey,
+              isDeleted
             );
           case AccountType.EQUITY:
             return new EquityAccountRetriever(
@@ -75,7 +78,8 @@ export default class AccountRetrieverFactory {
               limit,
               sortBy,
               sortOrder,
-              searchKey
+              searchKey,
+              isDeleted
             );
           default:
             return new BalanceSheetAccountRetriever(
@@ -90,7 +94,8 @@ export default class AccountRetrieverFactory {
               limit,
               sortBy,
               sortOrder,
-              searchKey
+              searchKey,
+              isDeleted
             );
         }
       case ReportSheetType.INCOME_STATEMENT:
@@ -106,7 +111,8 @@ export default class AccountRetrieverFactory {
           limit,
           sortBy,
           sortOrder,
-          searchKey
+          searchKey,
+          isDeleted
         );
       default:
         return new GeneralAccountRetriever(
@@ -121,7 +127,8 @@ export default class AccountRetrieverFactory {
           limit,
           sortBy,
           sortOrder,
-          searchKey
+          searchKey,
+          isDeleted
         );
     }
   }
