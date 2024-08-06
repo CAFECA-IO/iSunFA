@@ -58,3 +58,13 @@ export type IJournalFromPrismaIncludeProjectContractInvoiceVoucher = Prisma.Jour
     };
   };
 }>;
+
+export type IJournalFromPrismaIncludeInvoicePayment = Prisma.JournalGetPayload<{
+  include: {
+    invoice: {
+      include: {
+        payment: true,
+      }
+    }
+  }
+}>;

@@ -21,10 +21,12 @@ export async function getLineItemsInPrisma(
     voucher: {
       journal: {
         companyId,
-      },
-      createdAt: {
-        gte: startDateInSecond,
-        lte: endDateInSecond,
+        invoice: {
+          date: {
+            gte: startDateInSecond,
+            lte: endDateInSecond,
+          },
+        },
       },
     },
   };

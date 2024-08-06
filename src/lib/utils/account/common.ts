@@ -402,3 +402,7 @@ export function noAdjustNetIncome(netIncome: number = 0, originalNumber: number 
 export function reverseNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
   return -1 * (netIncome + originalNumber);
 }
+
+export function absoluteNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
+  return Math.abs(netIncome + originalNumber);
+}
