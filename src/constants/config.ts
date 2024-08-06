@@ -7,6 +7,7 @@ export const SCROLL_END = 530;
 
 export const BOOKMARK_SCROLL_STEP = 200;
 
+/* Deprecated: (20240806 - Liz) massiveDataContent 沒有使用到 */
 export const massiveDataContent = [
   {
     icon: '/icons/wallet.svg',
@@ -35,6 +36,7 @@ export const massiveDataContent = [
   },
 ];
 
+// Deprecated: (20240806 - Liz) toolsContent 沒有使用到
 export const toolsContent = [
   {
     title: 'LANDING_PAGE.TOOL_INTRO_1_TITLE',
@@ -59,6 +61,7 @@ export const toolsContent = [
   },
 ];
 
+// Deprecated: (20240806 - Liz) servicesContent 沒有使用到
 export const servicesContent = [
   {
     image: '/elements/tracing.png',
@@ -87,6 +90,7 @@ export const servicesContent = [
   },
 ];
 
+// Deprecated: (20240806 - Liz) whyUsContent 沒有使用到
 export const whyUsContent = [
   {
     image: '/icons/safety.png',
