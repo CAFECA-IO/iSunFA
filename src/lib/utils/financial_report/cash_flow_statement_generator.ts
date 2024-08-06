@@ -14,7 +14,6 @@ import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
-import { noAdjustNetIncome } from '@/lib/utils/account/common';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
 import {
   BalanceSheetOtherInfo,
@@ -161,9 +160,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       const account = referenceMap.get(code);
       if (account) {
         const isAccountDebit = account.debit;
-        let accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
-        accountAmount =
-          operatingFunction === noAdjustNetIncome ? Math.abs(accountAmount) : accountAmount;
+        const accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
         return operatingFunction(acc, accountAmount);
       }
       return acc;
