@@ -45,7 +45,9 @@ const StepOneTab = ({
     if (OCRListStatus.listSuccess === false) {
       toastHandler({
         id: `listUnprocessedOCR-${OCRListStatus.listCode}`,
-        content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
+        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
+        content: t('JOURNAL.FAILED_TO_LIST_UNPROCESSED_OCRS', { code: OCRListStatus.listCode }),
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -91,14 +93,18 @@ const StepOneTab = ({
     if (success === false) {
       toastHandler({
         id: `deleteUnprocessedOCR-${code}`,
-        content: `Failed to delete unprocessed OCR: ${code}, `,
+        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // content: `Failed to delete unprocessed OCR: ${code}, `,
+        content: t('JOURNAL.FAILED_TO_DELETE_UNPROCESSED_OCR', { code }),
         type: ToastType.ERROR,
         closeable: true,
       });
     } else if (success) {
       toastHandler({
         id: `deleteUnprocessedOCR-${code}`,
-        content: `Successfully deleted unprocessed OCR: ${code}`,
+        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // content: `Successfully deleted unprocessed OCR: ${code}`,
+        content: t('JOURNAL.SUCCESSFULLY_DELETED_UNPROCESSED_OCR', { code }),
         type: ToastType.SUCCESS,
         closeable: true,
       });

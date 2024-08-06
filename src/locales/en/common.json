@@ -286,7 +286,8 @@
     "DAYS": "D",
     "HOURS": "H",
     "MINUTES": "M",
-    "SECONDS": "S"
+    "SECONDS": "S",
+    "YES_DELETE_IT": "Yes, Delete it"
   },
   "EMBED_CODE_MODAL": {
     "EMBED_CODE": "Embed Code",
@@ -404,7 +405,7 @@
     "PARTIAL_PAID": "Partial Paid:",
     "PARTIAL": "Partial",
     "PAID": "Paid",
-    "CLEAR_ALL": "Clear all",
+    "CLEAR_ALL": "Clear All",
     "ADDED_JOURNAL": "Added Journal",
     "BASIC_INFO": "Basic Info",
     "ESTIMATED_COST": "Estimated Cost",
@@ -424,7 +425,17 @@
     "EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT": "Each row includes a debit or credit.",
     "DEBITS_AND_CREDITS_BALANCE_OUT": "Debits and credits balance out.",
     "ACCOUNT_TITLE": "Account Title",
-    "CREATE_INVOICE_FAILED": "Create Invoice Failed"
+    "CREATE_INVOICE_FAILED": "Create Invoice Failed",
+    "AMOUNT": "Amount",
+    "UPLOAD_SUCCESSFUL": "Upload Successful",
+    "DONE": "Done",
+    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "Successfully deleted unprocessed OCR:{{code}}",
+    "FAILED_TO_LIST_UNPROCESSED_OCRS": "Failed to list unprocessed OCRs:{{code}}",
+    "FAILED_TO_DELETE_UNPROCESSED_OCR": "Failed to delete unprocessed OCR:{{code}}",
+    "GO_BACK_TO_JOURNAL_LIST": "Go back to journal list",
+    "DOWNLOAD": "Download",
+    "DEBIT_AMOUNT_BALANCED": "Debit amount balanced with total amount",
+    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -467,7 +478,8 @@
     "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
     "NAME_YOUR_PROJECT": "Name your project",
     "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
-    "OVERALL": "Overall"
+    "OVERALL": "Overall",
+    "OK": "OK"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -766,9 +778,13 @@
     "AI_AUDIT_REPORT": "AI Audit Report",
     "HIGHER_SECURITY": "Higher security",
     "CHANGE_TO_OFFICIAL_ACCOUNT": "Upgrade to official account",
-    "GO_KYC": "Go KYC",
+    "GO_KYC": "Go to KYC",
     "ACCOUNT": "Account",
     "DELETE_COMPANY": "Delete Company",
+    "DELETE": "Delete",
+    "EXISTED_COMPANY": "Existed Company",
+    "COMPANY_ALREADY_REGISTERED": "This company has already been registered.",
+    "PLEASE_COMPLETE_KYC": "If you are the owner of this company, please complete KYC to get access back. Error code:{{code}}",
     "TRANSFER_ADMINISTRATION": "Transfer Administration",
     "UNDER_REVIEW": "Under Review",
     "VERIFIED": "Verified",
@@ -787,6 +803,44 @@
     "ACCOUNTING_TITLE_MANAGEMENT": "Accounting Title Management",
     "ASSETS": "Assets",
     "LIABILITY": "Liability",
-    "EQUITY": "Equity"
+    "EQUITY": "Equity",
+    "ALL": "All",
+    "ASSET": "Asset",
+    "INCOME": "Income",
+    "EXPENSE": "Expense",
+    "CURRENT": "Current",
+    "NON_CURRENT": "Non-Current",
+    "ENTER_NAME": "Enter name",
+    "FAVORITE_ACCOUNTING_TITLE": "Favorite Accounting Title",
+    "MY_NEW_ACCOUNTING_TITLE": "My new accounting title",
+    "NAME": "Name",
+    "CODE_NAME": "Code & Name",
+    "CODE": "Code",
+    "ACTION": "Action",
+    "ADD_NEW_ACCOUNTING_TITLE": "Add New Accounting Title",
+    "ACCOUNTING_TYPE": "Accounting Type",
+    "LIQUIDITY": "Liquidity",
+    "CURRENT_ASSET": "Current Asset",
+    "ADD_NEW_SUB": "Add New Sub",
+    "FAVORITE": "Favorite",
+    "EDIT": "Edit",
+    "REMOVE": "Remove",
+    "SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT": "Successfully created new sub account:{{name}} ",
+    "FAILED_TO_CREATE_NEW_SUB_ACCOUNT": "Failed to create new sub account, please try again later.",
+    "EDIT_MY_NEW_ACCOUNTING_TITLE": "Edit My New Accounting Title",
+    "CURRENT_LIQUIDITY": "Current Liquidity",
+    "REMOVE_ACCOUNTING_TITLE": "Remove Accounting Title",
+    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "Are you sure you want to remove this accounting title?"
+  },
+  "PROGRESS_STATUS": {
+    "SUCCESS": "success",
+    "INPROGRESS": "inProgress",
+    "NOTFOUND": "notFound",
+    "ALREADYUPLOAD": "alreadyUpload",
+    "INVALIDINPUT": "invalidInput",
+    "LLMERROR": "llmError",
+    "SYSTEMERROR": "systemError",
+    "PAUSED": "paused",
+    "HASBEENUSED": "hasBeenUsed"
   }
 }

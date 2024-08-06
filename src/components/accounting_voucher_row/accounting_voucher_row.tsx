@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaChevronDown } from 'react-icons/fa';
+import { PiBookOpen } from 'react-icons/pi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { useTranslation } from 'next-i18next';
+import { FiSearch } from 'react-icons/fi';
 
 interface IAccountingVoucherRow {
   accountingVoucher: IAccountingVoucher;
@@ -32,17 +33,14 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
   const [tempDebit, setTempDebit] = useState<string>(debit ? debit.toString() : '0');
   const [tempCredit, setTempCredit] = useState<string>(credit ? credit.toString() : '0');
 
-  useEffect(() => {
-    setSelectAccount(account);
-    setTempDebit(debit ? debit.toString() : '0');
-    setTempCredit(credit ? credit.toString() : '0');
-  }, [account, debit, credit]);
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
 
   const {
     targetRef: accountingRef,
     componentVisible: isAccountingMenuOpen,
     setComponentVisible: setAccountingMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  } = useOuterClick<HTMLDivElement>(false);
 
   const accountTitle = generateAccountTitle(selectAccount);
 
@@ -90,6 +88,11 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     }
   };
 
+  // Info: (20240806 - Julian) search
+  const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(event.target.value);
+  };
+
   // Info: (20240711 - Julian) 修改貸方的值
   const changeCreditHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value: creditValue } = event.target;
@@ -125,10 +128,30 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
 
   // Info: (20240711 - Julian) 刪除該列
   const deleteClickHandler = () => deleteVoucherRowHandler(id);
+
+  useEffect(() => {
+    setSelectAccount(account);
+    setTempDebit(debit ? debit.toString() : '0');
+    setTempCredit(credit ? credit.toString() : '0');
+  }, [account, debit, credit]);
+
+  useEffect(() => {
+    const filteredList = accountList.filter((accountItem) => {
+      const searchStr = searchValue.toLowerCase();
+      return accountItem.code.includes(searchStr) || accountItem.name.includes(searchStr);
+    });
+    setFilteredAccountList(filteredList);
+  }, [searchValue, accountList]);
+
+  useEffect(() => {
+    setFilteredAccountList(accountList);
+    setSearchValue('');
+  }, [isAccountingMenuOpen]);
+
   // Info: (20240430 - Julian) 顯示 Account 選單
   const displayAccountingDropmenu =
-    accountList.length > 0 ? (
-      accountList.map((accountItem: IAccount) => {
+    filteredAccountList.length > 0 ? (
+      filteredAccountList.map((accountItem: IAccount) => {
         const title = generateAccountTitle(accountItem);
         const displayTitle = t(accountTitleMap[title]) || t(title); // ToDo: (20240712 - Julian) Translate account title
         // Info: (20240430 - Julian) 點擊選單選項
@@ -139,35 +162,52 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         };
 
         return (
-          <li
+          <div
             key={title}
             id={`accounting-menu-item-${id}`}
             onClick={clickHandler}
             className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
           >
             {displayTitle}
-          </li>
+          </div>
         );
       })
     ) : (
-      <div>{t(`MY_REPORTS_SECTION.LOADING`)}</div>
+      <div className="text-navyBlue2">{'co result'}</div>
     );
 
   const displayAccounting = (
     <div
       id={`accounting-menu-${id}`}
       onClick={accountingMenuHandler}
-      className={`group relative flex h-46px w-271px cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-46px w-9/10 cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
-      <div className="line-clamp-2 w-200px">{t(accountTitle)}</div>
-      <FaChevronDown />
+      <div className="line-clamp-2 w-9/10">{t(accountTitle)}</div>
+      <PiBookOpen size={20} />
       {/* Info: (20240423 - Julian) Dropmenu */}
-      <ul
-        ref={accountingRef}
-        className={`absolute left-0 top-50px z-10 w-full bg-dropdown-surface-menu-background-primary p-8px ${isAccountingMenuOpen ? 'h-200px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} overflow-y-auto rounded-xs border transition-all duration-300 ease-in-out`}
+      <div
+        className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch bg-dropdown-surface-menu-background-primary p-8px ${isAccountingMenuOpen ? 'h-250px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
       >
-        {displayAccountingDropmenu}
-      </ul>
+        {/* Info: (20240806 - Julian) search */}
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+          <input
+            id="search-accounting"
+            type="text"
+            placeholder="Search"
+            value={searchValue}
+            onChange={changeSearchHandler}
+            className="w-full outline-none placeholder:text-lightGray4"
+          />
+          <FiSearch size={16} />
+        </div>
+        <div className="px-12px py-8px uppercase text-dropdown-text-head">Assets</div>
+        <div
+          ref={accountingRef}
+          className="flex max-h-150px flex-col items-stretch overflow-y-auto py-8px"
+        >
+          {displayAccountingDropmenu}
+        </div>
+      </div>
     </div>
   );
 

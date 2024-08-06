@@ -7,6 +7,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAdmin } from '@/interfaces/admin';
+import { useTranslation } from 'next-i18next';
 
 interface ITransferCompanyModal {
   isModalVisible: boolean;
@@ -17,6 +18,7 @@ const TransferCompanyModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: ITransferCompanyModal) => {
+  const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,7 +41,7 @@ const TransferCompanyModal = ({
             messageType: MessageType.SUCCESS,
             title: 'Transfer Owner',
             content: 'Transfer owner successfully',
-            submitBtnStr: 'OK',
+            submitBtnStr: t('PROJECT.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               // Info: (20240729 - Liz) reload this page to get the latest data and hide the UI
@@ -51,7 +53,7 @@ const TransferCompanyModal = ({
             messageType: MessageType.ERROR,
             title: 'Transfer Owner',
             content: 'Transfer owner failed',
-            submitBtnStr: 'OK',
+            submitBtnStr: t('PROJECT.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               messageModalVisibilityHandler();
@@ -65,7 +67,7 @@ const TransferCompanyModal = ({
           messageType: MessageType.ERROR,
           title: 'Transfer Owner',
           content: 'Transfer owner failed',
-          submitBtnStr: 'OK',
+          submitBtnStr: t('PROJECT.OK'),
           hideCloseBtn: true,
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -100,8 +102,8 @@ const TransferCompanyModal = ({
           </div>
         ), // TODO: message color (20240717 - Shirley)
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: message color (20240717 - Shirley)
-        backBtnStr: 'Cancel',
-        submitBtnStr: 'Transfer',
+        backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+        submitBtnStr: t('JOURNAL.TRANSFER'),
         submitBtnFunction: () => handleSubmit(newOwnerId),
       });
 

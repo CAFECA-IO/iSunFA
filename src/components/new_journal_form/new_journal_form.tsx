@@ -259,7 +259,7 @@ const NewJournalForm = () => {
         messageType: MessageType.ERROR,
         title: 'Get OCR result Failed',
         content: `Get OCR result failed: ${getCode}`,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -381,7 +381,7 @@ const NewJournalForm = () => {
   const dataMessageModal = {
     title: 'Clear form content',
     content: 'Are you sure you want to clear form content?',
-    submitBtnStr: 'Clear All',
+    submitBtnStr: t('JOURNAL.CLEAR_ALL'),
     submitBtnFunction: () => clearFormHandler(),
     messageType: MessageType.WARNING,
   };
