@@ -7,10 +7,10 @@ export default class MailService {
 
   private constructor() {
     this.transporter = nodemailer.createTransport({
-      service: process.env.GOOGLE_SERVICE,
+      service: process.env.MAIL_SERVICE,
       auth: {
-        user: process.env.GOOGLE_CLIENT_ID,
-        pass: process.env.GOOGLE_CLIENT_PASSWORD,
+        user: process.env.MAIL_CLIENT_ID,
+        pass: process.env.MAIL_CLIENT_PASSWORD,
       },
     });
   }

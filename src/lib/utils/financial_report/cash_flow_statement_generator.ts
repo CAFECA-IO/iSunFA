@@ -14,7 +14,6 @@ import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
-import { noAdjustNetIncome } from '@/lib/utils/account/common';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
 import {
   BalanceSheetOtherInfo,
@@ -23,6 +22,7 @@ import {
 } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { timestampInMilliSeconds } from '@/lib/utils/common';
+import { absoluteNetIncome, noAdjustNetIncome } from '@/lib/utils/account/common';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -161,9 +161,17 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       const account = referenceMap.get(code);
       if (account) {
         const isAccountDebit = account.debit;
-        let accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
-        accountAmount =
-          operatingFunction === noAdjustNetIncome ? Math.abs(accountAmount) : accountAmount;
+
+        let accountAmount = 0;
+        switch (operatingFunction) {
+          case noAdjustNetIncome:
+          case absoluteNetIncome:
+            accountAmount = account.amount;
+            break;
+          default:
+            accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
+        }
+
         return operatingFunction(acc, accountAmount);
       }
       return acc;

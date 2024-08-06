@@ -433,7 +433,9 @@
     "FAILED_TO_LIST_UNPROCESSED_OCRS": "Failed to list unprocessed OCRs:{{code}}",
     "FAILED_TO_DELETE_UNPROCESSED_OCR": "Failed to delete unprocessed OCR:{{code}}",
     "GO_BACK_TO_JOURNAL_LIST": "Go back to journal list",
-    "DOWNLOAD": "Download"
+    "DOWNLOAD": "Download",
+    "DEBIT_AMOUNT_BALANCED": "Debit amount balanced with total amount",
+    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",

@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { IOrder } from '@/interfaces/order';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Prisma } from '@prisma/client';
+import { Plan, Prisma } from '@prisma/client';
 
 export async function listOrder(companyId: number): Promise<IOrder[]> {
   const listedOrder = await prisma.order.findMany({
@@ -42,6 +42,22 @@ export async function getOrderById(id: number): Promise<IOrder | null> {
     order = await prisma.order.findUnique({
       where: {
         id,
+      },
+    });
+  }
+
+  return order;
+}
+
+export async function getOrderDetailById(id: number): Promise<(IOrder & { plan: Plan }) | null> {
+  let order: (IOrder & { plan: Plan }) | null = null;
+  if (id > 0) {
+    order = await prisma.order.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        plan: true,
       },
     });
   }
