@@ -26,7 +26,7 @@ export interface IVoucher {
   lineItems: ILineItem[];
 }
 
-export interface IVocuherDataForAPIResponse {
+export interface IVoucherDataForAPIResponse {
   id: number;
   createdAt: number;
   updatedAt: number;

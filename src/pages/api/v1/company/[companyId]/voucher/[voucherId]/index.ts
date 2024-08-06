@@ -1,5 +1,5 @@
 import { IResponseData } from '@/interfaces/response_data';
-import { IVocuherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -9,8 +9,10 @@ import {
   findUniqueJournalInPrisma,
   updateVoucherByJournalIdInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-type ApiResponseType = IVocuherDataForAPIResponse | null;
+type ApiResponseType = IVoucherDataForAPIResponse | null;
 
 function isVoucherValid(
   voucher: IVoucherDataForSavingToDB
@@ -89,28 +91,33 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ApiResponseType = null;
-  try {
-    const session = await getSession(req, res);
-    const { companyId } = session;
 
-    // ToDo: (20240703 - Murky) Need to check Auth
-    switch (req.method) {
-      case 'PUT': {
-        payload = await handlePutRequest(companyId, req);
+  if (isAuth) {
+    try {
+      // ToDo: (20240703 - Murky) Need to check Auth
+      switch (req.method) {
+        case 'PUT': {
+          payload = await handlePutRequest(companyId, req);
 
-        statusMessage = STATUS_MESSAGE.CREATED;
-        break;
+          statusMessage = STATUS_MESSAGE.CREATED;
+          break;
+        }
+        default: {
+          break;
+        }
       }
-      default: {
-        break;
-      }
+    } catch (_error) {
+      const error = _error as Error;
+      statusMessage = error.message;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
   }
+
   const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);
   res.status(httpCode).json(result);
 }
