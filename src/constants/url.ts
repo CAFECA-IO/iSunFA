@@ -31,3 +31,16 @@ export const ISUNFA_ROUTE = {
 export const EXTERNAL_API = {
   CFV_PDF: 'https://cfv.cafeca.io/api/pdf',
 };
+
+// Info: (20240805 - Jakcy) Test url for OEN
+const OEN_BASE_URL = 'https://payment-api.testing.oen.tw';
+export const OEN_BASE_ENDPOINT = {
+  CHECKOUT_TOKEN: `${OEN_BASE_URL}/checkout-token`,
+  TOKEN_TRANSACTION: `${OEN_BASE_URL}/token/transactions`,
+  GET_TRANSACTION: (orderId: string) => `${OEN_BASE_URL}/transactions/${orderId}`,
+};
+
+export const OEN_MERCHANT_ENDPOINT = {
+  GET_TOKEN: (merchantId: string, id: string) =>
+    `https://${merchantId}.testing.oen.tw/checkout/subscription/create/${id}`,
+};
