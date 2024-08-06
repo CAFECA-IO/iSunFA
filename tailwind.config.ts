@@ -740,41 +740,40 @@ module.exports = {
         darkBlue3: '#0024620D',
       },
       backgroundImage: {
-        web: 'url("/elements/web.svg")',
-        light_up: 'url("/elements/light_up.svg")',
-        light_down: 'url("/elements/light_down.svg")',
-        mask: 'url("/elements/mask.svg")',
-        blended_light: 'url("/elements/blended_light.svg")',
-        green_light: 'url("/elements/green_light.svg")',
-        shadow_01: 'url("/elements/shadow_01.svg")',
-        light_01: 'url("/elements/light_01.svg")',
-        light_02: 'url("/elements/light_02.svg")',
-        light_03: 'url("/elements/light_03.svg")',
-        light_04: 'url("/elements/light_04.svg")',
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
         contact_bg: 'url("/elements/contact_bg.svg")',
-        background_pattern: 'url("/elements/background_pattern.svg")',
-        green_light_left: 'url("/elements/green_light_left.svg")',
-        green_light_right: 'url("/elements/green_light_right.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:
           'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
-        pipe: 'url("/elements/pipe.svg")',
-        // neon: 'url("/animations/neon.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
         101: 'url("/elements/101.png")',
-        lightBalls: 'url("/elements/light_balls.svg")',
-        lightBallsReverse: 'url("/elements/light_balls_reverse.svg")',
 
         bubbleAbove: 'url("/elements/bubble_above.svg")',
         bubbleBelow: 'url("/elements/bubble_below.svg")',
+        spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
 
+        // web: 'url("/elements/web.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // light_up: 'url("/elements/light_up.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // light_down: 'url("/elements/light_down.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // mask: 'url("/elements/mask.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // blended_light: 'url("/elements/blended_light.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // green_light: 'url("/elements/green_light.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // shadow_01: 'url("/elements/shadow_01.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // light_01: 'url("/elements/light_01.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // light_02: 'url("/elements/light_02.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // light_03: 'url("/elements/light_03.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // light_04: 'url("/elements/light_04.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // background_pattern: 'url("/elements/background_pattern.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // green_light_left: 'url("/elements/green_light_left.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // green_light_right: 'url("/elements/green_light_right.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // pipe: 'url("/elements/pipe.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // neon: 'url("/animations/neon.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
+        // lightBalls: 'url("/elements/light_balls.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // lightBallsReverse: 'url("/elements/light_balls_reverse.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
         // reportCover: 'url("/documents/cover.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
         // contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
         // headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
-
-        spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
       },
       zIndex: {
         '-10': '-10',

@@ -785,7 +785,10 @@
     "PLEASE_COMPLETE_KYC": "If you are the owner of this company, please complete KYC to get access back. Error code:{{code}}",
     "TRANSFER_ADMINISTRATION": "Transfer Administration",
     "UNDER_REVIEW": "Under Review",
-    "VERIFIED": "Verified"
+    "VERIFIED": "Verified",
+    "PENDING": "Pending",
+    "COMPLETE_KYC": "Complete KYC",
+    "VERIFICATION_FAILED_PLEASE_RE_UPLOAD": "Verification failed, please re-upload."
   },
   "SETTING": {
     "PERSONAL_SETTING": "Personal Setting",

@@ -3,33 +3,12 @@ import { IProjectProgressChartData } from '@/interfaces/project_progress_chart';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, changeDateToTimeStampOfDayEnd } from '@/lib/utils/common';
-import prisma from '@/client';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { isDateFormatYYYYMMDD } from '@/lib/utils/type_guard/date';
 import { stageList } from '@/constants/project';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-
-async function getStatusNumber(dateToTimeStamp: number, companyId: number) {
-  const statusNumber = await prisma.milestone.groupBy({
-    by: ['status'],
-    _count: {
-      id: true,
-    },
-    where: {
-      startDate: {
-        lte: dateToTimeStamp,
-      },
-      endDate: {
-        gte: dateToTimeStamp,
-      },
-      project: {
-        companyId,
-      },
-    },
-  });
-  return statusNumber;
-}
+import { getStatusNumber } from '@/lib/utils/repo/progress.repo';
 
 async function checkEmpty(
   statusNumber: {

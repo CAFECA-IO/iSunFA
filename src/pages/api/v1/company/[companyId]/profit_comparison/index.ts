@@ -3,45 +3,12 @@ import { IProjectROIComparisonChartDataWithPagination } from '@/interfaces/proje
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import prisma from '@/client';
 import { isTimestamp } from '@/lib/utils/type_guard/date';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { Prisma } from '@prisma/client';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-
-async function getProjectLists(companyId: number) {
-  return prisma.project.findMany({
-    select: {
-      id: true,
-      name: true,
-    },
-    where: {
-      companyId,
-    },
-  });
-}
-
-async function getIncomeExpenses(
-  startDateToTimeStamp: number,
-  endDateToTimeStamp: number,
-  companyId: number
-) {
-  return prisma.incomeExpense.groupBy({
-    by: ['projectId'],
-    _sum: {
-      income: true,
-      expense: true,
-    },
-    where: {
-      createdAt: {
-        gte: startDateToTimeStamp,
-        lte: endDateToTimeStamp,
-      },
-      companyId,
-    },
-  });
-}
+import { getProjectLists, getIncomeExpenses } from '@/lib/utils/repo/profit_comparison.repo';
 
 async function matchProjectListsAndIncomeExpenses(
   projectLists: {

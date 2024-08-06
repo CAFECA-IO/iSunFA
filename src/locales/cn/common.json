@@ -782,10 +782,9 @@
     "TRANSFER_ADMINISTRATION": "转移管理权",
     "UNDER_REVIEW": "正在审核中",
     "VERIFIED": "已验证",
-    "DELETE": "删除",
-    "EXISTED_COMPANY": "已经存在的公司",
-    "COMPANY_ALREADY_REGISTERED": "该公司已注册",
-    "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。错误代码:{{code}}"
+    "PENDING": "验证中",
+    "COMPLETE_KYC": "已完成 KYC",
+    "VERIFICATION_FAILED_PLEASE_RE_UPLOAD": "验证失败，请重新上传"
   },
   "SETTING": {
     "PERSONAL_SETTING": "个人设置",

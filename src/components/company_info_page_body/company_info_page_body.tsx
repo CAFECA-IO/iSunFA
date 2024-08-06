@@ -412,7 +412,7 @@ const CompanyInfoPageBody = () => {
                         </div>
                         {/* Status Tag // Info: (20240802 - Liz)  */}
                         <p className="w-fit rounded-full bg-badge-surface-soft-primary px-10px py-8px text-xs text-badge-text-primary-solid">
-                          Pending
+                          {t('COMPANY_BASIC_INFO.PENDING')}
                         </p>
                       </div>
                       <div className="hidden w-full justify-end lg:relative lg:flex">
@@ -520,7 +520,7 @@ const CompanyInfoPageBody = () => {
                         </div>
                         {/* Status Tag // Info: (20240802 - Liz)  */}
                         <p className="w-fit rounded-full bg-badge-surface-soft-success px-10px py-8px text-xs text-badge-text-success-solid">
-                          Complete KYC
+                          {t('COMPANY_BASIC_INFO.COMPLETE_KYC')}
                         </p>
                       </div>
                       <div className="hidden w-full justify-end lg:relative lg:flex">
@@ -642,7 +642,7 @@ const CompanyInfoPageBody = () => {
                         </div>
                         {/* Status Tag // Info: (20240802 - Liz)  */}
                         <p className="w-fit rounded-full bg-badge-surface-soft-error px-10px py-8px text-xs text-badge-text-error-solid">
-                          Verification failed, please re-upload.
+                          {t('COMPANY_BASIC_INFO.VERIFICATION_FAILED_PLEASE_RE_UPLOAD')}
                         </p>
                       </div>
                       <div className="hidden w-full justify-end lg:relative lg:flex">
