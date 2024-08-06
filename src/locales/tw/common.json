@@ -433,7 +433,9 @@
     "FAILED_TO_LIST_UNPROCESSED_OCRS": "列出未處理的OCR失敗:{{code}}",
     "FAILED_TO_DELETE_UNPROCESSED_OCR": "刪除未處理的OCR失敗：{{code}}",
     "GO_BACK_TO_JOURNAL_LIST": "返回日記帳",
-    "DOWNLOAD": "下載"
+    "DOWNLOAD": "下載",
+    "DEBIT_AMOUNT_BALANCED": "借方金額與總金額平衡",
+    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
