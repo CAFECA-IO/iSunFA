@@ -76,10 +76,10 @@ const PendingReportItem = ({
       subtitle: 'Are you sure\n you want to delete the process?',
       content: `It will take 30 - 40 minutes\n 
       if you want to apply it again.`,
-      submitBtnStr: 'Yes, Delete it',
+      submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };

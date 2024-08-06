@@ -12,7 +12,6 @@ import {
 } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
 
-import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
@@ -26,6 +25,9 @@ import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { FileFolder } from '@/constants/file';
+import { getAichUrl } from '@/lib/utils/aich';
+import { AICH_APIS_TYPES } from '@/constants/aich';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -54,12 +56,16 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   const formData = createImageFormData(imageBlob, imageName);
 
   let response: Response;
+  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_OCR);
   try {
-    response = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
+    response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
     });
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -84,6 +90,9 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -145,9 +154,12 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
   let files: formidable.Files;
 
   try {
-    const parsedForm = await parseForm(req, 'invoice');
+    const parsedForm = await parseForm(req, FileFolder.INVOICE);
     files = parsedForm.files;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
   }
   return files;
@@ -155,7 +167,8 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
 
 export async function fetchStatus(aichResultId: string) {
   try {
-    const result = await fetch(`${AICH_URI}/api/v1/ocr/${aichResultId}/process_status`);
+    const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
+    const result = await fetch(fetchUrl);
 
     if (!result.ok) {
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
@@ -164,6 +177,9 @@ export async function fetchStatus(aichResultId: string) {
     const status: ProgressStatus = (await result.json()).payload;
     return status;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 }
@@ -229,27 +245,15 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return resultJson;
 }
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession(req, res);
-  const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-
-  // Info Murky (20240416): Check if companyId is string
-  if (!isCompanyIdValid(companyId)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  // Deprecated (20240611 - Murky) This convert is not needed
-  const companyIdNumber = Number(companyId);
-
+export async function handlePostRequest(companyId: number, req: NextApiRequest) {
   let resultJson: IAccountResultStatus[];
 
   try {
@@ -257,7 +261,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     const aichResults = await postImageToAICH(files);
     // Deprecated (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
-    resultJson = await createOcrFromAichResults(companyIdNumber, aichResults);
+    resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
@@ -265,91 +269,69 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
-    STATUS_MESSAGE.CREATED,
-    resultJson
-  );
-  return {
-    httpCode,
-    result,
-  };
+  return resultJson;
 }
 
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
-  const session = await getSession(req, res);
-  const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  const { ocrtype } = req.query;
-  if (!isCompanyIdValid(companyId)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  // Deprecated (20240611 - Murky) This convert is not needed
-  const companyIdNumber = Number(companyId);
-
-  // ToDo: (20240611 - Murky) GET ocr by companyId in Journal from prisma
+  const { ocrType } = req.query;
 
   let ocrData: Ocr[];
 
   try {
-    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyIdNumber, ocrtype as string);
+    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
   // ToDo: (20240611 - Murky) format prisma ocr to IOCR
   const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
-  // ToDo: formatApiResponse
-  const { httpCode, result } = formatApiResponse<IOCR[]>(
-    STATUS_MESSAGE.SUCCESS_GET,
-    unprocessedOCRs
-  );
-  return {
-    httpCode,
-    result,
-  };
+
+  return unprocessedOCRs;
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
-    message,
-    {} as IAccountResultStatus[]
-  );
-  res.status(httpCode).json(result);
-}
+type ApiReturnType = IAccountResultStatus[] | IOCR[];
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountResultStatus[] | IOCR[]>>
+  res: NextApiResponse<IResponseData<ApiReturnType>>
 ) {
-  try {
-    switch (req.method) {
-      case 'GET': {
-        const { httpCode, result } = await handleGetRequest(req, res);
-        res.status(httpCode).json(result);
-        break;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
+  let payload: ApiReturnType = [];
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+
+  if (isAuth) {
+    try {
+      switch (req.method) {
+        case 'GET': {
+          payload = await handleGetRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.SUCCESS;
+          break;
+        }
+        case 'POST': {
+          payload = await handlePostRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.CREATED;
+          break;
+        }
+        default: {
+          throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+        }
       }
-      case 'POST': {
-        const { httpCode, result } = await handlePostRequest(req, res);
-        res.status(httpCode).json(result);
-        break;
-      }
-      default: {
-        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
-      }
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecated (20240611 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
     }
-  } catch (_error) {
-    const error = _error as Error;
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
-    handleErrorResponse(res, error.message);
   }
+
+  const { httpCode, result } = formatApiResponse<ApiReturnType>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

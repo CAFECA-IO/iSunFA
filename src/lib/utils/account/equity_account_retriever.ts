@@ -15,7 +15,8 @@ export class EquityAccountRetriever extends AbstractAccountRetriever {
     limit?: number,
     sortBy?: 'code' | 'createdAt',
     sortOrder?: 'asc' | 'desc',
-    searchKey?: string
+    searchKey?: string,
+    isDeleted?: boolean
   ) {
     super({
       companyId,
@@ -30,6 +31,7 @@ export class EquityAccountRetriever extends AbstractAccountRetriever {
       sortBy,
       sortOrder,
       searchKey,
+      isDeleted
     });
   }
 }

@@ -92,7 +92,7 @@ const ProfileUploadModal = ({
       // ToDo: (20240801 - Julian) i18n
       title: 'Upload Failed',
       content: `Please try again later. Error code: ${code}`,
-      submitBtnStr: 'OK',
+      submitBtnStr: t('PROJECT.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();

@@ -31,6 +31,8 @@ export abstract class AbstractAccountRetriever {
 
   protected searchKey: string | undefined;
 
+  protected isDeleted: boolean | undefined;
+
   constructor({
     companyId,
     includeDefaultAccount,
@@ -44,6 +46,7 @@ export abstract class AbstractAccountRetriever {
     sortBy,
     sortOrder,
     searchKey,
+    isDeleted
   }: IAccountQueryArgs) {
     this.companyId = companyId;
     this.includeDefaultAccount = includeDefaultAccount;
@@ -57,6 +60,7 @@ export abstract class AbstractAccountRetriever {
     this.sortBy = sortBy || this.sortBy;
     this.sortOrder = sortOrder || this.sortOrder;
     this.searchKey = searchKey;
+    this.isDeleted = isDeleted;
   }
 
   public async getAccounts(): Promise<IPaginatedAccount> {
@@ -73,6 +77,7 @@ export abstract class AbstractAccountRetriever {
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
       searchKey: this.searchKey,
+      isDeleted: this.isDeleted
     });
 
     const paginatedAccount = formatIPaginatedAccount(accounts);
