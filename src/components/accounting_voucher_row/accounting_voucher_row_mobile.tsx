@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import { FaChevronDown } from 'react-icons/fa';
+import { FiSearch } from 'react-icons/fi';
+import { PiBookOpen } from 'react-icons/pi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import {
   useAccountingCtx,
@@ -35,7 +36,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
     targetRef: accountingRef,
     componentVisible: isAccountingMenuOpen,
     setComponentVisible: setAccountingMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  } = useOuterClick<HTMLDivElement>(false);
 
   const debitAmount = debit ?? 0;
   const creditAmount = credit ?? 0;
@@ -47,6 +48,10 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
 
   const [selectAccount, setSelectAccount] = useState<IAccount | null>(account);
   const [tempAmount, setTempAmount] = useState<string>(amountValue.toString());
+
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
+
   const accountTitle = generateAccountTitle(selectAccount);
 
   const accountingMenuOpenHandler = () => setAccountingMenuOpen(!isAccountingMenuOpen);
@@ -56,6 +61,10 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
   };
 
   const deleteVoucherRowMobileHandler = () => deleteVoucherRowHandler(id);
+
+  const changeSearchHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(event.target.value);
+  };
 
   // Info: (20240711 - Julian) 修改輸入的值
   const changeAmountHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,10 +99,28 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
     }
   };
 
+  useEffect(() => {
+    setSelectAccount(account);
+    setTempAmount(amountValue.toString());
+  }, [account, debit, credit]);
+
+  useEffect(() => {
+    const filteredList = accountList.filter((accountItem) => {
+      const searchStr = searchValue.toLowerCase();
+      return accountItem.code.includes(searchStr) || accountItem.name.includes(searchStr);
+    });
+    setFilteredAccountList(filteredList);
+  }, [searchValue, accountList]);
+
+  useEffect(() => {
+    setFilteredAccountList(accountList);
+    setSearchValue('');
+  }, [isAccountingMenuOpen]);
+
   // Info: (20240712 - Julian) 顯示 Account 選單
   const displayAccountingDropmenu =
-    accountList.length > 0 ? (
-      accountList.map((acc: IAccount) => {
+    filteredAccountList.length > 0 ? (
+      filteredAccountList.map((acc: IAccount) => {
         const title = generateAccountTitle(acc);
 
         const displayTitle = accountTitleMap[title] || title; // ToDo: (20240712 - Julian) Translate account title
@@ -106,18 +133,18 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
         };
 
         return (
-          <li
+          <div
             key={title}
             id={`accounting-menu-item-${id}`}
             onClick={clickHandler}
             className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
           >
             {displayTitle}
-          </li>
+          </div>
         );
       })
     ) : (
-      <div>loading...</div>
+      <div className="text-navyBlue2">{'no result'}</div>
     );
 
   const displayAccounting = (
@@ -126,17 +153,31 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
       onClick={accountingMenuOpenHandler}
       className={`group relative flex h-46px w-full cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
-      <p>{t(accountTitle)}</p>
-      <FaChevronDown />
+      <div className="line-clamp-2 w-9/10">{t(accountTitle)}</div>
+      <PiBookOpen />
       {/* Info: (20240423 - Julian) Dropmenu */}
       <div
-        className={`absolute left-0 top-50px w-full overflow-y-auto shadow-dropmenu
-        ${isAccountingMenuOpen ? 'h-200px border-lightGray3' : 'h-0 border-transparent'} 
-        overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch shadow-dropmenu ${isAccountingMenuOpen ? 'h-200px border-lightGray3 opacity-100' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border bg-dropdown-surface-menu-background-primary p-8px transition-all duration-300 ease-in-out`}
       >
-        <ul ref={accountingRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
+        {/* Info: (20240806 - Julian) search */}
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+          <input
+            id="search-accounting"
+            type="text"
+            placeholder="Search"
+            value={searchValue}
+            onChange={changeSearchHandler}
+            className="w-full outline-none placeholder:text-lightGray4"
+          />
+          <FiSearch size={16} />
+        </div>
+        <div className="px-12px py-8px uppercase text-dropdown-text-head">Assets</div>
+        <div
+          ref={accountingRef}
+          className="flex max-h-100px w-full flex-col items-start overflow-y-auto py-8px"
+        >
           {displayAccountingDropmenu}
-        </ul>
+        </div>
       </div>
     </div>
   );
