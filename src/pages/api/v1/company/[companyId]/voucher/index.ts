@@ -26,7 +26,7 @@ async function handleVoucherCreatePrismaLogic(
   companyId: number
 ) {
   let updatedVoucher: IVoucherFromPrismaIncludeLineItems | null = null;
-  let statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
 
   try {
     const journal: IJournalFromPrismaIncludeInvoicePayment | null = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
@@ -51,6 +51,7 @@ async function handleVoucherCreatePrismaLogic(
 
     // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
     updatedVoucher = await findUniqueVoucherInPrisma(voucherData.id);
+    statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
     // Deprecate: (20240806 - Murky) Debugging purpose

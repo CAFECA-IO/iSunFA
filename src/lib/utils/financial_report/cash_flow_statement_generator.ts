@@ -22,6 +22,7 @@ import {
 } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { timestampInMilliSeconds } from '@/lib/utils/common';
+import { absoluteNetIncome, noAdjustNetIncome } from '@/lib/utils/account/common';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -160,7 +161,17 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       const account = referenceMap.get(code);
       if (account) {
         const isAccountDebit = account.debit;
-        const accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
+
+        let accountAmount = 0;
+        switch (operatingFunction) {
+          case noAdjustNetIncome:
+          case absoluteNetIncome:
+            accountAmount = account.amount;
+            break;
+          default:
+            accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
+        }
+
         return operatingFunction(acc, accountAmount);
       }
       return acc;

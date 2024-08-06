@@ -57,7 +57,7 @@ async function handleVoucherUpdatePrismaLogic(
   companyId: number
 ) {
   let voucherUpdated: ApiResponseType = null;
-  let statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
     const journal = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
@@ -72,6 +72,7 @@ async function handleVoucherUpdatePrismaLogic(
     }
 
     voucherUpdated = await updateVoucherByJournalIdInPrisma(journal.id, companyId, voucher);
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
     // Deprecate: (20240524 - Murky) Deprecate this error message
@@ -100,7 +101,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
   // const { voucherIdInNumber } = formatGetQuery(req);
   const { voucherData } = formatPutBody(req);
   let voucherUpdated: ApiResponseType = null;
-  let statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let statusMessage:string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   if (voucherData) {
     try {
       const voucherUpdatedData = await handleVoucherUpdatePrismaLogic(voucherData, companyId);
@@ -146,6 +147,9 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
+      // Deprecate: (20240524 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
       statusMessage = error.message;
     }
   }
