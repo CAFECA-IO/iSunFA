@@ -5,7 +5,7 @@ import fs from 'fs';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import path from 'path';
-import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { BASE_STORAGE_FOLDER, FileFolder, VERCEL_STORAGE_FOLDER } from '@/constants/file';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -18,7 +18,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const uploadDir =
       process.env.VERCEL === '1'
         ? VERCEL_STORAGE_FOLDER
-        : path.join(BASE_STORAGE_FOLDER, 'invoice');
+        : path.join(BASE_STORAGE_FOLDER, FileFolder.INVOICE);
 
     const invoiceFilePath = fs
       .readdirSync(uploadDir)

@@ -1,5 +1,6 @@
 import { IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import {
+  absoluteNetIncome,
   adjustAssetIncreaseFromNetIncome,
   adjustLiabilityIncreaseFromNetIncome,
   adjustNonCashExpenseFromNetIncome,
@@ -752,7 +753,7 @@ export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlo
         fromCode: [],
         name: '支付之股利',
         debit: true,
-        operatingFunction: noAdjustNetIncome,
+        operatingFunction: absoluteNetIncome,
       },
     ],
     // Info: (20240708 - Murky) 這個項目需要特別直接算出來
@@ -762,7 +763,7 @@ export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlo
         fromCode: [],
         name: '退還（支付）之所得稅',
         debit: true,
-        operatingFunction: noAdjustNetIncome,
+        operatingFunction: absoluteNetIncome,
       },
     ],
   ]

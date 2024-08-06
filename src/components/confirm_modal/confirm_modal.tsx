@@ -6,7 +6,7 @@ import { RxCross2 } from 'react-icons/rx';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVocuherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
 import { checkboxStyle } from '@/constants/display';
@@ -109,10 +109,10 @@ const ConfirmModal = ({
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
   // Info: (20240527 - Julian) 建立傳票
-  const { trigger: createVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
+  const { trigger: createVoucher } = APIHandler<IVoucherDataForAPIResponse | null>(
     APIName.VOUCHER_CREATE
   );
-  const { trigger: updateVoucher } = APIHandler<IVocuherDataForAPIResponse | null>(
+  const { trigger: updateVoucher } = APIHandler<IVoucherDataForAPIResponse | null>(
     APIName.VOUCHER_UPDATE
   );
 
@@ -208,7 +208,7 @@ const ConfirmModal = ({
 
   const handleAPIResponse = (res: {
     success: boolean;
-    data: IVocuherDataForAPIResponse | null;
+    data: IVoucherDataForAPIResponse | null;
     code: string;
     error: Error | null;
   }) => {
@@ -451,7 +451,7 @@ const ConfirmModal = ({
   const displayedHint =
     ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
       isAILoading) ||
-    AIResultSuccess === undefined ? (
+      AIResultSuccess === undefined ? (
       <p className="text-slider-surface-bar">
         {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
         <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
