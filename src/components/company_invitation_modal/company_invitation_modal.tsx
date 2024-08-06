@@ -72,7 +72,7 @@ const CompanyInvitationModal = ({
         title: 'Invitation Code Expiry',
         subMsg: 'Oops! This verification code has expired.',
         content: 'Please verify again or contact the company administrator.',
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();

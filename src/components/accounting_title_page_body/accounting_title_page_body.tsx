@@ -108,7 +108,9 @@ const AccountingTitlePageBody = () => {
             onClick={() => setSelectedAsset(asset)}
             className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
           >
-            {asset}
+            {/* Info: (20240804 - Anna) 替換為翻譯後的文字 */}
+            {/* {asset} */}
+            {t(`SETTING.${asset.toUpperCase().replace(/ /g, '_')}`)}
           </li>
         ))}
       </ul>
@@ -131,7 +133,9 @@ const AccountingTitlePageBody = () => {
             onClick={() => setSelectedLiability(liability)}
             className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
           >
-            {liability}
+            {/* Info: (20240804 - Anna) 替換為翻譯後的文字 */}
+            {/* {liability} */}
+            {t(`SETTING.${liability.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
           </li>
         ))}
       </ul>
@@ -154,7 +158,9 @@ const AccountingTitlePageBody = () => {
             onClick={() => setSelectedEquity(equity)}
             className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
           >
-            {equity}
+            {/* Info: (20240804 - Anna) 替換為翻譯後的文字 */}
+            {/* {equity} */}
+            {t(`SETTING.${equity.toUpperCase().replace(/ /g, '_')}`)}
           </li>
         ))}
       </ul>
@@ -179,7 +185,11 @@ const AccountingTitlePageBody = () => {
             onClick={assetDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
-            <p className="text-input-text-input-placeholder">{selectedAsset}</p>
+            {/* Info: (20240804 - Anna) 翻譯選擇的資產文字 */}
+            {/* <p className="text-input-text-input-placeholder">{selectedAsset}</p> */}
+            <p className="text-input-text-input-placeholder">
+              {t(`SETTING.${selectedAsset.toUpperCase().replace(/ /g, '_')}`)}
+            </p>
             <FaChevronDown />
             {assetDropmenu}
           </div>
@@ -192,7 +202,13 @@ const AccountingTitlePageBody = () => {
             onClick={liabilityDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${liabilityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
-            <p className="text-input-text-input-placeholder">{selectedLiability}</p>
+            {/* Info: (20240804 - Anna) 翻譯選擇的負債文字 */}
+            {/* <p className="text-input-text-input-placeholder">{selectedLiability}</p> */}
+            <p className="text-input-text-input-placeholder">
+              {t(
+                `SETTING.${selectedLiability.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+              )}
+            </p>
             <FaChevronDown />
             {liabilityOptions}
           </div>
@@ -205,7 +221,11 @@ const AccountingTitlePageBody = () => {
             onClick={equityDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${equityVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
           >
-            <p className="text-input-text-input-placeholder">{selectedEquity}</p>
+            {/* Info: (20240804 - Anna) 翻譯選擇的權益文字 */}
+            {/* <p className="text-input-text-input-placeholder">{selectedEquity}</p> */}
+            <p className="text-input-text-input-placeholder">
+              {t(`SETTING.${selectedEquity.toUpperCase().replace(/ /g, '_')}`)}
+            </p>
             <FaChevronDown />
             {equityOptions}
           </div>
@@ -215,7 +235,8 @@ const AccountingTitlePageBody = () => {
       <div className="mt-20px flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px placeholder:text-input-text-input-placeholder lg:mt-20px">
         <input
           type="text"
-          placeholder="Search"
+          // placeholder="Search"
+          placeholder={t('AUDIT_REPORT.SEARCH')}
           className="flex-1 bg-transparent text-input-text-input-filled outline-none"
         />
         <FiSearch size={20} />
@@ -225,7 +246,8 @@ const AccountingTitlePageBody = () => {
       <div className="my-40px hidden items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
           <Image src="/icons/favorite.svg" width={16} height={16} alt="favorite_icon" />
-          <p>Favorite Accounting Title</p>
+          {/* <p>Favorite Accounting Title</p> */}
+          {t('SETTING.FAVORITE_ACCOUNTING_TITLE')}
         </div>
         <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
@@ -233,7 +255,8 @@ const AccountingTitlePageBody = () => {
       <div className="my-40px flex items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
           <Image src="/icons/user.svg" width={16} height={16} alt="user_icon" />
-          <p>My new accounting title</p>
+          {/* <p>My new accounting title</p> */}
+          {t('SETTING.MY_NEW_ACCOUNTING_TITLE')}
         </div>
         <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
@@ -246,7 +269,8 @@ const AccountingTitlePageBody = () => {
       <div className="my-40px flex items-center gap-4 lg:my-5">
         <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
           <Image src="/icons/accounting.svg" width={16} height={16} alt="accounting_icon" />
-          <p>Accounting Title</p>
+          {/* <p>Accounting Title</p> */}
+          {t('SETTING.ACCOUNTING_TITLE')}
         </div>
         <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>

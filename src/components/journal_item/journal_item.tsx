@@ -56,7 +56,7 @@ const Operations = ({
         subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
         content: `Error code: ${code}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
