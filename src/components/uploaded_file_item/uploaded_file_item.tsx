@@ -3,6 +3,8 @@ import { FiTrash2, FiPauseCircle, FiPlay } from 'react-icons/fi';
 import { IOCR } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
 import { useTranslation } from 'next-i18next';
+import { useState } from 'react';
+import { Button } from '@/components/button/button';
 
 interface IUploadedFileItemProps {
   itemData: IOCR;
@@ -19,6 +21,9 @@ const UploadedFileItem = ({
 }: IUploadedFileItemProps) => {
   const { t } = useTranslation('common');
   const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
+
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
     status === ProgressStatus.IN_PROGRESS ||
@@ -33,11 +38,12 @@ const UploadedFileItem = ({
 
   const deleteClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation(); // Info: (20240530 - Julian) 防止點擊刪除時，觸發 itemClickHandler
+    setIsDeleting(true);
     deleteHandler(aichResultId);
   };
 
   const itemClickHandler = () => {
-    if (progress !== 100) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
+    if (progress !== 100 || isDeleting) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
     clickHandler(itemData);
   };
 
@@ -90,9 +96,15 @@ const UploadedFileItem = ({
           {/* Info: (20240523 - Julian) Status */}
           {displayedStatus}
           {/* Info: (20240523 - Julian) Trash Button */}
-          <button type="button" onClick={deleteClickHandler}>
+          <Button
+            variant={'tertiaryBorderless'}
+            size={'extraSmall'}
+            disabled={isDeleting}
+            type="button"
+            onClick={deleteClickHandler}
+          >
             <FiTrash2 size={20} />
-          </button>
+          </Button>
         </div>
       </div>
       {/* Info: (20240523 - Julian) Progress Bar */}

@@ -147,7 +147,7 @@ const JournalUploadArea = () => {
         <input
           id="journal-upload-area"
           name="journal-upload-area"
-          accept="image/*"
+          accept="image/*,application/pdf"
           type="file"
           className="hidden"
           onChange={handleFileChange}
