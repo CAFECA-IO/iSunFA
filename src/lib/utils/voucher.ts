@@ -1,8 +1,10 @@
 import { IVoucherDataForSavingToDB } from "@/interfaces/voucher";
+import { Payment } from "@prisma/client";
+import { calculateTotalAmountAfterTax } from "@/lib/utils/invoice";
 
 export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
   voucher: IVoucherDataForSavingToDB,
-  paymentAmount: number
+  payment: Payment
 ): boolean {
   let debitAmount = 0;
   let creditAmount = 0;
@@ -14,6 +16,8 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
       creditAmount += lineItem.amount;
     }
   });
+
+  const paymentAmount = calculateTotalAmountAfterTax(payment.price, payment.taxPercentage) + payment.fee;
 
   const isDebitCreditEqual = debitAmount === creditAmount;
   const isDebitCreditGreaterOrEqualPaymentAmount = debitAmount >= paymentAmount && creditAmount >= paymentAmount;

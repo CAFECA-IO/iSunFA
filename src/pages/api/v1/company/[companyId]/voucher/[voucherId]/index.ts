@@ -6,11 +6,12 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { getSession } from '@/lib/utils/session';
 import {
-  findUniqueJournalInPrisma,
   updateVoucherByJournalIdInPrisma,
+  findUniqueJournalInvolveInvoicePaymentInPrisma
 } from '@/lib/utils/repo/voucher.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -57,9 +58,19 @@ async function handleVoucherUpdatePrismaLogic(
 ) {
   let voucherUpdated: ApiResponseType = null;
   try {
-    const journalId = await findUniqueJournalInPrisma(voucher.journalId);
+    const journal = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
-    voucherUpdated = await updateVoucherByJournalIdInPrisma(journalId, companyId, voucher);
+    if (!journal || !journal.invoice || !journal.invoice.payment) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error("Journal or invoice or payment not found");
+    }
+
+    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error("Voucher amount is not greater or equal to payment amount");
+    }
+
+    voucherUpdated = await updateVoucherByJournalIdInPrisma(journal.id, companyId, voucher);
   } catch (error) {
     // Deprecate: (20240524 - Murky) Deprecate this error message
     // eslint-disable-next-line no-console

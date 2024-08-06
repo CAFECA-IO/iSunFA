@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
-import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB, IVoucherFromPrismaIncludeLineItems } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -17,6 +17,7 @@ import {
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { IJournalFromPrismaIncludeInvoicePayment } from '@/interfaces/journal';
+import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -24,8 +25,20 @@ async function handleVoucherCreatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,
   companyId: number
 ) {
+  let updatedVoucher: IVoucherFromPrismaIncludeLineItems | null = null;
+
   try {
     const journal: IJournalFromPrismaIncludeInvoicePayment | null = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
+
+    if (!journal || !journal.invoice || !journal.invoice.payment) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error("Journal or invoice or payment not found");
+    }
+
+    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error("Voucher amount is not greater or equal to payment amount");
+    }
 
     const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
     const voucherData = await createVoucherInPrisma(newVoucherNo, journal.id);
@@ -36,15 +49,14 @@ async function handleVoucherCreatePrismaLogic(
     );
 
     // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
-    const voucherWithLineItems = await findUniqueVoucherInPrisma(voucherData.id);
-
-    return voucherWithLineItems;
+    updatedVoucher = await findUniqueVoucherInPrisma(voucherData.id);
   } catch (error) {
     // Deprecate: (20240806 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
-    console.error(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    console.log(error);
   }
+
+  return updatedVoucher;
 }
 
 function isVoucherValid(
