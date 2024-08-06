@@ -302,7 +302,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="font-normal">
+                <p className="text-left text-[12px] font-bold leading-[20px] tracking-[0.01em]">
                   {curDate.from}至{curDate.to} <br />
                   合併財務報告 - 現金流量表
                 </p>
