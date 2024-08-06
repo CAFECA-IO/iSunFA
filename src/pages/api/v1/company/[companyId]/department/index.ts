@@ -1,9 +1,9 @@
-import prisma from '@/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { EmployeeDepartments } from '@/interfaces/employees';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import { getDepartments } from '@/lib/utils/repo/department.repo';
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,14 +11,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const rawDepartments = await prisma.department.findMany({
-        select: {
-          name: true,
-        },
-      });
-      const departmentsList: EmployeeDepartments = rawDepartments.map(
-        (department) => department.name
-      );
+      const departmentsList = await getDepartments();
       const { httpCode, result } = formatApiResponse<EmployeeDepartments>(
         STATUS_MESSAGE.SUCCESS_GET,
         departmentsList

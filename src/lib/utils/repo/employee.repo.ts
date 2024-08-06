@@ -213,3 +213,77 @@ export async function updateEmployeeProject(
     }
   }
 }
+
+export async function getEmployeeById(employeeIdNumber: number) {
+  const employee = await prisma.employee.findUnique({
+    where: {
+      id: employeeIdNumber,
+      endDate: null,
+    },
+    include: {
+      department: true,
+      employeeProjects: {
+        select: {
+          project: true,
+        },
+      },
+    },
+  });
+  return employee;
+}
+
+export async function getProjectsByEmployeeId(employeeIdNumber: number) {
+  const projects = await prisma.employeeProject.findMany({
+    where: {
+      employeeId: employeeIdNumber,
+      endDate: null,
+    },
+    select: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+  return projects;
+}
+
+export async function updateEndDateByEmployeeId(employeeIdNumber: number, targetTime: number) {
+  await prisma.employee.update({
+    where: {
+      id: employeeIdNumber,
+      endDate: null,
+    },
+    data: {
+      endDate: targetTime,
+      updatedAt: targetTime,
+    },
+  });
+}
+
+export async function updateEmployeeById(
+  employeeIdNumber: number,
+  salary: number,
+  bonus: number,
+  insurancePayment: number,
+  salaryPayMode: string,
+  payFrequency: string,
+  targetTime: number
+) {
+  await prisma.employee.update({
+    where: {
+      id: employeeIdNumber,
+      endDate: null,
+    },
+    data: {
+      salary,
+      bonus,
+      insurancePayment,
+      salaryPayMode,
+      payFrequency,
+      updatedAt: targetTime,
+    },
+  });
+}

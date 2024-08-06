@@ -121,39 +121,39 @@ const initialAccountingContext: IAccountingContext = {
 
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
-  updateOCRListHandler: () => { },
+  updateOCRListHandler: () => {},
   accountList: [],
-  getAccountListHandler: () => { },
-  getAIStatusHandler: () => { },
+  getAccountListHandler: () => {},
+  getAIStatusHandler: () => {},
   AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
-  selectOCRHandler: () => { },
+  selectOCRHandler: () => {},
   selectedJournal: undefined,
-  selectJournalHandler: () => { },
+  selectJournalHandler: () => {},
   inputDescription: '',
-  inputDescriptionHandler: () => { },
+  inputDescriptionHandler: () => {},
 
   invoiceId: '1',
-  setInvoiceIdHandler: () => { },
+  setInvoiceIdHandler: () => {},
   voucherId: undefined,
-  setVoucherIdHandler: () => { },
+  setVoucherIdHandler: () => {},
   voucherPreview: undefined,
-  setVoucherPreviewHandler: () => { },
+  setVoucherPreviewHandler: () => {},
 
   accountingVoucher: [],
-  addVoucherRowHandler: () => { },
-  deleteVoucherRowHandler: () => { },
-  changeVoucherStringHandler: () => { },
-  changeVoucherAccountHandler: () => { },
-  changeVoucherAmountHandler: () => { },
-  resetVoucherHandler: () => { },
+  addVoucherRowHandler: () => {},
+  deleteVoucherRowHandler: () => {},
+  changeVoucherStringHandler: () => {},
+  changeVoucherAccountHandler: () => {},
+  changeVoucherAmountHandler: () => {},
+  resetVoucherHandler: () => {},
 
   totalDebit: 0,
   totalCredit: 0,
 
   generateAccountTitle: () => 'Account Title',
 
-  deleteOwnAccountTitle: () => { },
+  deleteOwnAccountTitle: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -221,8 +221,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     forUser?: boolean,
     sortBy?: string,
     sortOrder?: string,
-    searchKey?: string,
-    isDeleted?: boolean
+    searchKey?: string
+    // isDeleted?: boolean
   ) => {
     getAccountList({
       params: { companyId },
@@ -492,21 +492,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   useEffect(() => {
     if (deleteSuccess && deleteResult) {
       // Info: (20240719 - Julian) 重新取得 account list
-      getAccountListHandler(
-        deleteResult.companyId,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false
-      );
+      getAccountListHandler(deleteResult.companyId);
     }
   }, [deleteSuccess, deleteResult]);
 
