@@ -176,7 +176,7 @@ const JournalListBody = () => {
         subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
         content: `Error code: ${deleteCode}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();

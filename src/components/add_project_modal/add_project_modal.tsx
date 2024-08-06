@@ -132,13 +132,14 @@ const AddProjectModal = ({
       modalVisibilityHandler();
     } else if (success === false) {
       // Info: (20240802 - Julian) show error message when create project failed
+      // Info: (20240805 - Anna) 錯誤訊息的多語系
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Error',
         content: 'Create project failed, please try again later.',
         subMsg: `Error code: ${code}`,
         submitBtnFunction: messageModalVisibilityHandler,
-        submitBtnStr: 'OK',
+        submitBtnStr: t('PROJECT.OK'),
       });
     }
   }, [createSuccess, data]);

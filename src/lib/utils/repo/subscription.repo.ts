@@ -82,6 +82,9 @@ export async function listSubscriptions(companyId: number): Promise<ISubscriptio
     where: {
       companyId,
     },
+    orderBy: {
+      id: 'asc',
+    },
   });
   return subscriptions;
 }

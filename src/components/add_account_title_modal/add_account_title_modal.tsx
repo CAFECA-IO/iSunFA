@@ -11,6 +11,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
 import { ToastType } from '@/interfaces/toastify';
+import { useTranslation } from 'next-i18next';
 
 interface IAddAccountTitleModalProps {
   isModalVisible: boolean;
@@ -25,6 +26,7 @@ const AddAccountTitleModal = ({
   modalVisibilityHandler,
   modalData,
 }: IAddAccountTitleModalProps) => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
   const { getAccountListHandler } = useAccountingCtx();
@@ -77,14 +79,16 @@ const AddAccountTitleModal = ({
       toastHandler({
         id: `createSubAccount-${createCode}`,
         type: ToastType.SUCCESS,
-        content: `Successfully created new sub account: ${result.name}`,
+        // content: `Successfully created new sub account: ${result.name}`,
+        content: t('SETTING.SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT', { name: result.name }),
         closeable: true,
       });
     } else if (createSuccess === false) {
       toastHandler({
         id: `createSubAccount-${createCode}`,
         type: ToastType.ERROR,
-        content: 'Failed to create new sub account, please try again later.',
+        // content: 'Failed to create new sub account, please try again later.',
+        content: t('SETTING.FAILED_TO_CREATE_NEW_SUB_ACCOUNT'),
         closeable: true,
       });
     }
@@ -135,7 +139,10 @@ const AddAccountTitleModal = ({
     <input
       id="input-accounting-type"
       type="text"
-      value={accountingType}
+      // value={accountingType}
+      value={t(
+        `SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+      )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -147,7 +154,8 @@ const AddAccountTitleModal = ({
     <input
       id="input-liquidity"
       type="text"
-      value={liquidityText}
+      // value={liquidityText}
+      value={t(`SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -172,7 +180,8 @@ const AddAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          <h1>Add New Accounting Title</h1>
+          {/* <h1>Add New Accounting Title</h1> */}
+          <h1>{t('SETTING.ADD_NEW_ACCOUNTING_TITLE')}</h1>
           <button
             type="button"
             onClick={modalVisibilityHandler}
@@ -185,32 +194,44 @@ const AddAccountTitleModal = ({
         <div className="grid grid-flow-row grid-cols-2 gap-x-20px gap-y-16px px-40px py-20px">
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+            {/* <p className="text-sm font-semibold text-input-text-primary lg:text-base">
               Accounting Type
+            </p> */}
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              {t('SETTING.ACCOUNTING_TYPE')}
             </p>
             {displayType}
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Liquidity</p>
+            {/* <p className="text-sm font-semibold text-input-text-primary lg:text-base">Liquidity</p> */}
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              {t('SETTING.LIQUIDITY')}
+            </p>
             {displayLiquidity}
           </div>
           {/* Info: (20240717 - Julian) Current Asset */}
           <div className="col-span-2 flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+            {/* <p className="text-sm font-semibold text-input-text-primary lg:text-base">
               Current Asset
+            </p> */}
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              {t('SETTING.CURRENT_ASSET')}
             </p>
             {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="text-sm font-semibold text-input-text-primary lg:text-base">Name</p>
+            <p className="text-sm font-semibold text-input-text-primary lg:text-base">
+              {t('SETTING.NAME')}
+            </p>
             <input
               id="input-name"
               type="text"
               value={nameValue}
               onChange={handleNameChange}
-              placeholder="Enter name"
+              // placeholder="Enter name"
+              placeholder={t('SETTING.ENTER_NAME')}
               required
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
@@ -219,7 +240,7 @@ const AddAccountTitleModal = ({
         {/* Info: (20240717 - Julian) Buttons */}
         <div className="flex items-center justify-end gap-12px px-20px py-16px text-sm">
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
-            Cancel
+            {t('REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button
             id="add-accounting-title-button"
@@ -228,7 +249,7 @@ const AddAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={addNewSubAccount}
           >
-            <p>Add</p> <FaPlus />
+            <p>{t('PROJECT.ADD')}</p> <FaPlus />
           </Button>
         </div>
       </div>
