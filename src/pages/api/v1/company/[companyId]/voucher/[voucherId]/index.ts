@@ -57,26 +57,42 @@ async function handleVoucherUpdatePrismaLogic(
   companyId: number
 ) {
   let voucherUpdated: ApiResponseType = null;
+  let statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
     const journal = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
     if (!journal || !journal.invoice || !journal.invoice.payment) {
       // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
-      throw new Error("Journal or invoice or payment not found");
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
       // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
-      throw new Error("Voucher amount is not greater or equal to payment amount");
+      throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 
     voucherUpdated = await updateVoucherByJournalIdInPrisma(journal.id, companyId, voucher);
-  } catch (error) {
+  } catch (_error) {
+    const error = _error as Error;
     // Deprecate: (20240524 - Murky) Deprecate this error message
     // eslint-disable-next-line no-console
     console.error(error);
+    switch (error.message) {
+      case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        break;
+      case STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT:
+        statusMessage = STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT;
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR;
+        break;
+    }
   }
-  return voucherUpdated;
+  return {
+    voucherUpdated,
+    statusMessage
+  };
 }
 
 async function handlePutRequest(companyId: number, req: NextApiRequest) {
@@ -84,10 +100,12 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
   // const { voucherIdInNumber } = formatGetQuery(req);
   const { voucherData } = formatPutBody(req);
   let voucherUpdated: ApiResponseType = null;
-
+  let statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   if (voucherData) {
     try {
-      voucherUpdated = await handleVoucherUpdatePrismaLogic(voucherData, companyId);
+      const voucherUpdatedData = await handleVoucherUpdatePrismaLogic(voucherData, companyId);
+      voucherUpdated = voucherUpdatedData.voucherUpdated;
+      statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
       // Deprecate: (20240524 - Murky) Deprecate this error message
       // eslint-disable-next-line no-console
@@ -95,7 +113,10 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
     }
   }
 
-  return voucherUpdated;
+  return {
+    voucherUpdated,
+    statusMessage
+  };
 }
 
 export default async function handler(
@@ -114,9 +135,9 @@ export default async function handler(
       // ToDo: (20240703 - Murky) Need to check Auth
       switch (req.method) {
         case 'PUT': {
-          payload = await handlePutRequest(companyId, req);
-
-          statusMessage = STATUS_MESSAGE.CREATED;
+          const { voucherUpdated, statusMessage: message } = await handlePutRequest(companyId, req);
+          payload = voucherUpdated;
+          statusMessage = message;
           break;
         }
         default: {

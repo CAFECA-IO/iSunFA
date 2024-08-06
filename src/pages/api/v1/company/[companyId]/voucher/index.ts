@@ -26,18 +26,19 @@ async function handleVoucherCreatePrismaLogic(
   companyId: number
 ) {
   let updatedVoucher: IVoucherFromPrismaIncludeLineItems | null = null;
+  let statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
 
   try {
     const journal: IJournalFromPrismaIncludeInvoicePayment | null = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
     if (!journal || !journal.invoice || !journal.invoice.payment) {
       // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
-      throw new Error("Journal or invoice or payment not found");
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
       // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
-      throw new Error("Voucher amount is not greater or equal to payment amount");
+      throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 
     const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
@@ -50,13 +51,29 @@ async function handleVoucherCreatePrismaLogic(
 
     // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
     updatedVoucher = await findUniqueVoucherInPrisma(voucherData.id);
-  } catch (error) {
+  } catch (_error) {
+    const error = _error as Error;
     // Deprecate: (20240806 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
+
+    switch (error.message) {
+      case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        break;
+      case STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT:
+        statusMessage = STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT;
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR;
+        break;
+    }
   }
 
-  return updatedVoucher;
+  return {
+    updatedVoucher,
+    statusMessage
+  };
 }
 
 function isVoucherValid(
@@ -100,8 +117,9 @@ export default async function handler(
   if (isAuth) {
     try {
       if (req.method === 'POST') {
-        payload = await handlePostRequest(req, companyId);
-        statusMessage = STATUS_MESSAGE.CREATED;
+        const { updatedVoucher, statusMessage: message } = await handlePostRequest(req, companyId);
+        payload = updatedVoucher;
+        statusMessage = message;
       } else {
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }

@@ -1,7 +1,7 @@
 export function calculateTaxAmount(amount: number, taxRate: number): number {
   let taxRateInDecimal = taxRate;
 
-  if (taxRate > 1) {
+  if (taxRate >= 1) {
     taxRateInDecimal = taxRate / 100;
   }
 
