@@ -114,15 +114,13 @@ export async function handleGetRequest(
 
 export async function handleDeleteRequest(
   resultId: string,
-  res: NextApiResponse<IResponseData<IOCR>>
+  res: NextApiResponse<IResponseData<IOCR | null>>
 ) {
   let payload: IOCR | null = null;
-  const getOCR = await getOcrByResultId(resultId);
+  const getOCR = await getOcrByResultId(resultId, false);
 
   // (20240715 - Jacky): payload should add ad unify formatter @TinyMurky
-  if (!getOCR) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  } else {
+  if (getOCR) {
     const deletedOCR = await deleteOcrByResultId(resultId);
     const imageSize = transformBytesToFileSizeString(deletedOCR.imageSize);
     payload = {
@@ -133,7 +131,7 @@ export async function handleDeleteRequest(
     };
   }
 
-  const { httpCode, result } = formatApiResponse<IOCR>(STATUS_MESSAGE.SUCCESS, payload);
+  const { httpCode, result } = formatApiResponse<IOCR | null>(STATUS_MESSAGE.SUCCESS, payload);
 
   res.status(httpCode).json(result);
 }
@@ -145,7 +143,7 @@ function handleErrorResponse(res: NextApiResponse, message: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice | IContract | IOCR>>
+  res: NextApiResponse<IResponseData<IInvoice | IContract | IOCR | null>>
 ) {
   try {
     const { resultId, type } = req.query;
