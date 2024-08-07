@@ -1,4 +1,4 @@
-import { IPayment } from '@/interfaces/payment';
+import { IPayment, IPaymentBeta } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
 import { Prisma } from '@prisma/client';
 
@@ -19,12 +19,19 @@ export interface IInvoice {
 
 export type IInvoiceIncludePaymentJournal = Prisma.InvoiceGetPayload<{
   include: {
-    payment: true,
+    payment: true;
     journal: {
       include: {
-        project: true,
-        contract: true,
-      },
-    },
-  },
+        project: true;
+        contract: true;
+      };
+    };
+  };
 }>;
+
+export interface IInvoiceBeta extends IInvoice {
+  number: string; // origin invoice number
+  type: string;
+  vendorTaxId: string;
+  payment: IPaymentBeta;
+}
