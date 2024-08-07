@@ -842,5 +842,10 @@
     "SYSTEMERROR": "系統錯誤",
     "PAUSED": "已暫停",
     "HASBEENUSED": "憑證已使用"
+  },
+  "META": {
+    "TITLE": "iSunFA",
+    "DESCRIPTION": "iSunFA: 區塊鏈 AI 法務會計與審計——在金融調查領域，簡單與準確的完美結合。",
+    "KEYWORDS": "iSunFA, 區塊鏈, AI, 法務, 會計, 審計"
   }
 }

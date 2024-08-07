@@ -842,5 +842,10 @@
     "SYSTEMERROR": "系统错误",
     "PAUSED": "已暂停",
     "HASBEENUSED": "凭证已使用"
+  },
+  "META": {
+    "TITLE": "iSunFA",
+    "DESCRIPTION": "iSunFA: 区块链 AI 法务会计与审计——在金融调查领域，简单与准确的完美结合。",
+    "KEYWORDS": "iSunFA, 区块链, AI, 法务, 会计, 审计"
   }
 }
