@@ -5,7 +5,7 @@ import { JOURNAL_EVENT } from '@/constants/journal';
 
 export interface IJournal {
   id: number;
-  event?: JOURNAL_EVENT; // Info: To Murky, when backend is ready, please remove optional (20240712 - Tzuhan)
+  event: JOURNAL_EVENT;
   tokenContract: string;
   tokenId: string;
   aichResultId: string;
@@ -21,6 +21,7 @@ export interface IJournal {
 export interface IJournalListItem {
   id: number;
   date: number;
+  event: JOURNAL_EVENT;
   type: string | undefined;
   particulars: string | undefined;
   fromTo: string | undefined;

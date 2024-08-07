@@ -1,38 +1,44 @@
 [
-    {
-        "id": 1000,
-        "companyId": 1001,
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1001,
-        "companyId": 1001,
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1002,
-        "companyId": 1001,
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1003,
-        "companyId": 1001,
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1004,
-        "companyId": 1001,
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1005,
-        "companyId": 1001,
-        "createdAt": 1,
-        "updatedAt": 1
-    }
+  {
+    "id": 1000,
+    "companyId": 1002,
+    "createdAt": 1,
+    "updatedAt": 1,
+    "event": "JOURNAL.UPLOADED"
+  },
+  {
+    "id": 1001,
+    "companyId": 1002,
+    "createdAt": 1,
+    "updatedAt": 1,
+    "event": "JOURNAL.UPLOADED"
+  },
+  {
+    "id": 1002,
+    "companyId": 1002,
+    "createdAt": 1,
+    "updatedAt": 1,
+    "event": "JOURNAL.UPLOADED"
+  },
+  {
+    "id": 1003,
+    "companyId": 1002,
+    "createdAt": 1,
+    "updatedAt": 1,
+    "event": "JOURNAL.UPLOADED"
+  },
+  {
+    "id": 1004,
+    "companyId": 1002,
+    "createdAt": 1,
+    "updatedAt": 1,
+    "event": "JOURNAL.UPLOADED"
+  },
+  {
+    "id": 1005,
+    "companyId": 1002,
+    "createdAt": 1,
+    "updatedAt": 1,
+    "event": "JOURNAL.UPLOADED"
+  }
 ]
