@@ -230,7 +230,7 @@ export async function createInvoiceInPrisma(
         eventType: invoiceData.eventType,
         paymentReason: invoiceData.paymentReason,
         description: invoiceData.description,
-        verdorTaxId: invoiceData.vendorTaxId,
+        vendorTaxId: invoiceData.vendorTaxId,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
         imageUrl,
         payment: {
