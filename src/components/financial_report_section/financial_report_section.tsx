@@ -44,15 +44,6 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       ? FinancialReportTypesKey[reportType]
       : FinancialReportTypesKey.balance_sheet
   );
-  // eslint-disable-next-line no-console
-  console.log(
-    'reportType on FinancialReportSection',
-    reportType,
-    'FinancialReportTypesKey[reportType]',
-    FinancialReportTypesKey[reportType!],
-    'selectedReportType',
-    selectedReportType
-  );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
   );
