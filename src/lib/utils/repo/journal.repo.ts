@@ -183,6 +183,9 @@ export async function listJournal(
 
     return paginatedJournalList;
   } catch (error) {
+    // Deprecated: (20240522 - Murk) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
