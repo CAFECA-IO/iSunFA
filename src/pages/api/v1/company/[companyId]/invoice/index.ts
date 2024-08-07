@@ -11,6 +11,7 @@ import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { InvoiceType } from '@/constants/account';
 
 export interface IPostApiResponseType {
   journalId: number;
@@ -25,10 +26,16 @@ function isCompanyIdValid(companyId: any): companyId is number {
 
 // Info Murky (20240416): Body傳進來會是any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatInvoice(invoice: any) {
+function formatInvoice(invoice: IInvoice) {
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  const now = Date.now(); // Info (20240807 - Jacky): for fake unique invoice number
+  const invoiceTypeValues = Object.values(InvoiceType); // Info (20240807 - Jacky): for fake invoice type
+  const randomIndex = Math.floor(Math.random() * invoiceTypeValues.length);
   const formattedInvoice = {
     ...invoice,
+    number: now.toString(),
+    type: invoiceTypeValues[randomIndex],
+    vendorTaxId: 'temp fake id',
     projectId: invoice.projectId ? invoice.projectId : null,
     contractId: invoice.contractId ? invoice.contractId : null,
     project: invoice.project ? invoice.project : null,

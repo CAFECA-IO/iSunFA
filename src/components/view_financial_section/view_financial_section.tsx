@@ -3,10 +3,10 @@ import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { useGlobalCtx } from '@/contexts/global_context';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { ToastType } from '@/interfaces/toastify';
+// import { ToastType } from '@/interfaces/toastify';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import {
@@ -96,7 +96,7 @@ const ViewFinancialSection = ({
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const globalCtx = useGlobalCtx();
+  // const globalCtx = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
@@ -174,38 +174,38 @@ const ViewFinancialSection = ({
       }
     }
   };
+  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // const copyTokenContract = () => {
+  //   navigator.clipboard.writeText(tokenContract);
 
-  const copyTokenContract = () => {
-    navigator.clipboard.writeText(tokenContract);
+  //   globalCtx.toastHandler({
+  //     type: ToastType.SUCCESS,
+  //     id: 'token-copied',
+  //     closeable: true,
+  //     content: 'Copied',
+  //     autoClose: 500,
+  //   });
+  // };
+  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+  // const copyTokenId = () => {
+  //   navigator.clipboard.writeText(tokenId);
 
-    globalCtx.toastHandler({
-      type: ToastType.SUCCESS,
-      id: 'token-copied',
-      closeable: true,
-      content: 'Copied',
-      autoClose: 500,
-    });
-  };
-
-  const copyTokenId = () => {
-    navigator.clipboard.writeText(tokenId);
-
-    globalCtx.toastHandler({
-      type: ToastType.SUCCESS,
-      id: 'token-copied',
-      closeable: true,
-      content: 'Copied',
-      autoClose: 500,
-    });
-  };
-
-  const copyTokenContractClickHandler = () => {
-    copyTokenContract();
-  };
-
-  const copyTokenIdClickHandler = () => {
-    copyTokenId();
-  };
+  //   globalCtx.toastHandler({
+  //     type: ToastType.SUCCESS,
+  //     id: 'token-copied',
+  //     closeable: true,
+  //     content: 'Copied',
+  //     autoClose: 500,
+  //   });
+  // };
+  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // const copyTokenContractClickHandler = () => {
+  //   copyTokenContract();
+  // };
+  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+  // const copyTokenIdClickHandler = () => {
+  //   copyTokenId();
+  // };
 
   const backClickHandler = () => {
     // Info: 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面 (20240729 - Shirley)
@@ -438,15 +438,16 @@ const ViewFinancialSection = ({
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">Token Contract </div>
+            {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+            {/* <div className="text-text-neutral-tertiary">Token Contract </div> */}
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
               <div className="font-semibold text-link-text-primary">{tokenContract} </div>
-
-              <Button
+              {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+              {/* <Button
                 disabled={!tokenContract}
                 variant={'secondaryBorderless'}
                 size={'extraSmall'}
@@ -468,11 +469,12 @@ const ViewFinancialSection = ({
                     clipRule="evenodd"
                   ></path>
                 </svg>
-              </Button>
+              </Button> */}
             </div>
           </div>
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">Token ID </div>
+            {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+            {/* <div className="text-text-neutral-tertiary">Token ID </div> */}
 
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
@@ -481,8 +483,8 @@ const ViewFinancialSection = ({
               </Link> */}
 
               <div className="font-semibold text-link-text-primary">{tokenId} </div>
-
-              <Button
+              {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+              {/* <Button
                 disabled={!tokenId}
                 variant={'secondaryBorderless'}
                 size={'extraSmall'}
@@ -504,7 +506,7 @@ const ViewFinancialSection = ({
                     clipRule="evenodd"
                   ></path>
                 </svg>
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -512,12 +514,14 @@ const ViewFinancialSection = ({
         <div className="mt-0 flex flex-col lg:hidden">
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+              {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+              {/* <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
                 Token Contract
-              </div>
+              </div> */}
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
-                  <Button
+                  {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+                  {/* <Button
                     disabled={!tokenContract}
                     variant={'secondaryBorderless'}
                     size={'extraSmall'}
@@ -539,7 +543,7 @@ const ViewFinancialSection = ({
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </div>
@@ -551,12 +555,14 @@ const ViewFinancialSection = ({
           </div>
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+              {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+              {/* <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
                 Token ID
-              </div>
+              </div> */}
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
-                  <Button
+                  {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+                  {/* <Button
                     disabled={!tokenId}
                     variant={'secondaryBorderless'}
                     size={'extraSmall'}
@@ -578,7 +584,7 @@ const ViewFinancialSection = ({
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </div>

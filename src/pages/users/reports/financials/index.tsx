@@ -4,13 +4,25 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import FinancialReportSection from '@/components/financial_report_section/financial_report_section';
-import { ILocale } from '@/interfaces/locale';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { GetServerSideProps } from 'next';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
-const FinancialsReportsPage = () => {
+interface IFinancialsReportsPageProps {
+  reportType?: string;
+}
+
+const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
+  // eslint-disable-next-line no-console
+  console.log(
+    'reportType on FinancialsReportsPage',
+    reportType,
+    FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey]
+  );
+
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
@@ -23,7 +35,7 @@ const FinancialsReportsPage = () => {
         <ReportsSidebar />
       </div>
       <div className="h-1200px overflow-x-hidden bg-surface-neutral-main-background lg:h-1200px">
-        <FinancialReportSection />
+        <FinancialReportSection reportType={reportType as FinancialReportTypesKey} />
       </div>{' '}
     </>
   );
@@ -60,12 +72,14 @@ const FinancialsReportsPage = () => {
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common'])),
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
+export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
+  const { report_type } = query;
+  return {
+    props: {
+      reportType: report_type,
+      ...(await serverSideTranslations(locale as string, ['common'])),
+    },
+  };
+};
 
 export default FinancialsReportsPage;

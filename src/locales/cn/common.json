@@ -367,7 +367,7 @@
     "NO_SLASH_TAX": "税",
     "TWD_FEE": "新台币费用",
     "NONE": "无",
-    "ACCOUNTING_VOUCHER": "会计凭证",
+    "ACCOUNTING_VOUCHER": "会计分录",
     "PARTICULARS": "摘要",
     "DEBIT": "借方",
     "CREDIT": "贷方",
@@ -832,7 +832,7 @@
     "REMOVE_ACCOUNTING_TITLE": "删除会计科目",
     "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？"
   },
-  "PROGRESSSTATUS": {
+  "PROGRESS_STATUS": {
     "SUCCESS": "上传成功",
     "INPROGRESS": "上传中",
     "NOTFOUND": "未找到文件",
