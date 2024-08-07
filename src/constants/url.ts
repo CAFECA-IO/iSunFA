@@ -1,3 +1,5 @@
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
+
 export const ISUNFA_API = {
   SIGN_UP: '/api/v1/sign-up',
   SIGN_IN: '/api/v1/sign-in',
@@ -26,6 +28,9 @@ export const ISUNFA_ROUTE = {
   PROJECT_LIST: '/users/project',
   COMPANY_INFO: '/users/setting/company-info',
   ACCOUNTING_TITLE: '/users/setting/accounting-title',
+  USERS_FINANCIAL_REPORTS_BALANCE_SHEET: `/users/reports/financials?report_type=${FinancialReportTypesKey.balance_sheet}`,
+  USERS_FINANCIAL_REPORTS_INCOME_STATEMENT: `/users/reports/financials?report_type=${FinancialReportTypesKey.comprehensive_income_statement}`,
+  USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
 };
 
 export const EXTERNAL_API = {

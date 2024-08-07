@@ -167,7 +167,7 @@ model CompanyKYC {
   status                    String
   reviewer                  String?
   note                      String?
-  reviewAt                  Int?     @map("review_at")
+  reviewAt                  Int?    @map("review_at")
   createdAt                 Int     @map("created_at")
   updatedAt                 Int     @map("updated_at")
   deletedAt                 Int?    @map("deleted_at")
@@ -342,6 +342,7 @@ model Journal {
   projectId     Int?     @unique @map("project_id")
   contractId    Int?     @unique @map("contract_id")
   companyId     Int      @map("company_id")
+  event         String   @map("event")
   createdAt     Int      @map("created_at")
   updatedAt     Int      @map("updated_at")
   deletedAt     Int?     @map("deleted_at")

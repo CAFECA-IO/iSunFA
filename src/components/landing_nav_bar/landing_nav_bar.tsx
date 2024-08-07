@@ -51,7 +51,6 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
 
   const changeLanguage = (code: string) => {
     router.push(asPath, asPath, { locale: code });
-    setDropdownOpen(false);
   };
 
   const handleScroll = () => {
@@ -264,10 +263,11 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
 
       <ul className="flex items-center space-x-0 lg:mr-10">
         {/* TODO: refactor i18n (20240315 - Shirley) */}
-        <div ref={dropdownRef}>
+        <div>
           <li>
             <div
-              className={`absolute right-11rem top-3 flex flex-col items-center justify-center space-x-2 rounded-full font-bold lg:right-12rem ${dropdownOpen ? 'bg-tertiaryBlue p-4' : 'm-4'} hover:cursor-pointer`}
+              ref={dropdownRef}
+              className={`absolute right-11rem top-3 flex flex-col items-center justify-center rounded-full font-bold lg:right-13rem ${dropdownOpen ? 'bg-tertiaryBlue py-4' : 'm-4'} hover:cursor-pointer`}
               onClick={toggleDropdown}
             >
               <svg
@@ -292,13 +292,16 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 </defs>
               </svg>
               <ul
-                className={`mx-auto flex w-full flex-col items-center justify-center space-y-4 py-8 text-center ${dropdownOpen ? 'block' : 'hidden'}`}
+                className={`flex w-full flex-col items-center justify-center space-y-0 pb-3 pt-4 text-center ${dropdownOpen ? 'flex' : 'hidden'}`}
               >
                 {languages.map((lang: { label: string; code: string }) => (
                   <li
                     key={lang.code}
-                    className="mr-2 w-full cursor-pointer font-bold text-primaryYellow hover:text-white"
-                    onClick={() => changeLanguage(lang.code)}
+                    className="w-full cursor-pointer px-5 py-2.5 font-bold text-primaryYellow hover:text-white"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      changeLanguage(lang.code);
+                    }}
                   >
                     {lang.label}
                   </li>

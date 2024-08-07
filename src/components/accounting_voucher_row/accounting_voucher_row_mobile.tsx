@@ -164,14 +164,16 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           <input
             id="search-accounting"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-lightGray4"
           />
           <FiSearch size={16} />
         </div>
-        <div className="px-12px py-8px uppercase text-dropdown-text-head">Assets</div>
+        <div className="px-12px py-8px uppercase text-dropdown-text-head">
+          {t('SETTING.ASSETS')}
+        </div>
         <div
           ref={accountingRef}
           className="flex max-h-100px w-full flex-col items-start overflow-y-auto py-8px"

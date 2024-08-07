@@ -45,7 +45,7 @@
     "MAIN_SUBTITLE_1": "智能會計",
     "MAIN_SUBTITLE_2_POINT_1": "會計與審計的革命創新",
     "MAIN_SUBTITLE_2_POINT_2": "用人工智能，提升公司決策品質",
-    "MAIN_SUBTITLE_2_POINT_3": "用持續審計，掌握公司成長的潛力的關鍵數據",
+    "MAIN_SUBTITLE_2_POINT_3": "用持續審計，掌握公司成長潛力的關鍵數據",
     "MAIN_SUBTITLE_2_POINT_4": "減輕審計團隊的日常作業負擔",
     "MAIN_SUBTITLE_2_POINT_5": "讓財務團隊專注於企業發展規劃",
     "HOW_WE_WORK_TITLE": "我們的工作方式",
@@ -367,7 +367,7 @@
     "NO_SLASH_TAX": "稅",
     "TWD_FEE": "新台幣費用",
     "NONE": "無",
-    "ACCOUNTING_VOUCHER": "會計憑證",
+    "ACCOUNTING_VOUCHER": "會計分錄",
     "PARTICULARS": "摘要",
     "DEBIT": "借方",
     "CREDIT": "貸方",
@@ -386,7 +386,7 @@
     "CONTRACTS": "合約",
     "ADD_NEW_CONTRACT": "新增合約",
     "PROJECT_CONTRACT_ISUNFA": "專案合約 - iSunFA",
-    "FROM_TO": "起迄期間",
+    "FROM_TO": "供應商/客戶",
     "VOUCHER_NO": "憑證號碼",
     "OPERATIONS": "操作",
     "INFO": "資訊",
@@ -832,7 +832,7 @@
     "REMOVE_ACCOUNTING_TITLE": "刪除會計科目",
     "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您確定要刪除這個會計科目嗎？"
   },
-  "PROGRESSSTATUS": {
+  "PROGRESS_STATUS": {
     "SUCCESS": "上傳成功",
     "INPROGRESS": "上傳中",
     "NOTFOUND": "未找到檔案",
@@ -842,5 +842,10 @@
     "SYSTEMERROR": "系統錯誤",
     "PAUSED": "已暫停",
     "HASBEENUSED": "憑證已使用"
+  },
+  "META": {
+    "TITLE": "iSunFA",
+    "DESCRIPTION": "融合區塊鏈會計與人工智能審計的先進會計解決方案",
+    "KEYWORDS": "iSunFA, 區塊鏈, AI, 法務, 會計, 審計"
   }
 }
