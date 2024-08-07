@@ -76,7 +76,7 @@ enum ErrorMessage {
   INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL = 'Invalid input voucher body to journal',
   INVALID_ENUM_VALUE = 'Invalid enum value',
   INVALID_INPUT_TYPE = 'Invalid input type',
-  INVALID_VOUCHER_AMOUNT = "Voucher amount is not greater or equal to Payment amount, Debit and Credit should be equal and greater than Price * (1 + Tax Rate) + Fee",
+  INVALID_VOUCHER_AMOUNT = 'Voucher amount is not greater or equal to Payment amount, Debit and Credit should be equal and greater than Price * (1 + Tax Rate) + Fee',
   INTERNAL_SERVICE_ERROR = 'Internal service error',
   IMAGE_UPLOAD_FAILED_ERROR = 'Image upload failed',
   DATABASE_CREATE_FAILED_ERROR = 'Database create failed',

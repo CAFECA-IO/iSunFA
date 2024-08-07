@@ -63,8 +63,8 @@ export type IJournalFromPrismaIncludeInvoicePayment = Prisma.JournalGetPayload<{
   include: {
     invoice: {
       include: {
-        payment: true,
-      }
-    }
-  }
+        payment: true;
+      };
+    };
+  };
 }>;
