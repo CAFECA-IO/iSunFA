@@ -45,7 +45,7 @@
     "MAIN_SUBTITLE_1": "智能会计",
     "MAIN_SUBTITLE_2_POINT_1": "会计与审计的革命创新",
     "MAIN_SUBTITLE_2_POINT_2": "用人工智能，提升公司决策品质",
-    "MAIN_SUBTITLE_2_POINT_3": "用持续审计，掌握公司成长的潜力的关键数据",
+    "MAIN_SUBTITLE_2_POINT_3": "用持续审计，掌握公司成长潜力的关键数据",
     "MAIN_SUBTITLE_2_POINT_4": "减轻审计团队的日常作业负担",
     "MAIN_SUBTITLE_2_POINT_5": "让财务团队专注于企业发展规划",
     "HOW_WE_WORK_TITLE": "我们的工作方式",
@@ -367,7 +367,7 @@
     "NO_SLASH_TAX": "税",
     "TWD_FEE": "新台币费用",
     "NONE": "无",
-    "ACCOUNTING_VOUCHER": "会计凭证",
+    "ACCOUNTING_VOUCHER": "会计分录",
     "PARTICULARS": "摘要",
     "DEBIT": "借方",
     "CREDIT": "贷方",
@@ -832,7 +832,7 @@
     "REMOVE_ACCOUNTING_TITLE": "删除会计科目",
     "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？"
   },
-  "PROGRESSSTATUS": {
+  "PROGRESS_STATUS": {
     "SUCCESS": "上传成功",
     "INPROGRESS": "上传中",
     "NOTFOUND": "未找到文件",
@@ -845,7 +845,7 @@
   },
   "META": {
     "TITLE": "iSunFA",
-    "DESCRIPTION": "iSunFA: 区块链 AI 法务会计与审计——在金融调查领域，简单与准确的完美结合。",
+    "DESCRIPTION": "融合区块链会计与人工智能审计的先进会计解决方案",
     "KEYWORDS": "iSunFA, 区块链, AI, 法务, 会计, 审计"
   }
 }

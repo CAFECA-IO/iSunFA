@@ -10,7 +10,6 @@ const BackButton = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
   const handleBack = () => {
-    // router.back();
     router.push(ISUNFA_ROUTE.COMPANY_INFO);
   };
 
