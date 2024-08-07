@@ -45,7 +45,7 @@
     "MAIN_SUBTITLE_1": "智能会计",
     "MAIN_SUBTITLE_2_POINT_1": "会计与审计的革命创新",
     "MAIN_SUBTITLE_2_POINT_2": "用人工智能，提升公司决策品质",
-    "MAIN_SUBTITLE_2_POINT_3": "用持续审计，掌握公司成长的潜力的关键数据",
+    "MAIN_SUBTITLE_2_POINT_3": "用持续审计，掌握公司成长潜力的关键数据",
     "MAIN_SUBTITLE_2_POINT_4": "减轻审计团队的日常作业负担",
     "MAIN_SUBTITLE_2_POINT_5": "让财务团队专注于企业发展规划",
     "HOW_WE_WORK_TITLE": "我们的工作方式",
@@ -842,5 +842,10 @@
     "SYSTEMERROR": "系统错误",
     "PAUSED": "已暂停",
     "HASBEENUSED": "凭证已使用"
+  },
+  "META": {
+    "TITLE": "iSunFA",
+    "DESCRIPTION": "融合区块链会计与人工智能审计的先进会计解决方案",
+    "KEYWORDS": "iSunFA, 区块链, AI, 法务, 会计, 审计"
   }
 }
