@@ -238,8 +238,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.ACCOUNTING,
-    added: true,
+    link: '', // TODO: link (20240807 - Shirley)
+    // link: ISUNFA_ROUTE.ACCOUNTING,
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -282,7 +283,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS,
+    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_BALANCE_SHEET,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -325,7 +326,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS,
+    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_INCOME_STATEMENT,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -392,7 +393,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS,
+    link: ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_CASH_FLOW,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -449,8 +450,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
-    added: true,
+    link: '', // TODO: link (20240807 - Shirley)
+    // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -506,8 +508,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
-    added: true,
+    link: '', // TODO: link (20240807 - Shirley)
+    // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -563,8 +566,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
-    added: true,
+    link: '', // TODO: link (20240807 - Shirley)
+    // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -620,8 +624,9 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
-    added: true,
+    link: '', // TODO: link (20240807 - Shirley)
+    // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
+    added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
   },
@@ -634,6 +639,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   const [bookmarkList, setBookmarkList, bookmarkListRef] =
     useStateRef<Record<string, BookmarkItem>>(BookmarkAvailableList);
 
+  // Deprecated: 20240815 - Shirley
   const toggleBookmark = (bookmarkNames: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
       const updatedBookmarkList = { ...prevBookmarkList };
@@ -650,6 +656,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     });
   };
 
+  // Deprecated: 20240815 - Shirley
   const removeBookmark = (bookmarkName: string) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => ({
       ...prevBookmarkList,
@@ -660,6 +667,7 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     }));
   };
 
+  // Deprecated: 20240815 - Shirley
   const addBookmarks = (bookmarks: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
       const updatedBookmarkList = { ...prevBookmarkList };

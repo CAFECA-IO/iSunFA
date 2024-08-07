@@ -20,7 +20,11 @@ import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/repor
 // Info: (20240807 - Anna) 用來處理路由的 hook
 import { useRouter } from 'next/router';
 
-const FinancialReportSection = () => {
+interface IFinancialReportSectionProps {
+  reportType?: FinancialReportTypesKey;
+}
+
+const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
   // Info: (20240807 - Anna) 初始化 useRouter
   const router = useRouter();
   const { t } = useTranslation('common');
@@ -40,7 +44,9 @@ const FinancialReportSection = () => {
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
-    FinancialReportTypesKey.balance_sheet
+    reportType && FinancialReportTypesKey[reportType]
+      ? FinancialReportTypesKey[reportType]
+      : FinancialReportTypesKey.balance_sheet
   );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
