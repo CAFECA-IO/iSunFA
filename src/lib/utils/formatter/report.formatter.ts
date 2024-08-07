@@ -3,8 +3,7 @@ import {
   ReportSheetTypeFinancialFinancialReportTypesKeyMapping,
   ReportType,
 } from '@/constants/report';
-import { IReport, IReportIncludeProject } from '@/interfaces/report';
-import { Report } from '@prisma/client';
+import { IPaginatedReport, IReport, IReportIncludeCompanyProject } from '@/interfaces/report';
 import { isReportSheetType, isReportType } from '@/lib/utils/type_guard/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { isIAccountReadyForFrontendArray } from '@/lib/utils/type_guard/account';
@@ -16,7 +15,7 @@ import {
   IPaginatedGeneratedReportItem,
 } from '@/interfaces/report_item';
 
-export function formatIReport(report: Report): IReport {
+export function formatIReport(report: IReportIncludeCompanyProject): IReport {
   const type: ReportType = isReportType(report.reportType)
     ? report.reportType
     : ReportType.FINANCIAL;
@@ -32,6 +31,13 @@ export function formatIReport(report: Report): IReport {
 
   // Info: (20240729 - Murky) Bad code, not robust
   const otherInfo = reportContent.otherInfo || {};
+  const project = report.project
+    ? {
+        id: report.project.id.toString(),
+        name: report.project.name,
+        code: report.project.name,
+      }
+    : null;
 
   const formattedReport: IReport = {
     id: report.id,
@@ -47,6 +53,7 @@ export function formatIReport(report: Report): IReport {
     remainingSeconds: report.remainingSeconds || 0,
     paused: report.paused || false,
     projectId: report.projectId,
+    project,
     reportLink: report.reportLink || '',
     downloadLink: report.downloadLink || '',
     blockChainExplorerLink: report.blockChainExplorerLink || '',
@@ -59,7 +66,37 @@ export function formatIReport(report: Report): IReport {
   return formattedReport;
 }
 
-export function formatIBasicReportItem(report: IReportIncludeProject): IBasicReportItem {
+export function formatIPaginatedReport(reports: {
+  data: IReportIncludeCompanyProject[];
+  page: number;
+  totalPages: number;
+  totalCount: number; // 總數量
+  pageSize: number; // 每頁顯示的項目數量
+  hasNextPage: boolean; // 是否有下一頁
+  hasPreviousPage: boolean; // 是否有上一頁
+  sortBy: string; // 排序欄位
+  sortOrder: string; // 排序方式
+}) {
+  const formattedReports = reports.data.map((report) => formatIReport(report));
+  const paginatedReport: IPaginatedReport = {
+    data: formattedReports,
+    page: reports.page,
+    totalPages: reports.totalPages,
+    totalCount: reports.totalCount,
+    pageSize: reports.pageSize,
+    hasNextPage: reports.hasNextPage,
+    hasPreviousPage: reports.hasPreviousPage,
+    sort: [
+      {
+        sortBy: reports.sortBy,
+        sortOrder: reports.sortOrder,
+      },
+    ],
+  };
+  return paginatedReport;
+}
+
+export function formatIBasicReportItem(report: IReportIncludeCompanyProject): IBasicReportItem {
   const id = report.id.toString();
   const type = report.reportType as ReportType;
   const reportSheetType = report.reportType as ReportSheetType;
@@ -78,7 +115,7 @@ export function formatIBasicReportItem(report: IReportIncludeProject): IBasicRep
   return reportItem;
 }
 
-export function formatIPendingReportItem(report: IReportIncludeProject): IPendingReportItem {
+export function formatIPendingReportItem(report: IReportIncludeCompanyProject): IPendingReportItem {
   const basicReportItem = formatIBasicReportItem(report);
   const reportItem: IPendingReportItem = {
     ...basicReportItem,
@@ -88,7 +125,9 @@ export function formatIPendingReportItem(report: IReportIncludeProject): IPendin
   return reportItem;
 }
 
-export function formatIGeneratedReportItem(report: IReportIncludeProject): IGeneratedReportItem {
+export function formatIGeneratedReportItem(
+  report: IReportIncludeCompanyProject
+): IGeneratedReportItem {
   const basicReportItem = formatIBasicReportItem(report);
   const project = report.project
     ? {
@@ -109,7 +148,7 @@ export function formatIGeneratedReportItem(report: IReportIncludeProject): IGene
 }
 
 export function formatIPaginatedPendingReportItem(reports: {
-  data: IReportIncludeProject[];
+  data: IReportIncludeCompanyProject[];
   page: number;
   totalPages: number;
   totalCount: number; // 總數量
@@ -139,7 +178,7 @@ export function formatIPaginatedPendingReportItem(reports: {
 }
 
 export function formatIPaginatedGeneratedReportItem(reports: {
-  data: IReportIncludeProject[];
+  data: IReportIncludeCompanyProject[];
   page: number;
   totalPages: number;
   totalCount: number; // 總數量

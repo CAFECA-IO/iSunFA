@@ -1,4 +1,3 @@
-import { IGeneratedReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
@@ -6,9 +5,10 @@ import Link from 'next/link';
 import { FinancialReportTypeName, ReportTypeToBaifaReportType } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
+import { IReport } from '@/interfaces/report';
 
 interface IReportsHistoryItemProps {
-  report: IGeneratedReportItem;
+  report: IReport;
   checked: boolean;
   isCheckboxVisible: boolean;
   onCheckChange?: () => void;
@@ -21,19 +21,10 @@ const ReportsHistoryItem = ({
   onCheckChange = () => {},
 }: IReportsHistoryItemProps) => {
   const { t } = useTranslation('common');
-  const {
-    id,
-    createdTimestamp,
-    name,
-    period,
-    project,
-    reportLinkId,
-    reportType,
-    blockchainExplorerLink,
-  } = report;
+  const { id, createdAt, name, from, to, project, reportType, blockChainExplorerLink } = report;
 
-  const startDate = timestampToString(period.startTimestamp);
-  const endDate = timestampToString(period.endTimestamp);
+  const startDate = timestampToString(from);
+  const endDate = timestampToString(to);
 
   const displayedProject = project ? (
     <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
@@ -62,14 +53,14 @@ const ReportsHistoryItem = ({
       ) : null}
       <td className="border-x border-lightGray6">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
-        <CalendarIcon timestamp={createdTimestamp} />
+        <CalendarIcon timestamp={createdAt} />
       </td>
       {/* Info: report name (20240528 - Shirley) */}
       <td className="pl-5 text-start text-base text-text-neutral-primary">
         <div className="flex w-full flex-col justify-start">
           <Link
             className="hidden lg:flex"
-            href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
+            href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${id}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
           >
             {name}
           </Link>
@@ -78,14 +69,14 @@ const ReportsHistoryItem = ({
           <div className="flex flex-col space-y-2 lg:hidden">
             <Link
               className="sm:hidden"
-              href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
+              href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${id}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
             >
               {truncateString(name, 16)}
             </Link>
 
             <Link
               className="hidden sm:block"
-              href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportLinkId}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
+              href={`${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${id}?report_type=${ReportTypeToBaifaReportType[reportType]}`}
             >
               {name}
             </Link>
@@ -116,7 +107,7 @@ const ReportsHistoryItem = ({
       </td>
       {/* Info: (20240514 - Shirley) Blockchain explorer link */}
       <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
-        <Link href={blockchainExplorerLink} target="_blank">
+        <Link href={blockChainExplorerLink} target="_blank">
           <Button variant={'tertiaryBorderless'} size={'small'}>
             <svg
               xmlns="http://www.w3.org/2000/svg"

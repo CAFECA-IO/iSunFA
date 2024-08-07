@@ -46,7 +46,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     code: getFRCode,
     success: getFRSuccess,
   } = APIHandler<FinancialReport>(
-    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    APIName.REPORT_GET_BY_ID,
     {
       params: { companyId: selectedCompany?.id, reportId },
     },

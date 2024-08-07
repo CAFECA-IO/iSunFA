@@ -16,7 +16,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
-import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
+import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/constants/report';
 // Info: (20240807 - Anna) 用來處理路由的 hook
 import { useRouter } from 'next/router';
 
@@ -37,7 +37,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     code: generatedCode,
     isLoading: generatedLoading,
     success: generatedSuccess,
-  } = APIHandler<IAccountResultStatus>(APIName.REPORT_GENERATE_FINANCIAL);
+  } = APIHandler<IAccountResultStatus>(APIName.REPORT_GENERATE);
 
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
@@ -109,7 +109,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       reportLanguage: selectedReportLanguage,
       startDate: period.startTimeStamp,
       endDate: period.endTimeStamp,
-      financialOrAnalysis: 'financial',
+      financialOrAnalysis: ReportType.FINANCIAL,
     };
 
     if (selectedCompany) {

@@ -55,7 +55,7 @@ const ViewAnalysisReportPage = ({
     code: getARCode,
     success: getARSuccess,
   } = APIHandler<IReportOld>(
-    APIName.REPORT_ANALYSIS_GET_BY_ID,
+    APIName.REPORT_GET_BY_ID,
     {
       params: {
         params: { companyId: selectedCompany?.id, reportId: '1' },
