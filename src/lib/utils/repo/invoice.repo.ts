@@ -3,8 +3,8 @@
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IInvoice, IInvoiceIncludePaymentJournal } from '@/interfaces/invoice';
-import { IPayment } from '@/interfaces/payment';
+import { IInvoice, IInvoiceBeta, IInvoiceIncludePaymentJournal } from '@/interfaces/invoice';
+import { IPayment, IPaymentBeta } from '@/interfaces/payment';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { Ocr, Prisma } from '@prisma/client';
 
@@ -122,7 +122,7 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId?: n
   return journal;
 }
 
-export async function createPaymentInPrisma(paymentData: IPayment) {
+export async function createPaymentInPrisma(paymentData: IPaymentBeta) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   let payment: {
@@ -208,7 +208,7 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: n
 }
 
 export async function createInvoiceInPrisma(
-  invoiceData: IInvoice,
+  invoiceData: IInvoiceBeta,
   paymentId: number,
   journalId: number,
   imageUrl: string | undefined
@@ -223,10 +223,13 @@ export async function createInvoiceInPrisma(
   try {
     invoice = await prisma.invoice.create({
       data: {
+        number: invoiceData.number,
+        type: invoiceData.type,
         date: invoiceCreatedDate,
         eventType: invoiceData.eventType,
         paymentReason: invoiceData.paymentReason,
         description: invoiceData.description,
+        verdorTaxId: invoiceData.vendorTaxId,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
         imageUrl,
         payment: {
@@ -257,16 +260,19 @@ export async function createInvoiceInPrisma(
 }
 
 export async function createInvoiceAndPaymentInPrisma(
-  invoiceData: IInvoice,
+  invoiceData: IInvoiceBeta,
   journalId: number,
   imageUrl: string | undefined
 ) {
   const paymentData = invoiceData.payment;
+  // Info (20240807 - Jacky): 這邊是為了讓payment的taxPrice可以被存入prisma
+  const taxPrice = paymentData.price * paymentData.taxPercentage;
+  const paymentDataBeta = { ...paymentData, taxPrice };
 
   let createdInvoiceId: number;
   try {
     createdInvoiceId = await prisma.$transaction(async () => {
-      const payment = await createPaymentInPrisma(paymentData);
+      const payment = await createPaymentInPrisma(paymentDataBeta);
       const invoice = await createInvoiceInPrisma(invoiceData, payment.id, journalId, imageUrl);
       return invoice.id;
     });
@@ -472,7 +478,7 @@ export async function updateJournalInPrisma(
 
 // Info (20240524 - Murky): Main logics
 export async function handlePrismaSavingLogic(
-  formattedInvoice: IInvoice,
+  formattedInvoice: IInvoiceBeta,
   aichResultId: string,
   companyId: number,
   ocrId: number | undefined

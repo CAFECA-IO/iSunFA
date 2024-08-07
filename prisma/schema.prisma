@@ -281,10 +281,13 @@ model Invoice {
   id               Int     @id @default(autoincrement())
   journalId        Int     @unique @map("journal_id")
   paymentId        Int     @unique @map("payment_id")
+  number           String  @unique
+  type             String
   date             Int
   eventType        String  @map("event_type")
   paymentReason    String  @map("payment_reason")
   description      String
+  verdorTaxId      String  @map("verdor_tax_id")
   vendorOrSupplier String  @map("vendor_or_supplier")
   imageUrl         String  @default("") @map("image_url")
   createdAt        Int     @map("created_at")
@@ -446,6 +449,7 @@ model Payment {
   price             Int
   hasTax            Boolean   @map("has_tax")
   taxPercentage     Int       @map("tax_percentage")
+  taxPrice          Int       @map("tax_price")
   hasFee            Boolean   @map("has_fee")
   fee               Int
   method            String    @map("method")

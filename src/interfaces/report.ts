@@ -230,3 +230,82 @@ export function isIAnalysisReportRequest(obj: any): obj is IAnalysisReportReques
     obj.end_date instanceof Date
   );
 }
+
+export interface TaxReport401 {
+  basicInfo: BasicInfo;
+  sales: Sales;
+  purchases: Purchases;
+  taxCalculation: TaxCalculation;
+  imports: Imports;
+  bondedAreaSalesToTaxArea: number;
+}
+
+interface BasicInfo {
+  uniformNumber: string;
+  name: string;
+  taxOfficeCode: string;
+  businessAddress: string;
+  reportingPeriod: string;
+  usedInvoiceCount: number;
+}
+
+interface Sales {
+  breakdown: SalesBreakdown;
+  totalTaxableAmount: number;
+  includeFixedAsset: number;
+}
+
+interface SalesBreakdown {
+  triplicateAndElectronic: AmountAndTax;
+  cashRegisterTriplicate: AmountAndTax;
+  duplicateAndCashRegister: AmountAndTax;
+  taxExempt: AmountAndTax;
+  returnsAndAllowances: AmountAndTax;
+  total: AmountAndTax;
+}
+
+interface AmountAndTax {
+  amount: number;
+  tax: number;
+}
+
+interface Purchases {
+  breakdown: PurchaseBreakdown;
+  total: PurchaseCategory;
+  totalWithNonDeductible: PurchaseTotal;
+}
+
+interface PurchaseBreakdown {
+  uniformInvoice: PurchaseCategory;
+  cashRegisterAndElectronic: PurchaseCategory;
+  otherTaxableVouchers: PurchaseCategory;
+  customsDutyPayment: PurchaseCategory;
+  returnsAndAllowances: PurchaseCategory;
+}
+
+interface PurchaseCategory {
+  generalPurchases: AmountAndTax;
+  fixedAssets: AmountAndTax;
+}
+
+interface PurchaseTotal {
+  generalPurchases: number;
+  fixedAssets: number;
+}
+
+interface TaxCalculation {
+  outputTax: number;
+  deductibleInputTax: number;
+  previousPeriodOffset: number;
+  subtotal: number;
+  currentPeriodTaxPayable: number;
+  currentPeriodFilingOffset: number;
+  refundCeiling: number;
+  currentPeriodRefundableTax: number;
+  currentPeriodAccumulatedOffset: number;
+}
+
+interface Imports {
+  taxExemptGoods: number;
+  foreignServices: number;
+}
