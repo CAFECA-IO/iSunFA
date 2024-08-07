@@ -842,5 +842,10 @@
     "SYSTEMERROR": "systemError",
     "PAUSED": "paused",
     "HASBEENUSED": "hasBeenUsed"
+  },
+  "META": {
+    "TITLE": "iSunFA",
+    "DESCRIPTION": "Comprehensive accounting solution that enhances efficiency and accuracy through blockchain and AI integration.",
+    "KEYWORDS": "iSunFA, Blockchain, AI, Forensic, Accounting, Auditing"
   }
 }
