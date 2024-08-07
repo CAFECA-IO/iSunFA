@@ -64,10 +64,9 @@ export function formatQuery(query: any) {
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
     formatQuery(req.query);
-  const isUploaded = true;
-  const uploadedPagenatedJournalList = await listJournal(
+  const uploadedPaginatedJournalList = await listJournal(
     companyId,
-    isUploaded,
+    JOURNAL_EVENT.UPLOADED,
     page,
     pageSize,
     eventType,
@@ -78,9 +77,9 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     searchQuery
   );
 
-  const upComingPagenatedJournalList = await listJournal(
+  const upComingPaginatedJournalList = await listJournal(
     companyId,
-    !isUploaded,
+    JOURNAL_EVENT.UPCOMING,
     page,
     pageSize,
     eventType,
@@ -90,21 +89,21 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     endDate,
     searchQuery
   );
-  const uploadedPagenatedJournalListItems = {
-    ...uploadedPagenatedJournalList,
-    data: formatIJournalListItems(uploadedPagenatedJournalList.data),
+  const uploadedPaginatedJournalListItems = {
+    ...uploadedPaginatedJournalList,
+    data: formatIJournalListItems(uploadedPaginatedJournalList.data),
   };
 
-  const upComingPagenatedJournalListItems = {
-    ...upComingPagenatedJournalList,
-    data: formatIJournalListItems(upComingPagenatedJournalList.data),
+  const upComingPaginatedJournalListItems = {
+    ...upComingPaginatedJournalList,
+    data: formatIJournalListItems(upComingPaginatedJournalList.data),
   };
 
   const { httpCode, result } = formatApiResponse<{
     [key: string]: IPaginatedData<IJournalListItem[]>;
   }>(STATUS_MESSAGE.SUCCESS_LIST, {
-    [JOURNAL_EVENT.UPLOADED]: uploadedPagenatedJournalListItems,
-    [JOURNAL_EVENT.UPCOMING]: upComingPagenatedJournalListItems,
+    [JOURNAL_EVENT.UPLOADED]: uploadedPaginatedJournalListItems,
+    [JOURNAL_EVENT.UPCOMING]: upComingPaginatedJournalListItems,
   });
   return {
     httpCode,

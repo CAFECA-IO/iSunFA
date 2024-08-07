@@ -6,9 +6,10 @@ import {
   ISalaryRecordWithProjectsAndHours,
 } from '@/interfaces/salary_record';
 import { timestampInSeconds, calculateWorkingHours } from '@/lib/utils/common';
-import { IInvoice } from '@/interfaces/invoice';
-import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
+import { IInvoiceBeta } from '@/interfaces/invoice';
+import { EventType, InvoiceType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IFolder } from '@/interfaces/folder';
+import { JOURNAL_EVENT } from '@/constants/journal';
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
@@ -502,10 +503,11 @@ export async function updateSalaryRecordById(
   return formatUpdatedSalaryRecord;
 }
 
+// TODO: (20240807 - Jacky) Invoice is not exist in createSalaryRecord flow, need to delete in the future
 export async function generateInvoiceFromSalaryRecord(
   companyId: number,
   salaryRecordsIdsList: number[]
-): Promise<IInvoice> {
+): Promise<IInvoiceBeta> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const salaryRecords = await prisma.salaryRecord.findMany({
@@ -553,7 +555,10 @@ export async function generateInvoiceFromSalaryRecord(
     0
   );
   const totalBonus = salaryRecords.reduce((acc, record) => acc + record.bonus, 0);
-  const invoice: IInvoice = {
+  const invoice: IInvoiceBeta = {
+    number: now.toString(),
+    type: InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
+    vendorTaxId: 'temp fake id',
     journalId: null,
     date: nowTimestamp,
     eventType: EventType.PAYMENT,
@@ -569,6 +574,7 @@ export async function generateInvoiceFromSalaryRecord(
       price: totalSalary + totalInsurancePayment + totalBonus,
       hasTax: false,
       taxPercentage: 0,
+      taxPrice: 0,
       hasFee: false,
       fee: 0,
       method: 'Bank Transfer',
@@ -582,11 +588,15 @@ export async function generateInvoiceFromSalaryRecord(
   return invoice;
 }
 
-export async function createSalaryRecordJournal(companyId: number): Promise<number> {
+export async function createSalaryRecordJournal(
+  companyId: number,
+  event: JOURNAL_EVENT = JOURNAL_EVENT.UPLOADED
+): Promise<number> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const journal = await prisma.journal.create({
     data: {
+      event,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
       companyId,
