@@ -530,7 +530,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         !router.pathname.includes(ISUNFA_ROUTE.LOGIN) &&
         !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
       ) {
-        if (!selectedCompany) {
+        // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
+        if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
           // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
           toastHandler({
             id: ToastId.TRIAL,

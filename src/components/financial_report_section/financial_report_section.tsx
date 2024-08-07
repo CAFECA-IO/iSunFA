@@ -17,12 +17,16 @@ import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
+// Info: (20240807 - Anna) 用來處理路由的 hook
+import { useRouter } from 'next/router';
 
 interface IFinancialReportSectionProps {
   reportType?: FinancialReportTypesKey;
 }
 
 const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
+  // Info: (20240807 - Anna) 初始化 useRouter
+  const router = useRouter();
   const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
@@ -117,7 +121,10 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       });
     }
   };
-
+  // Info: (20240807 - Anna) 定義導航到 "my-reports" 頁面的函數
+  const navigateToMyReports = () => {
+    router.push('/users/reports/my-reports');
+  };
   useEffect(() => {
     setDatePickerType(() => {
       if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
@@ -147,6 +154,8 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           submitBtnStr: t('COMMON.CLOSE'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
+            // Info: (20240807 - Anna) 在成功生成報告後，將導航函數作為submitBtnFunction傳入⭢執行導航
+            navigateToMyReports();
           },
           messageType: MessageType.SUCCESS,
           submitBtnVariant: 'secondaryBorderless',

@@ -38,9 +38,8 @@ const countryList = [
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
-
   const {
     targetRef: menuRef,
     componentVisible: isMenuOpen,
@@ -102,6 +101,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
           submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
+            // Info: (20240807 - Anna) 隱藏 create company modal
+            modalVisibilityHandler();
             messageModalVisibilityHandler();
             router.push(ISUNFA_ROUTE.KYC);
           },

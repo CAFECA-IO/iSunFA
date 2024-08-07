@@ -193,14 +193,16 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           <input
             id="search-accounting"
             type="text"
-            placeholder="Search"
+            placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-lightGray4"
           />
           <FiSearch size={16} />
         </div>
-        <div className="px-12px py-8px uppercase text-dropdown-text-head">Assets</div>
+        <div className="px-12px py-8px uppercase text-dropdown-text-head">
+          {t('SETTING.ASSETS')}
+        </div>
         <div
           ref={accountingRef}
           className="flex max-h-150px flex-col items-stretch overflow-y-auto py-8px"
