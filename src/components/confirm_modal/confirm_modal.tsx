@@ -451,7 +451,7 @@ const ConfirmModal = ({
   const displayedHint =
     ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
       isAILoading) ||
-      AIResultSuccess === undefined ? (
+    AIResultSuccess === undefined ? (
       <p className="text-slider-surface-bar">
         {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
         <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>

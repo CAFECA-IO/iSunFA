@@ -67,13 +67,17 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   return ocrData;
 }
 
-export async function getOcrByResultId(aichResultId: string) {
+export async function getOcrByResultId(
+  aichResultId: string,
+  isDeleted?: boolean
+): Promise<Ocr | null> {
   let ocrData: Ocr | null = null;
 
   if (aichResultId) {
     ocrData = await prisma.ocr.findUnique({
       where: {
         aichResultId,
+        deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
       },
     });
   }
