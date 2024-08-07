@@ -185,8 +185,8 @@
     "UNPOPULAR": "冷门",
     "ALL": "全部",
     "RELEVANCY": "相关性",
-    "HIGHEST_PAYMENT_PRICE": "最高支付价格",
-    "LOWEST_PAYMENT_PRICE": "最低支付价格"
+    "HIGHEST_PAYMENT_PRICE": "最高价格",
+    "LOWEST_PAYMENT_PRICE": "最低价格"
   },
   "FOOTER": {
     "POWERED_BY": "技术支持 阳光智能会计",
@@ -433,7 +433,9 @@
     "FAILED_TO_LIST_UNPROCESSED_OCRS": "列出未处理的OCR失败:{{code}}",
     "FAILED_TO_DELETE_UNPROCESSED_OCR": "删除未处理的OCR失败：{{code}}",
     "GO_BACK_TO_JOURNAL_LIST": "返回日记帐",
-    "DOWNLOAD": "下载"
+    "DOWNLOAD": "下载",
+    "DEBIT_AMOUNT_BALANCED": "借方金额与总金额平衡",
+    "CREDIT_AMOUNT_BALANCED": "贷方金额与总金额平衡"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",

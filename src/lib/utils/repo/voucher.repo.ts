@@ -5,24 +5,29 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import {
+  IVoucherDataForSavingToDB,
+  IVoucherFromPrismaIncludeLineItems,
+} from '@/interfaces/voucher';
 
-export async function findUniqueJournalInPrisma(journalId: number | undefined) {
+export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
+  journalId: number | undefined
+) {
   try {
     const result = await prisma.journal.findUnique({
       where: {
         id: journalId,
       },
-      select: {
-        id: true,
+      include: {
+        invoice: {
+          include: {
+            payment: true,
+          },
+        },
       },
     });
 
-    if (!result) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-    }
-
-    return result.id;
+    return result;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
@@ -81,35 +86,19 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 }
 
 export async function findUniqueVoucherInPrisma(voucherId: number) {
-  let voucherData: {
-    id: number;
-    createdAt: number;
-    updatedAt: number;
-    journalId: number;
-    no: string;
-    lineItems: {
-      id: number;
-      amount: number;
-      description: string;
-      debit: boolean;
-      accountId: number;
-      voucherId: number;
-      createdAt: number;
-      updatedAt: number;
-    }[];
-  } | null = null;
+  let voucherData: IVoucherFromPrismaIncludeLineItems | null = null;
   try {
     voucherData = await prisma.voucher.findUnique({
       where: {
         id: voucherId,
       },
-      select: {
-        id: true,
-        journalId: true,
-        no: true,
-        createdAt: true,
-        updatedAt: true,
-        lineItems: true,
+      include: {
+        journal: true,
+        lineItems: {
+          include: {
+            account: true,
+          },
+        },
       },
     });
   } catch (error) {
