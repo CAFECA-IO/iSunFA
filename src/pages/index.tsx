@@ -25,6 +25,7 @@ function LandingPage() {
           property="og:description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
         />
+        <meta property="og:image" content="https://isunfa.com/elements/isunfa_preview.png" />
       </Head>
 
       {/*  Info: (20230712 - Shirley) Navbar */}
