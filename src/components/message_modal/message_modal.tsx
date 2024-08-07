@@ -3,8 +3,6 @@ import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { cn } from '@/lib/utils/common';
-// Info: (20240807 - Anna) 用來處理路由的 hook
-import { useRouter } from 'next/router';
 
 interface IMessageModalProps {
   isModalVisible: boolean;
@@ -17,8 +15,6 @@ const MessageModal = ({
   modalVisibilityHandler,
   messageModalData,
 }: IMessageModalProps) => {
-  // Info: (20240807 - Anna) 初始化 useRouter
-  const router = useRouter();
   const {
     title,
     subtitle,
@@ -43,8 +39,6 @@ const MessageModal = ({
   const submitClickHandler = () => {
     submitBtnFunction();
     modalVisibilityHandler();
-    // Info: (20240807 - Anna) 執行 submitBtnFunction 後，導航到"我的報告"頁面
-    router.push('/users/reports/my-reports');
   };
 
   const imgStr =

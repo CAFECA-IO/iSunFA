@@ -367,7 +367,7 @@
     "NO_SLASH_TAX": "稅",
     "TWD_FEE": "新台幣費用",
     "NONE": "無",
-    "ACCOUNTING_VOUCHER": "會計憑證",
+    "ACCOUNTING_VOUCHER": "會計分錄",
     "PARTICULARS": "摘要",
     "DEBIT": "借方",
     "CREDIT": "貸方",
@@ -386,7 +386,7 @@
     "CONTRACTS": "合約",
     "ADD_NEW_CONTRACT": "新增合約",
     "PROJECT_CONTRACT_ISUNFA": "專案合約 - iSunFA",
-    "FROM_TO": "起迄期間",
+    "FROM_TO": "供應商/客戶",
     "VOUCHER_NO": "憑證號碼",
     "OPERATIONS": "操作",
     "INFO": "資訊",
@@ -832,7 +832,7 @@
     "REMOVE_ACCOUNTING_TITLE": "刪除會計科目",
     "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您確定要刪除這個會計科目嗎？"
   },
-  "PROGRESSSTATUS": {
+  "PROGRESS_STATUS": {
     "SUCCESS": "上傳成功",
     "INPROGRESS": "上傳中",
     "NOTFOUND": "未找到檔案",
