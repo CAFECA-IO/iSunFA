@@ -842,5 +842,10 @@
     "SYSTEMERROR": "systemError",
     "PAUSED": "paused",
     "HASBEENUSED": "hasBeenUsed"
+  },
+  "META": {
+    "TITLE": "iSunFA",
+    "DESCRIPTION": "iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations.",
+    "KEYWORDS": "iSunFA, Blockchain, AI, Forensic, Accounting, Auditing"
   }
 }
