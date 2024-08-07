@@ -1,7 +1,8 @@
 import { timestampToString } from '@/lib/utils/common';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { ReportType } from '@/constants/report';
+import { ReportSheetType, ReportType } from '@/constants/report';
+import { IPaginatedReport, IReport } from './report';
 
 export interface IBasicReportItem {
   id: string;
@@ -75,66 +76,54 @@ export const generateRandomPendingReportItems = (count: number): IPendingReportI
 
 export const DUMMY_PENDING_REPORT_ITEMS = generateRandomPendingReportItems(5);
 
-export const FIXED_DUMMY_PENDING_REPORT_ITEMS: IPendingReportItem[] = [
+export const MOCK_REPORTS: IReport[] = [
   {
-    id: '7034v4',
-    name: 'Cash Flow Statement-20240420-1',
-    createdTimestamp: 1713611226,
-    period: { startTimestamp: 1683043200, endTimestamp: 1704067200 }, // 2023-05-02 to 2024-01-01
-    remainingSeconds: 10,
-    paused: false,
-    reportType: FinancialReportTypesKey.cash_flow_statement,
+    id: 1,
+    companyId: 123,
+    tokenContract: '0x123abc',
+    tokenId: '456def',
+    name: 'Mock Report',
+    from: 1630444800,
+    to: 1633046400,
     type: ReportType.FINANCIAL,
+    reportType: ReportSheetType.BALANCE_SHEET,
+    status: 'completed',
+    remainingSeconds: 0,
+    paused: false,
+    projectId: null,
+    project: null,
+    reportLink: 'https://example.com/report',
+    downloadLink: 'https://example.com/download',
+    blockChainExplorerLink: 'https://example.com/explorer',
+    evidenceId: 'abc123',
+    content: [],
+    otherInfo: null,
+    createdAt: 1633046400,
+    updatedAt: 1633046400,
   },
   {
-    id: 'sclika',
-    name: 'Cash Flow Statement-20240505-1',
-    createdTimestamp: 1714897574,
-    period: { startTimestamp: 1695609600, endTimestamp: 1698106883 }, // 2023-09-25 to 2023-10-24
-    remainingSeconds: 250,
-    paused: true,
-    reportType: FinancialReportTypesKey.cash_flow_statement,
+    id: 2,
+    companyId: 123,
+    tokenContract: '0x123abc',
+    tokenId: '456def',
+    name: 'Mock Report',
+    from: 1630444800,
+    to: 1633046400,
     type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'qxh66j',
-    name: 'Comprehensive Income Statement-20240412-1',
-    createdTimestamp: 1712863312,
-    period: { startTimestamp: 1685721600, endTimestamp: 1704076800 }, // 2023-06-03 to 2024-01-01
-    remainingSeconds: 1615,
+    reportType: ReportSheetType.BALANCE_SHEET,
+    status: 'completed',
+    remainingSeconds: 0,
     paused: false,
-    reportType: FinancialReportTypesKey.comprehensive_income_statement,
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: '4ruh5k',
-    name: 'Balance Sheet-20240423-1',
-    createdTimestamp: 1713846643,
-    period: { startTimestamp: 1693113600, endTimestamp: 1704096000 }, // 2023-08-27 to 2024-01-01
-    remainingSeconds: 3680,
-    paused: false,
-    reportType: FinancialReportTypesKey.balance_sheet,
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'wyt0mi',
-    name: 'Balance Sheet-20240501-1',
-    createdTimestamp: 1714508675,
-    period: { startTimestamp: 1698374400, endTimestamp: 1714022400 }, // 2023-11-01 to 2024-01-01
-    remainingSeconds: 30,
-    paused: false,
-    reportType: FinancialReportTypesKey.balance_sheet,
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'ndfgghjd',
-    name: 'Comprehensive Income Statement-20240312-1',
-    createdTimestamp: 1715863312,
-    period: { startTimestamp: 1686721600, endTimestamp: 1724076800 },
-    remainingSeconds: 16150,
-    paused: false,
-    reportType: FinancialReportTypesKey.comprehensive_income_statement,
-    type: ReportType.FINANCIAL,
+    projectId: null,
+    project: null,
+    reportLink: 'https://example.com/report',
+    downloadLink: 'https://example.com/download',
+    blockChainExplorerLink: 'https://example.com/explorer',
+    evidenceId: 'abc123',
+    content: [],
+    otherInfo: null,
+    createdAt: 1633046400,
+    updatedAt: 1633046400,
   },
 ];
 
@@ -185,101 +174,8 @@ export const generateRandomGeneratedReportItems = (count: number): IGeneratedRep
 
 export const DUMMY_GENERATED_REPORT_ITEMS = generateRandomGeneratedReportItems(5);
 
-export const FIXED_DUMMY_GENERATED_REPORT_ITEMS: IGeneratedReportItem[] = [
-  {
-    id: 'olszjd',
-    name: 'Balance Sheet-20240423-1',
-    createdTimestamp: 1713815673,
-    period: { startTimestamp: 1715616000, endTimestamp: 1718208000 },
-    blockchainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    project: null,
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    reportType: FinancialReportTypesKey.balance_sheet,
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'y11ggs',
-    name: 'Cash Flow Statement-20240420-1',
-    createdTimestamp: 1713543101,
-    period: { startTimestamp: 1715529600, endTimestamp: 1718121600 },
-    blockchainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    project: { id: 'hnhirr', name: 'TideBit', code: 'TB' },
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.cash_flow_statement,
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'uiz7oa',
-    name: 'Balance Sheet-20240427-1',
-    createdTimestamp: 1714220640,
-    period: { startTimestamp: 1715443200, endTimestamp: 1718035200 },
-    blockchainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    project: { id: '25ptrg', name: 'iSunFA', code: 'IS' },
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.balance_sheet,
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: '6pa0sq',
-    name: 'Comprehensive Income Statement-20240422-1',
-    createdTimestamp: 1713755682,
-    period: { startTimestamp: 1715356800, endTimestamp: 1717948800 },
-    blockchainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    project: null,
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.comprehensive_income_statement,
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'c353qc',
-    name: 'Balance Sheet-20240429-1',
-    createdTimestamp: 1714331987,
-    period: { startTimestamp: 1715270400, endTimestamp: 1717862400 },
-    blockchainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    project: { id: '3xza6b', name: 'BAIFA', code: 'BF' },
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.balance_sheet,
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL,
-  },
-  {
-    id: 'jsasdrho',
-    name: 'Cash Flow Statement-20240229-1',
-    createdTimestamp: 1719331987,
-    period: { startTimestamp: 1705270400, endTimestamp: 1726862400 },
-    blockchainExplorerLink:
-      'https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    project: { id: '78645', name: 'BAIFA', code: 'BF' },
-    downloadLink: 'https://BFample.com/download/report.pdf',
-    reportLinkId:
-      '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    reportType: FinancialReportTypesKey.cash_flow_statement,
-    evidenceId: '505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007',
-    type: ReportType.FINANCIAL,
-  },
-];
-
-export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedPendingReportItem = {
-  data: FIXED_DUMMY_PENDING_REPORT_ITEMS,
+export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedReport = {
+  data: MOCK_REPORTS,
   page: 1,
   totalPages: 2,
   totalCount: 5,
@@ -294,8 +190,8 @@ export const FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS: IPaginatedPendingReport
   ],
 };
 
-export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedGeneratedReportItem = {
-  data: FIXED_DUMMY_GENERATED_REPORT_ITEMS,
+export const FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS: IPaginatedReport = {
+  data: MOCK_REPORTS,
   page: 1,
   totalPages: 2,
   totalCount: 5,

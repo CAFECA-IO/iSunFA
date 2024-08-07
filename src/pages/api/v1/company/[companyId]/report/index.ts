@@ -1,16 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
   formatApiResponse,
   getTimestampOfFirstDateOfThisYear,
   getTimestampOfLastSecondOfDate,
   isParamNumeric,
+  isParamString,
   timestampInSeconds,
   timestampToString,
 } from '@/lib/utils/common';
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
-import { getSession } from '@/lib/utils/session';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import {
   ReportSheetType,
   ReportSheetTypeDisplayMap,
@@ -18,25 +19,127 @@ import {
   ReportType,
 } from '@/constants/report';
 import {
-  isReportSheetType,
-  convertStringToReportSheetType,
-  isReportLanguagesKey,
-  isReportStatusType,
-} from '@/lib/utils/type_guard/report';
-import FinancialReportGeneratorFactory from '@/lib/utils/financial_report/financial_report_generator_factory';
-import { createFinancialReport, getReportIdByFromTo } from '@/lib/utils/repo/report.repo';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
-
-import { ReportLanguagesKey } from '@/interfaces/report_language';
+  createFinancialReport,
+  findManyReports,
+  getReportIdByFromTo,
+} from '@/lib/utils/repo/report.repo';
+import { formatIPaginatedReport } from '@/lib/utils/formatter/report.formatter';
+import { getSession } from '@/lib/utils/session';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import {
   BalanceSheetOtherInfo,
   CashFlowStatementOtherInfo,
   IncomeStatementOtherInfo,
+  IPaginatedReport,
 } from '@/interfaces/report';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import { ReportLanguagesKey } from '@/interfaces/report_language';
+import FinancialReportGeneratorFactory from '@/lib/utils/financial_report/financial_report_generator_factory';
+import {
+  convertStringToReportSheetType,
+  isReportLanguagesKey,
+  isReportSheetType,
+} from '@/lib/utils/type_guard/report';
 
-// Info: (20240710 - Murky) Down below are Post related functions
+export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
+  let targetPageNumber = DEFAULT_PAGE_NUMBER;
+
+  if (isParamNumeric(targetPage)) {
+    targetPageNumber = parseInt(targetPage as string, 10);
+  }
+  return targetPageNumber;
+}
+
+export function formatPageSizeFromQuery(pageSize: string | string[] | undefined) {
+  let pageSizeNumber = DEFAULT_PAGE_LIMIT;
+
+  if (isParamNumeric(pageSize)) {
+    pageSizeNumber = parseInt(pageSize as string, 10);
+  }
+  return pageSizeNumber;
+}
+
+export function formatSortByFromQuery(sortBy: string | string[] | undefined) {
+  let sortByString: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt';
+  const allowSortBy = ['createdAt', 'name', 'type', 'reportType', 'status'];
+  if (isParamString(sortBy) && allowSortBy.includes(sortBy as string)) {
+    sortByString = sortBy as 'createdAt' | 'name' | 'type' | 'reportType' | 'status';
+  }
+  return sortByString;
+}
+
+export function formatSortOrderFromQuery(sortOrder: string | string[] | undefined) {
+  let sortOrderString: 'desc' | 'asc' = 'desc';
+
+  if (isParamString(sortOrder)) {
+    sortOrderString = sortOrder === 'asc' ? 'asc' : 'desc';
+  }
+  return sortOrderString;
+}
+
+export function formatDateInSecondFromQuery(dateInSecond: string | string[] | undefined) {
+  let dateInSecondNumber: number | undefined;
+
+  if (isParamNumeric(dateInSecond)) {
+    dateInSecondNumber = parseInt(dateInSecond as string, 10);
+  }
+  return dateInSecondNumber;
+}
+
+export function formatSearchQueryFromQuery(searchQuery: string | string[] | undefined) {
+  let searchQueryString: string | undefined;
+
+  if (isParamString(searchQuery)) {
+    searchQueryString = searchQuery as string;
+  }
+  return searchQueryString;
+}
+
+export function formatStatusFromQuery(status: string | string[] | undefined) {
+  let statusString: ReportStatusType | undefined;
+
+  if (
+    isParamString(status) &&
+    Object.values(ReportStatusType).includes(status as ReportStatusType)
+  ) {
+    statusString = status as ReportStatusType;
+  }
+  return statusString;
+}
+
+export function formatGetRequestQuery(req: NextApiRequest) {
+  const {
+    status,
+    targetPage,
+    pageSize,
+    sortBy,
+    sortOrder,
+    startDateInSecond,
+    endDateInSecond,
+    searchQuery,
+  } = req.query;
+
+  const statusString = formatStatusFromQuery(status);
+  const targetPageNumber = formatTargetPageFromQuery(targetPage);
+  const pageSizeNumber = formatPageSizeFromQuery(pageSize);
+  const sortByString = formatSortByFromQuery(sortBy);
+  const sortOrderString = formatSortOrderFromQuery(sortOrder);
+  const startDateInSecondFromQuery = formatDateInSecondFromQuery(startDateInSecond);
+  const endDateInSecondFromQuery = formatDateInSecondFromQuery(endDateInSecond);
+  const searchQueryString = formatSearchQueryFromQuery(searchQuery);
+  return {
+    statusString,
+    targetPageNumber,
+    pageSizeNumber,
+    sortByString,
+    sortOrderString,
+    startDateInSecondFromQuery,
+    endDateInSecondFromQuery,
+    searchQueryString,
+  };
+}
 
 export function formatReportSheetTypeFromQuery(reportType: unknown) {
   let reportSheetType = ReportSheetType.BALANCE_SHEET;
@@ -46,20 +149,6 @@ export function formatReportSheetTypeFromQuery(reportType: unknown) {
   }
   return reportSheetType;
 }
-
-// Deprecate: (20240729 - Murky) Move to financial report
-// export function getLastPeriodStartAndEndDate(
-//   reportSheetType: ReportSheetType,
-//   startDateInSecond: number,
-//   endDateInSecond: number
-// ) {
-//   const lastPeriodStartDateInSecond =
-//     reportSheetType === ReportSheetType.BALANCE_SHEET
-//       ? 0
-//       : Math.max(getTimestampOfSameDateOfLastYear(startDateInSecond), 0);
-//   const lastPeriodEndDateInSecond = Math.max(getTimestampOfSameDateOfLastYear(endDateInSecond), 0);
-//   return { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond };
-// }
 
 export function formatStartAndEndDateFromQuery(
   reportSheetType: ReportSheetType,
@@ -106,15 +195,6 @@ export function formatProjectIdFromQuery(projectId: unknown): number | null {
     projectIdNumber = parseInt(projectId as string, 10);
   }
   return projectIdNumber;
-}
-
-export function formatStatusFromQuery(status: unknown): ReportStatusType {
-  let statusString = ReportStatusType.GENERATED;
-
-  if (typeof status === 'string' && isReportStatusType(status)) {
-    statusString = status as ReportStatusType;
-  }
-  return statusString;
 }
 
 export function formatReportLanguageFromQuery(
@@ -221,82 +301,6 @@ export async function generateReportName(
   return reportName;
 }
 
-// Deprecate: (20240729 - Murky) Move to financial report
-// export function generateIAccountReadyForFrontendArray(
-//   curPeriodContent: IAccountForSheetDisplay[],
-//   prePeriodContent: IAccountForSheetDisplay[]
-// ): IAccountReadyForFrontend[] {
-//   const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
-
-//   if (
-//     curPeriodContent &&
-//     prePeriodContent &&
-//     curPeriodContent.length > 0 &&
-//     prePeriodContent.length > 0 &&
-//     curPeriodContent.length === prePeriodContent.length
-//   ) {
-//     curPeriodContent.forEach((curPeriodAccount, index) => {
-//       const lastPeriodAccount = prePeriodContent[index];
-//       const curPeriodAmount = curPeriodAccount.amount || 0;
-//       const prePeriodAmount = lastPeriodAccount.amount || 0;
-//       const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-//       const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
-//       const curPeriodPercentage = curPeriodAccount?.percentage
-//         ? Math.round(curPeriodAccount.percentage * 100)
-//         : 0;
-//       const prePeriodPercentage = lastPeriodAccount?.percentage
-//         ? Math.round(lastPeriodAccount.percentage * 100)
-//         : 0;
-//       const accountReadyForFrontend: IAccountReadyForFrontend = {
-//         code: curPeriodAccount.code,
-//         name: curPeriodAccount.name,
-//         curPeriodAmount,
-//         curPeriodPercentage,
-//         curPeriodAmountString,
-//         prePeriodAmount,
-//         prePeriodPercentage,
-//         prePeriodAmountString,
-//         indent: curPeriodAccount.indent,
-//       };
-//       curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
-//     });
-//   }
-//   if (
-//     curPeriodContent &&
-//     prePeriodContent &&
-//     curPeriodContent.length > 0 &&
-//     prePeriodContent.length > 0 &&
-//     curPeriodContent.length === prePeriodContent.length
-//   ) {
-//     curPeriodContent.forEach((curPeriodAccount, index) => {
-//       const lastPeriodAccount = prePeriodContent[index];
-//       const curPeriodAmount = curPeriodAccount.amount || 0;
-//       const prePeriodAmount = lastPeriodAccount.amount || 0;
-//       const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-//       const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
-//       const curPeriodPercentage = curPeriodAccount?.percentage
-//         ? Math.round(curPeriodAccount.percentage * 100)
-//         : 0;
-//       const prePeriodPercentage = lastPeriodAccount?.percentage
-//         ? Math.round(lastPeriodAccount.percentage * 100)
-//         : 0;
-//       const accountReadyForFrontend: IAccountReadyForFrontend = {
-//         code: curPeriodAccount.code,
-//         name: curPeriodAccount.name,
-//         curPeriodAmount,
-//         curPeriodPercentage,
-//         curPeriodAmountString,
-//         prePeriodAmount,
-//         prePeriodPercentage,
-//         prePeriodAmountString,
-//         indent: curPeriodAccount.indent,
-//       };
-//       curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
-//     });
-//   }
-//   return curPeriodAccountReadyForFrontendArray;
-// }
-
 export async function generateReportIfNotExist(
   companyId: number,
   projectId: number | null,
@@ -351,7 +355,58 @@ export async function generateReportIfNotExist(
   return reportId;
 }
 
-export async function handlePostRequest(companyId: number, req: NextApiRequest) {
+export async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<{ statusMessage: string; payload: IPaginatedReport | null }> {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IPaginatedReport | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    return { statusMessage, payload };
+  }
+
+  const {
+    statusString,
+    targetPageNumber,
+    pageSizeNumber,
+    sortByString,
+    sortOrderString,
+    startDateInSecondFromQuery,
+    endDateInSecondFromQuery,
+    searchQueryString,
+  } = formatGetRequestQuery(req);
+
+  const reportData = await findManyReports(
+    companyId,
+    statusString,
+    targetPageNumber,
+    pageSizeNumber,
+    sortByString,
+    sortOrderString,
+    startDateInSecondFromQuery,
+    endDateInSecondFromQuery,
+    searchQueryString
+  );
+  payload = formatIPaginatedReport(reportData);
+  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  return { statusMessage, payload };
+}
+
+export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: number | null = null;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    return { statusMessage, payload };
+  }
   const {
     projectIdNumber,
     reportLanguageString,
@@ -366,7 +421,7 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
 
   let thisPeriodReportId = -1;
   switch (financialOrAnalysisString) {
-    case 'financial': {
+    case ReportType.FINANCIAL: {
       thisPeriodReportId = await generateReportIfNotExist(
         companyId,
         projectIdNumber,
@@ -378,9 +433,10 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
         reportSheetType,
         reportLanguageString
       );
+      statusMessage = STATUS_MESSAGE.CREATED;
       break;
     }
-    case 'analysis': {
+    case ReportType.ANALYSIS: {
       // ToDo: (20240710 - Murky) Analysis Report Generator
       break;
     }
@@ -388,42 +444,40 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
       break;
     }
   }
-  return thisPeriodReportId;
+  payload = thisPeriodReportId;
+  return { statusMessage, payload };
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IPaginatedReport | number | null }>;
+} = {
+  GET: handleGetRequest,
+  POST: handlePostRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<number | null>>
+  res: NextApiResponse<IResponseData<IPaginatedReport | number | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: number | null = null;
-
+  let payload: IPaginatedReport | number | null = null;
   try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    // const companyId = 10000001;
-
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    if (isAuth) {
-      switch (req.method) {
-        case 'POST': {
-          payload = await handlePostRequest(companyId, req);
-
-          statusMessage = STATUS_MESSAGE.CREATED;
-          break;
-        }
-        default: {
-          break;
-        }
-      }
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate: (20240710 - Murky) Debug
-    // eslint-disable-next-line no-console
-    console.log(error);
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<number | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<IPaginatedReport | number | null>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }

@@ -6,7 +6,7 @@ import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IReportIncludeCompany, IReportIncludeProject } from '@/interfaces/report';
+import { IReportIncludeCompanyProject } from '@/interfaces/report';
 
 export async function findFirstReportByFromTo(
   companyId: number,
@@ -35,16 +35,18 @@ export async function findFirstReportByFromTo(
 }
 
 export async function findUniqueReportById(companyId: number, reportId: number) {
-  let report: IReportIncludeCompany | null = null;
+  let report: IReportIncludeCompanyProject | null = null;
 
   try {
     report = await prisma.report.findUnique({
       where: {
         id: reportId,
         companyId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         company: true,
+        project: true,
       },
     });
   } catch (error) {
@@ -127,7 +129,7 @@ export async function createFinancialReport(
 
 export async function findManyReports(
   companyId: number,
-  status: ReportStatusType,
+  status: ReportStatusType = ReportStatusType.PENDING,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   sortBy: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt',
@@ -136,7 +138,7 @@ export async function findManyReports(
   endDateInSecond?: number,
   searchQuery?: string
 ) {
-  let reports: IReportIncludeProject[] = [];
+  let reports: IReportIncludeCompanyProject[] = [];
 
   const where: Prisma.ReportWhereInput = {
     id: {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
@@ -9,14 +8,15 @@ import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { FinancialReportTypeName } from '@/interfaces/report_type';
+import { IReport } from '@/interfaces/report';
 
 interface IPendingReportItemProps {
-  report: IPendingReportItem;
+  report: IReport;
   checked: boolean;
   isCheckboxVisible: boolean;
   onCheckChange?: () => void;
-  onReportItemUpdate?: (report: IPendingReportItem) => void;
-  onReportItemDelete?: (id: string) => void;
+  onReportItemUpdate?: (report: IReport) => void;
+  onReportItemDelete?: (id: number) => void;
 }
 
 const PendingReportItem = ({
@@ -31,13 +31,13 @@ const PendingReportItem = ({
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const [reportItem, setReportItem] = useState(report);
-  const { id, createdTimestamp, name, period, remainingSeconds, paused } = reportItem;
+  const { id, createdAt, name, from, to, remainingSeconds, paused } = reportItem;
 
   const [isPaused, setIsPaused] = useState(paused);
   const [remainingTime, setRemainingTime] = useState(remainingSeconds);
 
-  const startDate = timestampToString(period.startTimestamp);
-  const endDate = timestampToString(period.endTimestamp);
+  const startDate = timestampToString(from);
+  const endDate = timestampToString(to);
   const remainingData = countdown(remainingTime);
 
   const togglePausedStatus = () => {
@@ -229,7 +229,7 @@ const PendingReportItem = ({
       ) : null}
       <td className="border-x border-lightGray6">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
-        <CalendarIcon timestamp={createdTimestamp} />
+        <CalendarIcon timestamp={createdAt} />
       </td>
       <td className="pl-5 text-start text-base text-text-neutral-primary">
         {/* Info: desktop (20240528 - Shirley) */}

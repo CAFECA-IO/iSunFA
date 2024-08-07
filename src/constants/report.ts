@@ -8,9 +8,9 @@ export enum ReportType {
 }
 
 export enum ReportSheetType {
-  BALANCE_SHEET = 'balanceSheet',
-  INCOME_STATEMENT = 'incomeStatement',
-  CASH_FLOW_STATEMENT = 'cashFlowStatement',
+  BALANCE_SHEET = 'balance_sheet',
+  INCOME_STATEMENT = 'comprehensive_income_statement',
+  CASH_FLOW_STATEMENT = 'cash_flow_statement',
   //  CHANGE_IN_EQUITY_STATEMENT = 'changeInEquityStatement',
 }
 

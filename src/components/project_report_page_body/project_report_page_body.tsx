@@ -9,21 +9,15 @@ import PendingReportList from '@/components/pending_report_list/pending_report_l
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
 import { SortOptions, default30DayPeriodInSec } from '@/constants/display';
-import {
-  FIXED_DUMMY_GENERATED_REPORT_ITEMS,
-  FIXED_DUMMY_PENDING_REPORT_ITEMS,
-  IGeneratedReportItem,
-  IPaginatedGeneratedReportItem,
-  IPaginatedPendingReportItem,
-  IPendingReportItem,
-} from '@/interfaces/report_item';
+import { MOCK_REPORTS } from '@/interfaces/report_item';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ToastType } from '@/interfaces/toastify';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
-import { ReportType } from '@/constants/report';
+import { ReportStatusType, ReportType } from '@/constants/report';
+import { IPaginatedReport, IReport } from '@/interfaces/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation('common');
@@ -34,7 +28,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];
 
   // Info: (20240701 - Julian) pending state
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
+  const [pendingData, setPendingData] = useState<IReport[]>([]);
   const [pendingCurrentPage, setPendingCurrentPage] = useState<number>(1);
   const [pendingSorting, setPendingSorting] = useState<string>(SortOptions.newest);
   const [pendingFilteredType, setPendingFilteredType] = useState<string>(typeOptions[0]);
@@ -43,7 +37,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const [pendingSearch, setPendingSearch] = useState<string>('');
 
   // Info: (20240701 - Julian) history state
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
+  const [historyData, setHistoryData] = useState<IReport[]>([]);
   const [historyCurrentPage, setHistoryCurrentPage] = useState<number>(1);
   const [historySorting, setHistorySorting] = useState<string>(SortOptions.newest);
   const [historyFilteredType, setHistoryFilteredType] = useState<string>(typeOptions[0]);
@@ -59,11 +53,14 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: pendingReports,
     code: listPendingCode,
     success: listPendingSuccess,
-  } = APIHandler<IPaginatedPendingReportItem>(
-    APIName.REPORT_LIST_PENDING,
+  } = APIHandler<IPaginatedReport>(
+    APIName.REPORT_LIST,
     {
       params: { companyId: selectedCompany?.id },
-      query: { projectId }, // ToDo: (20240701 - Julian) Add query for filtering
+      query: {
+        status: ReportStatusType.PENDING,
+        projectId,
+      }, // ToDo: (20240701 - Julian) Add query for filtering
     },
     hasCompanyId
   );
@@ -72,11 +69,14 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     data: generatedReports,
     code: listGeneratedCode,
     success: listGeneratedSuccess,
-  } = APIHandler<IPaginatedGeneratedReportItem>(
-    APIName.REPORT_LIST_GENERATED,
+  } = APIHandler<IPaginatedReport>(
+    APIName.REPORT_LIST,
     {
       params: { companyId: selectedCompany?.id },
-      query: { projectId }, //  ToDo: (20240701 - Julian) Add query for filtering
+      query: {
+        status: ReportStatusType.GENERATED,
+        projectId,
+      }, //  ToDo: (20240701 - Julian) Add query for filtering
     },
     hasCompanyId
   );
@@ -91,7 +91,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
         closeable: true,
       });
-      setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
+      setPendingData(MOCK_REPORTS);
     }
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
@@ -105,7 +105,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
         closeable: true,
       });
-      setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
+      setHistoryData(MOCK_REPORTS);
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 

@@ -3,12 +3,8 @@ import { IAccountReadyForFrontend, IAccountResultStatus } from '@/interfaces/acc
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
 import { Prisma } from '@prisma/client';
+import { IPaginatedData } from './pagination';
 
-export type IReportIncludeCompany = Prisma.ReportGetPayload<{
-  include: {
-    company: true;
-  };
-}>;
 export interface IAnalysisReportRequest {
   project_id: string;
   type: string;
@@ -31,6 +27,11 @@ export interface IReport {
   remainingSeconds: number;
   paused: boolean;
   projectId: number | null;
+  project: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
   reportLink: string;
   downloadLink: string;
   blockChainExplorerLink: string;
@@ -41,9 +42,12 @@ export interface IReport {
   updatedAt: number;
 }
 
-export type IReportIncludeProject = Prisma.ReportGetPayload<{
+export interface IPaginatedReport extends IPaginatedData<IReport[]> {}
+
+export type IReportIncludeCompanyProject = Prisma.ReportGetPayload<{
   include: {
     project: true;
+    company: true;
   };
 }>;
 export interface IReportOld {
