@@ -1,8 +1,8 @@
 import { timestampToString } from '@/lib/utils/common';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
+import { IPaginatedReport, IReport } from '@/interfaces/report';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ReportSheetType, ReportType } from '@/constants/report';
-import { IPaginatedReport, IReport } from './report';
 
 export interface IBasicReportItem {
   id: string;
