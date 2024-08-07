@@ -9,6 +9,7 @@ import { timestampInSeconds, calculateWorkingHours } from '@/lib/utils/common';
 import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IFolder } from '@/interfaces/folder';
+import { JOURNAL_EVENT } from '@/constants/journal';
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
@@ -582,11 +583,15 @@ export async function generateInvoiceFromSalaryRecord(
   return invoice;
 }
 
-export async function createSalaryRecordJournal(companyId: number): Promise<number> {
+export async function createSalaryRecordJournal(
+  companyId: number,
+  event: JOURNAL_EVENT = JOURNAL_EVENT.UPLOADED
+): Promise<number> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const journal = await prisma.journal.create({
     data: {
+      event,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
       companyId,

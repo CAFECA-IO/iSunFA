@@ -101,8 +101,10 @@ export async function listJournal(
   searchQuery?: string
 ): Promise<IPaginatedData<IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]>> {
   try {
+    const journalEvent = isUploaded === true ? JOURNAL_EVENT.UPLOADED : JOURNAL_EVENT.UPCOMING;
     const where: Prisma.JournalWhereInput = {
       deletedAt: null,
+      event: journalEvent,
       companyId,
       createdAt: {
         gte: startDateInSecond,
@@ -159,7 +161,6 @@ export async function listJournal(
     if (journalList.length > pageSize) {
       journalList.pop(); // 移除多余的记录
     }
-    const journalEvent = isUploaded === true ? JOURNAL_EVENT.UPLOADED : JOURNAL_EVENT.UPCOMING;
     const pagenatedJournalList = {
       data: journalList,
       page,

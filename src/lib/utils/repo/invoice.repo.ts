@@ -2,6 +2,7 @@
 
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice, IInvoiceIncludePaymentJournal } from '@/interfaces/invoice';
 import { IPayment } from '@/interfaces/payment';
@@ -369,7 +370,8 @@ export async function createJournalInPrisma(
   projectId: number | null,
   aichResultId: string,
   contractId: number | null,
-  companyId: number
+  companyId: number,
+  event: JOURNAL_EVENT = JOURNAL_EVENT.UPLOADED
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -380,6 +382,7 @@ export async function createJournalInPrisma(
       },
     },
     aichResultId,
+    event,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
   };
