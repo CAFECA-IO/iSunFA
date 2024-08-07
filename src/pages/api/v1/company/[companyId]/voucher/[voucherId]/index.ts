@@ -7,7 +7,7 @@ import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { getSession } from '@/lib/utils/session';
 import {
   updateVoucherByJournalIdInPrisma,
-  findUniqueJournalInvolveInvoicePaymentInPrisma
+  findUniqueJournalInvolveInvoicePaymentInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
@@ -92,7 +92,7 @@ async function handleVoucherUpdatePrismaLogic(
   }
   return {
     voucherUpdated,
-    statusMessage
+    statusMessage,
   };
 }
 
@@ -101,7 +101,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
   // const { voucherIdInNumber } = formatGetQuery(req);
   const { voucherData } = formatPutBody(req);
   let voucherUpdated: ApiResponseType = null;
-  let statusMessage:string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   if (voucherData) {
     try {
       const voucherUpdatedData = await handleVoucherUpdatePrismaLogic(voucherData, companyId);
@@ -116,7 +116,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
 
   return {
     voucherUpdated,
-    statusMessage
+    statusMessage,
   };
 }
 

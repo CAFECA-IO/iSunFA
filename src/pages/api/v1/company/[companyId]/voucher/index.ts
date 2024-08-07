@@ -2,7 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
-import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB, IVoucherFromPrismaIncludeLineItems } from '@/interfaces/voucher';
+import {
+  IVoucherDataForAPIResponse,
+  IVoucherDataForSavingToDB,
+  IVoucherFromPrismaIncludeLineItems,
+} from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -12,7 +16,7 @@ import {
   createVoucherInPrisma,
   findUniqueVoucherInPrisma,
   getLatestVoucherNoInPrisma,
-  findUniqueJournalInvolveInvoicePaymentInPrisma
+  findUniqueJournalInvolveInvoicePaymentInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
@@ -29,7 +33,8 @@ async function handleVoucherCreatePrismaLogic(
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
 
   try {
-    const journal: IJournalFromPrismaIncludeInvoicePayment | null = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
+    const journal: IJournalFromPrismaIncludeInvoicePayment | null =
+      await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
     if (!journal || !journal.invoice || !journal.invoice.payment) {
       // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
@@ -73,7 +78,7 @@ async function handleVoucherCreatePrismaLogic(
 
   return {
     updatedVoucher,
-    statusMessage
+    statusMessage,
   };
 }
 

@@ -5,9 +5,14 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
-import { IVoucherDataForSavingToDB, IVoucherFromPrismaIncludeLineItems } from '@/interfaces/voucher';
+import {
+  IVoucherDataForSavingToDB,
+  IVoucherFromPrismaIncludeLineItems,
+} from '@/interfaces/voucher';
 
-export async function findUniqueJournalInvolveInvoicePaymentInPrisma(journalId: number | undefined) {
+export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
+  journalId: number | undefined
+) {
   try {
     const result = await prisma.journal.findUnique({
       where: {
@@ -17,9 +22,9 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(journalId: 
         invoice: {
           include: {
             payment: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     return result;
@@ -92,9 +97,9 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
         lineItems: {
           include: {
             account: true,
-          }
+          },
         },
-      }
+      },
     });
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
