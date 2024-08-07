@@ -18,7 +18,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { FinancialReportTypesKeyReportSheetTypeMapping } from '@/constants/report';
 
-const FinancialReportSection = () => {
+interface IFinancialReportSectionProps {
+  reportType?: FinancialReportTypesKey;
+}
+
+const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
   const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
@@ -36,7 +40,9 @@ const FinancialReportSection = () => {
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
-    FinancialReportTypesKey.balance_sheet
+    reportType && FinancialReportTypesKey[reportType]
+      ? FinancialReportTypesKey[reportType]
+      : FinancialReportTypesKey.balance_sheet
   );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
