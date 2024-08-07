@@ -233,6 +233,7 @@ export async function handlePostRequest(
   }
   const latestSubAccount = await findLatestSubAccountInPrisma(parentAccount);
   const newCode = setNewCode(parentAccount, latestSubAccount);
+  const newName = parentAccount.name + "-" + String(name);
   const newOwnAccount = {
     companyId: companyIdNumber,
     system: parentAccount.system,
@@ -240,7 +241,7 @@ export async function handlePostRequest(
     debit: parentAccount.debit,
     liquidity: parentAccount.liquidity,
     code: newCode,
-    name: String(name),
+    name: newName,
     forUser: true,
     parentCode: parentAccount.code,
     rootCode: parentAccount.rootCode,
