@@ -287,7 +287,7 @@ model Invoice {
   eventType        String  @map("event_type")
   paymentReason    String  @map("payment_reason")
   description      String
-  verdorTaxId      String  @map("verdor_tax_id")
+  vendorTaxId      String  @map("vendor_tax_id")
   vendorOrSupplier String  @map("vendor_or_supplier")
   imageUrl         String  @default("") @map("image_url")
   createdAt        Int     @map("created_at")

@@ -102,7 +102,6 @@ export async function listJournal(
 ): Promise<IPaginatedData<IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]>> {
   try {
     const where: Prisma.JournalWhereInput = {
-      deletedAt: null,
       event: journalEvent,
       companyId,
       createdAt: {
