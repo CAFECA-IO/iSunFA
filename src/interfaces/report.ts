@@ -2,8 +2,8 @@ import { ReportSheetType, ReportType } from '@/constants/report';
 import { IAccountReadyForFrontend, IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
+import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
-import { IPaginatedData } from './pagination';
 
 export interface IAnalysisReportRequest {
   project_id: string;
