@@ -90,7 +90,7 @@ export async function findManyJournalsInPrisma(
 
 export async function listJournal(
   companyId: number,
-  isUploaded: boolean,
+  journalEvent?: JOURNAL_EVENT,
   page: number = 1, // 将 pageDelta 改为 targetPage，默认值为 1
   pageSize: number = DEFAULT_PAGE_LIMIT,
   eventType: string | undefined = undefined,
@@ -101,7 +101,6 @@ export async function listJournal(
   searchQuery?: string
 ): Promise<IPaginatedData<IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]>> {
   try {
-    const journalEvent = isUploaded === true ? JOURNAL_EVENT.UPLOADED : JOURNAL_EVENT.UPCOMING;
     const where: Prisma.JournalWhereInput = {
       deletedAt: null,
       event: journalEvent,
@@ -113,7 +112,6 @@ export async function listJournal(
       invoice: {
         eventType,
       },
-      tokenId: isUploaded ? { not: null } : { equals: null },
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
       ...(searchQuery
         ? [
@@ -161,7 +159,18 @@ export async function listJournal(
     if (journalList.length > pageSize) {
       journalList.pop(); // 移除多余的记录
     }
-    const pagenatedJournalList = {
+
+    const sort:{
+      sortBy: string; // 排序欄位的鍵
+      sortOrder: string; // 排序欄位的值
+    }[] = [
+        { sortBy, sortOrder },
+    ];
+
+    if (journalEvent) {
+      sort.push({ sortBy: journalEvent, sortOrder: '' });
+    }
+    const paginatedJournalList = {
       data: journalList,
       page,
       totalPages,
@@ -169,13 +178,10 @@ export async function listJournal(
       pageSize,
       hasNextPage,
       hasPreviousPage,
-      sort: [
-        { sortBy, sortOrder },
-        { sortBy: journalEvent, sortOrder: '' },
-      ],
+      sort,
     };
 
-    return pagenatedJournalList;
+    return paginatedJournalList;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }

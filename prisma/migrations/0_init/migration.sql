@@ -283,7 +283,7 @@ CREATE TABLE "journal" (
     "token_contract" TEXT,
     "token_id" TEXT,
     "aich_result_id" TEXT,
-    "event" TEXT NOT NULL;
+    "event" TEXT NOT NULL,
     "project_id" INTEGER,
     "contract_id" INTEGER,
     "company_id" INTEGER NOT NULL,

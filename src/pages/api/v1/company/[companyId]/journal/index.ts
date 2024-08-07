@@ -62,13 +62,11 @@ export function formatQuery(query: any) {
 }
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
-  // Info: (20240807 - Murky) formatQuery 裡可以取得eventType, 但是由於
   const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
     formatQuery(req.query);
-  const isUploaded = true;
   const uploadedPaginatedJournalList = await listJournal(
     companyId,
-    isUploaded,
+    JOURNAL_EVENT.UPLOADED,
     page,
     pageSize,
     eventType,
@@ -81,7 +79,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
 
   const upComingPaginatedJournalList = await listJournal(
     companyId,
-    !isUploaded,
+    JOURNAL_EVENT.UPCOMING,
     page,
     pageSize,
     eventType,
