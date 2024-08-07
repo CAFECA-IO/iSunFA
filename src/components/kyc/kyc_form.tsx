@@ -140,6 +140,15 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextButtonClick = () => {
+    handleStepChange(step + 1);
+    scrollToTop();
+  };
+
   // Info: (20240801 - Liz) 確認每個步驟的表格是否填寫完整
   const isBasicInfoFormComplete = Object.values(basicInfoValues).every((value) => value !== '');
 
@@ -182,7 +191,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
               <button
                 type="button"
                 className={`rounded px-4 py-2 ${isBasicInfoFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
-                onClick={() => handleStepChange(step + 1)}
+                onClick={handleNextButtonClick}
                 disabled={!isBasicInfoFormComplete}
               >
                 {t('KYC.NEXT')}
@@ -207,7 +216,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
               <button
                 type="button"
                 className={`rounded px-4 py-2 ${isRegistrationInfoFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
-                onClick={() => handleStepChange(step + 1)}
+                onClick={handleNextButtonClick}
                 disabled={!isRegistrationInfoFormComplete}
               >
                 {t('KYC.NEXT')}
@@ -229,7 +238,7 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
               <button
                 type="button"
                 className={`rounded px-4 py-2 ${isContactInfoFormComplete() ? enabledButtonStyle : disabledButtonStyle}`}
-                onClick={() => handleStepChange(step + 1)}
+                onClick={handleNextButtonClick}
                 disabled={!isContactInfoFormComplete()}
               >
                 {t('KYC.NEXT')}

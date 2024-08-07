@@ -122,7 +122,7 @@ const NavBar = () => {
         // ToDo: (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50"
+        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
           href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
@@ -144,7 +144,7 @@ const NavBar = () => {
         // TODO: temp disabled (20240517 - Shirley)
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50 disabled:hover:text-button-text-secondary"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
         <p>{t('JOURNAL.CONTRACT')}</p>
@@ -154,7 +154,7 @@ const NavBar = () => {
         // ToDo: (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:opacity-50"
+        className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
           href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
@@ -241,7 +241,7 @@ const NavBar = () => {
         // ToDo: (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="mx-auto flex flex-col items-center gap-8px disabled:opacity-50"
+        className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
           href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
@@ -269,7 +269,7 @@ const NavBar = () => {
         // TODO: temp disabled (20240517 - Shirley)
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="flex flex-col items-center gap-8px disabled:opacity-50"
+        className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
         <p>{t('JOURNAL.CONTRACT')}</p>
@@ -280,7 +280,7 @@ const NavBar = () => {
         // ToDo: (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
-        className="mx-auto flex flex-col items-center gap-8px disabled:opacity-50"
+        className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
           href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
@@ -291,7 +291,7 @@ const NavBar = () => {
         {/* </Link> */}
       </button>
       {/* Info: (20240416 - Julian) Report button */}
-      <button type="button" className="mx-auto disabled:opacity-50">
+      <button type="button" className="mx-auto disabled:text-button-text-disable">
         <Link
           href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
           className="flex flex-col items-center gap-8px"
@@ -331,7 +331,7 @@ const NavBar = () => {
             // TODO: temp disabled (20240517 - Shirley)
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
-            className="flex shrink-0 flex-col justify-center rounded-xs px-2 disabled:opacity-50"
+            className="flex shrink-0 flex-col justify-center rounded-xs px-2 disabled:text-button-text-disable"
           >
             <div className="flex items-center justify-center">
               <svg
@@ -359,7 +359,7 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           onClick={companyChangeClickHandler}
-          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${selectedCompany ? '' : 'pointer-events-none opacity-50'}`}
+          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${selectedCompany ? '' : 'pointer-events-none text-button-text-disable'}`}
         >
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -386,7 +386,7 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-          className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:opacity-50"
+          className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -412,7 +412,7 @@ const NavBar = () => {
           onClick={() => redirectTo(ISUNFA_ROUTE.COMPANY_INFO)}
           variant={'secondaryBorderless'}
           disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-          className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:opacity-50"
+          className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
           <div className="my-auto flex items-center justify-center">
             <svg
