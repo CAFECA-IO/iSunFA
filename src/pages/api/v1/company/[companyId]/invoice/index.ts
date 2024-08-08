@@ -36,6 +36,7 @@ function formatInvoice(invoice: IInvoice) {
     number: now.toString(),
     type: invoiceTypeValues[randomIndex],
     vendorTaxId: 'temp fake id',
+    deductible: true,
     projectId: invoice.projectId ? invoice.projectId : null,
     contractId: invoice.contractId ? invoice.contractId : null,
     project: invoice.project ? invoice.project : null,

@@ -232,6 +232,7 @@ export async function createInvoiceInPrisma(
         description: invoiceData.description,
         vendorTaxId: invoiceData.vendorTaxId,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
+        deductible: invoiceData.deductible,
         imageUrl,
         payment: {
           connect: {
