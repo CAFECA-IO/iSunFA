@@ -1,5 +1,5 @@
 import { EventType } from '@/constants/account';
-import { SortOrder } from './sort';
+import { SortOrder } from '@/constants/sort';
 
 export enum JOURNAL_EVENT {
   UPLOADED = 'JOURNAL.UPLOADED',
