@@ -12,6 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
+import { throttle } from '@/lib/utils/common';
 
 interface SignUpProps {
   username?: string;
@@ -42,55 +43,9 @@ interface UserContextType {
     credentials: PublicKeyCredential,
     invitation: string | undefined
   ) => Promise<void>;
-  clearCompany: () => void;
 }
 
-// 自定義 debounce 函數
 // eslint-disable-next-line function-paren-newline
-// function debounce<F extends (...args: unknown[]) => unknown>(
-//   func: F,
-//   wait: number
-// ): (...args: Parameters<F>) => void {
-//   let timeout: NodeJS.Timeout | null = null;
-//   // eslint-disable-next-line no-console
-//   console.log('debounce');
-//   return (...args: Parameters<F>) => {
-//     if (timeout) clearTimeout(timeout);
-//     timeout = setTimeout(() => func(...args), wait);
-//   };
-// }
-
-// 自定義 throttle 函數
-// eslint-disable-next-line function-paren-newline
-function throttle<F extends (...args: unknown[]) => unknown>(
-  func: F,
-  limit: number
-): (...args: Parameters<F>) => void {
-  let lastFunc: NodeJS.Timeout | null;
-  let lastRan: number | null = null;
-
-  function returnFunc(this: unknown, ...args: Parameters<F>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const context = this as unknown as F;
-    if (lastRan === null) {
-      func.apply(context, args);
-      lastRan = Date.now();
-    } else {
-      if (lastFunc) clearTimeout(lastFunc); // 確保 lastFunc 不是 null
-      lastFunc = setTimeout(
-        () => {
-          if (Date.now() - lastRan! >= limit) {
-            func.apply(context, args);
-            lastRan = Date.now();
-          }
-        },
-        limit - (Date.now() - lastRan)
-      );
-    }
-  }
-
-  return returnFunc;
-}
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
@@ -112,7 +67,6 @@ export const UserContext = createContext<UserContextType>({
     return { isRegistered: false, credentials: null };
   },
   handleExistingCredential: async () => {},
-  clearCompany: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -142,10 +96,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
-
-  // const lastEventTime = useRef(0);
   const isRouteChanging = useRef(false);
-  const userInitiatedNavigation = useRef(false);
 
   const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
     body: { credential: credentialRef.current },
@@ -456,9 +407,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
-          // if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-          //   router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-          // }
           if (
             'company' in userSessionData &&
             userSessionData.company &&
@@ -466,19 +414,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           ) {
             setSelectedCompany(userSessionData.company);
             setSuccessSelectCompany(true);
-
             handleReturnUrl();
-
-            // if (userInitiatedNavigation.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-            //   router.push(ISUNFA_ROUTE.DASHBOARD);
-            // }
-            // if (
-            //   !userInitiatedNavigation.current &&
-            //   router.pathname.includes('users') &&
-            //   !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
-            // ) {
-            //   handleReturnUrl();
-            // }
           } else {
             setSuccessSelectCompany(undefined);
             setSelectedCompany(null);
@@ -504,61 +440,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAuthLoading(false);
   }, [router.pathname]);
 
-  // const debouncedCheckSession = useCallback(
-  //   debounce(() => {
-  //     // eslint-disable-next-line no-console
-  //     console.log('debouncedCheckSession');
-  //     const now = Date.now();
-  //     if (now - lastEventTime.current > 1000) {
-  //       // 1秒內不重複執行
-  //       lastEventTime.current = now;
-  //       checkSession();
-  //     }
-  //   }, 250), // 250ms 的防抖時間
-  //   [checkSession]
-  // );
-
-  // 將 debouncedCheckSession 改為 throttledCheckSession
   const throttledCheckSession = useCallback(
     throttle(() => {
-      // eslint-disable-next-line no-console
-      console.log('throttledCheckSession');
       checkSession();
-    }, 1000), // 250ms 的節流時間
+    }, 100),
     [checkSession]
   );
-
-  const handleVisibilityChange = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('handleVisibilityChange');
-    if (document.visibilityState === 'visible' && !isRouteChanging.current) {
-      // debouncedCheckSession();
-      throttledCheckSession();
-    }
-  }, [throttledCheckSession]);
-
-  const handleRouteChangeStart = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('handleRouteChangeStart, router', router);
-    if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      isRouteChanging.current = true;
-      userInitiatedNavigation.current = true;
-      // debouncedCheckSession();
-      throttledCheckSession();
-      // eslint-disable-next-line no-console
-      console.log('handleRouteChangeStart, router.pathname is valid', router.pathname);
-    }
-  }, [throttledCheckSession, router.pathname]);
-
-  const handleRouteChangeComplete = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('handleRouteChangeComplete, router', router);
-    isRouteChanging.current = false;
-    // 重置用戶導航標誌
-    setTimeout(() => {
-      userInitiatedNavigation.current = false;
-    }, 100);
-  }, []);
 
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
@@ -566,8 +453,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     code: string;
     error: Error | null;
   }) => {
-    // eslint-disable-next-line no-console
-    console.log('handleSelectCompanyResponse', response);
     if (response.success && response.data !== null) {
       setSelectedCompany(response.data);
       setSuccessSelectCompany(true);
@@ -580,14 +465,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const clearCompany = () => {
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-    // eslint-disable-next-line no-console
-    console.log('clearCompany', selectedCompanyRef.current, successSelectCompanyRef.current);
-  };
-
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
     setSelectedCompany(null);
@@ -598,9 +475,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
-
-    // eslint-disable-next-line no-console
-    console.log('selectCompany', company, isPublic, res);
 
     if (!company && !isPublic) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
@@ -615,11 +489,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     router.push(ISUNFA_ROUTE.LOGIN);
   };
 
-  // const handleVisibilityChange = () => {
-  //   if (document.visibilityState === 'visible') {
-  //     checkSession();
-  //   }
-  // };
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === 'visible' && !isRouteChanging.current) {
+      throttledCheckSession();
+    }
+  }, [throttledCheckSession]);
+
+  const handleRouteChangeStart = useCallback(() => {
+    if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      isRouteChanging.current = true;
+      throttledCheckSession();
+    }
+  }, [throttledCheckSession, router.pathname]);
+
+  const handleRouteChangeComplete = useCallback(() => {
+    isRouteChanging.current = false;
+  }, []);
 
   useEffect(() => {
     checkSession();
@@ -661,7 +546,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleExistingCredential,
-      clearCompany,
     }),
     [
       credentialRef.current,
