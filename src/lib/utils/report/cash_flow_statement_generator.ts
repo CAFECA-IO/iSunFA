@@ -1,7 +1,7 @@
 import { ReportSheetType } from '@/constants/report';
-import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
-import BalanceSheetGenerator from '@/lib/utils/financial_report/balance_sheet_generator';
-import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
+import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
+import BalanceSheetGenerator from '@/lib/utils/report/balance_sheet_generator';
+import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import {
   IAccountForSheetDisplay,
   IAccountNode,
@@ -215,8 +215,10 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>
   ): number {
     const sum =
-      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_GENERATE_FROM_OPERATING.code)?.amount || 0) +
-      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_OUTFLOW_FOR_DIVIDEND.code)?.amount || 0) +
+      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_GENERATE_FROM_OPERATING.code)?.amount ||
+        0) +
+      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_OUTFLOW_FOR_DIVIDEND.code)?.amount ||
+        0) +
       (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FROM_TAX_REFUND.code)?.amount || 0);
 
     return sum;
@@ -643,18 +645,33 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     currentYear: number,
     accountMap: Map<string, IAccountReadyForFrontend>
   ) {
-    const getPPE = accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const salePPE = accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const getFVPL = accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_FVPL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const getFVOCI = accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_FVOCI.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const getAmortizedFA = accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_AMORTIZED_FINANCIAL_ASSET.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const saleFVOCI = accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_FVOCI.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getPPE =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const salePPE =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getFVPL =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_FVPL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getFVOCI =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_FVOCI.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getAmortizedFA =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_AMORTIZED_FINANCIAL_ASSET.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const saleFVOCI =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_FVOCI.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // const saleFVPL = accountMap.get('B00200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const saleAmortizedFA = accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_AMORTIZED_FINANCIAL_ASSET.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const removeHedgeAsset = accountMap.get(SPECIAL_ACCOUNTS.CASH_REMOVE_HEDGE_ASSET.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const receiveStockDividend = accountMap.get(SPECIAL_ACCOUNTS.CASH_RECEIVE_STOCK_DIVIDEND.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const saleAmortizedFA =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_AMORTIZED_FINANCIAL_ASSET.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const removeHedgeAsset =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_REMOVE_HEDGE_ASSET.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const receiveStockDividend =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_RECEIVE_STOCK_DIVIDEND.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
     // const equityDividend = accountMap.get('xxxx') || EMPTY_I_ACCOUNT_READY_FRONTEND; <= 沒有這個項目
-    const totalInvestCashFlow = accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const totalInvestCashFlow =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     const curPPEInvest = -1 * (getPPE.curPeriodAmount - salePPE.curPeriodAmount);
     const curStrategyInvest =
@@ -700,11 +717,19 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // eslint-disable-next-line class-methods-use-this
   private freeMoneyMap(currentYear: number, accountMap: Map<string, IAccountReadyForFrontend>) {
-    const operatingCashFlow = accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const getPPE = accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const salePPE = accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const getIntangibleAsset = accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_AMORTIZED_FINANCIAL_ASSET.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const saleIntangibleAsset = accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_INTANGIBLE_ASSET.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const operatingCashFlow =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getPPE =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const salePPE =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_PPE.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const getIntangibleAsset =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_INVEST_AMORTIZED_FINANCIAL_ASSET.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const saleIntangibleAsset =
+      accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_INTANGIBLE_ASSET.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     // Info: get本來就是負的
     const curFreeCash =

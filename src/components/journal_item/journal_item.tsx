@@ -146,7 +146,7 @@ const JournalItem = ({
   };
 
   const debitItem = lineItems
-    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
+    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -154,7 +154,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
+    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
     : defaultItem;
   const credit = {
     account: creditItem.account,

@@ -1,19 +1,8 @@
-import {
-  ReportSheetType,
-  ReportSheetTypeFinancialFinancialReportTypesKeyMapping,
-  ReportType,
-} from '@/constants/report';
+import { ReportSheetType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, IReportIncludeCompanyProject } from '@/interfaces/report';
 import { isReportSheetType, isReportType } from '@/lib/utils/type_guard/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { isIAccountReadyForFrontendArray } from '@/lib/utils/type_guard/account';
-import {
-  IPendingReportItem,
-  IGeneratedReportItem,
-  IBasicReportItem,
-  IPaginatedPendingReportItem,
-  IPaginatedGeneratedReportItem,
-} from '@/interfaces/report_item';
 
 export function formatIReport(report: IReportIncludeCompanyProject): IReport {
   const type: ReportType = isReportType(report.reportType)
@@ -94,115 +83,4 @@ export function formatIPaginatedReport(reports: {
     ],
   };
   return paginatedReport;
-}
-
-export function formatIBasicReportItem(report: IReportIncludeCompanyProject): IBasicReportItem {
-  const id = report.id.toString();
-  const type = report.reportType as ReportType;
-  const reportSheetType = report.reportType as ReportSheetType;
-  const reportType = ReportSheetTypeFinancialFinancialReportTypesKeyMapping[reportSheetType];
-  const reportItem: IBasicReportItem = {
-    id,
-    name: report.name,
-    createdTimestamp: report.createdAt,
-    period: {
-      startTimestamp: report.from,
-      endTimestamp: report.to,
-    },
-    type,
-    reportType,
-  };
-  return reportItem;
-}
-
-export function formatIPendingReportItem(report: IReportIncludeCompanyProject): IPendingReportItem {
-  const basicReportItem = formatIBasicReportItem(report);
-  const reportItem: IPendingReportItem = {
-    ...basicReportItem,
-    remainingSeconds: report.remainingSeconds || 0,
-    paused: report.paused || false,
-  };
-  return reportItem;
-}
-
-export function formatIGeneratedReportItem(
-  report: IReportIncludeCompanyProject
-): IGeneratedReportItem {
-  const basicReportItem = formatIBasicReportItem(report);
-  const project = report.project
-    ? {
-        id: report.project.id.toString(),
-        name: report.project.name,
-        code: report.project.name,
-      }
-    : null;
-  const reportItem: IGeneratedReportItem = {
-    ...basicReportItem,
-    project,
-    reportLinkId: report.id.toString() || '',
-    downloadLink: report.downloadLink || '',
-    blockchainExplorerLink: report.blockChainExplorerLink || '',
-    evidenceId: report.evidenceId || '',
-  };
-  return reportItem;
-}
-
-export function formatIPaginatedPendingReportItem(reports: {
-  data: IReportIncludeCompanyProject[];
-  page: number;
-  totalPages: number;
-  totalCount: number; // 總數量
-  pageSize: number; // 每頁顯示的項目數量
-  hasNextPage: boolean; // 是否有下一頁
-  hasPreviousPage: boolean; // 是否有上一頁
-  sortBy: string; // 排序欄位
-  sortOrder: string; // 排序方式
-}): IPaginatedPendingReportItem {
-  const pendingItems = reports.data.map((report) => formatIPendingReportItem(report));
-  const paginatedPendingReportItem: IPaginatedPendingReportItem = {
-    data: pendingItems,
-    page: reports.page,
-    totalPages: reports.totalPages,
-    totalCount: reports.totalCount,
-    pageSize: reports.pageSize,
-    hasNextPage: reports.hasNextPage,
-    hasPreviousPage: reports.hasPreviousPage,
-    sort: [
-      {
-        sortBy: reports.sortBy,
-        sortOrder: reports.sortOrder,
-      },
-    ],
-  };
-  return paginatedPendingReportItem;
-}
-
-export function formatIPaginatedGeneratedReportItem(reports: {
-  data: IReportIncludeCompanyProject[];
-  page: number;
-  totalPages: number;
-  totalCount: number; // 總數量
-  pageSize: number; // 每頁顯示的項目數量
-  hasNextPage: boolean; // 是否有下一頁
-  hasPreviousPage: boolean; // 是否有上一頁
-  sortBy: string; // 排序欄位
-  sortOrder: string; // 排序方式
-}): IPaginatedGeneratedReportItem {
-  const generatedItems = reports.data.map((report) => formatIGeneratedReportItem(report));
-  const paginatedGeneratedReportItem: IPaginatedGeneratedReportItem = {
-    data: generatedItems,
-    page: reports.page,
-    totalPages: reports.totalPages,
-    totalCount: reports.totalCount,
-    pageSize: reports.pageSize,
-    hasNextPage: reports.hasNextPage,
-    hasPreviousPage: reports.hasPreviousPage,
-    sort: [
-      {
-        sortBy: reports.sortBy,
-        sortOrder: reports.sortOrder,
-      },
-    ],
-  };
-  return paginatedGeneratedReportItem;
 }

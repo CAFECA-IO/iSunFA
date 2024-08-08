@@ -1,5 +1,5 @@
 import { ReportSheetType } from '@/constants/report';
-import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
+import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
 import {
   mappingAccountToSheetDisplay,
   transformForestToMap,
@@ -13,7 +13,7 @@ import {
 } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 import { BalanceSheetOtherInfo } from '@/interfaces/report';
-import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
+import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
@@ -56,13 +56,18 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       incomeStatementContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
     const otherComprehensiveIncome =
-      incomeStatementContent.find((account) => account.code === SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code) ||
-      EMPTY_I_ACCOUNT_READY_FRONTEND;
+      incomeStatementContent.find(
+        (account) => account.code === SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
+      ) || EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     const closeAccount: ILineItemIncludeAccount[] = [];
 
-    const netIncomeAccount = await findUniqueAccountByCodeInPrisma(SPECIAL_ACCOUNTS.NET_INCOME.code);
-    const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma(SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code);
+    const netIncomeAccount = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.NET_INCOME.code
+    );
+    const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
+    );
 
     closeAccount.push({
       id: -1,
@@ -205,9 +210,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   ) {
     const curDateString = timestampToString(curDateInSecond).date;
     const lastPeriodDateString = timestampToString(lastPeriodDateInSecond).date;
-    const asset = accountMap.get(SPECIAL_ACCOUNTS.ASSET_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const liability = accountMap.get(SPECIAL_ACCOUNTS.LIABILITY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const equity = accountMap.get(SPECIAL_ACCOUNTS.EQUITY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const asset =
+      accountMap.get(SPECIAL_ACCOUNTS.ASSET_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const liability =
+      accountMap.get(SPECIAL_ACCOUNTS.LIABILITY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const equity =
+      accountMap.get(SPECIAL_ACCOUNTS.EQUITY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     const assetAmount = BalanceSheetGenerator.getAmount(asset);
     const liabilityAmount = BalanceSheetGenerator.getAmount(liability);
@@ -301,8 +309,10 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static calculateDaysSalesOutstanding(accountMap: Map<string, IAccountReadyForFrontend>) {
-    const accountReceivable = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const salesTotal = accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const accountReceivable =
+      accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const salesTotal =
+      accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // DSO = (Account Receivable / Sales) * 365
 
     const curDso =
@@ -324,8 +334,10 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
   // this function is wrong, need to be fixed
   static calculateInventoryTurnoverDays(accountMap: Map<string, IAccountReadyForFrontend>) {
-    const operatingCost = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const inventory = accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const operatingCost =
+      accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+    const inventory =
+      accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
     const curInventoryTurnoverDays =
       operatingCost.curPeriodAmount !== 0

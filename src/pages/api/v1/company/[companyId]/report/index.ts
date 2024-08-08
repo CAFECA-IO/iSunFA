@@ -18,11 +18,7 @@ import {
   ReportStatusType,
   ReportType,
 } from '@/constants/report';
-import {
-  createFinancialReport,
-  findManyReports,
-  getReportIdByFromTo,
-} from '@/lib/utils/repo/report.repo';
+import { createReport, findManyReports, getReportIdByFromTo } from '@/lib/utils/repo/report.repo';
 import { formatIPaginatedReport } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
@@ -36,12 +32,14 @@ import {
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
-import FinancialReportGeneratorFactory from '@/lib/utils/financial_report/financial_report_generator_factory';
 import {
   convertStringToReportSheetType,
+  convertStringToReportType,
   isReportLanguagesKey,
   isReportSheetType,
 } from '@/lib/utils/type_guard/report';
+import { generate401Report } from '@/lib/utils/report/report_401';
+import FinancialReportGeneratorFactory from '@/lib/utils/report/financial_report_generator_factory';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -208,25 +206,20 @@ export function formatReportLanguageFromQuery(
   return reportLanguageString;
 }
 
-export function formatFinancialOrAnalysisFromQuery(financialOrAnalysis: unknown): string {
+export function formatReportTypeFromQuery(reportType: string): ReportType {
   // Deprecate: (20240710 - Murky) this function is to separate financial and analysis temperately
-  let financialOrAnalysisString = 'financial';
-
-  if (typeof financialOrAnalysis === 'string') {
-    financialOrAnalysisString = financialOrAnalysis as string;
-  }
-  return financialOrAnalysisString;
+  const reportTypeString = convertStringToReportType(reportType);
+  return reportTypeString;
 }
 
 export function formatPostRequestQuery(req: NextApiRequest) {
-  const { projectId, reportType, reportLanguage, startDate, endDate, financialOrAnalysis } =
-    req.body;
+  const { projectId, type, reportLanguage, from, to, reportType } = req.body;
 
   const projectIdNumber = formatProjectIdFromQuery(projectId);
 
   const reportLanguageString = formatReportLanguageFromQuery(reportLanguage);
 
-  const reportSheetType = formatReportSheetTypeFromQuery(reportType);
+  const reportSheetType = formatReportSheetTypeFromQuery(type);
 
   const {
     startDateInSecond,
@@ -235,9 +228,9 @@ export function formatPostRequestQuery(req: NextApiRequest) {
     // Deprecate: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
-  } = formatStartAndEndDateFromQuery(reportSheetType, startDate, endDate);
+  } = formatStartAndEndDateFromQuery(reportSheetType, from, to);
 
-  const financialOrAnalysisString = formatFinancialOrAnalysisFromQuery(financialOrAnalysis);
+  const formattedReportType = formatReportTypeFromQuery(reportType);
 
   return {
     projectIdNumber,
@@ -249,23 +242,21 @@ export function formatPostRequestQuery(req: NextApiRequest) {
     // Deprecate: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
-    financialOrAnalysisString,
+    formattedReportType,
   };
 }
 
-export async function generateFinancialReport(
+async function generateFinancialReport(
   companyId: number,
   startDateInSecond: number,
   endDateInSecond: number,
   reportSheetType: ReportSheetType
 ) {
   // Info: (20240710 - Murky) Financial Report Generator
-  let content: IAccountReadyForFrontend[] = [];
-  let otherInfo:
-    | BalanceSheetOtherInfo
-    | IncomeStatementOtherInfo
-    | CashFlowStatementOtherInfo
-    | null = null;
+  let reportContent: {
+    content: IAccountReadyForFrontend[];
+    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+  } = { content: [], otherInfo: {} as BalanceSheetOtherInfo };
   try {
     const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
       companyId,
@@ -274,21 +265,58 @@ export async function generateFinancialReport(
       reportSheetType
     );
 
-    const report = await financialReportGenerator.generateReport();
-    content = report.content;
-    otherInfo = report.otherInfo;
+    reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
     // Deprecate: (20240710 - Murky) console.error
     // eslint-disable-next-line no-console
     console.error(error);
   }
-  return {
-    content,
-    otherInfo,
-  };
+  return reportContent;
 }
 
-export async function generateReportName(
+async function generateReport(
+  companyId: number,
+  startDateInSecond: number,
+  endDateInSecond: number,
+  reportSheetType: ReportSheetType
+): Promise<object> {
+  // Todo (20240808 - Jacky): return type should change to IReportContent
+  let content = {};
+  switch (reportSheetType) {
+    case ReportSheetType.BALANCE_SHEET:
+      content = await generateFinancialReport(
+        companyId,
+        startDateInSecond,
+        endDateInSecond,
+        ReportSheetType.BALANCE_SHEET
+      );
+      break;
+    case ReportSheetType.INCOME_STATEMENT:
+      content = await generateFinancialReport(
+        companyId,
+        startDateInSecond,
+        endDateInSecond,
+        ReportSheetType.INCOME_STATEMENT
+      );
+      break;
+    case ReportSheetType.CASH_FLOW_STATEMENT:
+      content = await generateFinancialReport(
+        companyId,
+        startDateInSecond,
+        endDateInSecond,
+        ReportSheetType.CASH_FLOW_STATEMENT
+      );
+      break;
+    case ReportSheetType.REPORT_401:
+      content = await generate401Report(companyId, startDateInSecond);
+      break;
+    default:
+      break;
+  }
+  return content;
+}
+
+async function generateReportName(
   companyId: number,
   reportSheetType: ReportSheetType,
   reportLanguage: string,
@@ -306,9 +334,7 @@ export async function generateReportIfNotExist(
   projectId: number | null,
   startDateInSecond: number,
   endDateInSecond: number,
-  // Deprecate: (20240729 - Murky) Move to financial report
-  // lastPeriodStartDateInSecond: number,
-  // lastPeriodEndDateInSecond: number,
+  reportType: ReportType,
   reportSheetType: ReportSheetType,
   reportLanguageString: ReportLanguagesKey
 ) {
@@ -320,18 +346,12 @@ export async function generateReportIfNotExist(
     reportSheetType
   );
   if (!reportId) {
-    const { content, otherInfo } = await generateFinancialReport(
+    const content = await generateReport(
       companyId,
       startDateInSecond,
       endDateInSecond,
       reportSheetType
     );
-
-    const reportContentSavingToDB = {
-      content,
-      otherInfo,
-    };
-
     const name = await generateReportName(
       companyId,
       reportSheetType,
@@ -339,15 +359,15 @@ export async function generateReportIfNotExist(
       endDateInSecond
     );
 
-    const reportCreated = await createFinancialReport(
+    const reportCreated = await createReport(
       companyId,
       projectId,
       name,
       startDateInSecond,
       endDateInSecond,
-      ReportType.FINANCIAL,
+      reportType,
       reportSheetType,
-      reportContentSavingToDB,
+      content,
       ReportStatusType.GENERATED
     );
     reportId = reportCreated?.id || -1;
@@ -416,34 +436,20 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     // Deprecate: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
-    financialOrAnalysisString,
+    formattedReportType,
   } = formatPostRequestQuery(req);
 
   let thisPeriodReportId = -1;
-  switch (financialOrAnalysisString) {
-    case ReportType.FINANCIAL: {
-      thisPeriodReportId = await generateReportIfNotExist(
-        companyId,
-        projectIdNumber,
-        startDateInSecond,
-        endDateInSecond,
-        // Deprecate: (20240729 - Murky) Move to financial report
-        // lastPeriodStartDateInSecond,
-        // lastPeriodEndDateInSecond,
-        reportSheetType,
-        reportLanguageString
-      );
-      statusMessage = STATUS_MESSAGE.CREATED;
-      break;
-    }
-    case ReportType.ANALYSIS: {
-      // ToDo: (20240710 - Murky) Analysis Report Generator
-      break;
-    }
-    default: {
-      break;
-    }
-  }
+  thisPeriodReportId = await generateReportIfNotExist(
+    companyId,
+    projectIdNumber,
+    startDateInSecond,
+    endDateInSecond,
+    formattedReportType,
+    reportSheetType,
+    reportLanguageString
+  );
+  statusMessage = STATUS_MESSAGE.CREATED;
   payload = thisPeriodReportId;
   return { statusMessage, payload };
 }

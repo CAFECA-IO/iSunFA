@@ -1,6 +1,7 @@
+import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { ReportSheetType } from '@/constants/report';
-
-import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
+import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
+import incomeStatementMapping from '@/constants/account_sheet_mapping/income_statement_mapping.json';
 import {
   calculateIncomeStatementNetIncome,
   mappingAccountToSheetDisplay,
@@ -8,11 +9,13 @@ import {
   transformLineItemsFromDBToMap,
   updateAccountAmounts,
 } from '@/lib/utils/account/common';
-import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from '@/interfaces/accounting_account';
-import incomeStatementMapping from '@/constants/account_sheet_mapping/income_statement_mapping.json';
+import {
+  IAccountForSheetDisplay,
+  IAccountNode,
+  IAccountReadyForFrontend,
+} from '@/interfaces/accounting_account';
 import { IncomeStatementOtherInfo } from '@/interfaces/report';
-import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
-import { SPECIAL_ACCOUNTS } from '@/constants/account';
+import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
@@ -49,7 +52,9 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     return accountMap;
   }
 
-  public override async generateFinancialReportArray(curPeriod: boolean): Promise<IAccountForSheetDisplay[]> {
+  public override async generateFinancialReportArray(
+    curPeriod: boolean
+  ): Promise<IAccountForSheetDisplay[]> {
     const accountMap = await this.generateFinancialReportMap(curPeriod);
 
     // Info: Calculate revenue and expense ratio (20240726 - Murky)
@@ -79,12 +84,30 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       };
     }
 
-    if (totalCost.curPeriodAmount + salesExpense.curPeriodAmount + administrativeExpense.curPeriodAmount !== 0) {
-      curRatio = revenue.curPeriodAmount / (totalCost.curPeriodAmount + salesExpense.curPeriodAmount + administrativeExpense.curPeriodAmount);
+    if (
+      totalCost.curPeriodAmount +
+        salesExpense.curPeriodAmount +
+        administrativeExpense.curPeriodAmount !==
+      0
+    ) {
+      curRatio =
+        revenue.curPeriodAmount /
+        (totalCost.curPeriodAmount +
+          salesExpense.curPeriodAmount +
+          administrativeExpense.curPeriodAmount);
     }
 
-    if (totalCost.prePeriodAmount + salesExpense.prePeriodAmount + administrativeExpense.prePeriodAmount !== 0) {
-      preRatio = revenue.prePeriodAmount / (totalCost.prePeriodAmount + salesExpense.prePeriodAmount + administrativeExpense.prePeriodAmount);
+    if (
+      totalCost.prePeriodAmount +
+        salesExpense.prePeriodAmount +
+        administrativeExpense.prePeriodAmount !==
+      0
+    ) {
+      preRatio =
+        revenue.prePeriodAmount /
+        (totalCost.prePeriodAmount +
+          salesExpense.prePeriodAmount +
+          administrativeExpense.prePeriodAmount);
     }
 
     return {
@@ -96,10 +119,14 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   private generateRevenueAndExpenseRatioMap(accountMap: Map<string, IAccountReadyForFrontend>) {
     const revenue = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_INCOME.code);
     const totalCost = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code);
-
     const salesExpense = accountMap.get(SPECIAL_ACCOUNTS.SELLING_EXPENSE_TOTAL.code);
     const administrativeExpense = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_EXPENSE_TOTAL.code);
-    const { curRatio, preRatio } = this.calculateRevenueAndExpenseRatio(revenue, totalCost, salesExpense, administrativeExpense);
+    const { curRatio, preRatio } = this.calculateRevenueAndExpenseRatio(
+      revenue,
+      totalCost,
+      salesExpense,
+      administrativeExpense
+    );
 
     return {
       revenue: revenue || EMPTY_I_ACCOUNT_READY_FRONTEND,
@@ -148,11 +175,15 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   private generateRevenueToRDMap(accountMap: Map<string, IAccountReadyForFrontend>) {
     const revenue = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_INCOME.code);
     const researchAndDevelopmentExpense = accountMap.get(SPECIAL_ACCOUNTS.RD_EXPENSE_TOTAL.code);
-    const { curRatio, preRatio } = this.calculateRevenueToRDRatio(revenue, researchAndDevelopmentExpense);
+    const { curRatio, preRatio } = this.calculateRevenueToRDRatio(
+      revenue,
+      researchAndDevelopmentExpense
+    );
 
     return {
       revenue: revenue || EMPTY_I_ACCOUNT_READY_FRONTEND,
-      researchAndDevelopmentExpense: researchAndDevelopmentExpense || EMPTY_I_ACCOUNT_READY_FRONTEND,
+      researchAndDevelopmentExpense:
+        researchAndDevelopmentExpense || EMPTY_I_ACCOUNT_READY_FRONTEND,
       ratio: {
         curRatio,
         preRatio,
@@ -160,7 +191,9 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     };
   }
 
-  public override generateOtherInfo(incomeArray: IAccountReadyForFrontend[]): IncomeStatementOtherInfo {
+  public override generateOtherInfo(
+    incomeArray: IAccountReadyForFrontend[]
+  ): IncomeStatementOtherInfo {
     const accountMap = new Map<string, IAccountReadyForFrontend>();
     incomeArray.forEach((account) => {
       if (account.code.length > 0) {

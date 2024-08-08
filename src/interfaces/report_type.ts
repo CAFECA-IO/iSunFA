@@ -10,6 +10,7 @@ export enum FinancialReportTypeName {
   balance_sheet = 'Balance Sheet',
   comprehensive_income_statement = 'Comprehensive Income Statement',
   cash_flow_statement = 'Cash Flow Statement',
+  report_401 = '401 Report',
   //  change_in_equity_statement = 'change_in_equity_statement'
 }
 
@@ -28,6 +29,7 @@ export enum ReportTypeToBaifaReportType {
   balance_sheet = 'balance',
   comprehensive_income_statement = 'comprehensive-income',
   cash_flow_statement = 'cash-flow',
+  report_401 = '401',
   //  change_in_equity_statement = 'change-in-equity'
 }
 

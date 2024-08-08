@@ -4,10 +4,16 @@ import {
   LegalStructureOptions,
   RepresentativeIDType,
 } from '@/constants/kyc';
-import { createCompanyKYC, deleteCompanyKYCForTesting } from '@/lib/utils/repo/company_kyc.repo';
+import {
+  createCompanyKYC,
+  deleteCompanyKYCForTesting,
+  getCompanyKYCByCompanyId,
+} from '@/lib/utils/repo/company_kyc.repo';
+import companyKYCs from '@/seed_json/company_kyc.json';
+
+const testCompanyId = 1000;
 
 describe('CompanyKYC Repository Tests', () => {
-  const testCompanyId = 1000;
   const newCompanyKYCData = {
     legalName: 'New Legal Name',
     country: CountryOptions.TAIWAN,
@@ -43,5 +49,18 @@ describe('CompanyKYC Repository Tests', () => {
       expect(companyKYC.representativeName).toBe(newCompanyKYCData.representativeName);
       expect(companyKYC.structure).toBe(newCompanyKYCData.structure);
     });
+  });
+});
+
+describe('getCompanyKYCByCompanyId', () => {
+  it('should return the CompanyKYC record for a given companyId', async () => {
+    const companyKYC = await getCompanyKYCByCompanyId(testCompanyId);
+    expect(companyKYC).toEqual(companyKYCs[1]);
+  });
+
+  it('should return null if the companyId is invalid', async () => {
+    const companyId = -1; // Replace with an invalid companyId
+    const companyKYC = await getCompanyKYCByCompanyId(companyId);
+    expect(companyKYC).toBeNull();
   });
 });
