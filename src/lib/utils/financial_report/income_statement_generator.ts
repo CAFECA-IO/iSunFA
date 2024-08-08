@@ -12,6 +12,7 @@ import { IAccountForSheetDisplay, IAccountNode, IAccountReadyForFrontend } from 
 import incomeStatementMapping from '@/constants/account_sheet_mapping/income_statement_mapping.json';
 import { IncomeStatementOtherInfo } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
+import { SPECIAL_ACCOUNTS } from '@/constants/account';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
@@ -93,11 +94,11 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   }
 
   private generateRevenueAndExpenseRatioMap(accountMap: Map<string, IAccountReadyForFrontend>) {
-    const revenue = accountMap.get('4000');
-    const totalCost = accountMap.get('5000');
+    const revenue = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_INCOME.code);
+    const totalCost = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code);
 
-    const salesExpense = accountMap.get('6100');
-    const administrativeExpense = accountMap.get('6200');
+    const salesExpense = accountMap.get(SPECIAL_ACCOUNTS.SELLING_EXPENSE_TOTAL.code);
+    const administrativeExpense = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_EXPENSE_TOTAL.code);
     const { curRatio, preRatio } = this.calculateRevenueAndExpenseRatio(revenue, totalCost, salesExpense, administrativeExpense);
 
     return {
@@ -145,8 +146,8 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   }
 
   private generateRevenueToRDMap(accountMap: Map<string, IAccountReadyForFrontend>) {
-    const revenue = accountMap.get('4000');
-    const researchAndDevelopmentExpense = accountMap.get('6300');
+    const revenue = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_INCOME.code);
+    const researchAndDevelopmentExpense = accountMap.get(SPECIAL_ACCOUNTS.RD_EXPENSE_TOTAL.code);
     const { curRatio, preRatio } = this.calculateRevenueToRDRatio(revenue, researchAndDevelopmentExpense);
 
     return {
