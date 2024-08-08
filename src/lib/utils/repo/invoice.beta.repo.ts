@@ -92,6 +92,7 @@ export async function createInvoice(
         description: invoiceData.description,
         vendorTaxId: invoiceData.vendorTaxId,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
+        deductible: invoiceData.deductible,
         imageUrl,
         createdAt: nowInSecond,
         updatedAt: nowInSecond,

@@ -31,7 +31,8 @@ export type IInvoiceIncludePaymentJournal = Prisma.InvoiceGetPayload<{
 
 export interface IInvoiceBeta extends IInvoice {
   number: string; // origin invoice number
-  type: string;
+  type: string; // Info: (20240808 Murky)  營業稅格式代號
   vendorTaxId: string;
   payment: IPaymentBeta;
+  deductible: boolean;
 }
