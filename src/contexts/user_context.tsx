@@ -1,6 +1,6 @@
 import { client } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
@@ -42,6 +42,51 @@ interface UserContextType {
     credentials: PublicKeyCredential,
     invitation: string | undefined
   ) => Promise<void>;
+}
+
+// 自定義 debounce 函數
+// eslint-disable-next-line function-paren-newline
+// function debounce<F extends (...args: unknown[]) => unknown>(
+//   func: F,
+//   wait: number
+// ): (...args: Parameters<F>) => void {
+//   let timeout: NodeJS.Timeout | null = null;
+//   // eslint-disable-next-line no-console
+//   console.log('debounce');
+//   return (...args: Parameters<F>) => {
+//     if (timeout) clearTimeout(timeout);
+//     timeout = setTimeout(() => func(...args), wait);
+//   };
+// }
+
+// 自定義 throttle 函數
+// eslint-disable-next-line function-paren-newline
+function throttle<F extends (...args: unknown[]) => unknown>(
+  func: F,
+  limit: number
+): (...args: Parameters<F>) => void {
+  let lastFunc: NodeJS.Timeout | null;
+  let lastRan: number | null = null;
+
+  return function (this: unknown, ...args: Parameters<F>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context = this as unknown as F;
+    if (lastRan === null) {
+      func.apply(context, args);
+      lastRan = Date.now();
+    } else {
+      if (lastFunc) clearTimeout(lastFunc); // 確保 lastFunc 不是 null
+      lastFunc = setTimeout(
+        () => {
+          if (Date.now() - lastRan! >= limit) {
+            func.apply(context, args);
+            lastRan = Date.now();
+          }
+        },
+        limit - (Date.now() - lastRan)
+      );
+    }
+  };
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -93,6 +138,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
+
+  // const lastEventTime = useRef(0);
+  const isRouteChanging = useRef(false);
+  const userInitiatedNavigation = useRef(false);
 
   const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
     body: { credential: credentialRef.current },
@@ -376,7 +425,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
-  const checkSession = async () => {
+  const checkSession = useCallback(async () => {
     setIsAuthLoading(true);
     const {
       data: userSessionData,
@@ -403,9 +452,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
-          if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-          }
+          // if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+          //   router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+          // }
           if (
             'company' in userSessionData &&
             userSessionData.company &&
@@ -413,13 +462,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           ) {
             setSelectedCompany(userSessionData.company);
             setSuccessSelectCompany(true);
+
             handleReturnUrl();
+
+            // if (userInitiatedNavigation.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+            //   router.push(ISUNFA_ROUTE.DASHBOARD);
+            // }
+            // if (
+            //   !userInitiatedNavigation.current &&
+            //   router.pathname.includes('users') &&
+            //   !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
+            // ) {
+            //   handleReturnUrl();
+            // }
           } else {
             setSuccessSelectCompany(undefined);
             setSelectedCompany(null);
             // eslint-disable-next-line no-console
             console.log('checkSession: no company');
-            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+            if (
+              router.pathname.includes('users') &&
+              !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
+            ) {
+              router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+            }
           }
         } else {
           handleNotSignedIn();
@@ -432,7 +498,63 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setErrorCode(getUserSessionCode ?? '');
     }
     setIsAuthLoading(false);
-  };
+  }, [router.pathname]);
+
+  // const debouncedCheckSession = useCallback(
+  //   debounce(() => {
+  //     // eslint-disable-next-line no-console
+  //     console.log('debouncedCheckSession');
+  //     const now = Date.now();
+  //     if (now - lastEventTime.current > 1000) {
+  //       // 1秒內不重複執行
+  //       lastEventTime.current = now;
+  //       checkSession();
+  //     }
+  //   }, 250), // 250ms 的防抖時間
+  //   [checkSession]
+  // );
+
+  // 將 debouncedCheckSession 改為 throttledCheckSession
+  const throttledCheckSession = useCallback(
+    throttle(() => {
+      // eslint-disable-next-line no-console
+      console.log('throttledCheckSession');
+      checkSession();
+    }, 1000), // 250ms 的節流時間
+    [checkSession]
+  );
+
+  const handleVisibilityChange = useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log('handleVisibilityChange');
+    if (document.visibilityState === 'visible' && !isRouteChanging.current) {
+      // debouncedCheckSession();
+      throttledCheckSession();
+    }
+  }, [throttledCheckSession]);
+
+  const handleRouteChangeStart = useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log('handleRouteChangeStart, router', router);
+    if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      isRouteChanging.current = true;
+      userInitiatedNavigation.current = true;
+      // debouncedCheckSession();
+      throttledCheckSession();
+      // eslint-disable-next-line no-console
+      console.log('handleRouteChangeStart, router.pathname is valid', router.pathname);
+    }
+  }, [throttledCheckSession, router.pathname]);
+
+  const handleRouteChangeComplete = useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log('handleRouteChangeComplete, router', router);
+    isRouteChanging.current = false;
+    // 重置用戶導航標誌
+    setTimeout(() => {
+      userInitiatedNavigation.current = false;
+    }, 100);
+  }, []);
 
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
@@ -440,6 +562,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     code: string;
     error: Error | null;
   }) => {
+    // eslint-disable-next-line no-console
+    console.log('handleSelectCompanyResponse', response);
     if (response.success && response.data !== null) {
       setSelectedCompany(response.data);
       setSuccessSelectCompany(true);
@@ -475,21 +599,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     router.push(ISUNFA_ROUTE.LOGIN);
   };
 
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      checkSession();
-    }
-  };
+  // const handleVisibilityChange = () => {
+  //   if (document.visibilityState === 'visible') {
+  //     checkSession();
+  //   }
+  // };
 
   useEffect(() => {
     checkSession();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    router.events.on('routeChangeComplete', handleRouteChangeComplete);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+      router.events.off('routeChangeComplete', handleRouteChangeComplete);
     };
-  }, []);
+  }, [
+    handleVisibilityChange,
+    handleRouteChangeStart,
+    handleRouteChangeComplete,
+    router.events,
+    checkSession,
+  ]);
 
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(
@@ -520,6 +654,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
       returnUrlRef.current,
+      router.pathname,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
