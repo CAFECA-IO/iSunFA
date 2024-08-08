@@ -1,7 +1,7 @@
 import { ReportSheetType } from '@/constants/report';
-import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
-import BalanceSheetGenerator from '@/lib/utils/financial_report/balance_sheet_generator';
-import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
+import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
+import BalanceSheetGenerator from '@/lib/utils/report/balance_sheet_generator';
+import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import {
   IAccountForSheetDisplay,
   IAccountNode,

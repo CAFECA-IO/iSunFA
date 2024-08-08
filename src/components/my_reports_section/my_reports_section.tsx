@@ -8,10 +8,6 @@ import {
   DEFAULT_PAGE_NUMBER,
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import {
-  FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
-  FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
-} from '@/interfaces/report_item';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
@@ -27,7 +23,7 @@ import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
-import { IPaginatedReport, IReport } from '@/interfaces/report';
+import { IPaginatedReport, IReport, MOCK_TOTAL_PAGES } from '@/interfaces/report';
 import { ReportStatusType } from '@/constants/report';
 
 const MyReportsSection = () => {
@@ -114,10 +110,8 @@ const MyReportsSection = () => {
     },
     hasCompanyId
   );
-  const pendingTotalPages =
-    pendingReports?.totalPages || FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS.totalPages;
-  const historyTotalPages =
-    generatedReports?.totalPages || FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS.totalPages;
+  const pendingTotalPages = pendingReports?.totalPages || MOCK_TOTAL_PAGES;
+  const historyTotalPages = generatedReports?.totalPages || MOCK_TOTAL_PAGES;
   useEffect(() => {
     if (listPendingSuccess && pendingReports?.data) {
       setPendingData(pendingReports.data);
@@ -176,6 +170,7 @@ const MyReportsSection = () => {
           companyId: selectedCompany?.id,
         },
         query: {
+          status: ReportStatusType.PENDING,
           sortOrder: sortOptionQuery[sortOrder ?? filteredPendingSort],
           startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
           endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
@@ -215,6 +210,7 @@ const MyReportsSection = () => {
           companyId: selectedCompany?.id,
         },
         query: {
+          status: ReportStatusType.GENERATED,
           sortOrder: sortOptionQuery[sortOrder ?? filteredHistorySort],
           startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
           endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,

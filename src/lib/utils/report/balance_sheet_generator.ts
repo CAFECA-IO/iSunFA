@@ -1,5 +1,5 @@
 import { ReportSheetType } from '@/constants/report';
-import FinancialReportGenerator from '@/lib/utils/financial_report/financial_report_generator';
+import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
 import {
   mappingAccountToSheetDisplay,
   transformForestToMap,
@@ -13,7 +13,7 @@ import {
 } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
 import { BalanceSheetOtherInfo } from '@/interfaces/report';
-import IncomeStatementGenerator from '@/lib/utils/financial_report/income_statement_generator';
+import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { AccountType, ASSET_CODE } from '@/constants/account';

@@ -1,4 +1,5 @@
 import { EventType } from '@/constants/account';
+import { SortOrder } from './sort';
 
 export enum JOURNAL_EVENT {
   UPLOADED = 'JOURNAL.UPLOADED',
@@ -37,11 +38,6 @@ export enum SORTING_OPTION {
 export enum SortBy {
   CREATED_AT = 'createdAt',
   PAYMENT_PRICE = 'paymentPrice',
-}
-
-export enum SortOrder {
-  ASC = 'asc',
-  DESC = 'desc',
 }
 
 export const toSort = (

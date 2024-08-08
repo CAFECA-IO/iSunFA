@@ -10,6 +10,7 @@ import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/consta
 import path from 'path';
 import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
 import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
+import { ROCDate } from '@/interfaces/locale';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -146,6 +147,15 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   };
 };
 
+function rocYearToAD(rocYear: string, sperator: string): string {
+  let modifiedRocYear = rocYear;
+  if (rocYear.split(sperator)[0].length < 4) {
+    // Info 民國年
+    const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
+    modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
+  }
+  return modifiedRocYear;
+}
 // Info Murky (20240425) - Helper function to convert date strings to timestamps
 // will return timestamp of current if input is not valid
 export const convertDateToTimestamp = (dateStr: string | number): number => {
@@ -157,16 +167,6 @@ export const convertDateToTimestamp = (dateStr: string | number): number => {
 
   if (typeof dateStr === 'number') {
     return dateStr as number;
-  }
-
-  function rocYearToAD(rocYear: string, sperator: string): string {
-    let modifiedRocYear = rocYear;
-    if (rocYear.split(sperator)[0].length < 4) {
-      // Info 民國年
-      const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
-      modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
-    }
-    return modifiedRocYear;
   }
 
   let modifiedDateStr = dateStr;
@@ -304,6 +304,15 @@ export const countdown = (remainingSeconds: number) => {
     seconds: `${seconds}`,
     remainingTimeStr,
   };
+};
+
+export const convertTimestampToROCDate = (timestampInSecond: number): ROCDate => {
+  const milliSecondTimestamp = timestampInMilliSeconds(timestampInSecond);
+  const date = new Date(milliSecondTimestamp);
+  const year = date.getUTCFullYear() - 1911;
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  return { year, month, day };
 };
 
 export function eventTypeToVoucherType(eventType: EventType): VoucherType {

@@ -105,11 +105,11 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   const generateReportHandler = async () => {
     const body: IFinancialReportRequest = {
       projectId: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
-      reportType: FinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
+      type: FinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
       reportLanguage: selectedReportLanguage,
-      startDate: period.startTimeStamp,
-      endDate: period.endTimeStamp,
-      financialOrAnalysis: ReportType.FINANCIAL,
+      from: period.startTimeStamp,
+      to: period.endTimeStamp,
+      reportType: ReportType.FINANCIAL,
     };
 
     if (selectedCompany) {

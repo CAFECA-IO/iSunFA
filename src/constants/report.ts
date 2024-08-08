@@ -11,6 +11,7 @@ export enum ReportSheetType {
   BALANCE_SHEET = 'balance_sheet',
   INCOME_STATEMENT = 'comprehensive_income_statement',
   CASH_FLOW_STATEMENT = 'cash_flow_statement',
+  REPORT_401 = 'report_401',
   //  CHANGE_IN_EQUITY_STATEMENT = 'changeInEquityStatement',
 }
 
@@ -18,6 +19,7 @@ export enum ReportSheetTypeDisplay {
   BALANCE_SHEET = 'Balance Sheet',
   INCOME_STATEMENT = 'Statement of Comprehensive Income',
   CASH_FLOW_STATEMENT = 'Statement of Cash Flows',
+  REPORT_401 = '401 Report',
   //  CHANGE_IN_EQUITY_STATEMENT = 'Statement of Changes in Equity',
 }
 
@@ -32,7 +34,7 @@ export const ReportUrlMap: {
   [ReportSheetType.BALANCE_SHEET]: 'balance-sheet',
   [ReportSheetType.INCOME_STATEMENT]: 'income-statement',
   [ReportSheetType.CASH_FLOW_STATEMENT]: 'cash-flow-statement',
-  //  [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: 'change-in-equity-statement',
+  [ReportSheetType.REPORT_401]: '401-report',
 };
 
 export const ReportSheetAccountTypeMap: {
@@ -53,7 +55,7 @@ export const ReportSheetAccountTypeMap: {
     AccountType.OTHER_COMPREHENSIVE_INCOME,
   ],
   [ReportSheetType.CASH_FLOW_STATEMENT]: [AccountType.CASH_FLOW],
-  //  [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: [AccountType.CHANGE_IN_EQUITY],
+  [ReportSheetType.REPORT_401]: [],
 };
 
 export const ReportSheetTypeDisplayMap: {
@@ -62,17 +64,9 @@ export const ReportSheetTypeDisplayMap: {
   [ReportSheetType.BALANCE_SHEET]: ReportSheetTypeDisplay.BALANCE_SHEET,
   [ReportSheetType.INCOME_STATEMENT]: ReportSheetTypeDisplay.INCOME_STATEMENT,
   [ReportSheetType.CASH_FLOW_STATEMENT]: ReportSheetTypeDisplay.CASH_FLOW_STATEMENT,
-  //  [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: ReportSheetTypeDisplay.CHANGE_IN_EQUITY_STATEMENT,
+  [ReportSheetType.REPORT_401]: ReportSheetTypeDisplay.REPORT_401,
 };
 
-export const ReportSheetTypeFinancialFinancialReportTypesKeyMapping: {
-  [key in ReportSheetType]: FinancialReportTypesKey;
-} = {
-  [ReportSheetType.BALANCE_SHEET]: FinancialReportTypesKey.balance_sheet,
-  [ReportSheetType.INCOME_STATEMENT]: FinancialReportTypesKey.comprehensive_income_statement,
-  [ReportSheetType.CASH_FLOW_STATEMENT]: FinancialReportTypesKey.cash_flow_statement,
-  //  [ReportSheetType.CHANGE_IN_EQUITY_STATEMENT]: FinancialReportTypesKey.change_in_equity_statement,
-};
 export const FinancialReportTypesKeyReportSheetTypeMapping: {
   [key in FinancialReportTypesKey]: ReportSheetType;
 } = {
