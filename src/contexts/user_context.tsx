@@ -125,9 +125,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
-        setReturnUrl(encodeURIComponent(router.asPath));
-      }
+      // if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
+      //   setReturnUrl(encodeURIComponent(router.asPath));
+      // }
       router.push(ISUNFA_ROUTE.LOGIN);
     }
   };
@@ -383,7 +383,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       success: getUserSessionSuccess,
       code: getUserSessionCode,
     } = await getUserSessionData();
-    setIsAuthLoading(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
     if (getUserSessionSuccess) {
@@ -432,6 +431,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setIsSignInError(true);
       setErrorCode(getUserSessionCode ?? '');
     }
+    setIsAuthLoading(false);
   };
 
   const handleSelectCompanyResponse = async (response: {
