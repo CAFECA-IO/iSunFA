@@ -24,9 +24,57 @@ export interface IDashboardProvider {
 }
 
 export const BookmarkAvailableList: Record<string, BookmarkItem> = {
-  addNewContract: {
-    id: 'addNewContract',
-    name: 'Add New Contract',
+  // Info: (20240808 - Anna) Alpha版拿掉"新增合約"，改為"新增KYC"
+  // addNewContract: {
+  //   id: 'addNewContract',
+  //   name: 'Add New Contract',
+  //   iconOnModal: (
+  //     <svg
+  //       xmlns="http://www.w3.org/2000/svg"
+  //       width="22"
+  //       height="22"
+  //       fill="none"
+  //       viewBox="0 0 22 22"
+  //     >
+  //       <g>
+  //         <path
+  //           stroke="#314362"
+  //           strokeLinecap="round"
+  //           strokeLinejoin="round"
+  //           strokeWidth="1.5"
+  //           d="M12.833 2.08v3.787c0 .513 0 .77.1.966a.917.917 0 00.4.4c.197.1.454.1.967.1h3.786M11 16.5V11m-2.75 2.75h5.5m-.917-11.917H8.067c-1.54 0-2.31 0-2.899.3a2.75 2.75 0 00-1.202 1.202c-.3.588-.3 1.358-.3 2.898v9.534c0 1.54 0 2.31.3 2.898a2.75 2.75 0 001.202 1.202c.588.3 1.359.3 2.899.3h5.866c1.54 0 2.31 0 2.899-.3a2.75 2.75 0 001.202-1.202c.3-.588.3-1.358.3-2.898V7.333l-5.5-5.5z"
+  //         ></path>
+  //       </g>
+  //     </svg>
+  //   ),
+  //   iconOnSection: (
+  //     <svg
+  //       xmlns="http://www.w3.org/2000/svg"
+  //       width="22"
+  //       height="22"
+  //       fill="none"
+  //       viewBox="0 0 22 22"
+  //     >
+  //       <g>
+  //         <path
+  //           stroke="#fff"
+  //           strokeLinecap="round"
+  //           strokeLinejoin="round"
+  //           strokeWidth="1.5"
+  //           d="M12.833 2.08v3.787c0 .513 0 .77.1.966a.917.917 0 00.4.4c.197.1.454.1.967.1h3.786M11 16.5V11m-2.75 2.75h5.5m-.917-11.917H8.067c-1.54 0-2.31 0-2.899.3a2.75 2.75 0 00-1.202 1.202c-.3.588-.3 1.358-.3 2.898v9.534c0 1.54 0 2.31.3 2.898a2.75 2.75 0 001.202 1.202c.588.3 1.359.3 2.899.3h5.866c1.54 0 2.31 0 2.899-.3a2.75 2.75 0 001.202-1.202c.3-.588.3-1.358.3-2.898V7.333l-5.5-5.5z"
+  //         ></path>
+  //       </g>
+  //     </svg>
+  //   ),
+
+  //   link: ISUNFA_ROUTE.PROJECT_LIST,
+  //   added: true,
+  //   tempSelectedOnSection: false,
+  //   tempSelectedOnModal: false,
+  // },
+  addNewKYC: {
+    id: 'addNewKYC',
+    name: 'Add New KYC',
     iconOnModal: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -66,7 +114,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: ISUNFA_ROUTE.PROJECT_LIST,
+    link: ISUNFA_ROUTE.KYC,
     added: true,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,

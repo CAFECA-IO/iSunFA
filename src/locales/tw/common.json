@@ -649,6 +649,7 @@
   },
   "BOOKMARK_LIST": {
     "ADD_NEW_CONTRACT": "新增合約",
+    "ADD_NEW_KYC": "新增KYC",
     "ADD_NEW_EMPLOYEES": "新增員工",
     "ADD_NEW_PAYROLL": "新增工資",
     "ADD_NEW_JOURNAL": "新增日記帳",

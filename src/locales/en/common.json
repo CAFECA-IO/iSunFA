@@ -17,7 +17,7 @@
     "MARK_ALL_AS_READ": "Mark all as read",
     "READ_MORE": "Read more...",
     "LANGUAGE": "Language",
-    "ACCOUNT": "Account",
+    "ACCOUNT": "Accounting",
     "APPLICATIONS": "Applications",
     "SWITCH_COMPANY": "Switch Company",
     "SUBSCRIPTION_BILLS": "Subscription & Bills",
@@ -649,6 +649,7 @@
   },
   "BOOKMARK_LIST": {
     "ADD_NEW_CONTRACT": "Add New Contract",
+    "ADD_NEW_KYC": "Add New KYC",
     "ADD_NEW_EMPLOYEES": "Add New Employees",
     "ADD_NEW_PAYROLL": "Add New Payroll",
     "ADD_NEW_JOURNAL": "Add New Journal",

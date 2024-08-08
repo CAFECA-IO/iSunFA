@@ -19,7 +19,8 @@ import version from '@/lib/version';
 import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
-import Notification from '@/components/notification/notification';
+// Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+// import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
 
@@ -32,7 +33,8 @@ const NavBar = () => {
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
-  const [notificationIsOpen, setNotificationIsOpen] = useState(false);
+  // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+  // const [notificationIsOpen, setNotificationIsOpen] = useState(false);
 
   const {
     targetRef: userMenuRef,
@@ -67,7 +69,8 @@ const NavBar = () => {
   const burgerMenuClickHandler = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
     setLangIsOpen(false);
-    setNotificationIsOpen(false);
+    // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+    // setNotificationIsOpen(false);
   };
 
   const profileUploadClickHandler = () => {
@@ -220,11 +223,11 @@ const NavBar = () => {
         <p>{t('NAV_BAR.CONTACT_US')}</p>
       </Link>
 
-      <Notification
+      {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
+      {/* <Notification
         mobileMenuIsOpen={notificationIsOpen}
         setMobileMenuIsOpen={setNotificationIsOpen}
-      />
-
+      /> */}
       <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
       {displayedAppMenuMobile}
     </div>
@@ -627,7 +630,8 @@ const NavBar = () => {
           {/* Info: globe (i18n) (20240605 - Shirley) */}
           <I18n />
           {/* Info: notification (20240606 - Shirley) */}
-          <Notification />
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
+          {/* <Notification /> */}
           {/* Info: app menu (20240606 - Shirley) */}
           <div ref={appMenuRef}>
             <button

@@ -131,8 +131,9 @@ const ReportsHistoryItem = ({
       {/* Info: operation buttons (20240516 - Shirley) */}
       <td className="hidden min-w-100px px-16px lg:table-cell">
         <div className="flex items-center justify-between">
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(下載按鈕) */}
           {/* Info: download button (20240516 - Shirley) */}
-          <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
+          {/* <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -147,9 +148,10 @@ const ReportsHistoryItem = ({
                 clipRule="evenodd"
               ></path>
             </svg>
-          </Button>
+          </Button> */}
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(分享按鈕) */}
           {/* Info: share button (20240516 - Shirley) */}
-          <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
+          {/* <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -164,7 +166,7 @@ const ReportsHistoryItem = ({
                 clipRule="evenodd"
               ></path>
             </svg>
-          </Button>
+          </Button> */}
         </div>
       </td>
     </tr>
