@@ -26,7 +26,7 @@ import { UploadType } from '@/constants/file';
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
+  const { signedIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
     useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
@@ -81,8 +81,9 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
+    // clearCompany();
     selectCompany(null);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const redirectTo = (target: string) => {

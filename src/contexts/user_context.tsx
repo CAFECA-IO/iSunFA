@@ -42,6 +42,7 @@ interface UserContextType {
     credentials: PublicKeyCredential,
     invitation: string | undefined
   ) => Promise<void>;
+  clearCompany: () => void;
 }
 
 // 自定義 debounce 函數
@@ -68,7 +69,7 @@ function throttle<F extends (...args: unknown[]) => unknown>(
   let lastFunc: NodeJS.Timeout | null;
   let lastRan: number | null = null;
 
-  return function (this: unknown, ...args: Parameters<F>) {
+  function returnFunc(this: unknown, ...args: Parameters<F>) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const context = this as unknown as F;
     if (lastRan === null) {
@@ -86,7 +87,9 @@ function throttle<F extends (...args: unknown[]) => unknown>(
         limit - (Date.now() - lastRan)
       );
     }
-  };
+  }
+
+  return returnFunc;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -109,6 +112,7 @@ export const UserContext = createContext<UserContextType>({
     return { isRegistered: false, credentials: null };
   },
   handleExistingCredential: async () => {},
+  clearCompany: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -576,6 +580,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const clearCompany = () => {
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    // eslint-disable-next-line no-console
+    console.log('clearCompany', selectedCompanyRef.current, successSelectCompanyRef.current);
+  };
+
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
     setSelectedCompany(null);
@@ -587,7 +599,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       },
     });
 
+    // eslint-disable-next-line no-console
+    console.log('selectCompany', company, isPublic, res);
+
     if (!company && !isPublic) {
+      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
       return;
     }
     await handleSelectCompanyResponse(res);
@@ -645,6 +661,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleExistingCredential,
+      clearCompany,
     }),
     [
       credentialRef.current,
