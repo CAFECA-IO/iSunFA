@@ -290,6 +290,7 @@ model Invoice {
   vendorTaxId      String  @map("vendor_tax_id")
   vendorOrSupplier String  @map("vendor_or_supplier")
   imageUrl         String  @default("") @map("image_url")
+  deductible       Boolean
   createdAt        Int     @map("created_at")
   updatedAt        Int     @map("updated_at")
   deletedAt        Int?    @map("deleted_at")

@@ -559,6 +559,7 @@ export async function generateInvoiceFromSalaryRecord(
     number: now.toString(),
     type: InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
     vendorTaxId: 'temp fake id',
+    deductible: true,
     journalId: null,
     date: nowTimestamp,
     eventType: EventType.PAYMENT,
