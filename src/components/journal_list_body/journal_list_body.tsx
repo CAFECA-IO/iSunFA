@@ -24,6 +24,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import Toggle from '@/components/toggle/toggle';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
@@ -478,7 +479,7 @@ const JournalListBody = () => {
       {/* Info: (20240418 - Julian) Journal list */}
       <JournalList
         event={currentTab}
-        companyId={selectedCompany!.id}
+        companyId={selectedCompany?.id ?? NON_EXISTING_COMPANY_ID}
         journalsProps={{
           journals,
           isLoading,
