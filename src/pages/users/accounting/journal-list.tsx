@@ -21,7 +21,7 @@ const JournalListPage = () => {
   const { getAccountListHandler } = useAccountingCtx();
 
   useEffect(() => {
-    if (selectedCompany) {
+    if (selectedCompany && selectedCompany?.id) {
       getAccountListHandler(selectedCompany.id);
     }
   }, [selectedCompany]);

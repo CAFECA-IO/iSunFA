@@ -19,20 +19,22 @@ import version from '@/lib/version';
 import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
-import Notification from '@/components/notification/notification';
+// Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+// import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
+  const { signedIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
     useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
-  const [notificationIsOpen, setNotificationIsOpen] = useState(false);
+  // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+  // const [notificationIsOpen, setNotificationIsOpen] = useState(false);
 
   const {
     targetRef: userMenuRef,
@@ -67,7 +69,8 @@ const NavBar = () => {
   const burgerMenuClickHandler = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
     setLangIsOpen(false);
-    setNotificationIsOpen(false);
+    // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+    // setNotificationIsOpen(false);
   };
 
   const profileUploadClickHandler = () => {
@@ -81,8 +84,9 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
+    // clearCompany();
     selectCompany(null);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const redirectTo = (target: string) => {
@@ -220,11 +224,11 @@ const NavBar = () => {
         <p>{t('NAV_BAR.CONTACT_US')}</p>
       </Link>
 
-      <Notification
+      {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
+      {/* <Notification
         mobileMenuIsOpen={notificationIsOpen}
         setMobileMenuIsOpen={setNotificationIsOpen}
-      />
-
+      /> */}
       <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
       {displayedAppMenuMobile}
     </div>
@@ -468,25 +472,26 @@ const NavBar = () => {
     </div>
   );
 
-  const displayedCompanyChangeBtn = selectedCompany ? (
-    <button
-      type="button"
-      onClick={companyChangeClickHandler}
-      className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
-    >
-      {/* ToDo: (20240516 - Julian) icon */}
-      <Image
-        alt={`${selectedCompany?.name}_icon`}
-        src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
-        width={16}
-        height={16}
-        className="rounded-full"
-      />
-      {/* ToDo: (20240521 - Julian) company name abbreviation */}
-      <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
-      <GoArrowSwitch size={14} />
-    </button>
-  ) : null;
+  const displayedCompanyChangeBtn =
+    !isAuthLoading && selectedCompany ? (
+      <button
+        type="button"
+        onClick={companyChangeClickHandler}
+        className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
+      >
+        {/* ToDo: (20240516 - Julian) icon */}
+        <Image
+          alt={`${selectedCompany?.name}_icon`}
+          src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+          width={16}
+          height={16}
+          className="rounded-full"
+        />
+        {/* ToDo: (20240521 - Julian) company name abbreviation */}
+        <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
+        <GoArrowSwitch size={14} />
+      </button>
+    ) : null;
 
   const displayedAvatar = isAuthLoading ? (
     <Skeleton width={44} height={40} />
@@ -627,7 +632,8 @@ const NavBar = () => {
           {/* Info: globe (i18n) (20240605 - Shirley) */}
           <I18n />
           {/* Info: notification (20240606 - Shirley) */}
-          <Notification />
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
+          {/* <Notification /> */}
           {/* Info: app menu (20240606 - Shirley) */}
           <div ref={appMenuRef}>
             <button

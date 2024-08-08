@@ -4,7 +4,8 @@ import { IJournal, IJournalListItem } from '@/interfaces/journal';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { truncateString, numberWithCommas } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
-import { checkboxStyle } from '@/constants/display';
+// Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
+// import { checkboxStyle } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -16,8 +17,9 @@ import { MessageType } from '@/interfaces/message_modal';
 
 interface IJournalItemProps {
   event: JOURNAL_EVENT;
-  isChecked: boolean;
-  checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  // Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
+  // isChecked: boolean;
+  // checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
   companyId: number;
   // ToDo: (20240528 - Julian) 這裡的 interface 需要再確認
   journal: IJournalListItem;
@@ -117,8 +119,9 @@ const Operations = ({
 
 const JournalItem = ({
   event,
-  isChecked,
-  checkHandler,
+  // Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
+  // isChecked,
+  // checkHandler,
   companyId,
   journal,
   onDelete,
@@ -129,7 +132,8 @@ const JournalItem = ({
     date: createdTimestamp,
     type: eventType,
     particulars: description,
-    projectName,
+    // Info: (20240808 - Anna) Alpha版先隱藏(會計事件配對專案名稱)
+    // projectName,
     account: lineItems,
     voucherId,
     voucherNo,
@@ -251,8 +255,9 @@ const JournalItem = ({
       key={voucherId}
       className="relative border-b border-lightGray6 text-center align-middle text-lightGray4"
     >
+      {/* Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊) */}
       {/* Info: (20240418 - Julian) 選取方塊 */}
-      <td>
+      {/* <td>
         <div className="flex justify-center md:px-10px">
           <input
             id={voucherNo}
@@ -262,7 +267,7 @@ const JournalItem = ({
             className={checkboxStyle}
           />
         </div>
-      </td>
+      </td> */}
       {/* Info: (20240418 - Julian) 日期 */}
       <td className="border-x border-lightGray6">
         {/* Info: (20240418 - Julian) 將日期畫成日曆的 icon */}
@@ -280,16 +285,16 @@ const JournalItem = ({
       <td className="px-16px">{displayedAmount}</td>
       {/* Info: (20240418 - Julian) 專案 */}
       <td className="px-16px text-left">
-        <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-          {/* ToDo: (20240517 - Julian) Replace with project icon */}
+        {/* Info: (20240808 - Anna) Alpha版先隱藏(會計事件配對專案名稱) */}
+        {/* <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+          ToDo: (20240517 - Julian) Replace with project icon
           <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
             BF
           </div>
           <p>{projectName}</p>
-        </div>
+        </div> */}
       </td>
       {/* Info: (20240418 - Julian) 單據編號 */}
-
       {event === JOURNAL_EVENT.UPLOADED && (
         <td className="px-16px text-right font-medium text-darkBlue">{voucherNo}</td>
       )}
@@ -310,8 +315,9 @@ const JournalItem = ({
 
 export const JournalItemMobile = ({
   event,
-  isChecked,
-  checkHandler,
+  // Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
+  // isChecked,
+  // checkHandler,
   companyId,
   journal,
   onDelete,
@@ -387,8 +393,9 @@ export const JournalItemMobile = ({
           <input
             id={`${id}`}
             type="checkbox"
-            checked={isChecked}
-            onChange={checkHandler}
+            // Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
+            // checked={isChecked}
+            // onChange={checkHandler}
             className="relative h-4 w-4 border border-tertiaryBlue bg-white accent-tertiaryBlue"
           />
         </div>
