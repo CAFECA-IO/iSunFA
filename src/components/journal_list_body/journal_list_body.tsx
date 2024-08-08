@@ -3,6 +3,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -23,8 +24,10 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
+
 // Info: (20240808 - Anna) Alpha版先隱藏(發票列表)
 // import Toggle from '@/components/toggle/toggle';
+
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
@@ -487,7 +490,7 @@ const JournalListBody = () => {
       {/* Info: (20240418 - Julian) Journal list */}
       <JournalList
         event={currentTab}
-        companyId={selectedCompany!.id}
+        companyId={selectedCompany?.id ?? NON_EXISTING_COMPANY_ID}
         journalsProps={{
           journals,
           isLoading,
