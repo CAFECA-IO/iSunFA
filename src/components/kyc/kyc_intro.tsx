@@ -16,6 +16,10 @@ const KYCIntro = () => {
     setStep(newStep);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <main
       className={
@@ -39,7 +43,15 @@ const KYCIntro = () => {
           <div className="border border-divider-stroke-lv-4"></div>
         </div>
       </section>
-      {step === 0 && <KYCIntroContent isMobile={isMobile} onStart={() => handleStepChange(1)} />}
+      {step === 0 && (
+        <KYCIntroContent
+          isMobile={isMobile}
+          onStart={() => {
+            handleStepChange(1);
+            scrollToTop();
+          }}
+        />
+      )}
       {step === 1 && <KYCForm onCancel={() => handleStepChange(0)} />}
     </main>
   );

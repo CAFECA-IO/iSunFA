@@ -24,7 +24,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(
-    APIName.REPORT_FINANCIAL_GET_BY_ID,
+    APIName.REPORT_GET_BY_ID,
     {
       params: {
         companyId: selectedCompany?.id,

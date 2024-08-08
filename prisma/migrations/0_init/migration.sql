@@ -232,11 +232,15 @@ CREATE TABLE "invoice" (
     "id" SERIAL NOT NULL,
     "journal_id" INTEGER NOT NULL,
     "payment_id" INTEGER NOT NULL,
+    "number" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "vendor_tax_id" TEXT NOT NULL,
     "date" INTEGER NOT NULL,
     "event_type" TEXT NOT NULL,
     "payment_reason" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "vendor_or_supplier" TEXT NOT NULL,
+    "deductible" BOOLEAN NOT NULL,
     "image_url" TEXT NOT NULL DEFAULT '',
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -283,13 +287,13 @@ CREATE TABLE "journal" (
     "token_contract" TEXT,
     "token_id" TEXT,
     "aich_result_id" TEXT,
+    "event" TEXT NOT NULL,
     "project_id" INTEGER,
     "contract_id" INTEGER,
     "company_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
-
     CONSTRAINT "journal_pkey" PRIMARY KEY ("id")
 );
 
@@ -374,6 +378,7 @@ CREATE TABLE "payment" (
     "price" INTEGER NOT NULL,
     "has_tax" BOOLEAN NOT NULL,
     "tax_percentage" INTEGER NOT NULL,
+    "tax_price" INTEGER NOT NULL,
     "has_fee" BOOLEAN NOT NULL,
     "fee" INTEGER NOT NULL,
     "method" TEXT NOT NULL,
@@ -621,6 +626,7 @@ CREATE UNIQUE INDEX "invoice_journal_id_key" ON "invoice"("journal_id");
 -- CreateIndex
 CREATE UNIQUE INDEX "invoice_payment_id_key" ON "invoice"("payment_id");
 
+CREATE UNIQUE INDEX "invoice_number_key" ON "invoice"("number");
 -- CreateIndex
 CREATE UNIQUE INDEX "invitation_code_key" ON "invitation"("code");
 

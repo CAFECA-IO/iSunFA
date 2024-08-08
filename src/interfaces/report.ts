@@ -2,13 +2,9 @@ import { ReportSheetType, ReportType } from '@/constants/report';
 import { IAccountReadyForFrontend, IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
+import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
 
-export type IReportIncludeCompany = Prisma.ReportGetPayload<{
-  include: {
-    company: true;
-  };
-}>;
 export interface IAnalysisReportRequest {
   project_id: string;
   type: string;
@@ -31,6 +27,11 @@ export interface IReport {
   remainingSeconds: number;
   paused: boolean;
   projectId: number | null;
+  project: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
   reportLink: string;
   downloadLink: string;
   blockChainExplorerLink: string;
@@ -41,9 +42,12 @@ export interface IReport {
   updatedAt: number;
 }
 
-export type IReportIncludeProject = Prisma.ReportGetPayload<{
+export interface IPaginatedReport extends IPaginatedData<IReport[]> {}
+
+export type IReportIncludeCompanyProject = Prisma.ReportGetPayload<{
   include: {
     project: true;
+    company: true;
   };
 }>;
 export interface IReportOld {
@@ -229,4 +233,83 @@ export function isIAnalysisReportRequest(obj: any): obj is IAnalysisReportReques
     obj.start_date instanceof Date &&
     obj.end_date instanceof Date
   );
+}
+
+export interface TaxReport401 {
+  basicInfo: BasicInfo;
+  sales: Sales;
+  purchases: Purchases;
+  taxCalculation: TaxCalculation;
+  imports: Imports;
+  bondedAreaSalesToTaxArea: number;
+}
+
+interface BasicInfo {
+  uniformNumber: string;
+  name: string;
+  taxOfficeCode: string;
+  businessAddress: string;
+  reportingPeriod: string;
+  usedInvoiceCount: number;
+}
+
+interface Sales {
+  breakdown: SalesBreakdown;
+  totalTaxableAmount: number;
+  includeFixedAsset: number;
+}
+
+interface SalesBreakdown {
+  triplicateAndElectronic: AmountAndTax;
+  cashRegisterTriplicate: AmountAndTax;
+  duplicateAndCashRegister: AmountAndTax;
+  taxExempt: AmountAndTax;
+  returnsAndAllowances: AmountAndTax;
+  total: AmountAndTax;
+}
+
+interface AmountAndTax {
+  amount: number;
+  tax: number;
+}
+
+interface Purchases {
+  breakdown: PurchaseBreakdown;
+  total: PurchaseCategory;
+  totalWithNonDeductible: PurchaseTotal;
+}
+
+interface PurchaseBreakdown {
+  uniformInvoice: PurchaseCategory;
+  cashRegisterAndElectronic: PurchaseCategory;
+  otherTaxableVouchers: PurchaseCategory;
+  customsDutyPayment: PurchaseCategory;
+  returnsAndAllowances: PurchaseCategory;
+}
+
+interface PurchaseCategory {
+  generalPurchases: AmountAndTax;
+  fixedAssets: AmountAndTax;
+}
+
+interface PurchaseTotal {
+  generalPurchases: number;
+  fixedAssets: number;
+}
+
+interface TaxCalculation {
+  outputTax: number;
+  deductibleInputTax: number;
+  previousPeriodOffset: number;
+  subtotal: number;
+  currentPeriodTaxPayable: number;
+  currentPeriodFilingOffset: number;
+  refundCeiling: number;
+  currentPeriodRefundableTax: number;
+  currentPeriodAccumulatedOffset: number;
+}
+
+interface Imports {
+  taxExemptGoods: number;
+  foreignServices: number;
 }

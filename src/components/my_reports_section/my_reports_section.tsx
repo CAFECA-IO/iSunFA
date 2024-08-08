@@ -11,10 +11,6 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   FIXED_DUMMY_PAGINATED_GENERATED_REPORT_ITEMS,
   FIXED_DUMMY_PAGINATED_PENDING_REPORT_ITEMS,
-  IGeneratedReportItem,
-  IPaginatedGeneratedReportItem,
-  IPaginatedPendingReportItem,
-  IPendingReportItem,
 } from '@/interfaces/report_item';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
@@ -31,6 +27,8 @@ import { sortOptionQuery } from '@/constants/sort';
 import { useRouter } from 'next/router';
 import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
+import { IPaginatedReport, IReport } from '@/interfaces/report';
+import { ReportStatusType } from '@/constants/report';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
@@ -58,7 +56,7 @@ const MyReportsSection = () => {
   const [pendingCurrentPage, setPendingCurrentPage] = useState(
     pending ? +pending : DEFAULT_PAGE_NUMBER
   );
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
+  const [pendingData, setPendingData] = useState<IReport[]>([]);
 
   const [historyPeriod, setHistoryPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
@@ -67,7 +65,7 @@ const MyReportsSection = () => {
   const [historyCurrentPage, setHistoryCurrentPage] = useState(
     history ? +history : DEFAULT_PAGE_NUMBER
   );
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
+  const [historyData, setHistoryData] = useState<IReport[]>([]);
 
   const {
     trigger: fetchPendingReports,
@@ -75,11 +73,12 @@ const MyReportsSection = () => {
     code: listPendingCode,
     success: listPendingSuccess,
     isLoading: isPendingDataLoading,
-  } = APIHandler<IPaginatedPendingReportItem>(
-    APIName.REPORT_LIST_PENDING,
+  } = APIHandler<IPaginatedReport>(
+    APIName.REPORT_LIST,
     {
       params: { companyId: selectedCompany?.id },
       query: {
+        status: ReportStatusType.PENDING,
         sortOrder: sortOptionQuery[filteredPendingSort],
         startDateInSecond:
           pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
@@ -98,11 +97,12 @@ const MyReportsSection = () => {
     code: listGeneratedCode,
     success: listGeneratedSuccess,
     isLoading: isHistoryDataLoading,
-  } = APIHandler<IPaginatedGeneratedReportItem>(
-    APIName.REPORT_LIST_GENERATED,
+  } = APIHandler<IPaginatedReport>(
+    APIName.REPORT_LIST,
     {
       params: { companyId: selectedCompany?.id },
       query: {
+        status: ReportStatusType.GENERATED,
         sortOrder: sortOptionQuery[filteredHistorySort],
         startDateInSecond:
           historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,

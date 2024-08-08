@@ -12,5 +12,10 @@ export interface IPayment {
   installmentPeriod: number; // 這邊才是填 分期付款有幾期
   alreadyPaid: number; // 已經付了多少錢, 或是收取多少錢
   status: PaymentStatusType; // 付款狀態
+  // Dear @TinyMurky, is this progress deleted in new design?
   progress: number; // 這是給contract 使用的， 看contract 實際工作完成了多少%, 不是指付款進度
+}
+
+export interface IPaymentBeta extends IPayment {
+  taxPrice: number; // 稅金
 }

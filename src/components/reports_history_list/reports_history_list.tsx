@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { IGeneratedReportItem } from '@/interfaces/report_item';
 import ReportsHistoryItem from '@/components/reports_history_item/reports_history_item';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
+import { IReport } from '@/interfaces/report';
 
 interface IReportsHistoryListProps {
-  reports: IGeneratedReportItem[];
+  reports: IReport[];
 }
 
 const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
   const { t } = useTranslation('common');
   // Info: 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來 (20240514 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportItems, setReportItems] = useState<IGeneratedReportItem[]>(reports);
+  const [reportItems, setReportItems] = useState<IReport[]>(reports);
 
   const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
 
@@ -52,7 +52,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
 
   const displayedList = reports
     // Info: (20240722 - Julian) 依照 createdTimestamp 由新到舊排序
-    .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
+    .sort((a, b) => b.createdAt - a.createdAt)
     .map((report, index) => (
       <ReportsHistoryItem
         key={report.id}

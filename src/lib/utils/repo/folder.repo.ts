@@ -1,6 +1,7 @@
 import prisma from '@/client';
 import { IFolder, IFolderContent } from '@/interfaces/folder';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { assertIsJournalEvent } from '@/lib/utils/type_guard/journal';
 
 export async function getFolderList(companyId: number): Promise<IFolder[]> {
   const folderList = await prisma.voucherSalaryRecordFolder.findMany({
@@ -108,6 +109,11 @@ export async function getFolderContent(
         select: {
           no: true,
           createdAt: true,
+          journal: {
+            select: {
+              event: true,
+            }
+          }
         },
       },
     },
@@ -140,12 +146,15 @@ export async function getFolderContent(
       amount: lineItem.amount,
     };
   });
+
+  assertIsJournalEvent(voucher.voucher.journal.event);
   const folderContent = {
     id: folderId,
     name: salaryRecordList[0].voucherSalaryRecordFolder.name,
     createdAt: salaryRecordList[0].voucherSalaryRecordFolder.createdAt,
     voucher: {
       id: voucherIdNumber,
+      event: voucher.voucher.journal.event,
       date: voucher.voucher.createdAt,
       type: 'Payment',
       particulars: 'Salary Bookkeeping',
