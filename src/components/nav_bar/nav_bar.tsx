@@ -26,7 +26,7 @@ import { UploadType } from '@/constants/file';
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
+  const { signedIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
     useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
@@ -81,8 +81,9 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
+    // clearCompany();
     selectCompany(null);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const redirectTo = (target: string) => {
@@ -468,25 +469,26 @@ const NavBar = () => {
     </div>
   );
 
-  const displayedCompanyChangeBtn = selectedCompany ? (
-    <button
-      type="button"
-      onClick={companyChangeClickHandler}
-      className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
-    >
-      {/* ToDo: (20240516 - Julian) icon */}
-      <Image
-        alt={`${selectedCompany?.name}_icon`}
-        src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
-        width={16}
-        height={16}
-        className="rounded-full"
-      />
-      {/* ToDo: (20240521 - Julian) company name abbreviation */}
-      <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
-      <GoArrowSwitch size={14} />
-    </button>
-  ) : null;
+  const displayedCompanyChangeBtn =
+    !isAuthLoading && selectedCompany ? (
+      <button
+        type="button"
+        onClick={companyChangeClickHandler}
+        className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
+      >
+        {/* ToDo: (20240516 - Julian) icon */}
+        <Image
+          alt={`${selectedCompany?.name}_icon`}
+          src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+          width={16}
+          height={16}
+          className="rounded-full"
+        />
+        {/* ToDo: (20240521 - Julian) company name abbreviation */}
+        <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
+        <GoArrowSwitch size={14} />
+      </button>
+    ) : null;
 
   const displayedAvatar = isAuthLoading ? (
     <Skeleton width={44} height={40} />
