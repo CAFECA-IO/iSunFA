@@ -1,6 +1,5 @@
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { Payment } from '@prisma/client';
-import { calculateTotalAmountAfterTax } from '@/lib/utils/invoice';
 
 export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
   voucher: IVoucherDataForSavingToDB,
@@ -17,8 +16,11 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
     }
   });
 
-  const paymentAmount =
-    calculateTotalAmountAfterTax(payment.price, payment.taxPercentage) + payment.fee;
+  // Deprecate: (20240808 Murky) total amount already includes tax and fee
+  // const paymentAmount =
+  // calculateTotalAmountAfterTax(payment.price, payment.taxPercentage) + payment.fee;
+
+  const paymentAmount = payment.price;
 
   const isDebitCreditEqual = debitAmount === creditAmount;
   const isDebitCreditGreaterOrEqualPaymentAmount =

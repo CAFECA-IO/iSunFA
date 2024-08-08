@@ -601,3 +601,35 @@ export function getEnumValue<T extends object>(enumObj: T, value: string): T[key
     ? (value as unknown as T[keyof T])
     : undefined;
 }
+
+// Info: (20240808 - Shirley) 節流函數
+// eslint-disable-next-line function-paren-newline
+export function throttle<F extends (...args: unknown[]) => unknown>(
+  func: F,
+  limit: number
+): (...args: Parameters<F>) => void {
+  let lastFunc: NodeJS.Timeout | null;
+  let lastRan: number | null = null;
+
+  function returnFunc(this: unknown, ...args: Parameters<F>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context = this as unknown as F;
+    if (lastRan === null) {
+      func.apply(context, args);
+      lastRan = Date.now();
+    } else {
+      if (lastFunc) clearTimeout(lastFunc);
+      lastFunc = setTimeout(
+        () => {
+          if (Date.now() - lastRan! >= limit) {
+            func.apply(context, args);
+            lastRan = Date.now();
+          }
+        },
+        limit - (Date.now() - lastRan)
+      );
+    }
+  }
+
+  return returnFunc;
+}

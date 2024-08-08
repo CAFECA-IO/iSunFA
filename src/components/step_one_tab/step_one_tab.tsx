@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { FiSend } from 'react-icons/fi';
+// Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+// import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
@@ -16,15 +17,18 @@ import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 
-const StepOneTab = ({
-  inputDescription,
-  handleInputChange,
-  handelClick,
-}: {
-  inputDescription: string;
-  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  handelClick: () => void;
-}) => {
+// Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+// 原本代碼是：
+// const StepOneTab = ({
+//   inputDescription,
+//   handleInputChange,
+//   handelClick,
+// }: {
+//   inputDescription: string;
+//   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+//   handelClick: () => void;
+// }) =>
+const StepOneTab = () => {
   const { t } = useTranslation('common');
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
@@ -180,12 +184,11 @@ const StepOneTab = ({
     <div className="flex flex-col gap-8px">
       {/* Info: (20240523 - Julian) Uploaded File Section */}
       {uploadedFileSection}
-
+      {/* Info: (20240808 - Anna) Alpha版先隱藏(事件描述) */}
       {/* Info: (20240422 - Julian) label */}
-      <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION_OF_EVENTS')}</p>
-
+      {/* <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION_OF_EVENTS')}</p> */}
       {/* Info: (20240422 - Julian) input */}
-      <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
+      {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
         <input
           className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-lightGray4"
           placeholder={t('COMMON.ENTER_A_DESCRIPTION')}
@@ -200,11 +203,9 @@ const StepOneTab = ({
           <p className="hidden md:block">{t('CONTACT_US.SUBMIT')}</p>
           <FiSend />
         </button>
-      </div>
-
+      </div> */}
       {/* Info: (20240422 - Julian) tip */}
-      <p className="text-sm text-lightGray5">{t('JOURNAL.DESCRIPTION_EXAMPLE')}</p>
-
+      {/* <p className="text-sm text-lightGray5">{t('JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
       {/* Info: (20240422 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-lightGray4 md:hidden" />
@@ -214,7 +215,6 @@ const StepOneTab = ({
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>
-
       <div className="my-20px flex flex-col items-center gap-40px md:flex-row">
         {/* Info: (20240422 - Julian) Upload area */}
         <JournalUploadArea />

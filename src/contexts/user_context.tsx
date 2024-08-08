@@ -1,6 +1,6 @@
 import { client } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
@@ -12,6 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
+import { throttle } from '@/lib/utils/common';
 
 interface SignUpProps {
   username?: string;
@@ -43,6 +44,8 @@ interface UserContextType {
     invitation: string | undefined
   ) => Promise<void>;
 }
+
+// eslint-disable-next-line function-paren-newline
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
@@ -93,6 +96,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
+  const isRouteChanging = useRef(false);
 
   const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
     body: { credential: credentialRef.current },
@@ -125,9 +129,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
-        setReturnUrl(encodeURIComponent(router.asPath));
-      }
+      // if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
+      //   setReturnUrl(encodeURIComponent(router.asPath));
+      // }
       router.push(ISUNFA_ROUTE.LOGIN);
     }
   };
@@ -376,14 +380,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
-  const checkSession = async () => {
+  const checkSession = useCallback(async () => {
     setIsAuthLoading(true);
     const {
       data: userSessionData,
       success: getUserSessionSuccess,
       code: getUserSessionCode,
     } = await getUserSessionData();
-    setIsAuthLoading(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
     if (getUserSessionSuccess) {
@@ -404,9 +407,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
-          if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-          }
           if (
             'company' in userSessionData &&
             userSessionData.company &&
@@ -420,7 +420,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             setSelectedCompany(null);
             // eslint-disable-next-line no-console
             console.log('checkSession: no company');
-            router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+            if (
+              router.pathname.includes('users') &&
+              !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
+            ) {
+              router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+            }
           }
         } else {
           handleNotSignedIn();
@@ -432,7 +437,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setIsSignInError(true);
       setErrorCode(getUserSessionCode ?? '');
     }
-  };
+    setIsAuthLoading(false);
+  }, [router.pathname]);
+
+  const throttledCheckSession = useCallback(
+    throttle(() => {
+      checkSession();
+    }, 100),
+    [checkSession]
+  );
 
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
@@ -459,11 +472,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
+        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
       },
     });
 
     if (!company && !isPublic) {
+      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
       return;
     }
     await handleSelectCompanyResponse(res);
@@ -475,21 +489,42 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     router.push(ISUNFA_ROUTE.LOGIN);
   };
 
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      checkSession();
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === 'visible' && !isRouteChanging.current) {
+      throttledCheckSession();
     }
-  };
+  }, [throttledCheckSession]);
+
+  const handleRouteChangeStart = useCallback(() => {
+    if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      isRouteChanging.current = true;
+      throttledCheckSession();
+    }
+  }, [throttledCheckSession, router.pathname]);
+
+  const handleRouteChangeComplete = useCallback(() => {
+    isRouteChanging.current = false;
+  }, []);
 
   useEffect(() => {
     checkSession();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    router.events.on('routeChangeComplete', handleRouteChangeComplete);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+      router.events.off('routeChangeComplete', handleRouteChangeComplete);
     };
-  }, []);
+  }, [
+    handleVisibilityChange,
+    handleRouteChangeStart,
+    handleRouteChangeComplete,
+    router.events,
+    checkSession,
+  ]);
 
   // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
   const value = useMemo(
@@ -520,6 +555,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
       returnUrlRef.current,
+      router.pathname,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
