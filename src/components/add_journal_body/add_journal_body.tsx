@@ -15,9 +15,11 @@ const AddJournalBody = () => {
     selectOCRHandler,
     selectedJournal,
     selectJournalHandler,
-    inputDescriptionHandler,
+    // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+    // inputDescriptionHandler,
   } = useAccountingCtx();
-  const [inputDescription, setInputDescription] = useState<string>('');
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // const [inputDescription, setInputDescription] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
@@ -27,23 +29,27 @@ const AddJournalBody = () => {
     setCurrentStep(AccountingStep.STEP_ONE);
     selectOCRHandler(undefined);
     selectJournalHandler(undefined);
-    setInputDescription('');
+    // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+    // setInputDescription('');
   };
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
   const skipClickHandler = () => {
     selectJournalHandler(undefined);
     setCurrentStep(AccountingStep.STEP_TWO);
-    setInputDescription('');
+    // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+    // setInputDescription('');
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputDescription(event.target.value);
-  };
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setInputDescription(event.target.value);
+  // };
 
-  const handelClick = () => {
-    inputDescriptionHandler(inputDescription);
-    setCurrentStep(AccountingStep.STEP_TWO);
-  };
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // const handelClick = () => {
+  //   inputDescriptionHandler(inputDescription);
+  //   setCurrentStep(AccountingStep.STEP_TWO);
+  // };
 
   useEffect(() => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
@@ -65,12 +71,22 @@ const AddJournalBody = () => {
       <FaArrowLeft />
     </button>
   );
-
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // 原本代碼是：
+  // const displayStepTab = isStepOne ? (
+  //   <StepOneTab
+  //     inputDescription={inputDescription}
+  //     handleInputChange={handleInputChange}
+  //     handelClick={handelClick}
+  //   />
+  // ) : (
+  //   <StepTwoTab />
+  // );
   const displayStepTab = isStepOne ? (
     <StepOneTab
-      inputDescription={inputDescription}
-      handleInputChange={handleInputChange}
-      handelClick={handelClick}
+    // inputDescription={inputDescription}
+    // handleInputChange={handleInputChange}
+    // handelClick={handelClick}
     />
   ) : (
     <StepTwoTab />
