@@ -28,7 +28,6 @@ import { ToastType } from '@/interfaces/toastify';
 // Info: (20240808 - Anna) Alpha版先隱藏(發票列表)
 // import Toggle from '@/components/toggle/toggle';
 
-
 const JournalListBody = () => {
   const { t } = useTranslation('common');
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
