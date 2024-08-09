@@ -248,21 +248,29 @@ const MyReportsSection = () => {
   };
 
   const togglePendingSortMenu = () => {
-    setIsPendingSortSelected(true);
-    setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+    if (!isPendingDataLoading) {
+      setIsPendingSortSelected(true);
+      setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+    }
   };
 
   const toggleHistorySortMenu = () => {
-    setIsHistorySortSelected(true);
-    setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+    if (!isHistoryDataLoading) {
+      setIsHistorySortSelected(true);
+      setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+    }
   };
 
   const pendingInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchPendingQuery(e.target.value);
+    if (!isPendingDataLoading) {
+      setSearchPendingQuery(e.target.value);
+    }
   };
 
   const historyInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchHistoryQuery(e.target.value);
+    if (!isHistoryDataLoading) {
+      setSearchHistoryQuery(e.target.value);
+    }
   };
 
   const pendingPaginationHandler = async (newPage: number) => {
