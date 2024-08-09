@@ -6,6 +6,7 @@ import {
   default30DayPeriodInSec,
   LIMIT_FOR_REPORT_PAGE,
   DEFAULT_PAGE_NUMBER,
+  DEFAULT_SKELETON_COUNT_FOR_PAGE,
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
@@ -25,6 +26,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
 import { IPaginatedReport, IReport, MOCK_TOTAL_PAGES } from '@/interfaces/report';
 import { ReportStatusType } from '@/constants/report';
+import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
@@ -262,24 +264,24 @@ const MyReportsSection = () => {
     setSearchHistoryQuery(e.target.value);
   };
 
-  const pendingPaginationHandler = (newPage: number) => {
+  const pendingPaginationHandler = async (newPage: number) => {
     setPendingCurrentPage(newPage);
-    getPendingReports({ currentPage: newPage });
+    await getPendingReports({ currentPage: newPage });
   };
 
-  const historyPaginationHandler = (newPage: number) => {
+  const historyPaginationHandler = async (newPage: number) => {
     setHistoryCurrentPage(newPage);
-    getGeneratedReports({ currentPage: newPage });
+    await getGeneratedReports({ currentPage: newPage });
   };
 
-  const pendingSortClickHandler = (sorting: SortOptions) => {
+  const pendingSortClickHandler = async (sorting: SortOptions) => {
     setFilteredPendingSort(sorting);
-    getPendingReports({ filteredPendingSort: sorting });
+    await getPendingReports({ filteredPendingSort: sorting });
   };
 
-  const historySortClickHandler = (sorting: SortOptions) => {
+  const historySortClickHandler = async (sorting: SortOptions) => {
     setFilteredHistorySort(sorting);
-    getGeneratedReports({ filteredHistorySort: sorting });
+    await getGeneratedReports({ filteredHistorySort: sorting });
   };
 
   const displayedPendingSortMenu = (
@@ -333,11 +335,19 @@ const MyReportsSection = () => {
       <input
         value={searchPendingQuery}
         onChange={pendingInputChangeHandler}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getPendingReports({ searchPendingQuery });
+          }
+        }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
-      <div className="absolute right-3 top-3 hover:cursor-pointer">
+      <div
+        onClick={() => getPendingReports({ searchPendingQuery })}
+        className="absolute right-3 top-3 hover:cursor-pointer"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -413,7 +423,9 @@ const MyReportsSection = () => {
   );
 
   const displayedPendingDataSection = isPendingDataLoading ? (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div className="flex w-full items-center justify-center py-10">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
   ) : pendingData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       {' '}
@@ -545,11 +557,19 @@ const MyReportsSection = () => {
       <input
         value={searchHistoryQuery}
         onChange={historyInputChangeHandler}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getGeneratedReports({ searchHistoryQuery });
+          }
+        }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
-      <div className="absolute right-3 top-3 hover:cursor-pointer">
+      <div
+        onClick={() => getGeneratedReports({ searchHistoryQuery })}
+        className="absolute right-3 top-3 hover:cursor-pointer"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -625,7 +645,9 @@ const MyReportsSection = () => {
   );
 
   const displayedHistoryDataSection = isHistoryDataLoading ? (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div className="flex w-full items-center justify-center py-10">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
   ) : historyData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       <ReportsHistoryList reports={historyData} />
