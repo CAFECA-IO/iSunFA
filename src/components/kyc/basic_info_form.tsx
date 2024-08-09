@@ -1,7 +1,6 @@
 import { BasicInfoKeys, CountryOptions } from '@/constants/kyc';
 import { IBasicInfo } from '@/interfaces/kyc_basic_info';
 import Image from 'next/image';
-import { useState } from 'react';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
 
@@ -24,7 +23,6 @@ const countryTranslationMap: { [key in CountryOptions]: string } = {
 };
 
 const BasicInfoForm = ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data,
   onChange,
 }: {
@@ -32,9 +30,6 @@ const BasicInfoForm = ({
   onChange: (key: BasicInfoKeys, value: string) => void;
 }) => {
   const { t } = useTranslation('common');
-  // Info: (20240719 - Liz) 狀態管理
-  const [countryFlag, setCountryFlag] = useState<CountryOptions>(CountryOptions.TAIWAN);
-
   // Info: (20240719 - Liz) OuterClick Hook
   const {
     targetRef: countryFlagMenuRef,
@@ -48,7 +43,7 @@ const BasicInfoForm = ({
   // Info: (20240719 - Liz) 下拉選單選項
   const countryFlagDropmenu = Object.values(CountryOptions).map((country) => {
     const selectionClickHandler = () => {
-      setCountryFlag(country); // Info: (20240719 - Liz) 這裡的值不用回傳後端，所以不用 onChange
+      onChange(BasicInfoKeys.COUNTRY, country);
       setIsCountryFlagMenuOpen(false);
     };
 
@@ -102,6 +97,7 @@ const BasicInfoForm = ({
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={legalCompanyNameInputHandler}
+          value={data[BasicInfoKeys.LEGAL_COMPANY_NAME]}
         />
       </div>
 
@@ -122,10 +118,10 @@ const BasicInfoForm = ({
             >
               {/* // Info: (20240719 - Liz) 不拿後端回傳的值，因為這裡 country 不傳給後端 */}
               <Image
-                src={countryFlagMap[countryFlag]}
+                src={countryFlagMap[data[BasicInfoKeys.COUNTRY]]}
                 width={16}
                 height={16}
-                alt={countryFlag}
+                alt={data[BasicInfoKeys.COUNTRY]}
                 className="h-16px w-16px rounded-full object-cover"
               ></Image>
               <div className="pr-6px">
@@ -165,6 +161,7 @@ const BasicInfoForm = ({
               required
               className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
               onChange={cityInputHandler}
+              value={data[BasicInfoKeys.CITY]}
             />
           </div>
         </div>
@@ -179,6 +176,7 @@ const BasicInfoForm = ({
             required
             className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={zipCodeInputHandler}
+            value={data[BasicInfoKeys.ZIP_CODE]}
           />
         </div>
       </div>
@@ -192,6 +190,7 @@ const BasicInfoForm = ({
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={addressInputHandler}
+          value={data[BasicInfoKeys.ADDRESS]}
         />
       </div>
 
@@ -207,6 +206,7 @@ const BasicInfoForm = ({
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyCompanyRepresentativesInputHandler}
+          value={data[BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME]}
         />
       </div>
     </section>

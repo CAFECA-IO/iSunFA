@@ -435,7 +435,14 @@
     "GO_BACK_TO_JOURNAL_LIST": "返回日記帳",
     "DOWNLOAD": "下載",
     "DEBIT_AMOUNT_BALANCED": "借方金額與總金額平衡",
-    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡"
+    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡",
+    "CLEAR_FORM": "清除表格",
+    "CLEAR_FORM_CONTENT": "您確定要清除表格吗？",
+    "LEAVE_HINT": "您的日記帳還未新增",
+    "LEAVE_HINT_CONTENT": "您的日記帳還未新增，您確定要離開嗎？",
+    "LEAVE": "離開",
+    "CANCEL": "取消",
+    "FEE_EXCEEDS_TOTAL": "費用不能大於總金額"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
@@ -763,7 +770,8 @@
     "LEAVE_THIS_PAGE": "離開這個頁面",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果離開，可能會失去目前您已完成的進度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "確定要離開此頁面嗎",
-    "LEAVE_NOW": "現在離開"
+    "LEAVE_NOW": "現在離開",
+    "BACK": "上一步"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "基本資訊",

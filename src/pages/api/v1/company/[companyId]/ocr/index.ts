@@ -5,6 +5,7 @@ import { promises as fs } from 'fs';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
+  generateUUID,
   timestampInSeconds,
   transformBytesToFileSizeString,
   transformOCRImageIDToURL,
@@ -123,6 +124,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
   // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
     resultJson = await Promise.all(
       files.image.map(async (image) => {
+        const defaultResultId = "error-" + generateUUID;
         let result:{
           resultStatus: IAccountResultStatus;
           imageName: string;
@@ -131,8 +133,8 @@ export async function postImageToAICH(files: formidable.Files): Promise<
           type: string;
         } = {
           resultStatus: {
-            status: ProgressStatus.SYSTEM_ERROR,
-            resultId: '',
+            status: ProgressStatus.IN_PROGRESS,
+            resultId: defaultResultId,
           },
           imageUrl: '',
           imageName: '',

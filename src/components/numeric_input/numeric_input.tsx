@@ -6,6 +6,7 @@ interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement>
   setValue: React.Dispatch<React.SetStateAction<number>>;
   isDecimal?: boolean;
   hasComma?: boolean; // Info: (20240722 - Liz) 新增逗號顯示
+  triggerWhenChanged?: (value: number, e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const formatDisplayValue = (
@@ -23,7 +24,14 @@ const formatDisplayValue = (
   return hasComma ? numberWithCommas(stringValue) : stringValue;
 };
 
-const NumericInput = ({ value, setValue, isDecimal, hasComma, ...props }: INumericInputProps) => {
+const NumericInput = ({
+  value,
+  setValue,
+  isDecimal,
+  hasComma,
+  triggerWhenChanged,
+  ...props
+}: INumericInputProps) => {
   // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
   const [displayValue, setDisplayValue] = useState<string>(value.toString());
   // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
@@ -60,6 +68,10 @@ const NumericInput = ({ value, setValue, isDecimal, hasComma, ...props }: INumer
 
     setDbValue(validNumericValue); // 更新儲存值
     setDisplayValue(formattedDisplayValue); // 更新顯示值
+
+    if (triggerWhenChanged) {
+      triggerWhenChanged(validNumericValue, event);
+    }
   };
 
   // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況

@@ -1,5 +1,5 @@
 import { useTranslation } from 'next-i18next';
-import BackButton from '@/components/kyc/kyc_back_button';
+import LeaveButton from '@/components/kyc/kyc_leave_button';
 import KYCIntroContent from '@/components/kyc/kyc_intro_content';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
@@ -31,7 +31,7 @@ const KYCIntro = () => {
       {/* Page Title */}
       <section className={`pb-20px ${isMobile ? 'space-y-8px pt-50px' : 'space-y-16px pt-60px'} `}>
         <div className={`flex gap-24px ${isMobile ? 'items-center' : ''}`}>
-          <BackButton />
+          <LeaveButton />
           <h1
             className={`font-semibold text-text-neutral-secondary ${isMobile ? 'text-base' : 'text-36px'}`}
           >
@@ -52,7 +52,7 @@ const KYCIntro = () => {
           }}
         />
       )}
-      {step === 1 && <KYCForm onCancel={() => handleStepChange(0)} />}
+      {step === 1 && <KYCForm />}
     </main>
   );
 };
