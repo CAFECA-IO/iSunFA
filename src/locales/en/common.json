@@ -435,7 +435,8 @@
     "GO_BACK_TO_JOURNAL_LIST": "Go back to journal list",
     "DOWNLOAD": "Download",
     "DEBIT_AMOUNT_BALANCED": "Debit amount balanced with total amount",
-    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount"
+    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount",
+    "FEE_EXCEEDS_TOTAL": "Fee cannot exceed total amount"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",

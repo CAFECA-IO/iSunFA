@@ -435,7 +435,8 @@
     "GO_BACK_TO_JOURNAL_LIST": "返回日記帳",
     "DOWNLOAD": "下載",
     "DEBIT_AMOUNT_BALANCED": "借方金額與總金額平衡",
-    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡"
+    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡",
+    "FEE_EXCEEDS_TOTAL": "費用不能大於總金額"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
