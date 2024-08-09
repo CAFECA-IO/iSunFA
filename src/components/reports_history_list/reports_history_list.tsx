@@ -49,18 +49,15 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
     setIndividualChecks(updatedChecks);
   };
 
-  const displayedList = reports
-    // Info: (20240722 - Julian) 依照 createdTimestamp 由新到舊排序
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .map((report, index) => (
-      <ReportsHistoryItem
-        key={report.id}
-        report={report}
-        checked={individualChecks[index]}
-        onCheckChange={() => individualCheckHandler(index)}
-        isCheckboxVisible={isCheckboxVisible}
-      />
-    ));
+  const displayedList = reports.map((report, index) => (
+    <ReportsHistoryItem
+      key={report.id}
+      report={report}
+      checked={individualChecks[index]}
+      onCheckChange={() => individualCheckHandler(index)}
+      isCheckboxVisible={isCheckboxVisible}
+    />
+  ));
   const displayedStatusButtons = (
     <div className="flex w-full items-center justify-end space-x-5">
       {isCheckboxVisible ? (

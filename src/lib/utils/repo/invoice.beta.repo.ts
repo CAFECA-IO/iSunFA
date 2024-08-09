@@ -258,15 +258,17 @@ export async function listInvoice({
       gte: startDateInSecond,
       lte: endDateInSecond,
     },
-    OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    ...(searchQuery
-      ? [
-          { invoice: { number: { contains: searchQuery, mode: 'insensitive' } } },
-          { invoice: { vendorTaxId: { contains: searchQuery, mode: 'insensitive' } } },
-          { invoice: { vendorOrSupplier: { contains: searchQuery, mode: 'insensitive' } } },
-          { invoice: { description: { contains: searchQuery, mode: 'insensitive' } } },
-        ]
-      : {}),
+    AND: [
+      { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+      {
+        OR: [
+          { number: { contains: searchQuery, mode: 'insensitive' } },
+          { vendorTaxId: { contains: searchQuery, mode: 'insensitive' } },
+          { vendorOrSupplier: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+        ],
+      },
+    ],
   };
 
   const totalCount = await prisma.invoice.count({ where });
