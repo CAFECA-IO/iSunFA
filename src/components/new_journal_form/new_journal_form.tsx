@@ -1334,12 +1334,7 @@ const NewJournalForm = () => {
           >
             {t('JOURNAL.CLEAR_ALL')}
           </button>
-          <Button
-            id="upload-btn"
-            type="submit"
-            className="px-16px py-8px"
-            // disabled={isUploadDisabled}
-          >
+          <Button id="upload-btn" type="submit" className="px-16px py-8px" disabled={isFeeValid}>
             <p>{t('JOURNAL.UPLOAD')}</p>
             <svg
               width="20"
