@@ -4,7 +4,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-const BackButton = () => {
+const LeaveButton = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
@@ -48,4 +48,4 @@ const BackButton = () => {
   );
 };
 
-export default BackButton;
+export default LeaveButton;

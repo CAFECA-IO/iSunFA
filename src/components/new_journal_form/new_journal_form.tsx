@@ -394,8 +394,8 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
   const dataMessageModal = {
-    title: 'Clear form content',
-    content: 'Are you sure you want to clear form content?',
+    title: t('JOURNAL.CLEAR_FORM'),
+    content: t('JOURNAL.CLEAR_FORM_CONTENT'),
     submitBtnStr: t('JOURNAL.CLEAR_ALL'),
     submitBtnFunction: () => clearFormHandler(),
     messageType: MessageType.WARNING,

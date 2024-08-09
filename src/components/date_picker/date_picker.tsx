@@ -44,7 +44,7 @@ interface IDatePickerProps {
   btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
-  onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
+  onClose?: (start: number, end: number) => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback // Info: (20240809 - Tzuhan) 更新傳入參數 start, end 用在 RegistrationInfoForm
   alignCalendar?: DatePickerAlign;
   datePickerClassName?: string;
   disabled?: boolean;
@@ -251,7 +251,7 @@ const DatePicker = ({
       }
       // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
       if (onClose) {
-        onClose();
+        onClose(dateOneStamp, isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp);
       }
     } else if (dateOneStamp === 0 && dateTwoStamp === 0) {
       setFilteredPeriod({
@@ -259,7 +259,7 @@ const DatePicker = ({
         endTimeStamp: 0,
       });
       if (onClose) {
-        onClose();
+        onClose(0, 0);
       }
       if (datePickerHandler) {
         datePickerHandler(0, 0);

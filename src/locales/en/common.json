@@ -436,6 +436,12 @@
     "DOWNLOAD": "Download",
     "DEBIT_AMOUNT_BALANCED": "Debit amount balanced with total amount",
     "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount",
+    "CLEAR_FORM": "Clear Form",
+    "CLEAR_FORM_CONTENT": "Are you sure you want to clear the form?",
+    "LEAVE_HINT": "You journal is not added yet",
+    "LEAVE_HINT_CONTENT": "You journal is not added yet. Are you sure you want to leave now?",
+    "LEAVE": "Leave",
+    "CANCEL": "Cancel",
     "FEE_EXCEEDS_TOTAL": "Fee cannot exceed total amount"
   },
   "PROJECT": {
@@ -764,7 +770,8 @@
     "LEAVE_THIS_PAGE": "Leave this page",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
-    "LEAVE_NOW": "Leave now"
+    "LEAVE_NOW": "Leave now",
+    "BACK": "Back"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "Basic Info",
