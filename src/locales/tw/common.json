@@ -435,7 +435,13 @@
     "GO_BACK_TO_JOURNAL_LIST": "返回日記帳",
     "DOWNLOAD": "下載",
     "DEBIT_AMOUNT_BALANCED": "借方金額與總金額平衡",
-    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡"
+    "CREDIT_AMOUNT_BALANCED": "貸方金額與總金額平衡",
+    "CLEAR_FORM": "清除表格",
+    "CLEAR_FORM_CONTENT": "您確定要清除表格吗？",
+    "LEAVE_HINT": "您的日記帳還未新增",
+    "LEAVE_HINT_CONTENT": "您的日記帳還未新增，您確定要離開嗎？",
+    "LEAVE": "離開",
+    "CANCEL": "取消"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",

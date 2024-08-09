@@ -435,7 +435,13 @@
     "GO_BACK_TO_JOURNAL_LIST": "Go back to journal list",
     "DOWNLOAD": "Download",
     "DEBIT_AMOUNT_BALANCED": "Debit amount balanced with total amount",
-    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount"
+    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount",
+    "CLEAR_FORM": "Clear Form",
+    "CLEAR_FORM_CONTENT": "Are you sure you want to clear the form?",
+    "LEAVE_HINT": "You journal is not added yet",
+    "LEAVE_HINT_CONTENT": "You journal is not added yet. Are you sure you want to leave now?",
+    "LEAVE": "Leave",
+    "CANCEL": "Cancel"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
