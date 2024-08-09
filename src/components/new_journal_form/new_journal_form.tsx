@@ -872,7 +872,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required
                 hasComma
-                onChange={amountChangeHandler}
+                triggerWhenChanged={amountChangeHandler}
                 className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 bg-white p-12px text-sm text-lightGray4">
@@ -953,7 +953,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required={feeToggle}
                 hasComma
-                onChange={amountChangeHandler}
+                triggerWhenChanged={amountChangeHandler}
                 className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">

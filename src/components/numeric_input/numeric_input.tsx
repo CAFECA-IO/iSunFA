@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
 
-interface INumericInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number;
   setValue: React.Dispatch<React.SetStateAction<number>>;
   isDecimal?: boolean;
   hasComma?: boolean; // Info: (20240722 - Liz) 新增逗號顯示
-  onChange?: (value: number, e: React.ChangeEvent<HTMLInputElement>) => void;
+  triggerWhenChanged?: (value: number, e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const formatDisplayValue = (
@@ -29,7 +29,7 @@ const NumericInput = ({
   setValue,
   isDecimal,
   hasComma,
-  onChange: triggerWhenChanged,
+  triggerWhenChanged,
   ...props
 }: INumericInputProps) => {
   // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值

@@ -72,7 +72,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
             name="input-progress-rate"
             value={progressRate}
             setValue={setProgressRate}
-            // onChange={progressRateChangeHandler} // TODO: 原先 NumericInput 不接受外部的 onChange 事件，目前看不出來 ProgressBar 沒有 onChange 之後會有什麼問題 (20240809 - Shirley)
+            onChange={progressRateChangeHandler}
             min={0}
             max={100}
             className="flex-1 bg-transparent px-10px outline-none"
