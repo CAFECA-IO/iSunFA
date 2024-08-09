@@ -218,7 +218,7 @@ const JournalListBody = () => {
     <div
       onClick={isJournalListLoading ? undefined : toggleTypeMenu}
       className={cn(
-        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border bg-white p-10px',
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow',
         {
           'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
             isJournalListLoading,
@@ -226,7 +226,6 @@ const JournalListBody = () => {
           'border-input-stroke-input text-input-text-input-placeholder': !isTypeMenuOpen,
         }
       )}
-      // className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-input-stroke-input-hover text-primaryYellow' : 'border-input-stroke-input text-input-text-input-placeholder'} items-center justify-between rounded-sm border bg-white p-10px hover:border-input-stroke-input-hover hover:text-primaryYellow`}
     >
       <p
         className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? '' : 'text-input-text-input-placeholder'}`}
@@ -261,7 +260,7 @@ const JournalListBody = () => {
     <div
       onClick={isJournalListLoading ? undefined : toggleSortByMenu}
       className={cn(
-        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border bg-white p-10px',
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow',
         {
           'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
             isJournalListLoading,
