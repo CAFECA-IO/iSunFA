@@ -37,8 +37,8 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
       body: JSON.stringify({
         merchantId: oenMerchantId,
         customId: orderIdNum, // order id
-        successUrl: `https://www.google.com`, // TODO (20240806 - Jacky): Need to modify in the future
-        failureUrl: `https://www.bing.com`, // TODO (20240806 - Jacky): Need to modify in the future
+        successUrl: `https://www.google.com`,
+        failureUrl: `https://www.bing.com`,
       }),
     });
     const responseJson = await response.json();

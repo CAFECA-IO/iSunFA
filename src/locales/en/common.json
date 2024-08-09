@@ -441,7 +441,8 @@
     "LEAVE_HINT": "You journal is not added yet",
     "LEAVE_HINT_CONTENT": "You journal is not added yet. Are you sure you want to leave now?",
     "LEAVE": "Leave",
-    "CANCEL": "Cancel"
+    "CANCEL": "Cancel",
+    "FEE_EXCEEDS_TOTAL": "Fee cannot exceed total amount"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",

@@ -441,7 +441,8 @@
     "LEAVE_HINT": "您的日記帳還未新增",
     "LEAVE_HINT_CONTENT": "您的日記帳還未新增，您確定要離開嗎？",
     "LEAVE": "離開",
-    "CANCEL": "取消"
+    "CANCEL": "取消",
+    "FEE_EXCEEDS_TOTAL": "費用不能大於總金額"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",
