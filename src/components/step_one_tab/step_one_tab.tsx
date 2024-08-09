@@ -9,7 +9,8 @@ import { IOCR } from '@/interfaces/ocr';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
-import Pagination from '@/components/pagination/pagination';
+// Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
+// import Pagination from '@/components/pagination/pagination';
 import JournalUploadArea from '@/components/journal_upload_area/journal_upload_area';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -33,8 +34,12 @@ const StepOneTab = () => {
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler } = useAccountingCtx();
+  // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IOCR[]>(OCRList);
+  // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalPages, setTotalPages] = useState<number>(1);
   const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE);
 
@@ -173,14 +178,15 @@ const StepOneTab = () => {
         <div className="mb-50px flex flex-col items-center gap-y-50px">
           <div className="flex w-full flex-col items-center gap-y-12px">{displayedFileList}</div>
           {/* Info: (20240523 - Julian) Pagination */}
-          {totalPages > 1 && (
+          {/* Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作 */}
+          {/* {totalPages > 1 && (
             <Pagination
               currentPage={currentFilePage}
               totalPages={totalPages}
               setCurrentPage={setCurrentFilePage}
               pagePrefix="filePage"
             />
-          )}
+          )} */}
         </div>
       </>
     ) : null;

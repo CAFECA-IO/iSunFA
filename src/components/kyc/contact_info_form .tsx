@@ -87,6 +87,7 @@ const ContactInfoForm = ({
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyContactPersonInputHandler}
+          value={data[ContactInfoKeys.KEY_CONTACT_PERSON]}
         />
       </div>
 
@@ -146,6 +147,7 @@ const ContactInfoForm = ({
             required
             className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={contactNumberInputHandler}
+            value={data[ContactInfoKeys.CONTACT_NUMBER]}
           />
         </div>
       </div>
@@ -183,6 +185,7 @@ const ContactInfoForm = ({
             required
             className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={emailAddressInputHandler}
+            value={data[ContactInfoKeys.EMAIL_ADDRESS]}
           />
         </div>
       </div>
@@ -203,6 +206,7 @@ const ContactInfoForm = ({
             required
             className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={companyWebsiteInputHandler}
+            value={data[ContactInfoKeys.COMPANY_WEBSITE]}
           />
         </div>
       </div>

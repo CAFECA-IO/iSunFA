@@ -44,7 +44,7 @@ interface IDatePickerProps {
   btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
-  onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
+  onClose?: (start: number, end: number) => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback // Info: (20240809 - Tzuhan) 更新傳入參數 start, end 用在 RegistrationInfoForm
   alignCalendar?: DatePickerAlign;
   datePickerClassName?: string;
   disabled?: boolean;
@@ -251,7 +251,7 @@ const DatePicker = ({
       }
       // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
       if (onClose) {
-        onClose();
+        onClose(dateOneStamp, isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp);
       }
     } else if (dateOneStamp === 0 && dateTwoStamp === 0) {
       setFilteredPeriod({
@@ -259,7 +259,7 @@ const DatePicker = ({
         endTimeStamp: 0,
       });
       if (onClose) {
-        onClose();
+        onClose(0, 0);
       }
       if (datePickerHandler) {
         datePickerHandler(0, 0);
@@ -387,7 +387,7 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-xs border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
           // props control style
           btnClassName,
           // variables control style
@@ -427,7 +427,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-xs border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
           btnClassName,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,

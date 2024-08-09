@@ -79,6 +79,7 @@ export enum RepresentativeIDType {
 
 export enum BasicInfoKeys {
   LEGAL_COMPANY_NAME = 'legalName',
+  COUNTRY = 'country',
   CITY = 'city',
   ZIP_CODE = 'zipCode',
   ADDRESS = 'address',

@@ -1,3 +1,4 @@
+import { default30DayPeriodInSec } from '@/constants/display';
 import {
   CountryOptions,
   LegalStructureOptions,
@@ -17,6 +18,6 @@ export const initialRegistrationInfo: IRegistrationInfo = {
   [RegistrationInfoKeys.COUNTRY]: CountryOptions.DEFAULT,
   [RegistrationInfoKeys.LEGAL_STRUCTURE]: LegalStructureOptions.DEFAULT,
   [RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]: '',
-  [RegistrationInfoKeys.REGISTRATION_DATE]: '',
+  [RegistrationInfoKeys.REGISTRATION_DATE]: default30DayPeriodInSec.startTimeStamp.toString(),
   [RegistrationInfoKeys.INDUSTRY]: IndustryOptions.DEFAULT,
 };

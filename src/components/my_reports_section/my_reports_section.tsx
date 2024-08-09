@@ -6,6 +6,7 @@ import {
   default30DayPeriodInSec,
   LIMIT_FOR_REPORT_PAGE,
   DEFAULT_PAGE_NUMBER,
+  DEFAULT_SKELETON_COUNT_FOR_PAGE,
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
@@ -25,6 +26,8 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import useStateRef from 'react-usestateref';
 import { IPaginatedReport, IReport, MOCK_TOTAL_PAGES } from '@/interfaces/report';
 import { ReportStatusType } from '@/constants/report';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { cn } from '@/lib/utils/common';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
@@ -245,51 +248,66 @@ const MyReportsSection = () => {
   };
 
   const togglePendingSortMenu = () => {
-    setIsPendingSortSelected(true);
-    setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+    if (!isPendingDataLoading) {
+      setIsPendingSortSelected(true);
+      setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+    }
   };
 
   const toggleHistorySortMenu = () => {
-    setIsHistorySortSelected(true);
-    setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+    if (!isHistoryDataLoading) {
+      setIsHistorySortSelected(true);
+      setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+    }
   };
 
   const pendingInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchPendingQuery(e.target.value);
+    if (!isPendingDataLoading) {
+      setSearchPendingQuery(e.target.value);
+    }
   };
 
   const historyInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchHistoryQuery(e.target.value);
+    if (!isHistoryDataLoading) {
+      setSearchHistoryQuery(e.target.value);
+    }
   };
 
-  const pendingPaginationHandler = (newPage: number) => {
+  const pendingPaginationHandler = async (newPage: number) => {
     setPendingCurrentPage(newPage);
-    getPendingReports({ currentPage: newPage });
+    await getPendingReports({ currentPage: newPage });
   };
 
-  const historyPaginationHandler = (newPage: number) => {
+  const historyPaginationHandler = async (newPage: number) => {
     setHistoryCurrentPage(newPage);
-    getGeneratedReports({ currentPage: newPage });
+    await getGeneratedReports({ currentPage: newPage });
   };
 
-  const pendingSortClickHandler = (sorting: SortOptions) => {
+  const pendingSortClickHandler = async (sorting: SortOptions) => {
     setFilteredPendingSort(sorting);
-    getPendingReports({ filteredPendingSort: sorting });
+    await getPendingReports({ filteredPendingSort: sorting });
   };
 
-  const historySortClickHandler = (sorting: SortOptions) => {
+  const historySortClickHandler = async (sorting: SortOptions) => {
     setFilteredHistorySort(sorting);
-    getGeneratedReports({ filteredHistorySort: sorting });
+    await getGeneratedReports({ filteredHistorySort: sorting });
   };
 
   const displayedPendingSortMenu = (
     <div
       ref={pendingSortMenuRef}
-      onClick={togglePendingSortMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isPendingSortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      onClick={isPendingDataLoading ? undefined : togglePendingSortMenu}
+      className={cn(
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        {
+          'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
+            isPendingDataLoading,
+          'border-primaryYellow text-primaryYellow': isPendingSortMenuOpen,
+        }
+      )}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isPendingSortMenuOpen ? 'text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isPendingDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isPendingSortMenuOpen ? 'text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredPendingSort)}
       </p>
@@ -331,13 +349,22 @@ const MyReportsSection = () => {
   const displayedPendingSearchBar = (
     <div className="relative flex-1">
       <input
+        disabled={isPendingDataLoading}
         value={searchPendingQuery}
         onChange={pendingInputChangeHandler}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getPendingReports({ searchPendingQuery });
+          }
+        }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
-      <div className="absolute right-3 top-3 hover:cursor-pointer">
+      <div
+        onClick={() => !isPendingDataLoading && getPendingReports({ searchPendingQuery })}
+        className="absolute right-3 top-3 hover:cursor-pointer"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -369,6 +396,7 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
+          disabled={isPendingDataLoading}
           datePickerHandler={handlePendingDatePickerClose}
           type={DatePickerType.TEXT_PERIOD}
           period={pendingPeriod}
@@ -389,7 +417,14 @@ const MyReportsSection = () => {
           {displayedPendingSearchBar}
         </div>
         <Button
-          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)}
+          disabled={isPendingDataLoading}
+          onClick={
+            () =>
+              !isPendingDataLoading &&
+              filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)
+            // Info: conflict with prettier (20240809 - Shirley)
+            // eslint-disable-next-line react/jsx-curly-newline
+          }
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -413,7 +448,9 @@ const MyReportsSection = () => {
   );
 
   const displayedPendingDataSection = isPendingDataLoading ? (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div className="flex w-full items-center justify-center py-10">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
   ) : pendingData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       {' '}
@@ -497,11 +534,18 @@ const MyReportsSection = () => {
   const displayedHistorySortMenu = (
     <div
       ref={historySortMenuRef}
-      onClick={toggleHistorySortMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      onClick={isHistoryDataLoading ? undefined : toggleHistorySortMenu}
+      className={cn(
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        {
+          'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
+            isHistoryDataLoading,
+          'border-primaryYellow text-primaryYellow': isHistorySortMenuOpen,
+        }
+      )}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? 'text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isHistoryDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isHistorySortMenuOpen ? 'text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredHistorySort)}
       </p>
@@ -543,13 +587,22 @@ const MyReportsSection = () => {
   const displayedHistorySearchBar = (
     <div className="relative flex-1">
       <input
+        disabled={isHistoryDataLoading}
         value={searchHistoryQuery}
         onChange={historyInputChangeHandler}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getGeneratedReports({ searchHistoryQuery });
+          }
+        }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
-      <div className="absolute right-3 top-3 hover:cursor-pointer">
+      <div
+        onClick={() => !isHistoryDataLoading && getGeneratedReports({ searchHistoryQuery })}
+        className="absolute right-3 top-3 hover:cursor-pointer"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -581,6 +634,7 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
+          disabled={isHistoryDataLoading}
           datePickerHandler={handleHistoryDatePickerClose}
           type={DatePickerType.TEXT_PERIOD}
           period={historyPeriod}
@@ -601,7 +655,14 @@ const MyReportsSection = () => {
           {displayedHistorySearchBar}
         </div>
         <Button
-          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)}
+          disabled={isHistoryDataLoading}
+          onClick={
+            () =>
+              !isHistoryDataLoading &&
+              filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)
+            // Info: conflict with prettier (20240809 - Shirley)
+            // eslint-disable-next-line react/jsx-curly-newline
+          }
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -625,7 +686,9 @@ const MyReportsSection = () => {
   );
 
   const displayedHistoryDataSection = isHistoryDataLoading ? (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div className="flex w-full items-center justify-center py-10">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
   ) : historyData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       <ReportsHistoryList reports={historyData} />
