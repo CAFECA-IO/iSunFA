@@ -22,8 +22,8 @@ const MyReportsPage = () => {
       <div className="flex w-full flex-1 flex-col overflow-x-hidden">
         <ReportsSidebar />
       </div>
-
-      <div className="bg-surface-neutral-main-background pb-40">
+      {/* info: (20240809 - Anna) 加min-h-screen */}
+      <div className="min-h-screen bg-surface-neutral-main-background pb-40">
         <MyReportsSection />
       </div>
     </>
