@@ -358,9 +358,7 @@ const NewJournalForm = () => {
   };
 
   const amountChangeHandler = (value: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    // eslint-disable-next-line no-console
-    console.log('amountChangeHandler', e.target.name, value);
-    // 檢查費用是否有效
+    // Info: (20240809 - Shirley) 檢查費用是否正當
     if (e.target.name === 'fee-input') {
       checkFeeValidity(value, inputTotalPrice);
     } else if (e.target.name === 'input-total-price') {
