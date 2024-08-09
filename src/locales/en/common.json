@@ -769,7 +769,8 @@
     "LEAVE_THIS_PAGE": "Leave this page",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
-    "LEAVE_NOW": "Leave now"
+    "LEAVE_NOW": "Leave now",
+    "BACK": "Back"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "Basic Info",

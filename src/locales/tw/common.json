@@ -769,7 +769,8 @@
     "LEAVE_THIS_PAGE": "離開這個頁面",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果離開，可能會失去目前您已完成的進度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "確定要離開此頁面嗎",
-    "LEAVE_NOW": "現在離開"
+    "LEAVE_NOW": "現在離開",
+    "BACK": "上一步"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "基本資訊",

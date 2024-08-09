@@ -7,7 +7,7 @@ import { Button } from '@/components/button/button';
 import { AccountingStep } from '@/interfaces/stepper_string';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useTranslation } from 'next-i18next';
-import { MessageType } from '@/interfaces/message_modal';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useGlobalCtx } from '@/contexts/global_context';
 
 const AddJournalBody = () => {
@@ -37,13 +37,12 @@ const AddJournalBody = () => {
     // setInputDescription('');
   };
 
-  const leaveMessageModal = {
+  const leaveMessageModal: IMessageModal = {
     title: t('JOURNAL.LEAVE_HINT'),
     content: t('JOURNAL.LEAVE_HINT_CONTENT'), // 'Are you sure you want to leave the form?',
     submitBtnStr: t('JOURNAL.LEAVE'),
     submitBtnFunction: () => backClickHandler(),
-    cancelBtnStr: t('JOURNAL.CANCEL'),
-    cancelBtnFunction: () => messageModalVisibilityHandler(),
+    backBtnStr: t('JOURNAL.CANCEL'),
     messageType: MessageType.WARNING,
   };
 

@@ -769,7 +769,8 @@
     "LEAVE_THIS_PAGE": "离开这个页面",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果您离开，您可能会失去目前完成的进度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "您确定要离开此页面吗",
-    "LEAVE_NOW": "现在离开"
+    "LEAVE_NOW": "现在离开",
+    "BACK": "上一步"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "基本信息",
