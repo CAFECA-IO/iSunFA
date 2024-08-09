@@ -112,14 +112,16 @@ export async function listJournal(
       invoice: {
         eventType,
       },
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      ...(searchQuery
-        ? [
+      AND: [
+        { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+        {
+          OR: [
             { invoice: { vendorOrSupplier: { contains: searchQuery, mode: 'insensitive' } } },
             { invoice: { description: { contains: searchQuery, mode: 'insensitive' } } },
             { voucher: { no: { contains: searchQuery, mode: 'insensitive' } } },
-          ]
-        : {}),
+          ],
+        },
+      ],
     };
 
     const totalCount = await prisma.journal.count({ where });

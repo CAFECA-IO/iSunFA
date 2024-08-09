@@ -66,13 +66,13 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
   const idAndName =
     obj === undefined
       ? {
-          id: array[0].id,
-          name: array[0].name,
-        }
+        id: array[0].id,
+        name: array[0].name,
+      }
       : {
-          id: obj.id,
-          name: obj.name,
-        };
+        id: obj.id,
+        name: obj.name,
+      };
   return idAndName;
 };
 
@@ -102,7 +102,7 @@ const NewJournalForm = () => {
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID);
+  } = APIHandler<IInvoice | null>(APIName.OCR_RESULT_GET_BY_ID); // Info: (20240809 - Murky) To Emily, 現在如果在AI還沒有解析完成就點擊，後端會傳Null
   const { trigger: createInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
@@ -158,6 +158,7 @@ const NewJournalForm = () => {
   const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
   const [isInstallmentValid, setIsInstallmentValid] = useState<boolean>(true);
   const [isPartialPaidValid, setIsPartialPaidValid] = useState<boolean>(true);
+  const [isFeeValid, setIsFeeValid] = useState<boolean>(true);
 
   useEffect(() => {
     if (selectedOCR !== undefined && hasCompanyId) {
@@ -243,11 +244,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -355,6 +356,20 @@ const NewJournalForm = () => {
   //  Info: (20240425 - Julian) 檢查表單內容是否有變動
   const formChangedHandler = () => setFormHasChanged(true);
 
+  // Info: (20240809 - Shirley) 檢查費用是否小於總金額
+  const checkFeeValidity = (fee: number, totalPrice: number) => {
+    setIsFeeValid(fee <= totalPrice);
+  };
+
+  const amountChangeHandler = (value: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    // Info: (20240809 - Shirley) 檢查費用是否正當
+    if (e.target.name === 'fee-input') {
+      checkFeeValidity(value, inputTotalPrice);
+    } else if (e.target.name === 'input-total-price') {
+      checkFeeValidity(inputFee, value);
+    }
+  };
+
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
@@ -384,8 +399,8 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
   const dataMessageModal = {
-    title: 'Clear form content',
-    content: 'Are you sure you want to clear form content?',
+    title: t('JOURNAL.CLEAR_FORM'),
+    content: t('JOURNAL.CLEAR_FORM_CONTENT'),
     submitBtnStr: t('JOURNAL.CLEAR_ALL'),
     submitBtnFunction: () => clearFormHandler(),
     messageType: MessageType.WARNING,
@@ -862,6 +877,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required
                 hasComma
+                triggerWhenChanged={amountChangeHandler}
                 className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 bg-white p-12px text-sm text-lightGray4">
@@ -942,6 +958,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required={feeToggle}
                 hasComma
+                triggerWhenChanged={amountChangeHandler}
                 className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
@@ -955,6 +972,11 @@ const NewJournalForm = () => {
                 <p>{t('JOURNAL.TWD')}</p>
               </div>
             </div>
+            {feeToggle && !isFeeValid && (
+              <div className="ml-auto text-sm text-input-text-error">
+                <p>{t('JOURNAL.FEE_EXCEEDS_TOTAL')}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1317,12 +1339,7 @@ const NewJournalForm = () => {
           >
             {t('JOURNAL.CLEAR_ALL')}
           </button>
-          <Button
-            id="upload-btn"
-            type="submit"
-            className="px-16px py-8px"
-            // disabled={isUploadDisabled}
-          >
+          <Button id="upload-btn" type="submit" className="px-16px py-8px" disabled={!isFeeValid}>
             <p>{t('JOURNAL.UPLOAD')}</p>
             <svg
               width="20"

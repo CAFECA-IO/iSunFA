@@ -148,15 +148,15 @@ export async function findManyReports(
     AND: [
       // { from: { gte: startDateInSecond } },
       { to: { lte: endDateInSecond } },
-    ],
-    OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    ...(searchQuery
-      ? [
+      { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+      {
+        OR: [
           { name: { contains: searchQuery, mode: 'insensitive' } },
           { type: { contains: searchQuery, mode: 'insensitive' } },
           { reportType: { contains: searchQuery, mode: 'insensitive' } },
-        ]
-      : undefined),
+        ],
+      },
+    ],
   };
 
   const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };

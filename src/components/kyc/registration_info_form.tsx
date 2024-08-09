@@ -1,5 +1,5 @@
 import { IRegistrationInfo } from '@/interfaces/kyc_registration_info';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa';
 import { useTranslation } from 'next-i18next';
@@ -10,7 +10,6 @@ import {
   IndustryOptions,
 } from '@/constants/kyc';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { default30DayPeriodInSec } from '@/constants/display';
 
 // Info: (20240717 - Liz) 翻譯對應的 country 選項
 const countryTranslationMap: { [key in CountryOptions]: string } = {
@@ -68,12 +67,10 @@ const RegistrationInfoForm = ({
   onChange: (key: RegistrationInfoKeys, value: string) => void;
 }) => {
   const { t } = useTranslation('common');
-  const [selectedDate, setSelectedDate] = useState(default30DayPeriodInSec);
-
-  useEffect(() => {
-    // 當 selectedDate 變動時觸發 onChange
-    onChange(RegistrationInfoKeys.REGISTRATION_DATE, selectedDate.startTimeStamp.toString());
-  }, [selectedDate]);
+  const [selectedDate, setSelectedDate] = useState({
+    startTimeStamp: +data[RegistrationInfoKeys.REGISTRATION_DATE],
+    endTimeStamp: +data[RegistrationInfoKeys.REGISTRATION_DATE],
+  });
 
   // Info: (20240717 - Liz) OuterClick Hook
   const {
@@ -234,6 +231,7 @@ const RegistrationInfoForm = ({
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={businessRegistrationNumberInputHandler}
+          value={data[RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]}
         />
       </div>
 
@@ -249,6 +247,7 @@ const RegistrationInfoForm = ({
             setFilteredPeriod={setSelectedDate}
             type={DatePickerType.TEXT_DATE}
             btnClassName="text-sm rounded-sm"
+            onClose={(start) => onChange(RegistrationInfoKeys.REGISTRATION_DATE, start.toString())}
           />
         </div>
       </div>

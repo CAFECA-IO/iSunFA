@@ -197,13 +197,12 @@ describe('POST OCR', () => {
       jest.clearAllMocks();
     });
 
-    it('should throw error when images is empty', async () => {
+    it('should return empty array when images is empty', async () => {
       mockImages = mock<formidable.Files<'image'>>({
         image: [],
       });
-      await expect(module.postImageToAICH(mockImages)).rejects.toThrow(
-        STATUS_MESSAGE.INVALID_INPUT_FORM_DATA_IMAGE
-      );
+      const result = await module.postImageToAICH(mockImages);
+      expect(result).toEqual([]);
     });
 
     it('should return resultJson', async () => {
@@ -286,11 +285,10 @@ describe('POST OCR', () => {
       expect(imageFile).toEqual(mockFiles);
     });
 
-    it('should throw error when parseForm failed', async () => {
+    it('should return empty object when parseForm failed', async () => {
       jest.spyOn(parseImageForm, 'parseForm').mockRejectedValue(new Error('parseForm failed'));
-      await expect(module.getImageFileFromFormData(req)).rejects.toThrow(
-        STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR
-      );
+      const result = await module.getImageFileFromFormData(req);
+      expect(result).toEqual({});
     });
   });
 
@@ -452,18 +450,15 @@ describe('GET OCR', () => {
       jest.spyOn(common, 'timestampInMilliSeconds').mockReturnValue(0);
     });
     it('should return 100 if success', () => {
-      const mockCreatedAt = 1;
-      const mockStatus = ProgressStatus.SUCCESS;
+      const mockImageUrl = 'testImageUrl';
 
-      const progress = module.calculateProgress(mockCreatedAt, mockStatus);
+      const progress = module.calculateProgress(mockImageUrl);
       expect(progress).toBe(100);
     });
 
     it('should return 0 if not success and not in progress', () => {
-      const mockCreatedAt = 1;
-      const mockStatus = ProgressStatus.INVALID_INPUT;
-
-      const progress = module.calculateProgress(mockCreatedAt, mockStatus);
+      const mockImageUrl = '';
+      const progress = module.calculateProgress(mockImageUrl);
       expect(progress).toBe(0);
     });
   });

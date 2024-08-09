@@ -318,7 +318,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [OCRListParams, listError, listSuccess, listCode, unprocessOCRs]);
 
   const generateAccountTitle = (account: IAccount | null) => {
-    if (account) return account.code.substring(0, 4) + ' - ' + account.name;
+    if (account) return account.code + ' - ' + account.name;
     return `JOURNAL.ACCOUNT_TITLE`;
   };
 
