@@ -7,10 +7,23 @@ import { Button } from '@/components/button/button';
 import { AccountingStep } from '@/interfaces/stepper_string';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useTranslation } from 'next-i18next';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 const AddJournalBody = () => {
   const { t } = useTranslation('common');
-  const { selectedOCR, selectOCRHandler } = useAccountingCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+
+  const {
+    selectedOCR,
+    selectOCRHandler,
+    selectedJournal,
+    selectJournalHandler,
+    // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+    // inputDescriptionHandler,
+  } = useAccountingCtx();
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // const [inputDescription, setInputDescription] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<AccountingStep>(AccountingStep.STEP_ONE);
 
   const isStepOne = currentStep === AccountingStep.STEP_ONE;
@@ -19,31 +32,84 @@ const AddJournalBody = () => {
   const backClickHandler = () => {
     setCurrentStep(AccountingStep.STEP_ONE);
     selectOCRHandler(undefined);
+    selectJournalHandler(undefined);
+    // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+    // setInputDescription('');
   };
+
+  const leaveMessageModal: IMessageModal = {
+    title: t('JOURNAL.LEAVE_HINT'),
+    content: t('JOURNAL.LEAVE_HINT_CONTENT'), // 'Are you sure you want to leave the form?',
+    submitBtnStr: t('JOURNAL.LEAVE'),
+    submitBtnFunction: () => backClickHandler(),
+    backBtnStr: t('JOURNAL.CANCEL'),
+    messageType: MessageType.WARNING,
+  };
+
+  const leaveFormClickHandler = () => {
+    messageModalDataHandler(leaveMessageModal);
+    messageModalVisibilityHandler();
+  };
+
   // Info: (20240422 - Julian) Skip -> 直接跳到第二步填表格
-  const skipClickHandler = () => setCurrentStep(AccountingStep.STEP_TWO);
-  // ToDo: (20240422 - Julian) Submit -> 提交 description of events
-  // const submitClickHandler = () => { }
+  const skipClickHandler = () => {
+    selectJournalHandler(undefined);
+    setCurrentStep(AccountingStep.STEP_TWO);
+    // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+    // setInputDescription('');
+  };
+
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setInputDescription(event.target.value);
+  // };
+
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // const handelClick = () => {
+  //   inputDescriptionHandler(inputDescription);
+  //   setCurrentStep(AccountingStep.STEP_TWO);
+  // };
 
   useEffect(() => {
     // Info: (20240422 - Julian) 如果有 OCR 結果，直接跳到第二步
-    if (selectedOCR) {
+    if (selectedOCR || selectedJournal) {
       setCurrentStep(AccountingStep.STEP_TWO);
+      if (selectedOCR) {
+        selectJournalHandler(undefined);
+      }
     }
-  }, [selectedOCR]);
+  }, [selectedOCR, selectedJournal]);
 
   // Info: (20240422 - Julian) 第一步不會顯示 back button
   const displayBackButton = isStepOne ? null : (
     <button
       type="button"
-      onClick={backClickHandler}
+      onClick={leaveFormClickHandler}
       className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
     >
       <FaArrowLeft />
     </button>
   );
-
-  const displayStepTab = isStepOne ? <StepOneTab /> : <StepTwoTab />;
+  // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+  // 原本代碼是：
+  // const displayStepTab = isStepOne ? (
+  //   <StepOneTab
+  //     inputDescription={inputDescription}
+  //     handleInputChange={handleInputChange}
+  //     handelClick={handelClick}
+  //   />
+  // ) : (
+  //   <StepTwoTab />
+  // );
+  const displayStepTab = isStepOne ? (
+    <StepOneTab
+    // inputDescription={inputDescription}
+    // handleInputChange={handleInputChange}
+    // handelClick={handelClick}
+    />
+  ) : (
+    <StepTwoTab />
+  );
 
   const displayButtons = isStepOne ? (
     <div className="absolute right-0 hidden items-center gap-8px md:flex">

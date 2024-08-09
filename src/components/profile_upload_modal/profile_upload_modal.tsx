@@ -1,26 +1,60 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
-import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/button/button';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
+import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
+import { MessageType } from '@/interfaces/message_modal';
+import { UploadType } from '@/constants/file';
+import { IFile } from '@/interfaces/file';
 
 interface IProfileUploadModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  uploadType: UploadType;
 }
 
 const ProfileUploadModal = ({
   isModalVisible,
   modalVisibilityHandler,
+  uploadType,
 }: IProfileUploadModalProps) => {
   const { t } = useTranslation('common');
+  const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (!isModalVisible) {
-      setUploadedImage(null);
-    }
-  }, [isModalVisible]);
+  const { selectedCompany, userAuth } = useUserCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+
+  // Info: (20240801 - Julian) 上傳圖片 API
+  const {
+    trigger: uploadImage,
+    success,
+    code,
+  } = APIHandler<IFile>(APIName.FILE_UPLOAD, {}, false, false);
+
+  const modalTitle =
+    uploadType === UploadType.USER
+      ? t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')
+      : uploadType === UploadType.COMPANY
+        ? // ToDo: (20240801 - Julian) i18n
+          'Company Image'
+        : 'Project Image';
+
+  const modalDescription =
+    uploadType === UploadType.USER
+      ? t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
+      : uploadType === UploadType.COMPANY
+        ? // ToDo: (20240801 - Julian) i18n
+          'Please upload your company image'
+        : 'Please upload your project image';
 
   const cancelHandler = () => {
     setUploadedImage(null);
@@ -43,7 +77,7 @@ const ProfileUploadModal = ({
     }
   };
 
-  const uploadImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const printImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const file = event.target.files?.[0];
     if (file) {
@@ -51,9 +85,91 @@ const ProfileUploadModal = ({
     }
   };
 
-  const saveImage = () => {
-    // ToDo: (20240618 - Julian) Save image to server
+  // Info: (20240801 - Julian) 上傳失敗 -> 顯示錯誤訊息
+  const uploadedError = () => {
+    messageModalDataHandler({
+      messageType: MessageType.ERROR,
+      // ToDo: (20240801 - Julian) i18n
+      title: 'Upload Failed',
+      content: `Please try again later. Error code: ${code}`,
+      submitBtnStr: t('PROJECT.OK'),
+      submitBtnFunction: messageModalVisibilityHandler,
+    });
+    messageModalVisibilityHandler();
   };
+
+  // Info: (20240801 - Julian) 上傳成功 -> 清空 uploadedImage 並關閉 Modal
+  const uploadedSuccess = () => {
+    setUploadedImage(null);
+    setUploadSuccess(true);
+  };
+
+  // Info: (20240801 - Julian) --------------- API Functions ---------------
+  const saveImage = async () => {
+    // Info: (20240801 - Julian) 建立 FormData
+    const formData = new FormData();
+    let targetId = '';
+    switch (uploadType) {
+      // Info: (20240801 - Julian) 上傳公司圖片
+      case UploadType.COMPANY: {
+        const companyId = selectedCompany?.id ?? NON_EXISTING_COMPANY_ID;
+        targetId = companyId.toString();
+
+        formData.append('file', uploadedImage as File);
+        break;
+      }
+      // Info: (20240801 - Julian) 上傳用戶頭貼
+      case UploadType.USER: {
+        const userId = userAuth?.id ?? -1;
+        targetId = userId.toString();
+
+        formData.append('file', uploadedImage as File);
+        break;
+      }
+      // Info: (20240801 - Julian) 上傳專案圖片
+      case UploadType.PROJECT: {
+        targetId = '-1'; // ToDo: (20240801 - Julian) get project id
+
+        formData.append('file', uploadedImage as File);
+        break;
+      }
+      default:
+        break;
+    }
+    // Info: (20240801 - Julian) call API
+    await uploadImage({
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
+      query: {
+        type: uploadType,
+        targetId,
+      },
+      body: formData,
+    });
+  };
+
+  useEffect(() => {
+    if (!isModalVisible) {
+      setUploadedImage(null);
+      setUploadSuccess(false);
+    }
+  }, [isModalVisible]);
+
+  useEffect(() => {
+    if (uploadSuccess) {
+      modalVisibilityHandler();
+      router.reload();
+    }
+  }, [uploadSuccess]);
+
+  useEffect(() => {
+    if (success) {
+      uploadedSuccess();
+    } else if (code) {
+      uploadedError();
+    }
+  }, [success, code]);
 
   const uploadArea = (
     // eslint-disable-next-line jsx-a11y/label-has-associated-control
@@ -68,7 +184,7 @@ const ProfileUploadModal = ({
         name="file"
         className="hidden"
         accept="image/*"
-        onChange={(event) => uploadImage(event)}
+        onChange={(event) => printImage(event)}
       />
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
       <p className="mt-20px font-semibold text-navyBlue2">
@@ -86,7 +202,7 @@ const ProfileUploadModal = ({
         <Image
           src={URL.createObjectURL(uploadedImage)}
           alt="preview"
-          layout="fill"
+          fill
           style={{ objectFit: 'contain' }}
         />
         {/* Info: (20240618 - Julian) spotlight */}
@@ -133,12 +249,8 @@ const ProfileUploadModal = ({
         </button>
         {/* Info: (20240617 - Julian) Header */}
         <div className="flex flex-col items-center p-16px">
-          <h1 className="text-xl font-bold text-card-text-primary">
-            {t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')}
-          </h1>
-          <p className="text-xs text-card-text-secondary">
-            {t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')}
-          </p>
+          <h1 className="text-xl font-bold text-card-text-primary">{modalTitle}</h1>
+          <p className="text-xs text-card-text-secondary">{modalDescription}</p>
         </div>
         {/* Info: (20240617 - Julian) Body */}
         <div className="flex items-center justify-center">{overview}</div>

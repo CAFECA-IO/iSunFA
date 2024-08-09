@@ -1,72 +1,159 @@
-import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
-import { IVoucher } from '@/interfaces/voucher';
+import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { isIVoucher } from '@/lib/utils/type_guard/voucher';
+import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
+import { getSession } from '@/lib/utils/session';
+import {
+  updateVoucherByJournalIdInPrisma,
+  findUniqueJournalInvolveInvoicePaymentInPrisma,
+} from '@/lib/utils/repo/voucher.repo';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
+
+type ApiResponseType = IVoucherDataForAPIResponse | null;
+
+function isVoucherValid(
+  voucher: IVoucherDataForSavingToDB
+): voucher is IVoucherDataForSavingToDB & { journalId: number } {
+  if (
+    !voucher ||
+    !isIVoucherDataForSavingToDB(voucher) ||
+    !voucher.journalId ||
+    typeof voucher.journalId !== 'number'
+  ) {
+    return false;
+  }
+  return true;
+}
+
+// Info: (20240613 - Murky) Temporary not use
+// function formatVoucherId(voucherId: unknown): number {
+//   let voucherIdInNumber = -1;
+//   if (typeof voucherId === 'string') {
+//     voucherIdInNumber = parseInt(voucherId, 10);
+//   }
+//   return voucherIdInNumber;
+// }
+
+function formatVoucherBody(voucher: IVoucherDataForSavingToDB) {
+  let voucherData: IVoucherDataForSavingToDB | null = null;
+  if (isVoucherValid(voucher)) {
+    voucherData = voucher;
+  }
+  return voucherData;
+}
+
+function formatPutBody(req: NextApiRequest) {
+  const { voucher } = req.body;
+  const voucherData = formatVoucherBody(voucher as IVoucherDataForSavingToDB);
+  return { voucherData };
+}
+
+async function handleVoucherUpdatePrismaLogic(
+  voucher: IVoucherDataForSavingToDB,
+  companyId: number
+) {
+  let voucherUpdated: ApiResponseType = null;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  try {
+    const journal = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
+
+    if (!journal || !journal.invoice || !journal.invoice.payment) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
+    }
+
+    voucherUpdated = await updateVoucherByJournalIdInPrisma(journal.id, companyId, voucher);
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+  } catch (_error) {
+    const error = _error as Error;
+    // Deprecate: (20240524 - Murky) Deprecate this error message
+    // eslint-disable-next-line no-console
+    console.error(error);
+    switch (error.message) {
+      case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        break;
+      case STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT:
+        statusMessage = STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT;
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR;
+        break;
+    }
+  }
+  return {
+    voucherUpdated,
+    statusMessage,
+  };
+}
+
+async function handlePutRequest(companyId: number, req: NextApiRequest) {
+  // Info: (20240613 - Murky) Temporary not use
+  // const { voucherIdInNumber } = formatGetQuery(req);
+  const { voucherData } = formatPutBody(req);
+  let voucherUpdated: ApiResponseType = null;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  if (voucherData) {
+    try {
+      const voucherUpdatedData = await handleVoucherUpdatePrismaLogic(voucherData, companyId);
+      voucherUpdated = voucherUpdatedData.voucherUpdated;
+      statusMessage = voucherUpdatedData.statusMessage;
+    } catch (error) {
+      // Deprecate: (20240524 - Murky) Deprecate this error message
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
+  return {
+    voucherUpdated,
+    statusMessage,
+  };
+}
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IVoucher | null>>
+  res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
-  try {
-    if (req.method === 'GET') {
-      const { voucherId } = req.query;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
 
-      // Info Murky (20240416): Check if resultId is string
-      if (typeof voucherId !== 'string' || !voucherId || Array.isArray(voucherId)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ApiResponseType = null;
+
+  if (isAuth) {
+    try {
+      // ToDo: (20240703 - Murky) Need to check Auth
+      switch (req.method) {
+        case 'PUT': {
+          const { voucherUpdated, statusMessage: message } = await handlePutRequest(companyId, req);
+          payload = voucherUpdated;
+          statusMessage = message;
+          break;
+        }
+        default: {
+          break;
+        }
       }
-
-      const fetchResult = await fetch(`${AICH_URI}/api/v1/vouchers/${voucherId}/result`);
-
-      if (!fetchResult.ok) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
-      }
-
-      const rawVoucher: IVoucher = (await fetchResult.json()).payload;
-      if (!rawVoucher) {
-        const { httpCode, result } = formatApiResponse<IVoucher>(
-          STATUS_MESSAGE.SUCCESS_GET,
-          rawVoucher
-        );
-        res.status(httpCode).json(result);
-      }
-
-      if (!isIVoucher(rawVoucher)) {
-        throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
-      }
-
-      // Depreciate: AICH需要match這邊的type
-      // const { voucherIndex, metaData, lineItems } = rawVoucher;
-      // const {vendorOrSupplier, paymentReason, invoiceId, ...rawMetadata } = metaData[0];
-      // const truemetaData: IVoucherMetaData = {
-      //   ...rawMetadata,
-      //   companyId: '810af23',
-      //   companyName:vendorOrSupplier,
-      //   reason: paymentReason,
-      //   contract: 'ISunFa開發',
-      //   project: 'ISunFa',
-      // };
-      // const voucher: IVoucher = {
-      //   voucherIndex,
-      //   metaData: [truemetaData],
-      //   lineItems,
-      //   invoiceIndex: invoiceId,
-      // };
-
-      const { httpCode, result } = formatApiResponse<IVoucher>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        rawVoucher
-      );
-      res.status(httpCode).json(result);
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecate: (20240524 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
+      statusMessage = error.message;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IVoucher>(error.message, {} as IVoucher);
-    res.status(httpCode).json(result);
   }
+
+  const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

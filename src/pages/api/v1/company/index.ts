@@ -11,6 +11,8 @@ import {
 import { createCompanyAndRole, listCompanyAndRole } from '@/lib/utils/repo/admin.repo';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { getSession } from '@/lib/utils/session';
+import { getCompanyByCode } from '@/lib/utils/repo/company.repo';
+import { generateIcon } from '@/lib/utils/generate_user_icon';
 
 async function checkAuth(userId: number) {
   let isValid = true;
@@ -71,10 +73,24 @@ export default async function handler(
           if (!isAuth) {
             statusMessage = STATUS_MESSAGE.FORBIDDEN;
           } else {
-            const createdCompanyRoleList = await createCompanyAndRole(userId, code, name, regional);
-            const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
-            statusMessage = STATUS_MESSAGE.CREATED;
-            payload = newCompanyRoleList;
+            const getCompany = await getCompanyByCode(code);
+            if (getCompany) {
+              statusMessage = getCompany.kycStatus
+                ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
+                : STATUS_MESSAGE.DUPLICATE_COMPANY;
+            } else {
+              const companyIcon = await generateIcon(name);
+              const createdCompanyRoleList = await createCompanyAndRole(
+                userId,
+                code,
+                name,
+                regional,
+                companyIcon
+              );
+              const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
+              statusMessage = STATUS_MESSAGE.CREATED;
+              payload = newCompanyRoleList;
+            }
           }
         }
         break;

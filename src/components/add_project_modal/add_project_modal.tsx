@@ -9,6 +9,12 @@ import { ProjectStage, stageList } from '@/constants/project';
 import { FiSearch } from 'react-icons/fi';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalCtx } from '@/contexts/global_context';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { MessageType } from '@/interfaces/message_modal';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -26,14 +32,15 @@ const stageNameMap: StageNameMap = {
 };
 
 // Info: (2024704 - Anna) 反向映射，用於從翻譯值回到原始名稱，讓篩選時可以比對
-const stageNameMapReverse: { [key: string]: ProjectStage } = {
-  'STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
-  'STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
-  'STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
-  'STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
-  'STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
-  'STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
-};
+// const stageNameMapReverse: { [key: string]: ProjectStage } = {
+//   'STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
+//   'STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
+//   'STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
+//   'STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
+//   'STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
+//   'STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
+// };
+
 interface IAddProjectModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
@@ -46,10 +53,25 @@ const AddProjectModal = ({
   defaultStage,
 }: IAddProjectModalProps) => {
   const { t } = useTranslation('common');
+  const { selectedCompany } = useUserCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+
+  const {
+    trigger: createProject,
+    data,
+    success,
+    code,
+  } = APIHandler<{
+    name: string;
+    stage: string;
+    members: string[];
+  }>(APIName.CREATE_PROJECT);
+
   const [inputName, setInputName] = useState('');
   const [selectedStage, setSelectedStage] = useState<ProjectStage>(defaultStage);
   const [selectedMembers, setSelectedMembers] = useState<IMember[]>([]);
   const [searchMemberValue, setSearchMemberValue] = useState('');
+  const [createSuccess, setCreateSuccess] = useState(false);
 
   const {
     targetRef: stageOptionsRef,
@@ -63,7 +85,7 @@ const AddProjectModal = ({
     setComponentVisible: setMembersVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const isConfirmValid = inputName !== '' && selectedMembers.length > 0;
+  const isConfirmValid = inputName !== ''; // && selectedMembers.length > 0;
   const membersAmount = selectedMembers.length;
 
   const stageMenuClickHandler = () => setStageOptionsVisible(!isStageOptionsVisible);
@@ -78,6 +100,17 @@ const AddProjectModal = ({
   const addProjectSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     // ToDo: (20240611 - Julian) send data to API
+    createProject({
+      params: {
+        companyId: selectedCompany?.id,
+      },
+      body: {
+        name: inputName,
+        stage: selectedStage,
+        // ToDo: (20240802 - Julian) get member list
+        memberIdList: [], // selectedMembers.map((member) => member.id),
+      },
+    });
   };
 
   useEffect(() => {
@@ -90,8 +123,26 @@ const AddProjectModal = ({
       setInputName('');
       setSelectedMembers([]);
       setSearchMemberValue('');
+      setCreateSuccess(false);
     }
   }, [isModalVisible]);
+
+  useEffect(() => {
+    if (success && data) {
+      modalVisibilityHandler();
+    } else if (success === false) {
+      // Info: (20240802 - Julian) show error message when create project failed
+      // Info: (20240805 - Anna) 錯誤訊息的多語系
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Error',
+        content: 'Create project failed, please try again later.',
+        subMsg: `Error code: ${code}`,
+        submitBtnFunction: messageModalVisibilityHandler,
+        submitBtnStr: t('PROJECT.OK'),
+      });
+    }
+  }, [createSuccess, data]);
 
   // ToDo: (20240612 - Julian) get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
@@ -105,20 +156,16 @@ const AddProjectModal = ({
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
-      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input
-      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
-      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {stageList.map((stage) => (
         <button
           key={stage}
           type="button"
           className="w-full p-8px text-left hover:bg-dropdown-surface-item-hover"
-          onClick={() => setSelectedStage(stageNameMapReverse[t(stageNameMap[stage])])} // Info: (2024704 - Anna) 使用反向映射來設置 `selectedStage`
-          // onClick={() => setSelectedStage(stage)}
+          onClick={() => setSelectedStage(stage)}
         >
           {t(stageNameMap[stage])}
-          {/* {stage}test */}
         </button>
       ))}
     </div>
@@ -183,9 +230,7 @@ const AddProjectModal = ({
   const displayMembersMenu = (
     <div
       ref={membersRef}
-      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px
-      ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
-      `}
+      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
@@ -258,13 +303,10 @@ const AddProjectModal = ({
                 <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
-                  className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-            ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-            px-12px hover:cursor-pointer md:w-200px`}
+                  className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {t(stageNameMap[selectedStage])}{' '}
                   {/* Info: (2024704 - Anna) 顯示翻譯後的選擇階段 */}
-                  {/* {selectedStage} */}
+                  {t(stageNameMap[selectedStage])}
                   <FaChevronDown />
                   {displayedStageOptions}
                 </div>

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { FiBookOpen, FiPlusCircle } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
@@ -12,12 +13,15 @@ const AccountingSidebar = () => {
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
 
+  const { pathname } = useRouter();
+
   const { selectedCompany } = useUserCtx();
   const companyName = selectedCompany?.name;
 
   const displayedCompanyName = companyName ? (
     <Link
-      href={ISUNFA_ROUTE.SELECT_COMPANY}
+      // Info:(20240807 - Anna) 點公司頭像，跳轉到儀表板
+      href={ISUNFA_ROUTE.DASHBOARD}
       className={`my-20px flex ${isExpanded ? 'h-60px w-60px text-3xl' : 'h-40px w-40px text-2xl'} items-center justify-center rounded-full bg-avatar-surface-background-indigo font-bold text-avatar-text-in-dark-background transition-all duration-300 ease-in-out`}
     >
       {/* Info: (20240423 - Julian) Display company name's first letter */}
@@ -55,11 +59,11 @@ const AccountingSidebar = () => {
         <div className="my-16px flex w-full flex-col items-center text-lg">
           <Link
             href={ISUNFA_ROUTE.ACCOUNTING}
-            className={`flex w-full items-center gap-8px ${isExpanded ? 'bg-tertiaryBlue p-16px text-white hover:opacity-75' : 'p-8px text-secondaryBlue'} rounded transition-all duration-300 ease-in-out`}
+            className={`flex w-full items-center justify-center ${isExpanded ? 'bg-tertiaryBlue p-16px text-white hover:opacity-75' : 'p-8px text-secondaryBlue'} rounded transition-all duration-300 ease-in-out`}
           >
             <FiPlusCircle size={24} />
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
             >
               {t('JOURNAL.ADD_NEW_JOURNAL')}
             </p>
@@ -72,11 +76,11 @@ const AccountingSidebar = () => {
 
           <Link
             href={ISUNFA_ROUTE.JOURNAL_LIST}
-            className="flex w-full items-center gap-8px p-8px text-secondaryBlue hover:text-primaryYellow"
+            className={`flex w-full items-center justify-center p-8px hover:text-tabs-text-active ${pathname.includes('journal-list') ? 'text-tabs-text-active' : 'text-secondaryBlue'} `}
           >
             <FiBookOpen size={20} className="transition-all duration-300 ease-in-out" />
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
             >
               {t('JOURNAL.JOURNAL')}
             </p>
@@ -85,7 +89,7 @@ const AccountingSidebar = () => {
       </div>
 
       {/* Info: (20240423 - Julian) Mobile */}
-      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
+      <div className="fixed bottom-0 z-20 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
         <Link
           href={ISUNFA_ROUTE.ACCOUNTING}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"

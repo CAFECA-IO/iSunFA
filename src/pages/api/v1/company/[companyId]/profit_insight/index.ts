@@ -3,10 +3,16 @@ import { IProfitInsight } from '@/interfaces/project_insight';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
-import prisma from '@/client';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { ONE_DAY_IN_MS } from '@/constants/time';
-import { ProjectStage } from '@/constants/project';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import {
+  getIncomeExpenseToday,
+  getIncomeExpenseYesterday,
+  getProjectsIncomeExpense,
+  getPreLaunchProjectCount,
+} from '@/lib/utils/repo/profit_insight.repo';
 
 async function getProfitChange(targetTime: number, companyId: number) {
   // Info: startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime (20240607 - Gibbs)
@@ -22,36 +28,20 @@ async function getProfitChange(targetTime: number, companyId: number) {
   const endPreviousDayTimestampOfTargetTime = timestampInSeconds(
     new Date(targetTime).setHours(23, 59, 59, 999) - ONE_DAY_IN_MS
   );
-  const IncomeExpenseToday = await prisma.incomeExpense.findMany({
-    select: {
-      income: true,
-      expense: true,
-    },
-    where: {
-      createdAt: {
-        gte: startDayTimestampOfTargetTime,
-        lte: endDayTimestampOfTargetTime,
-      },
-      companyId,
-    },
-  });
+  const IncomeExpenseToday = await getIncomeExpenseToday(
+    startDayTimestampOfTargetTime,
+    endDayTimestampOfTargetTime,
+    companyId
+  );
   const emptyToday = IncomeExpenseToday.length === 0;
   const profitToday = IncomeExpenseToday.reduce((acc, today) => {
     return acc + (today.income! - today.expense!);
   }, 0);
-  const IncomeExpenseYesterday = await prisma.incomeExpense.findMany({
-    select: {
-      income: true,
-      expense: true,
-    },
-    where: {
-      createdAt: {
-        gte: startPreviousDayTimestampOfTargetTime,
-        lte: endPreviousDayTimestampOfTargetTime,
-      },
-      companyId,
-    },
-  });
+  const IncomeExpenseYesterday = await getIncomeExpenseYesterday(
+    startPreviousDayTimestampOfTargetTime,
+    endPreviousDayTimestampOfTargetTime,
+    companyId
+  );
   const emptyYesterday = IncomeExpenseYesterday.length === 0;
   const profitYesterday = IncomeExpenseYesterday.reduce((acc, yesterday) => {
     return acc + (yesterday.income! - yesterday.expense!);
@@ -62,16 +52,7 @@ async function getProfitChange(targetTime: number, companyId: number) {
 }
 
 async function getTopProjectRoi(companyId: number) {
-  const projectsIncomeExpense = await prisma.incomeExpense.groupBy({
-    by: ['projectId'],
-    _sum: {
-      income: true,
-      expense: true,
-    },
-    where: {
-      companyId,
-    },
-  });
+  const projectsIncomeExpense = await getProjectsIncomeExpense(companyId);
   const emptyTopProjectRoi = projectsIncomeExpense.length === 0;
   const topProjectRoi = projectsIncomeExpense.reduce((acc, project) => {
     // Info: (20240527 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
@@ -83,12 +64,7 @@ async function getTopProjectRoi(companyId: number) {
 }
 
 async function getPreLaunchProject(companyId: number) {
-  const preLaunchProject = await prisma.project.count({
-    where: {
-      stage: ProjectStage.BETA_TESTING,
-      companyId,
-    },
-  });
+  const preLaunchProject = await getPreLaunchProjectCount(companyId);
   const emptyPreLaunchProject = preLaunchProject === 0;
   return { preLaunchProject, emptyPreLaunchProject };
 }
@@ -99,8 +75,12 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      const session = await checkAdmin(req, res);
-      const { companyId } = session;
+      const session = await getSession(req, res);
+      const { userId, companyId } = session;
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+      if (!isAuth) {
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
       const targetTime = new Date().getTime();
       const { profitChange, emptyProfitChange } = await getProfitChange(targetTime, companyId);
       const { preLaunchProject, emptyPreLaunchProject } = await getPreLaunchProject(companyId);

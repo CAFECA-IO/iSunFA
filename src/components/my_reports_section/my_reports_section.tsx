@@ -1,18 +1,14 @@
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import {
   SortOptions,
-  DEFAULT_DISPLAYED_COMPANY_ID,
   default30DayPeriodInSec,
+  LIMIT_FOR_REPORT_PAGE,
+  DEFAULT_PAGE_NUMBER,
+  DEFAULT_SKELETON_COUNT_FOR_PAGE,
 } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import {
-  FIXED_DUMMY_GENERATED_REPORT_ITEMS,
-  FIXED_DUMMY_PENDING_REPORT_ITEMS,
-  IGeneratedReportItem,
-  IPendingReportItem,
-} from '@/interfaces/report_item';
 import PendingReportList from '@/components/pending_report_list/pending_report_list';
 import ReportsHistoryList from '@/components/reports_history_list/reports_history_list';
 import Pagination from '@/components/pagination/pagination';
@@ -24,10 +20,21 @@ import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
 import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
+import { sortOptionQuery } from '@/constants/sort';
+import { useRouter } from 'next/router';
+import { IDatePeriod } from '@/interfaces/date_period';
+import useStateRef from 'react-usestateref';
+import { IPaginatedReport, IReport, MOCK_TOTAL_PAGES } from '@/interfaces/report';
+import { ReportStatusType } from '@/constants/report';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { cn } from '@/lib/utils/common';
 
 const MyReportsSection = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const router = useRouter();
+
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
   // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
   // eslint-disable-next-line no-unused-vars
@@ -38,57 +45,92 @@ const MyReportsSection = () => {
     // filterOptionsForHistory,
     // filterOptionsForPending,
   } = useGlobalCtx();
-  const {
-    data: pendingReports,
-    code: listPendingCode,
-    success: listPendingSuccess,
-  } = APIHandler<IPendingReportItem[]>(APIName.REPORT_LIST_PENDING, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-  });
-  const {
-    data: generatedReports,
-    code: listGeneratedCode,
-    success: listGeneratedSuccess,
-  } = APIHandler<IGeneratedReportItem[]>(APIName.REPORT_LIST_GENERATED, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID },
-  });
-  const [pendingPeriod, setPendingPeriod] = useState(default30DayPeriodInSec);
+
+  const { pending, history } = router.query;
+
+  const [pendingPeriod, setPendingPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchPendingQuery, setSearchPendingQuery] = useState('');
   const [filteredPendingSort, setFilteredPendingSort] = useState<SortOptions>(SortOptions.newest);
   const [isPendingSortSelected, setIsPendingSortSelected] = useState(false);
-  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
-  const [pendingData, setPendingData] = useState<IPendingReportItem[]>([]);
-  const [historyData, setHistoryData] = useState<IGeneratedReportItem[]>([]);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(
+    pending ? +pending : DEFAULT_PAGE_NUMBER
+  );
+  const [pendingData, setPendingData] = useState<IReport[]>([]);
 
-  const [historyPeriod, setHistoryPeriod] = useState(default30DayPeriodInSec);
+  const [historyPeriod, setHistoryPeriod] = useStateRef(default30DayPeriodInSec);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [filteredHistorySort, setFilteredHistorySort] = useState<SortOptions>(SortOptions.newest);
   const [isHistorySortSelected, setIsHistorySortSelected] = useState(false);
-  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(
+    history ? +history : DEFAULT_PAGE_NUMBER
+  );
+  const [historyData, setHistoryData] = useState<IReport[]>([]);
 
-  const isPendingDataLoading = false;
-  const isHistoryDataLoading = false;
+  const {
+    trigger: fetchPendingReports,
+    data: pendingReports,
+    code: listPendingCode,
+    success: listPendingSuccess,
+    isLoading: isPendingDataLoading,
+  } = APIHandler<IPaginatedReport>(
+    APIName.REPORT_LIST,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: {
+        status: ReportStatusType.PENDING,
+        sortOrder: sortOptionQuery[filteredPendingSort],
+        startDateInSecond:
+          pendingPeriod.startTimeStamp === 0 ? undefined : pendingPeriod.startTimeStamp,
+        endDateInSecond: pendingPeriod.endTimeStamp === 0 ? undefined : pendingPeriod.endTimeStamp,
+        searchQuery: searchPendingQuery,
+        targetPage: pendingCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
+    },
+    hasCompanyId
+  );
 
-  const pendingTotalPages = 1;
-  const historyTotalPages = 1;
-
+  const {
+    trigger: fetchGeneratedReports,
+    data: generatedReports,
+    code: listGeneratedCode,
+    success: listGeneratedSuccess,
+    isLoading: isHistoryDataLoading,
+  } = APIHandler<IPaginatedReport>(
+    APIName.REPORT_LIST,
+    {
+      params: { companyId: selectedCompany?.id },
+      query: {
+        status: ReportStatusType.GENERATED,
+        sortOrder: sortOptionQuery[filteredHistorySort],
+        startDateInSecond:
+          historyPeriod.startTimeStamp === 0 ? undefined : historyPeriod.startTimeStamp,
+        endDateInSecond: historyPeriod.endTimeStamp === 0 ? undefined : historyPeriod.endTimeStamp,
+        searchQuery: searchHistoryQuery,
+        targetPage: historyCurrentPage,
+        pageSize: LIMIT_FOR_REPORT_PAGE,
+      },
+    },
+    hasCompanyId
+  );
+  const pendingTotalPages = pendingReports?.totalPages || MOCK_TOTAL_PAGES;
+  const historyTotalPages = generatedReports?.totalPages || MOCK_TOTAL_PAGES;
   useEffect(() => {
-    if (listPendingSuccess && pendingReports) {
-      setPendingData(pendingReports);
+    if (listPendingSuccess && pendingReports?.data) {
+      setPendingData(pendingReports.data);
     } else if (listPendingSuccess === false) {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
+        content: `${t('DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
-      setPendingData(FIXED_DUMMY_PENDING_REPORT_ITEMS);
     }
   }, [listPendingSuccess, listPendingCode, pendingReports]);
 
   useEffect(() => {
-    if (listGeneratedSuccess && generatedReports) {
-      setHistoryData(generatedReports);
+    if (listGeneratedSuccess && generatedReports?.data) {
+      setHistoryData(generatedReports.data);
     } else if (listGeneratedSuccess === false) {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
@@ -96,7 +138,6 @@ const MyReportsSection = () => {
         content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
         closeable: true,
       });
-      setHistoryData(FIXED_DUMMY_GENERATED_REPORT_ITEMS);
     }
   }, [listGeneratedSuccess, listGeneratedCode, generatedReports]);
 
@@ -112,32 +153,161 @@ const MyReportsSection = () => {
     setComponentVisible: setIsHistorySortMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const getPendingReports = useCallback(
+    async (query: {
+      currentPage?: number;
+      filteredPendingSort?: SortOptions;
+      pendingPeriod?: IDatePeriod;
+      searchPendingQuery?: string;
+    }) => {
+      if (!hasCompanyId) return;
+      const {
+        currentPage: page,
+        filteredPendingSort: sortOrder,
+        pendingPeriod: period,
+        searchPendingQuery: searchString,
+      } = query;
+
+      await fetchPendingReports({
+        params: {
+          companyId: selectedCompany?.id,
+        },
+        query: {
+          status: ReportStatusType.PENDING,
+          sortOrder: sortOptionQuery[sortOrder ?? filteredPendingSort],
+          startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
+          endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
+          searchQuery: searchString ?? searchPendingQuery,
+          targetPage: page ?? pendingCurrentPage,
+          pageSize: LIMIT_FOR_REPORT_PAGE,
+        },
+      });
+    },
+    [
+      fetchPendingReports,
+      selectedCompany,
+      filteredPendingSort,
+      searchPendingQuery,
+      pendingCurrentPage,
+      pendingPeriod.endTimeStamp,
+    ]
+  );
+
+  const getGeneratedReports = useCallback(
+    async (query: {
+      currentPage?: number;
+      filteredHistorySort?: SortOptions;
+      historyPeriod?: IDatePeriod;
+      searchHistoryQuery?: string;
+    }) => {
+      if (!hasCompanyId) return;
+      const {
+        currentPage: page,
+        filteredHistorySort: sortOrder,
+        historyPeriod: period,
+        searchHistoryQuery: searchString,
+      } = query;
+
+      await fetchGeneratedReports({
+        params: {
+          companyId: selectedCompany?.id,
+        },
+        query: {
+          status: ReportStatusType.GENERATED,
+          sortOrder: sortOptionQuery[sortOrder ?? filteredHistorySort],
+          startDateInSecond: period?.startTimeStamp === 0 ? undefined : period?.startTimeStamp,
+          endDateInSecond: period?.endTimeStamp === 0 ? undefined : period?.endTimeStamp,
+          searchQuery: searchString ?? searchHistoryQuery,
+          targetPage: page ?? historyCurrentPage,
+          pageSize: LIMIT_FOR_REPORT_PAGE,
+        },
+      });
+    },
+    [
+      fetchGeneratedReports,
+      selectedCompany,
+      filteredHistorySort,
+      searchHistoryQuery,
+      historyCurrentPage,
+      historyPeriod.endTimeStamp,
+    ]
+  );
+
+  const handlePendingDatePickerClose = async (start: number, end: number) => {
+    setPendingPeriod({ startTimeStamp: start, endTimeStamp: end });
+    await getPendingReports({
+      pendingPeriod: { startTimeStamp: start, endTimeStamp: end },
+    });
+  };
+
+  const handleHistoryDatePickerClose = async (start: number, end: number) => {
+    setHistoryPeriod({ startTimeStamp: start, endTimeStamp: end });
+    await getGeneratedReports({
+      historyPeriod: { startTimeStamp: start, endTimeStamp: end },
+    });
+  };
+
   const togglePendingSortMenu = () => {
-    setIsPendingSortSelected(true);
-    setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+    if (!isPendingDataLoading) {
+      setIsPendingSortSelected(true);
+      setIsPendingSortMenuOpen(!isPendingSortMenuOpen);
+    }
   };
 
   const toggleHistorySortMenu = () => {
-    setIsHistorySortSelected(true);
-    setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+    if (!isHistoryDataLoading) {
+      setIsHistorySortSelected(true);
+      setIsHistorySortMenuOpen(!isHistorySortMenuOpen);
+    }
   };
 
   const pendingInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchPendingQuery(e.target.value);
+    if (!isPendingDataLoading) {
+      setSearchPendingQuery(e.target.value);
+    }
   };
 
   const historyInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchHistoryQuery(e.target.value);
+    if (!isHistoryDataLoading) {
+      setSearchHistoryQuery(e.target.value);
+    }
+  };
+
+  const pendingPaginationHandler = async (newPage: number) => {
+    setPendingCurrentPage(newPage);
+    await getPendingReports({ currentPage: newPage });
+  };
+
+  const historyPaginationHandler = async (newPage: number) => {
+    setHistoryCurrentPage(newPage);
+    await getGeneratedReports({ currentPage: newPage });
+  };
+
+  const pendingSortClickHandler = async (sorting: SortOptions) => {
+    setFilteredPendingSort(sorting);
+    await getPendingReports({ filteredPendingSort: sorting });
+  };
+
+  const historySortClickHandler = async (sorting: SortOptions) => {
+    setFilteredHistorySort(sorting);
+    await getGeneratedReports({ filteredHistorySort: sorting });
   };
 
   const displayedPendingSortMenu = (
     <div
       ref={pendingSortMenuRef}
-      onClick={togglePendingSortMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isPendingSortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      onClick={isPendingDataLoading ? undefined : togglePendingSortMenu}
+      className={cn(
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        {
+          'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
+            isPendingDataLoading,
+          'border-primaryYellow text-primaryYellow': isPendingSortMenuOpen,
+        }
+      )}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isPendingSortMenuOpen ? ' text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isPendingDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isPendingSortMenuOpen ? 'text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredPendingSort)}
       </p>
@@ -164,11 +334,10 @@ const MyReportsSection = () => {
             <li
               key={sorting}
               onClick={() => {
-                setFilteredPendingSort(sorting);
+                pendingSortClickHandler(sorting);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {/* {sorting} */}
               {t(sorting)}
             </li>
           ))}
@@ -180,13 +349,22 @@ const MyReportsSection = () => {
   const displayedPendingSearchBar = (
     <div className="relative flex-1">
       <input
+        disabled={isPendingDataLoading}
         value={searchPendingQuery}
         onChange={pendingInputChangeHandler}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getPendingReports({ searchPendingQuery });
+          }
+        }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
-      <div className="absolute right-3 top-3 hover:cursor-pointer">
+      <div
+        onClick={() => !isPendingDataLoading && getPendingReports({ searchPendingQuery })}
+        className="absolute right-3 top-3 hover:cursor-pointer"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -218,6 +396,8 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
+          disabled={isPendingDataLoading}
+          datePickerHandler={handlePendingDatePickerClose}
           type={DatePickerType.TEXT_PERIOD}
           period={pendingPeriod}
           setFilteredPeriod={setPendingPeriod}
@@ -237,7 +417,14 @@ const MyReportsSection = () => {
           {displayedPendingSearchBar}
         </div>
         <Button
-          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)}
+          disabled={isPendingDataLoading}
+          onClick={
+            () =>
+              !isPendingDataLoading &&
+              filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)
+            // Info: conflict with prettier (20240809 - Shirley)
+            // eslint-disable-next-line react/jsx-curly-newline
+          }
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -261,7 +448,9 @@ const MyReportsSection = () => {
   );
 
   const displayedPendingDataSection = isPendingDataLoading ? (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div className="flex w-full items-center justify-center py-10">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
   ) : pendingData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       {' '}
@@ -272,6 +461,7 @@ const MyReportsSection = () => {
           setCurrentPage={setPendingCurrentPage}
           totalPages={pendingTotalPages}
           pagePrefix="pending"
+          paginationHandler={pendingPaginationHandler}
         />
       </div>
     </div>
@@ -344,13 +534,20 @@ const MyReportsSection = () => {
   const displayedHistorySortMenu = (
     <div
       ref={historySortMenuRef}
-      onClick={toggleHistorySortMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      onClick={isHistoryDataLoading ? undefined : toggleHistorySortMenu}
+      className={cn(
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        {
+          'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
+            isHistoryDataLoading,
+          'border-primaryYellow text-primaryYellow': isHistorySortMenuOpen,
+        }
+      )}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isHistoryDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isHistorySortMenuOpen ? 'text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
-        {filteredHistorySort}
+        {t(filteredHistorySort)}
       </p>
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -375,11 +572,10 @@ const MyReportsSection = () => {
             <li
               key={sorting}
               onClick={() => {
-                setFilteredHistorySort(sorting);
+                historySortClickHandler(sorting);
               }}
               className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
             >
-              {/* {sorting} */}
               {t(sorting)}
             </li>
           ))}
@@ -391,13 +587,22 @@ const MyReportsSection = () => {
   const displayedHistorySearchBar = (
     <div className="relative flex-1">
       <input
+        disabled={isHistoryDataLoading}
         value={searchHistoryQuery}
         onChange={historyInputChangeHandler}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getGeneratedReports({ searchHistoryQuery });
+          }
+        }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
       />
-      <div className="absolute right-3 top-3 hover:cursor-pointer">
+      <div
+        onClick={() => !isHistoryDataLoading && getGeneratedReports({ searchHistoryQuery })}
+        className="absolute right-3 top-3 hover:cursor-pointer"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -429,6 +634,8 @@ const MyReportsSection = () => {
         </div>
         {/* Info: date picker (20240513 - Shirley) */}
         <DatePicker
+          disabled={isHistoryDataLoading}
+          datePickerHandler={handleHistoryDatePickerClose}
           type={DatePickerType.TEXT_PERIOD}
           period={historyPeriod}
           setFilteredPeriod={setHistoryPeriod}
@@ -448,7 +655,14 @@ const MyReportsSection = () => {
           {displayedHistorySearchBar}
         </div>
         <Button
-          onClick={() => filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)}
+          disabled={isHistoryDataLoading}
+          onClick={
+            () =>
+              !isHistoryDataLoading &&
+              filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)
+            // Info: conflict with prettier (20240809 - Shirley)
+            // eslint-disable-next-line react/jsx-curly-newline
+          }
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -472,7 +686,9 @@ const MyReportsSection = () => {
   );
 
   const displayedHistoryDataSection = isHistoryDataLoading ? (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div className="flex w-full items-center justify-center py-10">
+      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    </div>
   ) : historyData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
       <ReportsHistoryList reports={historyData} />
@@ -483,6 +699,7 @@ const MyReportsSection = () => {
           setCurrentPage={setHistoryCurrentPage}
           totalPages={historyTotalPages}
           pagePrefix="history"
+          paginationHandler={historyPaginationHandler}
         />
       </div>
     </div>

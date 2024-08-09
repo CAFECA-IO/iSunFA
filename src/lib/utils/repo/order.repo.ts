@@ -1,11 +1,13 @@
 import prisma from '@/client';
 import { IOrder } from '@/interfaces/order';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Plan, Prisma } from '@prisma/client';
 
 export async function listOrder(companyId: number): Promise<IOrder[]> {
   const listedOrder = await prisma.order.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
       id: 'asc',
@@ -47,6 +49,22 @@ export async function getOrderById(id: number): Promise<IOrder | null> {
   return order;
 }
 
+export async function getOrderDetailById(id: number): Promise<(IOrder & { plan: Plan }) | null> {
+  let order: (IOrder & { plan: Plan }) | null = null;
+  if (id > 0) {
+    order = await prisma.order.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        plan: true,
+      },
+    });
+  }
+
+  return order;
+}
+
 // Update
 export async function updateOrder(id: number, status: string): Promise<IOrder> {
   const now = Date.now();
@@ -64,10 +82,35 @@ export async function updateOrder(id: number, status: string): Promise<IOrder> {
 }
 
 export async function deleteOrder(id: number): Promise<IOrder> {
+  const nowInSecond = getTimestampNow();
+  const where: Prisma.OrderWhereUniqueInput = {
+    id,
+    deletedAt: null,
+  };
+
+  const data: Prisma.OrderUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs: Prisma.OrderUpdateArgs = {
+    where,
+    data,
+  };
+
+  const deletedOrder = await prisma.order.update(updateArgs);
+  return deletedOrder;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteOrderForTesting(id: number): Promise<IOrder> {
+  const where: Prisma.OrderWhereUniqueInput = {
+    id,
+  };
+
   const deletedOrder = await prisma.order.delete({
-    where: {
-      id,
-    },
+    where,
   });
+
   return deletedOrder;
 }

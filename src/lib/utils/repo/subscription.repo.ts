@@ -1,7 +1,8 @@
 import prisma from '@/client';
 import { ONE_DAY_IN_S } from '@/constants/time';
 import { ISubscription } from '@/interfaces/subscription';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma } from '@prisma/client';
 
 // Create
 export async function createSubscription(
@@ -32,6 +33,7 @@ export async function getSubscriptionById(id: number): Promise<ISubscription | n
   const subscription = await prisma.subscription.findUnique({
     where: {
       id,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return subscription;
@@ -53,11 +55,24 @@ export async function updateSubscription(
 
 // Delete
 export async function deleteSubscription(id: number): Promise<ISubscription> {
-  const deletedSubscription = await prisma.subscription.delete({
-    where: {
-      id,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.SubscriptionWhereUniqueInput = {
+    id,
+    deletedAt: null,
+  };
+
+  const data: Prisma.SubscriptionUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs: Prisma.SubscriptionUpdateArgs = {
+    where,
+    data,
+  };
+
+  const deletedSubscription = await prisma.subscription.update(updateArgs);
   return deletedSubscription;
 }
 
@@ -67,6 +82,22 @@ export async function listSubscriptions(companyId: number): Promise<ISubscriptio
     where: {
       companyId,
     },
+    orderBy: {
+      id: 'asc',
+    },
   });
   return subscriptions;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteSubscriptionForTesting(id: number): Promise<ISubscription> {
+  const where: Prisma.SubscriptionWhereUniqueInput = {
+    id,
+  };
+
+  const deletedSubscription = await prisma.subscription.delete({
+    where,
+  });
+
+  return deletedSubscription;
 }

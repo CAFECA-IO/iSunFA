@@ -1,9 +1,11 @@
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { IInvoice } from '@/interfaces/invoice';
 import { Prisma } from '@prisma/client';
+import { JOURNAL_EVENT } from '@/constants/journal';
 
 export interface IJournal {
   id: number;
+  event: JOURNAL_EVENT;
   tokenContract: string;
   tokenId: string;
   aichResultId: string;
@@ -19,6 +21,7 @@ export interface IJournal {
 export interface IJournalListItem {
   id: number;
   date: number;
+  event: JOURNAL_EVENT;
   type: string | undefined;
   particulars: string | undefined;
   fromTo: string | undefined;
@@ -52,6 +55,16 @@ export type IJournalFromPrismaIncludeProjectContractInvoiceVoucher = Prisma.Jour
             account: true;
           };
         };
+      };
+    };
+  };
+}>;
+
+export type IJournalFromPrismaIncludeInvoicePayment = Prisma.JournalGetPayload<{
+  include: {
+    invoice: {
+      include: {
+        payment: true;
       };
     };
   };

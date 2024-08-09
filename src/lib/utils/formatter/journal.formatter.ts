@@ -10,24 +10,23 @@ import {
   convertStringToPaymentPeriodType,
   convertStringToPaymentStatusType,
 } from '@/lib/utils/type_guard/account';
+import { sumLineItemsAndReturnBiggest } from '@/lib/utils/line_item';
+import { assertIsJournalEvent } from '@/lib/utils/type_guard/journal';
 
 export function formatSingleIJournalListItem(
   journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
 ): IJournalListItem {
+  const { credit, debit } = sumLineItemsAndReturnBiggest(journalFromPrisma?.voucher?.lineItems);
+
+  assertIsJournalEvent(journalFromPrisma.event);
   return {
     id: journalFromPrisma.id,
     date: journalFromPrisma.createdAt,
     type: journalFromPrisma.invoice?.eventType,
     particulars: journalFromPrisma.invoice?.description,
     fromTo: journalFromPrisma.invoice?.vendorOrSupplier,
-    account: journalFromPrisma.voucher?.lineItems.map((lineItem) => {
-      return {
-        id: lineItem.id,
-        debit: lineItem.debit,
-        account: lineItem.account.name,
-        amount: lineItem.amount,
-      };
-    }),
+    event: journalFromPrisma.event,
+    account: [debit, credit],
     projectName: journalFromPrisma.project?.name,
     projectImageId: journalFromPrisma.project?.imageId,
     voucherId: journalFromPrisma.voucher?.id,
@@ -38,7 +37,9 @@ export function formatSingleIJournalListItem(
 export function formatIJournalListItems(
   journalsFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]
 ): IJournalListItem[] {
-  const journalLineItems = journalsFromPrisma.map((journalFromPrisma) => formatSingleIJournalListItem(journalFromPrisma));
+  const journalLineItems = journalsFromPrisma.map((journalFromPrisma) => {
+    return formatSingleIJournalListItem(journalFromPrisma);
+  });
   return journalLineItems;
 }
 
@@ -96,6 +97,7 @@ export function formatIJournal(
       }
     : ({} as IVoucherDataForSavingToDB);
 
+  assertIsJournalEvent(journalFromPrisma.event);
   return {
     id: journalFromPrisma.id,
     tokenContract: journalFromPrisma.tokenContract || '',
@@ -104,6 +106,7 @@ export function formatIJournal(
     projectId: projectId || 0,
     contractId: contractId || 0,
     imageUrl: imageUrl || '',
+    event: journalFromPrisma.event,
     invoice,
     voucher,
   };

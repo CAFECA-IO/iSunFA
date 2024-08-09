@@ -1,14 +1,16 @@
 import Image from 'next/image';
 import { FiTrash2, FiPauseCircle, FiPlay } from 'react-icons/fi';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
 import { useTranslation } from 'next-i18next';
+import { useState } from 'react';
+import { Button } from '@/components/button/button';
 
 interface IUploadedFileItemProps {
-  itemData: IUnprocessedOCR;
+  itemData: IOCR;
   pauseHandler: (id: number) => void;
-  deleteHandler: (id: number) => void;
-  clickHandler: (unprocessedJournal: IUnprocessedOCR) => void;
+  deleteHandler: (aichResultId: string) => void;
+  clickHandler: (unprocessedJournal: IOCR) => void;
 }
 
 const UploadedFileItem = ({
@@ -18,12 +20,17 @@ const UploadedFileItem = ({
   clickHandler,
 }: IUploadedFileItemProps) => {
   const { t } = useTranslation('common');
-  const { id, imageName, imageUrl, imageSize, progress, status } = itemData;
+  const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
+
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
-    status === ProgressStatus.IN_PROGRESS ||
-    status === ProgressStatus.SUCCESS ||
-    status === ProgressStatus.PAUSED
+    // Info (20240809 - Murky): To Julian 設定成P
+    // status === ProgressStatus.IN_PROGRESS ||
+    // status === ProgressStatus.SUCCESS ||
+    // status === ProgressStatus.PAUSED
+    imageUrl && imageUrl.length > 0
   );
 
   const pauseClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -33,11 +40,13 @@ const UploadedFileItem = ({
 
   const deleteClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation(); // Info: (20240530 - Julian) 防止點擊刪除時，觸發 itemClickHandler
-    deleteHandler(id);
+    setIsDeleting(true);
+    deleteHandler(aichResultId);
   };
 
   const itemClickHandler = () => {
-    if (progress !== 100) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
+    // if (progress !== 100 || isDeleting) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
+    if (!imageUrl || imageUrl.length <= 0 || isDeleting) return; // Info: (2024809 - Murky) 如果沒有imageUrl就不能點擊(或是url是空字串)
     clickHandler(itemData);
   };
 
@@ -58,7 +67,8 @@ const UploadedFileItem = ({
     </button>
   );
 
-  const displayedProgress = progress === 100 ? 'Completed' : `${progress}%`;
+  // const displayedProgress = progress === 100 ? 'Completed' : `${progress}%`;
+  const displayedProgress = progress === 100 ? t('PROJECT.COMPLETED') : `${progress}%`;
 
   return (
     <div
@@ -69,8 +79,8 @@ const UploadedFileItem = ({
       <div className="relative inline-flex w-full items-center gap-20px">
         <Image src="/animations/scanning.gif" width={56} height={56} alt="scanning_animation" />
         {/* Info: (20240523 - Julian) File Thumbnail */}
-        <div className="inline-flex h-64px w-64px items-center justify-center">
-          <Image src={imageUrl} width={64} height={64} alt="file_thumbnail" />
+        <div className="relative inline-flex h-64px w-64px items-center justify-center overflow-hidden">
+          <Image src={imageUrl} alt="file_thumbnail" fill style={{ objectFit: 'contain' }} />
         </div>
         <div className="flex shrink grow flex-col items-start">
           {/* Info: (20240523 - Julian) File Name */}
@@ -85,13 +95,19 @@ const UploadedFileItem = ({
           </p>
         </div>
         {/* Info: (20240523 - Julian) Tool Buttons */}
-        <div className="absolute right-0 z-30 flex items-center gap-10px text-icon-surface-single-color-primary">
+        <div className="absolute right-0 z-10 flex items-center gap-10px text-icon-surface-single-color-primary">
           {/* Info: (20240523 - Julian) Status */}
           {displayedStatus}
           {/* Info: (20240523 - Julian) Trash Button */}
-          <button type="button" onClick={deleteClickHandler}>
+          <Button
+            variant={'tertiaryBorderless'}
+            size={'extraSmall'}
+            disabled={isDeleting}
+            type="button"
+            onClick={deleteClickHandler}
+          >
             <FiTrash2 size={20} />
-          </button>
+          </Button>
         </div>
       </div>
       {/* Info: (20240523 - Julian) Progress Bar */}

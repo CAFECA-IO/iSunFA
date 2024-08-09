@@ -1,6 +1,7 @@
 import prisma from '@/client';
 import { IPaymentRecord } from '@/interfaces/payment_record';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma } from '@prisma/client';
 
 // Create
 export async function createPaymentRecord(
@@ -37,6 +38,7 @@ export async function getPaymentRecordById(id: number): Promise<IPaymentRecord |
     paymentRecord = await prisma.paymentRecord.findUnique({
       where: {
         id,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -49,16 +51,42 @@ export async function listPaymentRecords(orderId: number): Promise<IPaymentRecor
   const listedPaymentRecords = await prisma.paymentRecord.findMany({
     where: {
       orderId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return listedPaymentRecords;
 }
 
 export async function deletePaymentRecord(id: number): Promise<IPaymentRecord> {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.PaymentRecordWhereUniqueInput = {
+    id,
+    deletedAt: null,
+  };
+
+  const data: Prisma.PaymentRecordUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs: Prisma.PaymentRecordUpdateArgs = {
+    where,
+    data,
+  };
+  const deletedPaymentRecord = await prisma.paymentRecord.update(updateArgs);
+  return deletedPaymentRecord;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deletePaymentRecordForTesting(id: number): Promise<IPaymentRecord> {
+  const where: Prisma.PaymentRecordWhereUniqueInput = {
+    id,
+  };
+
   const deletedPaymentRecord = await prisma.paymentRecord.delete({
-    where: {
-      id,
-    },
+    where,
   });
+
   return deletedPaymentRecord;
 }

@@ -6,11 +6,7 @@ import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  DatePickerAlign,
-  MILLISECONDS_IN_A_SECOND,
-} from '@/constants/display';
+import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -112,7 +108,7 @@ const PieChart = ({ data }: PieChartProps) => {
       markers: {
         // width: 20,
         // height: 12,
-        radius: 0,
+        // radius: 0,
       },
       width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
       height: 140,
@@ -208,7 +204,8 @@ const LaborCostChart = () => {
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const { toastHandler } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     trigger: getLaborCostChartData,
     data: laborCostData,
@@ -219,14 +216,13 @@ const LaborCostChart = () => {
     APIName.LABOR_COST_CHART,
     {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
       },
     },
-    false,
-    false
+    hasCompanyId
   );
 
   const isNoData = laborCostData?.empty || !laborCostData || !getSuccess;
@@ -271,9 +267,10 @@ const LaborCostChart = () => {
   }, [getSuccess, getCode, getError]);
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     getLaborCostChartData({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

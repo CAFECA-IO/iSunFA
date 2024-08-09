@@ -45,8 +45,14 @@ import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
+import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
+import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
+import { UploadType } from '@/constants/file';
 
 interface IGlobalContext {
   width: number;
@@ -100,8 +106,20 @@ interface IGlobalContext {
   addProjectModalVisibilityHandler: () => void;
   addProjectModalDataHandler: (stage: ProjectStage) => void;
 
+  isSalaryBookConfirmModalVisible: boolean;
+  salaryBookConfirmModalVisibilityHandler: () => void;
+
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
+  profileUploadModalDataHandler: (type: UploadType) => void;
+
+  isAddAccountTitleModalVisible: boolean;
+  addAccountTitleModalVisibilityHandler: () => void;
+  addAccountTitleDataHandler: (id: number) => void;
+
+  isEditAccountTitleModalVisible: boolean;
+  editAccountTitleModalVisibilityHandler: () => void;
+  editAccountTitleDataHandler: (id: number) => void;
 
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
@@ -116,6 +134,12 @@ interface IGlobalContext {
   isFilterOptionsModalForPendingVisible: boolean;
   isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
+
+  isTeamSettingModalVisible: boolean;
+  teamSettingModalVisibilityHandler: () => void;
+
+  isTransferCompanyModalVisible: boolean;
+  transferCompanyModalVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -185,6 +209,19 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   );
 
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
+  const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
+
+  const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
+
+  const [isAddAccountTitleModalVisible, setIsAddAccountTitleModalVisible] = useState(false);
+  const [addAccountTitleId, setAddAccountTitleId] = useState(0);
+
+  const [isEditAccountTitleModalVisible, setIsEditAccountTitleModalVisible] = useState(false);
+  const [editAccountTitleId, setEditAccountTitleId] = useState(0);
+
+  const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
+
+  const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -279,6 +316,38 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setProfileUploadModalVisible(!profileUploadModalVisible);
   };
 
+  const profileUploadModalDataHandler = (type: UploadType) => {
+    setUploadImageType(type);
+  };
+
+  const salaryBookConfirmModalVisibilityHandler = () => {
+    setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
+  };
+
+  const addAccountTitleModalVisibilityHandler = () => {
+    setIsAddAccountTitleModalVisible(!isAddAccountTitleModalVisible);
+  };
+
+  const addAccountTitleDataHandler = (id: number) => {
+    setAddAccountTitleId(id);
+  };
+
+  const editAccountTitleModalVisibilityHandler = () => {
+    setIsEditAccountTitleModalVisible(!isEditAccountTitleModalVisible);
+  };
+
+  const editAccountTitleDataHandler = (id: number) => {
+    setEditAccountTitleId(id);
+  };
+
+  const teamSettingModalVisibilityHandler = () => {
+    setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
+  };
+
+  const transferCompanyModalVisibilityHandler = () => {
+    setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
+  };
+
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
     if (filterType === FilterOptionsModalType.history) {
       filterOptionsModalVisibilityHandlerForHistory();
@@ -321,7 +390,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
-    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const autoClose = closeable ? (isAutoClose ?? 5000) : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
     const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable; // Info:(20240513 - Julian) default draggable true
@@ -461,7 +530,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         !router.pathname.includes(ISUNFA_ROUTE.LOGIN) &&
         !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
       ) {
-        if (!selectedCompany) {
+        // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
+        if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
           // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
           toastHandler({
             id: ToastId.TRIAL,
@@ -522,6 +592,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     createCompanyModalVisibilityHandler,
     isLoadingModalVisible,
     loadingModalVisibilityHandler,
+    isSalaryBookConfirmModalVisible,
+    salaryBookConfirmModalVisibilityHandler,
+    isAddAccountTitleModalVisible,
+    addAccountTitleModalVisibilityHandler,
+    addAccountTitleDataHandler,
+    isEditAccountTitleModalVisible,
+    editAccountTitleModalVisibilityHandler,
+    editAccountTitleDataHandler,
     toastHandler,
     eliminateToast,
 
@@ -540,6 +618,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     addProjectModalDataHandler,
     profileUploadModalVisible,
     profileUploadModalVisibilityHandler,
+    profileUploadModalDataHandler,
+
+    isTeamSettingModalVisible,
+    teamSettingModalVisibilityHandler,
+
+    isTransferCompanyModalVisible,
+    transferCompanyModalVisibilityHandler,
   };
 
   return (
@@ -639,6 +724,34 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ProfileUploadModal
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
+        uploadType={uploadImageType}
+      />
+
+      <SalaryBookConfirmModal
+        isModalVisible={isSalaryBookConfirmModalVisible}
+        modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
+      />
+
+      <AddAccountTitleModal
+        isModalVisible={isAddAccountTitleModalVisible}
+        modalVisibilityHandler={addAccountTitleModalVisibilityHandler}
+        modalData={{ accountId: addAccountTitleId }}
+      />
+
+      <EditAccountTitleModal
+        isModalVisible={isEditAccountTitleModalVisible}
+        modalVisibilityHandler={editAccountTitleModalVisibilityHandler}
+        modalData={{ accountId: editAccountTitleId }}
+      />
+
+      <TeamSettingModal
+        isModalVisible={isTeamSettingModalVisible}
+        modalVisibilityHandler={teamSettingModalVisibilityHandler}
+      />
+
+      <TransferCompanyModal
+        isModalVisible={isTransferCompanyModalVisible}
+        modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
       {children}

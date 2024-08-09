@@ -4,27 +4,31 @@ import React from 'react';
 import LandingNavBar from '@/components/landing_nav_bar/landing_nav_bar';
 import { ILocale } from '@/interfaces/locale';
 import LandingPageBody from '@/components/landing_page_body/landing_page_body';
+import { useTranslation } from 'next-i18next';
 
-function LandingPage() {
+interface ILandingPageProps {
+  locale: string;
+}
+
+function LandingPage({ locale }: ILandingPageProps) {
+  const { t } = useTranslation('common');
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA</title>
-        <meta
-          name="description"
-          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
-        />
+        <title>{t('META.TITLE')}</title>
+        <meta name="description" content={t('META.DESCRIPTION')} />
         <meta name="author" content="CAFECA" />
-        <meta name="keywords" content="區塊鏈,人工智慧,會計" />
+        <meta name="keywords" content={t('META.KEYWORDS')} />
 
         <meta property="og:title" content="iSunFA" />
-        <meta
-          property="og:description"
-          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
-        />
+        <meta property="og:description" content={t('META.DESCRIPTION')} />
+        {/* TODO: i18n for image (20240807 - Shirley) */}
+        <meta property="og:image" content={`https://isunfa.com/meta/isunfa_preview.png`} />
+        <meta property="og:url" content={`https://isunfa.com/${locale}`} />
+        <meta property="og:type" content="website" />
       </Head>
 
       {/*  Info: (20230712 - Shirley) Navbar */}
@@ -42,6 +46,7 @@ function LandingPage() {
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
     ...(await serverSideTranslations(locale, ['common'])),
+    locale,
   },
 });
 

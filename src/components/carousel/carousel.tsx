@@ -79,25 +79,13 @@ export default function Carousel({
             onClick={prev}
             className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
           >
-            <Image
-              loading="lazy"
-              src="/elements/arrow_left.svg"
-              alt="arrow_left"
-              width={24}
-              height={24}
-            />
+            <Image src="/elements/arrow_left.svg" alt="arrow_left" width={24} height={24} />
           </button>
           <button
             onClick={next}
             className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
           >
-            <Image
-              loading="lazy"
-              src="/elements/arrow_right.svg"
-              alt="arrow_left"
-              width={24}
-              height={24}
-            />
+            <Image src="/elements/arrow_right.svg" alt="arrow_left" width={24} height={24} />
           </button>
         </div>
 
@@ -107,10 +95,7 @@ export default function Carousel({
             {children.map((_, i) => (
               <div
                 key={i}
-                className={`
-              h-1 w-3 rounded-full  transition-all
-              ${curr === i ? 'bg-primaryYellow' : 'bg-tertiaryBlue'}
-            `}
+                className={`h-1 w-3 rounded-full transition-all ${curr === i ? 'bg-primaryYellow' : 'bg-tertiaryBlue'} `}
               />
             ))}
           </div>

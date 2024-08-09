@@ -16,6 +16,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { IRole } from '@/interfaces/role';
 import { useTranslation } from 'next-i18next';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 interface ICreateCompanyModal {
   isModalVisible: boolean;
@@ -37,9 +38,8 @@ const countryList = [
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
-
   const {
     targetRef: menuRef,
     componentVisible: isMenuOpen,
@@ -52,7 +52,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     success: createCompanySuccess,
     error: createCompanyError,
     code: createCompanyCode,
-  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD, {}, false, false);
+  } = APIHandler<{ company: ICompany; role: IRole }>(APIName.COMPANY_ADD);
 
   const [nameValue, setNameValue] = useState<string>('');
   const [registrationNumberValue, setRegistrationNumberValue] = useState<string>('');
@@ -67,14 +67,20 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     setNameValue(e.target.value);
   };
   const changeRegistrationNumberHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRegistrationNumberValue(e.target.value);
+    // Info: (20240801 - Julian) 只允許輸入數字
+    const valueOnlyNumber = e.target.value.replace(/[^0-9]/g, '');
+    setRegistrationNumberValue(valueOnlyNumber);
+  };
+
+  const resetValues = () => {
+    setNameValue('');
+    setRegistrationNumberValue('');
+    setIsMenuOpen(false);
   };
 
   const cancelBtnClickHandler = () => {
     modalVisibilityHandler();
-    setNameValue('');
-    setRegistrationNumberValue('');
-    setIsMenuOpen(false);
+    resetValues();
   };
 
   useEffect(() => {
@@ -82,18 +88,49 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
       selectCompany(companyAndRole.company);
       modalVisibilityHandler();
+      resetValues();
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
-      // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Create Company Failed',
-        subMsg: 'Please try again later',
-        content: `Error code: ${createCompanyCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
+      if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
+        messageModalDataHandler({
+          messageType: MessageType.WARNING,
+          title: t('COMPANY_BASIC_INFO.EXISTED_COMPANY'),
+          subMsg: t('COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
+          // content: `If you are the owner of this company,
+          // please complete KYC to get access back. Error code: ${createCompanyCode}`,
+          content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
+          submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
+          submitBtnFunction: () => {
+            // Info: (20240807 - Anna) 隱藏 create company modal
+            modalVisibilityHandler();
+            messageModalVisibilityHandler();
+            router.push(ISUNFA_ROUTE.KYC);
+          },
+          backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+        });
+        messageModalVisibilityHandler();
+      } else if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE]) {
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Verified Company',
+          subMsg: 'This company has already been registered and verified.',
+          content: `Please check the information again, or contact with us. Error code: ${createCompanyCode}`,
+          submitBtnStr: t('COMMON.CLOSE'),
+          submitBtnFunction: messageModalVisibilityHandler,
+        });
+        messageModalVisibilityHandler();
+      } else {
+        // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
+        messageModalDataHandler({
+          messageType: MessageType.ERROR,
+          title: 'Create Company Failed',
+          subMsg: 'Please try again later',
+          content: `Error code: ${createCompanyCode}`,
+          submitBtnStr: t('COMMON.CLOSE'),
+          submitBtnFunction: messageModalVisibilityHandler,
+        });
+        messageModalVisibilityHandler();
+      }
     }
   }, [createCompanySuccess, createCompanyError, createCompanyCode]);
 

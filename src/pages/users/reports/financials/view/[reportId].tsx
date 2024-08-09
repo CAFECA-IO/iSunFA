@@ -15,62 +15,46 @@ import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { IReport } from '@/interfaces/report';
+import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { FinancialReport, IReportOld } from '@/interfaces/report';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
+import { ReportUrlMap } from '@/constants/report';
 
 interface IServerSideProps {
   reportId: string;
   reportType: keyof typeof BaifaReportTypeToReportType;
 }
 
-// TODO: dummy data to be replaced (20240429 - Shirley)
-const getBaseUrl = (): string => {
-  return 'https://baifa.io';
-};
-
-// TODO: dummy data to be replaced (20240429 - Shirley)
-const ReportLink = {
-  balance_sheet: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`,
-  comprehensive_income_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`,
-  cash_flow_statement: `${getBaseUrl()}/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`,
-} as const;
-
-const DUMMY_DATA_FOR_REPORT = {
-  reportType: 'balance_sheet',
-  reportLanguage: 'en',
-  startTimestamp: '1711961114',
-  endTimestamp: '1714553114',
-
-  tokenContract: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-  tokenId: '37002036',
-  reportLink:
-    'https://baifa.io/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance',
-};
-
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
-  const [reportData, setReportData] = React.useState<IReport>({
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // TODO: refactor and delete it (20240723 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },
-    tokenContract: DUMMY_DATA_FOR_REPORT.tokenContract,
-    tokenId: DUMMY_DATA_FOR_REPORT.tokenId,
-    reportLink:
-      ReportLink[
-        BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-      ],
+    tokenContract: '',
+    tokenId: '',
+    reportLink: '',
   });
   const {
     data: reportFinancial,
     code: getFRCode,
     success: getFRSuccess,
-  } = APIHandler<IReport>(APIName.REPORT_FINANCIAL_GET_BY_ID, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, reportId },
-  });
+  } = APIHandler<FinancialReport>(
+    APIName.REPORT_GET_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id, reportId },
+    },
+    hasCompanyId
+  );
+
+  // eslint-disable-next-line no-console
+  console.log('reportFinancial in reportId', reportFinancial);
 
   useEffect(() => {
     if (getFRSuccess === false) {
@@ -82,37 +66,37 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       });
     }
     if (getFRSuccess && reportFinancial) {
-      setReportData(reportFinancial);
+      // setReportData(reportFinancial);
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 
-  const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
-      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-    </div>
-  ) : (
-    <>
-      <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-        <ReportsSidebar />
+  const displayedBody =
+    isAuthLoading || !getFRSuccess ? (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
       </div>
+    ) : (
+      <div>
+        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
+          <ReportsSidebar />
+        </div>
 
-      <div className="h-1400px bg-surface-neutral-main-background">
-        <ViewFinancialSection
-          reportTypesName={
-            reportData.reportTypesName as {
-              id: keyof typeof FinancialReportTypesMap;
-              name: string;
+        <div className="h-1400px bg-surface-neutral-main-background">
+          <ViewFinancialSection
+            reportTypesName={
+              reportData.reportTypesName as {
+                id: keyof typeof FinancialReportTypesMap;
+                name: string;
+              }
             }
-          }
-          // reportTypesName={FinancialReportTypesMap.balance_sheet as { id: string; name: string }}
-          tokenContract={reportData.tokenContract}
-          tokenId={reportData.tokenId}
-          // reportLink={DUMMY_DATA_FOR_REPORT.reportLink}
-          reportLink={reportData.reportLink}
-        />
+            tokenContract={reportData.tokenContract}
+            tokenId={reportData.tokenId}
+            reportLink={`/users/reports/${reportId}/${ReportUrlMap[reportFinancial?.reportType as keyof typeof ReportUrlMap]}`}
+            reportId={reportId}
+          />
+        </div>
       </div>
-    </>
-  );
+    );
 
   // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
@@ -122,7 +106,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
-        {/* <title>{FinancialReportTypesMap[reportType].name} - iSunFA</title> */}
         <title>
           {
             FinancialReportTypesMap[
@@ -134,7 +117,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
 
         <meta
           name="description"
-          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
         />
         <meta name="author" content="CAFECA" />
         <meta name="keywords" content="區塊鏈,人工智慧,會計" />
@@ -142,7 +125,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta property="og:title" content="iSunFA" />
         <meta
           property="og:description"
-          content="iSunFA: BOLT AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
         />
       </Head>
 

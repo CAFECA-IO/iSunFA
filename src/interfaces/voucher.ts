@@ -1,6 +1,7 @@
 import { VoucherType } from '@/constants/account';
 import { ILineItem } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
+import { Prisma } from '@prisma/client';
 
 export interface IVoucherMetaData {
   date: number;
@@ -16,7 +17,7 @@ export interface IVoucherMetaData {
   payment: IPayment;
 }
 
-// Depreciate: (20240524 - Murky) To Emily, To Julian IVoucher only contains lineItems
+// Deprecate: (20240524 - Murky) To Emily, To Julian IVoucher only contains lineItems
 // I use IVoucherDataForSavingToDB
 export interface IVoucher {
   voucherIndex: string;
@@ -25,7 +26,36 @@ export interface IVoucher {
   lineItems: ILineItem[];
 }
 
+export interface IVoucherDataForAPIResponse {
+  id: number;
+  createdAt: number;
+  updatedAt: number;
+  journalId: number;
+  no: string;
+  lineItems: {
+    id: number;
+    amount: number;
+    description: string;
+    debit: boolean;
+    accountId: number;
+    voucherId: number;
+    createdAt: number;
+    updatedAt: number;
+  }[];
+}
+
 export interface IVoucherDataForSavingToDB {
   journalId?: number;
   lineItems: ILineItem[];
 }
+
+export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
+  include: {
+    journal: true;
+    lineItems: {
+      include: {
+        account: true;
+      };
+    };
+  };
+}>;

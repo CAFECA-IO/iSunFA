@@ -3,6 +3,10 @@ module.exports = {
   content: ['./src/**/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      scale: {
+        80: '0.8',
+        90: '0.9',
+      },
       aspectRatio: {
         '1/1': '1 / 1',
         '1/1.18': '1 / 1.18',
@@ -68,6 +72,7 @@ module.exports = {
           800: 'var(--neutral-800)',
           900: 'var(--neutral-900)',
           white: 'var(--neutral-white)',
+          // 'neutral-secondary': 'var(--neutral-secondary)',
         },
         orange: {
           100: 'var(--orange-100)',
@@ -735,45 +740,49 @@ module.exports = {
         darkBlue3: '#0024620D',
       },
       backgroundImage: {
-        web: 'url("/elements/web.svg")',
-        light_up: 'url("/elements/light_up.svg")',
-        light_down: 'url("/elements/light_down.svg")',
-        mask: 'url("/elements/mask.svg")',
-        blended_light: 'url("/elements/blended_light.svg")',
-        green_light: 'url("/elements/green_light.svg")',
-        shadow_01: 'url("/elements/shadow_01.svg")',
-        light_01: 'url("/elements/light_01.svg")',
-        light_02: 'url("/elements/light_02.svg")',
-        light_03: 'url("/elements/light_03.svg")',
-        light_04: 'url("/elements/light_04.svg")',
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
         contact_bg: 'url("/elements/contact_bg.svg")',
-        background_pattern: 'url("/elements/background_pattern.svg")',
-        green_light_left: 'url("/elements/green_light_left.svg")',
-        green_light_right: 'url("/elements/green_light_right.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
         purpleLinear2:
           'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
-        pipe: 'url("/elements/pipe.svg")',
-        neon: 'url("/animations/neon.svg")',
         101: 'url("/elements/101.png")',
-        lightBalls: 'url("/elements/light_balls.svg")',
-        lightBallsReverse: 'url("/elements/light_balls_reverse.svg")',
 
         bubbleAbove: 'url("/elements/bubble_above.svg")',
         bubbleBelow: 'url("/elements/bubble_below.svg")',
-
-        reportCover: 'url("/documents/cover.svg")',
-        contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
-        headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)',
-
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
+
+        web: 'url("/elements/web.svg")',
+        light_up: 'url("/elements/light_up.svg")',
+        light_down: 'url("/elements/light_down.svg")',
+        green_light: 'url("/elements/green_light.svg")',
+        light_01: 'url("/elements/light_01.svg")',
+        light_02: 'url("/elements/light_02.svg")',
+        light_03: 'url("/elements/light_03.svg")',
+        light_04: 'url("/elements/light_04.svg")',
+
+        green_light_left: 'url("/elements/green_light_left.svg")',
+        green_light_right: 'url("/elements/green_light_right.svg")',
+
+        // mask: 'url("/elements/mask.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // blended_light: 'url("/elements/blended_light.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+
+        // shadow_01: 'url("/elements/shadow_01.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // background_pattern: 'url("/elements/background_pattern.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+
+        // pipe: 'url("/elements/pipe.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // neon: 'url("/animations/neon.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
+        // lightBalls: 'url("/elements/light_balls.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // lightBallsReverse: 'url("/elements/light_balls_reverse.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
+        // reportCover: 'url("/documents/cover.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
+        // contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
+        // headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
       },
       zIndex: {
         '-10': '-10',
         '-1': '-1',
+        1: '1',
         5: '5',
         10: '10',
         20: '20',
@@ -798,6 +807,7 @@ module.exports = {
         '3xl': ['30px', '36px'],
         '32px': ['32px', '36px'],
         '4xl': ['36px', '40px'],
+        '36px': ['36px', '44px'],
         '40px': ['40px', '44px'],
         '5xl': ['42px', 1],
         '48px': ['48px', '52px'],
@@ -1175,9 +1185,19 @@ module.exports = {
         '96rem': '96rem',
 
         '8%': '8%',
+        '10%': '10%',
         '11%': '11%',
         '14%': '14%',
+        '30%': '30%',
         '35%': '35%',
+        '44%': '44%',
+        '50%': '50%',
+        '56%': '56%',
+        '60%': '60%',
+        '70%': '70%',
+        '75%': '75%',
+        '83%': '83%',
+        '100%': '100%',
         0.5: '50%',
         '1/2': '50%',
         '1/4': '25%',
@@ -1322,6 +1342,7 @@ module.exports = {
         '1/50': '2%',
         '50px': '50px',
       },
+
       boxShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0 4px 24px rgba(0, 0, 0, 0.40)',
@@ -1356,6 +1377,8 @@ module.exports = {
           '0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
         scrollBtn:
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
+        customShadowSmall:
+          '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -1377,6 +1400,9 @@ module.exports = {
         inter: ['Inter', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
+      },
+      width: {
+        'full-available': '-webkit-fill-available',
       },
       maxWidth: {
         '80px': '80px',
@@ -1461,4 +1487,8 @@ module.exports = {
     },
   },
   plugins: [],
+  safelist: [
+    // Info: (20240726 - Liz) 在這裡添加自定義類別名稱
+    'toast-container',
+  ],
 };

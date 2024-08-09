@@ -1079,11 +1079,6 @@ input[type='number']::-webkit-inner-spin-button {
   margin: 0;
 }
 
-h6 {
-  -webkit-text-stroke: 1px white;
-  color: transparent;
-}
-
 .hollowYellow {
   -webkit-text-stroke: 1px #ffa502;
   color: transparent;
@@ -1167,6 +1162,15 @@ div::-webkit-scrollbar {
     0px 2px 5px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.1));
 }
 
+.kycCardShadow {
+  box-shadow:
+    0px 83px 23px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0)),
+    0px 53px 21px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)),
+    0px 30px 18px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)),
+    0px 13px 13px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)),
+    0px 3px 7px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.1));
+}
+
 /* Info: (20240502 - Julian) progress bar style */
 .sliderProgress {
   -webkit-appearance: none;
@@ -1210,8 +1214,15 @@ div::-webkit-scrollbar {
 }
 
 @page {
-  size: 595px 842px;
+  /* Info: size: A4 (20240729 - Shirley) */
+  size: 595px 843px;
   margin: 0cm;
+}
+
+@media print {
+  .break-before-page {
+    break-before: page;
+  }
 }
 
 .iframe-no-scrollbar::-webkit-scrollbar {
@@ -1274,3 +1285,23 @@ input[type='checkbox']:checked::before {
   color: #fff;
   border: 0;
 } */
+
+/* // Info: (20240725 - Liz) 使用自定義樣式調整 toast container */
+
+.toast-container {
+  width: max-content;
+  margin-top: 80px;
+  pointer-events: none;
+}
+
+@media (max-width: 769px) {
+  .toast-container {
+    margin-bottom: 40px;
+  }
+}
+
+@media (max-width: 425px) {
+  .toast-container {
+    margin-bottom: 70px;
+  }
+}

@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { useCallback, useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -15,8 +14,6 @@ type Dates = {
   disable: boolean;
 };
 interface IPopulateDatesParams {
-  minDate: Date;
-  maxDate: Date;
   daysInMonth: Dates[];
   selectedYear: number;
   selectedMonth: number;
@@ -30,10 +27,10 @@ interface IPopulateDatesParams {
 
 // TODO: refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE (20240529 - Shirley)
 export enum DatePickerType {
-  ICON_PERIOD = 'ICON_PERIOD', // ICON_PERIOD
-  TEXT_DATE = 'TEXT_DATE', // TEXT_DATE
-  TEXT_PERIOD = 'TEXT_PERIOD', // TEXT_PERIOD 🐨
-  ICON_DATE = 'ICON_DATE', // ICON_DATE
+  ICON_PERIOD = 'ICON_PERIOD',
+  TEXT_DATE = 'TEXT_DATE',
+  TEXT_PERIOD = 'TEXT_PERIOD',
+  ICON_DATE = 'ICON_DATE',
 }
 
 interface IDatePickerProps {
@@ -47,9 +44,8 @@ interface IDatePickerProps {
   btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
-  onClose?: () => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
+  onClose?: (start: number, end: number) => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback // Info: (20240809 - Tzuhan) 更新傳入參數 start, end 用在 RegistrationInfoForm
   alignCalendar?: DatePickerAlign;
-  customCalendarAlignment?: string;
   datePickerClassName?: string;
   disabled?: boolean;
 }
@@ -73,8 +69,8 @@ const PopulateDates = ({
     'before:absolute before:-z-10 before:w-[40px] before:md:w-[42px] before:h-[40px] before:md:h-[42px] before:rounded-full before:bg-primaryYellow';
 
   // Info: (20240417 - Shirley) 顯示星期標題
-  const weekNameList = WEEK_LIST.map((week, index) => (
-    <p className="mx-auto h-35px w-35px text-primaryYellow" key={index}>
+  const weekNameList = WEEK_LIST.map((week) => (
+    <p className="mx-auto h-35px w-35px text-primaryYellow" key={week}>
       {t(week)}
     </p>
   ));
@@ -87,7 +83,7 @@ const PopulateDates = ({
   };
 
   // Info: (20240417 - Shirley) 顯示月份中的每一天
-  const formatDaysInMonth = daysInMonth.map((el: Dates, index) => {
+  const formatDaysInMonth = daysInMonth.map((el: Dates) => {
     const date = el ? new Date(`${selectedYear}/${selectedMonth}/${el.date} 00:00:00`) : null;
 
     // Info: (20240417 - Shirley) 因為 selectTimeTwo 是 23:59:59，所以還原時間設置為 00:00:00
@@ -165,7 +161,7 @@ const PopulateDates = ({
 
     return (
       <button
-        key={index}
+        key={el?.date}
         type="button"
         disabled={el?.disable}
         className={`relative z-10 h-35px whitespace-nowrap px-1 text-base md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle} transition-all duration-150 ease-in-out disabled:text-lilac`}
@@ -201,6 +197,7 @@ const DatePicker = ({
   alignCalendar,
   datePickerClassName,
   disabled,
+  datePickerHandler,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
@@ -222,11 +219,23 @@ const DatePicker = ({
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 0 (January) to 11 (December).
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
 
+  // useEffect(() => {
+  //   setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
+  //   setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
+  // }, [period]);
+
   useEffect(() => {
     // Info: (20240417 - Shirley) 如果已取得兩個日期，則將日期區間傳回父層
     // Info: (20240417 - Shirley) 如果兩個日期相同，則將日期區間設為當天 00:00:00 ~ 23:59:59
-    const dateOneStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
-    const dateTwoStamp = dateTwo ? dateTwo.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+    let dateOneStamp = 0;
+    let dateTwoStamp = 0;
+    if (type === DatePickerType.ICON_PERIOD || type === DatePickerType.TEXT_PERIOD) {
+      dateOneStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+      dateTwoStamp = dateTwo ? dateTwo.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+    } else {
+      dateOneStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+      dateTwoStamp = dateOne ? dateOne.getTime() / MILLISECONDS_IN_A_SECOND : 0;
+    }
 
     if (dateOneStamp && dateTwoStamp) {
       const isSameDate = dateOneStamp === dateTwoStamp;
@@ -234,9 +243,26 @@ const DatePicker = ({
         startTimeStamp: dateOneStamp,
         endTimeStamp: isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp,
       });
+      if (datePickerHandler) {
+        datePickerHandler(
+          dateOneStamp,
+          isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp
+        );
+      }
       // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
       if (onClose) {
-        onClose();
+        onClose(dateOneStamp, isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp);
+      }
+    } else if (dateOneStamp === 0 && dateTwoStamp === 0) {
+      setFilteredPeriod({
+        startTimeStamp: 0,
+        endTimeStamp: 0,
+      });
+      if (onClose) {
+        onClose(0, 0);
+      }
+      if (datePickerHandler) {
+        datePickerHandler(0, 0);
       }
     } else {
       setFilteredPeriod({
@@ -244,21 +270,7 @@ const DatePicker = ({
         endTimeStamp: 0,
       });
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateOne, dateTwo]);
-
-  // TODO: 在不讓 parent component re-render 造成多次 API call 的情況下，將 period 從一段期間改成一個日期 (20240527 - Shirley)
-  // Info: If type changed, reset the date (20240425 - Shirley)
-  // useEffect(() => {
-  //   if (type === DatePickerType.CHOOSE_PERIOD || type === DatePickerType.ICON) {
-  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //     setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //   } else {
-  //     setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //     setDateTwo(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
-  //   }
-  // }, [type]);
+  }, [dateOne, dateTwo, type]);
 
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {
@@ -266,13 +278,13 @@ const DatePicker = ({
   };
 
   // Info: (20240417 - Shirley) 取得該月份的所有天數
-  const daysInMonth = (year: number, month: number, minDate?: Date, maxDate?: Date) => {
+  const daysInMonth = (year: number, month: number) => {
     const day = firstDayOfMonth(year, month);
     const dateLength = new Date(year, month, 0).getDate();
 
     let dates: Dates[] = [];
 
-    for (let i = 0; i < dateLength; i++) {
+    for (let i = 0; i < dateLength; i += 1) {
       const dateTime = new Date(`${year}/${month}/${i + 1}`).getTime();
       const date = {
         date: i + 1,
@@ -288,10 +300,10 @@ const DatePicker = ({
   const goToNextMonth = useCallback(() => {
     let month = selectedMonth;
     let year = selectedYear;
-    month++;
+    month += 1;
     if (month > 12) {
       month = 1;
-      year++;
+      year += 1;
     }
     setSelectedMonth(month);
     setSelectedYear(year);
@@ -300,17 +312,20 @@ const DatePicker = ({
   const goToPrevMonth = useCallback(() => {
     let month = selectedMonth;
     let year = selectedYear;
-    month--;
+    month -= 1;
     if (month < 1) {
       month = 12;
-      year--;
+      year -= 1;
     }
     setSelectedMonth(month);
     setSelectedYear(year);
   }, [selectedMonth, selectedYear]);
 
   const selectDateOne = useCallback((el: Dates | null) => {
-    if (!el) return setDateOne(null);
+    if (!el) {
+      setDateOne(null);
+      return;
+    }
     const newDate = new Date(el.time);
     // Info: (20240417 - Shirley) 設定時間為當天的開始（00:00:00）
     newDate.setHours(0, 0, 0);
@@ -318,7 +333,10 @@ const DatePicker = ({
   }, []);
 
   const selectDateTwo = useCallback((el: Dates | null) => {
-    if (!el) return setDateTwo(null);
+    if (!el) {
+      setDateTwo(null);
+      return;
+    }
     const newDate = new Date(el.time);
     // Info: (20240417 - Shirley) 設定時間為當天的最後一秒（23:59:59）
     newDate.setHours(23, 59, 59);
@@ -369,7 +387,7 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // default style
-          'flex w-full items-center space-x-3 rounded-xs border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
           // props control style
           btnClassName,
           // variables control style
@@ -409,7 +427,7 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-xs border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
           btnClassName,
           {
             'border-primaryYellow text-primaryYellow': componentVisible,
@@ -463,7 +481,7 @@ const DatePicker = ({
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
           className={cn(
-            'invisible absolute top-16 z-20 grid w-[300px] grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
+            'invisible absolute top-16 z-20 grid w-[300px] grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 text-black opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
               'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,
@@ -508,9 +526,7 @@ const DatePicker = ({
             </button>
           </div>
           <PopulateDates
-            minDate={minDate ?? new Date(minTime)}
-            maxDate={maxDate ?? new Date(maxTime)}
-            daysInMonth={daysInMonth(selectedYear, selectedMonth, minDate, maxDate)}
+            daysInMonth={daysInMonth(selectedYear, selectedMonth)}
             selectedYear={selectedYear}
             selectedMonth={selectedMonth}
             selectTimeOne={dateOne?.getTime() ?? 0}

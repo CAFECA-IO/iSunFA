@@ -2,12 +2,13 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { IMilestone } from '@/interfaces/project';
 import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
 import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function checkInput(projectId: string) {
   let isValid = true;
@@ -19,7 +20,7 @@ async function checkInput(projectId: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await isUserAdmin(userId, companyId);
+  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {

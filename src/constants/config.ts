@@ -1,3 +1,5 @@
+import { Options } from 'formidable';
+
 export const copyright = 'iSunFA @ 2024. All rights reserved.';
 
 /* Info: (20230711 - Shirley) ----- Landing Page ----- */
@@ -5,6 +7,7 @@ export const SCROLL_END = 530;
 
 export const BOOKMARK_SCROLL_STEP = 200;
 
+/* Deprecated: (20240806 - Liz) massiveDataContent 沒有使用到 */
 export const massiveDataContent = [
   {
     icon: '/icons/wallet.svg',
@@ -33,6 +36,7 @@ export const massiveDataContent = [
   },
 ];
 
+// Deprecated: (20240806 - Liz) toolsContent 沒有使用到
 export const toolsContent = [
   {
     title: 'LANDING_PAGE.TOOL_INTRO_1_TITLE',
@@ -57,6 +61,7 @@ export const toolsContent = [
   },
 ];
 
+// Deprecated: (20240806 - Liz) servicesContent 沒有使用到
 export const servicesContent = [
   {
     image: '/elements/tracing.png',
@@ -85,6 +90,7 @@ export const servicesContent = [
   },
 ];
 
+// Deprecated: (20240806 - Liz) whyUsContent 沒有使用到
 export const whyUsContent = [
   {
     image: '/icons/safety.png',
@@ -136,8 +142,18 @@ export const ALLOWED_ORIGINS = [
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
 
-export const FORMIDABLE_CONFIG = {
-  uploadDir: 'tmp',
+// 定義 Formidable 的 options
+export const FORMIDABLE_OPTIONS: Partial<Options> = {
+  encoding: 'utf-8',
+  keepExtensions: true,
+  maxFieldsSize: 200 * 1024 * 1024, // (200mb),
+  maxFields: 1000,
+  multiples: false,
+
+  // 過濾器例子，保留圖片類型
+  filter({ mimetype }) {
+    return !!(mimetype && (mimetype.includes('image') || mimetype.includes('pdf')));
+  },
 };
 
 export const AICH_URI = process.env.AICH_URI as string;
@@ -149,31 +165,37 @@ export const DEFAULT_PAGE_OFFSET = 0;
 export const USER_ICON_BACKGROUND_COLORS = [
   // Info: (20230814 - Murky) color from surface/support/strong/Light_Mode and Dark_Mode
   {
-    lightMode: "#FD853A",
-    darkMode: "#EC4A0A",
+    lightMode: '#FD853A',
+    darkMode: '#EC4A0A',
   },
   {
-    lightMode: "#9B8AFB",
-    darkMode: "#6938EF",
+    lightMode: '#9B8AFB',
+    darkMode: '#6938EF',
   },
   {
-    lightMode: "#FD6F8E",
-    darkMode: "#E31B54",
+    lightMode: '#FD6F8E',
+    darkMode: '#E31B54',
   },
   {
-    lightMode: "#F670C7",
-    darkMode: "#DD2590",
+    lightMode: '#F670C7',
+    darkMode: '#DD2590',
   },
   {
-    lightMode: "#8098F9",
-    darkMode: "#444CE7",
+    lightMode: '#8098F9',
+    darkMode: '#444CE7',
   },
   {
-    lightMode: "#53B1FD",
-    darkMode: "#1570EF",
+    lightMode: '#53B1FD',
+    darkMode: '#1570EF',
   },
   {
-    lightMode: "#6CDEA0",
-    darkMode: "#29B368",
+    lightMode: '#6CDEA0',
+    darkMode: '#29B368',
   },
 ];
+
+export const FREE_COMPANY_ID = 1001;
+export const NON_EXISTING_COMPANY_ID = -1;
+export const DOMAIN = 'https://isunfa.com';
+export const NON_EXISTING_REPORT_ID = -1;
+export const BUFFER_AMOUNT = 0.01; // Info: (20240806 - Shirley) 小於0.01來避免浮點數精度問題

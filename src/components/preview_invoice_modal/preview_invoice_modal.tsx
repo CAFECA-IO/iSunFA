@@ -1,4 +1,3 @@
-/* eslint-disable */
 import Image from 'next/image';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { RxCross2 } from 'react-icons/rx';
@@ -6,9 +5,11 @@ import { PiShareFat } from 'react-icons/pi';
 import { timestampToString } from '@/lib/utils/common';
 import { IPreviewInvoiceModal } from '@/interfaces/preview_invoice_modal';
 import { Button } from '@/components/button/button';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IPreviewInvoiceModalProps {
   isModalVisible: boolean;
@@ -23,7 +24,7 @@ const PreviewInvoiceModal = ({
 }: IPreviewInvoiceModalProps) => {
   const { t } = useTranslation('common');
   const { date, imgStr } = previewInvoiceModalData;
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 
   // Info: (20240508 - Julian) 關閉 modal
   const closeClickHandler = () => modalVisibilityHandler();
@@ -34,7 +35,7 @@ const PreviewInvoiceModal = ({
       title: 'Download Selected Voucher',
       content: 'Are you sure you want to download the selected items?',
       messageType: MessageType.INFO,
-      submitBtnStr: 'Download',
+      submitBtnStr: t('JOURNAL.DOWNLOAD'),
       // ToDo: (20240508 - Julian) 下載功能
       submitBtnFunction: () => {
         modalVisibilityHandler();
@@ -44,7 +45,7 @@ const PreviewInvoiceModal = ({
   };
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div
         className={`relative flex h-700px w-90vw flex-col gap-16px rounded-xs bg-white py-16px md:w-700px`}
       >
@@ -87,6 +88,15 @@ const PreviewInvoiceModal = ({
               height={300}
               alt="invoice_preview"
               style={{ objectFit: 'contain' }}
+              onError={() => {
+                modalVisibilityHandler();
+                toastHandler({
+                  id: 'no-invoice-preview',
+                  type: ToastType.WARNING,
+                  content: 'No invoice preview',
+                  closeable: true,
+                });
+              }}
             />
           </div>
           {/* Info: (20240508 - Julian) Close Button */}

@@ -5,25 +5,28 @@ import { promises as fs } from 'fs';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
-  timestampInMilliSeconds,
+  generateUUID,
   timestampInSeconds,
   transformBytesToFileSizeString,
   transformOCRImageIDToURL,
 } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
 
-import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
   createOcrInPrisma,
   findManyOCRByCompanyIdWithoutUsedInPrisma,
 } from '@/lib/utils/repo/ocr.repo';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
-import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { FileFolder } from '@/constants/file';
+import { getAichUrl } from '@/lib/utils/aich';
+import { AICH_APIS_TYPES } from '@/constants/aich';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -52,17 +55,21 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   const formData = createImageFormData(imageBlob, imageName);
 
   let response: Response;
+  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_OCR);
   try {
-    response = await fetch(`${AICH_URI}/api/v1/ocr/upload`, {
+    response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
     });
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   return response.json() as Promise<{ payload?: unknown } | null>;
@@ -72,7 +79,7 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   let json: {
@@ -82,6 +89,9 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -103,29 +113,62 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     type: string;
   }[]
 > {
-  if (!files || !files.image || !files.image.length) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORM_DATA_IMAGE);
-  }
-
+  let resultJson: {
+    resultStatus: IAccountResultStatus;
+    imageName: string;
+    imageUrl: string;
+    imageSize: number;
+    type: string;
+  }[] = [];
+  if (files && files.image && files.image.length) {
   // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
-  const resultJson = await Promise.all(
-    files.image.map(async (image) => {
-      const imageBlob = await readImageFromFilePath(image);
-      const imageName = getImageName(image);
+    resultJson = await Promise.all(
+      files.image.map(async (image) => {
+        const defaultResultId = "error-" + generateUUID;
+        let result:{
+          resultStatus: IAccountResultStatus;
+          imageName: string;
+          imageUrl: string;
+          imageSize: number;
+          type: string;
+        } = {
+          resultStatus: {
+            status: ProgressStatus.IN_PROGRESS,
+            resultId: defaultResultId,
+          },
+          imageUrl: '',
+          imageName: '',
+          imageSize: 0,
+          type: 'invoice',
+        };
+        try {
+          const imageBlob = await readImageFromFilePath(image);
+          const imageName = getImageName(image);
 
-      const fetchResult = uploadImageToAICH(imageBlob, imageName);
+          const fetchResult = uploadImageToAICH(imageBlob, imageName);
 
-      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-      const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
-      return {
-        resultStatus,
-        imageUrl,
-        imageName,
-        imageSize: image.size,
-        type: 'invoice',
-      };
-    })
-  );
+          const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
+          result = {
+            resultStatus,
+            imageUrl,
+            imageName,
+            imageSize: image.size,
+            type: 'invoice',
+          };
+        } catch (error) {
+          // Deprecated (20240611 - Murky) Debugging purpose
+          // eslint-disable-next-line no-console
+          console.log(error);
+        }
+        return result;
+      })
+    );
+  } else {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('No image file found in formidable when upload ocr');
+  }
 
   return resultJson;
 }
@@ -140,57 +183,74 @@ export function isCompanyIdValid(companyId: any): companyId is number {
 }
 
 export async function getImageFileFromFormData(req: NextApiRequest) {
-  let files: formidable.Files;
+  let files: formidable.Files = {};
 
   try {
-    const parsedForm = await parseForm(req);
+    const parsedForm = await parseForm(req, FileFolder.INVOICE);
     files = parsedForm.files;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
   }
   return files;
 }
 
 export async function fetchStatus(aichResultId: string) {
-  try {
-    const result = await fetch(`${AICH_URI}/api/v1/ocr/${aichResultId}/process_status`);
+  let status: ProgressStatus = ProgressStatus.SYSTEM_ERROR;
 
-    if (!result.ok) {
-      throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+  if (aichResultId.length > 0) {
+    try {
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
+      const result = await fetch(fetchUrl);
+
+      if (!result.ok) {
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
+      }
+
+      status = (await result.json()).payload;
+    } catch (error) {
+      // Deprecated (20240611 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(error);
+      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
-
-    const status: ProgressStatus = (await result.json()).payload;
-    return status;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
   }
+
+  return status;
 }
 
-export function calculateProgress(createdAt: number, status: ProgressStatus) {
-  const currentTime = new Date();
-  const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
-  let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
+// Deprecated (20240809 - Murky) This function is not used
+// export function calculateProgress(createdAt: number, status: ProgressStatus) {
+//   const currentTime = new Date();
+//   const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
+//   let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
 
-  if (process > 99) {
-    process = 99;
-  }
+//   if (process > 99) {
+//     process = 99;
+//   }
 
-  if (status === ProgressStatus.SUCCESS) {
-    process = 100;
-  } else if (status !== ProgressStatus.IN_PROGRESS) {
-    process = 0;
-  }
-  return process;
+//   if (status === ProgressStatus.SUCCESS) {
+//     process = 100;
+//   } else if (status !== ProgressStatus.IN_PROGRESS) {
+//     process = 0;
+//   }
+//   return process;
+// }
+
+export function calculateProgress(imageUrl?: string | null) {
+  return (imageUrl && imageUrl.length > 0) ? 100 : 0;
 }
 
-export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IUnprocessedOCR[]> {
+export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
   const unprocessedOCRs = await Promise.all(
     ocrData.map(async (ocr) => {
       const status = await fetchStatus(ocr.aichResultId);
-      const progress = calculateProgress(ocr.createdAt, status);
+      // const progress = calculateProgress(ocr.createdAt, status);
+      const progress = calculateProgress(ocr.imageUrl);
       const imageSize = transformBytesToFileSizeString(ocr.imageSize);
       const createdAt = timestampInSeconds(ocr.createdAt);
-      const unprocessedOCR: IUnprocessedOCR = {
+      const unprocessedOCR: IOCR = {
         id: ocr.id,
         aichResultId: ocr.aichResultId,
         imageUrl: ocr.imageUrl,
@@ -227,119 +287,92 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return resultJson;
 }
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
-
-  // Info Murky (20240416): Check if companyId is string
-  if (!isCompanyIdValid(companyId)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  // Depreciated (20240611 - Murky) This convert is not needed
-  const companyIdNumber = Number(companyId);
-
-  let resultJson: IAccountResultStatus[];
+export async function handlePostRequest(companyId: number, req: NextApiRequest) {
+  let resultJson: IAccountResultStatus[] = [];
 
   try {
     const files = await getImageFileFromFormData(req);
     const aichResults = await postImageToAICH(files);
-    // Depreciated (20240611 - Murky) This function is not used
+    // Deprecated (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
-    resultJson = await createOcrFromAichResults(companyIdNumber, aichResults);
+    resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
-    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
-    STATUS_MESSAGE.CREATED,
-    resultJson
-  );
-  return {
-    httpCode,
-    result,
-  };
+  return resultJson;
 }
 
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
-  const { ocrtype } = req.query;
-  if (!isCompanyIdValid(companyId)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  // Depreciated (20240611 - Murky) This convert is not needed
-  const companyIdNumber = Number(companyId);
-
-  // ToDo: (20240611 - Murky) GET ocr by companyId in Journal from prisma
+  const { ocrType } = req.query;
 
   let ocrData: Ocr[];
 
   try {
-    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyIdNumber, ocrtype as string);
+    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
-    // Depreciated (20240611 - Murky) Debugging purpose
+    // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
+    console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
-  // ToDo: (20240611 - Murky) format prisma ocr to IUnprocessedOCR
+  // ToDo: (20240611 - Murky) format prisma ocr to IOCR
   const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
-  // ToDo: formatApiResponse
-  const { httpCode, result } = formatApiResponse<IUnprocessedOCR[]>(
-    STATUS_MESSAGE.SUCCESS_GET,
-    unprocessedOCRs
-  );
-  return {
-    httpCode,
-    result,
-  };
+
+  return unprocessedOCRs;
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus[]>(
-    message,
-    {} as IAccountResultStatus[]
-  );
-  res.status(httpCode).json(result);
-}
+type ApiReturnType = IAccountResultStatus[] | IOCR[];
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountResultStatus[] | IUnprocessedOCR[]>>
+  res: NextApiResponse<IResponseData<ApiReturnType>>
 ) {
-  try {
-    switch (req.method) {
-      case 'GET': {
-        const { httpCode, result } = await handleGetRequest(req, res);
-        res.status(httpCode).json(result);
-        break;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
+  let payload: ApiReturnType = [];
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+
+  if (isAuth) {
+    try {
+      switch (req.method) {
+        case 'GET': {
+          payload = await handleGetRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.SUCCESS;
+          break;
+        }
+        case 'POST': {
+          payload = await handlePostRequest(companyId, req);
+          statusMessage = STATUS_MESSAGE.CREATED;
+          break;
+        }
+        default: {
+          throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+        }
       }
-      case 'POST': {
-        const { httpCode, result } = await handlePostRequest(req, res);
-        res.status(httpCode).json(result);
-        break;
-      }
-      default: {
-        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
-      }
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecated (20240611 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
     }
-  } catch (_error) {
-    const error = _error as Error;
-    // Depreciated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
-    handleErrorResponse(res, error.message);
   }
+
+  const { httpCode, result } = formatApiResponse<ApiReturnType>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

@@ -3,16 +3,10 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { IFinancialReport, IFinancialReportRequest } from '@/interfaces/report';
+import { IFinancialReportRequest } from '@/interfaces/report';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  MILLISECONDS_IN_A_SECOND,
-  default30DayPeriodInSec,
-} from '@/constants/display';
+import { default30DayPeriodInSec } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -22,8 +16,17 @@ import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
+import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/constants/report';
+// Info: (20240807 - Anna) 用來處理路由的 hook
+import { useRouter } from 'next/router';
 
-const FinancialReportSection = () => {
+interface IFinancialReportSectionProps {
+  reportType?: FinancialReportTypesKey;
+}
+
+const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
+  // Info: (20240807 - Anna) 初始化 useRouter
+  const router = useRouter();
   const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
@@ -34,22 +37,16 @@ const FinancialReportSection = () => {
     code: generatedCode,
     isLoading: generatedLoading,
     success: generatedSuccess,
-  } = APIHandler<IAccountResultStatus>(
-    APIName.REPORT_GENERATE_FINANCIAL,
-    {
-      params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
-      },
-    },
-    false,
-    false
-  );
+  } = APIHandler<IAccountResultStatus>(APIName.REPORT_GENERATE);
+
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReportType, setSelectedReportType] = useState<FinancialReportTypesKey>(
-    FinancialReportTypesKey.balance_sheet
+    reportType && FinancialReportTypesKey[reportType]
+      ? FinancialReportTypesKey[reportType]
+      : FinancialReportTypesKey.balance_sheet
   );
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
     ReportLanguagesKey.en
@@ -79,8 +76,8 @@ const FinancialReportSection = () => {
   };
 
   const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
-    setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
-
+    //   setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
+    setSelectedProjectName(projectName);
     setIsProjectMenuOpen(false);
   };
 
@@ -105,36 +102,40 @@ const FinancialReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  // const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}?project=${DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
-
-  const generateReportHandler = () => {
+  const generateReportHandler = async () => {
     const body: IFinancialReportRequest = {
-      project_id: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
-      type: selectedReportType,
-      language: selectedReportLanguage,
-      start_date: new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND),
-      end_date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND),
+      projectId: DUMMY_PROJECTS_MAP[selectedProjectName as keyof typeof DUMMY_PROJECTS_MAP].id,
+      type: FinancialReportTypesKeyReportSheetTypeMapping[selectedReportType],
+      reportLanguage: selectedReportLanguage,
+      from: period.startTimeStamp,
+      to: period.endTimeStamp,
+      reportType: ReportType.FINANCIAL,
     };
 
-    generateFinancialReport({
-      body,
-    });
+    if (selectedCompany) {
+      generateFinancialReport({
+        params: {
+          companyId: selectedCompany.id,
+        },
+        body,
+      });
+    }
   };
-
-  const tryAgainHandler = () => {
-    generateReportHandler();
+  // Info: (20240807 - Anna) 定義導航到 "my-reports" 頁面的函數
+  const navigateToMyReports = () => {
+    router.push('/users/reports/my-reports');
   };
-
   useEffect(() => {
     setDatePickerType(() => {
       if (selectedReportType === FinancialReportTypesKey.balance_sheet) {
+        setPeriod(default30DayPeriodInSec);
         return DatePickerType.TEXT_DATE;
       } else {
+        setPeriod(default30DayPeriodInSec);
         return DatePickerType.TEXT_PERIOD;
       }
     });
   }, [selectedReportType]);
-
   useEffect(() => {
     // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
     if (isProjectMenuOpen) {
@@ -148,10 +149,14 @@ const FinancialReportSection = () => {
       if (generatedSuccess) {
         messageModalDataHandler({
           title: '',
-          subtitle: 'We received your application',
-          content: `It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later.`,
-          submitBtnStr: 'Close',
-          submitBtnFunction: () => {},
+          subtitle: t('MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
+          content: t('MY_REPORTS_SECTION.TAKE_MINUTES'),
+          submitBtnStr: t('COMMON.CLOSE'),
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+            // Info: (20240807 - Anna) 在成功生成報告後，將導航函數作為submitBtnFunction傳入⭢執行導航
+            navigateToMyReports();
+          },
           messageType: MessageType.SUCCESS,
           submitBtnVariant: 'secondaryBorderless',
           submitBtnClassName: 'text-link-text-success hover:text-link-text-success-hover',
@@ -160,10 +165,12 @@ const FinancialReportSection = () => {
       } else {
         messageModalDataHandler({
           title: '',
-          subtitle: 'Failed',
-          content: `We can't generate the report you applied for, please change the selections and try again.`,
-          submitBtnStr: 'Try again',
-          submitBtnFunction: tryAgainHandler,
+          subtitle: t('DASHBOARD.FAILED'),
+          content: t('DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
+          submitBtnStr: t('DASHBOARD.TRY_AGAIN'),
+          submitBtnFunction: () => {
+            messageModalVisibilityHandler();
+          },
           messageType: MessageType.ERROR,
           submitBtnVariant: 'tertiaryBorderless',
           submitBtnIcon: (
@@ -215,7 +222,9 @@ const FinancialReportSection = () => {
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {selectedProjectName}
+            {DUMMY_PROJECTS_MAP[selectedProjectName].name === 'Overall'
+              ? t('PROJECT.OVERALL')
+              : DUMMY_PROJECTS_MAP[selectedProjectName].name}
           </div>
 
           <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -289,6 +298,10 @@ const FinancialReportSection = () => {
                     .includes(searchQuery.toLowerCase())
                 // eslint-disable-next-line function-paren-newline
               )
+              // TODO: 串上 API 之後把 filter 拿掉 (20240726 - Shirley)
+              .filter((project) => {
+                return project.includes('Overall');
+              })
               .map((project) => (
                 <li
                   key={project}
@@ -312,7 +325,11 @@ const FinancialReportSection = () => {
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
+                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
+                      {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
+                      'Overall'
+                        ? t('PROJECT.OVERALL')
+                        : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
                 </li>
@@ -333,7 +350,7 @@ const FinancialReportSection = () => {
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {selectedReportName}
+          {t(`PLUGIN.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center px-0 py-0">
           <div className="flex items-center justify-center">
@@ -370,7 +387,8 @@ const FinancialReportSection = () => {
               onClick={() => menuOptionClickHandler(id as FinancialReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
-              {name}
+              {/* {name} */}
+              {t(`PLUGIN.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>
@@ -478,7 +496,6 @@ const FinancialReportSection = () => {
       )}
     </Button>
   );
-
   return (
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
@@ -588,7 +605,7 @@ const FinancialReportSection = () => {
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
+              key={`${selectedReportType}-${period.startTimeStamp}-${period.endTimeStamp}`}
               type={datePickerType}
               period={period}
               setFilteredPeriod={setPeriod}
@@ -604,5 +621,4 @@ const FinancialReportSection = () => {
     </div>
   );
 };
-
 export default FinancialReportSection;

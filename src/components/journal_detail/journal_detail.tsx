@@ -2,7 +2,6 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
-import { LuTag } from 'react-icons/lu';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
@@ -10,9 +9,10 @@ import APIHandler from '@/lib/utils/api_handler';
 import { timestampToString } from '@/lib/utils/common';
 import { MessageType } from '@/interfaces/message_modal';
 import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID } from '@/constants/display';
 import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IVoucherItem {
   id: string;
@@ -35,7 +35,8 @@ interface IJournalDetailProps {
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     previewInvoiceModalDataHandler,
     previewInvoiceModalVisibilityHandler,
@@ -45,12 +46,15 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const {
     data: journalDetail,
     isLoading,
-    // error,
     success,
     code,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {
-    params: { companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID, journalId },
-  });
+  } = APIHandler<IJournal>(
+    APIName.JOURNAL_GET_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id, journalId },
+    },
+    hasCompanyId
+  );
 
   const [contractId, setContractId] = useState<string>('');
   const [journalTokenId, setJournalTokenId] = useState<string>('');
@@ -70,7 +74,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
 
-  const backClickHandler = () => window.history.back();
+  const backClickHandler = () => {
+    window.location.href = ISUNFA_ROUTE.JOURNAL_LIST;
+  };
 
   useEffect(() => {
     if (success === false && isLoading === false) {
@@ -80,7 +86,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         title: 'Journal Detail Failed',
         content: `Error code: ${code}`,
         subMsg: 'Get journal detail failed',
-        submitBtnStr: 'Go back to journal list',
+        submitBtnStr: t('JOURNAL.GO_BACK_TO_JOURNAL_LIST'),
         hideCloseBtn: true,
         submitBtnFunction: backClickHandler,
       });
@@ -151,7 +157,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       };
     });
 
-  // Info: (20240503 - Murky) To Julian, 如果ocr skip的話=> imageUrl: '', 這樣就不會有圖片 => 原本的位置會變成placeholder
+  // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
   const invoicePreviewSrc = journalDetail?.imageUrl ?? '';
 
   const copyTokenContractHandler = () => {
@@ -226,19 +232,26 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       </div>
     ) : null;
 
-  const displayType = <p className="text-lightRed">{type}</p>;
+  // const displayType = <p className="text-lightRed">{type}</p>;
+
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
+  const typeString = type && typeof type === 'string' ? type : '';
+  const translatedType = typeString
+    ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
+    : '';
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  const displayReason = (
-    <div className="flex flex-col items-center gap-x-12px md:flex-row">
-      <p>{reason}</p>
-      <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
-        <LuTag size={14} />
-        Printer
-      </div>
-    </div>
-  );
+  // Info: (20240726 - Julian) Interface lacks reason
+  // const displayReason = (
+  //   <div className="flex flex-col items-center gap-x-12px md:flex-row">
+  //     <p>{reason}</p>
+  //     <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+  //       <LuTag size={14} />
+  //       Printer
+  //     </div>
+  //   </div>
+  // );
 
   const displayVendor = <p className="font-semibold text-navyBlue2">{vendor}</p>;
 
@@ -250,17 +263,25 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{tax}%</span> {t('JOURNAL.Tax /')}{' '}
+        (<span className="font-semibold text-navyBlue2">{tax}%</span> {t('JOURNAL.TAX')} /
         <span className="font-semibold text-navyBlue2">{fee}</span> {t('JOURNAL.TWD_FEE')})
       </p>
     </div>
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = (
+    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+  );
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
+  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
+  const translatedPeriod = t(`JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`);
 
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
+  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
+  const translatedStatus = t(`JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`);
 
   // Info: (20240503 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
@@ -276,7 +297,16 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  // Info: (20240731 - Anna) 把合約None加上多語系
+  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  const displayContract =
+    contract !== 'None' ? (
+      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+        <p className="font-semibold text-darkBlue">{contract}</p>
+      </div>
+    ) : (
+      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+    );
 
   const createVoucherLayout = (dataType: VoucherItem) => {
     const displayList = voucherList.map((voucher) => {
@@ -317,8 +347,8 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <hr className="flex-1 border-lightGray3" />
       </div>
       {/* Info: (20240503 - Julian) List */}
-      <div className="rounded-sm bg-lightGray3 p-20px">
-        <div className="flex w-full text-left text-navyBlue2">
+      <div className="w-90vw rounded-sm bg-lightGray3 p-20px">
+        <div className="flex text-left text-navyBlue2">
           {/* Info: (20240503 - Julian) Accounting */}
           <div className="w-1/4">
             <p>{t('JOURNAL.ACCOUNTING')}</p>
@@ -346,7 +376,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayDebitList = debitList.map((debit) => {
     return (
-      <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
@@ -374,7 +404,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayCreditList = creditList.map((credit) => {
     return (
-      <div className="mx-auto flex max-w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
           <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
@@ -432,6 +462,60 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     </div>
   );
 
+  // Info: (20240802 - Julian) No token contract and token id in free company
+  const displayToken =
+    selectedCompany?.id !== FREE_COMPANY_ID ? (
+      <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
+        {/* Info: (20240503 - Julian) Token Contract */}
+        <div className="flex flex-wrap items-center text-base text-lightGray4">
+          <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
+            <div className="flex items-center">
+              <p>{t('JOURNAL.TOKEN_CONTRACT')}</p>
+              <button
+                type="button"
+                onClick={copyTokenContractHandler}
+                className="block p-10px text-secondaryBlue md:hidden"
+              >
+                <PiCopySimpleBold size={16} />
+              </button>
+            </div>
+
+            <p className="break-all text-darkBlue">{contractId}</p>
+          </div>
+          <button
+            type="button"
+            onClick={copyTokenContractHandler}
+            className="hidden p-10px text-secondaryBlue md:block"
+          >
+            <PiCopySimpleBold size={16} />
+          </button>
+        </div>
+        {/* Info: (20240503 - Julian) Token ID */}
+        <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
+          <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
+            <div className="flex items-center">
+              <p>{t('JOURNAL.TOKEN_ID')}</p>
+              <button
+                type="button"
+                onClick={copyTokenIdHandler}
+                className="block p-10px text-secondaryBlue md:hidden"
+              >
+                <PiCopySimpleBold size={16} />
+              </button>
+            </div>
+            <p className="text-darkBlue">{journalTokenId}</p>
+          </div>
+          <button
+            type="button"
+            onClick={copyTokenIdHandler}
+            className="hidden p-10px text-secondaryBlue md:block"
+          >
+            <PiCopySimpleBold size={16} />
+          </button>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
       {/* Info: (20240503 - Julian) Title */}
@@ -452,55 +536,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       <hr className="my-20px w-full border-lightGray6" />
       {/* Info: (20240503 - Julian) Journal detail */}
       <div className="flex flex-col py-10px">
-        <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
-          {/* Info: (20240503 - Julian) Token Contract */}
-          <div className="flex flex-wrap items-center text-base text-lightGray4">
-            <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
-              <div className="flex items-center">
-                <p>{t('JOURNAL.TOKEN_CONTRACT')}</p>
-                <button
-                  type="button"
-                  onClick={copyTokenContractHandler}
-                  className="block p-10px text-secondaryBlue md:hidden"
-                >
-                  <PiCopySimpleBold size={16} />
-                </button>
-              </div>
-
-              <p className="break-all text-darkBlue">{contractId}</p>
-            </div>
-            <button
-              type="button"
-              onClick={copyTokenContractHandler}
-              className="hidden p-10px text-secondaryBlue md:block"
-            >
-              <PiCopySimpleBold size={16} />
-            </button>
-          </div>
-          {/* Info: (20240503 - Julian) Token ID */}
-          <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
-            <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
-              <div className="flex items-center">
-                <p>{t('JOURNAL.TOKEN_ID')}</p>
-                <button
-                  type="button"
-                  onClick={copyTokenIdHandler}
-                  className="block p-10px text-secondaryBlue md:hidden"
-                >
-                  <PiCopySimpleBold size={16} />
-                </button>
-              </div>
-              <p className=" text-darkBlue">{journalTokenId}</p>
-            </div>
-            <button
-              type="button"
-              onClick={copyTokenIdHandler}
-              className="hidden p-10px text-secondaryBlue md:block"
-            >
-              <PiCopySimpleBold size={16} />
-            </button>
-          </div>
-        </div>
+        {displayToken}
         <div className="my-40px flex w-full flex-col items-center justify-between gap-40px md:flex-row">
           {/* Info: (20240503 - Julian) certificate */}
           <div className="flex w-fit flex-col gap-y-30px">
@@ -509,7 +545,15 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
               onClick={invoicePreviewClickHandler}
               className="border border-lightGray6"
             >
-              <Image src={invoicePreviewSrc} width={236} height={300} alt="certificate" />
+              <Image
+                src={invoicePreviewSrc}
+                width={236}
+                height={300}
+                alt="certificate"
+                onError={(e) => {
+                  e.currentTarget.src = '/elements/default_certificate.svg';
+                }}
+              />
             </button>
             {displayJournalType}
           </div>
@@ -518,7 +562,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             {/* Info: (20240503 - Julian) Type */}
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.TYPE')}</p>
-              {displayType}
+              {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
+              {/* {displayType} */}
+              <p className="text-lightRed">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">
@@ -526,10 +572,10 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
-            <div className="flex items-center justify-between gap-x-10px">
+            {/*             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
-            </div>
+            </div> */}
             {/* Info: (20240503 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
@@ -553,12 +599,20 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             {/* Info: (20240503 - Julian) Payment Period */}
             <div className="flex items-center justify-between gap-x-10px">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
-              {displayPeriod}
+              {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
+              {/* {displayPeriod} */}
+              {translatedPeriod && (
+                <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
+              )}
             </div>
             {/* Info: (20240503 - Julian) Payment Status */}
             <div className="flex items-center justify-between gap-x-10px">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
-              {displayStatus}
+              {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
+              {/* {displayStatus} */}
+              {translatedStatus && (
+                <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
+              )}
             </div>
             {/* Info: (20240503 - Julian) Project */}
             <div className="flex items-center justify-between gap-x-10px">

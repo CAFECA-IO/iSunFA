@@ -5,7 +5,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { MONTH_FULL_LIST_SHORT } from '@/constants/display';
 import prisma from '@/client';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 async function makeSeriesAnnotations(
   totalIncome: number[],
@@ -150,8 +152,12 @@ export default async function handler(
     if (req.method !== 'GET') {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    if (!isAuth) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
     const { period = 'month' } = req.query;
     const responseData = await getIncomeExpenseTrendChartData(period as string, companyId);
     const { httpCode, result } = formatApiResponse<IIncomeExpenseTrendChartData>(

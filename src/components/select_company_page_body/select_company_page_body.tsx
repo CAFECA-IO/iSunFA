@@ -1,11 +1,9 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { FaChevronDown, FaArrowRight } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { ICompany } from '@/interfaces/company';
-import { DEFAULT_AVATAR_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
-import { ISUNFA_ROUTE } from '@/constants/url';
+import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -15,12 +13,10 @@ import { APIName } from '@/constants/api_connection';
 import { ToastType } from '@/interfaces/toastify';
 import { IRole } from '@/interfaces/role';
 import { cn } from '@/lib/utils/common';
-import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
   const { t } = useTranslation('common');
-  const router = useRouter();
 
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
@@ -41,7 +37,7 @@ const SelectCompanyPageBody = () => {
     data: companyAndRoleList,
     success: companyAndRoleListSuccess,
     isLoading: iscompanyAndRoleListLoading,
-  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST, {}, false, false);
+  } = APIHandler<Array<{ company: ICompany; role: IRole }>>(APIName.COMPANY_LIST);
 
   const [selectedCompany, setSelectedCompany] = useState<ICompany | null>(null);
   const [searchValue, setSearchValue] = useState<string>('');
@@ -66,11 +62,14 @@ const SelectCompanyPageBody = () => {
     setSearchValue(event.target.value);
   };
 
-  const selectCompanyClickHandler = () => {
-    if (selectedCompany === null) return;
-    selectCompany(selectedCompany);
-    router.push(ISUNFA_ROUTE.DASHBOARD);
+  const selectCompanyClickHandler = async () => {
+    await selectCompany(selectedCompany);
   };
+
+  // useEffect(() => {
+  //   // Info: (20240730 - Julian) 一進入本頁，先清除已選擇的公司
+  //   selectCompany(null);
+  // }, []);
 
   useEffect(() => {
     if (successSelectCompany === false) {
@@ -120,7 +119,7 @@ const SelectCompanyPageBody = () => {
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
               alt={companyAndRole.company.name}
-              src={'/entities/happy.png'}
+              src={companyAndRole.company?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
               width={20}
               height={20}
             />
@@ -128,7 +127,9 @@ const SelectCompanyPageBody = () => {
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
             {companyAndRole.company.name}
           </p>
-          <p className="text-xs text-lightGray5">{companyAndRole.role.name}</p>
+          <p className="text-xs text-lightGray5">
+            {t(`ROLE.${companyAndRole.role.name.toUpperCase().replace(/ /g, '_')}`)}
+          </p>
         </button>
       );
     })
@@ -139,9 +140,7 @@ const SelectCompanyPageBody = () => {
   const displayCompanyMenu = (
     <div
       ref={companyMenuRef}
-      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5
-      ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
-      `}
+      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5 ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240514 - Julian) search bar */}
@@ -164,7 +163,8 @@ const SelectCompanyPageBody = () => {
         <button
           type="button"
           onClick={companyInvitationModalVisibilityHandler}
-          className="flex w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
+          // Info: disabled for now (20240809 - Shirley)
+          className="hidden w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
           <p>{t('SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
@@ -189,15 +189,19 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) company selection */}
         <div className="mt-10 flex w-full flex-col items-center gap-y-40px">
           {/* Info: (20240513 - Julian) user avatar */}
-          <div className="relative flex w-200px items-center justify-center py-0">
-            <Image
-              alt="avatar"
-              src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
-              width={200}
-              height={200}
-            />
+          <div className="relative flex w-200px items-center justify-center">
+            <div className="h-200px w-200px overflow-hidden">
+              <Image
+                alt="avatar"
+                src={userAuth?.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+                fill
+                style={{ objectFit: 'cover' }}
+                className="rounded-full"
+              />
+            </div>
+
             {/* Info: (20240513 - Julian) green dot */}
-            <div className={cn('absolute right-4', userAuth?.imageId ? 'bottom-4' : 'bottom-0')}>
+            <div className={cn('absolute right-2', userAuth?.imageId ? 'bottom-2' : 'bottom-0')}>
               <svg
                 width="41"
                 height="40"
@@ -228,7 +232,7 @@ const SelectCompanyPageBody = () => {
                 onClick={menuOpenHandler}
                 className="flex shrink grow items-center justify-between px-16px py-8px text-center text-base font-medium leading-normal tracking-tight"
               >
-                <p className=" text-lightGray4">{selectedCompanyName}</p>
+                <p className="text-lightGray4">{selectedCompanyName}</p>
                 <FaChevronDown
                   size={16}
                   className={`text-darkBlue2 ${isCompanyMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
@@ -287,16 +291,14 @@ const SelectCompanyPageBody = () => {
               <p>{t('SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
               <FaArrowRight />
             </Button>
-
-            <Link href={ISUNFA_ROUTE.DASHBOARD} className="w-full">
-              <Button
-                variant={'tertiaryOutline'}
-                className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
-              >
-                <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
-                <FaArrowRight />
-              </Button>
-            </Link>
+            <Button
+              onClick={() => selectCompany(null, true)}
+              variant={'tertiaryOutline'}
+              className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
+            >
+              <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
+              <FaArrowRight />
+            </Button>
           </div>
         </div>
       </div>

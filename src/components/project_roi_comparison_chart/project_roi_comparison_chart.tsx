@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
 import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
   DatePickerAlign,
   ITEMS_PER_PAGE_ON_DASHBOARD,
   MILLISECONDS_IN_A_SECOND,
@@ -98,7 +97,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         fillColors: ['#4BD394B2', '#FB5C5CB2'],
         // width: 20, // 標記的寬度
         // height: 12, // 標記的高度
-        radius: 0, // 標記的半徑（如果是圓形）
+        // radius: 0, // 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
 
@@ -165,7 +164,8 @@ const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, layoutAssertion } = useGlobalCtx();
 
   const minDate = new Date(DUMMY_START_DATE);
@@ -210,7 +210,7 @@ const ProjectRoiComparisonChart = () => {
     APIName.PROJECT_LIST_PROFIT_COMPARISON,
     {
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         page: currentPage,
@@ -218,7 +218,8 @@ const ProjectRoiComparisonChart = () => {
         startDate: period.startTimeStamp,
         endDate: period.endTimeStamp,
       },
-    }
+    },
+    hasCompanyId
   );
 
   const isNoData = profitComparison?.empty || !profitComparison || !listSuccess;
@@ -250,11 +251,11 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
+    if (hasCompanyId && currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           page: currentPage + 1,
@@ -267,11 +268,11 @@ const ProjectRoiComparisonChart = () => {
   };
 
   const goToPrevPage = () => {
-    if (currentPage > 1) {
+    if (hasCompanyId && currentPage > 1) {
       setCurrentPage(currentPage - 1);
       listProjectProfitComparison({
         params: {
-          companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+          companyId: selectedCompany?.id,
         },
         query: {
           page: currentPage - 1,
@@ -284,9 +285,10 @@ const ProjectRoiComparisonChart = () => {
   };
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     listProjectProfitComparison({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         page: currentPage - 1,

@@ -26,13 +26,13 @@ const MilestoneCalendar = ({
 }: ICalendarProps) => {
   const { t } = useTranslation('common');
   const weekdayTitle = [
-    t('JOURNAL.SUN'),
-    t('JOURNAL.MON'),
-    t('JOURNAL.TUE'),
-    t('JOURNAL.WEN'),
-    t('JOURNAL.THU'),
-    t('JOURNAL.FRI'),
-    t('JOURNAL.SAT'),
+    t('DATE_PICKER.SUN'),
+    t('DATE_PICKER.MON'),
+    t('DATE_PICKER.TUE'),
+    t('DATE_PICKER.WED'),
+    t('DATE_PICKER.THU'),
+    t('DATE_PICKER.FRI'),
+    t('DATE_PICKER.SAT'),
   ];
   const [currentDate, setCurrentDate] = useState(new Date());
 

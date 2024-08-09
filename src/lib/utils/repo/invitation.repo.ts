@@ -1,12 +1,13 @@
 import prisma from '@/client';
 import { ONE_DAY_IN_S } from '@/constants/time';
-import { timestampInSeconds } from '@/lib/utils/common';
-import { Invitation } from '@prisma/client';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Invitation, Prisma } from '@prisma/client';
 
 export async function getInvitationByCode(code: string): Promise<Invitation | null> {
   const invitation = await prisma.invitation.findUnique({
     where: {
       code,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return invitation;
@@ -52,10 +53,33 @@ export async function createInvitation(
 }
 
 export async function deleteInvitation(id: number): Promise<Invitation> {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.InvitationWhereUniqueInput = {
+    id,
+    deletedAt: null,
+  };
+
+  const data: Prisma.InvitationUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs = {
+    where,
+    data,
+  };
+  const deletedInvitation = await prisma.invitation.update(updateArgs);
+  return deletedInvitation;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteInvitationForTesting(id: number): Promise<Invitation> {
+  const where: Prisma.InvitationWhereUniqueInput = {
+    id,
+  };
   const deletedInvitation = await prisma.invitation.delete({
-    where: {
-      id,
-    },
+    where,
   });
   return deletedInvitation;
 }

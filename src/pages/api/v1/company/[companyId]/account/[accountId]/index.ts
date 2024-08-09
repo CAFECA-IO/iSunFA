@@ -3,9 +3,15 @@ import { IAccount } from '@/interfaces/accounting_account';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatAccount } from '@/lib/utils/formatter/account.formatter';
-import { findFirstAccountInPrisma, updateAccountInPrisma, softDeleteAccountInPrisma } from '@/lib/utils/repo/account.repo';
+import {
+  findFirstAccountInPrisma,
+  updateAccountInPrisma,
+  softDeleteAccountInPrisma,
+} from '@/lib/utils/repo/account.repo';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 function formatParams(companyId: unknown, accountId: string | string[] | undefined) {
   // ToDo: (20240613 - Murky) - need to use type guard instead
@@ -25,8 +31,12 @@ function formatParams(companyId: unknown, accountId: string | string[] | undefin
 }
 
 async function getCompanyIdAccountId(req: NextApiRequest, res: NextApiResponse) {
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  if (!isAuth) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
   const { accountId } = req.query;
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId);
   return {

@@ -69,9 +69,16 @@ const SalarySidebar = () => {
               </p>
             </Link>
 
-            <Link
-              href={ISUNFA_ROUTE.SALARY}
+            {/* <Link
+              href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default hover:text-tabs-text-active"
+            > */}
+            <button
+              type="button"
+              // ToDo: (20240802 - Julian) Not released yet
+              // eslint-disable-next-line react/jsx-boolean-value
+              disabled={true}
+              className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -92,9 +99,10 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.SALARY_BOOK')}
+                {t('SALARY.SALARY_LIST')}
               </p>
-            </Link>
+            </button>
+            {/* </Link> */}
           </div>
         </div>
       </div>
@@ -120,7 +128,7 @@ const SalarySidebar = () => {
           </svg>
         </Link>
         <Link
-          href={ISUNFA_ROUTE.SALARY}
+          href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
           className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
         >
           <svg

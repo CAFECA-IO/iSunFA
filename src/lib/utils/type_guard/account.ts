@@ -1,7 +1,7 @@
 // ToDo (20240605 - Murk): 不同的type guard 需要放在屬於他的資料夾，不要都放在這個檔案裡
 import {
-  AccountSheetType,
   AccountType,
+  EquityType,
   EventType,
   PaymentPeriodType,
   PaymentStatusType,
@@ -9,7 +9,11 @@ import {
   VoucherType,
 } from '@/constants/account';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import {
+  IAccountForSheetDisplay,
+  IAccountResultStatus,
+  IAccountReadyForFrontend,
+} from '@/interfaces/accounting_account';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isEventType(data: any): data is EventType {
@@ -56,9 +60,93 @@ export function isIAccountResultStatus(value: unknown): value is IAccountResultS
   return isValid;
 }
 
-export function isAccountSheetType(data: string): data is AccountSheetType {
-  const isValid = Object.values(AccountSheetType).includes(data as AccountSheetType);
+export function isIAccountForSheetDisplay(value: unknown): value is IAccountForSheetDisplay {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const { code, name, amount, indent, debit, percentage } = value as IAccountForSheetDisplay;
+  const isValid =
+    typeof code === 'string' &&
+    typeof name === 'string' &&
+    (amount === null || typeof amount === 'number') &&
+    typeof indent === 'number' &&
+    (debit === undefined || typeof debit === 'boolean') &&
+    (percentage === null || typeof percentage === 'number');
   return isValid;
+}
+
+export function isIAccountForSheetDisplayArray(value: unknown): value is IAccountForSheetDisplay[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every((item) => isIAccountForSheetDisplay(item));
+}
+
+export function isIAccountReadyForFrontend(value: unknown): value is IAccountReadyForFrontend {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const {
+    code,
+    name,
+    curPeriodAmount,
+    curPeriodAmountString,
+    curPeriodPercentage,
+    prePeriodAmount,
+    prePeriodAmountString,
+    prePeriodPercentage,
+    indent,
+  } = value as IAccountReadyForFrontend;
+  const isValid =
+    typeof code === 'string' &&
+    typeof name === 'string' &&
+    typeof curPeriodAmount === 'number' &&
+    typeof curPeriodAmountString === 'string' &&
+    typeof curPeriodPercentage === 'number' &&
+    typeof prePeriodAmount === 'number' &&
+    typeof prePeriodAmountString === 'string' &&
+    typeof prePeriodPercentage === 'number' &&
+    typeof indent === 'number';
+  return isValid;
+}
+
+export function isIAccountReadyForFrontendArray(
+  value: unknown
+): value is IAccountReadyForFrontend[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every((item) => isIAccountReadyForFrontend(item));
+}
+
+export function isEquityType(data: unknown): data is EquityType {
+  const isValid = Object.values(EquityType).includes(data as EquityType);
+  return isValid;
+}
+
+export function assertIsIAccountResultStatus(
+  value: unknown
+): asserts value is IAccountResultStatus {
+  if (!isIAccountResultStatus(value)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+}
+
+export function assertIsIAccountForSheetDisplay(
+  value: unknown
+): asserts value is IAccountForSheetDisplay {
+  if (!isIAccountForSheetDisplay(value)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+}
+
+export function assertIsIAccountForSheetDisplayArray(
+  value: unknown
+): asserts value is IAccountForSheetDisplay[] {
+  if (!isIAccountForSheetDisplayArray(value)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
 }
 
 // Info: (20240527 - Murky) convert string to EventType:
@@ -97,9 +185,9 @@ export function convertStringToAccountType(data: string) {
   return data as AccountType;
 }
 
-export function convertStringToAccountSheetType(data: string) {
-  if (!isAccountSheetType(data)) {
+export function convertStringToEquityType(data: string) {
+  if (!isEquityType(data)) {
     throw new Error(STATUS_MESSAGE.INVALID_ENUM_VALUE);
   }
-  return data as AccountSheetType;
+  return data as EquityType;
 }

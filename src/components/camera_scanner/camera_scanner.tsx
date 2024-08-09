@@ -42,7 +42,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     data: results,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD, {}, false, false);
+  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD);
 
   // Info: (20240507 - Julian) 從相簿上傳照片
   const [uploadImage, setUploadImage] = useState<File | null>(null);
@@ -169,6 +169,10 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     if (uploadSuccess && results && isShowSuccessModal) {
       results.forEach((result) => {
         const { resultId } = result;
+        /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
+        const translatedStatus = t(
+          `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
+        );
         if (
           result.status === ProgressStatus.ALREADY_UPLOAD ||
           result.status === ProgressStatus.SUCCESS ||
@@ -176,10 +180,13 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           result.status === ProgressStatus.IN_PROGRESS
         ) {
           messageModalDataHandler({
-            title: 'Upload Successful',
-            content: result.status,
+            // title: 'Upload Successful',
+            title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
+            /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
+            // content: result.status,
+            content: translatedStatus,
             messageType: MessageType.SUCCESS,
-            submitBtnStr: 'Done',
+            submitBtnStr: t('JOURNAL.DONE'),
             submitBtnFunction: () => {
               setInvoiceIdHandler(resultId);
               messageModalVisibilityHandler();
@@ -193,7 +200,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
             title: 'Upload Invoice Failed',
             content: `Upload invoice failed(${uploadCode}): ${result.status}`,
             messageType: MessageType.ERROR,
-            submitBtnStr: 'Close',
+            submitBtnStr: t('COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
           });
           messageModalVisibilityHandler();
@@ -205,7 +212,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         title: 'Upload Invoice Failed',
         content: `Upload invoice failed(${uploadCode})`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();

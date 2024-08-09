@@ -1,6 +1,7 @@
 [
   {
     "id": 8888871,
+    "companyId":1001,
     "name": "Cash Flow Statement-20240420-1",
     "from": 1683043200,
     "to": 1704067200,
@@ -9,11 +10,13 @@
     "reportType": "cash_flow_statement",
     "type": "financial",
     "status": "pending",
+    "content": [{ "name": "Bob the dog" }, { "name": "Claudine the cat" }],
     "createdAt": 1713611226,
     "updatedAt": 1713611226
   },
   {
     "id": 8888872,
+    "companyId":1001,
     "name": "Cash Flow Statement-20240505-1",
     "from": 1695609600,
     "to": 1698106883,
@@ -22,11 +25,13 @@
     "reportType": "cash_flow_statement",
     "type": "financial",
     "status": "pending",
+    "content": [],
     "createdAt": 1714897574,
     "updatedAt": 1714897574
   },
   {
     "id": 8888873,
+    "companyId":1001,
     "name": "Comprehensive Income Statement-20240412-1",
     "remainingSeconds": 1615,
     "paused": false,
@@ -35,11 +40,13 @@
     "from": 1685721600,
     "to": 1704076800,
     "status": "pending",
+    "content": [],
     "createdAt": 1712863312,
     "updatedAt": 1712863312
   },
   {
     "id": 8888874,
+    "companyId":1001,
     "name": "Balance Sheet-20240423-1",
     "remainingSeconds": 3680,
     "paused": false,
@@ -48,11 +55,13 @@
     "from": 1693113600,
     "to": 1704096000,
     "status": "pending",
+    "content": [],
     "createdAt": 1713846643,
     "updatedAt": 1713846643
   },
   {
     "id": 8888875,
+    "companyId":1001,
     "name": "Balance Sheet-20240501-1",
     "remainingSeconds": 30,
     "paused": false,
@@ -61,6 +70,7 @@
     "from": 1698374400,
     "to": 1714022400,
     "status": "pending",
+    "content": [],
     "createdAt": 1714508675,
     "updatedAt": 1714508675
   }

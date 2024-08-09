@@ -6,6 +6,7 @@ export async function listProjectProgress(projectId: number): Promise<number> {
     const projectProgress = await prisma.project.findFirst({
       where: {
         id: projectId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
         completedPercent: true,
@@ -16,4 +17,25 @@ export async function listProjectProgress(projectId: number): Promise<number> {
     }
   }
   return completedPercent;
+}
+
+export async function getStatusNumber(dateToTimeStamp: number, companyId: number) {
+  const statusNumber = await prisma.milestone.groupBy({
+    by: ['status'],
+    _count: {
+      id: true,
+    },
+    where: {
+      startDate: {
+        lte: dateToTimeStamp,
+      },
+      endDate: {
+        gte: dateToTimeStamp,
+      },
+      project: {
+        companyId,
+      },
+    },
+  });
+  return statusNumber;
 }

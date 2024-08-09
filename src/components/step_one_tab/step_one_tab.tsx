@@ -1,38 +1,62 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { FiSend } from 'react-icons/fi';
+// Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+// import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { IUnprocessedOCR } from '@/interfaces/ocr';
+import { IOCR } from '@/interfaces/ocr';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
 import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
-import Pagination from '@/components/pagination/pagination';
+// Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
+// import Pagination from '@/components/pagination/pagination';
+import JournalUploadArea from '@/components/journal_upload_area/journal_upload_area';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
+// Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
+// 原本代碼是：
+// const StepOneTab = ({
+//   inputDescription,
+//   handleInputChange,
+//   handelClick,
+// }: {
+//   inputDescription: string;
+//   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+//   handelClick: () => void;
+// }) =>
 const StepOneTab = () => {
   const { t } = useTranslation('common');
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler } = useAccountingCtx();
+  // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
-  const [fileList, setFileList] = useState<IUnprocessedOCR[]>(OCRList);
+  const [fileList, setFileList] = useState<IOCR[]>(OCRList);
+  // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalPages, setTotalPages] = useState<number>(1);
+  const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE);
 
   useEffect(() => {
-    updateOCRListHandler(selectedCompany!.id, true);
+    const companyId = selectedCompany?.id;
+    updateOCRListHandler(companyId, true);
 
-    return () => updateOCRListHandler(selectedCompany!.id, false);
+    return () => updateOCRListHandler(companyId, false);
   }, []);
 
   useEffect(() => {
     if (OCRListStatus.listSuccess === false) {
       toastHandler({
         id: `listUnprocessedOCR-${OCRListStatus.listCode}`,
-        content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
+        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
+        content: t('JOURNAL.FAILED_TO_LIST_UNPROCESSED_OCRS', { code: OCRListStatus.listCode }),
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -41,11 +65,16 @@ const StepOneTab = () => {
       setFileList(OCRList);
     }
 
-    return () => {};
+    return () => { };
   }, [OCRList, OCRListStatus]);
 
-  const handleOCRClick = (unprocessOCR: IUnprocessedOCR) => {
-    if (unprocessOCR.status === ProgressStatus.SUCCESS) {
+  const handleOCRClick = (unprocessOCR: IOCR) => {
+    // Info (20240809 - Murky): To Emily, 改成讓只要有圖片 就可以點了
+    // if (unprocessOCR.status === ProgressStatus.SUCCESS) {
+    //   selectOCRHandler(unprocessOCR);
+    // }
+
+    if (unprocessOCR.imageUrl && unprocessOCR.imageUrl.length > 0) {
       selectOCRHandler(unprocessOCR);
     }
   };
@@ -70,10 +99,30 @@ const StepOneTab = () => {
     setFileList(newList);
   };
 
-  const fileItemDeleteHandler = (id: number) => {
-    // ToDo: (20240528 - Julian) 應串接刪除 item 的 API
-    const newList = fileList.filter((data) => data.id !== id);
-    setFileList(newList);
+  const fileItemDeleteHandler = async (aichResultId: string) => {
+    // Info: (20240718 - Tzuhan) To Julian, Emily 已串接刪除 item 的 API
+    const { success, code } = await deleteOCRTrigger({
+      params: { companyId: selectedCompany!.id, resultId: aichResultId },
+    });
+    if (success === false) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // content: `Failed to delete unprocessed OCR: ${code}, `,
+        content: t('JOURNAL.FAILED_TO_DELETE_UNPROCESSED_OCR', { code }),
+        type: ToastType.ERROR,
+        closeable: true,
+      });
+    } else if (success) {
+      toastHandler({
+        id: `deleteUnprocessedOCR-${code}`,
+        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // content: `Successfully deleted unprocessed OCR: ${code}`,
+        content: t('JOURNAL.SUCCESSFULLY_DELETED_UNPROCESSED_OCR', { code }),
+        type: ToastType.SUCCESS,
+        closeable: true,
+      });
+    }
   };
 
   const qrCodeScanClickHandler = () => {
@@ -121,7 +170,7 @@ const StepOneTab = () => {
               height={16}
               alt="upload_file_icon"
             />
-            <p>{t('JOURNAL.UPLOADED FILE')}</p>
+            <p>{t('JOURNAL.UPLOADED_FILE')}</p>
           </div>
           <hr className="flex-1 border-lightGray4" />
         </div>
@@ -129,14 +178,15 @@ const StepOneTab = () => {
         <div className="mb-50px flex flex-col items-center gap-y-50px">
           <div className="flex w-full flex-col items-center gap-y-12px">{displayedFileList}</div>
           {/* Info: (20240523 - Julian) Pagination */}
-          {totalPages > 1 && (
+          {/* Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作 */}
+          {/* {totalPages > 1 && (
             <Pagination
               currentPage={currentFilePage}
               totalPages={totalPages}
               setCurrentPage={setCurrentFilePage}
               pagePrefix="filePage"
             />
-          )}
+          )} */}
         </div>
       </>
     ) : null;
@@ -145,31 +195,28 @@ const StepOneTab = () => {
     <div className="flex flex-col gap-8px">
       {/* Info: (20240523 - Julian) Uploaded File Section */}
       {uploadedFileSection}
-
+      {/* Info: (20240808 - Anna) Alpha版先隱藏(事件描述) */}
       {/* Info: (20240422 - Julian) label */}
-      <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION_OF_EVENTS')}</p>
-
+      {/* <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION_OF_EVENTS')}</p> */}
       {/* Info: (20240422 - Julian) input */}
-      <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
+      {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
         <input
           className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-lightGray4"
           placeholder={t('COMMON.ENTER_A_DESCRIPTION')}
+          value={inputDescription}
+          onChange={handleInputChange}
         />
         <button
           type="button"
           className="flex items-center gap-10px p-20px text-tertiaryBlue hover:text-primaryYellow"
+          onClick={handelClick}
         >
-          <p className="hidden md:block">
-            {t('CONTACT_US.SUBMIT')}
-            {t('CONTACT_US.SUBMIT')}
-          </p>
+          <p className="hidden md:block">{t('CONTACT_US.SUBMIT')}</p>
           <FiSend />
         </button>
-      </div>
-
+      </div> */}
       {/* Info: (20240422 - Julian) tip */}
-      <p className="text-sm text-lightGray5">{t('JOURNAL.DESCRIPTION_EXAMPLE')}</p>
-
+      {/* <p className="text-sm text-lightGray5">{t('JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
       {/* Info: (20240422 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-lightGray4 md:hidden" />
@@ -179,36 +226,33 @@ const StepOneTab = () => {
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>
-
       <div className="my-20px flex flex-col items-center gap-40px md:flex-row">
         {/* Info: (20240422 - Julian) Upload area */}
-        <div className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px">
-          <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-          <p className="mt-20px font-semibold text-navyBlue2">
-            {t('JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-            <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
-          </p>
-          <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
-        </div>
+        <JournalUploadArea />
 
         <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
-        <button
-          type="button"
-          onClick={qrCodeScanClickHandler}
-          className="flex h-200px w-300px flex-col items-center justify-center rounded-lg border border-dashed border-lightGray6 bg-white p-24px md:h-240px md:w-auto md:flex-1 md:p-48px"
-        >
-          <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
-          <div className="mt-20px flex items-center gap-10px">
-            <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
-            <p className="font-semibold text-navyBlue2">
-              {t('JOURNAL.USE_YOUR_PHONE_AS')}{' '}
-              <span className="text-primaryYellow">{t('JOURNAL.SCANNER')}</span>
-            </p>
-          </div>
-          <p className="text-center text-lightGray4">{t('JOURNAL.SCAN_THE_QRCODE')}</p>
-        </button>
+        <div className="h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1">
+          <button
+            type="button"
+            onClick={qrCodeScanClickHandler}
+            // ToDo: (20240802 - Julian) Not released yet
+            // eslint-disable-next-line react/jsx-boolean-value
+            disabled={true}
+            className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable disabled:text-drag-n-drop-text-disable md:p-48px"
+          >
+            <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
+            <div className="mt-20px flex items-center gap-10px">
+              <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
+              <p className="font-semibold text-navyBlue2">
+                {t('JOURNAL.USE_YOUR_PHONE_AS')}{' '}
+                <span className="text-primaryYellow">{t('JOURNAL.SCANNER')}</span>
+              </p>
+            </div>
+            <p className="text-center text-lightGray4">{t('JOURNAL.SCAN_THE_QRCODE')}</p>
+          </button>
+        </div>
       </div>
     </div>
   );

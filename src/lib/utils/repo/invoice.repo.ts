@@ -2,9 +2,10 @@
 
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IInvoice } from '@/interfaces/invoice';
-import { IPayment } from '@/interfaces/payment';
+import { IInvoice, IInvoiceBeta, IInvoiceIncludePaymentJournal } from '@/interfaces/invoice';
+import { IPayment, IPaymentBeta } from '@/interfaces/payment';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { Ocr, Prisma } from '@prisma/client';
 
@@ -24,6 +25,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
     ocrIdInDB = await prisma.ocr.findUnique({
       where: {
         id: ocrId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
         id: true,
@@ -31,7 +33,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -57,7 +59,7 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
@@ -73,7 +75,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
 
   try {
     company = await prisma.company.findUnique({
-      where: { id: companyId },
+      where: { id: companyId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       select: { id: true },
     });
   } catch (error) {
@@ -90,7 +92,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
   return company;
 }
 
-export async function findUniqueJournalInPrisma(journalId: number) {
+export async function findUniqueJournalInPrisma(journalId: number, companyId?: number) {
   let journal: {
     id: number;
     projectId: number | null;
@@ -101,7 +103,7 @@ export async function findUniqueJournalInPrisma(journalId: number) {
 
   try {
     journal = await prisma.journal.findUnique({
-      where: { id: journalId },
+      where: { id: journalId, companyId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       select: {
         id: true,
         projectId: true,
@@ -113,7 +115,7 @@ export async function findUniqueJournalInPrisma(journalId: number) {
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -121,7 +123,7 @@ export async function findUniqueJournalInPrisma(journalId: number) {
   return journal;
 }
 
-export async function createPaymentInPrisma(paymentData: IPayment) {
+export async function createPaymentInPrisma(paymentData: IPaymentBeta) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   let payment: {
@@ -140,7 +142,7 @@ export async function createPaymentInPrisma(paymentData: IPayment) {
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
@@ -166,31 +168,39 @@ export async function updatePaymentInPrisma(paymentId: number, paymentData: IPay
   return payment;
 }
 
-export async function findUniqueInvoiceInPrisma(invoiceId: number) {
-  let invoice: {
-    id: number;
-    paymentId: number;
-  } | null = null;
+export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: number) {
+  let invoice: IInvoiceIncludePaymentJournal | null = null;
+
+  const where: Prisma.InvoiceWhereUniqueInput = {
+    id: invoiceId,
+    journal: {
+      companyId,
+    },
+  };
+
+  const include = {
+    payment: true,
+    journal: {
+      include: {
+        project: true,
+        contract: true,
+      },
+    },
+  };
 
   try {
     invoice = await prisma.invoice.findUnique({
-      where: {
-        id: invoiceId,
-      },
-      select: {
-        id: true,
-        paymentId: true,
-      },
+      where,
+      include,
     });
 
     if (!invoice) {
-      // Depreciate: ( 20240605 - Murky ) Debugging purpose
+      // Deprecate: ( 20240605 - Murky ) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -199,7 +209,7 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number) {
 }
 
 export async function createInvoiceInPrisma(
-  invoiceData: IInvoice,
+  invoiceData: IInvoiceBeta,
   paymentId: number,
   journalId: number,
   imageUrl: string | undefined
@@ -214,11 +224,15 @@ export async function createInvoiceInPrisma(
   try {
     invoice = await prisma.invoice.create({
       data: {
+        number: invoiceData.number,
+        type: invoiceData.type,
         date: invoiceCreatedDate,
         eventType: invoiceData.eventType,
         paymentReason: invoiceData.paymentReason,
         description: invoiceData.description,
+        vendorTaxId: invoiceData.vendorTaxId,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
+        deductible: invoiceData.deductible,
         imageUrl,
         payment: {
           connect: {
@@ -238,7 +252,7 @@ export async function createInvoiceInPrisma(
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
@@ -248,21 +262,24 @@ export async function createInvoiceInPrisma(
 }
 
 export async function createInvoiceAndPaymentInPrisma(
-  invoiceData: IInvoice,
+  invoiceData: IInvoiceBeta,
   journalId: number,
   imageUrl: string | undefined
 ) {
   const paymentData = invoiceData.payment;
+  // Info (20240807 - Jacky): 這邊是為了讓payment的taxPrice可以被存入prisma
+  const taxPrice = paymentData.price * paymentData.taxPercentage;
+  const paymentDataBeta = { ...paymentData, taxPrice };
 
   let createdInvoiceId: number;
   try {
     createdInvoiceId = await prisma.$transaction(async () => {
-      const payment = await createPaymentInPrisma(paymentData);
+      const payment = await createPaymentInPrisma(paymentDataBeta);
       const invoice = await createInvoiceInPrisma(invoiceData, payment.id, journalId, imageUrl);
       return invoice.id;
     });
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
@@ -312,7 +329,7 @@ export async function updateInvoiceInPrisma(
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
@@ -325,36 +342,33 @@ export async function updateInvoiceAndPaymentInPrisma(
   invoiceIdToBeUpdated: number,
   invoiceData: IInvoice,
   journalId: number,
-  imageUrl: string | undefined
+  imageUrl?: string
 ) {
   const paymentData = invoiceData.payment;
 
-  let updatedInvoiceId: number;
+  let updatedInvoiceId: number = -1;
 
   try {
-    updatedInvoiceId = await prisma.$transaction(async () => {
-      const invoiceInDB = await findUniqueInvoiceInPrisma(invoiceIdToBeUpdated);
+    const invoiceInDB = await findUniqueInvoiceInPrisma(invoiceIdToBeUpdated);
 
-      if (!invoiceInDB) {
-        throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
-      }
+    if (!invoiceInDB) {
+      throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+    }
 
-      const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
-      const invoice = await updateInvoiceInPrisma(
-        invoiceIdToBeUpdated,
-        payment.id,
-        invoiceData,
-        journalId,
-        imageUrl
-      );
+    const payment = await updatePaymentInPrisma(invoiceInDB.paymentId, paymentData);
+    const invoice = await updateInvoiceInPrisma(
+      invoiceIdToBeUpdated,
+      payment.id,
+      invoiceData,
+      journalId,
+      imageUrl
+    );
 
-      return invoice.id;
-    });
+    updatedInvoiceId = invoice.id;
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return updatedInvoiceId;
 }
@@ -363,7 +377,8 @@ export async function createJournalInPrisma(
   projectId: number | null,
   aichResultId: string,
   contractId: number | null,
-  companyId: number
+  companyId: number,
+  event: JOURNAL_EVENT = JOURNAL_EVENT.UPLOADED
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -374,6 +389,7 @@ export async function createJournalInPrisma(
       },
     },
     aichResultId,
+    event,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
   };
@@ -406,7 +422,7 @@ export async function createJournalInPrisma(
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
@@ -455,7 +471,7 @@ export async function updateJournalInPrisma(
       },
     });
   } catch (error) {
-    // Depreciate: ( 20240605 - Murky ) Debugging purpose
+    // Deprecate: ( 20240605 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
@@ -466,24 +482,23 @@ export async function updateJournalInPrisma(
 
 // Info (20240524 - Murky): Main logics
 export async function handlePrismaSavingLogic(
-  formattedInvoice: IInvoice,
+  formattedInvoice: IInvoiceBeta,
   aichResultId: string,
   companyId: number,
   ocrId: number | undefined
 ) {
   // ToDo: ( 20240522 - Murky ) 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
   try {
-    const { journalId, projectId, contractId } = formattedInvoice;
+    const { projectId, contractId } = formattedInvoice;
 
-    let journalIdBeCreateOrUpdate: number;
+    let journalIdBeCreated: number = -1;
 
-    const ocrIdInDB = await findUniqueOcrInPrisma(ocrId);
+    try {
+      const ocrIdInDB = await findUniqueOcrInPrisma(ocrId);
 
-    if (!journalId) {
-      // Info Murky (20240416): 如果不存在journalId，則代表是新的invoice，需要新增
-      // 拉出去
       const company = await findUniqueCompanyInPrisma(companyId);
-      journalIdBeCreateOrUpdate = await createJournalInPrisma(
+
+      journalIdBeCreated = await createJournalInPrisma(
         projectId,
         aichResultId,
         contractId,
@@ -492,47 +507,74 @@ export async function handlePrismaSavingLogic(
 
       await createInvoiceAndPaymentInPrisma(
         formattedInvoice,
-        journalIdBeCreateOrUpdate,
-        ocrIdInDB?.imageUrl
-      );
-    } else {
-      // Depreciate ( 20240522 - Murky ) 拉到put invoice
-      const journalInDB = await findUniqueJournalInPrisma(journalId);
-
-      if (!journalInDB) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-
-      const invoiceIdToBeUpdated = journalInDB.invoice?.id;
-      if (!invoiceIdToBeUpdated) {
-        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-      }
-
-      await updateInvoiceAndPaymentInPrisma(
-        invoiceIdToBeUpdated,
-        formattedInvoice,
-        journalId,
+        journalIdBeCreated,
         ocrIdInDB?.imageUrl
       );
 
-      journalIdBeCreateOrUpdate = await updateJournalInPrisma(
-        journalId,
-        aichResultId,
-        projectId,
-        contractId
-      );
+      // Info (20240524 - Murky): 更新ocr的狀態, 等到其他db操作都沒有錯誤後才更新
+      if (ocrIdInDB?.id) {
+        await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
+      }
+    } catch (error) {
+      // Deprecate ( 20240522 - Murky ) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(error);
     }
 
-    // Info (20240524 - Murky): 更新ocr的狀態, 等到其他db操作都沒有錯誤後才更新
-    if (ocrIdInDB?.id) {
-      await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
-    }
-
-    return journalIdBeCreateOrUpdate;
+    return journalIdBeCreated;
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
+}
+
+export async function handlePrismaUpdateLogic(
+  formattedInvoice: IInvoice,
+  aichResultId: string,
+  companyId: number
+) {
+  const { journalId, projectId, contractId } = formattedInvoice;
+  if (!journalId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+
+  let journalIdBeUpdated: number = -1;
+  try {
+    const journalInDB = await findUniqueJournalInPrisma(journalId, companyId);
+
+    if (!journalInDB || !journalInDB.invoice) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const invoiceIdToBeUpdated = journalInDB.invoice.id;
+
+    if (!invoiceIdToBeUpdated) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const invoiceBeUpdated = await updateInvoiceAndPaymentInPrisma(
+      invoiceIdToBeUpdated,
+      formattedInvoice,
+      journalId
+    );
+
+    if (invoiceBeUpdated === -1) {
+      throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+    }
+
+    journalIdBeUpdated = await updateJournalInPrisma(
+      journalId,
+      aichResultId,
+      projectId,
+      contractId
+    );
+  } catch (error) {
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+  }
+
+  return journalIdBeUpdated;
 }

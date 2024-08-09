@@ -7,86 +7,95 @@
     "stage": "Beta Testing",
     "imageId": "TP",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999991,
+    "id": 1001,
     "companyId": 8867,
     "name": "iSunFA",
     "completedPercent": 30,
     "stage": "Designing",
     "imageId": "ISF",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999992,
+    "id": 1002,
     "companyId": 8867,
     "name": "BAIFA",
     "completedPercent": 80,
     "stage": "Beta Testing",
     "imageId": "BF",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999993,
+    "id": 1003,
     "companyId": 8867,
     "name": "iSunOne",
     "completedPercent": 60,
     "stage": "Develop",
     "imageId": "ISO",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999994,
+    "id": 1004,
     "companyId": 8867,
     "name": "TideBit",
     "completedPercent": 98,
     "stage": "Sold",
     "imageId": "TB",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999995,
+    "id": 1005,
     "companyId": 8867,
     "name": "ProjectE",
     "completedPercent": 95,
     "stage": "Selling",
     "imageId": "E",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999996,
+    "id": 1006,
     "companyId": 8867,
     "name": "ProjectF",
     "completedPercent": 100,
     "stage": "Archived",
     "imageId": "F",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999997,
+    "id": 1007,
     "companyId": 8867,
     "name": "ProjectG",
     "completedPercent": 70,
     "stage": "Develop",
     "imageId": "G",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   },
   {
-    "id": 9999998,
+    "id": 1008,
     "companyId": 8867,
     "name": "ProjectH",
     "completedPercent": 85,
     "stage": "Beta Testing",
     "imageId": "H",
     "createdAt": 1651368365,
-    "updatedAt": 1651368365
+    "updatedAt": 1651368365,
+    "deletedAt": null
   }
 ]

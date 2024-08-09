@@ -36,12 +36,7 @@ const CompanyInvitationModal = ({
     data: adminData,
     trigger: addCompany,
     success,
-  } = APIHandler<IAdmin>(
-    APIName.COMPANY_ADD_BY_INVITATION_CODE,
-    { params: { userId: userAuth?.id } },
-    false,
-    false
-  );
+  } = APIHandler<IAdmin>(APIName.COMPANY_ADD_BY_INVITATION_CODE);
 
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
@@ -77,7 +72,7 @@ const CompanyInvitationModal = ({
         title: 'Invitation Code Expiry',
         subMsg: 'Oops! This verification code has expired.',
         content: 'Please verify again or contact the company administrator.',
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -103,7 +98,7 @@ const CompanyInvitationModal = ({
 
     // Info: (20240515 - Julian) Check if the code is valid
     if (codeRegex.test(codeInput)) {
-      addCompany({ body: { invitation: codeInput } });
+      addCompany({ params: { userId: userAuth?.id }, body: { invitation: codeInput } });
     }
   };
 

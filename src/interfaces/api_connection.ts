@@ -1,7 +1,9 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
+import { ICompanyKYCForm } from './company_kyc';
 
 export type IAPIName =
+  | 'CREATE_CHALLENGE'
   | 'SIGN_UP'
   | 'SIGN_IN'
   | 'SIGN_OUT'
@@ -9,6 +11,7 @@ export type IAPIName =
   | 'USER_GET_BY_ID'
   | 'USER_UPDATE'
   | 'COMPANY_LIST'
+  | 'COMPANY_GET'
   | 'COMPANY_ADD'
   | 'COMPANY_ADD_BY_INVITATION_CODE'
   | 'COMPANY_SELECT'
@@ -22,30 +25,53 @@ export type IAPIName =
   | 'ASSET_MANAGEMENT_GET_BY_ID'
   | 'ASSET_MANAGEMENT_UPDATE'
   | 'OCR_UPLOAD'
+  | 'OCR_DELETE'
   | 'OCR_RESULT_GET_BY_ID'
   | 'OCR_LIST'
   | 'INVOICE_CREATE'
+  | 'INVOICE_UPDATE'
   | 'AI_ASK_STATUS'
   | 'AI_ASK_RESULT'
   | 'VOUCHER_CREATE'
+  | 'VOUCHER_UPDATE'
   | 'JOURNAL_GET_BY_ID'
   | 'JOURNAL_LIST'
-  | 'JOURNAL_UPDATE'
+  // | 'JOURNAL_UPDATE'
   | 'JOURNAL_DELETE'
-  | 'REPORT_LIST_PENDING'
-  | 'REPORT_LIST_GENERATED'
-  | 'REPORT_FINANCIAL_GET_BY_ID'
-  | 'REPORT_ANALYSIS_GET_BY_ID'
-  | 'REPORT_GENERATE_FINANCIAL'
-  | 'REPORT_GENERATE_ANALYSIS'
+  | 'REPORT_LIST'
+  | 'REPORT_GET_BY_ID'
+  | 'REPORT_GENERATE'
   | 'SESSION_GET'
-  | 'ACCOUNT_LIST';
+  | 'ACCOUNT_LIST'
+  | 'FILE_UPLOAD'
+  | 'FILE_DELETE'
+  | 'FILE_GET'
+  | 'COMPANY_GET_BY_ID'
+  | 'COMPANY_DELETE'
+  | 'COMPANY_UPDATE'
+  | 'ROLE_GET_BY_ID'
+  | 'ROLE_DELETE'
+  | 'ROLE_UPDATE'
+  | 'KYC_UPLOAD'
+  | 'ACCOUNT_GET_BY_ID'
+  | 'CREATE_NEW_SUB_ACCOUNT'
+  | 'UPDATE_ACCOUNT_INFO_BY_ID'
+  | 'DELETE_ACCOUNT_BY_ID'
+  | 'TRANSFER_OWNER'
+  | 'PROJECT_LIST'
+  | 'CREATE_PROJECT'
+  | 'GET_PROJECT_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
 export type IAPIInput = {
   header?: { [key: string]: string };
-  body?: { [key: string]: unknown } | FormData | IVoucher | IFinancialReportRequest;
+  body?:
+    | { [key: string]: unknown }
+    | FormData
+    | IVoucher
+    | IFinancialReportRequest
+    | ICompanyKYCForm;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };
@@ -63,7 +89,15 @@ export type IAPIConfig = {
 
 export type IAPIResponse<Data> = {
   success: boolean | undefined;
-  trigger: (input?: IAPIInput, signal?: AbortSignal) => void;
+  trigger: (
+    input?: IAPIInput,
+    signal?: AbortSignal
+  ) => Promise<{
+    success: boolean;
+    data: Data | null;
+    code: string;
+    error: Error | null;
+  }>;
   isLoading: boolean | undefined;
   data: Data | undefined;
   code: string | undefined;

@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  DatePickerAlign,
-  MILLISECONDS_IN_A_SECOND,
-} from '@/constants/display';
+import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 // import { TranslateFunction } from '@/interfaces/locale';
 import Tooltip from '@/components/tooltip/tooltip';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
@@ -172,7 +168,8 @@ const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { t } = useTranslation('common');
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -197,14 +194,18 @@ const ProjectProgressChart = () => {
     success: listSuccess,
     code: listCode,
     error: listError,
-  } = APIHandler<IProjectProgressChartData>(APIName.PROJECT_LIST_PROGRESS, {
-    params: {
-      companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+  } = APIHandler<IProjectProgressChartData>(
+    APIName.PROJECT_LIST_PROGRESS,
+    {
+      params: {
+        companyId: selectedCompany?.id,
+      },
+      query: {
+        date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
+      },
     },
-    query: {
-      date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),
-    },
-  });
+    hasCompanyId
+  );
 
   const isNoData = projectProgress?.empty || !projectProgress || !listSuccess;
 
@@ -238,7 +239,7 @@ const ProjectProgressChart = () => {
       setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
-        content: `Failed to get project progress data. Error code: ${listCode}`,
+        content: `${t('DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -246,9 +247,10 @@ const ProjectProgressChart = () => {
   }, [listSuccess, listCode, listError, projectProgress]);
 
   useEffect(() => {
+    if (!hasCompanyId) return;
     listProjectProgress({
       params: {
-        companyId: selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID,
+        companyId: selectedCompany?.id,
       },
       query: {
         date: new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND).toISOString().slice(0, 10),

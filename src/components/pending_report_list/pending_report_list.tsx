@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { IPendingReportItem } from '@/interfaces/report_item';
 import PendingReportItem from '@/components/pending_report_item/pending_report_item';
 import { Button } from '@/components/button/button';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
+import { IReport } from '@/interfaces/report';
 
-interface IPendingReportListProps {
-  reports: IPendingReportItem[];
+interface IReportListProps {
+  reports: IReport[];
 }
-const PendingReportList = ({ reports }: IPendingReportListProps) => {
+const PendingReportList = ({ reports }: IReportListProps) => {
   const { t } = useTranslation('common');
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
   // Info: 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來 (20240514 - Shirley)
-  const [reportItems, setReportItems] = useState<IPendingReportItem[]>(reports);
+  const [reportItems, setReportItems] = useState<IReport[]>(reports);
 
   const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
 
@@ -30,7 +30,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
     setIndividualChecks(new Array(reportItems.length).fill(false));
   };
 
-  const handleReportItemUpdate = (updatedReportItem: IPendingReportItem) => {
+  const handleReportItemUpdate = (updatedReportItem: IReport) => {
     setReportItems(
       (prevReportItems) =>
         // Info: result from prettier format rules (20240515 - Shirley)
@@ -43,7 +43,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
     );
   };
 
-  const handleReportItemDelete = (reportId: string) => {
+  const handleReportItemDelete = (reportId: number) => {
     setReportItems((prevReports) => prevReports.filter((report) => report.id !== reportId));
   };
 
@@ -72,10 +72,10 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
       subtitle: 'Are you sure\n you want to delete the process?',
       content: `It will take 30 - 40 minutes\n 
       if you want to apply it again.`,
-      submitBtnStr: 'Yes, Delete it',
+      submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
-      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };
@@ -277,6 +277,7 @@ const PendingReportList = ({ reports }: IPendingReportListProps) => {
             {displayedCheckbox}
             <th className="text-center">{t('PENDING_REPORT_LIST.DATE')}</th>
             <th className="px-16px">{t('PENDING_REPORT_LIST.REPORT_NAME')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('JOURNAL.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">{t('PENDING_REPORT_LIST.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">
               {t('PENDING_REPORT_LIST.REMAINING_TIME')}

@@ -7,49 +7,80 @@ import { APIName } from '@/constants/api_connection';
 import { IInvoice } from '@/interfaces/invoice';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
-import { firstCharToUpperCase } from '@/lib/utils/common';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import {
-  DEFAULT_DISPLAYED_COMPANY_ID,
-  default30DayPeriodInSec,
-  radioButtonStyle,
-} from '@/constants/display';
+import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
-import ProgressBar from '@/components/progress_bar/progress_bar';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
+import NumericInput from '@/components/numeric_input/numeric_input';
 
+// Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
+const eventTypeMap: { [key in EventType]: string } = {
+  [EventType.PAYMENT]: 'JOURNAL.PAYMENT',
+  [EventType.INCOME]: 'PROJECT.INCOME',
+  [EventType.TRANSFER]: 'JOURNAL.TRANSFER',
+};
 const taxRateSelection: number[] = [0, 5, 20, 25];
-const paymentMethodSelection: string[] = ['Cash', 'Transfer', 'Credit Card'];
-const ficSelection: string[] = [
-  '004 Bank of Taiwan',
-  '005 Land Bank of Taiwan',
-  '006 Taiwan Cooperative Bank',
-  '007 First Commercial Bank',
+
+enum PAYMENT_METHOD {
+  CASH = 'PAYMENT_METHOD.CASH',
+  TRANSFER = 'PAYMENT_METHOD.TRANSFER',
+  CREDIT_CARD = 'PAYMENT_METHOD.CREDIT_CARD',
+}
+
+const paymentMethodSelection: PAYMENT_METHOD[] = [
+  PAYMENT_METHOD.CASH,
+  PAYMENT_METHOD.TRANSFER,
+  PAYMENT_METHOD.CREDIT_CARD,
+];
+
+enum BANK {
+  BANK_OF_TAIWAN = 'JOURNAL.BANK_OF_TAIWAN',
+  LAND_BANK_OF_TAIWAN = 'JOURNAL.LAND_BANK_OF_TAIWAN',
+  TAIWAN_COOPERATIVE_BANK = 'JOURNAL.TAIWAN_COOPERATIVE_BANK',
+  FIRST_COMMERCIAL_BANK = 'JOURNAL.FIRST_COMMERCIAL_BANK',
+}
+
+const ficSelection: BANK[] = [
+  BANK.BANK_OF_TAIWAN,
+  BANK.LAND_BANK_OF_TAIWAN,
+  BANK.TAIWAN_COOPERATIVE_BANK,
+  BANK.FIRST_COMMERCIAL_BANK,
 ];
 
 // Info: (20240515 - tzuhan) TO Julian update the type of projectSelection and contractSelection to match the data structure @Julian review
 const projectSelection: { id: number | null; name: string }[] = [
-  { id: null, name: 'None' },
-  { id: 1, name: 'Project A' },
-  { id: 2, name: 'Project B' },
-  { id: 3, name: 'Project C' },
+  { id: null, name: 'JOURNAL.NONE' },
 ];
 const contractSelection: { id: number | null; name: string }[] = [
-  { id: null, name: 'None' },
-  { id: 1, name: 'Contract A' },
-  { id: 2, name: 'Contract B' },
-  { id: 3, name: 'Contract C' },
+  { id: null, name: 'JOURNAL.NONE' },
 ];
+
+const getIdAndName = (id: number | null, array: { id: number | null; name: string }[]) => {
+  const obj = id === null || id < 0 ? undefined : array.find((item) => item.id === id);
+  const idAndName =
+    obj === undefined
+      ? {
+        id: array[0].id,
+        name: array[0].name,
+      }
+      : {
+        id: obj.id,
+        name: obj.name,
+      };
+  return idAndName;
+};
 
 const NewJournalForm = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
   const {
     messageModalVisibilityHandler,
@@ -58,64 +89,49 @@ const NewJournalForm = () => {
     addAssetModalVisibilityHandler,
     confirmModalDataHandler,
   } = useGlobalCtx();
-
-  const { selectedOCR, selectOCRHandler, selectedJournal } = useAccountingCtx();
-
+  const {
+    selectedOCR,
+    selectOCRHandler,
+    selectedJournal,
+    getAIStatusHandler,
+    inputDescription: description,
+    inputDescriptionHandler,
+  } = useAccountingCtx();
   const {
     trigger: getOCRResult,
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID, {}, false, false);
-
-  const {
-    trigger: createInvoice,
-    data: invoiceReturn,
-    success: createSuccess,
-    code: createCode,
-  } = APIHandler<{ journalId: number; resultStatus: IAccountResultStatus }>(
-    APIName.INVOICE_CREATE,
-    {},
-    false,
-    false
-  );
-
-  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
-
-  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
-  const {
-    trigger: getAIStatus,
-    data: status,
-    success: statusSuccess,
-    code: statusCode,
-  } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS, {}, false, false);
-
-  const {
-    trigger: getAIResult,
-    data: AIResult,
-    success: AIResultSuccess,
-    code: AIResultCode,
-  } = APIHandler<{ lineItem: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-  */
+  } = APIHandler<IInvoice | null>(APIName.OCR_RESULT_GET_BY_ID); // Info: (20240809 - Murky) To Emily, 現在如果在AI還沒有解析完成就點擊，後端會傳Null
+  const { trigger: createInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_CREATE);
+  const { trigger: updateInvoice } = APIHandler<{
+    journalId: number;
+    resultStatus: IAccountResultStatus;
+  }>(APIName.INVOICE_UPDATE);
 
   // Info: (20240425 - Julian) check if form has changed
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.INCOME);
+  const [selectedEventType, setSelectedEventType] = useState<EventType>(EventType.PAYMENT);
 
-  const [inputPaymentReason, setInputPaymentReason] = useState<string>('');
-  const [inputDescription, setInputDescription] = useState<string>('');
+  const [inputReason, setInputReason] = useState<string>('');
+  const [inputDescription, setInputDescription] = useState<string>(description);
   const [inputVendor, setInputVendor] = useState<string>('');
   // Info: (20240425 - Julian) Payment states
   const [inputTotalPrice, setInputTotalPrice] = useState<number>(0);
+
   const [taxToggle, setTaxToggle] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(taxRateSelection[0]);
   const [feeToggle, setFeeToggle] = useState<boolean>(false);
   const [inputFee, setInputFee] = useState<number>(0);
-  const [selectedMethod, setSelectedMethod] = useState<string>(paymentMethodSelection[0]);
+  const [selectedMethod, setSelectedMethod] = useState<PAYMENT_METHOD>(paymentMethodSelection[0]);
   const [selectedFIC, setSelectedFIC] = useState<string>(ficSelection[0]);
   const [inputAccountNumber, setInputAccountNumber] = useState<string>('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriodType>(PaymentPeriodType.AT_ONCE);
@@ -124,37 +140,47 @@ const NewJournalForm = () => {
 
   const [inputPartialPaid, setInputPartialPaid] = useState<number>(0);
   // Info: (20240425 - Julian) Project states
-  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>(
-    projectSelection[0]
-  );
-  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>(
-    contractSelection[0]
-  );
+  const [selectedProject, setSelectedProject] = useState<{ id: number | null; name: string }>({
+    id: projectSelection[0].id,
+    name: t(projectSelection[0].name),
+  });
+  const [selectedContract, setSelectedContract] = useState<{ id: number | null; name: string }>({
+    id: contractSelection[0].id,
+    name: t(contractSelection[0].name),
+  });
   const [progressRate, setProgressRate] = useState<number>(0);
-  const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+  const [journalId, setJournalId] = useState<number | null>(selectedJournal?.id || null);
+
+  // Info: (20240723 - Julian) For Hint
+  const [isSelectingDate, setIsSelectingDate] = useState<boolean>(true);
+  const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
+  const [isInstallmentValid, setIsInstallmentValid] = useState<boolean>(true);
+  const [isPartialPaidValid, setIsPartialPaidValid] = useState<boolean>(true);
+  const [isFeeValid, setIsFeeValid] = useState<boolean>(true);
 
   useEffect(() => {
-    if (selectedOCR !== undefined) {
+    if (selectedOCR !== undefined && hasCompanyId) {
       getOCRResult({
-        params: { companyId, resultId: selectedOCR.aichResultId },
+        params: { companyId: selectedCompany.id, resultId: selectedOCR.aichResultId },
       });
     }
   }, [selectedOCR]);
 
   useEffect(() => {
-    if (selectedJournal) {
+    if (hasCompanyId && selectedJournal) {
       if (selectedJournal.invoice === null) {
         getOCRResult({
           params: {
-            companyId,
+            companyId: selectedCompany.id,
             resultId: selectedJournal.aichResultId,
           },
-        }); // selectedOCR.aichResultId
+        });
       } else {
         const { invoice } = selectedJournal;
-        // Info: update form data with journal data (20240524 - tzuhan)
-        // setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
-        // setInputPaymentReason(invoice.paymentReason);
+        setDatePeriod({ startTimeStamp: invoice.date, endTimeStamp: invoice.date });
+        setInputReason(invoice.paymentReason);
         setSelectedEventType(invoice.eventType as EventType);
         setInputDescription(invoice.description);
         setInputVendor(invoice.vendorOrSupplier);
@@ -163,29 +189,38 @@ const NewJournalForm = () => {
         setTaxRate(invoice.payment.taxPercentage);
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
-        setSelectedMethod(invoice.payment.method);
+        setSelectedMethod(invoice.payment.method as PAYMENT_METHOD);
         // setInputAccountNumber(invoice.payment.accountNumber);
         setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
         setInputInstallment(invoice.payment.installmentPeriod);
         setPaymentStatus(invoice.payment.status as PaymentStatusType);
         setInputPartialPaid(invoice.payment.alreadyPaid);
-        setSelectedProject(
-          projectSelection.find(
-            (project) => selectedJournal.projectId && project.id === selectedJournal.projectId
-          ) || projectSelection[0]
-        );
-        setSelectedContract(
-          contractSelection.find(
-            (contract) => selectedJournal.contractId && contract.id === selectedJournal.contractId
-          ) || contractSelection[0]
-        );
+        const project = getIdAndName(selectedJournal.projectId, projectSelection);
+        setSelectedProject({
+          id: project.id,
+          name: t(project.name),
+        });
+        const contract = getIdAndName(selectedJournal.contractId, contractSelection);
+        setSelectedContract({
+          id: contract.id,
+          name: t(contract.name),
+        });
         setProgressRate(invoice.payment.progress);
       }
-      // if (journal.voucher) {
-      //   confirmModalVisibilityHandler();
-      // }
+      getAIStatusHandler(
+        {
+          companyId: selectedCompany.id,
+          askAIId: selectedJournal.aichResultId,
+        },
+        true
+      );
+      confirmModalDataHandler({
+        journalId: selectedJournal.id,
+        askAIId: selectedJournal.aichResultId,
+      });
+      confirmModalVisibilityHandler();
     }
-  }, [selectedJournal, selectedOCR]);
+  }, [selectedCompany, selectedJournal, selectedOCR]);
 
   // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
@@ -193,7 +228,7 @@ const NewJournalForm = () => {
       // Info: (20240506 - Julian) 設定表單的預設值
       setDatePeriod({ startTimeStamp: OCRResult.date, endTimeStamp: OCRResult.date });
       setSelectedEventType(OCRResult.eventType);
-      setInputPaymentReason(OCRResult.paymentReason);
+      setInputReason(OCRResult.paymentReason);
       setInputDescription(OCRResult.description);
       setInputVendor(OCRResult.vendorOrSupplier);
       setInputTotalPrice(OCRResult.payment.price);
@@ -201,7 +236,7 @@ const NewJournalForm = () => {
       setTaxRate(OCRResult.payment.taxPercentage);
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
-      setSelectedMethod(OCRResult.payment.method);
+      setSelectedMethod(OCRResult.payment.method as PAYMENT_METHOD);
       // setInputAccountNumber(OCRResult.payment.accountNumber);
       setPaymentPeriod(OCRResult.payment.period);
       setInputInstallment(OCRResult.payment.installmentPeriod);
@@ -209,11 +244,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -226,7 +261,7 @@ const NewJournalForm = () => {
         messageType: MessageType.ERROR,
         title: 'Get OCR result Failed',
         content: `Get OCR result failed: ${getCode}`,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -234,16 +269,16 @@ const NewJournalForm = () => {
   }, [getSuccess]);
 
   // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
-  useEffect(() => {
-    // const onBeforeUnload = (e: BeforeUnloadEvent) => {
-    //   if (formHasChanged) {
-    //     e.preventDefault();
-    //     e.returnValue = '';
-    //   }
-    // };
-    // window.addEventListener('beforeunload', onBeforeUnload);
-    // return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [formHasChanged]);
+  // useEffect(() => {
+  // const onBeforeUnload = (e: BeforeUnloadEvent) => {
+  //   if (formHasChanged) {
+  //     e.preventDefault();
+  //     e.returnValue = '';
+  //   }
+  // };
+  // window.addEventListener('beforeunload', onBeforeUnload);
+  // return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  // }, [formHasChanged]);
 
   const {
     targetRef: eventMenuRef,
@@ -269,29 +304,32 @@ const NewJournalForm = () => {
     setComponentVisible: setIsBankAccountMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
-  const {
-    targetRef: projectRef,
-    componentVisible: isProjectMenuOpen,
-    setComponentVisible: setIsProjectMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const {
+  //   targetRef: projectRef,
+  //   componentVisible: isProjectMenuOpen,
+  //   setComponentVisible: setIsProjectMenuOpen,
+  // } = useOuterClick<HTMLUListElement>(false);
 
-  const {
-    targetRef: contractRef,
-    componentVisible: isContractMenuOpen,
-    setComponentVisible: setIsContractMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const {
+  //   targetRef: contractRef,
+  //   componentVisible: isContractMenuOpen,
+  //   setComponentVisible: setIsContractMenuOpen,
+  // } = useOuterClick<HTMLUListElement>(false);
 
   // Info: (20240425 - Julian) 開啟/關閉下拉選單
   const eventMenuOpenHandler = () => setIsEventMenuOpen(!isEventMenuOpen);
   const taxMenuHandler = () => setIsTaxMenuOpen(!isTaxMenuOpen);
   const methodMenuHandler = () => setIsMethodMenuOpen(!isMethodMenuOpen);
   const bankAccountMenuHandler = () => setIsBankAccountMenuOpen(!isBankAccountMenuOpen);
-  const projectMenuHandler = () => setIsProjectMenuOpen(!isProjectMenuOpen);
-  const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const projectMenuHandler = () => setIsProjectMenuOpen(!isProjectMenuOpen);
+  // const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
 
   // Info: (20240423 - Julian) 處理 input 輸入
-  const paymentReasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputPaymentReason(e.target.value);
+  const reasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputReason(e.target.value);
   };
   const descriptionChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputDescription(e.target.value);
@@ -299,48 +337,9 @@ const NewJournalForm = () => {
   const vendorChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVendor(e.target.value);
   };
-  const totalPriceChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputTotalPrice(input);
-    }
-  };
-  const feeChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputFee(input);
-    }
-  };
+
   const accountNumberChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputAccountNumber(e.target.value);
-  };
-  const installmentChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputInstallment(input);
-    }
-  };
-  const partialPaidChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputPartialPaid(input);
-    }
-  };
-
-  const progressRateChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      // Info: (20240425 - Julian) 限制輸入範圍 0 ~ 100
-      if (input <= 100 && input >= 0) {
-        setProgressRate(input);
-      }
-    }
-  };
-  const estimatedCostChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = Number(e.target.value);
-    if (!Number.isNaN(input)) {
-      setInputEstimatedCost(input);
-    }
   };
 
   // Info: (20240423 - Julian) 處理 toggle 開關
@@ -357,11 +356,25 @@ const NewJournalForm = () => {
   //  Info: (20240425 - Julian) 檢查表單內容是否有變動
   const formChangedHandler = () => setFormHasChanged(true);
 
+  // Info: (20240809 - Shirley) 檢查費用是否小於總金額
+  const checkFeeValidity = (fee: number, totalPrice: number) => {
+    setIsFeeValid(fee <= totalPrice);
+  };
+
+  const amountChangeHandler = (value: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    // Info: (20240809 - Shirley) 檢查費用是否正當
+    if (e.target.name === 'fee-input') {
+      checkFeeValidity(value, inputTotalPrice);
+    } else if (e.target.name === 'input-total-price') {
+      checkFeeValidity(inputFee, value);
+    }
+  };
+
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
     setSelectedEventType(EventType.INCOME);
-    setInputPaymentReason('');
+    setInputReason('');
     setInputDescription('');
     setInputVendor('');
     setInputTotalPrice(0);
@@ -377,16 +390,18 @@ const NewJournalForm = () => {
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
     setProgressRate(0);
-    setInputEstimatedCost(0);
+    // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+    // setInputEstimatedCost(0);
     // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
     selectOCRHandler(undefined);
+    inputDescriptionHandler('');
   };
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
   const dataMessageModal = {
-    title: 'Clear form content',
-    content: 'Are you sure you want to clear form content?',
-    submitBtnStr: 'Clear All',
+    title: t('JOURNAL.CLEAR_FORM'),
+    content: t('JOURNAL.CLEAR_FORM_CONTENT'),
+    submitBtnStr: t('JOURNAL.CLEAR_ALL'),
     submitBtnFunction: () => clearFormHandler(),
     messageType: MessageType.WARNING,
   };
@@ -397,177 +412,194 @@ const NewJournalForm = () => {
     messageModalVisibilityHandler();
   };
 
-  // Info: (20240429 - Julian) 上傳日記帳資料
-  const createInvoiceHandler = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!createSuccess || !invoiceReturn) {
-      const invoiceData: IInvoice = {
-        journalId: selectedJournal?.id || null,
-        date: datePeriod.startTimeStamp,
-        eventType: selectedEventType,
-        paymentReason: inputPaymentReason,
-        description: inputDescription,
-        vendorOrSupplier: inputVendor,
-        project: selectedProject.name,
-        projectId: selectedProject.id,
-        contract: selectedContract.name,
-        contractId: selectedContract.id,
-        payment: {
-          price: inputTotalPrice,
-          hasTax: taxToggle,
-          taxPercentage: taxRate,
-          hasFee: feeToggle,
-          fee: inputFee,
-          method: selectedMethod,
-          installmentPeriod: inputInstallment,
-          alreadyPaid: inputPartialPaid,
-          isRevenue: true,
-          progress: progressRate,
-          period: paymentPeriod,
-          status: paymentStatus,
+  const updateInvoiceHandler = async (updateJournalId: number, invoiceData: IInvoice) => {
+    if (!hasCompanyId) return;
+    const invoiceDataToUpdate: IInvoice = {
+      ...invoiceData,
+      journalId: updateJournalId,
+    };
+    const {
+      success: updateSuccess,
+      data: updateAIResult,
+      code: updateCode,
+    } = await updateInvoice({
+      params: { companyId: selectedCompany.id, invoiceId: 0 }, // Info: (20240723 - Murky) invoiceId目前沒有作用
+      body: { invoice: invoiceDataToUpdate },
+    });
+    if (
+      updateSuccess &&
+      updateAIResult?.resultStatus?.resultId &&
+      updateAIResult?.resultStatus?.status
+    ) {
+      getAIStatusHandler(
+        {
+          companyId: selectedCompany.id,
+          askAIId: updateAIResult.resultStatus.resultId,
         },
-      };
-
-      createInvoice({
-        params: { companyId },
-        body: { invoice: invoiceData, ocrId: selectedOCR?.id },
-      });
-    } else {
+        true
+      );
       confirmModalDataHandler({
-        journalId: invoiceReturn.journalId,
-        askAIId: invoiceReturn.resultStatus.resultId,
+        journalId: updateJournalId,
+        askAIId: updateAIResult.resultStatus.resultId,
       });
       confirmModalVisibilityHandler();
+    } else if (updateSuccess === false) {
+      messageModalDataHandler({
+        messageType: MessageType.ERROR,
+        title: 'Update Invoice Failed',
+        content: `Update Invoice failed: ${updateCode}`,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: messageModalVisibilityHandler,
+      });
+      messageModalVisibilityHandler();
     }
   };
 
-  useEffect(() => {
-    if (createSuccess && invoiceReturn?.journalId && invoiceReturn?.resultStatus) {
+  const createInvoiceHandler = async (invoiceData: IInvoice) => {
+    if (!hasCompanyId) return;
+    const {
+      data: invoice,
+      success: createSuccess,
+      code: createCode,
+    } = await createInvoice({
+      params: { companyId: selectedCompany.id },
+      body: { invoice: invoiceData, ocrId: selectedOCR?.id },
+    });
+    if (createSuccess && invoice?.journalId && invoice?.resultStatus) {
+      setJournalId(invoice.journalId);
+      getAIStatusHandler(
+        {
+          companyId: selectedCompany.id,
+          askAIId: invoice.resultStatus.resultId,
+        },
+        true
+      );
       confirmModalDataHandler({
-        journalId: invoiceReturn.journalId,
-        askAIId: invoiceReturn.resultStatus.resultId,
+        journalId: invoice.journalId,
+        askAIId: invoice.resultStatus.resultId,
       });
       confirmModalVisibilityHandler();
-      // const { resultId } = result;
-      // getAIStatus({
-      //   params: {
-      //     companyId,
-      //     resultId,
-      //   },
-      // });
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Create Invoice Failed',
-        content: `Create Invoice failed: ${createCode}`,
-        submitBtnStr: 'Close',
+        // title: 'Create Invoice Failed',
+        title: `${t('JOURNAL.CREATE_INVOICE_FAILED')}`,
+        // content: `Create Invoice failed: ${createCode}`,
+        content: `${t('JOURNAL.CREATE_INVOICE_FAILED')}:${createCode}`,
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
     }
-  }, [createSuccess, invoiceReturn, createCode]);
+  };
 
-  /** Deprecated: move to confirm modal by Julian will remove when confirm modal is ready(20240529 - tzuhan)
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      interval = setInterval(() => {
-        getAIStatus({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }, 2000);
-    }
-    if (statusSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal failed: ${statusCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (
-      status === ProgressStatus.INVALID_INPUT ||
-      status === ProgressStatus.LLM_ERROR ||
-      status === ProgressStatus.SYSTEM_ERROR ||
-      status === ProgressStatus.NOT_FOUND ||
-      status === ProgressStatus.PAUSED
-    ) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Upload Journal Failed',
-        content: `Upload journal status: ${status}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
-    }
-    if (result && (status === ProgressStatus.SUCCESS || status === ProgressStatus.ALREADY_UPLOAD)) {
-      if (journal?.id) {
-        getJournalById({ params: { companyId, journalId: journal?.id } });
-      } else {
-        getAIResult({
-          params: {
-            companyId,
-            resultId: result.resultId,
-          },
-        });
-      }
-    }
-    return () => clearInterval(interval);
-  }, [result, statusSuccess, status]);
+  // Info: (20240723 - Julian) 上傳日記帳資料
+  const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    getAIStatusHandler(undefined, false);
 
-  useEffect(() => {
-    if (result && statusSuccess && status === ProgressStatus.IN_PROGRESS) {
-      loadingModalVisibilityHandler();
+    // Info: (20240723 - Julian) 檢查日期填寫
+    if (datePeriod.startTimeStamp === 0 && datePeriod.endTimeStamp === 0) {
+      // Info: (20240723 - Julian) 將錨點指向 date-picker
+      document.getElementById('date-picker')?.scrollIntoView();
+      setIsSelectingDate(false);
+      return;
+    } else {
+      setIsSelectingDate(true);
     }
-    if (status === ProgressStatus.SUCCESS) {
-      loadingModalVisibilityHandler(); // Info: (20240528 - Julian) 關閉 loading modal
-      confirmModalVisibilityHandler(); // Info: (20240528 - Julian) 顯示 confirm modal
-    }
-  }, [statusSuccess, status]);
 
-  useEffect(() => {
-    if (AIResultSuccess && AIResult) {
-      getJournalById({ params: { companyId, journalId } });
+    // Info: (20240723 - Julian) 檢查金額是否為正數
+    if (inputTotalPrice <= 0) {
+      // Info: (20240723 - Julian) 將錨點指向 price
+      document.getElementById('price')?.scrollIntoView();
+      setIsPriceValid(false);
+      return;
+    } else {
+      setIsPriceValid(true);
     }
-    if (AIResultSuccess === false) {
-      messageModalDataHandler({
-        messageType: MessageType.ERROR,
-        title: 'Get Voucher Preview Failed',
-        content: `Get voucher preview failed: ${AIResultCode}`,
-        submitBtnStr: 'Close',
-        submitBtnFunction: messageModalVisibilityHandler,
-      });
-      messageModalVisibilityHandler();
+
+    // Info: (20240723 - Julian) 檢查分期付款是否為正數
+    if (paymentPeriod === PaymentPeriodType.INSTALLMENT && inputInstallment <= 0) {
+      // Info: (20240723 - Julian) 將錨點指向 installment
+      document.getElementById('installment')?.scrollIntoView();
+      setIsInstallmentValid(false);
+      return;
+    } else {
+      setIsInstallmentValid(true);
     }
-  }, [AIResultSuccess, AIResult, AIResultCode]);
-  */
+
+    // Info: (20240723 - Julian) 檢查部分付款是否為正數
+    if (paymentStatus === PaymentStatusType.PARTIAL && inputPartialPaid <= 0) {
+      // Info: (20240723 - Julian) 將錨點指向 partial-paid
+      document.getElementById('partial-paid')?.scrollIntoView();
+      setIsPartialPaidValid(false);
+      return;
+    } else {
+      setIsPartialPaidValid(true);
+    }
+
+    // Info: (20240723 - Julian) 整理日記帳資料
+    const invoiceData: IInvoice = {
+      journalId: selectedJournal?.id || null,
+      date: datePeriod.startTimeStamp,
+      eventType: selectedEventType,
+      paymentReason: inputReason,
+      description: inputDescription,
+      vendorOrSupplier: inputVendor,
+      project: selectedProject.name,
+      projectId: selectedProject.id,
+      contract: selectedContract.name,
+      contractId: selectedContract.id,
+      payment: {
+        price: inputTotalPrice,
+        hasTax: taxToggle,
+        taxPercentage: taxRate,
+        hasFee: feeToggle,
+        fee: inputFee,
+        method: selectedMethod,
+        installmentPeriod: inputInstallment,
+        alreadyPaid: inputPartialPaid,
+        isRevenue: true,
+        progress: progressRate,
+        period: paymentPeriod,
+        status: paymentStatus,
+      },
+    };
+    const updateJournalId = selectedJournal?.id || journalId;
+    if (updateJournalId) {
+      await updateInvoiceHandler(updateJournalId, invoiceData);
+    } else {
+      await createInvoiceHandler(invoiceData);
+    }
+  };
 
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
-  const isAccountNumberVisible = selectedMethod === 'Transfer';
-  // Info: (20240513 - Julian) 如果為轉帳，則檢查是否有填寫銀行帳號
-  const isAccountNumberInvalid = isAccountNumberVisible && inputAccountNumber === '';
+  const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
 
-  // Info: (20240429 - Julian) 檢查表單是否填寫完整，若有空欄位，則無法上傳
-  const isUploadDisabled =
-    // Info: (20240429 - Julian) 檢查日期是否有填寫
-    datePeriod.startTimeStamp === 0 ||
-    datePeriod.endTimeStamp === 0 ||
-    inputPaymentReason === '' ||
-    inputDescription === '' ||
-    inputVendor === '' ||
-    isAccountNumberInvalid ||
-    // Info: (20240429 - Julian) 檢查手續費是否有填寫
-    (!!feeToggle && inputFee === 0) ||
-    // Info: (20240429 - Julian) 檢查總價是否有填寫
-    (paymentPeriod === PaymentPeriodType.INSTALLMENT && inputInstallment === 0) ||
-    // Info: (20240429 - Julian) 檢查部分支付是否有填寫
-    (paymentStatus === PaymentStatusType.PARTIAL && inputPartialPaid === 0);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // Info: (20240715 - Julian) 專案名稱翻譯
+  // const projectName = selectedProject.id === null ? t(selectedProject.name) : selectedProject.name;
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // Info: (20240715 - Julian) 合約名稱翻譯
+  // const contractName =
+  //   selectedContract.id === null ? t(selectedContract.name) : selectedContract.name;
+
+  // Info: (20240722 - Julian) 根據收支類型，顯示不同的文字
+  const reasonText =
+    selectedEventType === EventType.INCOME
+      ? t('JOURNAL.RECEIVING_REASON')
+      : t('JOURNAL.PAYMENT_REASON');
+  const reasonPlaceholder =
+    selectedEventType === EventType.INCOME
+      ? t('JOURNAL.WHY_YOU_RECEIVE')
+      : t('JOURNAL.WHY_YOU_PAY');
+  const vendorText =
+    selectedEventType === EventType.INCOME
+      ? t('JOURNAL.CLIENT_SOURCE')
+      : t('JOURNAL.VENDOR_SUPPLIER');
+  const vendorPlaceholder =
+    selectedEventType === EventType.INCOME ? t('JOURNAL.FROM_WHOM') : t('JOURNAL.TO_WHOM');
+  const isHideAddAssetBtn = selectedEventType === EventType.INCOME;
 
   // Info: (20240425 - Julian) 下拉選單選項
   const displayEventDropmenu = Object.values(EventType).map((type: EventType) => {
@@ -582,7 +614,7 @@ const NewJournalForm = () => {
         onClick={selectionClickHandler}
         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
       >
-        {firstCharToUpperCase(type)}
+        <p>{t(eventTypeMap[type])}</p>
       </li>
     );
   });
@@ -604,9 +636,11 @@ const NewJournalForm = () => {
     );
   });
 
-  const displayMethodDropmenu = paymentMethodSelection.map((method: string) => {
+  const displayMethodDropmenu = paymentMethodSelection.map((methodKey: PAYMENT_METHOD) => {
+    const method = t(methodKey);
     const selectionClickHandler = () => {
-      setSelectedMethod(method);
+      setSelectedMethod(methodKey); // 使用方法鍵值而不是翻譯後的文字
+      setIsMethodMenuOpen(false);
     };
 
     return (
@@ -620,57 +654,64 @@ const NewJournalForm = () => {
     );
   });
 
-  const displayFICDropmenu = ficSelection.map((account: string) => {
+  const displayFICDropmenu = ficSelection.map((accountKey: string) => {
     const selectionClickHandler = () => {
-      setSelectedFIC(account);
+      setSelectedFIC(accountKey);
     };
 
     return (
       <li
-        key={account}
+        key={accountKey}
         onClick={selectionClickHandler}
         className="w-full cursor-pointer px-3 py-2 text-left text-navyBlue2 hover:text-primaryYellow"
       >
-        {account}
+        {t(accountKey)}
       </li>
     );
   });
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayProjectDropmenu = projectSelection.map(
+  //   (project: { id: number | null; name: string }) => {
+  //     const selectionClickHandler = () => {
+  //       setSelectedProject({
+  //         id: project.id,
+  //         name: project.id === null ? t(project.name) : project.name,
+  //       });
+  //     };
 
-  const displayProjectDropmenu = projectSelection.map(
-    (project: { id: number | null; name: string }) => {
-      const selectionClickHandler = () => {
-        setSelectedProject(project);
-      };
+  //     return (
+  //       <li
+  //         key={project.name}
+  //         onClick={selectionClickHandler}
+  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //       >
+  //         {t(project.name)}
+  //       </li>
+  //     );
+  //   }
+  // );
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayContractDropmenu = contractSelection.map(
+  //   (contract: { id: number | null; name: string }) => {
+  //     const selectionClickHandler = () => {
+  //       setSelectedContract({
+  //         id: contract.id,
+  //         // name: t(contract.name),
+  //         name: contract.id === null ? t(contract.name) : contract.name,
+  //       });
+  //     };
 
-      return (
-        <li
-          key={project.name}
-          onClick={selectionClickHandler}
-          className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-        >
-          {project.name}
-        </li>
-      );
-    }
-  );
-
-  const displayContractDropmenu = contractSelection.map(
-    (contract: { id: number | null; name: string }) => {
-      const selectionClickHandler = () => {
-        setSelectedContract(contract);
-      };
-
-      return (
-        <li
-          key={contract.name}
-          onClick={selectionClickHandler}
-          className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-        >
-          {contract.name}
-        </li>
-      );
-    }
-  );
+  //     return (
+  //       <li
+  //         key={contract.name}
+  //         onClick={selectionClickHandler}
+  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //       >
+  //         {t(contract.name)}
+  //       </li>
+  //     );
+  //   }
+  // );
 
   const displayedBasicInfo = (
     <>
@@ -689,24 +730,31 @@ const NewJournalForm = () => {
         {/* Info: (20240423 - Julian) First Column */}
         <div className="flex w-full flex-col items-start justify-between gap-y-24px md:flex-row">
           {/* Info: (20240423 - Julian) Date */}
-          <div className="flex w-full flex-col items-start gap-8px md:w-240px">
+          <div className="relative flex w-full flex-col items-start gap-8px md:w-240px">
+            <div id="date-picker" className="absolute -top-20"></div>
             <p className="text-sm font-semibold text-navyBlue2">{t('DATE_PICKER.DATE')}</p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
               type={DatePickerType.TEXT_DATE}
             />
+            {/* ToDo: (20240723 - Julian) i18n */}
+            <div
+              className={`ml-auto text-sm text-input-text-error ${isSelectingDate ? 'opacity-0' : 'opacity-100'}`}
+            >
+              <p>請選擇日期</p>
+            </div>
           </div>
 
           {/* Info: (20240423 - Julian) Event Type */}
           <div className="flex w-full flex-col items-start gap-8px md:w-130px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.EVENT_TYPE')}</p>
             <div
-              id="eventTypeMenu"
+              id="event-type-menu"
               onClick={eventMenuOpenHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
-              <p>{firstCharToUpperCase(selectedEventType)}</p>
+              <p>{t(eventTypeMap[selectedEventType])}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
@@ -722,16 +770,16 @@ const NewJournalForm = () => {
             </div>
           </div>
 
-          {/* Info: (20240423 - Julian) Payment Reason */}
+          {/* Info: (20240423 - Julian) Reason */}
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
-            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_REASON')}</p>
+            <p className="text-sm font-semibold text-navyBlue2">{reasonText}</p>
             <input
-              id="inputPaymentReason"
-              name="inputPaymentReason"
+              id="input-reason"
+              name="input-reason"
               type="text"
-              placeholder={t('JOURNAL.WHY_YOU_PAY')}
-              value={inputPaymentReason}
-              onChange={paymentReasonChangeHandler}
+              placeholder={reasonPlaceholder}
+              value={inputReason}
+              onChange={reasonChangeHandler}
               required
               className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
             />
@@ -756,7 +804,8 @@ const NewJournalForm = () => {
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}
-              className="ml-auto text-secondaryBlue hover:text-primaryYellow"
+              className={`ml-auto ${isHideAddAssetBtn ? 'opacity-0' : 'opacity-100'} ${disabledAddNewAsset ? 'text-gray-400' : 'text-secondaryBlue hover:text-primaryYellow'}`}
+              disabled={disabledAddNewAsset}
             >
               {t('JOURNAL.ADD_NEW_ASSET')}
             </button>
@@ -769,8 +818,8 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION')}</p>
             <input
-              id="inputDescription"
-              name="inputDescription"
+              id="input-description"
+              name="input-description"
               type="text"
               placeholder={t('JOURNAL.DESCRIPTION')}
               value={inputDescription}
@@ -780,14 +829,14 @@ const NewJournalForm = () => {
             />
           </div>
 
-          {/* Info: (20240423 - Julian) Vendor/Supplier */}
+          {/* Info: (20240423 - Julian) vendor */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.VENDOR_SUPPLIER')}</p>
+            <p className="text-sm font-semibold text-navyBlue2">{vendorText}</p>
             <input
-              id="inputVendor"
-              name="inputVendor"
+              id="input-vendor"
+              name="input-vendor"
               type="text"
-              placeholder={t('JOURNAL.TO_WHOM')}
+              placeholder={vendorPlaceholder}
               value={inputVendor}
               onChange={vendorChangeHandler}
               required
@@ -814,22 +863,24 @@ const NewJournalForm = () => {
       {/* Info: (20240423 - Julian) Form */}
       <div className="my-20px flex flex-col gap-40px">
         {/* Info: (20240423 - Julian) First Column */}
-        <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-end">
+        <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row md:items-baseline">
           {/* Info: (20240423 - Julian) Total Price */}
-          <div className="flex w-full flex-1 flex-col items-start gap-8px">
+          <div className="relative flex w-full flex-1 flex-col items-start gap-8px">
+            <div id="price" className="absolute -top-20"></div>
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.TOTAL_PRICE')}</p>
-            <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
-              <input
-                id="inputTotalPrice"
-                name="inputTotalPrice"
-                type="number"
+            <div className="flex w-full items-center">
+              <NumericInput
+                id="input-total-price"
+                name="input-total-price"
                 value={inputTotalPrice}
-                onChange={totalPriceChangeHandler}
+                setValue={setInputTotalPrice}
+                isDecimal
                 required
-                className="flex-1 bg-transparent px-10px outline-none"
-                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
+                hasComma
+                triggerWhenChanged={amountChangeHandler}
+                className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
               />
-              <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+              <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 bg-white p-12px text-sm text-lightGray4">
                 <Image
                   src="/currencies/twd.svg"
                   width={16}
@@ -840,15 +891,22 @@ const NewJournalForm = () => {
                 <p>{t('JOURNAL.TWD')}</p>
               </div>
             </div>
+            {/* Info: (20240723 - Julian) Hint */}
+            {/* ToDo: (20240723 - Julian) i18n */}
+            <div
+              className={`ml-auto text-sm text-input-text-error ${isPriceValid ? 'opacity-0' : 'opacity-100'}`}
+            >
+              <p>請填入金額</p>
+            </div>
           </div>
 
           {/* Info: (20240423 - Julian) Tax */}
           <div className="flex w-full flex-col gap-8px text-lightGray4 md:w-200px">
             {/* Info: (20240424 - Julian) toggle */}
             <div className="flex items-center gap-18px">
-              <p>{t('JOURNAL.Tax')}</p>
+              <p>{t('JOURNAL.NO_SLASH_TAX')}</p>
               <Toggle
-                id="taxToggle"
+                id="tax-toggle"
                 initialToggleState={taxToggle}
                 getToggledState={taxToggleHandler}
                 toggleStateFromParent={taxToggle}
@@ -857,8 +915,8 @@ const NewJournalForm = () => {
 
             {/* Info: (20240424 - Julian) dropmenu */}
             <button
-              id="taxMenu"
-              name="taxMenu"
+              id="tax-menu"
+              name="tax-menu"
               type="button"
               onClick={taxMenuHandler}
               disabled={!taxToggle}
@@ -882,26 +940,28 @@ const NewJournalForm = () => {
             <div className="flex items-center gap-18px">
               <p>{t('JOURNAL.FEE')}</p>
               <Toggle
-                id="feeToggle"
+                id="fee-toggle"
                 initialToggleState={feeToggle}
                 getToggledState={feeToggleHandler}
                 toggleStateFromParent={feeToggle}
               />
             </div>
             <div
-              className={`flex h-46px w-full items-center justify-between ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
+              className={`flex w-full items-center ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} rounded-sm transition-all duration-300 ease-in-out`}
             >
-              <input
-                id="feeInput"
-                name="feeInput"
-                type="number"
+              <NumericInput
+                id="fee-input"
+                name="fee-input"
                 disabled={!feeToggle}
                 value={inputFee}
-                onChange={feeChangeHandler}
-                className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
-                onWheel={(e) => e.currentTarget.blur()} // Info: (20240529 - Julian) 禁止滾輪改變數值
+                setValue={setInputFee}
+                isDecimal
+                required={feeToggle}
+                hasComma
+                triggerWhenChanged={amountChangeHandler}
+                className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
               />
-              <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+              <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
                 <Image
                   src="/currencies/twd.svg"
                   width={16}
@@ -912,6 +972,11 @@ const NewJournalForm = () => {
                 <p>{t('JOURNAL.TWD')}</p>
               </div>
             </div>
+            {feeToggle && !isFeeValid && (
+              <div className="ml-auto text-sm text-input-text-error">
+                <p>{t('JOURNAL.FEE_EXCEEDS_TOTAL')}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -921,11 +986,11 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px md:w-200px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_METHOD')}</p>
             <div
-              id="paymentMethodMenu"
+              id="payment-method-menu"
               onClick={methodMenuHandler}
               className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
             >
-              <p>{selectedMethod}</p>
+              <p>{t(selectedMethod)}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -945,13 +1010,13 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px md:w-300px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.BANK_ACCOUNT')}</p>
             <button
-              id="ficMenu"
+              id="fic-menu"
               type="button"
               onClick={bankAccountMenuHandler}
               disabled={!isAccountNumberVisible}
               className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6 disabled:hover:border-lightGray3 disabled:hover:text-navyBlue2`}
             >
-              <p>{selectedFIC}</p>
+              <p>{t(selectedFIC)}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
@@ -970,8 +1035,8 @@ const NewJournalForm = () => {
           {/* Info: (20240424 - Julian) Bank Account */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
             <input
-              id="inputAccountNumber"
-              name="inputAccountNumber"
+              id="input-account-number"
+              name="input-account-number"
               type="text"
               placeholder={t('JOURNAL.ACCOUNT_NUMBER')}
               value={inputAccountNumber}
@@ -984,6 +1049,7 @@ const NewJournalForm = () => {
         </div>
 
         {/* Info: (20240424 - Julian) Third Column */}
+
         <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240424 - Julian) Payment Period */}
           <div className="flex w-full flex-col items-start gap-8px md:w-fit">
@@ -991,13 +1057,16 @@ const NewJournalForm = () => {
               {t('REPORTS_HISTORY_LIST.PERIOD')}
             </p>
             {/* Info: (20240424 - Julian) radio buttons */}
-            <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-center">
+            <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-baseline">
               {/* Info: (20240424 - Julian) At Once */}
-              <label htmlFor="inputAtOnce" className="flex items-center gap-8px whitespace-nowrap">
+              <label
+                htmlFor="input-at-once"
+                className="flex items-center gap-8px whitespace-nowrap"
+              >
                 <input
                   type="radio"
-                  id="inputAtOnce"
-                  name="paymentPeriod"
+                  id="input-at-once"
+                  name="payment-period"
                   className={radioButtonStyle}
                   checked={paymentPeriod === PaymentPeriodType.AT_ONCE}
                   onChange={atOnceClickHandler}
@@ -1006,37 +1075,46 @@ const NewJournalForm = () => {
               </label>
 
               {/* Info: (20240424 - Julian) Installment */}
-              <div className="flex w-full flex-1 flex-col items-start gap-8px md:flex-row md:items-center">
-                <label
-                  htmlFor="inputInstallment"
-                  className="flex w-full items-center gap-8px whitespace-nowrap"
-                >
-                  <input
-                    type="radio"
-                    id="inputInstallment"
-                    name="paymentPeriod"
-                    className={radioButtonStyle}
-                    checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
-                    onChange={installmentClickHandler}
-                  />
-                  {t('JOURNAL.INSTALLMENT')}
-                </label>
-                {/* Info: (20240424 - Julian) input */}
-                <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
-                >
-                  <input
-                    id="inputInstallmentTimes"
-                    type="number"
-                    name="inputInstallmentTimes"
-                    value={inputInstallment}
-                    onChange={installmentChangeHandler}
-                    disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
-                    className="flex-1 bg-transparent px-10px outline-none"
-                  />
-                  <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-                    <p>{t('JOURNAL.TIMES')}</p>
+              <div className="relative flex flex-col">
+                <div id="installment" className="absolute -top-20"></div>
+                <div className="flex w-full flex-1 flex-col items-start gap-8px md:flex-row md:items-center">
+                  <label
+                    htmlFor="input-installment"
+                    className="flex w-full items-center gap-8px whitespace-nowrap"
+                  >
+                    <input
+                      type="radio"
+                      id="input-installment"
+                      name="payment-period"
+                      className={radioButtonStyle}
+                      checked={paymentPeriod === PaymentPeriodType.INSTALLMENT}
+                      onChange={installmentClickHandler}
+                    />
+                    {t('JOURNAL.INSTALLMENT')}
+                  </label>
+                  {/* Info: (20240424 - Julian) input */}
+                  <div
+                    className={`flex w-full items-center ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
+                  >
+                    <NumericInput
+                      id="input-installment-times"
+                      name="input-installment-times"
+                      value={inputInstallment}
+                      setValue={setInputInstallment}
+                      required={paymentPeriod === PaymentPeriodType.INSTALLMENT}
+                      disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
+                      className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none"
+                    />
+                    <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+                      <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.TIMES')}</p>
+                    </div>
                   </div>
+                </div>
+                {/* ToDo: (20240723 - Julian) i18n */}
+                <div
+                  className={`ml-auto text-sm text-input-text-error ${isInstallmentValid ? 'opacity-0' : 'opacity-100'}`}
+                >
+                  <p>請填入次數</p>
                 </div>
               </div>
             </div>
@@ -1046,13 +1124,13 @@ const NewJournalForm = () => {
           <div className="flex w-full flex-col items-start gap-8px">
             <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.PAYMENT_STATE')}</p>
             {/* Info: (20240424 - Julian) radio buttons */}
-            <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-center md:justify-between">
+            <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label htmlFor="inputUnpaid" className=" flex items-center gap-8px whitespace-nowrap">
+              <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
-                  id="inputUnpaid"
-                  name="paymentStatus"
+                  id="input-unpaid"
+                  name="payment-status"
                   className={radioButtonStyle}
                   checked={paymentStatus === PaymentStatusType.UNPAID}
                   onChange={unpaidClickHandler}
@@ -1060,52 +1138,64 @@ const NewJournalForm = () => {
                 <p>{t('JOURNAL.UNPAID')}</p>
               </label>
               {/* Info: (20240424 - Julian) Partial Paid */}
-              <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
-                <label
-                  htmlFor="inputPartialPaid"
-                  className="flex items-center gap-8px whitespace-nowrap"
-                >
-                  <input
-                    type="radio"
-                    id="inputPartialPaid"
-                    name="paymentStatus"
-                    className={radioButtonStyle}
-                    checked={paymentStatus === PaymentStatusType.PARTIAL}
-                    onChange={partialPaidClickHandler}
-                  />
-                  <p>{t('JOURNAL.PARTIAL_PAID')}</p>
-                </label>
-                {/* Info: (20240424 - Julian) input */}
-                <div
-                  className={`flex h-46px w-full items-center justify-between ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} divide-x divide-lightGray3 rounded-sm border border-lightGray3 transition-all duration-300 ease-in-out`}
-                >
-                  <input
-                    id="inputPartialPaidAmount"
-                    type="number"
-                    name="inputPartialPaidAmount"
-                    value={inputPartialPaid}
-                    onChange={partialPaidChangeHandler}
-                    disabled={paymentStatus !== PaymentStatusType.PARTIAL}
-                    className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
-                  />
-                  <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-                    <Image
-                      src="/currencies/twd.svg"
-                      width={16}
-                      height={16}
-                      alt="twd_icon"
-                      className="rounded-full"
+              <div className="relative flex flex-col">
+                <div id="partial-paid" className="absolute -top-20"></div>
+                <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
+                  <label
+                    htmlFor="input-partial-paid"
+                    className="flex items-center gap-8px whitespace-nowrap"
+                  >
+                    <input
+                      type="radio"
+                      id="input-partial-paid"
+                      name="payment-status"
+                      className={radioButtonStyle}
+                      checked={paymentStatus === PaymentStatusType.PARTIAL}
+                      onChange={partialPaidClickHandler}
                     />
-                    <p>{t('JOURNAL.TWD')}</p>
+                    <p>{t('JOURNAL.PARTIAL_PAID')}</p>
+                  </label>
+                  {/* Info: (20240424 - Julian) input */}
+                  <div
+                    className={`flex w-full items-center ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
+                  >
+                    <NumericInput
+                      id="input-partial-paid-amount"
+                      name="input-partial-paid-amount"
+                      value={inputPartialPaid}
+                      setValue={setInputPartialPaid}
+                      isDecimal
+                      hasComma
+                      required={paymentStatus === PaymentStatusType.PARTIAL}
+                      disabled={paymentStatus !== PaymentStatusType.PARTIAL}
+                      className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
+                    />
+                    <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+                      <Image
+                        src="/currencies/twd.svg"
+                        width={16}
+                        height={16}
+                        alt="twd_icon"
+                        className="rounded-full"
+                      />
+                      <p>{t('JOURNAL.TWD')}</p>
+                    </div>
                   </div>
+                </div>
+
+                {/* ToDo: (20240723 - Julian) i18n */}
+                <div
+                  className={`ml-auto text-sm text-input-text-error ${isPartialPaidValid ? 'opacity-0' : 'opacity-100'}`}
+                >
+                  <p>請填入金額</p>
                 </div>
               </div>
               {/* Info: (20240424 - Julian) Paid */}
-              <label htmlFor="inputPaid" className="flex items-center gap-8px whitespace-nowrap">
+              <label htmlFor="input-paid" className="flex items-center gap-8px whitespace-nowrap">
                 <input
                   type="radio"
-                  id="inputPaid"
-                  name="paymentStatus"
+                  id="input-paid"
+                  name="payment-status"
                   className={radioButtonStyle}
                   checked={paymentStatus === PaymentStatusType.PAID}
                   onChange={paidClickHandler}
@@ -1119,149 +1209,137 @@ const NewJournalForm = () => {
     </>
   );
 
-  const displayedProjectSecondLine =
-    selectedEventType === EventType.INCOME ? (
-      <div className="flex flex-col items-start gap-40px md:flex-row">
-        {/* Info: (20240502 - Julian) Progress */}
-        <ProgressBar
-          progressRate={progressRate}
-          progressRateChangeHandler={progressRateChangeHandler}
-        />
-        {/* Info: (20240502 - Julian) Estimated Cost */}
-        <div className="flex w-full flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
-          <div
-            className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
-          >
-            <input
-              id="inputEstimatedCost"
-              type="number"
-              name="inputEstimatedCost"
-              value={inputEstimatedCost}
-              onChange={estimatedCostChangeHandler}
-              className="flex-1 bg-transparent px-10px outline-none md:w-1/2"
-            />
-            <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
-              <Image
-                src="/currencies/twd.svg"
-                width={16}
-                height={16}
-                alt="twd_icon"
-                className="rounded-full"
-              />
-              <p>{t('JOURNAL.TWD')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    ) : null;
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayedProjectSecondLine =
+  //   selectedEventType === EventType.INCOME ? (
+  //     /* Info: (20240502 - Julian) Estimated Cost */
+  //     <div className="flex w-full flex-col items-start gap-8px">
+  //       <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
+  //       <div className="flex w-full items-center rounded-sm bg-white transition-all duration-300 ease-in-out">
+  //         <NumericInput
+  //           id="input-estimated-cost"
+  //           name="input-estimated-cost"
+  //           value={inputEstimatedCost}
+  //           setValue={setInputEstimatedCost}
+  //           isDecimal
+  //           required={selectedEventType === EventType.INCOME}
+  //           hasComma
+  //           className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
+  //         />
+  //         <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+  //           <Image
+  //             src="/currencies/twd.svg"
+  //             width={16}
+  //             height={16}
+  //             alt="twd_icon"
+  //             className="rounded-full"
+  //           />
+  //           <p>{t('JOURNAL.TWD')}</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   ) : null;
 
-  const displayedProject = (
-    <>
-      {/* Info: (20240424 - Julian) Title */}
-      <div className="my-5 flex items-center gap-4">
-        <hr className="block flex-1 border-lightGray3 md:hidden" />
-        <div className="flex items-center gap-2 text-sm">
-          <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
-          <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
-        </div>
-        <hr className="flex-1 border-lightGray3" />
-      </div>
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayedProject = (
+  //   <>
+  //     {/* Info: (20240424 - Julian) Title */}
+  //     {/* <div className="my-5 flex items-center gap-4">
+  //       <hr className="block flex-1 border-lightGray3 md:hidden" />
+  //       <div className="flex items-center gap-2 text-sm">
+  //         <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
+  //         <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //       </div>
+  //       <hr className="flex-1 border-lightGray3" />
+  //     </div> */}
 
-      {/* Info: (20240424 - Julian) Form */}
-      <div className="my-20px flex flex-col gap-40px">
-        {/* Info: (20240502 - Julian) First Column */}
-        <div className="flex w-full flex-col items-center gap-40px md:flex-row">
-          {/* Info: (20240424 - Julian) Project */}
-          <div
-            id="projectMenu"
-            onClick={projectMenuHandler}
-            className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
-          >
-            <div className="p-12px text-sm text-lightGray4">
-              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
-            </div>
-            <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedProject.name}</p>
-              <FaChevronDown />
-              {/* Info: (20240424 - Julian) Dropmenu */}
-              <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-              >
-                <ul
-                  ref={projectRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
-                >
-                  {displayProjectDropmenu}
-                </ul>
-              </div>
-            </div>
-          </div>
+  //     {/* Info: (20240424 - Julian) Form */}
+  //     <div className="my-20px flex flex-col gap-40px">
+  //       {/* Info: (20240502 - Julian) First Column */}
+  //       <div className="flex w-full flex-col items-center gap-40px md:flex-row">
+  //         {/* Info: (20240424 - Julian) Project */}
+  //         <div
+  //           id="project-menu"
+  //           onClick={projectMenuHandler}
+  //           className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+  //         >
+  //           <div className="p-12px text-sm text-lightGray4">
+  //             <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //           </div>
+  //           <div className="flex w-full items-center p-10px">
+  //             <p className="flex-1">{projectName}</p>
+  //             <FaChevronDown />
+  //             {/* Info: (20240424 - Julian) Dropmenu */}
+  //             <div
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //             >
+  //               <ul
+  //                 ref={projectRef}
+  //                 className="z-10 flex w-full flex-col items-start bg-white p-8px"
+  //               >
+  //                 {displayProjectDropmenu}
+  //               </ul>
+  //             </div>
+  //           </div>
+  //         </div>
 
-          {/* Info: (20240424 - Julian) Contract */}
-          <div
-            id="contractMenu"
-            onClick={contractMenuHandler}
-            className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
-          >
-            <div className="p-12px text-sm text-lightGray4">
-              <p>{t('JOURNAL.CONTRACT')}</p>
-            </div>
-            <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{selectedContract.name}</p>
-              <FaChevronDown />
-              {/* Info: (20240424 - Julian) Dropmenu */}
-              <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-              >
-                <ul
-                  ref={contractRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
-                >
-                  {displayContractDropmenu}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Info: (20240502 - Julian) Second Column */}
-        {displayedProjectSecondLine}
-      </div>
-    </>
-  );
+  //         {/* Info: (20240424 - Julian) Contract */}
+  //         <div
+  //           id="contract-menu"
+  //           onClick={contractMenuHandler}
+  //           className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+  //         >
+  //           <div className="p-12px text-sm text-lightGray4">
+  //             <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.CONTRACT')}</p>
+  //           </div>
+  //           <div className="flex w-full items-center p-10px">
+  //             <p className="flex-1">{contractName}</p>
+  //             <FaChevronDown />
+  //             {/* Info: (20240424 - Julian) Dropmenu */}
+  //             <div
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //             >
+  //               <ul
+  //                 ref={contractRef}
+  //                 className="z-10 flex w-full flex-col items-start bg-white p-8px"
+  //               >
+  //                 {displayContractDropmenu}
+  //               </ul>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //       {/* Info: (20240502 - Julian) Second Column */}
+  //       {displayedProjectSecondLine}
+  //     </div>
+  //   </>
+  // );
 
   return (
     <div>
       <form
-        onSubmit={createInvoiceHandler}
+        onSubmit={submitHandler}
         onChange={formChangedHandler}
         className="flex flex-col gap-8px"
       >
         {/* Info: (20240423 - Julian) Basic Info */}
         {displayedBasicInfo}
-
         {/* Info: (20240423 - Julian) Payment */}
         {displayedPayment}
-
+        {/* Info: (20240809 - Anna) Alpha版先隱藏(專案選擇) */}
         {/* Info: (20240423 - Julian) Project */}
-        {displayedProject}
-
+        {/* {displayedProject} */}
         {/* Info: (20240423 - Julian) Buttons */}
         <div className="ml-auto flex items-center gap-24px">
           <button
-            id="clearJournalFormBtn"
+            id="clear-journal-form-btn"
             type="button"
             onClick={clearAllClickHandler}
             className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
           >
             {t('JOURNAL.CLEAR_ALL')}
           </button>
-          <Button
-            id="uploadBtn"
-            type="submit"
-            className="px-16px py-8px"
-            disabled={isUploadDisabled}
-          >
+          <Button id="upload-btn" type="submit" className="px-16px py-8px" disabled={!isFeeValid}>
             <p>{t('JOURNAL.UPLOAD')}</p>
             <svg
               width="20"

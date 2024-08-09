@@ -8,7 +8,7 @@ import NavBar from '@/components/nav_bar/nav_bar';
 import ProjectSidebar from '@/components/project_sidebar/project_sidebar';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { ProjectStage, stageList } from '@/constants/project';
+import { stageList } from '@/constants/project';
 import ProjectValueBlock from '@/components/project_value_block/project_value_block';
 import ProjectProgressBlock from '@/components/project_progress_block/project_progress_block';
 import ProjectMilestoneBlock from '@/components/project_milestone_block/project_milestone_block';
@@ -18,6 +18,9 @@ import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { APIName } from '@/constants/api_connection';
+import { IProject } from '@/interfaces/project';
+import APIHandler from '@/lib/utils/api_handler';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -39,11 +42,18 @@ interface IProjectDashboardPageProps {
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   const { t } = useTranslation('common');
-  const { isAuthLoading } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  const { data: projectData } = APIHandler<IProject>(
+    APIName.GET_PROJECT_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id, projectId },
+    },
+    hasCompanyId
+  );
 
-  // ToDo: (20240612 - Julian) replace with actual data
-  const projectName = 'BAIFA';
-  const currentStage = ProjectStage.DESIGNING;
+  const projectName = projectData?.name ?? '-';
+  const currentStage = projectData?.stage ?? '-';
 
   const {
     targetRef: stageOptionsRef,
@@ -56,9 +66,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
-      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input
-      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
-      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {stageList.map((stage) => {
         const clickHandler = () => {
@@ -73,7 +81,6 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             onClick={clickHandler}
           >
             {t(stageNameMap[stage])}
-            {/* {stage}test3 */}
           </button>
         );
       })}
@@ -109,11 +116,8 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                 <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
-                  className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-      ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-      px-12px hover:cursor-pointer md:w-200px`}
+                  className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {/* {currentStage} */}
                   {t(stageNameMap[currentStage])}
                   <FaChevronDown />
                   {displayedStageOptions}
@@ -127,12 +131,9 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
               <p className="font-semibold">{t('PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
-                className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-      ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-      px-12px hover:cursor-pointer md:w-200px`}
+                className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
               >
                 {t(stageNameMap[currentStage])}
-                {/* {currentStage} */}
                 <FaChevronDown />
                 {displayedStageOptions}
               </div>

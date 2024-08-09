@@ -5,6 +5,17 @@ export interface IEasyEmployee {
   name: string;
   salary: number;
   department: string;
+  payFrequency: string;
+}
+
+export interface IEasyEmployeeWithPagination {
+  data: IEasyEmployee[];
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export interface IEmployeeData {
@@ -16,14 +27,15 @@ export interface IEmployeeData {
   bonus: number;
   salary_payment_mode: string;
   pay_frequency: string;
-  projects: string[];
+  projects: { id: number; name: string }[];
   insurance_payments: number;
+  additionalOfTotal: number;
 }
 
 export interface IEmployee {
   id: number;
   name: string;
-  imageId: string;
+  imageId: string | undefined;
   departmentId: number;
   companyId: number;
   salary: number;
@@ -32,7 +44,7 @@ export interface IEmployee {
   salaryPayMode: string;
   payFrequency: string;
   startDate: number;
-  endDate: number;
+  endDate: number | undefined;
   createdAt: number;
   updatedAt: number;
 }

@@ -27,7 +27,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
       <AccountingSidebar />
       {/* Info: (20240503 - Julian) Overview */}
       <div className="flex h-full w-full bg-gray-100">
-        <div className="mt-100px flex-1 md:ml-80px">
+        <div className="mt-100px w-screen flex-1 md:ml-80px">
           <JournalDetail journalId={journalId} />
         </div>
       </div>

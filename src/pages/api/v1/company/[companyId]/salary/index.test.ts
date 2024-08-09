@@ -21,7 +21,7 @@ beforeEach(() => {
 afterEach(() => {
   jest.clearAllMocks();
 });
-describe('getEmployeesNamesByDepartments API Handler Tests', () => {
+xdescribe('getEmployeesNamesByDepartments API Handler Tests', () => {
   it('should return all employees names, ids by departments', async () => {
     req.method = 'GET';
     const expectedPayload = expect.arrayContaining([

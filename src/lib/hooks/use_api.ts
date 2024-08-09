@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { IAPIConfig, IAPIInput, IAPIResponse } from '@/interfaces/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { HttpMethod } from '@/constants/api_connection';
-import { ErrorMessage, STATUS_CODE } from '@/constants/status_code';
+import { STATUS_MESSAGE, STATUS_CODE } from '@/constants/status_code';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -17,6 +17,7 @@ function getAPIPath(apiConfig: IAPIConfig, input: IAPIInput) {
   });
   const queryString = input.query
     ? Object.keys(input.query)
+        .filter((key) => input.query?.[key] !== undefined)
         .map(
           (key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(input.query?.[key]))}`
         )
@@ -79,8 +80,16 @@ const useAPI = <Data>(
     setError(e);
   }, []);
 
-  const fetchDataCallback = useCallback(
-    async (input?: IAPIInput, signal?: AbortSignal) => {
+  const trigger = useCallback(
+    async (
+      input?: IAPIInput,
+      signal?: AbortSignal
+    ): Promise<{
+      success: boolean;
+      data: Data | null;
+      code: string;
+      error: Error | null;
+    }> => {
       setIsLoading(true);
       setSuccess(undefined);
       setCode(undefined);
@@ -101,25 +110,48 @@ const useAPI = <Data>(
         setCode(response.code);
         setData(response.payload as Data);
         setSuccess(response.success);
+
+        if (!response.success) {
+          const apiError = new Error(
+            response.message || STATUS_MESSAGE.MISSING_ERROR_FROM_BACKEND_API
+          ); // Info: 實際上這裡應該要顯示從後端 API response 的錯誤訊息 (20240716 - Shirley)
+          setError(apiError);
+          return {
+            success: false,
+            data: null,
+            code: response.code,
+            error: apiError,
+          };
+        }
+
+        return {
+          success: response.success,
+          data: response.payload as Data,
+          code: response.code,
+          error: null,
+        };
       } catch (e) {
         handleError(e as Error);
         setSuccess(false);
-        // Deprecated: debug log (20240523 - Tzuahan)
-        // eslint-disable-next-line no-console
-        console.log(`setCode: ${setCode}`, e);
-        setCode(STATUS_CODE[ErrorMessage.INTERNAL_SERVICE_ERROR]);
+        setCode(STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR]);
+        return {
+          success: false,
+          data: null,
+          code: STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR],
+          error: e as Error,
+        };
       } finally {
         setIsLoading(false);
       }
     },
-    [apiConfig.name, options, handleError]
+    [apiConfig, options, handleError]
   );
 
   useEffect(() => {
     const controller = new AbortController();
 
     if (triggerImmediately) {
-      fetchDataCallback(undefined, cancel ? controller.signal : undefined);
+      trigger(undefined, cancel ? controller.signal : undefined);
     }
 
     return () => {
@@ -128,7 +160,7 @@ const useAPI = <Data>(
   }, [apiConfig.name, cancel, triggerImmediately]);
 
   return {
-    trigger: fetchDataCallback,
+    trigger,
     success,
     code,
     isLoading,

@@ -1,26 +1,33 @@
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
+import {
+  IVoucherDataForSavingToDB,
+  IVoucherFromPrismaIncludeLineItems,
+} from '@/interfaces/voucher';
 
-export async function findUniqueJournalInPrisma(journalId: number | undefined) {
+export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
+  journalId: number | undefined
+) {
   try {
     const result = await prisma.journal.findUnique({
       where: {
         id: journalId,
       },
-      select: {
-        id: true,
+      include: {
+        invoice: {
+          include: {
+            payment: true,
+          },
+        },
       },
     });
 
-    if (!result) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-    }
-
-    return result.id;
+    return result;
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
     // eslint-disable-next-line no-console
@@ -79,35 +86,19 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 }
 
 export async function findUniqueVoucherInPrisma(voucherId: number) {
-  let voucherData: {
-    id: number;
-    createdAt: number;
-    updatedAt: number;
-    journalId: number;
-    no: string;
-    lineItems: {
-      id: number;
-      amount: number;
-      description: string;
-      debit: boolean;
-      accountId: number;
-      voucherId: number;
-      createdAt: number;
-      updatedAt: number;
-    }[];
-  } | null = null;
+  let voucherData: IVoucherFromPrismaIncludeLineItems | null = null;
   try {
     voucherData = await prisma.voucher.findUnique({
       where: {
         id: voucherId,
       },
-      select: {
-        id: true,
-        journalId: true,
-        no: true,
-        createdAt: true,
-        updatedAt: true,
-        lineItems: true,
+      include: {
+        journal: true,
+        lineItems: {
+          include: {
+            account: true,
+          },
+        },
       },
     });
   } catch (error) {
@@ -208,7 +199,10 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
     });
 
     const localToday = new Date();
-    const localTodayNo = `${localToday.getFullYear()}`.padStart(4, '0') + `${localToday.getMonth() + 1}`.padStart(2, '0') + `${localToday.getDate()}`.padStart(2, '0');
+    const localTodayNo =
+      `${localToday.getFullYear()}`.padStart(4, '0') +
+      `${localToday.getMonth() + 1}`.padStart(2, '0') +
+      `${localToday.getDate()}`.padStart(2, '0');
     const resultDate = result?.createdAt
       ? new Date(timestampInSeconds(result?.createdAt)).getDate()
       : -1;
@@ -253,4 +247,144 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
+}
+
+// Info: (20240710 - Murky) Unefficient need to be refactor
+export async function findManyVoucherWithCashInPrisma(
+  companyId: number,
+  startDateInSecond: number,
+  endDateInSecond: number
+) {
+  try {
+    const vouchers = await prisma.voucher.findMany({
+      where: {
+        journal: {
+          companyId,
+        },
+        createdAt: {
+          gte: startDateInSecond,
+          lte: endDateInSecond,
+        },
+        lineItems: {
+          some: {
+            OR: CASH_AND_CASH_EQUIVALENTS_CODE.map((cashCode) => ({
+              account: {
+                code: {
+                  startsWith: cashCode,
+                },
+              },
+            })),
+          },
+        },
+      },
+      include: {
+        journal: true,
+        lineItems: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    return vouchers;
+  } catch (error) {
+    // Info: （ 20240710 - Murky）Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+}
+
+export async function updateVoucherByJournalIdInPrisma(
+  journalId: number,
+  companyId: number,
+  voucherToUpdate: IVoucherDataForSavingToDB
+) {
+  const nowInSecond = getTimestampNow();
+
+  let newVoucher: {
+    id: number;
+    createdAt: number;
+    updatedAt: number;
+    journalId: number;
+    no: string;
+    lineItems: {
+      id: number;
+      amount: number;
+      description: string;
+      debit: boolean;
+      accountId: number;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
+    }[];
+  } | null = null;
+
+  newVoucher = await prisma.$transaction(async (prismaClient) => {
+    const journalExists = await prismaClient.journal.findUnique({
+      where: {
+        id: journalId,
+        companyId,
+      },
+      include: {
+        voucher: {
+          include: {
+            lineItems: true,
+          },
+        },
+      },
+    });
+
+    // Info: (20240712 - Murky) If journal exists and voucher exists, update the voucher
+
+    if (journalExists && journalExists?.voucher && journalExists?.voucher?.id) {
+      if (journalExists?.voucher?.lineItems) {
+        await prismaClient.lineItem.deleteMany({
+          where: {
+            voucherId: journalExists.voucher.id,
+          },
+        });
+      }
+
+      await Promise.all(
+        voucherToUpdate.lineItems.map(async (lineItem) => {
+          await prismaClient.lineItem.create({
+            data: {
+              amount: lineItem.amount,
+              description: lineItem.description,
+              debit: lineItem.debit,
+              account: {
+                connect: {
+                  id: lineItem.accountId,
+                },
+              },
+              voucher: {
+                connect: { id: journalExists?.voucher?.id },
+              },
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            },
+          });
+        })
+      );
+      const voucherBeUpdated = await prismaClient.voucher.update({
+        where: {
+          id: journalExists.voucher.id,
+        },
+        data: {
+          updatedAt: nowInSecond,
+        },
+        include: {
+          lineItems: true,
+        },
+      });
+
+      return voucherBeUpdated;
+    }
+
+    return null;
+  });
+
+  return newVoucher;
 }

@@ -8,9 +8,12 @@ import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { InvoiceType } from '@/constants/account';
 
-interface IPostApiResponseType {
+export interface IPostApiResponseType {
   journalId: number;
   resultStatus: IAccountResultStatus;
 }
@@ -23,10 +26,17 @@ function isCompanyIdValid(companyId: any): companyId is number {
 
 // Info Murky (20240416): Body傳進來會是any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatInvoice(invoice: any) {
-  // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+function formatInvoice(invoice: IInvoice) {
+  // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  const now = Date.now(); // Info (20240807 - Jacky): for fake unique invoice number
+  const invoiceTypeValues = Object.values(InvoiceType); // Info (20240807 - Jacky): for fake invoice type
+  const randomIndex = Math.floor(Math.random() * invoiceTypeValues.length);
   const formattedInvoice = {
     ...invoice,
+    number: now.toString(),
+    type: invoiceTypeValues[randomIndex],
+    vendorTaxId: 'temp fake id',
+    deductible: true,
     projectId: invoice.projectId ? invoice.projectId : null,
     contractId: invoice.contractId ? invoice.contractId : null,
     project: invoice.project ? invoice.project : null,
@@ -54,7 +64,7 @@ function formatOcrId(ocrId: any): number | undefined {
   return ocrIdNumber;
 }
 
-async function uploadInvoiceToAICH(invoice: IInvoice) {
+export async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
 
   try {
@@ -68,22 +78,24 @@ async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
     });
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
+export async function getPayloadFromResponseJSON(
+  responseJSON: Promise<{ payload?: unknown } | null>
+) {
   if (!responseJSON) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_AICH_FAILED);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   let json: {
@@ -93,7 +105,7 @@ async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unkn
   try {
     json = await responseJSON;
   } catch (error) {
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
@@ -110,7 +122,7 @@ async function handlePostRequest(companyId: number, req: NextApiRequest) {
   // Info (20240612 - Murky) ocrId is optional, if not provided, set it to undefined
   const { invoice, ocrId } = req.body;
 
-  // Depreciate ( 20240522 - Murky ) Need to use type guard instead
+  // Deprecate ( 20240522 - Murky ) Need to use type guard instead
   const formattedInvoice = formatInvoice(invoice);
   const formattedOcrId = formatOcrId(ocrId);
 
@@ -120,10 +132,10 @@ async function handlePostRequest(companyId: number, req: NextApiRequest) {
   const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
 
   if (!resultStatus || !isIAccountResultStatus(resultStatus)) {
-    throw new Error(STATUS_MESSAGE.BAD_GATEWAY_DATA_FROM_AICH_IS_INVALID_TYPE);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
   }
 
-  // Depreciate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
+  // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   // const { projectId, contractId } = getProjectIdAndContractIdFromInvoice(formattedInvoice);
 
   const journalId = await handlePrismaSavingLogic(
@@ -156,8 +168,12 @@ export default async function handler(
   res: NextApiResponse<IResponseData<IPostApiResponseType>>
 ) {
   try {
-    const session = await checkAdmin(req, res);
-    const { companyId } = session;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    if (!isAuth) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
 
     if (!isCompanyIdValid(companyId)) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -172,7 +188,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Depreciate ( 20240522 - Murky ) Debugging purpose
+    // Deprecate ( 20240522 - Murky ) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
     handleErrorResponse(res, error.message);

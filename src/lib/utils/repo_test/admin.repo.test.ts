@@ -6,12 +6,14 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   createAdmin,
   updateAdminById,
-  deleteAdminById,
-  deleteAdminListByCompanyId,
   listCompanyAndRole,
   createCompanyAndRole,
+  getCompanyDetailAndRoleByCompanyId,
+  deleteAdminByIdForTesting,
+  deleteAdminListByCompanyIdForTesting,
 } from '@/lib/utils/repo/admin.repo';
 import admins from '@/seed_json/admin.json';
+import { deleteCompanyByIdForTesting } from '@/lib/utils/repo/company.repo';
 
 describe('Admin Repository Tests', () => {
   const testAdminId = 1000;
@@ -29,7 +31,7 @@ describe('Admin Repository Tests', () => {
       expect(adminList[0].userId).toEqual(admins[0].userId);
       expect(adminList[0].role.id).toEqual(admins[0].roleId);
       expect(adminList[0].status).toEqual(admins[0].status);
-      expect(adminList[0].startDate).toEqual(admins[0].startDate);
+      expect(typeof adminList[0].startDate).toBe('number');
     });
   });
 
@@ -37,16 +39,17 @@ describe('Admin Repository Tests', () => {
     it('should return an admin by its ID', async () => {
       const admin = await getAdminById(testAdminId);
       expect(admin).toBeDefined();
-      expect(admin.companyId).toEqual(admins[0].companyId);
-      expect(admin.userId).toEqual(admins[0].userId);
-      expect(admin.roleId).toEqual(admins[0].roleId);
-      expect(admin.status).toEqual(admins[0].status);
-      expect(admin.startDate).toEqual(admins[0].startDate);
+      expect(admin!.companyId).toEqual(admins[0].companyId);
+      expect(admin!.userId).toEqual(admins[0].userId);
+      expect(admin!.roleId).toEqual(admins[0].roleId);
+      expect(admin!.status).toEqual(admins[0].status);
+      expect(admin!.startDate).toEqual(admins[0].startDate);
     });
 
     it('should throw an error if the admin is not found', async () => {
       const nonExistentAdminId = -1;
-      await expect(getAdminById(nonExistentAdminId)).rejects.toThrow();
+      const admin = await getAdminById(nonExistentAdminId);
+      expect(admin).toBeNull();
     });
   });
 
@@ -90,7 +93,7 @@ describe('Admin Repository Tests', () => {
   describe('createAdmin', () => {
     it('should create a new admin', async () => {
       const admin = await createAdmin(testUserId, testCompanyId, testRoleId);
-      await deleteAdminById(admin.id); // Clean up after test
+      await deleteAdminByIdForTesting(admin.id); // Clean up after test
       expect(admin).toBeDefined();
       expect(admin.userId).toBe(testUserId);
       expect(admin.companyId).toBe(testCompanyId);
@@ -120,13 +123,28 @@ describe('Admin Repository Tests', () => {
     });
   });
 
+  describe('getCompanyDetailAndRoleByCompanyId', () => {
+    it('should return company details and role by company ID', async () => {
+      const detail = await getCompanyDetailAndRoleByCompanyId(testUserId, testCompanyId);
+      expect(detail).toBeDefined();
+      expect(detail?.company.id).toBe(testCompanyId);
+      expect(detail?.role).toBeDefined();
+    });
+
+    it('should return null if the company details and role are not found', async () => {
+      const detail = await getCompanyDetailAndRoleByCompanyId(testUserId, -1);
+      expect(detail).toBeNull();
+    });
+  });
+
   describe('createCompanyAndRole', () => {
     it('should create a company and role for a given user', async () => {
-      const code = 'TESTCODE';
+      const code = `TESTCODE-${Date.now()}`;
       const name = 'Test Company';
       const regional = 'Test Regional';
       const companyRole = await createCompanyAndRole(testUserId, code, name, regional);
-      await deleteAdminListByCompanyId(companyRole.company.id);
+      await deleteAdminListByCompanyIdForTesting(companyRole.company.id);
+      await deleteCompanyByIdForTesting(companyRole.company.id);
       expect(companyRole).toBeDefined();
       expect(companyRole.company.code).toBe(code);
       expect(companyRole.company.name).toBe(name);

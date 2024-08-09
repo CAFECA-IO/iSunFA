@@ -1,53 +1,149 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { ISalary } from '@/interfaces/salary';
+import { ISalaryRecord } from '@/interfaces/salary_record';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import { getSession } from '@/lib/utils/session';
+import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
+import {
+  createSalaryRecord,
+  getSalaryRecordsList,
+  updateSalaryRecordsConfirmed,
+} from '@/lib/utils/repo/salary_record.repo';
 
-const responseDataArray: ISalary[] = [
-  {
-    department: 'Tech Dev',
-    names_ids: [
-      { name: 'John Doe', id: 1 },
-      { name: 'Andy', id: 2 },
-      { name: 'Eva', id: 3 },
-    ],
-  },
-  {
-    department: 'Product Design',
-    names_ids: [
-      { name: 'Jane Smith', id: 4 },
-      { name: 'Paul', id: 5 },
-    ],
-  },
-  {
-    department: 'Marketing',
-    names_ids: [
-      { name: 'Bob Brown', id: 6 },
-      { name: 'Johnny', id: 7 },
-      { name: 'Queen', id: 8 },
-      { name: 'Lion', id: 9 },
-    ],
-  },
-];
+async function checkAuth(userId: number, companyId: number): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  return !!admin;
+}
 
-export default function handler(
+function checkInput(
+  type: string,
+  frequency: string,
+  startDate: number,
+  endDate: number,
+  employeeIdList: number[],
+  description: string
+): boolean {
+  return (
+    !!type &&
+    !!frequency &&
+    !!startDate &&
+    !!endDate &&
+    Array.isArray(employeeIdList) &&
+    employeeIdList.every((id) => typeof id === 'number') &&
+    !!description
+  );
+}
+
+async function handleGetRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ISalary[] | ISalary>>
+  res: NextApiResponse<IResponseData<ISalaryRecord | ISalaryRecord[] | null>>
 ) {
-  try {
-    if (req.method === 'GET') {
-      const { httpCode, result } = formatApiResponse<ISalary[]>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        responseDataArray
-      );
-      res.status(httpCode).json(result);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ISalaryRecord | ISalaryRecord[] | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuth(userId, companyId);
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    const salaryRecordsLists = await getSalaryRecordsList(companyId);
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = salaryRecordsLists;
+  }
+  return { statusMessage, payload };
+}
+
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISalaryRecord | ISalaryRecord[] | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ISalaryRecord | ISalaryRecord[] | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuth(userId, companyId);
+  if (!isAuth) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    const confirmedSalaryRecordsLists = await updateSalaryRecordsConfirmed(companyId);
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = confirmedSalaryRecordsLists;
+  }
+  return { statusMessage, payload };
+}
+
+async function handlePostRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISalaryRecord | ISalaryRecord[] | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ISalaryRecord[] | ISalaryRecord | null = null;
+
+  const { type, frequency, startDate, endDate, employeeIdList, description } = req.body;
+  const isValid = checkInput(type, frequency, startDate, endDate, employeeIdList, description);
+  if (!isValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+  } else {
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const isAuth = await checkAuth(userId, companyId);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      const newSalaryRecords = await createSalaryRecord(
+        type,
+        frequency,
+        startDate,
+        endDate,
+        employeeIdList,
+        description
+      );
+      statusMessage = STATUS_MESSAGE.CREATED;
+      payload = newSalaryRecords;
+    }
+  }
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{
+    statusMessage: string;
+    payload: ISalary | ISalary[] | ISalaryRecord | ISalaryRecord[] | null;
+  }>;
+} = {
+  GET: handleGetRequest,
+  PUT: handlePutRequest,
+  POST: handlePostRequest,
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ISalary | ISalary[] | ISalaryRecord | ISalaryRecord[] | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ISalary | ISalary[] | ISalaryRecord | ISalaryRecord[] | null = null;
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ISalary>(error.message, {} as ISalary);
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<
+      ISalary | ISalary[] | ISalaryRecord | ISalaryRecord[] | null
+    >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

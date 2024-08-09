@@ -32,6 +32,11 @@ const nextConfig = {
     I_SUN_FA_ADDRESS_ON_GOOGLE_MAP: process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP,
     I_SUN_FA_PHONE_NUMBER: process.env.I_SUN_FA_PHONE_NUMBER,
     GITHUB_LINK: process.env.REACT_APP_GITHUB_LINK,
+    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+  },
+  images: {
+    loader: 'custom',
+    loaderFile: '/src/lib/utils/image-loader.js',
   },
   webpack: (config) => {
     const newConfig = cloneDeep(config);

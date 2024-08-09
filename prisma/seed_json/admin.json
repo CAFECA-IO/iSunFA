@@ -12,12 +12,36 @@
     "updatedAt": 1635724800
   },
   {
-    "userId": 99999991,
-    "companyId": 8867,
-    "roleId": 99999991,
+    "id": 1001,
+    "userId": 1001,
+    "companyId": 1000,
+    "roleId": 1003,
     "email": "",
     "status": true,
-    "startDate": 1717751006,
+    "startDate": 1635724800,
+    "endDate": 1667260800,
+    "createdAt": 1635724800,
+    "updatedAt": 1635724800
+  },
+  {
+    "id": 1002,
+    "userId": 1002,
+    "companyId": 1000,
+    "roleId": 1002,
+    "email": "",
+    "status": true,
+    "startDate": 1635724800,
+    "endDate": 1667260800,
+    "createdAt": 1635724800,
+    "updatedAt": 1635724800
+  },
+  {
+    "userId":1003,
+    "companyId": 8867,
+    "roleId":1003,
+    "email": "",
+    "status": true,
+    "startDate": 1721201350,
     "endDate": null,
     "createdAt": 1717751006,
     "updatedAt": 1717751006

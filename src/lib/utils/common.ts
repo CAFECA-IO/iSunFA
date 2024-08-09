@@ -3,16 +3,14 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import {
-  ALLOWED_ORIGINS,
-  DEFAULT_PAGE_LIMIT,
-  DEFAULT_PAGE_START_AT,
-  FORMIDABLE_CONFIG,
-} from '@/constants/config';
+import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import path from 'path';
+import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
+import { ROCDate } from '@/interfaces/locale';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -32,7 +30,7 @@ export const truncateString = (str: string, length: number) => {
   return result;
 };
 
-export const timestampToString = (timestamp: number | undefined) => {
+export const timestampToString = (timestamp: number | undefined, separator: string = '-') => {
   if (timestamp === 0 || timestamp === undefined || timestamp === null) {
     return {
       date: '-',
@@ -95,21 +93,23 @@ export const timestampToString = (timestamp: number | undefined) => {
 
   const monthNameShort = monthNamesInShort[monthIndex];
   const monthName = monthFullName[monthIndex];
-  const dateString = `${year}-${month.toString().padStart(2, '0')}-${day
+  const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
+    .toString()
+    .padStart(2, '0')}`;
+  const dateString = `${year}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
     .padStart(2, '0')}`;
   const dayString = `${day.toString().padStart(2, '0')}`;
+  const tomorrowString = `${year}${separator}${(month + 1)
+    .toString()
+    .padStart(2, '0')}${separator}${(day + 1).toString().padStart(2, '0')}`;
   const monthString = MONTH_LIST[monthIndex];
 
   return {
     date: dateString, // e.g. 2021-01-01
-    dateOfLastYear: `${year - 1}-${month.toString().padStart(2, '0')}-${day
-      .toString()
-      .padStart(2, '0')}`, // e.g. 2020-01-01
+    dateOfLastYear: dateOfLastYearString, // e.g. 2020-01-01
     day: `${dayString}`, // e.g. 01
-    tomorrow: `${year}-${month.toString().padStart(2, '0')}-${(day + 1)
-      .toString()
-      .padStart(2, '0')}`, // e.g. 2021-01-02
+    tomorrow: tomorrowString, // e.g. 2021-01-02
     month: `${month}`.padStart(2, '0'), // e.g. 01
     monthString: `${monthString}`, // e.g. January (with i18n)
     monthShortName: `${monthNameShort}`, // e.g. Jan.
@@ -147,6 +147,15 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   };
 };
 
+function rocYearToAD(rocYear: string, sperator: string): string {
+  let modifiedRocYear = rocYear;
+  if (rocYear.split(sperator)[0].length < 4) {
+    // Info 民國年
+    const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
+    modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
+  }
+  return modifiedRocYear;
+}
 // Info Murky (20240425) - Helper function to convert date strings to timestamps
 // will return timestamp of current if input is not valid
 export const convertDateToTimestamp = (dateStr: string | number): number => {
@@ -158,16 +167,6 @@ export const convertDateToTimestamp = (dateStr: string | number): number => {
 
   if (typeof dateStr === 'number') {
     return dateStr as number;
-  }
-
-  function rocYearToAD(rocYear: string, sperator: string): string {
-    let modifiedRocYear = rocYear;
-    if (rocYear.split(sperator)[0].length < 4) {
-      // Info 民國年
-      const year = parseInt(rocYear.split(sperator)[0], 10) + 1911;
-      modifiedRocYear = `${year}-${rocYear.split(sperator)[1]}-${rocYear.split(sperator)[2]}`;
-    }
-    return modifiedRocYear;
   }
 
   let modifiedDateStr = dateStr;
@@ -232,11 +231,11 @@ const getCodeByMessage = (statusMessage: string) => {
     code = STATUS_CODE[statusMessage as keyof typeof STATUS_CODE];
     message = statusMessage;
   } else if (/prisma/i.test(statusMessage)) {
-    code = STATUS_CODE[STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR];
-    message = STATUS_MESSAGE.BAD_GATEWAY_PRISMA_ERROR;
+    code = STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR];
+    message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_PRISMA_ERROR;
   } else {
-    code = STATUS_CODE[STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR];
-    message = STATUS_MESSAGE.INVALID_STATUS_MESSAGE_ERROR;
+    code = STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR];
+    message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
   return { code, message };
 };
@@ -307,6 +306,15 @@ export const countdown = (remainingSeconds: number) => {
   };
 };
 
+export const convertTimestampToROCDate = (timestampInSecond: number): ROCDate => {
+  const milliSecondTimestamp = timestampInMilliSeconds(timestampInSecond);
+  const date = new Date(milliSecondTimestamp);
+  const year = date.getUTCFullYear() - 1911;
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  return { year, month, day };
+};
+
 export function eventTypeToVoucherType(eventType: EventType): VoucherType {
   return EVENT_TYPE_TO_VOUCHER_TYPE_MAP[eventType];
 }
@@ -350,6 +358,10 @@ export function pageToOffset(
   return (page - 1) * limit;
 }
 
+export function calculateTotalPages(totalCount: number, pageSize: number): number {
+  return Math.ceil(totalCount / pageSize);
+}
+
 export const getTodayPeriodInSec = () => {
   const today = new Date();
   const startTimeStamp = timestampInSeconds(
@@ -362,14 +374,12 @@ export const getTodayPeriodInSec = () => {
 };
 
 // Info Murky (20240531): This function can only be used in the server side
-export async function mkUploadFolder() {
-  const uploadFolder =
-    process.env.VERCEL === '1'
-      ? FORMIDABLE_CONFIG.uploadDir
-      : path.join(process.cwd(), FORMIDABLE_CONFIG.uploadDir);
+export async function mkUploadFolder(subDir: string) {
+  const uploadDir =
+    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
 
   try {
-    await fs.mkdir(uploadFolder, { recursive: false });
+    await fs.mkdir(uploadDir, { recursive: false });
   } catch (error) {
     // Info: (20240329) Murky: Do nothing if /tmp already exist
   }
@@ -446,4 +456,184 @@ export function getTimestampOfFirstDateOfThisYear() {
   const timestamp = date.getTime();
   const timestampInSecond = setTimestampToDayStart(timestamp);
   return timestampInSecond;
+}
+
+export function getTimestampOfSameDateOfLastYear(todayInSecond: number) {
+  const milliseconds = timestampInMilliSeconds(todayInSecond);
+  const date = new Date(milliseconds);
+  date.setFullYear(date.getFullYear() - 1);
+  return timestampInSeconds(date.getTime());
+}
+
+export function getTimestampOfLastSecondOfDate(date: Date | number) {
+  if (typeof date === 'number') {
+    // eslint-disable-next-line no-param-reassign
+    date = new Date(timestampInMilliSeconds(date));
+  }
+
+  const timestamp = date.setHours(23, 59, 59, 999);
+  return timestampInSeconds(timestamp);
+}
+
+export function getTimestampNow() {
+  return timestampInSeconds(new Date().getTime());
+}
+
+export function calculateWorkingHours(startDate: number, endDate: number) {
+  // 將秒轉換為毫秒
+  const start = new Date(startDate * 1000);
+  const end = new Date(endDate * 1000);
+  let totalWorkingHours = 0;
+
+  // 遍歷每一天
+  // 使用 let date = new Date(start) 創建一個新的 Date 物件，在迴圈中不會影響到原始的 start
+  // date.setDate(date.getDate() + 1) 會將日期增加一天
+  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+    const day = date.getDay();
+    // 如果是工作日（週一到週五）
+    if (day >= 1 && day <= 5) {
+      totalWorkingHours += 8;
+    }
+  }
+  return totalWorkingHours;
+}
+
+export function formatNumberSeparateByComma(num: number) {
+  const formatter = new Intl.NumberFormat('en-US');
+  const formattedNumber = formatter.format(Math.abs(num));
+
+  // Info: (20240716 - Murky) 如果 num 是負數，則將結果包裹在括號內
+  return num < 0 ? `(${formattedNumber})` : formattedNumber;
+}
+
+export const loadFileFromLocalStorage = (
+  fileType: UploadDocumentKeys,
+  localStorageFilesKey: string = 'KYCFiles'
+) => {
+  try {
+    const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
+    // eslint-disable-next-line no-console
+    console.log('Loaded from localStorage:', data);
+
+    let fileObject: {
+      id: string | undefined;
+      file: File | undefined;
+    } = {
+      id: undefined,
+      file: undefined,
+    };
+
+    if (data[fileType]) {
+      const {
+        id,
+        name,
+        file: fileData,
+      } = data[fileType] as {
+        id: string | undefined;
+        file: string | undefined;
+        name: string;
+        type: string;
+      };
+
+      if (fileData) {
+        const byteString = atob(fileData.split(',')[1]);
+        const mimeString = fileData.split(',')[0].split(':')[1].split(';')[0];
+
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i += 1) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+
+        const blob = new Blob([ab], { type: mimeString });
+        fileObject = { id, file: new File([blob], name, { type: mimeString }) };
+      } else {
+        fileObject = { id, file: undefined };
+      }
+    }
+
+    return fileObject;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error loading file from localStorage:', error);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
+};
+
+export const deleteFileFromLocalStorage = (
+  fileType: UploadDocumentKeys,
+  loacalStorageFilesKey: string = KYCFiles,
+  fileId?: string
+) => {
+  const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
+  const data = currentData;
+  let newData = {
+    ...data,
+  };
+  if (fileType) {
+    newData = {
+      ...data,
+      [fileType]: {
+        id: undefined,
+        file: undefined,
+      },
+    };
+  } else {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const key in data) {
+      if (data[key].id === fileId) {
+        newData = {
+          ...data,
+          [key]: {
+            id: undefined,
+            file: undefined,
+          },
+        };
+        break;
+      }
+    }
+  }
+  localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
+};
+
+export function getEnumValue<T extends object>(enumObj: T, value: string): T[keyof T] | undefined {
+  return (Object.values(enumObj) as unknown as string[]).includes(value)
+    ? (value as unknown as T[keyof T])
+    : undefined;
+}
+
+// Info: (20240808 - Shirley) 節流函數
+// eslint-disable-next-line function-paren-newline
+export function throttle<F extends (...args: unknown[]) => unknown>(
+  func: F,
+  limit: number
+): (...args: Parameters<F>) => void {
+  let lastFunc: NodeJS.Timeout | null;
+  let lastRan: number | null = null;
+
+  function returnFunc(this: unknown, ...args: Parameters<F>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context = this as unknown as F;
+    if (lastRan === null) {
+      func.apply(context, args);
+      lastRan = Date.now();
+    } else {
+      if (lastFunc) clearTimeout(lastFunc);
+      lastFunc = setTimeout(
+        () => {
+          if (Date.now() - lastRan! >= limit) {
+            func.apply(context, args);
+            lastRan = Date.now();
+          }
+        },
+        limit - (Date.now() - lastRan)
+      );
+    }
+  }
+
+  return returnFunc;
+}
+
+export function generateUUID(): string {
+  return Math.random().toString(36).substring(2, 12);
 }

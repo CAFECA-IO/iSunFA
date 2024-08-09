@@ -3,10 +3,12 @@ import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { isUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { createProject, listProject } from '@/lib/utils/repo/project.repo';
 import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.formatter';
 import { getSession } from '@/lib/utils/session';
+import { generateIcon } from '@/lib/utils/generate_user_icon';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,7 +20,7 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    shouldContinue = await isUserAdmin(userId, companyId);
+    shouldContinue = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (shouldContinue) {
       switch (req.method) {
         case 'GET': {
@@ -34,7 +36,14 @@ export default async function handler(
             shouldContinue = false;
           }
           if (shouldContinue) {
-            const createdProject = await createProject(companyId, name, stage, memberIdList);
+            const porjectIcon = await generateIcon(name);
+            const createdProject = await createProject(
+              companyId,
+              name,
+              stage,
+              memberIdList,
+              porjectIcon
+            );
             const project = await formatProject(createdProject);
             statusMessage = STATUS_MESSAGE.CREATED;
             payload = project;

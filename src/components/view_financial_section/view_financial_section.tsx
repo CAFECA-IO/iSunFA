@@ -1,16 +1,27 @@
-/* eslint-disable */
-import { pdfjs, Document, Page } from 'react-pdf';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { EXTERNAL_API } from '@/constants/url';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { ISUNFA_ROUTE } from '@/constants/url';
+// import { useGlobalCtx } from '@/contexts/global_context';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { ToastType } from '@/interfaces/toastify';
-import useStateRef from 'react-usestateref';
-import { useTranslation } from 'next-i18next';
+// import { ToastType } from '@/interfaces/toastify';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import {
+  BalanceSheetReport,
+  CashFlowStatementReport,
+  FinancialReport,
+  IncomeStatementReport,
+} from '@/interfaces/report';
+import { useUserCtx } from '@/contexts/user_context';
+import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
+import Skeleton from '@/components/skeleton/skeleton';
+import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+import { useTranslation } from 'react-i18next';
+import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
+import { useRouter } from 'next/router';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -18,342 +29,123 @@ interface IViewReportSectionProps {
   tokenContract: string;
   tokenId: string;
   reportLink: string;
+  reportId: string;
 }
 
-const balanceReportThumbnails = [
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/balance_sheet/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-];
+const generateThumbnails = (count: number) => {
+  return Array.from({ length: count }, (_, index) => ({
+    number: index + 1,
+    active: index === 0,
+    src: `/elements/placeholder.png`,
+    alt: `${count}`,
+  }));
+};
 
-const comprehensiveIncomeReportThumbnails = [
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_17.png',
-    alt: 'Report Thumbnail 17',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_18.png',
-    alt: 'Report Thumbnail 18',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_19.png',
-    alt: 'Report Thumbnail 19',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_20.png',
-    alt: 'Report Thumbnail 20',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_21.png',
-    alt: 'Report Thumbnail 21',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/comprehensive_income_statement/report_thumbnail_22.png',
-    alt: 'Report Thumbnail 22',
-    active: false,
-  },
-];
+const balanceReportThumbnails = generateThumbnails(12);
+const incomeReportThumbnails = generateThumbnails(9);
+const cashFlowReportThumbnails = generateThumbnails(11);
 
-const cashFlowReportThumbnails = [
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_01.png',
-    alt: 'Report Thumbnail 01',
-    active: true,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_02.png',
-    alt: 'Report Thumbnail 02',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_03.png',
-    alt: 'Report Thumbnail 03',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_04.png',
-    alt: 'Report Thumbnail 04',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_05.png',
-    alt: 'Report Thumbnail 05',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_06.png',
-    alt: 'Report Thumbnail 06',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_07.png',
-    alt: 'Report Thumbnail 07',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_08.png',
-    alt: 'Report Thumbnail 08',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_09.png',
-    alt: 'Report Thumbnail 09',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_10.png',
-    alt: 'Report Thumbnail 10',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_11.png',
-    alt: 'Report Thumbnail 11',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_12.png',
-    alt: 'Report Thumbnail 12',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_13.png',
-    alt: 'Report Thumbnail 13',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_14.png',
-    alt: 'Report Thumbnail 14',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_15.png',
-    alt: 'Report Thumbnail 15',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_16.png',
-    alt: 'Report Thumbnail 16',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_17.png',
-    alt: 'Report Thumbnail 17',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_18.png',
-    alt: 'Report Thumbnail 18',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_19.png',
-    alt: 'Report Thumbnail 19',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_20.png',
-    alt: 'Report Thumbnail 20',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_21.png',
-    alt: 'Report Thumbnail 21',
-    active: false,
-  },
-  {
-    src: '/report_thumbnails/cash_flow_statement/report_thumbnail_22.png',
-    alt: 'Report Thumbnail 22',
-    active: false,
-  },
-];
+enum TotalPages {
+  BALANCE_SHEET = 12,
+  INCOME_STATEMENT = 9,
+  CASH_FLOW_STATEMENT = 11,
+}
+
+function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
+  return !!(
+    report.general &&
+    report.details &&
+    report.otherInfo &&
+    report.otherInfo.revenueAndExpenseRatio &&
+    report.otherInfo.revenueToRD
+  );
+}
+
+function isValidBalanceSheetReport(report: BalanceSheetReport): boolean {
+  return !!(
+    report.general &&
+    report.details &&
+    report.otherInfo &&
+    report.otherInfo.assetLiabilityRatio &&
+    report.otherInfo.assetMixRatio &&
+    report.otherInfo.dso &&
+    report.otherInfo.inventoryTurnoverDays
+  );
+}
+
+function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolean {
+  return !!(
+    report.general &&
+    report.details &&
+    report.otherInfo &&
+    report.otherInfo.operatingStabilized &&
+    report.otherInfo.lineChartDataForRatio &&
+    report.otherInfo.strategyInvest &&
+    report.otherInfo.freeCash
+  );
+}
 
 const ViewFinancialSection = ({
+  reportId,
+
   reportTypesName,
   tokenContract,
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
   const { t } = useTranslation('common');
-  const globalCtx = useGlobalCtx();
+  const router = useRouter();
 
-  const [chartWidth, setChartWidth, chartWidthRef] = useStateRef(580);
-  const [chartHeight, setChartHeight, chartHeightRef] = useStateRef(250);
+  // const globalCtx = useGlobalCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const [numPages, setNumPages] = useState<number>(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [reportThumbnails, setReportThumbnails] = useState<
-    { src: string; alt: string; active: boolean }[]
+    { number: number; alt: string; active: boolean; src: string }[]
   >([]);
+  // TODO: download PDF file (20240802 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pdfFile, setPdfFile] = useState<null | string>(null);
-  const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  function onDocumentLoadSuccess(data: { numPages: number }): void {
-    setNumPages(data.numPages);
-    setIsLoading(false);
-  }
+  const { data: reportFinancial, isLoading: getReportFinancialIsLoading } =
+    APIHandler<FinancialReport>(
+      APIName.REPORT_GET_BY_ID,
+      {
+        params: {
+          companyId: selectedCompany?.id,
+          reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        },
+      },
+      hasCompanyId
+    );
+
+  const isInvalidReport = useMemo(() => {
+    if (!reportFinancial) return true;
+
+    switch (reportFinancial.reportType) {
+      case ReportSheetType.INCOME_STATEMENT:
+        return !isValidIncomeStatementReport(reportFinancial as IncomeStatementReport);
+      case ReportSheetType.BALANCE_SHEET:
+        return !isValidBalanceSheetReport(reportFinancial as BalanceSheetReport);
+      case ReportSheetType.CASH_FLOW_STATEMENT:
+        return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
+      default:
+        return true;
+    }
+  }, [reportFinancial]);
+
+  // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
+  const handleIframeLoad = () => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, MILLISECONDS_IN_A_SECOND);
+  };
 
   const thumbnailClickHandler = (index: number) => {
     setActiveIndex(index);
@@ -370,137 +162,186 @@ const ViewFinancialSection = ({
     setPageNumber((prev) => prev + 1);
   };
 
-  const copyTokenContract = () => {
-    navigator.clipboard.writeText(tokenContract);
-
-    globalCtx.toastHandler({
-      type: ToastType.SUCCESS,
-      id: 'token-copied',
-      closeable: true,
-      content: 'Copied',
-      autoClose: 500,
-    });
+  const printPDF = () => {
+    if (reportLink) {
+      const printWindow = window.open(reportLink, '_blank');
+      if (printWindow) {
+        printWindow.addEventListener('load', () => {
+          setTimeout(() => {
+            printWindow.print();
+          }, WAIT_FOR_REPORT_DATA);
+        });
+      }
+    }
   };
+  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // const copyTokenContract = () => {
+  //   navigator.clipboard.writeText(tokenContract);
 
-  const copyTokenId = () => {
-    navigator.clipboard.writeText(tokenId);
+  //   globalCtx.toastHandler({
+  //     type: ToastType.SUCCESS,
+  //     id: 'token-copied',
+  //     closeable: true,
+  //     content: 'Copied',
+  //     autoClose: 500,
+  //   });
+  // };
+  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+  // const copyTokenId = () => {
+  //   navigator.clipboard.writeText(tokenId);
 
-    globalCtx.toastHandler({
-      type: ToastType.SUCCESS,
-      id: 'token-copied',
-      closeable: true,
-      content: 'Copied',
-      autoClose: 500,
-    });
-  };
-
-  const copyTokenContractClickHandler = () => {
-    copyTokenContract();
-  };
-
-  const copyTokenIdClickHandler = () => {
-    copyTokenId();
-  };
+  //   globalCtx.toastHandler({
+  //     type: ToastType.SUCCESS,
+  //     id: 'token-copied',
+  //     closeable: true,
+  //     content: 'Copied',
+  //     autoClose: 500,
+  //   });
+  // };
+  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // const copyTokenContractClickHandler = () => {
+  //   copyTokenContract();
+  // };
+  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+  // const copyTokenIdClickHandler = () => {
+  //   copyTokenId();
+  // };
 
   const backClickHandler = () => {
-    window.history.back();
+    // Info: 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面 (20240729 - Shirley)
+    router.push(ISUNFA_ROUTE.USERS_MY_REPORTS);
   };
 
   const downloadClickHandler = () => {
-    if (pdfFile) {
-      window.open(pdfFile, '_blank');
+    if (reportLink) {
+      printPDF();
     }
+    // TODO: get PDF file (20240802 - Shirley)
+    // if (pdfFile) {
+    //   window.open(pdfFile, '_blank');
+    // }
   };
 
-  const fetchPDF = async () => {
-    try {
-      const uri = encodeURIComponent(reportLink);
+  // TODO: get PDF file (20240802 - Shirley)
+  // const fetchPDF = async () => {
+  //   try {
+  //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
 
-      const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
+  //     const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
-      // TODO: use API service (20240502 - Shirley)
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-      });
+  //     // TODO: use API service (20240502 - Shirley)
+  //     const response = await fetch(apiUrl, {
+  //       method: 'GET',
+  //     });
 
-      const blob = await response.blob();
-      const pdfUrl = URL.createObjectURL(blob);
+  //     const blob = await response.blob();
+  //     const pdfUrl = URL.createObjectURL(blob);
 
-      setPdfFile(pdfUrl);
-    } catch (error) {
-      // TODO: error handling (20240502 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error(error);
-    }
-  };
+  //     setPdfFile(pdfUrl);
+  //   } catch (error) {
+  //     // TODO: error handling (20240502 - Shirley)
+  //     // eslint-disable-next-line no-console
+  //     console.error(error);
+  //   }
+  // };
 
   useEffect(() => {
-    if (!pdfFile) return;
-
-    switch (reportTypesName.id) {
+    switch (reportTypesName?.id ?? '') {
       case FinancialReportTypesKey.balance_sheet:
         setReportThumbnails(balanceReportThumbnails);
+        setNumPages(TotalPages.BALANCE_SHEET);
         break;
       case FinancialReportTypesKey.comprehensive_income_statement:
-        setReportThumbnails(comprehensiveIncomeReportThumbnails);
+        setReportThumbnails(incomeReportThumbnails);
+        setNumPages(TotalPages.INCOME_STATEMENT);
         break;
       case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
+        setNumPages(TotalPages.CASH_FLOW_STATEMENT);
         break;
       default:
         setReportThumbnails([]);
     }
-  }, [pdfFile]);
-
-  useEffect(() => {
-    fetchPDF();
-  }, [reportLink]);
-
-  useEffect(() => {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.js',
-      import.meta.url
-    ).toString();
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const windowWidth = globalCtx.width;
-      const windowHeight = window.innerHeight;
-      const DESKTOP_WIDTH = 1024;
-      const TABLET_WIDTH = 910;
-      const MOBILE_WIDTH = 500;
+  // useEffect(() => {
+  //   if (reportLink) {
+  //     fetchPDF();
+  //   }
+  // }, [reportLink]);
 
-      if (windowWidth <= MOBILE_WIDTH) {
-        const presentWidth = 350 + (windowWidth - 375);
-        const presentHeight = 150;
+  // useEffect(() => {
+  //   pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  //     'pdfjs-dist/build/pdf.worker.js',
+  //     import.meta.url
+  //   ).toString();
+  // }, []);
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else if (windowWidth <= TABLET_WIDTH) {
-        // Info: 為了讓 ipad mini 跟 ipad air 可以在 left:x 參數不改動的情況下置中，以 ipad mini 去水平跟垂直置中，超過 ipad mini (768 px) 的部分就變大，以維持比例 (20240529 - Shirley)
-        const presentWidth = 650 + (windowWidth - 768);
-        const presentHeight = 250;
+  const displayedReportType = getReportFinancialIsLoading ? (
+    <Skeleton width={200} height={40} />
+  ) : (
+    <p>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
+  );
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else if (windowWidth <= DESKTOP_WIDTH && windowWidth > TABLET_WIDTH) {
-        const presentWidth = 500;
-        const presentHeight = 250;
+  // Info:創建一個新的變數來儲存翻譯後的字串 (20240730 - Anna)
+  const reportTypeString =
+    !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
+      ? displayedReportType.props.children
+      : '';
+  const translatedReportType = t(`PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`);
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      } else {
-        const presentWidth = windowWidth / 12;
-        const presentHeight = windowHeight / 3.5;
+  const renderedThumbnail = (
+    thumbnail: { number: number; active: boolean; alt: string; src: string },
+    index: number
+  ) => (
+    <button type="button" onClick={() => thumbnailClickHandler(index)} key={index}>
+      <div
+        className={`flex flex-col rounded-2xl px-5 py-4 ${
+          index === activeIndex
+            ? 'bg-surface-brand-primary-soft'
+            : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+        }`}
+      >
+        <div className="flex items-center justify-center border border-solid border-blue-950">
+          <Image width={100} height={142} src={thumbnail.src} alt={thumbnail.alt} />
+        </div>
+        <div
+          className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
+            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
+          }`}
+        >
+          {index + 1 < 10 ? `0${index + 1}` : index + 1}
+        </div>
+      </div>
+    </button>
+  );
 
-        setChartWidth(presentWidth);
-        setChartHeight(presentHeight);
-      }
-    };
+  const displayedReport = (
+    <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
+      {/* Info: Sidebar (20240426 - Shirley) */}
+      <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+        <div className="mt-9 flex w-full flex-col items-center justify-center">
+          <div className="flex h-850px flex-col gap-3">
+            {isLoading ? (
+              <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+            ) : isInvalidReport ? null : (
+              reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
+            )}
+          </div>
+        </div>
+      </div>
 
-    handleResize();
-  }, [globalCtx.width]);
+      <div className="mx-10 flex h-850px w-full flex-1 justify-center overflow-x-auto bg-transparent lg:mx-0">
+        <iframe
+          ref={iframeRef}
+          src={`${reportLink}#${pageNumber}`}
+          className={`h-full w-full origin-top-left scale-90 overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
+          title="Financial Report"
+          onLoad={handleIframeLoad}
+        />
+      </div>
+    </div>
+  );
 
   // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
@@ -530,13 +371,21 @@ const ViewFinancialSection = ({
             </svg>
           </div>
         </Button>
+        {/* <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
+          {displayedReportType}
+        </div> */}
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
-          {reportTypesName?.name}
+          {getReportFinancialIsLoading ? (
+            <Skeleton width={200} height={40} />
+          ) : (
+            translatedReportType
+          )}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={isLoading}
+              disabled={!reportLink || isLoading || isInvalidReport}
+              // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -560,7 +409,7 @@ const ViewFinancialSection = ({
             </Button>
             <Button
               // TODO: yet to dev (20240507 - Shirley)
-              disabled={true}
+              disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -589,15 +438,22 @@ const ViewFinancialSection = ({
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_CONTRACT')} </div>
+            {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+            {/* <div className="text-text-neutral-tertiary">Token Contract </div> */}
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
               <div className="font-semibold text-link-text-primary">{tokenContract} </div>
-
-              <button onClick={copyTokenContractClickHandler} type="button">
+              {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+              {/* <Button
+                disabled={!tokenContract}
+                variant={'secondaryBorderless'}
+                size={'extraSmall'}
+                onClick={copyTokenContractClickHandler}
+                type="button"
+              >
                 {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -613,11 +469,12 @@ const ViewFinancialSection = ({
                     clipRule="evenodd"
                   ></path>
                 </svg>
-              </button>
+              </Button> */}
             </div>
           </div>
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_ID')}</div>
+            {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+            {/* <div className="text-text-neutral-tertiary">Token ID </div> */}
 
             <div className="flex items-center space-x-3">
               {/* TODO: link (20240507 - Shirley) */}
@@ -626,8 +483,14 @@ const ViewFinancialSection = ({
               </Link> */}
 
               <div className="font-semibold text-link-text-primary">{tokenId} </div>
-
-              <button onClick={copyTokenIdClickHandler} type="button">
+              {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+              {/* <Button
+                disabled={!tokenId}
+                variant={'secondaryBorderless'}
+                size={'extraSmall'}
+                onClick={copyTokenIdClickHandler}
+                type="button"
+              >
                 {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -643,7 +506,7 @@ const ViewFinancialSection = ({
                     clipRule="evenodd"
                   ></path>
                 </svg>
-              </button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -651,12 +514,20 @@ const ViewFinancialSection = ({
         <div className="mt-0 flex flex-col lg:hidden">
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                {t('JOURNAL.TOKEN_CONTRACT')}
-              </div>
+              {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+              {/* <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+                Token Contract
+              </div> */}
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
-                  <button onClick={copyTokenContractClickHandler} type="button">
+                  {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
+                  {/* <Button
+                    disabled={!tokenContract}
+                    variant={'secondaryBorderless'}
+                    size={'extraSmall'}
+                    onClick={copyTokenContractClickHandler}
+                    type="button"
+                  >
                     {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -672,7 +543,7 @@ const ViewFinancialSection = ({
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                  </button>
+                  </Button> */}
                 </div>
               </div>
             </div>
@@ -684,12 +555,20 @@ const ViewFinancialSection = ({
           </div>
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                {t('JOURNAL.TOKEN_ID')}
-              </div>
+              {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+              {/* <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+                Token ID
+              </div> */}
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
-                  <button onClick={copyTokenIdClickHandler} type="button">
+                  {/* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */}
+                  {/* <Button
+                    disabled={!tokenId}
+                    variant={'secondaryBorderless'}
+                    size={'extraSmall'}
+                    onClick={copyTokenIdClickHandler}
+                    type="button"
+                  >
                     {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -705,132 +584,68 @@ const ViewFinancialSection = ({
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                  </button>
+                  </Button> */}
                 </div>
               </div>
             </div>
             {/* TODO: link (20240507 - Shirley) */}
-
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className=""></div>
+      <div className="pointer-events-auto z-0 flex lg:hidden">
+        {/* Info: prev button (20240529 - Shirley) */}
+        <Button
+          variant={'secondaryBorderless'}
+          size={'extraSmall'}
+          onClick={prevClickHandler}
+          disabled={pageNumber <= 1 || isInvalidReport || isLoading}
+          className="fixed left-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 17 16"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
+
+        {/* Info: next button (20240529 - Shirley) */}
+        <Button
+          variant={'secondaryBorderless'}
+          size={'extraSmall'}
+          onClick={nextClickHandler}
+          disabled={pageNumber >= numPages || isInvalidReport || isLoading}
+          className="fixed right-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 17 16"
+          >
+            <path
+              fillRule="evenodd"
+              d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </Button>
       </div>
 
       {/* Info: financial report content (20240426 - Shirley) */}
-      <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-40 pb-2">
-        {/* Info: Sidebar (20240426 - Shirley) */}
-        <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
-          <div className="mt-9 flex w-full flex-col items-center justify-center">
-            {/* Info: 不能加上 `items-center justify-center`，否則縮圖會被截斷 (20240507 - Shirley) */}
-            <div className="flex h-850px flex-col gap-3">
-              {!isLoading ? (
-                reportThumbnails.map((thumbnail, index) => (
-                  <button onClick={() => thumbnailClickHandler(index)} key={index}>
-                    <div
-                      className={`flex flex-col rounded-2xl px-5 py-4 ${
-                        index === activeIndex
-                          ? 'bg-surface-brand-primary-soft'
-                          : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center border border-solid border-blue-950">
-                        <Image width={150} height={106} src={thumbnail.src} alt={thumbnail.alt} />
-                      </div>
-                      <div
-                        className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
-                          thumbnail.active
-                            ? 'text-text-neutral-solid-dark'
-                            : 'text-text-text-neutral-primary'
-                        }`}
-                      >
-                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {pdfFile ? (
-          <div className="flex w-screen flex-1 items-center justify-center md:h-850px lg:w-full lg:bg-white">
-            {/* Info: prev button (20240529 - Shirley) */}
-            <button
-              onClick={prevClickHandler}
-              disabled={pageNumber <= 1}
-              className="absolute left-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <path
-                  fill="#001840"
-                  fillRule="evenodd"
-                  d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
-
-            {/* Info: PDF 本體 for desktop (20240529 - Shirley) */}
-            <div className="hidden lg:flex">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page scale={1} pageNumber={pageNumber} />
-              </Document>
-            </div>
-
-            {/* Info: PDF 本體 for mobile (20240529 - Shirley) */}
-            <div className="flex h-screen md:mt-20 lg:hidden">
-              <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess} className={`relative`}>
-                <Page
-                  scale={1}
-                  pageNumber={pageNumber}
-                  width={chartWidth}
-                  height={chartHeight}
-                  className="absolute left-8% top-1/3 w-full -translate-x-1/2 -translate-y-1/2 iphonese:left-11% iphonexr:left-14% sm:left-35% sm:top-1/2 md:left-35%"
-                />
-              </Document>
-            </div>
-
-            {/* Info: next button (20240529 - Shirley) */}
-            <button
-              onClick={nextClickHandler}
-              disabled={pageNumber >= numPages}
-              className="absolute right-0 top-40rem z-10 m-4 iphone12pro:top-40rem iphonexr:top-38rem md:bottom-56 lg:hidden"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 17 16"
-              >
-                <path
-                  fill="#001840"
-                  fillRule="evenodd"
-                  d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </button>
-          </div>
-        ) : (
-          <div className="flex h-850px w-full flex-1 justify-center bg-white">
-            <p className="text-stroke-brand-secondary">{t('MY_REPORTS_SECTION.LOADING')}</p>
-          </div>
-        )}
-      </div>
+      {displayedReport}
     </div>
   );
 };

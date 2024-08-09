@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { IPendingReportItem } from '@/interfaces/report_item';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
@@ -8,14 +7,16 @@ import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { FinancialReportTypeName } from '@/interfaces/report_type';
+import { IReport } from '@/interfaces/report';
 
 interface IPendingReportItemProps {
-  report: IPendingReportItem;
+  report: IReport;
   checked: boolean;
   isCheckboxVisible: boolean;
   onCheckChange?: () => void;
-  onReportItemUpdate?: (report: IPendingReportItem) => void;
-  onReportItemDelete?: (id: string) => void;
+  onReportItemUpdate?: (report: IReport) => void;
+  onReportItemDelete?: (id: number) => void;
 }
 
 const PendingReportItem = ({
@@ -30,13 +31,13 @@ const PendingReportItem = ({
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const [reportItem, setReportItem] = useState(report);
-  const { id, createdTimestamp, name, period, remainingSeconds, paused } = reportItem;
+  const { id, createdAt, name, from, to, remainingSeconds, paused } = reportItem;
 
   const [isPaused, setIsPaused] = useState(paused);
   const [remainingTime, setRemainingTime] = useState(remainingSeconds);
 
-  const startDate = timestampToString(period.startTimestamp);
-  const endDate = timestampToString(period.endTimestamp);
+  const startDate = timestampToString(from);
+  const endDate = timestampToString(to);
   const remainingData = countdown(remainingTime);
 
   const togglePausedStatus = () => {
@@ -75,10 +76,10 @@ const PendingReportItem = ({
       subtitle: 'Are you sure\n you want to delete the process?',
       content: `It will take 30 - 40 minutes\n 
       if you want to apply it again.`,
-      submitBtnStr: 'Yes, Delete it',
+      submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: 'Cancel', // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
     });
     messageModalVisibilityHandler();
   };
@@ -111,7 +112,7 @@ const PendingReportItem = ({
     <Button
       onClick={pauseClickHandler}
       variant={'tertiaryBorderless'}
-      className="my-auto mr-5 px-0 py-0"
+      className="my-auto mr-2 px-0 py-0"
     >
       {' '}
       <svg
@@ -133,7 +134,7 @@ const PendingReportItem = ({
     <Button
       onClick={resumeClickHandler}
       variant={'tertiaryBorderless'}
-      className="my-auto mr-5 px-0 py-0"
+      className="my-auto mr-2 px-0 py-0"
     >
       {' '}
       <svg
@@ -157,7 +158,7 @@ const PendingReportItem = ({
 
   const displayedOperationsColumn =
     remainingTime > 0 ? (
-      <div className="hidden w-full grid-cols-3 lg:grid">
+      <div className="flex w-full grid-cols-3 lg:grid">
         {/* Info: Pause / Resume (20240514 - Shirley) */}
         {displayedPauseOrResumeButton}
         {/* Info: Delete (20240514 - Shirley) */}
@@ -228,21 +229,27 @@ const PendingReportItem = ({
       ) : null}
       <td className="border-x border-lightGray6">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
-        <CalendarIcon timestamp={createdTimestamp} />
+        <CalendarIcon timestamp={createdAt} />
       </td>
       <td className="pl-5 text-start text-base text-text-neutral-primary">
         {/* Info: desktop (20240528 - Shirley) */}
         <p className="hidden lg:flex">{name}</p>
 
         {/* Info: mobile (20240528 - Shirley) */}
-        <div className="flex flex-col space-y-5 lg:hidden">
+        <div className="flex flex-col space-y-3 lg:hidden">
           <p className="text-ellipsis sm:hidden">{truncateString(name, 16)}</p>
           <p className="hidden text-ellipsis sm:flex">{name}</p>
-
           <div className="flex items-center justify-start">{displayedOperationsColumn}</div>
         </div>
       </td>
-      <td className="hidden w-240px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden px-16px text-left font-medium lg:table-cell">
+        <span className="text-sm text-text-neutral-primary">
+          {t(
+            `PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+          )}
+        </span>
+      </td>
+      <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
@@ -251,14 +258,14 @@ const PendingReportItem = ({
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
-      <td className="hidden w-240px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-150px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.ESTIMATED')}</span>
           {displayedEstimatedTime}
         </div>
       </td>
-      {/* Info: Operations (20240514 - Shirley) */}
-      <td className="hidden px-16px lg:table-cell">
+      {/* Info: Desktop Operations (20240514 - Shirley) */}
+      <td className="hidden min-w-150px px-16px lg:table-cell">
         <div className="flex items-center">{displayedOperationsColumn}</div>
       </td>
     </tr>

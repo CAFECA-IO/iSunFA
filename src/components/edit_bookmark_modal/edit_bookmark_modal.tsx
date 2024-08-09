@@ -12,6 +12,26 @@ interface IAddBookmarkModal {
   modalVisibilityHandler: () => void;
 }
 
+// Info: (2024708 - Anna) 定義BookmarkName名稱到翻譯鍵值的映射
+interface BookmarkNameMap {
+  [key: string]: string;
+}
+
+const bookmarkNameMap: BookmarkNameMap = {
+  'Add New Contract': 'BOOKMARK_LIST.ADD_NEW_CONTRACT',
+  'Add New Employees': 'BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
+  'Add New Payroll': 'BOOKMARK_LIST.ADD_NEW_PAYROLL',
+  'Add New Journal': 'BOOKMARK_LIST.ADD_NEW_JOURNAL',
+  'Camera Scanner': 'BOOKMARK_LIST.CAMERA_SCANNER',
+  'Balance Sheet': 'BOOKMARK_LIST.BALANCE_SHEET',
+  'Income Statement': 'BOOKMARK_LIST.INCOME_STATEMENT',
+  'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
+  'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
+  'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
+  'HR Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
+  'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
+};
+
 const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
   const { t } = useTranslation('common');
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
@@ -30,7 +50,9 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   };
 
   const dropdownMenu =
-    selectedBookmark.length > 0 ? `${selectedBookmark.length} selected` : 'Please select bookmarks';
+    selectedBookmark.length > 0
+      ? `${selectedBookmark.length} ${t('DASHBOARD.SELECTED')}`
+      : t('EDIT_BOOKMARK_MODAL.PLEASE_SELECT_BOOKMARKS');
 
   useEffect(() => {
     const addedBookmark = Object.entries(bookmarkList)
@@ -123,7 +145,8 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                       {bookmarkList[key].iconOnModal}
                     </div>
                     <p className="items-center justify-center text-start text-xs sm:text-sm">
-                      {bookmarkList[key].name}
+                      {/* {bookmarkList[key].name} */}
+                      {t(bookmarkNameMap[bookmarkList[key].name])}
                     </p>
 
                     <div
@@ -260,7 +283,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
               onClick={cancelBtnClickHandler}
               className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
             >
-              {t('REPORTS_HISTORY_ITEM.CANCEL')}
+              {t('REPORTS_HISTORY_LIST.CANCEL')}
             </button>{' '}
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
               {t('EDIT_BOOKMARK_MODAL.SAVE')}

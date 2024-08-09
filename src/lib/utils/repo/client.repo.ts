@@ -1,11 +1,13 @@
 import prisma from '@/client';
 import { IClient } from '@/interfaces/client';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma } from '@prisma/client';
 
 export async function listClient(companyId: number): Promise<IClient[]> {
   const listedClient = await prisma.client.findMany({
     where: {
       companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
   return listedClient;
@@ -17,6 +19,7 @@ export async function getClientById(clientId: number): Promise<IClient | null> {
     client = await prisma.client.findUnique({
       where: {
         id: clientId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -46,11 +49,24 @@ export async function updateClientById(
 }
 
 export async function deleteClientById(clientId: number): Promise<IClient> {
-  const deletedClient = await prisma.client.delete({
-    where: {
-      id: clientId,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.ClientWhereUniqueInput = {
+    id: clientId,
+    deletedAt: null,
+  };
+
+  const data: Prisma.ClientUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs = {
+    where,
+    data,
+  };
+
+  const deletedClient = await prisma.client.update(updateArgs);
   return deletedClient;
 }
 

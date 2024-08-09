@@ -1,13 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import accounts from '@/seed_json/account.json';
 import companies from '@/seed_json/company.json';
+import companyKYCs from '@/seed_json/company_kyc.json';
 import admins from '@/seed_json/admin.json';
 import projects from '@/seed_json/project.json';
 import IncomeExpenses from '@/seed_json/income_expense.json';
 import roles from '@/seed_json/role.json';
 import users from '@/seed_json/user.json';
 import milestones from '@/seed_json/milestone.json';
-import generatedReports from '@/seed_json/generated_report.json';
+
+// Info (2024722 - Murky) - Uncomment this line to seed generated reports
+// import generatedReports from '@/seed_json/generated_report.json';
 import pendingReports from '@/seed_json/pending_report.json';
 import departments from '@/seed_json/department.json';
 import employees from '@/seed_json/employee.json';
@@ -21,6 +24,9 @@ import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
 import invitations from '@/seed_json/invitation.json';
 import clients from '@/seed_json/client.json';
+import journals from '@/seed_json/journal.json';
+import vouchers from '@/seed_json/voucher.json';
+import lineItems from '@/seed_json/line_item.json';
 
 const prisma = new PrismaClient();
 
@@ -30,11 +36,12 @@ async function createMilestones() {
   });
 }
 
-async function createGeneratedReports() {
-  await prisma.report.createMany({
-    data: generatedReports,
-  });
-}
+// Info (2024722 - Murky) - Uncomment this line to seed generated reports
+// async function createGeneratedReports() {
+//   await prisma.report.createMany({
+//     data: generatedReports,
+//   });
+// }
 
 async function createPendingReports() {
   await prisma.report.createMany({
@@ -63,6 +70,12 @@ async function createAccount() {
 async function createCompany() {
   await prisma.company.createMany({
     data: companies,
+  });
+}
+
+async function createCompanyKYC() {
+  await prisma.companyKYC.createMany({
+    data: companyKYCs,
   });
 }
 
@@ -155,11 +168,69 @@ async function createInvitation() {
   });
 }
 
+async function createJournal() {
+  await prisma.journal.createMany({
+    data: journals,
+  });
+}
+
+async function createVoucher() {
+  await prisma.voucher.createMany({
+    data: vouchers,
+  });
+}
+
+async function createLineItem(lineItem: {
+  amount: number;
+  description: string;
+  accountCode: string;
+  debit: boolean;
+  voucherId: number;
+  createdAt: number;
+  updatedAt: number;
+}) {
+  const account = await prisma.account.findFirst({
+    where: {
+      code: lineItem.accountCode,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (!account) {
+    throw new Error(`Account with code ${lineItem.accountCode} not found`);
+  }
+  await prisma.lineItem.create({
+    data: {
+      amount: lineItem.amount,
+      description: lineItem.description,
+      debit: lineItem.debit,
+      createdAt: lineItem.createdAt,
+      updatedAt: lineItem.updatedAt,
+      account: {
+        connect: {
+          id: account.id,
+        },
+      },
+      voucher: {
+        connect: {
+          id: lineItem.voucherId,
+        },
+      },
+    },
+  });
+}
+
+async function createLineItems() {
+  await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
+}
+
 async function main() {
   // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
   await createRole();
   await createUser();
   await createCompany();
+  await createCompanyKYC();
   await createClient();
   await createAccount();
   await createAdmin();
@@ -186,7 +257,9 @@ async function main() {
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });
-  await createGeneratedReports();
+
+  // Info (20240316 - Murky) - Uncomment this line to seed generated reports
+  // await createGeneratedReports();
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });
@@ -194,6 +267,14 @@ async function main() {
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });
+
+  await createJournal();
+  await createVoucher();
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createLineItems();
 }
 
 main()

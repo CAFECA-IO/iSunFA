@@ -3,11 +3,13 @@ import { IWorkRate } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkAdmin, isUserAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { listWorkRate } from '@/lib/utils/repo/work_rate.repo';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { listEmployeeProject } from '@/lib/utils/repo/employee_project.repo';
 import { formatWorkRateList } from '@/lib/utils/formatter/work_rate.formatter';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { getSession } from '@/lib/utils/session';
 
 async function checkInput(projectId: string) {
   let isValid = true;
@@ -19,7 +21,7 @@ async function checkInput(projectId: string) {
 
 async function checkAuth(userId: number, companyId: number, projectId: number) {
   let isValid = true;
-  const isAdmin = await isUserAdmin(userId, companyId);
+  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAdmin) {
     isValid = false;
   } else {
@@ -46,8 +48,12 @@ export default async function handler(
       if (!shouldContinue) {
         statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       } else {
-        const session = await checkAdmin(req, res);
-        const { companyId } = session;
+        const session = await getSession(req, res);
+        const { userId, companyId } = session;
+        const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+        if (!isAuth) {
+          throw new Error(STATUS_MESSAGE.FORBIDDEN);
+        }
         const projectIdNum = convertStringToNumber(projectId);
 
         shouldContinue = await checkAuth(session.userId, companyId, projectIdNum);

@@ -1,8 +1,6 @@
 export const IS_BUTTON_DISABLED_TEMP = true;
-export const INTERVAL_NUMBER_ANIMATION_MOBILE = 1000;
-export const INTERVAL_NUMBER_ANIMATION_DESKTOP = 10;
+export const INTERVAL_NUMBER_ANIMATION = 500;
 export const DEFAULT_DISPLAYED_USER_NAME = 'User';
-export const DEFAULT_DISPLAYED_COMPANY_ID = 1; // Deprecated: remove when production (20240528 - tzuhan)
 export const NO_DATA_FOR_DEMO = false;
 export const LAYOUT_BREAKPOINT = 1024;
 
@@ -84,6 +82,7 @@ export enum SortOptions {
 }
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';
+export const DEFAULT_COMPANY_IMAGE_URL = '/elements/example_company_image.png';
 
 export enum DatePickerAlign {
   LEFT = 'left',
@@ -99,3 +98,8 @@ export enum ActionType {
 }
 
 export const DEFAULT_SKELETON_COUNT_FOR_PAGE = 5;
+export const LIMIT_FOR_REPORT_PAGE = 5;
+export const DEFAULT_PAGE_NUMBER = 1;
+
+export const DEFAULT_THROTTLE_TIME = 100;
+export const WAIT_FOR_REPORT_DATA = 2000;

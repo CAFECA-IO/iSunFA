@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils/common';
 
 // Info: 用 cva 來定義 button 的樣式 (20240319 - Shirley)
 const buttonVariants = cva(
-  '"gap space-x-2 ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100',
+  '"gap space-x-2 ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -13,13 +13,15 @@ const buttonVariants = cva(
         tertiary:
           'bg-button-surface-strong-secondary text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable',
         tertiaryOutline:
-          'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+          'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable disabled:border-button-stroke-disable',
         secondaryOutline:
-          'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+          'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable disabled:border-button-stroke-disable',
         tertiaryBorderless:
-          'border-none border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+          'border-none border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable',
         secondaryBorderless:
-          'border-none border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary',
+          'border-none border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable',
+        disabledGray: 'border border-button-stroke-disable text-button-text-disable',
+        disabledYellow: 'border border-button-stroke-primary text-button-text-primary',
       },
       size: {
         default: 'px-6 py-3',

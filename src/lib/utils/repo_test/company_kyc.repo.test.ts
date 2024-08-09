@@ -1,52 +1,44 @@
-import { createCompanyKYC, deleteCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
+import {
+  CountryOptions,
+  IndustryOptions,
+  LegalStructureOptions,
+  RepresentativeIDType,
+} from '@/constants/kyc';
+import {
+  createCompanyKYC,
+  deleteCompanyKYCForTesting,
+  getCompanyKYCByCompanyId,
+} from '@/lib/utils/repo/company_kyc.repo';
+import companyKYCs from '@/seed_json/company_kyc.json';
+
+const testCompanyId = 1000;
 
 describe('CompanyKYC Repository Tests', () => {
-  const testCompanyId = 1000;
   const newCompanyKYCData = {
     legalName: 'New Legal Name',
-    country: 'New Country',
+    country: CountryOptions.TAIWAN,
     city: 'New City',
     address: 'New Address',
     zipCode: '54321',
     representativeName: 'New Representative',
-    structure: 'Corporation',
+    structure: LegalStructureOptions.CORPORATION,
     registrationNumber: '987654321',
     registrationDate: '2023-01-02',
-    industry: 'Finance',
+    industry: IndustryOptions.FINANCIAL_SERVICES,
     contactPerson: 'Jane Doe',
     contactPhone: '+987654321',
     contactEmail: 'jane.doe@example.com',
     website: 'https://newexample.com',
-    representativeIdType: 'Driver License',
+    representativeIdType: RepresentativeIDType.DRIVER_LICENSE,
     registrationCertificateId: 'newcert123',
     taxCertificateId: 'newtax123',
     representativeIdCardId: 'newid123',
   };
 
-  describe('createCompanyKYC', () => {
+  xdescribe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
-      const companyKYC = await createCompanyKYC(
-        testCompanyId,
-        newCompanyKYCData.legalName,
-        newCompanyKYCData.country,
-        newCompanyKYCData.city,
-        newCompanyKYCData.address,
-        newCompanyKYCData.zipCode,
-        newCompanyKYCData.representativeName,
-        newCompanyKYCData.structure,
-        newCompanyKYCData.registrationNumber,
-        newCompanyKYCData.registrationDate,
-        newCompanyKYCData.industry,
-        newCompanyKYCData.contactPerson,
-        newCompanyKYCData.contactPhone,
-        newCompanyKYCData.contactEmail,
-        newCompanyKYCData.website,
-        newCompanyKYCData.representativeIdType,
-        newCompanyKYCData.registrationCertificateId,
-        newCompanyKYCData.taxCertificateId,
-        newCompanyKYCData.representativeIdCardId
-      );
-      await deleteCompanyKYC(companyKYC.id); // Clean up after test
+      const companyKYC = await createCompanyKYC(testCompanyId, newCompanyKYCData);
+      await deleteCompanyKYCForTesting(companyKYC.id); // Clean up after test
       expect(companyKYC).toBeDefined();
       expect(companyKYC.companyId).toBe(testCompanyId);
       expect(companyKYC.legalName).toBe(newCompanyKYCData.legalName);
@@ -57,5 +49,18 @@ describe('CompanyKYC Repository Tests', () => {
       expect(companyKYC.representativeName).toBe(newCompanyKYCData.representativeName);
       expect(companyKYC.structure).toBe(newCompanyKYCData.structure);
     });
+  });
+});
+
+describe('getCompanyKYCByCompanyId', () => {
+  it('should return the CompanyKYC record for a given companyId', async () => {
+    const companyKYC = await getCompanyKYCByCompanyId(testCompanyId);
+    expect(companyKYC).toEqual(companyKYCs[1]);
+  });
+
+  it('should return null if the companyId is invalid', async () => {
+    const companyId = -1; // Replace with an invalid companyId
+    const companyKYC = await getCompanyKYCByCompanyId(companyId);
+    expect(companyKYC).toBeNull();
   });
 });

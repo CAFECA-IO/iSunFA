@@ -1,8 +1,5 @@
-import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IUser } from '@/interfaces/user';
-import { IAdmin } from '@/interfaces/admin';
 import { RoleName } from '@/constants/role_name';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
@@ -12,24 +9,31 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import { formatAdmin } from '@/lib/utils/formatter/admin.formatter';
 import { Invitation } from '@prisma/client';
+import i18next from 'i18next';
+import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import { getUserById } from './repo/user.repo';
 
-export async function checkUser(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession(req, res);
-  const { userId } = session;
-  if (!userId) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  const user: IUser = (await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  })) as IUser;
-  if (!user) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-  return session;
+const getTranslatedRoleName = (roleName: RoleName): string => {
+  const t = i18next.t.bind(i18next);
+  const roleTranslations: Record<RoleName, string> = {
+    [RoleName.SUPER_ADMIN]: t('ROLE.SUPER_ADMIN'),
+    [RoleName.ADMIN]: t('ROLE.ADMIN'),
+    [RoleName.OWNER]: t('ROLE.OWNER'),
+    [RoleName.ACCOUNTANT]: t('ROLE.ACCOUNTANT'),
+    [RoleName.BOOKKEEPER]: t('ROLE.BOOKKEEPER'),
+    [RoleName.FINANCE]: t('ROLE.FINANCE'),
+    [RoleName.VIEWER]: t('ROLE.VIEWER'),
+    [RoleName.TEST]: t('ROLE.TEST'),
+  };
+
+  return roleTranslations[roleName] || roleName;
+};
+
+export async function checkUser(params: { userId: number }) {
+  const user = await getUserById(params.userId);
+  return !!user;
 }
 
 export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
@@ -51,12 +55,40 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   return session;
 }
 
-export async function isUserAdmin(userId: number, companyId: number): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+export async function checkUserAdmin(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(params.companyId, params.userId);
+  return !!admin;
+}
+
+export async function checkUserCompanyOwner(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+    params.companyId,
+    params.userId,
+    RoleName.OWNER
+  );
+  return !!admin;
+}
+
+export async function checkUserCompanySuperAdmin(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+    params.companyId,
+    params.userId,
+    RoleName.SUPER_ADMIN
+  );
   return !!admin;
 }
 
 export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
+  const translatedRoleName = getTranslatedRoleName(roleName);
   const session = await getSession(req, res);
   const { companyId, userId } = session;
   if (!userId) {
@@ -70,29 +102,78 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   }
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    // throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error(`${STATUS_MESSAGE.FORBIDDEN} - Missing role: ${translatedRoleName}`);
   }
   return session;
 }
 
-export async function checkCompanyAdminMatch(companyId: number, adminId: number): Promise<IAdmin> {
-  const getAdmin = await getAdminById(adminId);
-  if (getAdmin.companyId !== companyId) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+export async function checkCompanyAdminMatch(params: {
+  companyId: number;
+  adminId: number;
+}): Promise<boolean> {
+  let isAuth = true;
+  const getAdmin = await getAdminById(params.adminId);
+  if (!getAdmin) {
+    isAuth = false;
+  } else if (getAdmin.companyId !== params.companyId) {
+    isAuth = false;
   }
-  const admin = await formatAdmin(getAdmin);
-  return admin;
+  return isAuth;
 }
 
-export async function isProjectCompanyMatch(projectId: number, companyId: number) {
-  const getProject = await getProjectById(projectId);
-  const match = getProject !== null && getProject.companyId === companyId;
+export async function checkProjectCompanyMatch(params: { projectId: number; companyId: number }) {
+  const getProject = await getProjectById(params.projectId);
+  const match = getProject !== null && getProject.companyId === params.companyId;
   return match;
 }
 
-export async function checkInvitation(invitation: Invitation): Promise<boolean> {
+export async function checkInvitation(params: { invitation: Invitation }): Promise<boolean> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const isValid = invitation && !invitation.hasUsed && invitation.expiredAt >= nowTimestamp;
-  return isValid;
+  const isAuth =
+    params.invitation && !params.invitation.hasUsed && params.invitation.expiredAt >= nowTimestamp;
+  return isAuth;
+}
+
+// 检查函数的映射表
+export const authFunctions: AuthFunctions = {
+  user: checkUser,
+  admin: checkUserAdmin,
+  owner: checkUserCompanyOwner,
+  superAdmin: checkUserCompanySuperAdmin,
+  CompanyAdminMatch: checkCompanyAdminMatch,
+  projectCompanyMatch: checkProjectCompanyMatch,
+  invitation: checkInvitation,
+};
+
+export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
+  requiredChecks: T,
+  authParams: AllRequiredParams<T>
+): Promise<boolean> {
+  let isAuthorized = false;
+
+  // 檢查 companyId 是否為 FREE_COMPANY_ID
+  if (
+    typeof authParams === 'object' &&
+    authParams !== null &&
+    'companyId' in authParams &&
+    authParams.companyId === FREE_COMPANY_ID
+  ) {
+    isAuthorized = true;
+  } else {
+    const results = await Promise.all(
+      requiredChecks.map(async (check) => {
+        const checkFunction = authFunctions[check] as (
+          params: typeof authParams
+        ) => Promise<boolean>;
+        const checked = await checkFunction(authParams);
+        return checked;
+      })
+    );
+
+    isAuthorized = results.every((result) => result);
+  }
+
+  return isAuthorized;
 }

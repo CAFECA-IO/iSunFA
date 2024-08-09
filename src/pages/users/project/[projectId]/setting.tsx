@@ -16,8 +16,9 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { UploadType } from '@/constants/file';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -43,11 +44,11 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
 
   // ToDo: (20240617 - Julian) Replace with real data
   const projectName = 'BAIFA';
-  const projectImageSrc = '/entities/happy.png';
+  const projectImageSrc = DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
   const projectMembers = dummyMemberList;
 
-  const { profileUploadModalVisibilityHandler } = useGlobalCtx();
+  const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
 
   const [changedProjectName, setChangedProjectName] = useState(projectName);
   const [changedStage, setChangedStage] = useState(projectStage);
@@ -93,6 +94,11 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
     event.preventDefault();
   };
 
+  const profileUploadClickHandler = () => {
+    profileUploadModalDataHandler(UploadType.PROJECT);
+    profileUploadModalVisibilityHandler();
+  };
+
   // ToDo: (20240612 - Julian) get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
@@ -128,9 +134,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const displayedStageOptions = (
     <div
       ref={stageOptionsRef}
-      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input
-      ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'}
-      bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute right-0 top-12 z-10 flex w-full flex-col items-start rounded-sm border border-input-stroke-input ${isStageOptionsVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} bg-input-surface-input-background px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {stageList.map((stage) => {
         const clickHandler = () => {
@@ -145,7 +149,6 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
             onClick={clickHandler}
           >
             {t(stageNameMap[stage])}
-            {/* {stage}test4 */}
           </button>
         );
       })}
@@ -188,9 +191,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const displayMembersMenu = (
     <div
       ref={membersRef}
-      className={`absolute bottom-full left-0 mb-10px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px md:bottom-auto md:top-50px md:mb-0
-      ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out
-      `}
+      className={`absolute bottom-full left-0 mb-10px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px md:bottom-auto md:top-50px md:mb-0 ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
@@ -251,7 +252,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                 {/* ToDo: (20240617 - Julian) open profile update modal */}
                 <button
                   type="button"
-                  onClick={profileUploadModalVisibilityHandler}
+                  onClick={profileUploadClickHandler}
                   className="group relative flex h-150px w-150px items-center justify-center overflow-hidden rounded-full"
                 >
                   <Image
@@ -261,10 +262,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     height={150}
                     className="group-hover:brightness-50"
                   />
-                  <FiEdit
-                    className="absolute hidden text-text-brand-primary-lv2 group-hover:block"
-                    size={40}
-                  />
+                  <FiEdit className="absolute hidden text-white group-hover:block" size={40} />
                 </button>
                 <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                   {/* Info: (20240617 - Julian) Project Name */}
@@ -285,9 +283,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     <p className="font-semibold">{t('PROJECT.STAGE')}</p>
                     <div
                       onClick={stageMenuClickHandler}
-                      className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background 
-      ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}
-      px-12px hover:cursor-pointer`}
+                      className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer`}
                     >
                       {changedStage}
                       <FaChevronDown />

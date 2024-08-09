@@ -2,46 +2,52 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { IResponseData } from '@/interfaces/response_data';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import {
+  IVoucherDataForAPIResponse,
+  IVoucherDataForSavingToDB,
+  IVoucherFromPrismaIncludeLineItems,
+} from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { checkAdmin } from '@/lib/utils/auth_check';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import {
   createLineItemInPrisma,
   createVoucherInPrisma,
-  findUniqueJournalInPrisma,
   findUniqueVoucherInPrisma,
   getLatestVoucherNoInPrisma,
+  findUniqueJournalInvolveInvoicePaymentInPrisma,
 } from '@/lib/utils/repo/voucher.repo';
+import { getSession } from '@/lib/utils/session';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { IJournalFromPrismaIncludeInvoicePayment } from '@/interfaces/journal';
+import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 
-type ApiResponseType = {
-  id: number;
-  createdAt: number;
-  updatedAt: number;
-  journalId: number;
-  no: string;
-  lineItems: {
-    id: number;
-    amount: number;
-    description: string;
-    debit: boolean;
-    accountId: number;
-    voucherId: number;
-    createdAt: number;
-    updatedAt: number;
-  }[];
-} | null;
+type ApiResponseType = IVoucherDataForAPIResponse | null;
 
 async function handleVoucherCreatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,
   companyId: number
 ) {
+  let updatedVoucher: IVoucherFromPrismaIncludeLineItems | null = null;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+
   try {
-    const journalId = await findUniqueJournalInPrisma(voucher.journalId);
+    const journal: IJournalFromPrismaIncludeInvoicePayment | null =
+      await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
+
+    if (!journal || !journal.invoice || !journal.invoice.payment) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
+      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
+      throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
+    }
 
     const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
-    const voucherData = await createVoucherInPrisma(newVoucherNo, journalId);
+    const voucherData = await createVoucherInPrisma(newVoucherNo, journal.id);
     await Promise.all(
       voucher.lineItems.map(async (lineItem) => {
         return createLineItemInPrisma(lineItem, voucherData.id, companyId);
@@ -49,12 +55,31 @@ async function handleVoucherCreatePrismaLogic(
     );
 
     // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
-    const voucherWithLineItems = await findUniqueVoucherInPrisma(voucherData.id);
+    updatedVoucher = await findUniqueVoucherInPrisma(voucherData.id);
+    statusMessage = STATUS_MESSAGE.CREATED;
+  } catch (_error) {
+    const error = _error as Error;
+    // Deprecate: (20240806 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(error);
 
-    return voucherWithLineItems;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    switch (error.message) {
+      case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        break;
+      case STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT:
+        statusMessage = STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT;
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR;
+        break;
+    }
   }
+
+  return {
+    updatedVoucher,
+    statusMessage,
+  };
 }
 
 function isVoucherValid(
@@ -81,43 +106,36 @@ export async function handlePostRequest(req: NextApiRequest, companyId: number) 
 
   const result = await handleVoucherCreatePrismaLogic(voucher, companyId);
 
-  const { httpCode, result: response } = formatApiResponse<ApiResponseType>(
-    STATUS_MESSAGE.CREATED,
-    result
-  );
-
-  return { httpCode, response };
-}
-
-export function handleErrorRequest(error: Error) {
-  const { httpCode, result } = formatApiResponse<ApiResponseType>(
-    error.message,
-    {} as ApiResponseType
-  );
-  return { httpCode, result };
+  return result;
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
-  const session = await checkAdmin(req, res);
-  const { companyId } = session;
-  // Depreciated: (20240613 - Murky) Need to replace by type guard after merge
-  if (!companyId || typeof companyId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
 
-  try {
-    if (req.method === 'POST') {
-      const { httpCode, response } = await handlePostRequest(req, companyId);
-      res.status(httpCode).json(response);
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ApiResponseType = null;
+
+  if (isAuth) {
+    try {
+      if (req.method === 'POST') {
+        const { updatedVoucher, statusMessage: message } = await handlePostRequest(req, companyId);
+        payload = updatedVoucher;
+        statusMessage = message;
+      } else {
+        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      }
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecate: (20240524 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
     }
-  } catch (_error) {
-    const error = _error as Error;
-    const { httpCode, result } = handleErrorRequest(error);
-    res.status(httpCode).json(result);
   }
+  const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

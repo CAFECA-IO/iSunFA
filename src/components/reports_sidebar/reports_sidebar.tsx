@@ -41,9 +41,13 @@ const ReportsSidebar = () => {
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
-          <div
+          <button
+            type="button"
             onClick={embedCodeModalVisibilityHandler}
-            className={`flex w-full items-center gap-8px hover:cursor-pointer ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
+            // ToDo: (20240802 - Julian) Not released yet
+            // eslint-disable-next-line react/jsx-boolean-value
+            disabled={true}
+            className={`flex w-full items-center gap-8px disabled:opacity-50 ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +56,7 @@ const ReportsSidebar = () => {
               fill="none"
               viewBox="0 0 24 24"
             >
-              <g clipPath="url(#clip0_904_65797)">
+              <g>
                 <path
                   className="fill-current"
                   fill="none"
@@ -61,18 +65,13 @@ const ReportsSidebar = () => {
                   clipRule="evenodd"
                 ></path>
               </g>
-              <defs>
-                <clipPath id="clip0_904_65797">
-                  <path fill="#fff" d="M0 0H24V24H0z"></path>
-                </clipPath>
-              </defs>
             </svg>
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-white transition-all duration-300 ease-in-out`}
             >
               {t('REPORTS_SIDEBAR.GET_EMBED_CODE')}
             </p>
-          </div>
+          </button>
 
           {/* Info: Divider (20240423 - Shirley) */}
           <div
@@ -107,7 +106,7 @@ const ReportsSidebar = () => {
                 ></path>
               </svg>
               <p
-                className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base text-base transition-all duration-300 ease-in-out`}
+                className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
                 {t('REPORTS_SIDEBAR.MY_REPORTS')}
               </p>
@@ -158,7 +157,7 @@ const ReportsSidebar = () => {
               </p>
             </Link>
 
-            <Link
+            {/* <Link
               href={ISUNFA_ROUTE.USERS_ANALYSES_REPORTS}
               className={cn(
                 'flex w-full items-center gap-8px py-8px pl-10px',
@@ -166,6 +165,13 @@ const ReportsSidebar = () => {
                   ? 'text-tabs-text-active'
                   : 'text-tabs-text-default hover:text-tabs-text-active'
               )}
+            > */}
+            <button
+              type="button"
+              // ToDo: (20240802 - Julian) Not released yet
+              // eslint-disable-next-line react/jsx-boolean-value
+              disabled={true}
+              className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -189,7 +195,8 @@ const ReportsSidebar = () => {
               >
                 {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
               </p>
-            </Link>
+            </button>
+            {/* </Link> */}
           </div>
         </div>
       </div>
@@ -222,9 +229,13 @@ const ReportsSidebar = () => {
           </svg>
         </Link>
 
-        <div
+        <button
+          type="button"
           onClick={embedCodeModalVisibilityHandler}
-          className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
+          // ToDo: (20240802 - Julian) Not released yet
+          // eslint-disable-next-line react/jsx-boolean-value
+          disabled={true}
+          className="mx-auto p-16px text-secondaryBlue disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -233,7 +244,7 @@ const ReportsSidebar = () => {
             fill="none"
             viewBox="0 0 24 24"
           >
-            <g clipPath="url(#clip0_904_65797)">
+            <g>
               <path
                 className="fill-current"
                 fill="none"
@@ -242,13 +253,8 @@ const ReportsSidebar = () => {
                 clipRule="evenodd"
               ></path>
             </g>
-            <defs>
-              <clipPath id="clip0_904_65797">
-                <path fill="#fff" d="M0 0H24V24H0z"></path>
-              </clipPath>
-            </defs>
           </svg>
-        </div>
+        </button>
         <Link
           href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
           className={cn(
@@ -282,7 +288,7 @@ const ReportsSidebar = () => {
             </defs>
           </svg>{' '}
         </Link>
-        <Link
+        {/* <Link
           href={ISUNFA_ROUTE.USERS_ANALYSES_REPORTS}
           className={cn(
             'mx-auto p-16px',
@@ -290,6 +296,13 @@ const ReportsSidebar = () => {
               ? 'text-tabs-text-active'
               : 'text-tabs-text-default hover:text-tabs-text-active'
           )}
+        > */}
+        <button
+          type="button"
+          // ToDo: (20240802 - Julian) Not released yet
+          // eslint-disable-next-line react/jsx-boolean-value
+          disabled={true}
+          className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -307,7 +320,8 @@ const ReportsSidebar = () => {
               d="M11.667 1.891v3.442c0 .467 0 .7.09.879.08.156.208.284.365.364.178.09.411.09.878.09h3.442M6.667 12.5V15m6.666-4.167V15M10 8.75V15m6.667-6.677v6.01c0 1.4 0 2.1-.273 2.635a2.5 2.5 0 01-1.092 1.093c-.535.272-1.235.272-2.635.272H7.333c-1.4 0-2.1 0-2.635-.272a2.5 2.5 0 01-1.092-1.093c-.273-.535-.273-1.235-.273-2.635V5.667c0-1.4 0-2.1.273-2.635a2.5 2.5 0 011.092-1.093c.535-.272 1.235-.272 2.635-.272h2.677c.611 0 .917 0 1.205.069a2.5 2.5 0 01.722.299c.253.155.469.37.901.803l2.657 2.657c.432.432.649.649.803.9.137.225.238.468.3.724.069.287.069.593.069 1.204z"
             ></path>
           </svg>
-        </Link>
+        </button>
+        {/* </Link> */}
       </div>
     </>
   );

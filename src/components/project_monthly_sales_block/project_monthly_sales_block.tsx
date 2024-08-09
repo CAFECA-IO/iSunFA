@@ -87,7 +87,7 @@ const ProjectMonthlySalesBlock = () => {
         fillColors: ['#ffa50266', '#FFB632'],
         // width: 8, // 標記的寬度
         // height: 8, // 標記的高度
-        radius: 4, // 標記的半徑（如果是圓形）
+        // radius: 4, // 標記的半徑（如果是圓形）
       },
     },
 
@@ -137,11 +137,13 @@ const ProjectMonthlySalesBlock = () => {
 
   const series = [
     {
-      name: 'Pass Year',
+      // name: 'Pass Year',
+      name: translate('DASHBOARD.PASS_YEAR'),
       data: data.seriesData[0],
     },
     {
-      name: 'Current Year',
+      // name: 'Current Year',
+      name: translate('DASHBOARD.CURRENT_YEAR'),
       data: data.seriesData[1],
     },
   ];

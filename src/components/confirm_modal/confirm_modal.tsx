@@ -1,21 +1,19 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 import { RxCross2 } from 'react-icons/rx';
-import { LuTag } from 'react-icons/lu';
+// import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { APIName } from '@/constants/api_connection';
 import { VoucherRowType, useAccountingCtx } from '@/contexts/accounting_context';
-import { DEFAULT_DISPLAYED_COMPANY_ID, checkboxStyle } from '@/constants/display';
+import { checkboxStyle } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ILineItem } from '@/interfaces/line_item';
-import AccountingVoucherRow, {
-  AccountingVoucherRowMobile,
-} from '@/components/accounting_voucher_row/accounting_voucher_row';
+import AccountingVoucherRow from '@/components/accounting_voucher_row/accounting_voucher_row';
+import AccountingVoucherRowMobile from '@/components/accounting_voucher_row/accounting_voucher_row_mobile';
 import { Button } from '@/components/button/button';
 // ToDo: (20240527 - Luphia) Fix me
 // eslint-disable-next-line import/no-cycle
@@ -27,6 +25,7 @@ import { ProgressStatus } from '@/constants/account';
 import { IConfirmModal } from '@/interfaces/confirm_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
+import { BUFFER_AMOUNT } from '@/constants/config';
 
 interface IConfirmModalProps {
   isModalVisible: boolean;
@@ -40,67 +39,42 @@ const ConfirmModal = ({
   confirmData,
 }: IConfirmModalProps) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { isAuthLoading, selectedCompany } = useUserCtx();
   const {
-    getAIStatusHandler,
-    accountList,
     AIStatus,
+    getAIStatusHandler,
+    totalCredit,
+    totalDebit,
+    accountList,
     generateAccountTitle,
     accountingVoucher,
     addVoucherRowHandler,
     changeVoucherAccountHandler,
     changeVoucherAmountHandler,
-    clearVoucherHandler,
-    totalCredit,
-    totalDebit,
+    resetVoucherHandler,
+    selectedJournal,
     selectJournalHandler,
   } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+
+  // // Info: (20240801 - Anna) 函數用來生成會計科目的標題，並進行多語系翻譯
+  // const generateAccountTitleWithTranslation = (account: IAccount | null) => {
+  //   if (account) {
+  //     const title = generateAccountTitle(account);
+  //     // 如果標題是 'Account Title'，則進行多語系翻譯
+  //     return title === 'Account Title' ? t('JOURNAL.ACCOUNT_TITLE') : title;
+  //   }
+  //   // 如果 account 是 null 或 undefined，返回預設值或其他處理方式
+  //   return '';
+  // };
+
+  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 
   const { journalId, askAIId } = confirmData;
 
-  // Info: (20240527 - Julian) Get journal by id (上半部資料)
-  const {
-    trigger: getJournalById,
-    success: getJournalSuccess,
-    data: journal,
-    code: getJournalCode,
-  } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID, {}, false, false);
-
-  const {
-    trigger: createVoucher,
-    data: result,
-    success: createSuccess,
-    code: createCode,
-  } = APIHandler<{
-    id: number;
-    createdAt: number;
-    updatedAt: number;
-    journalId: number;
-    no: string;
-    lineItems: {
-      id: number;
-      amount: number;
-      description: string;
-      debit: boolean;
-      accountId: number;
-      voucherId: number;
-      createdAt: number;
-      updatedAt: number;
-    }[];
-  } | null>(APIName.VOUCHER_CREATE, {}, false, false);
-
-  const {
-    trigger: getAIResult,
-    data: AIResult,
-    success: AIResultSuccess,
-    code: AIResultCode,
-  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT, {}, false, false);
-
-  const router = useRouter();
-
   const [eventType, setEventType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
+  // ToDo: (20240527 - Julian) Add paymentReason
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -112,45 +86,208 @@ const ConfirmModal = ({
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
-  const [lineItems, setLineItems] = useState<ILineItem[]>([]);
-  const [disableConfirmButton, setDisableConfirmButton] = useState<boolean>(true);
 
-  const companyId = selectedCompany?.id ?? DEFAULT_DISPLAYED_COMPANY_ID;
+  // Info: (20240527 - Julian) voucher verification
+  const [isEveryRowHasAccount, setIsEveryRowHasAccount] = useState<boolean>(false);
+  const [isNoEmptyRow, setIsNoEmptyRow] = useState<boolean>(false);
+  const [isBalance, setIsBalance] = useState<boolean>(false);
+  const [isTotalDebitBalanced, setIsTotalDebitBalanced] = useState<boolean>(false);
+  const [isTotalCreditBalanced, setIsTotalCreditBalanced] = useState<boolean>(false);
 
+  // Info: (20240730 - Julian)
+  const [isAILoading, setIsAILoading] = useState<boolean>(false);
+
+  const [journal, setJournal] = useState<IJournal | null>(null);
+
+  // Info: (20240527 - Julian) Get AI 生成的傳票
+  const {
+    trigger: getAIResult,
+    data: AIResult,
+    success: AIResultSuccess,
+    code: AIResultCode,
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT);
+  // Info: (20240527 - Julian) Get journal by id (上半部資料)
+  const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
+  // Info: (20240527 - Julian) 建立傳票
+  const { trigger: createVoucher } = APIHandler<IVoucherDataForAPIResponse | null>(
+    APIName.VOUCHER_CREATE
+  );
+  const { trigger: updateVoucher } = APIHandler<IVoucherDataForAPIResponse | null>(
+    APIName.VOUCHER_UPDATE
+  );
+
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+  // Info: (20240430 - Julian) Get first letter of each word
+  const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
+  // ToDo: (20240711 - Julian) Check if AI result is successful
   const hasAIResult = AIResultSuccess && AIResult && AIResult.lineItems.length > 0;
 
-  useEffect(() => {
-    if (journalId !== undefined) {
-      getJournalById({
-        params: { companyId, journalId },
+  const addRowHandler = () => addVoucherRowHandler(1);
+  const addDebitRowHandler = () => addVoucherRowHandler(1, VoucherRowType.DEBIT);
+  const addCreditRowHandler = () => addVoucherRowHandler(1, VoucherRowType.CREDIT);
+
+  const importVoucherHandler = (initialLineItems?: ILineItem[]) => {
+    try {
+      // Info: (20240529 - Julian) 取得 AI 生成的傳票 or 日記帳的初始傳票
+      const items = initialLineItems ?? AIResult?.lineItems ?? [];
+
+      // Info: (20240529 - Julian) 清空 accountingVoucher
+      resetVoucherHandler();
+
+      // Info: (20240716 - Julian) 根據 AI 生成的傳票數量，新增 accountingVoucher
+      addVoucherRowHandler(items.length - 1);
+
+      // Info: (20240716 - Julian) 將 AI 生成的傳票逐一寫入 accountingVoucher
+      items.forEach((lineItem, index) => {
+        // Info: (20240716 - Julian) 在 accountList 中找到對應的 account
+        const rowAccount = accountList.find((account) => account.id === lineItem.accountId);
+        const rowAmount = lineItem.amount;
+        // Info: (20240716 - Julian) 判斷 row type
+        const rowType = lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
+        const rowDescription = lineItem.description;
+
+        // Info: (20240716 - Julian) 寫入 account
+        changeVoucherAccountHandler(index, rowAccount);
+        // Info: (20240716 - Julian) 寫入 description 和 amount
+        changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
       });
+    } catch (err) {
+      // Debug: (20240726 - Tzuhan) Show error message
+      // eslint-disable-next-line no-console
+      console.log(`importVoucherHandler err: `, err);
     }
-  }, [journalId]);
+  };
 
-  useEffect(() => {
-    if (!isModalVisible) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
-    clearVoucherHandler();
+  const analysisBtnClickHandler = () => {
+    // Info: (20240605 - Julian) Show warning message after clicking the button
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Replace Input',
+      subMsg: 'Are you sure you want to use Ai information?',
+      content: 'The text you entered will be replaced.',
+      submitBtnStr: t('JOURNAL.CONFIRM'),
+      // Info: (20240716 - Julian) 從 API response 取出傳票列表
+      submitBtnFunction: importVoucherHandler,
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnFunction: () => {
+        getAIStatusHandler(undefined, false);
+        messageModalVisibilityHandler();
+      },
+    });
+    messageModalVisibilityHandler();
+  };
 
-    // Info: (20240528 - Julian) Call AI API first time
-    getAIStatusHandler({ companyId, askAIId: askAIId! }, true);
-  }, [isModalVisible]);
+  const closeHandler = () => {
+    modalVisibilityHandler();
+    getAIStatusHandler(undefined, false);
+    resetVoucherHandler();
+    setIsAILoading(true);
+  };
 
-  // ToDo: (20240528 - Julian) Error handling
-  useEffect(() => {
-    if (AIStatus === ProgressStatus.SUCCESS) {
-      getAIResult({
-        params: {
-          companyId,
-          resultId: askAIId,
-        },
+  const convertToLineItems = () => {
+    const newLineItems = accountingVoucher
+      .filter((voucher) => voucher.account)
+      .map((voucher) => {
+        const isDebit = voucher.debit !== null;
+        const debitAmount = voucher.debit ?? 0;
+        const creditAmount = voucher.credit ?? 0;
+
+        return {
+          accountId: voucher.account!.id,
+          lineItemIndex: `${voucher.id}`,
+          account: generateAccountTitle(voucher.account),
+          // // Info: (20240801 - Anna) 使用 generateAccountTitleWithTranslation 函數生成會計科目的標題(翻譯後的)，取代原本的 generateAccountTitle 函數）
+          // account: generateAccountTitleWithTranslation(voucher.account),
+          description: voucher.particulars,
+          debit: isDebit,
+          amount: isDebit ? debitAmount : creditAmount,
+        };
       });
-    }
-    return () => getAIStatusHandler(undefined, false);
-  }, [AIStatus]);
+    return newLineItems;
+  };
 
-  useEffect(() => {
-    if (journal && getJournalSuccess) {
-      const { invoice, voucher } = journal;
+  const handleAPIResponse = (res: {
+    success: boolean;
+    data: IVoucherDataForAPIResponse | null;
+    code: string;
+    error: Error | null;
+  }) => {
+    if (res.success && res.data && journal) {
+      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
+      closeHandler();
+      selectJournalHandler(undefined);
+
+      // Info: (20240527 - Julian) Toast notification
+      toastHandler({
+        id: `Voucher-${res.data.id}`,
+        type: ToastType.SUCCESS,
+        content: (
+          <div className="flex items-center justify-between">
+            <p>{t('CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
+            <Link
+              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
+              className="font-semibold text-link-text-success hover:opacity-70"
+            >
+              {t('AUDIT_REPORT.GO_CHECK_IT')}
+            </Link>
+          </div>
+        ),
+        closeable: true,
+      });
+
+      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
+      window.location.href = `${ISUNFA_ROUTE.ACCOUNTING}/${res.data.journalId}`;
+    }
+    if (res.success === false) {
+      messageModalDataHandler({
+        title: t('CONFIRM_MODAL.UPLOAD_FAILED'),
+        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        content: t('COMMON.ERROR_CODE', { code: res.code }),
+        messageType: MessageType.ERROR,
+        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnFunction: () => messageModalVisibilityHandler(),
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  // Info: (20240527 - Julian) 送出 Voucher
+  const confirmHandler = async () => {
+    const newLineItems = convertToLineItems();
+
+    if (hasCompanyId && journal && journal.invoice && newLineItems) {
+      const voucher: IVoucherDataForSavingToDB = {
+        journalId: journal.id,
+        lineItems: newLineItems,
+      };
+      if (selectedJournal && journal?.voucher && Object.keys(journal.voucher).length > 0) {
+        const updateRes = await updateVoucher({
+          params: { companyId: selectedCompany.id },
+          body: { voucher },
+        });
+        handleAPIResponse(updateRes);
+      } else {
+        const createRes = await createVoucher({
+          params: { companyId: selectedCompany.id },
+          body: { voucher },
+        });
+        handleAPIResponse(createRes);
+      }
+    }
+  };
+
+  const openHandler = async () => {
+    if (!hasCompanyId || !journalId) return;
+    const {
+      success: getJournalSuccess,
+      data,
+      code: getJournalCode,
+    } = await getJournalById({
+      params: { companyId: selectedCompany.id, journalId },
+    });
+    if (data && getJournalSuccess) {
+      setJournal(data);
+      const { invoice, voucher } = data;
       if (invoice) {
         setDateTimestamp(invoice.date);
         setReason(invoice.paymentReason);
@@ -167,7 +304,7 @@ const ConfirmModal = ({
         setContract(invoice.contract ?? 'None');
       }
       if (voucher) {
-        setLineItems(voucher.lineItems);
+        importVoucherHandler(voucher.lineItems);
       }
     }
     if (getJournalSuccess === false) {
@@ -176,155 +313,87 @@ const ConfirmModal = ({
         subMsg: 'Please try again later',
         content: `Error code: ${getJournalCode}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
     }
-  }, [journal, getJournalSuccess, getJournalCode]);
-
-  // Info: (20240527 - Julian) 送出 Voucher
-  const confirmHandler = () => {
-    if (journal && journal.invoice && lineItems) {
-      const voucher: IVoucherDataForSavingToDB = {
-        journalId: journal.id,
-        lineItems,
-      };
-      createVoucher({
-        params: { companyId },
-        body: { voucher },
-      });
-    }
-  };
-
-  const closeHandler = () => {
-    modalVisibilityHandler();
-    getAIStatusHandler(undefined, false);
-  };
-
-  const addRowHandler = () => addVoucherRowHandler();
-  const addDebitRowHandler = () => addVoucherRowHandler(VoucherRowType.DEBIT);
-  const addCreditRowHandler = () => addVoucherRowHandler(VoucherRowType.CREDIT);
-
-  const importVoucherHandler = () => {
-    const AILineItems = AIResult?.lineItems ?? [];
-
-    // Info: (20240529 - Julian) 清空 accountingVoucher
-    clearVoucherHandler();
-
-    // Info: (20240529 - Julian) 先加入空白列，再寫入資料
-    AILineItems.forEach((lineItem, index) => {
-      addRowHandler();
-      const account = accountList.find((acc) => acc.id === lineItem.accountId);
-      changeVoucherAccountHandler(index, account);
-      changeVoucherAmountHandler(
-        index,
-        lineItem.amount,
-        lineItem.debit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT,
-        lineItem.description
-      );
-    });
-  };
-
-  const analysisBtnClickHandler = () => {
-    // Info: (20240605 - Julian) Show warning message after clicking the button
-    messageModalDataHandler({
-      messageType: MessageType.WARNING,
-      title: 'Replace Input',
-      subMsg: 'Are you sure you want to use Ai information?',
-      content: 'The text you entered will be replaced.',
-      submitBtnStr: 'Confirm',
-      submitBtnFunction: importVoucherHandler,
-      backBtnStr: 'Cancel',
-      backBtnFunction: () => getAIStatusHandler(undefined, false),
-    });
-    messageModalVisibilityHandler();
   };
 
   useEffect(() => {
-    // Info: (20240529 - Julian) 將 IAccountingVoucher 轉換成 ILineItem
-    const newLineItems = accountingVoucher
-      .filter((voucher) => voucher.account)
-      .map((voucher) => {
-        const isDebit = voucher.debit !== 0;
-        const debitAmount = voucher.debit ?? 0;
-        const creditAmount = voucher.credit ?? 0;
+    if (!isModalVisible || !hasCompanyId) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    openHandler();
+    // Info: (20240529 - Julian) 清空 accountingVoucher
+    resetVoucherHandler();
+    // Info: (20240730 - Julian) 顯示 AI loading
+    setIsAILoading(true);
 
-        return {
-          accountId: voucher.account!.id,
-          lineItemIndex: `${voucher.id}`,
-          account: generateAccountTitle(voucher.account),
-          description: voucher.particulars,
-          debit: isDebit,
-          amount: isDebit ? debitAmount : creditAmount,
-        };
+    // Info: (20240528 - Julian) Call AI API first time
+    getAIStatusHandler({ companyId: selectedCompany.id!, askAIId: askAIId! }, true);
+  }, [isModalVisible]);
+
+  // ToDo: (20240528 - Julian) Error handling
+  useEffect(() => {
+    if (hasCompanyId && AIStatus === ProgressStatus.SUCCESS) {
+      getAIResult({
+        params: {
+          companyId: selectedCompany.id!,
+          resultId: askAIId,
+        },
       });
-
-    setLineItems(newLineItems);
-  }, [accountingVoucher]);
+      setIsAILoading(false);
+    }
+    return () => getAIStatusHandler(undefined, false);
+  }, [hasCompanyId, AIStatus]);
 
   useEffect(() => {
     const isCreditEqualDebit = totalCredit === totalDebit;
-    const isNotZero = totalCredit !== 0 && totalDebit !== 0;
+    const isNotEmpty = accountingVoucher.every((voucher) => !!voucher.debit || !!voucher.credit);
     const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
 
-    setDisableConfirmButton(!(isCreditEqualDebit && isNotZero && isEveryLineItemHasAccount));
-  }, [totalCredit, totalDebit, accountingVoucher]);
+    // Info: 計算借貸方科目加總 (20240806 - Shirley)
+    const totalDebitAmount = accountingVoucher.reduce(
+      (sum, voucher) => sum + (voucher.debit || 0),
+      0
+    );
+    const totalCreditAmount = accountingVoucher.reduce(
+      (sum, voucher) => sum + (voucher.credit || 0),
+      0
+    );
 
-  useEffect(() => {
-    if (createSuccess && result && journal) {
-      // Info: (20240503 - Julian) 關閉 Modal、清空 Voucher、清空 AI 狀態、清空 Journal
-      closeHandler();
-      clearVoucherHandler();
-      selectJournalHandler(undefined);
+    // Info: 檢查借方總額和貸方總額是否分別等於總金額 (20240806 - Shirley)
+    const isDebitValid = Math.abs(totalDebitAmount - totalPrice) < BUFFER_AMOUNT; // Info: 使用小於0.01來避免浮點數精度問題 (20240806 - Shirley)
+    const isCreditValid = Math.abs(totalCreditAmount - totalPrice) < BUFFER_AMOUNT;
 
-      // Info: (20240503 - Julian) 將網址導向至 /user/accounting/[id]
-      router.push(`${ISUNFA_ROUTE.ACCOUNTING}/${journal.id}`);
-      // Info: (20240527 - Julian) Toast notification
-      toastHandler({
-        id: `createVoucher-${result.id}`,
-        type: ToastType.SUCCESS,
-        content: (
-          <div className="flex items-center justify-between">
-            <p>{t('CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
-            <Link
-              href={ISUNFA_ROUTE.USERS_MY_REPORTS}
-              className="font-semibold text-link-text-success hover:opacity-70"
-            >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
-            </Link>
-          </div>
-        ),
-        closeable: true,
-      });
-    }
-    if (createSuccess === false) {
-      messageModalDataHandler({
-        title: 'Create Voucher Failed',
-        subMsg: 'Please try again later',
-        content: `Error code: ${createCode}`,
-        messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
-        submitBtnFunction: () => messageModalVisibilityHandler(),
-      });
-      messageModalVisibilityHandler();
-    }
-  }, [createSuccess, createCode]);
+    setIsBalance(isCreditEqualDebit);
+    setIsNoEmptyRow(isNotEmpty);
+    setIsEveryRowHasAccount(isEveryLineItemHasAccount);
+    setIsTotalDebitBalanced(isDebitValid);
+    setIsTotalCreditBalanced(isCreditValid);
+  }, [totalCredit, totalDebit, accountingVoucher, totalPrice]);
 
-  const displayType = <p className="text-lightRed">{eventType}</p>;
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
+  // const displayType = <p className="text-lightRed">{eventType}</p>;
+  const typeString = eventType && typeof eventType === 'string' ? eventType : '';
+  const translatedType = typeString
+    ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
+    : '';
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  const displayReason = // ToDo: (20240527 - Julian) Interface lacks paymentReason
-    (
-      <div className="flex flex-col items-center gap-x-12px md:flex-row">
-        <p>{reason}</p>
-        <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
-          <LuTag size={14} />
-          {t('CONFIRM_MODAL.PRINTER')}
-        </div>
-      </div>
-    );
+  // ToDo: (20240527 - Julian) Interface lacks paymentReason
+  // ToDo: (20240729 - Julian) Add Tag functionality
+  // const displayReason =
+  //   (
+  //     <div className="flex flex-col items-center gap-x-12px md:flex-row">
+  //       <p>{reason}</p>
+  //       {/* ToDo: (20240711 - Julian) Add Tag functionality */}
+  //       <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+  //         <LuTag size={14} />
+  //         {t('CONFIRM_MODAL.PRINTER')}
+  //       </div>
+  //     </div>
+  //   );
 
   const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
 
@@ -333,8 +402,7 @@ const ConfirmModal = ({
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span>
-        {t('JOURNAL.TWD')}
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> {t('JOURNAL.TAX')}
@@ -344,71 +412,75 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayMethod = <p className="text-right font-semibold text-navyBlue2">{paymentMethod}</p>;
+  const displayMethod = (
+    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+  );
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
+  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
+  const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
+  const translatedPeriod = t(`JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`);
 
-  const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
-
-  const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
-
-  const projectName = project; // ToDo: (20240527 - Julian) Get project name from somewhere
-  // Info: (20240430 - Julian) Get first letter of each word
-  const projectCode = projectName.split(' ').reduce((acc, word) => acc + word[0], '');
+  // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
+  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
+  const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
+  const translatedStatus = t(`JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`);
 
   const displayProject =
-    projectName !== 'None' ? (
+    project !== 'None' ? (
       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
         <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
           {projectCode}
         </div>
-        <p>{projectName}</p>
+        <p>{project}</p>
       </div>
     ) : (
       <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
     );
 
-  const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>; // ToDo: (20240527 - Julian) Get contract name from somewhere
+  // Info: (20240731 - Anna) 把合約None加上多語系
+  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
+  const displayContract =
+    contract !== 'None' ? (
+      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
+        <p className="font-semibold text-darkBlue">{contract}</p>
+      </div>
+    ) : (
+      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+    );
+
+  const displayedHint =
+    ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
+      isAILoading) ||
+    AIResultSuccess === undefined ? (
+      <p className="text-slider-surface-bar">
+        {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
+        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+      </p>
+    ) : hasAIResult ? (
+      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+    ) : AIResultSuccess === false && AIResultCode ? (
+      <p className="text-text-neutral-secondary">
+        {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+      </p>
+    ) : (
+      <p className="text-slider-surface-bar">
+        {t('CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+      </p>
+    );
 
   const accountingVoucherRow = accountingVoucher.map((voucher) => (
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
   ));
 
-  const displayAccountingVoucher = (
-    <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
-      {/* Info: (20240429 - Julian) Divider */}
-      <div className="flex items-center gap-4">
-        <hr className="flex-1 border-lightGray3" />
-        <div className="flex items-center gap-2 text-sm">
-          <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-          <p>{t('JOURNAL.Accounting Voucher')}</p>
-        </div>
-        <hr className="flex-1 border-lightGray3" />
-      </div>
-      {/* Info: (20240429 - Julian) List */}
-      <div className="overflow-x-auto rounded-sm bg-lightGray7 p-20px">
-        <table className="w-full text-left text-navyBlue2">
-          {/* Info: (20240429 - Julian) Header */}
-          <thead>
-            <tr>
-              <th>{t('JOURNAL.ACCOUNTING')}</th>
-              <th>{t('JOURNAL.PARTICULARS')}</th>
-              <th>{t('JOURNAL.DEBIT')}</th>
-              <th>{t('JOURNAL.CREDIT')}</th>
-            </tr>
-          </thead>
-          {/* Info: (20240429 - Julian) Body */}
-          <tbody>{accountingVoucherRow}</tbody>
-        </table>
-      </div>
-    </div>
-  );
-
   const debitListMobile = accountingVoucher
     .filter((voucher) => !!voucher.debit) // Info: (20240530 - Julian) 找出 Debit 的 Voucher
-    .map((debit) => AccountingVoucherRowMobile({ type: 'Debit', accountingVoucher: debit }));
+    .map((debit) => <AccountingVoucherRowMobile type="Debit" accountingVoucher={debit} />);
 
   const creditListMobile = accountingVoucher
     .filter((voucher) => !!voucher.credit) // Info: (20240530 - Julian) 找出 Credit 的 Voucher
-    .map((credit) => AccountingVoucherRowMobile({ type: 'Credit', accountingVoucher: credit }));
+    .map((credit) => <AccountingVoucherRowMobile type="Credit" accountingVoucher={credit} />);
 
   const displayAccountingVoucherMobile = (
     <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
@@ -428,6 +500,7 @@ const ConfirmModal = ({
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
+          id="add-debit-btn-mobile"
           type="button"
           onClick={addDebitRowHandler}
           className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
@@ -452,6 +525,7 @@ const ConfirmModal = ({
 
         {/* Info: (20240510 - Julian) Add Button */}
         <button
+          id="add-credit-btn-mobile"
           type="button"
           onClick={addCreditRowHandler}
           className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
@@ -462,25 +536,103 @@ const ConfirmModal = ({
     </div>
   );
 
-  const displayedHint =
-    AIResultSuccess === undefined ? (
-      <p className="text-slider-surface-bar">
-        {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
-        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+  const displayAccountingVoucher = (
+    <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
+      {/* Info: (20240429 - Julian) Divider */}
+      <div className="flex items-center gap-4">
+        <hr className="flex-1 border-lightGray3" />
+        <div className="flex items-center gap-2 text-sm">
+          <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
+          <p>{t('JOURNAL.ACCOUNTING_VOUCHER')}</p>
+        </div>
+        <hr className="flex-1 border-lightGray3" />
+      </div>
+      {/* Info: (20240429 - Julian) List */}
+      <div className="rounded-sm bg-lightGray7 p-20px">
+        <table className="w-full text-left text-navyBlue2">
+          {/* Info: (20240429 - Julian) Header */}
+          <thead>
+            <tr>
+              <th>{t('JOURNAL.ACCOUNTING')}</th>
+              <th>{t('JOURNAL.PARTICULARS')}</th>
+              <th>{t('JOURNAL.DEBIT')}</th>
+              <th>{t('JOURNAL.CREDIT')}</th>
+            </tr>
+          </thead>
+          {/* Info: (20240429 - Julian) Body */}
+          <tbody>{accountingVoucherRow}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const displayVerifyAcc = (
+    <div className="flex items-center gap-12px">
+      {isEveryRowHasAccount ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isEveryRowHasAccount ? 'text-text-state-success' : 'text-text-state-error'}>
+        {/* Each row includes an accounting account. */}
+        {t('JOURNAL.EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT')}
       </p>
-    ) : hasAIResult ? (
-      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
-    ) : AIResultSuccess === false && AIResultCode ? (
-      <p className="text-text-neutral-secondary">
-        {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+    </div>
+  );
+
+  const displayVerifyNoEmpty = (
+    <div className="flex items-center gap-12px">
+      {isNoEmptyRow ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isNoEmptyRow ? 'text-text-state-success' : 'text-text-state-error'}>
+        {/* Each row includes a debit or credit. */}
+        {t('JOURNAL.EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT')}
       </p>
-    ) : (
-      <p className="text-slider-surface-bar">
-        {t('CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+    </div>
+  );
+
+  const displayVerifyBalance = (
+    <div className="flex items-center gap-12px">
+      {isBalance ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isBalance ? 'text-text-state-success' : 'text-text-state-error'}>
+        {/* Debits and credits balance out. */}
+        {t('JOURNAL.DEBITS_AND_CREDITS_BALANCE_OUT')}
       </p>
-    );
+    </div>
+  );
+
+  const displayVerifyDebitAmount = (
+    <div className="flex items-center gap-12px">
+      {isTotalDebitBalanced ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isTotalDebitBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
+        {t('JOURNAL.DEBIT_AMOUNT_BALANCED')}
+      </p>
+    </div>
+  );
+
+  const displayVerifyCreditAmount = (
+    <div className="flex items-center gap-12px">
+      {isTotalCreditBalanced ? (
+        <Image src="/icons/verify_true.svg" width={16} height={16} alt="success_icon" />
+      ) : (
+        <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
+      )}
+      <p className={isTotalCreditBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
+        {t('JOURNAL.CREDIT_AMOUNT_BALANCED')}
+      </p>
+    </div>
+  );
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -498,7 +650,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) close button */}
         <button
           type="button"
-          onClick={closeHandler}
+          onClick={modalVisibilityHandler}
           className="absolute right-20px top-20px text-lightGray5"
         >
           <RxCross2 size={20} />
@@ -511,7 +663,8 @@ const ConfirmModal = ({
             {/* Info: (20240429 - Julian) Type */}
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.TYPE')}</p>
-              {displayType}
+              {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
+              <p className="text-lightRed">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
@@ -519,10 +672,10 @@ const ConfirmModal = ({
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
-            </div>
+            </div> */}
             {/* Info: (20240429 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
@@ -546,12 +699,20 @@ const ConfirmModal = ({
             {/* Info: (20240429 - Julian) Payment Period */}
             <div className="flex items-center justify-between">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
-              {displayPeriod}
+              {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
+              {/* {displayPeriod} */}
+              {translatedPeriod && (
+                <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
+              )}
             </div>
             {/* Info: (20240429 - Julian) Payment Status */}
             <div className="flex items-center justify-between">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
-              {displayStatus}
+              {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
+              {translatedStatus && (
+                <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
+              )}
+              {/* {displayStatus} */}
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">
@@ -574,6 +735,7 @@ const ConfirmModal = ({
             <div className="mt-40px flex flex-col items-center md:mt-0 md:flex-row md:gap-x-16px">
               {/* Info: (20240605 - Julian) button */}
               <button
+                id="ai-analysis-btn"
                 type="button"
                 disabled={!hasAIResult}
                 onClick={analysisBtnClickHandler}
@@ -600,6 +762,7 @@ const ConfirmModal = ({
 
             {/* Info: (20240430 - Julian) Add Button */}
             <button
+              id="add-row-btn"
               type="button"
               onClick={addRowHandler}
               className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
@@ -609,22 +772,38 @@ const ConfirmModal = ({
           </div>
 
           {/* Info: (20240429 - Julian) checkbox */}
-          <div className="mt-24px flex flex-wrap justify-between gap-y-4px">
-            <p className="font-semibold text-navyBlue2">
+          <div className="my-24px flex flex-wrap justify-between gap-y-4px">
+            <p className="text-sm font-semibold text-navyBlue2">
               {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
-              {t('CONFIRM_MODAL.ATTENTION')}&#39;{t('CONFIRM_MODAL.PERMANENT_ON_THE_BLOCKCHAIN')}
-              &#39;{t('CONFIRM_MODAL.CANT_BE_FIXED')}&#39;{t('CONFIRM_MODAL.MAKE_CORRECTIONS.')}
+              {t('CONFIRM_MODAL.ATTENTION')}
             </p>
-            <label htmlFor="addToBook" className="ml-auto flex items-center gap-8px text-navyBlue2">
+            <label
+              htmlFor="addToBook"
+              className="ml-auto flex items-center gap-8px text-sm text-navyBlue2"
+            >
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
               <p>{t('CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
+          </div>
+
+          {/* Info: (20240730 - Julian) Verify Hints */}
+          <div className="mx-20px flex flex-col items-center justify-center gap-20px rounded-sm bg-surface-support-soft-maple px-20px py-10px text-sm font-semibold md:flex-row md:py-5px">
+            {/* Info: (20240730 - Julian) Verify all rows have account */}
+            {displayVerifyAcc}
+            {/* Info: (20240730 - Julian) Verify no empty row */}
+            {displayVerifyNoEmpty}
+            {/* Info: (20240730 - Julian) Verify balancing debits and credits */}
+            {displayVerifyBalance}
+            {/* Info: (20240806 - Shirley) Verify debit and credit amount */}
+            {displayVerifyDebitAmount}
+            {displayVerifyCreditAmount}
           </div>
         </div>
 
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <button
+            id="cancel-btn"
             type="button"
             onClick={closeHandler}
             className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
@@ -632,9 +811,18 @@ const ConfirmModal = ({
             {t('REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button
+            id="confirm-btn"
             type="button"
             variant="tertiary"
-            disabled={disableConfirmButton}
+            disabled={
+              !(
+                isBalance &&
+                isNoEmptyRow &&
+                isEveryRowHasAccount &&
+                isTotalDebitBalanced &&
+                isTotalCreditBalanced
+              )
+            }
             onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >

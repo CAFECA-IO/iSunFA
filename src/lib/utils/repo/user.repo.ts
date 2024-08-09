@@ -1,9 +1,12 @@
 import prisma from '@/client';
 import { Prisma, User } from '@prisma/client';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
 export async function listUser(): Promise<User[]> {
   const userList = await prisma.user.findMany({
+    where: {
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
     orderBy: {
       id: 'asc',
     },
@@ -17,6 +20,7 @@ export async function getUserById(userId: number): Promise<User | null> {
     user = await prisma.user.findUnique({
       where: {
         id: userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -29,6 +33,7 @@ export async function getUserByCredential(credentialId: string): Promise<User | 
     user = await prisma.user.findUnique({
       where: {
         credentialId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }
@@ -99,10 +104,36 @@ export async function updateUserById(
 }
 
 export async function deleteUserById(userId: number): Promise<User> {
-  const user = await prisma.user.delete({
-    where: {
-      id: userId,
-    },
-  });
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.UserWhereUniqueInput = {
+    id: userId,
+    deletedAt: null,
+  };
+
+  const data: Prisma.UserUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  const updateArgs: Prisma.UserUpdateArgs = {
+    where,
+    data,
+  };
+
+  const user = await prisma.user.update(updateArgs);
   return user;
+}
+
+// Info: (20240723 - Murky) Real delete for testing
+export async function deleteUserByIdForTesting(userId: number): Promise<User> {
+  const where: Prisma.UserWhereUniqueInput = {
+    id: userId,
+  };
+
+  const deletedUser = await prisma.user.delete({
+    where,
+  });
+
+  return deletedUser;
 }

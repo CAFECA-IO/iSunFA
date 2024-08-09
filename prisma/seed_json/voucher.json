@@ -1,0 +1,44 @@
+[
+    {
+        "id": 1000,
+        "journalId": 1000,
+        "no": "20240101001",
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 1001,
+        "journalId": 1001,
+        "no": "20240101002",
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 1002,
+        "journalId": 1002,
+        "no": "20240101003",
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 1003,
+        "journalId": 1003,
+        "no": "20240101004",
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 1004,
+        "journalId": 1004,
+        "no": "20240101005",
+        "createdAt": 1,
+        "updatedAt": 1
+    },
+    {
+        "id": 1005,
+        "journalId": 1005,
+        "no": "20240101006",
+        "createdAt": 1,
+        "updatedAt": 1
+    }
+]
