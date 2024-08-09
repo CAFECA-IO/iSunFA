@@ -633,3 +633,7 @@ export function throttle<F extends (...args: unknown[]) => unknown>(
 
   return returnFunc;
 }
+
+export function generateUUID(): string {
+  return Math.random().toString(36).substring(2, 12);
+}
