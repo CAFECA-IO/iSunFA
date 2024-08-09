@@ -66,13 +66,13 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
   const idAndName =
     obj === undefined
       ? {
-          id: array[0].id,
-          name: array[0].name,
-        }
+        id: array[0].id,
+        name: array[0].name,
+      }
       : {
-          id: obj.id,
-          name: obj.name,
-        };
+        id: obj.id,
+        name: obj.name,
+      };
   return idAndName;
 };
 
@@ -102,7 +102,7 @@ const NewJournalForm = () => {
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID);
+  } = APIHandler<IInvoice | null>(APIName.OCR_RESULT_GET_BY_ID); // Info: (20240809 - Murky) To Emily, 現在如果在AI還沒有解析完成就點擊，後端會傳Null
   const { trigger: createInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
@@ -242,11 +242,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-          projectSelection[0]
+        projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-          contractSelection[0]
+        contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }
@@ -1314,7 +1314,7 @@ const NewJournalForm = () => {
             id="upload-btn"
             type="submit"
             className="px-16px py-8px"
-            // disabled={isUploadDisabled}
+          // disabled={isUploadDisabled}
           >
             <p>{t('JOURNAL.UPLOAD')}</p>
             <svg

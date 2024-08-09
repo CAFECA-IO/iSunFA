@@ -5,7 +5,6 @@ import { promises as fs } from 'fs';
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
-  timestampInMilliSeconds,
   timestampInSeconds,
   transformBytesToFileSizeString,
   transformOCRImageIDToURL,
@@ -21,7 +20,6 @@ import {
 import { IOCR } from '@/interfaces/ocr';
 import type { Ocr } from '@prisma/client';
 import { ProgressStatus } from '@/constants/account';
-import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
@@ -114,29 +112,61 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     type: string;
   }[]
 > {
-  if (!files || !files.image || !files.image.length) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_FORM_DATA_IMAGE);
-  }
-
+  let resultJson: {
+    resultStatus: IAccountResultStatus;
+    imageName: string;
+    imageUrl: string;
+    imageSize: number;
+    type: string;
+  }[] = [];
+  if (files && files.image && files.image.length) {
   // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
-  const resultJson = await Promise.all(
-    files.image.map(async (image) => {
-      const imageBlob = await readImageFromFilePath(image);
-      const imageName = getImageName(image);
+    resultJson = await Promise.all(
+      files.image.map(async (image) => {
+        let result:{
+          resultStatus: IAccountResultStatus;
+          imageName: string;
+          imageUrl: string;
+          imageSize: number;
+          type: string;
+        } = {
+          resultStatus: {
+            status: ProgressStatus.SYSTEM_ERROR,
+            resultId: '',
+          },
+          imageUrl: '',
+          imageName: '',
+          imageSize: 0,
+          type: 'invoice',
+        };
+        try {
+          const imageBlob = await readImageFromFilePath(image);
+          const imageName = getImageName(image);
 
-      const fetchResult = uploadImageToAICH(imageBlob, imageName);
+          const fetchResult = uploadImageToAICH(imageBlob, imageName);
 
-      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-      const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
-      return {
-        resultStatus,
-        imageUrl,
-        imageName,
-        imageSize: image.size,
-        type: 'invoice',
-      };
-    })
-  );
+          const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
+          result = {
+            resultStatus,
+            imageUrl,
+            imageName,
+            imageSize: image.size,
+            type: 'invoice',
+          };
+        } catch (error) {
+          // Deprecated (20240611 - Murky) Debugging purpose
+          // eslint-disable-next-line no-console
+          console.log(error);
+        }
+        return result;
+      })
+    );
+  } else {
+    // Deprecated (20240611 - Murky) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('No image file found in formidable when upload ocr');
+  }
 
   return resultJson;
 }
@@ -151,7 +181,7 @@ export function isCompanyIdValid(companyId: any): companyId is number {
 }
 
 export async function getImageFileFromFormData(req: NextApiRequest) {
-  let files: formidable.Files;
+  let files: formidable.Files = {};
 
   try {
     const parsedForm = await parseForm(req, FileFolder.INVOICE);
@@ -160,52 +190,62 @@ export async function getImageFileFromFormData(req: NextApiRequest) {
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
-    throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
   }
   return files;
 }
 
 export async function fetchStatus(aichResultId: string) {
-  try {
-    const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
-    const result = await fetch(fetchUrl);
+  let status: ProgressStatus = ProgressStatus.SYSTEM_ERROR;
 
-    if (!result.ok) {
+  if (aichResultId.length > 0) {
+    try {
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
+      const result = await fetch(fetchUrl);
+
+      if (!result.ok) {
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
+      }
+
+      status = (await result.json()).payload;
+    } catch (error) {
+      // Deprecated (20240611 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(error);
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
-
-    const status: ProgressStatus = (await result.json()).payload;
-    return status;
-  } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
-    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
+
+  return status;
 }
 
-export function calculateProgress(createdAt: number, status: ProgressStatus) {
-  const currentTime = new Date();
-  const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
-  let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
+// Deprecated (20240809 - Murky) This function is not used
+// export function calculateProgress(createdAt: number, status: ProgressStatus) {
+//   const currentTime = new Date();
+//   const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
+//   let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
 
-  if (process > 99) {
-    process = 99;
-  }
+//   if (process > 99) {
+//     process = 99;
+//   }
 
-  if (status === ProgressStatus.SUCCESS) {
-    process = 100;
-  } else if (status !== ProgressStatus.IN_PROGRESS) {
-    process = 0;
-  }
-  return process;
+//   if (status === ProgressStatus.SUCCESS) {
+//     process = 100;
+//   } else if (status !== ProgressStatus.IN_PROGRESS) {
+//     process = 0;
+//   }
+//   return process;
+// }
+
+export function calculateProgress(imageUrl?: string | null) {
+  return (imageUrl && imageUrl.length > 0) ? 100 : 0;
 }
 
 export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
   const unprocessedOCRs = await Promise.all(
     ocrData.map(async (ocr) => {
       const status = await fetchStatus(ocr.aichResultId);
-      const progress = calculateProgress(ocr.createdAt, status);
+      // const progress = calculateProgress(ocr.createdAt, status);
+      const progress = calculateProgress(ocr.imageUrl);
       const imageSize = transformBytesToFileSizeString(ocr.imageSize);
       const createdAt = timestampInSeconds(ocr.createdAt);
       const unprocessedOCR: IOCR = {
@@ -254,7 +294,7 @@ export async function createOcrFromAichResults(
 }
 
 export async function handlePostRequest(companyId: number, req: NextApiRequest) {
-  let resultJson: IAccountResultStatus[];
+  let resultJson: IAccountResultStatus[] = [];
 
   try {
     const files = await getImageFileFromFormData(req);
@@ -266,7 +306,6 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
-    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
   return resultJson;

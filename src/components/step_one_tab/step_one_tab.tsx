@@ -60,11 +60,16 @@ const StepOneTab = () => {
       setFileList(OCRList);
     }
 
-    return () => {};
+    return () => { };
   }, [OCRList, OCRListStatus]);
 
   const handleOCRClick = (unprocessOCR: IOCR) => {
-    if (unprocessOCR.status === ProgressStatus.SUCCESS) {
+    // Info (20240809 - Murky): To Emily, 改成讓只要有圖片 就可以點了
+    // if (unprocessOCR.status === ProgressStatus.SUCCESS) {
+    //   selectOCRHandler(unprocessOCR);
+    // }
+
+    if (unprocessOCR.imageUrl && unprocessOCR.imageUrl.length > 0) {
       selectOCRHandler(unprocessOCR);
     }
   };

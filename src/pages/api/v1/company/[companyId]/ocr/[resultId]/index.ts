@@ -14,6 +14,9 @@ import { IContract } from '@/interfaces/contract';
 import { deleteOcrByResultId, getOcrByResultId } from '@/lib/utils/repo/ocr.repo';
 import { IOCR } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
+import { getSession } from '@/lib/utils/session';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
@@ -57,11 +60,12 @@ export async function getPayloadFromResponseJSON(
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
-  if (!json || !json.payload) {
-    throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
-  }
+  // if (!json || !json.payload) {
+  //   throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
+  // }
 
-  return json.payload as IInvoice;
+  const result = json?.payload ? json.payload as IInvoice : null;
+  return result;
 }
 
 export function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
@@ -78,43 +82,43 @@ export function formatOCRResultDate(ocrResult: IInvoice) {
 
 export async function handleGetRequest(
   resultId: string,
-  res: NextApiResponse<IResponseData<IInvoice | IContract>>,
   type: string = 'invoice'
 ) {
-  const fetchResult = fetchOCRResult(resultId);
-  switch (type) {
-    case 'contract': {
-      const ocrResult: IContract = {} as IContract;
+  let ocrResult: IInvoice | IContract | null = null;
 
-      const { httpCode, result } = formatApiResponse<IContract>(STATUS_MESSAGE.SUCCESS, ocrResult);
+  if (resultId && resultId.length >= 0) {
+    const fetchResult = fetchOCRResult(resultId);
+    switch (type) {
+      case 'contract': {
+        ocrResult = {} as IContract;
 
-      res.status(httpCode).json(result);
-      break;
-    }
-    case 'invoice': {
-      const ocrResult: IInvoice = await getPayloadFromResponseJSON(fetchResult);
-
-      setOCRResultJournalId(ocrResult, null);
-      formatOCRResultDate(ocrResult);
-
-      if (!isIInvoice(ocrResult)) {
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_DATA_FROM_AICH_IS_INVALID_TYPE);
+        break;
       }
+      case 'invoice': {
+        ocrResult = await getPayloadFromResponseJSON(fetchResult);
+        if (ocrResult) {
+          setOCRResultJournalId(ocrResult, null);
+          formatOCRResultDate(ocrResult);
 
-      const { httpCode, result } = formatApiResponse<IInvoice>(STATUS_MESSAGE.SUCCESS, ocrResult);
+          if (!isIInvoice(ocrResult)) {
+            // eslint-disable-next-line no-console
+            console.error("OCR From AICH is not an Invoice (wrong type)");
+            ocrResult = null;
+          }
+        }
 
-      res.status(httpCode).json(result);
-      break;
-    }
-    default: {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+        break;
+      }
+      default: {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      }
     }
   }
-}
 
+  return ocrResult;
+}
 export async function handleDeleteRequest(
   resultId: string,
-  res: NextApiResponse<IResponseData<IOCR | null>>
 ) {
   let payload: IOCR | null = null;
   const getOCR = await getOcrByResultId(resultId, false);
@@ -131,41 +135,51 @@ export async function handleDeleteRequest(
     };
   }
 
-  const { httpCode, result } = formatApiResponse<IOCR | null>(STATUS_MESSAGE.SUCCESS, payload);
-
-  res.status(httpCode).json(result);
+  return payload;
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IInvoice>(message, {} as IInvoice);
-  res.status(httpCode).json(result);
-}
-
+type APIReturnType = IInvoice | IContract | IOCR | null;
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice | IContract | IOCR | null>>
+  res: NextApiResponse<IResponseData<APIReturnType>>
 ) {
-  try {
-    const { resultId, type } = req.query;
-    if (!isResultIdValid(resultId)) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  let payload: APIReturnType = null;
+  let status:string = STATUS_MESSAGE.BAD_REQUEST;
 
-    switch (req.method) {
-      case 'GET': {
-        await handleGetRequest(resultId, res, type as string);
-        break;
+  if (isAuth) {
+    try {
+      const { resultId, type } = req.query;
+      if (!isResultIdValid(resultId)) {
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
-      case 'DELETE': {
-        await handleDeleteRequest(resultId, res);
-        break;
+
+      switch (req.method) {
+        case 'GET': {
+          payload = await handleGetRequest(resultId, type as string);
+          status = STATUS_MESSAGE.SUCCESS;
+          break;
+        }
+        case 'DELETE': {
+          payload = await handleDeleteRequest(resultId);
+          status = STATUS_MESSAGE.SUCCESS_DELETE;
+          break;
+        }
+        default: {
+          status = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        }
       }
-      default: {
-        throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
-      }
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecated: (20240522 - Murky) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
+      status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    handleErrorResponse(res, error.message);
   }
+
+  const { httpCode, result } = formatApiResponse<APIReturnType>(status, payload);
+  res.status(httpCode).json(result);
 }
