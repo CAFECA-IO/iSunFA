@@ -86,7 +86,8 @@ export async function handleGetRequest(
 ) {
   let ocrResult: IInvoice | IContract | null = null;
 
-  if (resultId && resultId.length >= 0) {
+  const isResultIdError = resultId && resultId.slice(0, 5) === 'error';
+  if (resultId && resultId.length >= 0 && !isResultIdError) {
     const fetchResult = fetchOCRResult(resultId);
     switch (type) {
       case 'contract': {
