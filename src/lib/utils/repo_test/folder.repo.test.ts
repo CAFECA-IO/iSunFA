@@ -24,7 +24,7 @@ describe('Folder Repository Tests', () => {
   describe('getFolderContent', () => {
     it('should return related info for a valid folder id', async () => {
       const companyId = 8867;
-      const folderId = 10000000;
+      const folderId = 10000099;
       const result = await getFolderContent(companyId, folderId);
       expect(result).toBeDefined();
       if (result) {
