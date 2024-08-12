@@ -5,7 +5,8 @@ import { IJournalFromPrismaIncludeProjectContractInvoiceVoucher } from '@/interf
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
 import { calculateTotalPages, getTimestampNow } from '@/lib/utils/common';
-import { JOURNAL_EVENT, SortBy, SortOrder } from '@/constants/journal';
+import { JOURNAL_EVENT, SortBy } from '@/constants/journal';
+import { SortOrder } from '@/constants/sort';
 
 export async function findManyJournalsInPrisma(
   companyId: number,
@@ -111,14 +112,16 @@ export async function listJournal(
       invoice: {
         eventType,
       },
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      ...(searchQuery
-        ? [
+      AND: [
+        { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+        {
+          OR: [
             { invoice: { vendorOrSupplier: { contains: searchQuery, mode: 'insensitive' } } },
             { invoice: { description: { contains: searchQuery, mode: 'insensitive' } } },
             { voucher: { no: { contains: searchQuery, mode: 'insensitive' } } },
-          ]
-        : {}),
+          ],
+        },
+      ],
     };
 
     const totalCount = await prisma.journal.count({ where });
@@ -159,12 +162,10 @@ export async function listJournal(
       journalList.pop(); // 移除多余的记录
     }
 
-    const sort:{
+    const sort: {
       sortBy: string; // 排序欄位的鍵
       sortOrder: string; // 排序欄位的值
-    }[] = [
-        { sortBy, sortOrder },
-    ];
+    }[] = [{ sortBy, sortOrder }];
 
     if (journalEvent) {
       sort.push({ sortBy: journalEvent, sortOrder: '' });

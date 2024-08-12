@@ -102,7 +102,7 @@ const NewJournalForm = () => {
     success: getSuccess,
     data: OCRResult,
     code: getCode,
-  } = APIHandler<IInvoice>(APIName.OCR_RESULT_GET_BY_ID);
+  } = APIHandler<IInvoice | null>(APIName.OCR_RESULT_GET_BY_ID); // Info: (20240809 - Murky) To Emily, 現在如果在AI還沒有解析完成就點擊，後端會傳Null
   const { trigger: createInvoice } = APIHandler<{
     journalId: number;
     resultStatus: IAccountResultStatus;
@@ -149,7 +149,8 @@ const NewJournalForm = () => {
     name: t(contractSelection[0].name),
   });
   const [progressRate, setProgressRate] = useState<number>(0);
-  const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const [inputEstimatedCost, setInputEstimatedCost] = useState<number>(0);
   const [journalId, setJournalId] = useState<number | null>(selectedJournal?.id || null);
 
   // Info: (20240723 - Julian) For Hint
@@ -157,6 +158,7 @@ const NewJournalForm = () => {
   const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
   const [isInstallmentValid, setIsInstallmentValid] = useState<boolean>(true);
   const [isPartialPaidValid, setIsPartialPaidValid] = useState<boolean>(true);
+  const [isFeeValid, setIsFeeValid] = useState<boolean>(true);
 
   useEffect(() => {
     if (selectedOCR !== undefined && hasCompanyId) {
@@ -302,25 +304,28 @@ const NewJournalForm = () => {
     setComponentVisible: setIsBankAccountMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
-  const {
-    targetRef: projectRef,
-    componentVisible: isProjectMenuOpen,
-    setComponentVisible: setIsProjectMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const {
+  //   targetRef: projectRef,
+  //   componentVisible: isProjectMenuOpen,
+  //   setComponentVisible: setIsProjectMenuOpen,
+  // } = useOuterClick<HTMLUListElement>(false);
 
-  const {
-    targetRef: contractRef,
-    componentVisible: isContractMenuOpen,
-    setComponentVisible: setIsContractMenuOpen,
-  } = useOuterClick<HTMLUListElement>(false);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const {
+  //   targetRef: contractRef,
+  //   componentVisible: isContractMenuOpen,
+  //   setComponentVisible: setIsContractMenuOpen,
+  // } = useOuterClick<HTMLUListElement>(false);
 
   // Info: (20240425 - Julian) 開啟/關閉下拉選單
   const eventMenuOpenHandler = () => setIsEventMenuOpen(!isEventMenuOpen);
   const taxMenuHandler = () => setIsTaxMenuOpen(!isTaxMenuOpen);
   const methodMenuHandler = () => setIsMethodMenuOpen(!isMethodMenuOpen);
   const bankAccountMenuHandler = () => setIsBankAccountMenuOpen(!isBankAccountMenuOpen);
-  const projectMenuHandler = () => setIsProjectMenuOpen(!isProjectMenuOpen);
-  const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const projectMenuHandler = () => setIsProjectMenuOpen(!isProjectMenuOpen);
+  // const contractMenuHandler = () => setIsContractMenuOpen(!isContractMenuOpen);
 
   // Info: (20240423 - Julian) 處理 input 輸入
   const reasonChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,6 +356,20 @@ const NewJournalForm = () => {
   //  Info: (20240425 - Julian) 檢查表單內容是否有變動
   const formChangedHandler = () => setFormHasChanged(true);
 
+  // Info: (20240809 - Shirley) 檢查費用是否小於總金額
+  const checkFeeValidity = (fee: number, totalPrice: number) => {
+    setIsFeeValid(fee <= totalPrice);
+  };
+
+  const amountChangeHandler = (value: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    // Info: (20240809 - Shirley) 檢查費用是否正當
+    if (e.target.name === 'fee-input') {
+      checkFeeValidity(value, inputTotalPrice);
+    } else if (e.target.name === 'input-total-price') {
+      checkFeeValidity(inputFee, value);
+    }
+  };
+
   // Info: (20240423 - Julian) 清空表單的所有欄位
   const clearFormHandler = () => {
     setDatePeriod(default30DayPeriodInSec);
@@ -371,7 +390,8 @@ const NewJournalForm = () => {
     setSelectedProject(projectSelection[0]);
     setSelectedContract(contractSelection[0]);
     setProgressRate(0);
-    setInputEstimatedCost(0);
+    // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+    // setInputEstimatedCost(0);
     // Info: (20240510 - Julian) 取得 API 回傳的資料後，將 invoiceId 重置
     selectOCRHandler(undefined);
     inputDescriptionHandler('');
@@ -379,8 +399,8 @@ const NewJournalForm = () => {
 
   // Info: (20240425 - Julian) 整理警告視窗的資料
   const dataMessageModal = {
-    title: 'Clear form content',
-    content: 'Are you sure you want to clear form content?',
+    title: t('JOURNAL.CLEAR_FORM'),
+    content: t('JOURNAL.CLEAR_FORM_CONTENT'),
     submitBtnStr: t('JOURNAL.CLEAR_ALL'),
     submitBtnFunction: () => clearFormHandler(),
     messageType: MessageType.WARNING,
@@ -556,11 +576,13 @@ const NewJournalForm = () => {
   // Info: (20240510 - Julian) 檢查是否要填銀行帳號
   const isAccountNumberVisible = selectedMethod === PAYMENT_METHOD.TRANSFER;
 
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
   // Info: (20240715 - Julian) 專案名稱翻譯
-  const projectName = selectedProject.id === null ? t(selectedProject.name) : selectedProject.name;
+  // const projectName = selectedProject.id === null ? t(selectedProject.name) : selectedProject.name;
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
   // Info: (20240715 - Julian) 合約名稱翻譯
-  const contractName =
-    selectedContract.id === null ? t(selectedContract.name) : selectedContract.name;
+  // const contractName =
+  //   selectedContract.id === null ? t(selectedContract.name) : selectedContract.name;
 
   // Info: (20240722 - Julian) 根據收支類型，顯示不同的文字
   const reasonText =
@@ -647,49 +669,49 @@ const NewJournalForm = () => {
       </li>
     );
   });
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayProjectDropmenu = projectSelection.map(
+  //   (project: { id: number | null; name: string }) => {
+  //     const selectionClickHandler = () => {
+  //       setSelectedProject({
+  //         id: project.id,
+  //         name: project.id === null ? t(project.name) : project.name,
+  //       });
+  //     };
 
-  const displayProjectDropmenu = projectSelection.map(
-    (project: { id: number | null; name: string }) => {
-      const selectionClickHandler = () => {
-        setSelectedProject({
-          id: project.id,
-          name: project.id === null ? t(project.name) : project.name,
-        });
-      };
+  //     return (
+  //       <li
+  //         key={project.name}
+  //         onClick={selectionClickHandler}
+  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //       >
+  //         {t(project.name)}
+  //       </li>
+  //     );
+  //   }
+  // );
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayContractDropmenu = contractSelection.map(
+  //   (contract: { id: number | null; name: string }) => {
+  //     const selectionClickHandler = () => {
+  //       setSelectedContract({
+  //         id: contract.id,
+  //         // name: t(contract.name),
+  //         name: contract.id === null ? t(contract.name) : contract.name,
+  //       });
+  //     };
 
-      return (
-        <li
-          key={project.name}
-          onClick={selectionClickHandler}
-          className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-        >
-          {t(project.name)}
-        </li>
-      );
-    }
-  );
-
-  const displayContractDropmenu = contractSelection.map(
-    (contract: { id: number | null; name: string }) => {
-      const selectionClickHandler = () => {
-        setSelectedContract({
-          id: contract.id,
-          // name: t(contract.name),
-          name: contract.id === null ? t(contract.name) : contract.name,
-        });
-      };
-
-      return (
-        <li
-          key={contract.name}
-          onClick={selectionClickHandler}
-          className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
-        >
-          {t(contract.name)}
-        </li>
-      );
-    }
-  );
+  //     return (
+  //       <li
+  //         key={contract.name}
+  //         onClick={selectionClickHandler}
+  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //       >
+  //         {t(contract.name)}
+  //       </li>
+  //     );
+  //   }
+  // );
 
   const displayedBasicInfo = (
     <>
@@ -855,6 +877,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required
                 hasComma
+                triggerWhenChanged={amountChangeHandler}
                 className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 bg-white p-12px text-sm text-lightGray4">
@@ -935,6 +958,7 @@ const NewJournalForm = () => {
                 isDecimal
                 required={feeToggle}
                 hasComma
+                triggerWhenChanged={amountChangeHandler}
                 className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
               />
               <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
@@ -948,6 +972,11 @@ const NewJournalForm = () => {
                 <p>{t('JOURNAL.TWD')}</p>
               </div>
             </div>
+            {feeToggle && !isFeeValid && (
+              <div className="ml-auto text-sm text-input-text-error">
+                <p>{t('JOURNAL.FEE_EXCEEDS_TOTAL')}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1180,109 +1209,111 @@ const NewJournalForm = () => {
     </>
   );
 
-  const displayedProjectSecondLine =
-    selectedEventType === EventType.INCOME ? (
-      /* Info: (20240502 - Julian) Estimated Cost */
-      <div className="flex w-full flex-col items-start gap-8px">
-        <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
-        <div className="flex w-full items-center rounded-sm bg-white transition-all duration-300 ease-in-out">
-          <NumericInput
-            id="input-estimated-cost"
-            name="input-estimated-cost"
-            value={inputEstimatedCost}
-            setValue={setInputEstimatedCost}
-            isDecimal
-            required={selectedEventType === EventType.INCOME}
-            hasComma
-            className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
-          />
-          <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
-            <Image
-              src="/currencies/twd.svg"
-              width={16}
-              height={16}
-              alt="twd_icon"
-              className="rounded-full"
-            />
-            <p>{t('JOURNAL.TWD')}</p>
-          </div>
-        </div>
-      </div>
-    ) : null;
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayedProjectSecondLine =
+  //   selectedEventType === EventType.INCOME ? (
+  //     /* Info: (20240502 - Julian) Estimated Cost */
+  //     <div className="flex w-full flex-col items-start gap-8px">
+  //       <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.ESTIMATED_COST')}</p>
+  //       <div className="flex w-full items-center rounded-sm bg-white transition-all duration-300 ease-in-out">
+  //         <NumericInput
+  //           id="input-estimated-cost"
+  //           name="input-estimated-cost"
+  //           value={inputEstimatedCost}
+  //           setValue={setInputEstimatedCost}
+  //           isDecimal
+  //           required={selectedEventType === EventType.INCOME}
+  //           hasComma
+  //           className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
+  //         />
+  //         <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+  //           <Image
+  //             src="/currencies/twd.svg"
+  //             width={16}
+  //             height={16}
+  //             alt="twd_icon"
+  //             className="rounded-full"
+  //           />
+  //           <p>{t('JOURNAL.TWD')}</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   ) : null;
 
-  const displayedProject = (
-    <>
-      {/* Info: (20240424 - Julian) Title */}
-      <div className="my-5 flex items-center gap-4">
-        <hr className="block flex-1 border-lightGray3 md:hidden" />
-        <div className="flex items-center gap-2 text-sm">
-          <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
-          <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
-        </div>
-        <hr className="flex-1 border-lightGray3" />
-      </div>
+  // Info: (20240809 - Anna) Alpha版先隱藏(專案選擇)
+  // const displayedProject = (
+  //   <>
+  //     {/* Info: (20240424 - Julian) Title */}
+  //     {/* <div className="my-5 flex items-center gap-4">
+  //       <hr className="block flex-1 border-lightGray3 md:hidden" />
+  //       <div className="flex items-center gap-2 text-sm">
+  //         <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
+  //         <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //       </div>
+  //       <hr className="flex-1 border-lightGray3" />
+  //     </div> */}
 
-      {/* Info: (20240424 - Julian) Form */}
-      <div className="my-20px flex flex-col gap-40px">
-        {/* Info: (20240502 - Julian) First Column */}
-        <div className="flex w-full flex-col items-center gap-40px md:flex-row">
-          {/* Info: (20240424 - Julian) Project */}
-          <div
-            id="project-menu"
-            onClick={projectMenuHandler}
-            className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
-          >
-            <div className="p-12px text-sm text-lightGray4">
-              <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
-            </div>
-            <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{projectName}</p>
-              <FaChevronDown />
-              {/* Info: (20240424 - Julian) Dropmenu */}
-              <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-              >
-                <ul
-                  ref={projectRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
-                >
-                  {displayProjectDropmenu}
-                </ul>
-              </div>
-            </div>
-          </div>
+  //     {/* Info: (20240424 - Julian) Form */}
+  //     <div className="my-20px flex flex-col gap-40px">
+  //       {/* Info: (20240502 - Julian) First Column */}
+  //       <div className="flex w-full flex-col items-center gap-40px md:flex-row">
+  //         {/* Info: (20240424 - Julian) Project */}
+  //         <div
+  //           id="project-menu"
+  //           onClick={projectMenuHandler}
+  //           className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+  //         >
+  //           <div className="p-12px text-sm text-lightGray4">
+  //             <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //           </div>
+  //           <div className="flex w-full items-center p-10px">
+  //             <p className="flex-1">{projectName}</p>
+  //             <FaChevronDown />
+  //             {/* Info: (20240424 - Julian) Dropmenu */}
+  //             <div
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //             >
+  //               <ul
+  //                 ref={projectRef}
+  //                 className="z-10 flex w-full flex-col items-start bg-white p-8px"
+  //               >
+  //                 {displayProjectDropmenu}
+  //               </ul>
+  //             </div>
+  //           </div>
+  //         </div>
 
-          {/* Info: (20240424 - Julian) Contract */}
-          <div
-            id="contract-menu"
-            onClick={contractMenuHandler}
-            className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
-          >
-            <div className="p-12px text-sm text-lightGray4">
-              <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.CONTRACT')}</p>
-            </div>
-            <div className="flex w-full items-center p-10px">
-              <p className="flex-1">{contractName}</p>
-              <FaChevronDown />
-              {/* Info: (20240424 - Julian) Dropmenu */}
-              <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-              >
-                <ul
-                  ref={contractRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
-                >
-                  {displayContractDropmenu}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Info: (20240502 - Julian) Second Column */}
-        {displayedProjectSecondLine}
-      </div>
-    </>
-  );
+  //         {/* Info: (20240424 - Julian) Contract */}
+  //         <div
+  //           id="contract-menu"
+  //           onClick={contractMenuHandler}
+  //           className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+  //         >
+  //           <div className="p-12px text-sm text-lightGray4">
+  //             <p style={{ whiteSpace: 'nowrap' }}>{t('JOURNAL.CONTRACT')}</p>
+  //           </div>
+  //           <div className="flex w-full items-center p-10px">
+  //             <p className="flex-1">{contractName}</p>
+  //             <FaChevronDown />
+  //             {/* Info: (20240424 - Julian) Dropmenu */}
+  //             <div
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //             >
+  //               <ul
+  //                 ref={contractRef}
+  //                 className="z-10 flex w-full flex-col items-start bg-white p-8px"
+  //               >
+  //                 {displayContractDropmenu}
+  //               </ul>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //       {/* Info: (20240502 - Julian) Second Column */}
+  //       {displayedProjectSecondLine}
+  //     </div>
+  //   </>
+  // );
 
   return (
     <div>
@@ -1293,13 +1324,11 @@ const NewJournalForm = () => {
       >
         {/* Info: (20240423 - Julian) Basic Info */}
         {displayedBasicInfo}
-
         {/* Info: (20240423 - Julian) Payment */}
         {displayedPayment}
-
+        {/* Info: (20240809 - Anna) Alpha版先隱藏(專案選擇) */}
         {/* Info: (20240423 - Julian) Project */}
-        {displayedProject}
-
+        {/* {displayedProject} */}
         {/* Info: (20240423 - Julian) Buttons */}
         <div className="ml-auto flex items-center gap-24px">
           <button
@@ -1310,12 +1339,7 @@ const NewJournalForm = () => {
           >
             {t('JOURNAL.CLEAR_ALL')}
           </button>
-          <Button
-            id="upload-btn"
-            type="submit"
-            className="px-16px py-8px"
-            // disabled={isUploadDisabled}
-          >
+          <Button id="upload-btn" type="submit" className="px-16px py-8px" disabled={!isFeeValid}>
             <p>{t('JOURNAL.UPLOAD')}</p>
             <svg
               width="20"

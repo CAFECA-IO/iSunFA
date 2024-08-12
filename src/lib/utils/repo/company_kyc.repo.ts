@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { KYCStatus } from '@/constants/kyc';
+import { SortOrder } from '@/constants/sort';
 import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { CompanyKYC, Prisma } from '@prisma/client';
@@ -25,6 +26,21 @@ export async function createCompanyKYC(
     },
   });
 
+  return companyKYC;
+}
+
+export async function getCompanyKYCByCompanyId(companyId: number): Promise<CompanyKYC | null> {
+  let companyKYC = null;
+  if (companyId > 0) {
+    companyKYC = await prisma.companyKYC.findFirst({
+      where: {
+        companyId,
+      },
+      orderBy: {
+        id: SortOrder.DESC,
+      },
+    });
+  }
   return companyKYC;
 }
 

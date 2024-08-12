@@ -19,20 +19,22 @@ import version from '@/lib/version';
 import { useRouter } from 'next/router';
 import I18n from '@/components/i18n/i18n';
 import { TranslateFunction } from '@/interfaces/locale';
-import Notification from '@/components/notification/notification';
+// Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+// import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, selectCompany, userAuth, isAuthLoading } =
+  const { signedIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
     useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
 
   const [langIsOpen, setLangIsOpen] = useState(false);
-  const [notificationIsOpen, setNotificationIsOpen] = useState(false);
+  // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+  // const [notificationIsOpen, setNotificationIsOpen] = useState(false);
 
   const {
     targetRef: userMenuRef,
@@ -67,7 +69,8 @@ const NavBar = () => {
   const burgerMenuClickHandler = () => {
     setIsBurgerMenuOpen(!isBurgerMenuOpen);
     setLangIsOpen(false);
-    setNotificationIsOpen(false);
+    // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
+    // setNotificationIsOpen(false);
   };
 
   const profileUploadClickHandler = () => {
@@ -81,8 +84,9 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
+    // clearCompany();
     selectCompany(null);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const redirectTo = (target: string) => {
@@ -220,11 +224,11 @@ const NavBar = () => {
         <p>{t('NAV_BAR.CONTACT_US')}</p>
       </Link>
 
-      <Notification
+      {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
+      {/* <Notification
         mobileMenuIsOpen={notificationIsOpen}
         setMobileMenuIsOpen={setNotificationIsOpen}
-      />
-
+      /> */}
       <I18n langIsOpen={langIsOpen} setLangIsOpen={setLangIsOpen} />
       {displayedAppMenuMobile}
     </div>
@@ -324,14 +328,15 @@ const NavBar = () => {
         </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
+            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
           </div>
+          {/* Info: edit name button (20240809 - Shirley) */}
           <button
             type="button"
             // TODO: temp disabled (20240517 - Shirley)
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
-            className="flex shrink-0 flex-col justify-center rounded-xs px-2 disabled:text-button-text-disable"
+            className="hidden shrink-0 flex-col justify-center rounded-xs px-2 text-button-surface-strong-secondary disabled:text-button-text-disable"
           >
             <div className="flex items-center justify-center">
               <svg
@@ -342,7 +347,7 @@ const NavBar = () => {
                 viewBox="0 0 17 16"
               >
                 <path
-                  fill="#001840"
+                  className="fill-current"
                   fillRule="evenodd"
                   d="M12.128.96a2.414 2.414 0 113.415 3.415L9.167 10.75l-.045.045c-.184.185-.38.382-.62.529a2.335 2.335 0 01-.674.28c-.273.065-.552.064-.812.064H5.835a1 1 0 01-1-1V9.55v-.064c0-.26 0-.539.065-.812.057-.238.151-.465.28-.674.146-.24.343-.436.528-.62l.045-.045L12.128.96zm2 1.415a.414.414 0 00-.585 0L7.167 8.75c-.121.121-.189.19-.238.243m7.2-6.618a.414.414 0 010 .586v-.586zm-9.132-.707h2.839a1 1 0 110 2h-2.8c-.577 0-.95 0-1.233.024-.271.022-.372.06-.421.085a1 1 0 00-.437.437c-.026.05-.063.15-.086.422-.023.283-.023.655-.023 1.232v5.6c0 .576 0 .949.023 1.232.023.272.06.372.086.422a1 1 0 00.437.437c.049.025.15.063.421.085.284.023.656.024 1.233.024h5.6c.576 0 .948-.001 1.232-.024.271-.022.372-.06.421-.085a1 1 0 00.438-.437c.025-.05.062-.15.085-.422.023-.283.024-.656.024-1.232v-2.8a1 1 0 112 0V11.506c0 .527 0 .982-.031 1.357-.032.395-.104.788-.296 1.167a3 3 0 01-1.312 1.31c-.378.194-.771.265-1.166.297-.375.03-.83.03-1.357.03H4.997c-.527 0-.982 0-1.357-.03-.395-.032-.788-.103-1.166-.296a3 3 0 01-1.312-1.311c-.192-.379-.264-.772-.296-1.167-.03-.375-.03-.83-.03-1.357V5.83c0-.527 0-.982.03-1.356.032-.396.104-.789.296-1.167a3 3 0 011.312-1.311c.378-.193.771-.264 1.166-.297.375-.03.83-.03 1.357-.03zm9.131 1.293L7.753 9.336l6.375-6.375zM6.884 9.047v-.001.001zm0-.001a.334.334 0 00-.04.096.61.61 0 00-.005.069 8.42 8.42 0 00-.004.34v.117h.117c.172 0 .268 0 .34-.004.064-.003.075-.007.069-.005a.333.333 0 00.095-.04m.297-.283a8.41 8.41 0 01-.243.238l.243-.238zm-.243.238a.61.61 0 01-.053.045l.053-.045z"
                   clipRule="evenodd"
@@ -386,7 +391,8 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-          className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
+          // Info: disabled for now (20240809 - Shirley)
+          className="mt-3 hidden w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -468,25 +474,26 @@ const NavBar = () => {
     </div>
   );
 
-  const displayedCompanyChangeBtn = selectedCompany ? (
-    <button
-      type="button"
-      onClick={companyChangeClickHandler}
-      className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
-    >
-      {/* ToDo: (20240516 - Julian) icon */}
-      <Image
-        alt={`${selectedCompany?.name}_icon`}
-        src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
-        width={16}
-        height={16}
-        className="rounded-full"
-      />
-      {/* ToDo: (20240521 - Julian) company name abbreviation */}
-      <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
-      <GoArrowSwitch size={14} />
-    </button>
-  ) : null;
+  const displayedCompanyChangeBtn =
+    !isAuthLoading && selectedCompany ? (
+      <button
+        type="button"
+        onClick={companyChangeClickHandler}
+        className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
+      >
+        {/* ToDo: (20240516 - Julian) icon */}
+        <Image
+          alt={`${selectedCompany?.name}_icon`}
+          src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+          width={16}
+          height={16}
+          className="rounded-full"
+        />
+        {/* ToDo: (20240521 - Julian) company name abbreviation */}
+        <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
+        <GoArrowSwitch size={14} />
+      </button>
+    ) : null;
 
   const displayedAvatar = isAuthLoading ? (
     <Skeleton width={44} height={40} />
@@ -627,7 +634,8 @@ const NavBar = () => {
           {/* Info: globe (i18n) (20240605 - Shirley) */}
           <I18n />
           {/* Info: notification (20240606 - Shirley) */}
-          <Notification />
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
+          {/* <Notification /> */}
           {/* Info: app menu (20240606 - Shirley) */}
           <div ref={appMenuRef}>
             <button

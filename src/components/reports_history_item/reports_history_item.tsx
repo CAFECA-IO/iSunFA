@@ -107,32 +107,35 @@ const ReportsHistoryItem = ({
       </td>
       {/* Info: (20240514 - Shirley) Blockchain explorer link */}
       <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
-        <Link href={blockChainExplorerLink} target="_blank">
-          <Button variant={'tertiaryBorderless'} size={'small'}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                d="M12.952 2.932a5.75 5.75 0 018.13 8.131l-.009.01-3 3a5.75 5.75 0 01-8.67-.622.75.75 0 011.2-.898 4.25 4.25 0 006.41.459l2.995-2.996a4.25 4.25 0 00-6.01-6.008l-1.716 1.706a.75.75 0 01-1.058-1.064l1.72-1.71.008-.008zM7.989 8.61a5.75 5.75 0 016.615 1.944.75.75 0 01-1.202.898 4.247 4.247 0 00-4.888-1.436 4.249 4.249 0 00-1.52.977l-2.996 2.995a4.25 4.25 0 006.01 6.01l1.705-1.705a.75.75 0 111.06 1.06l-1.71 1.71-.009.01a5.75 5.75 0 01-8.13-8.131l.008-.01 3-3A5.75 5.75 0 017.99 8.61z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-          </Button>
-        </Link>
+        {blockChainExplorerLink ? (
+          <Link href={blockChainExplorerLink} target="_blank">
+            <Button variant={'tertiaryBorderless'} size={'small'}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  className="fill-current"
+                  fillRule="evenodd"
+                  d="M12.952 2.932a5.75 5.75 0 018.13 8.131l-.009.01-3 3a5.75 5.75 0 01-8.67-.622.75.75 0 011.2-.898 4.25 4.25 0 006.41.459l2.995-2.996a4.25 4.25 0 00-6.01-6.008l-1.716 1.706a.75.75 0 01-1.058-1.064l1.72-1.71.008-.008zM7.989 8.61a5.75 5.75 0 016.615 1.944.75.75 0 01-1.202.898 4.247 4.247 0 00-4.888-1.436 4.249 4.249 0 00-1.52.977l-2.996 2.995a4.25 4.25 0 006.01 6.01l1.705-1.705a.75.75 0 111.06 1.06l-1.71 1.71-.009.01a5.75 5.75 0 01-8.13-8.131l.008-.01 3-3A5.75 5.75 0 017.99 8.61z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+            </Button>
+          </Link>
+        ) : null}
       </td>
       {/* Info: project (20240528 - Shirley) */}
       <td className="hidden px-16px text-left lg:table-cell">{displayedProject}</td>
       {/* Info: operation buttons (20240516 - Shirley) */}
       <td className="hidden min-w-100px px-16px lg:table-cell">
         <div className="flex items-center justify-between">
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(下載按鈕) */}
           {/* Info: download button (20240516 - Shirley) */}
-          <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
+          {/* <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -147,9 +150,10 @@ const ReportsHistoryItem = ({
                 clipRule="evenodd"
               ></path>
             </svg>
-          </Button>
+          </Button> */}
+          {/* Info: (20240808 - Anna) Alpha版先隱藏(分享按鈕) */}
           {/* Info: share button (20240516 - Shirley) */}
-          <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
+          {/* <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -164,7 +168,7 @@ const ReportsHistoryItem = ({
                 clipRule="evenodd"
               ></path>
             </svg>
-          </Button>
+          </Button> */}
         </div>
       </td>
     </tr>

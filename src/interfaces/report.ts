@@ -44,6 +44,59 @@ export interface IReport {
 
 export interface IPaginatedReport extends IPaginatedData<IReport[]> {}
 
+export const MOCK_TOTAL_PAGES = 10;
+
+export const MOCK_REPORTS: IReport[] = [
+  {
+    id: 1,
+    companyId: 123,
+    tokenContract: '0x123abc',
+    tokenId: '456def',
+    name: 'Mock Report',
+    from: 1630444800,
+    to: 1633046400,
+    type: ReportType.FINANCIAL,
+    reportType: ReportSheetType.BALANCE_SHEET,
+    status: 'completed',
+    remainingSeconds: 0,
+    paused: false,
+    projectId: null,
+    project: null,
+    reportLink: 'https://example.com/report',
+    downloadLink: 'https://example.com/download',
+    blockChainExplorerLink: 'https://example.com/explorer',
+    evidenceId: 'abc123',
+    content: [],
+    otherInfo: null,
+    createdAt: 1633046400,
+    updatedAt: 1633046400,
+  },
+  {
+    id: 2,
+    companyId: 123,
+    tokenContract: '0x123abc',
+    tokenId: '456def',
+    name: 'Mock Report',
+    from: 1630444800,
+    to: 1633046400,
+    type: ReportType.FINANCIAL,
+    reportType: ReportSheetType.BALANCE_SHEET,
+    status: 'completed',
+    remainingSeconds: 0,
+    paused: false,
+    projectId: null,
+    project: null,
+    reportLink: 'https://example.com/report',
+    downloadLink: 'https://example.com/download',
+    blockChainExplorerLink: 'https://example.com/explorer',
+    evidenceId: 'abc123',
+    content: [],
+    otherInfo: null,
+    createdAt: 1633046400,
+    updatedAt: 1633046400,
+  },
+];
+
 export type IReportIncludeCompanyProject = Prisma.ReportGetPayload<{
   include: {
     project: true;
@@ -73,11 +126,11 @@ export type FinancialReportLanguage = (typeof ReportLanguagesKey)[keyof typeof R
 
 export interface IFinancialReportRequest {
   projectId?: string;
-  reportType?: ReportSheetType;
+  type?: ReportSheetType;
   reportLanguage?: ReportLanguagesKey;
-  startDate?: number;
-  endDate?: number;
-  financialOrAnalysis?: 'financial' | 'analysis';
+  from?: number;
+  to?: number;
+  reportType?: ReportType;
 }
 
 export interface FinancialReportItem {
@@ -246,10 +299,12 @@ export interface TaxReport401 {
 
 interface BasicInfo {
   uniformNumber: string;
-  name: string;
-  taxOfficeCode: string;
+  businessName: string;
+  personInCharge: string;
+  taxSerialNumber: string;
   businessAddress: string;
-  reportingPeriod: string;
+  currentYear: string;
+  currentMonth: string;
   usedInvoiceCount: number;
 }
 

@@ -3,6 +3,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -23,7 +24,10 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import Toggle from '@/components/toggle/toggle';
+import { cn } from '@/lib/utils/common';
+
+// Info: (20240808 - Anna) Alpha版先隱藏(發票列表)
+// import Toggle from '@/components/toggle/toggle';
 
 const JournalListBody = () => {
   const { t } = useTranslation('common');
@@ -36,10 +40,11 @@ const JournalListBody = () => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [code, setCode] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean | undefined>(undefined);
-  const [invoiceListToggle, setInvoiceListoggle] = useState<boolean>(false);
-  const { trigger } = APIHandler<{ [key: string]: IPaginatedData<IJournalListItem[]> }>(
-    APIName.JOURNAL_LIST
-  );
+  // Info: (20240808 - Anna) Alpha版先隱藏(發票列表)
+  // const [invoiceListToggle, setInvoiceListoggle] = useState<boolean>(false);
+  const { trigger, isLoading: isJournalListLoading } = APIHandler<{
+    [key: string]: IPaginatedData<IJournalListItem[]>;
+  }>(APIName.JOURNAL_LIST);
   const { trigger: deleteJournalById } = APIHandler<void>(APIName.JOURNAL_DELETE);
 
   const types = [
@@ -74,7 +79,8 @@ const JournalListBody = () => {
   );
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [currentTab, setCurrentTab] = useState<JOURNAL_EVENT>(JOURNAL_EVENT.UPCOMING);
+  // Info: (20240808 - Anna) Alpha版，進到頁面時，顯示JOURNAL_EVENT.UPLOADED的畫面，而不是JOURNAL_EVENT.UPCOMING的畫面
+  const [currentTab, setCurrentTab] = useState<JOURNAL_EVENT>(JOURNAL_EVENT.UPLOADED);
   const [search, setSearch] = useState<string>('');
   const [totalPages, setTotalPages] = useState<number>(0);
   const [journals, setJournals] = useState<IJournalListItem[]>([]);
@@ -83,16 +89,27 @@ const JournalListBody = () => {
   const [isTypeSelected, setIsTypeSelected] = useState(false);
   const [isSortBySelected, setIsSortBySelected] = useState(false);
 
-  const toggleTypeMenu = () => setIsTypeMenuOpen(!isTypeMenuOpen);
-  const toggleSortByMenu = () => setIsSortByMenuOpen(!isSortByMenuOpen);
-
+  const toggleTypeMenu = () => {
+    if (!isJournalListLoading) {
+      setIsTypeMenuOpen(!isTypeMenuOpen);
+    }
+  };
+  const toggleSortByMenu = () => {
+    if (!isJournalListLoading) {
+      setIsSortByMenuOpen(!isSortByMenuOpen);
+    }
+  };
   const tabClickHandler = (event: JOURNAL_EVENT) => {
     setCurrentTab(event);
     setJournals(pagenatedJournalListItems?.[event]?.data ?? []);
     setTotalPages(pagenatedJournalListItems?.[event]?.totalPages ?? 0);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isJournalListLoading) {
+      setSearch(e.target.value);
+    }
+  };
 
   const getJournalList = useCallback(
     async (query: {
@@ -128,7 +145,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
+          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
         },
       });
 
@@ -182,8 +199,8 @@ const JournalListBody = () => {
       messageModalVisibilityHandler();
     }
   };
-
-  const invoiceListToggleHandler = () => setInvoiceListoggle(!invoiceListToggle);
+  // Info: (20240808 - Anna) Alpha版先隱藏(發票列表)
+  // const invoiceListToggleHandler = () => setInvoiceListoggle(!invoiceListToggle);
 
   useEffect(() => {
     getJournalList({});
@@ -199,11 +216,19 @@ const JournalListBody = () => {
 
   const displayedTypeDropMenu = (
     <div
-      onClick={toggleTypeMenu}
-      className={`group relative flex h-44px w-130px cursor-pointer ${isTypeMenuOpen ? 'border-input-stroke-input-hover text-primaryYellow' : 'border-input-stroke-input text-input-text-input-placeholder'} items-center justify-between rounded-sm border bg-white p-10px hover:border-input-stroke-input-hover hover:text-primaryYellow`}
+      onClick={isJournalListLoading ? undefined : toggleTypeMenu}
+      className={cn(
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        {
+          'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
+            isJournalListLoading,
+          'border-input-stroke-selected text-primaryYellow': isTypeMenuOpen,
+          'border-input-stroke-input text-input-text-input-placeholder': !isTypeMenuOpen,
+        }
+      )}
     >
       <p
-        className={`group-hover:text-primaryYellow ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? 'text-primaryYellow' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredJournalType)}
       </p>
@@ -233,11 +258,19 @@ const JournalListBody = () => {
 
   const displayedSortByDropMenu = (
     <div
-      onClick={toggleSortByMenu}
-      className={`group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm ${isSortByMenuOpen ? 'border-input-stroke-selected text-primaryYellow' : 'border-input-stroke-input text-input-text-input-placeholder'} border bg-white p-10px hover:border-input-stroke-selected hover:text-primaryYellow`}
+      onClick={isJournalListLoading ? undefined : toggleSortByMenu}
+      className={cn(
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        {
+          'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
+            isJournalListLoading,
+          'border-input-stroke-selected text-primaryYellow': isSortByMenuOpen,
+          'border-input-stroke-input text-input-text-input-placeholder': !isSortByMenuOpen,
+        }
+      )}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isSortByMenuOpen ? 'text-primaryYellow' : isSortBySelected ? '' : 'text-lightGray3'}`}
+        className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isSortByMenuOpen ? 'text-primaryYellow' : isSortBySelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredJournalSortBy)}
       </p>
@@ -269,6 +302,7 @@ const JournalListBody = () => {
   const displayedDatePicker = (
     <div className="hidden md:flex">
       <DatePicker
+        disabled={isJournalListLoading}
         type={DatePickerType.TEXT_PERIOD}
         period={filteredPeriod}
         setFilteredPeriod={setFilteredPeriod}
@@ -280,15 +314,21 @@ const JournalListBody = () => {
   const displayedSearchBar = (
     <div className="relative flex-1">
       <input
+        disabled={isJournalListLoading}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
         onChange={handleInputChange}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            getJournalList({ search });
+          }
+        }}
       />
       <FiSearch
         size={20}
         className="absolute right-3 top-3 cursor-pointer"
-        onClick={() => getJournalList({ search })}
+        onClick={() => !isJournalListLoading && getJournalList({ search })}
       />
     </div>
   );
@@ -304,20 +344,22 @@ const JournalListBody = () => {
         <hr className="flex-1 border-lightGray4" />
       </div>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-18px">
-          <Toggle
-            id="invoice-list-toggle"
-            initialToggleState={invoiceListToggle}
-            getToggledState={invoiceListToggleHandler}
-            toggleStateFromParent={invoiceListToggle}
-          />
-          <p>{t('JOURNAL.INVOICE_LIST')}</p>
-        </div>
+        {/* Info: (20240808 - Anna) Alpha版先隱藏(發票列表) */}
+        {/* <div className="flex items-center gap-18px">
+            <Toggle
+              id="invoice-list-toggle"
+              initialToggleState={invoiceListToggle}
+              getToggledState={invoiceListToggleHandler}
+              toggleStateFromParent={invoiceListToggle}
+            />
+            <p>{t('JOURNAL.INVOICE_LIST')}</p>
+          </div> */}
         {/* Info: (20240731 - Tzuhan) Toolbar */}
         <div className="flex items-center">
           <div className="flex w-full items-center justify-center gap-16px md:justify-end">
+            {/* Info: (20240808 - Anna) Alpha版先隱藏(刪除按鈕) */}
             {/* Info: (20240731 - Tzuhan) Delete button */}
-            <button
+            {/* <button
               type="button"
               className="rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >
@@ -338,10 +380,10 @@ const JournalListBody = () => {
                   />
                 </g>
               </svg>
-            </button>
-
+            </button> */}
+            {/* Info: (20240808 - Anna) Alpha版先隱藏(下載按鈕) */}
             {/* Info: (20240418 - Julian) Download button */}
-            <button
+            {/* <button
               type="button"
               className="rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
             >
@@ -360,10 +402,10 @@ const JournalListBody = () => {
                   fill="#001840"
                 />
               </svg>
-            </button>
-
+            </button> */}
+            {/* Info: (20240808 - Anna) Alpha版先隱藏(選擇按鈕) */}
             {/* Info: (20240418 - Julian) Select */}
-            <button
+            {/* <button
               type="button"
               className="flex items-center gap-4px p-16px text-sm text-secondaryBlue hover:text-primaryYellow"
             >
@@ -383,7 +425,7 @@ const JournalListBody = () => {
                 />
               </svg>
               <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -411,10 +453,14 @@ const JournalListBody = () => {
       <button
         type="button"
         onClick={() => tabClickHandler(JOURNAL_EVENT.UPCOMING)}
-        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JOURNAL_EVENT.UPCOMING ? 'border-tabs-stroke-active' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out`}
+        // Info: (20240808 - Anna) Alpha版，進到頁面時，顯示JOURNAL_EVENT.UPLOADED的畫面，而不是JOURNAL_EVENT.UPCOMING的畫面，並且把文字顏色改為disabled:text-button-text-disable、底線顏色由border-tabs-stroke-active改為border-tabs-stroke-default(改?後面的)
+        className={`inline-flex w-1/2 items-center justify-center gap-2 border-b-2 ${currentTab === JOURNAL_EVENT.UPLOADED ? 'border-tabs-stroke-default' : 'border-tabs-stroke-default'} px-12px py-8px font-medium tracking-tight transition-all duration-300 ease-in-out disabled:text-button-text-disable`}
+        // Info: (20240808 - Anna) Alpha版先屏蔽(即將到來的會計事件)
+        disabled
       >
+        {/* Info: (20240808 - Anna) Alpha版先屏蔽(即將到來的會計事件)，文字顏色由text-tabs-text-default改為disabled:text-button-text-disable、由text-tabs-text-active改為text-tabs-text-default */}
         <p
-          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPCOMING ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+          className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPCOMING ? 'text-tabs-text-default' : 'disabled:text-button-text-disable'}`}
         >
           {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
         </p>
@@ -478,7 +524,7 @@ const JournalListBody = () => {
       {/* Info: (20240418 - Julian) Journal list */}
       <JournalList
         event={currentTab}
-        companyId={selectedCompany!.id}
+        companyId={selectedCompany?.id ?? NON_EXISTING_COMPANY_ID}
         journalsProps={{
           journals,
           isLoading,

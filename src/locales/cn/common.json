@@ -429,13 +429,20 @@
     "AMOUNT": "会计分录",
     "UPLOAD_SUCCESSFUL": "上传成功",
     "DONE": "完成",
-    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "已成功删除未处理的OCR:{{code}}",
-    "FAILED_TO_LIST_UNPROCESSED_OCRS": "列出未处理的OCR失败:{{code}}",
-    "FAILED_TO_DELETE_UNPROCESSED_OCR": "删除未处理的OCR失败：{{code}}",
+    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "已成功删除",
+    "FAILED_TO_LIST_UNPROCESSED_OCRS": "列出凭证失败",
+    "FAILED_TO_DELETE_UNPROCESSED_OCR": "删除失败",
     "GO_BACK_TO_JOURNAL_LIST": "返回日记帐",
     "DOWNLOAD": "下载",
     "DEBIT_AMOUNT_BALANCED": "借方金额与总金额平衡",
-    "CREDIT_AMOUNT_BALANCED": "贷方金额与总金额平衡"
+    "CREDIT_AMOUNT_BALANCED": "贷方金额与总金额平衡",
+    "CLEAR_FORM": "清除表格",
+    "CLEAR_FORM_CONTENT": "您确定要清除表格吗？",
+    "LEAVE_HINT": "您的日记帐还未新增",
+    "LEAVE_HINT_CONTENT": "您的日记帐还未新增，您确定要离开吗？",
+    "LEAVE": "离开",
+    "CANCEL": "取消",
+    "FEE_EXCEEDS_TOTAL": "费用不能大于总金额"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -649,6 +656,7 @@
   },
   "BOOKMARK_LIST": {
     "ADD_NEW_CONTRACT": "新增合同",
+    "ADD_NEW_KYC": "新增KYC",
     "ADD_NEW_EMPLOYEES": "新增员工",
     "ADD_NEW_PAYROLL": "新增工资",
     "ADD_NEW_JOURNAL": "新增日记账",
@@ -762,7 +770,8 @@
     "LEAVE_THIS_PAGE": "离开这个页面",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果您离开，您可能会失去目前完成的进度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "您确定要离开此页面吗",
-    "LEAVE_NOW": "现在离开"
+    "LEAVE_NOW": "现在离开",
+    "BACK": "上一步"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "基本信息",

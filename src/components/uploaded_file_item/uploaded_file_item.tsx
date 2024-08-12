@@ -26,9 +26,11 @@ const UploadedFileItem = ({
 
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
-    status === ProgressStatus.IN_PROGRESS ||
-    status === ProgressStatus.SUCCESS ||
-    status === ProgressStatus.PAUSED
+    // Info (20240809 - Murky): To Julian 設定成P
+    // status === ProgressStatus.IN_PROGRESS ||
+    // status === ProgressStatus.SUCCESS ||
+    // status === ProgressStatus.PAUSED
+    (imageUrl && imageUrl.length > 0)
   );
 
   const pauseClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -43,7 +45,8 @@ const UploadedFileItem = ({
   };
 
   const itemClickHandler = () => {
-    if (progress !== 100 || isDeleting) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
+    // if (progress !== 100 || isDeleting) return; // Info: (20240530 - Julian) 達到 100% 才能點擊
+    if (!imageUrl || imageUrl.length <= 0 || isDeleting) return; // Info: (2024809 - Murky) 如果沒有imageUrl就不能點擊(或是url是空字串)
     clickHandler(itemData);
   };
 

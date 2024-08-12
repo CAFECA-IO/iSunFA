@@ -68,18 +68,18 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
     <div
       className={`transition-all duration-300 ${
         openMenu
-          ? 'visible -translate-y-19rem opacity-100'
+          ? 'visible -translate-y-7rem opacity-100'
           : 'invisible -translate-y-36rem opacity-0'
       } lg:hidden`}
     >
       <div
         id="I18nMenuMobile"
-        className="absolute left-0 top-0 z-10 h-350px w-screen bg-white shadow"
+        className="absolute left-0 top-0 z-10 h-300px w-screen bg-white shadow"
       >
         <button
           onClick={mobileClickHandler}
           type="button"
-          className="p-16px text-button-text-secondary hover:text-button-text-primary"
+          className="px-4 pt-2 text-button-text-secondary hover:text-button-text-primary"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +107,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
                 scroll={false}
                 locale={item.value}
                 href={asPath}
-                className="block rounded-none px-3 py-7 font-medium hover:cursor-pointer"
+                className="block rounded-none px-3 py-7 font-medium text-button-text-secondary hover:cursor-pointer hover:text-button-text-primary"
               >
                 {item.label}
               </Link>

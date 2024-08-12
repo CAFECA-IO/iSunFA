@@ -17,7 +17,7 @@
     "MARK_ALL_AS_READ": "Mark all as read",
     "READ_MORE": "Read more...",
     "LANGUAGE": "Language",
-    "ACCOUNT": "Account",
+    "ACCOUNT": "Accounting",
     "APPLICATIONS": "Applications",
     "SWITCH_COMPANY": "Switch Company",
     "SUBSCRIPTION_BILLS": "Subscription & Bills",
@@ -429,13 +429,20 @@
     "AMOUNT": "Amount",
     "UPLOAD_SUCCESSFUL": "Upload Successful",
     "DONE": "Done",
-    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "Successfully deleted unprocessed OCR:{{code}}",
-    "FAILED_TO_LIST_UNPROCESSED_OCRS": "Failed to list unprocessed OCRs:{{code}}",
-    "FAILED_TO_DELETE_UNPROCESSED_OCR": "Failed to delete unprocessed OCR:{{code}}",
+    "SUCCESSFULLY_DELETED_UNPROCESSED_OCR": "Successfully deleted",
+    "FAILED_TO_LIST_UNPROCESSED_OCRS": "Failed to list",
+    "FAILED_TO_DELETE_UNPROCESSED_OCR": "Failed to delete",
     "GO_BACK_TO_JOURNAL_LIST": "Go back to journal list",
     "DOWNLOAD": "Download",
     "DEBIT_AMOUNT_BALANCED": "Debit amount balanced with total amount",
-    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount"
+    "CREDIT_AMOUNT_BALANCED": "Credit amount balanced with total amount",
+    "CLEAR_FORM": "Clear Form",
+    "CLEAR_FORM_CONTENT": "Are you sure you want to clear the form?",
+    "LEAVE_HINT": "You journal is not added yet",
+    "LEAVE_HINT_CONTENT": "You journal is not added yet. Are you sure you want to leave now?",
+    "LEAVE": "Leave",
+    "CANCEL": "Cancel",
+    "FEE_EXCEEDS_TOTAL": "Fee cannot exceed total amount"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
@@ -649,6 +656,7 @@
   },
   "BOOKMARK_LIST": {
     "ADD_NEW_CONTRACT": "Add New Contract",
+    "ADD_NEW_KYC": "Add New KYC",
     "ADD_NEW_EMPLOYEES": "Add New Employees",
     "ADD_NEW_PAYROLL": "Add New Payroll",
     "ADD_NEW_JOURNAL": "Add New Journal",
@@ -762,7 +770,8 @@
     "LEAVE_THIS_PAGE": "Leave this page",
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
-    "LEAVE_NOW": "Leave now"
+    "LEAVE_NOW": "Leave now",
+    "BACK": "Back"
   },
   "COMPANY_BASIC_INFO": {
     "BASIC_INFO": "Basic Info",

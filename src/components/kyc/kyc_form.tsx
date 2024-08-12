@@ -26,7 +26,7 @@ import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 
-const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
+const KYCForm = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -149,6 +149,11 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
     scrollToTop();
   };
 
+  const handleBackButtonClick = () => {
+    handleStepChange(step - 1);
+    scrollToTop();
+  };
+
   // Info: (20240801 - Liz) 確認每個步驟的表格是否填寫完整
   const isBasicInfoFormComplete = Object.values(basicInfoValues).every((value) => value !== '');
 
@@ -183,13 +188,6 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
-                onClick={onCancel}
-              >
-                {t('KYC.CANCEL')}
-              </button>
-              <button
-                type="button"
                 className={`rounded px-4 py-2 ${isBasicInfoFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
                 onClick={handleNextButtonClick}
                 disabled={!isBasicInfoFormComplete}
@@ -209,9 +207,9 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
               <button
                 type="button"
                 className="rounded px-4 py-2 text-secondaryBlue"
-                onClick={onCancel}
+                onClick={handleBackButtonClick}
               >
-                {t('KYC.CANCEL')}
+                {t('KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -231,9 +229,9 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
               <button
                 type="button"
                 className="rounded px-4 py-2 text-secondaryBlue"
-                onClick={onCancel}
+                onClick={handleBackButtonClick}
               >
-                {t('KYC.CANCEL')}
+                {t('KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -257,9 +255,9 @@ const KYCForm = ({ onCancel }: { onCancel: () => void }) => {
               <button
                 type="button"
                 className="rounded px-4 py-2 text-secondaryBlue"
-                onClick={onCancel}
+                onClick={handleBackButtonClick}
               >
-                {t('KYC.CANCEL')}
+                {t('KYC.BACK')}
               </button>
               <button
                 type="button"

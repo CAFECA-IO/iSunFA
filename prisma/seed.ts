@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import accounts from '@/seed_json/account.json';
 import companies from '@/seed_json/company.json';
+import companyKYCs from '@/seed_json/company_kyc.json';
 import admins from '@/seed_json/admin.json';
 import projects from '@/seed_json/project.json';
 import IncomeExpenses from '@/seed_json/income_expense.json';
@@ -83,6 +84,12 @@ async function createAccount() {
 async function createCompany() {
   await prisma.company.createMany({
     data: companies,
+  });
+}
+
+async function createCompanyKYC() {
+  await prisma.companyKYC.createMany({
+    data: companyKYCs,
   });
 }
 
@@ -237,6 +244,7 @@ async function main() {
   await createRole();
   await createUser();
   await createCompany();
+  await createCompanyKYC();
   await createClient();
   await createAccount();
   await createAdmin();

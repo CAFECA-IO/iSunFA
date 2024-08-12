@@ -1,11 +1,11 @@
-import { NextApiResponse } from 'next';
 import * as module from '@/pages/api/v1/company/[companyId]/ocr/[resultId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import * as common from '@/lib/utils/common';
 
-let res: jest.Mocked<NextApiResponse>;
+// Info (20240806 - Murky): Temporary not use
+// let res: jest.Mocked<NextApiResponse>;
 
 global.fetch = jest.fn();
 
@@ -15,10 +15,11 @@ jest.mock('../../../../../../../lib/utils/common', () => ({
 }));
 
 beforeEach(() => {
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
+  // Info (20240806 - Murky): Temporary not use
+  // res = {
+  //   status: jest.fn().mockReturnThis(),
+  //   json: jest.fn(),
+  // } as unknown as jest.Mocked<NextApiResponse>;
 });
 
 afterEach(() => {
@@ -189,8 +190,8 @@ describe('handleGetRequest', () => {
     global.fetch = jest.fn().mockResolvedValue(mockFetchResponse);
     jest.spyOn(common, 'formatApiResponse').mockReturnValue(mockResponse);
 
-    await module.handleGetRequest(resultId, res);
+    const result = await module.handleGetRequest(resultId);
 
-    expect(res.json).toHaveBeenCalledWith(mockResult);
+    expect(result).toEqual(mockResult?.payload);
   });
 });

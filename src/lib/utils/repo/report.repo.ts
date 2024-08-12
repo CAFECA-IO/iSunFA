@@ -88,7 +88,7 @@ export async function getReportIdByFromTo(
   return report?.id;
 }
 
-export async function createFinancialReport(
+export async function createReport(
   companyId: number,
   projectId: number | null,
   name: string,
@@ -139,25 +139,24 @@ export async function findManyReports(
   searchQuery?: string
 ) {
   let reports: IReportIncludeCompanyProject[] = [];
-
   const where: Prisma.ReportWhereInput = {
     id: {
-      gte: 1000000, // Info
+      gte: 10000000, // Info
     },
     companyId,
     status,
     AND: [
       // { from: { gte: startDateInSecond } },
       { to: { lte: endDateInSecond } },
-    ],
-    OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    ...(searchQuery
-      ? [
+      { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+      {
+        OR: [
           { name: { contains: searchQuery, mode: 'insensitive' } },
           { type: { contains: searchQuery, mode: 'insensitive' } },
           { reportType: { contains: searchQuery, mode: 'insensitive' } },
-        ]
-      : undefined),
+        ],
+      },
+    ],
   };
 
   const orderBy: Prisma.ReportOrderByWithRelationInput = { [sortBy]: sortOrder };

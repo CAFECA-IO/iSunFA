@@ -28,7 +28,6 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
       setAllChecked(false);
     }
   }, [individualChecks]);
-
   const clearAllChecks = () => {
     setAllChecked(false);
     setIndividualChecks(new Array(reportItems.length).fill(false));
@@ -50,19 +49,15 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
     setIndividualChecks(updatedChecks);
   };
 
-  const displayedList = reports
-    // Info: (20240722 - Julian) 依照 createdTimestamp 由新到舊排序
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .map((report, index) => (
-      <ReportsHistoryItem
-        key={report.id}
-        report={report}
-        checked={individualChecks[index]}
-        onCheckChange={() => individualCheckHandler(index)}
-        isCheckboxVisible={isCheckboxVisible}
-      />
-    ));
-
+  const displayedList = reports.map((report, index) => (
+    <ReportsHistoryItem
+      key={report.id}
+      report={report}
+      checked={individualChecks[index]}
+      onCheckChange={() => individualCheckHandler(index)}
+      isCheckboxVisible={isCheckboxVisible}
+    />
+  ));
   const displayedStatusButtons = (
     <div className="flex w-full items-center justify-end space-x-5">
       {isCheckboxVisible ? (
@@ -113,7 +108,8 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
           <p>{t('REPORTS_HISTORY_LIST.CANCEL')}</p>
         ) : (
           <>
-            <svg
+            {/* Info: (20240808 - Anna) Alpha版先隱藏 */}
+            {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -126,8 +122,9 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
                 d="M5.172 1.252h5.497a.75.75 0 010 1.5H5.202c-.572 0-.956 0-1.252.025-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.091-.088.228-.111.515-.024.296-.025.68-.025 1.253v5.6c0 .572 0 .957.025 1.253.023.287.065.424.111.514.12.236.312.427.547.547.09.046.228.088.515.111.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.111a1.25 1.25 0 00.546-.547c.046-.09.088-.227.111-.514.025-.296.025-.68.025-1.253v-2.8a.75.75 0 011.5 0V10.832c0 .535 0 .98-.03 1.345-.03.38-.098.736-.27 1.073a2.75 2.75 0 01-1.201 1.202c-.338.172-.694.24-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.03-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.073-.03-.365-.03-.81-.03-1.345v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.201c.337-.172.694-.24 1.074-.27.364-.03.81-.03 1.344-.03zm10.027.886a.75.75 0 010 1.061L8.533 9.866a.75.75 0 01-1.061 0l-2-2a.75.75 0 111.06-1.061l1.47 1.47 6.136-6.137a.75.75 0 011.061 0z"
                 clipRule="evenodd"
               ></path>
-            </svg>
-            <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
+            </svg> */}
+            {/* Info: (20240808 - Anna) Alpha版先隱藏 */}
+            {/* <p>{t('PENDING_REPORT_LIST.SELECT')}</p> */}
           </>
         )}
       </Button>
