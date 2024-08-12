@@ -121,11 +121,11 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     type: string;
   }[] = [];
   if (files && files.image && files.image.length) {
-  // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
+    // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
     resultJson = await Promise.all(
       files.image.map(async (image) => {
-        const defaultResultId = "error-" + generateUUID;
-        let result:{
+        const defaultResultId = 'error-' + generateUUID;
+        let result: {
           resultStatus: IAccountResultStatus;
           imageName: string;
           imageUrl: string;
@@ -239,7 +239,7 @@ export async function fetchStatus(aichResultId: string) {
 // }
 
 export function calculateProgress(imageUrl?: string | null) {
-  return (imageUrl && imageUrl.length > 0) ? 100 : 0;
+  return imageUrl && imageUrl.length > 0 ? 100 : 0;
 }
 
 export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {

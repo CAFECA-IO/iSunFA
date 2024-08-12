@@ -14,7 +14,8 @@
         "startDate": 1630435200,
         "endDate": null,
         "createdAt": 1630435200,
-        "updatedAt": 1630435200
+        "updatedAt": 1630435200,
+        "deletedAt": null
     },
     {
         "id": 1001,
