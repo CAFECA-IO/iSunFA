@@ -325,7 +325,8 @@
     "Y": "年",
     "V": "版本",
     "OR": "或",
-    "ERROR_CODE": "錯誤代碼: {{code}}"
+    "ERROR_CODE": "錯誤代碼: {{code}}",
+    "ALPHA_TEST_REMINDER": "現為 iSunFA Alpha 測試版本 (測試後資料將被刪除)"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",

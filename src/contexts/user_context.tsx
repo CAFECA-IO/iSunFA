@@ -2,7 +2,7 @@ import { client } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { toast as toastify } from 'react-toastify';
+// import { toast as toastify } from 'react-toastify';
 // import { createChallenge } from '@/lib/utils/authorization';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
@@ -44,8 +44,6 @@ interface UserContextType {
     invitation: string | undefined
   ) => Promise<void>;
 }
-
-// eslint-disable-next-line function-paren-newline
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
@@ -121,8 +119,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
-
-    toastify.dismiss(); // Info: (20240513 - Julian) 清除所有的 Toast
   };
 
   // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
@@ -472,7 +468,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
+        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
 
