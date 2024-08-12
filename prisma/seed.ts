@@ -27,8 +27,22 @@ import clients from '@/seed_json/client.json';
 import journals from '@/seed_json/journal.json';
 import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
+import salaryRecords from '@/seed_json/salary_record.json';
+import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
 
 const prisma = new PrismaClient();
+
+async function createSalaryRecord() {
+  await prisma.salaryRecord.createMany({
+    data: salaryRecords,
+  });
+}
+
+async function createVoucherSalaryRecordFolder() {
+  await prisma.voucherSalaryRecordFolder.createMany({
+    data: voucherSalaryRecordFolder,
+  });
+}
 
 async function createMilestones() {
   await prisma.milestone.createMany({
@@ -275,6 +289,8 @@ async function main() {
     setTimeout(resolve, 3000);
   });
   await createLineItems();
+  await createSalaryRecord();
+  await createVoucherSalaryRecordFolder();
 }
 
 main()

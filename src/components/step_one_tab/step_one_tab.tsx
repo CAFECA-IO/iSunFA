@@ -65,7 +65,7 @@ const StepOneTab = () => {
       setFileList(OCRList);
     }
 
-    return () => { };
+    return () => {};
   }, [OCRList, OCRListStatus]);
 
   const handleOCRClick = (unprocessOCR: IOCR) => {

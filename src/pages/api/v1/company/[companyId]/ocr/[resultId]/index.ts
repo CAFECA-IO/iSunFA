@@ -64,7 +64,7 @@ export async function getPayloadFromResponseJSON(
   //   throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   // }
 
-  const result = json?.payload ? json.payload as IInvoice : null;
+  const result = json?.payload ? (json.payload as IInvoice) : null;
   return result;
 }
 
@@ -80,10 +80,7 @@ export function formatOCRResultDate(ocrResult: IInvoice) {
   ocrResult.date = timestampInSeconds(ocrResult.date);
 }
 
-export async function handleGetRequest(
-  resultId: string,
-  type: string = 'invoice'
-) {
+export async function handleGetRequest(resultId: string, type: string = 'invoice') {
   let ocrResult: IInvoice | IContract | null = null;
 
   const isResultIdError = resultId && resultId.slice(0, 5) === 'error';
@@ -103,7 +100,7 @@ export async function handleGetRequest(
 
           if (!isIInvoice(ocrResult)) {
             // eslint-disable-next-line no-console
-            console.error("OCR From AICH is not an Invoice (wrong type)");
+            console.error('OCR From AICH is not an Invoice (wrong type)');
             ocrResult = null;
           }
         }
@@ -118,9 +115,7 @@ export async function handleGetRequest(
 
   return ocrResult;
 }
-export async function handleDeleteRequest(
-  resultId: string,
-) {
+export async function handleDeleteRequest(resultId: string) {
   let payload: IOCR | null = null;
   const getOCR = await getOcrByResultId(resultId, false);
 
@@ -148,7 +143,7 @@ export default async function handler(
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   let payload: APIReturnType = null;
-  let status:string = STATUS_MESSAGE.BAD_REQUEST;
+  let status: string = STATUS_MESSAGE.BAD_REQUEST;
 
   if (isAuth) {
     try {

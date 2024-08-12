@@ -30,7 +30,7 @@ const UploadedFileItem = ({
     // status === ProgressStatus.IN_PROGRESS ||
     // status === ProgressStatus.SUCCESS ||
     // status === ProgressStatus.PAUSED
-    imageUrl && imageUrl.length > 0
+    (imageUrl && imageUrl.length > 0)
   );
 
   const pauseClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
