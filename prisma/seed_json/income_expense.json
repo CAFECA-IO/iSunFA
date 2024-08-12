@@ -1,4 +1,28 @@
-[
+[  
+  {
+    "income": 500,
+    "expense": 400,
+    "companyId": 1000,
+    "projectId": 1001,
+    "createdAt": 1682933165,
+    "updatedAt": 1682933165
+  },
+  {
+    "income": 1010,
+    "expense": 510,
+    "companyId": 1000,
+    "projectId": 1001,
+    "createdAt": 1711911019,
+    "updatedAt": 1711911019
+  },
+  {
+    "income": 1000,
+    "expense": 500,
+    "companyId": 1000,
+    "projectId": 1001,
+    "createdAt": 1711997419,
+    "updatedAt": 1711997419
+  },
   {
     "income": 500,
     "expense": 400,

@@ -40,5 +40,12 @@
         "no": "20240101006",
         "createdAt": 1,
         "updatedAt": 1
+    },
+    {
+        "id": 1006,
+        "journalId": 1006,
+        "no": "20240809001",
+        "createdAt": 1723188860,
+        "updatedAt": 1723188860
     }
 ]

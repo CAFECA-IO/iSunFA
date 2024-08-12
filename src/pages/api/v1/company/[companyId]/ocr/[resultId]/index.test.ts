@@ -15,7 +15,6 @@ jest.mock('../../../../../../../lib/utils/common', () => ({
 }));
 
 beforeEach(() => {
-
   // Info (20240806 - Murky): Temporary not use
   // res = {
   //   status: jest.fn().mockReturnThis(),

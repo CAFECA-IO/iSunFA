@@ -66,13 +66,13 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
   const idAndName =
     obj === undefined
       ? {
-        id: array[0].id,
-        name: array[0].name,
-      }
+          id: array[0].id,
+          name: array[0].name,
+        }
       : {
-        id: obj.id,
-        name: obj.name,
-      };
+          id: obj.id,
+          name: obj.name,
+        };
   return idAndName;
 };
 
@@ -244,11 +244,11 @@ const NewJournalForm = () => {
       setInputPartialPaid(OCRResult.payment.alreadyPaid);
       setSelectedProject(
         projectSelection.find((project) => project.id === OCRResult.projectId) ||
-        projectSelection[0]
+          projectSelection[0]
       );
       setSelectedContract(
         contractSelection.find((contract) => contract.id === OCRResult.contractId) ||
-        contractSelection[0]
+          contractSelection[0]
       );
       setProgressRate(OCRResult.payment.progress);
     }

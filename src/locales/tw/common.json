@@ -329,7 +329,8 @@
     "CANCEL": "取消",
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "首次登錄時，請閱讀並同意",
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意《信息收集聲明》",
-    "AGREE_WITH_TOS_N_PP": "同意《服務條款》和《隱私政策》"
+    "AGREE_WITH_TOS_N_PP": "同意《服務條款》和《隱私政策》",
+    "ALPHA_TEST_REMINDER": "現為 iSunFA Alpha 測試版本 (測試後資料將被刪除)"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",

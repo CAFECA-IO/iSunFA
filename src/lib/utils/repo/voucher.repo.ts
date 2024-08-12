@@ -7,7 +7,7 @@ import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
   IVoucherDataForSavingToDB,
-  IVoucherFromPrismaIncludeLineItems,
+  IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
@@ -86,7 +86,7 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 }
 
 export async function findUniqueVoucherInPrisma(voucherId: number) {
-  let voucherData: IVoucherFromPrismaIncludeLineItems | null = null;
+  let voucherData: IVoucherFromPrismaIncludeJournalLineItems | null = null;
   try {
     voucherData = await prisma.voucher.findUnique({
       where: {

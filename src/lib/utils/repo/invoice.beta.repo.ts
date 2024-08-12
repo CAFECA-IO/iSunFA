@@ -252,7 +252,6 @@ export async function listInvoice({
     journal: {
       companyId,
     },
-    deletedAt: null,
     eventType,
     createdAt: {
       gte: startDateInSecond,

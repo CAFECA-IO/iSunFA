@@ -505,11 +505,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   useEffect(() => {
     if (!signedIn) return;
 
-    if (!pathname.includes('users')) {
-      eliminateToast();
-      return;
-    }
-
     if (reportGeneratedStatus) {
       toastHandler({
         type: ToastType.SUCCESS,
@@ -554,36 +549,52 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   useEffect(() => {
     if (signedIn) {
-      if (
-        router.pathname.startsWith('/users') &&
-        !router.pathname.includes(ISUNFA_ROUTE.LOGIN) &&
-        !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
-      ) {
-        // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
-        if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
-          // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
-          toastHandler({
-            id: ToastId.TRIAL,
-            type: ToastType.INFO,
-            closeable: false,
-            content: (
-              <div className="flex items-center justify-between">
-                <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
-                <Link
-                  href={ISUNFA_ROUTE.SELECT_COMPANY}
-                  className="text-base font-semibold text-darkBlue"
-                >
-                  {t('COMMON.END_OF_TRIAL')}
-                </Link>
-              </div>
-            ),
-          });
+      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
+        if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
+          // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
+          if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
+            // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
+            toastHandler({
+              id: ToastId.TRIAL,
+              type: ToastType.INFO,
+              closeable: false,
+              content: (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
+                  <Link
+                    href={ISUNFA_ROUTE.SELECT_COMPANY}
+                    className="text-base font-semibold text-darkBlue"
+                  >
+                    {t('COMMON.END_OF_TRIAL')}
+                  </Link>
+                </div>
+              ),
+            });
+          }
         } else {
           eliminateToast(ToastId.TRIAL);
         }
       }
+    } else {
+      eliminateToast();
+      if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+        toastHandler({
+          id: ToastId.ALPHA_TEST_REMINDER,
+          type: ToastType.INFO,
+          closeable: true,
+          autoClose: false,
+          content: (
+            <div className="flex items-center justify-between">
+              <p className="font-barlow text-sm">{t('COMMON.ALPHA_TEST_REMINDER')}</p>
+            </div>
+          ),
+        });
+      } else {
+        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
+      }
     }
-  }, [pathname]);
+  }, [pathname, signedIn]);
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {
