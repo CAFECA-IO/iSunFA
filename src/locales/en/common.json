@@ -325,7 +325,8 @@
     "Y": "Y",
     "V": "V",
     "OR": "OR",
-    "ERROR_CODE": "Error Code: {{code}}"
+    "ERROR_CODE": "Error Code: {{code}}",
+    "ALPHA_TEST_REMINDER": "This is the iSunFA Alpha test version (data will be deleted after testing)."
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",

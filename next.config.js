@@ -48,6 +48,9 @@ const nextConfig = {
     newConfig.resolve.fallback = { fs: false };
     return newConfig;
   },
+  experimental: {
+    instrumentationHook: true, // Info (20240812 - Murky) this is for function run before server start
+  },
 };
 
 module.exports = nextConfig;
