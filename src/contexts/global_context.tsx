@@ -53,6 +53,8 @@ import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_ac
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
+import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal.beta';
+import { term_1, term_2 } from '@/constants/terms';
 
 interface IGlobalContext {
   width: number;
@@ -140,6 +142,12 @@ interface IGlobalContext {
 
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
+
+  isAgreeWithInfomationConfirmModalVisible: boolean;
+  agreeWithInfomationConfirmModalVisibilityHandler: () => void;
+
+  isTOSNPrivacyPolicyConfirmModalVisible: boolean;
+  TOSNPrivacyPolicyConfirmModalCallbackHandler: (callback: () => Promise<void>) => void;
 }
 
 export interface IGlobalProvider {
@@ -222,6 +230,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
+
+  const [isAgreeWithInfomationConfirmModalVisible, setIsAgreeWithInfomationConfirmModalVisible] =
+    useState(false);
+
+  const [isTOSNPrivacyPolicyConfirmModalVisible, setIsTOSNPrivacyPolicyConfirmModalVisible] =
+    useState(false);
+
+  const [TOSNPrivacyPolicyConfirmModalCallback, setTOSNPrivacyPolicyConfirmModalCallback] =
+    useState<() => void>(() => {});
 
   const { width, height } = windowSize;
 
@@ -370,6 +387,18 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setFilterOptionsForContract(options);
   };
 
+  const agreeWithInfomationConfirmModalVisibilityHandler = () => {
+    setIsAgreeWithInfomationConfirmModalVisible(!isAgreeWithInfomationConfirmModalVisible);
+  };
+
+  const TOSNPrivacyPolicyConfirmModalVisibilityHandler = () => {
+    setIsTOSNPrivacyPolicyConfirmModalVisible(!isTOSNPrivacyPolicyConfirmModalVisible);
+  };
+
+  const TOSNPrivacyPolicyConfirmModalCallbackHandler = (callback: () => void) => {
+    setTOSNPrivacyPolicyConfirmModalCallback(callback);
+  };
+
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
     const {
@@ -390,7 +419,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
-    const autoClose = closeable ? (isAutoClose ?? 5000) : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
     const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable; // Info:(20240513 - Julian) default draggable true
@@ -625,6 +654,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
     isTransferCompanyModalVisible,
     transferCompanyModalVisibilityHandler,
+
+    isAgreeWithInfomationConfirmModalVisible,
+    agreeWithInfomationConfirmModalVisibilityHandler,
+
+    isTOSNPrivacyPolicyConfirmModalVisible,
+    TOSNPrivacyPolicyConfirmModalCallbackHandler,
   };
 
   return (
@@ -754,6 +789,33 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
+      <LoginConfirmModal
+        isModalVisible={isAgreeWithInfomationConfirmModalVisible}
+        modalData={{
+          title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          content: term_1,
+          buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
+        }}
+        onAgree={() => {
+          agreeWithInfomationConfirmModalVisibilityHandler();
+          TOSNPrivacyPolicyConfirmModalVisibilityHandler();
+        }}
+        onCancel={agreeWithInfomationConfirmModalVisibilityHandler}
+      />
+
+      <LoginConfirmModal
+        isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
+        modalData={{
+          title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          content: term_2,
+          buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
+        }}
+        onAgree={() => {
+          TOSNPrivacyPolicyConfirmModalVisibilityHandler();
+          TOSNPrivacyPolicyConfirmModalCallback();
+        }}
+        onCancel={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
+      />
       {children}
     </GlobalContext.Provider>
   );

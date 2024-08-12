@@ -325,7 +325,11 @@
     "Y": "年",
     "V": "版本",
     "OR": "或",
-    "ERROR_CODE": "錯誤代碼: {{code}}"
+    "ERROR_CODE": "錯誤代碼: {{code}}",
+    "CANCEL": "取消",
+    "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "首次登錄時，請閱讀並同意",
+    "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意《信息收集聲明》",
+    "AGREE_WITH_TOS_N_PP": "同意《服務條款》和《隱私政策》"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "獲取數據失敗",
@@ -441,7 +445,6 @@
     "LEAVE_HINT": "您的日記帳還未新增",
     "LEAVE_HINT_CONTENT": "您的日記帳還未新增，您確定要離開嗎？",
     "LEAVE": "離開",
-    "CANCEL": "取消",
     "FEE_EXCEEDS_TOTAL": "費用不能大於總金額"
   },
   "PROJECT": {
@@ -687,7 +690,6 @@
     "UPLOAD_DOCUMENT": "上傳文件",
     "NEXT": "下一步",
     "SUBMIT": "提交",
-    "CANCEL": "取消",
     "CONFIRM": "確認",
     "BUSINESS_REGISTRATION_CERTIFICATE": "商業登記證明",
     "TAX_STATUS_CERTIFICATE": "稅務狀態證明",

@@ -101,7 +101,7 @@ const KYCForm = () => {
           messageType: MessageType.SUCCESS,
           title: t('KYC.SUBMIT_SUCCESS'),
           content: t('KYC.SUBMIT_SUCCESS_MESSAGE'),
-          backBtnStr: t('KYC.CANCEL'),
+          backBtnStr: t('COMMON.CANCEL'),
           submitBtnStr: t('KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -115,7 +115,7 @@ const KYCForm = () => {
           title: t('KYC.SUBMIT_FAILED'),
           content: t('KYC.CONTACT_SERVICE_TEAM'),
           subMsg: t('KYC.SUBMIT_FAILED_MESSAGE', code),
-          backBtnStr: t('KYC.CANCEL'),
+          backBtnStr: t('COMMON.CANCEL'),
           submitBtnStr: t('KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -130,7 +130,7 @@ const KYCForm = () => {
         subMsg: t('KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
         content: t('KYC.CONTACT_SERVICE_TEAM'),
         submitBtnStr: t('KYC.CONFIRM'),
-        backBtnStr: t('KYC.CANCEL'),
+        backBtnStr: t('COMMON.CANCEL'),
         submitBtnFunction: () => {
           messageModalVisibilityHandler();
           goCompanyInfo();
