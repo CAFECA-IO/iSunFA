@@ -326,6 +326,10 @@
     "V": "版本",
     "OR": "或",
     "ERROR_CODE": "错误代码: {{code}}",
+    "CANCEL": "取消",
+    "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "第一次登录时，请阅读并同意",
+    "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意信息收集声明",
+    "AGREE_WITH_TOS_N_PP": "同意服务条款和隐私政策",
     "ALPHA_TEST_REMINDER": "现为 iSunFA Alpha 测试版本 (测试后资料将被删除)"
   },
   "JOURNAL": {
@@ -442,7 +446,6 @@
     "LEAVE_HINT": "您的日记帐还未新增",
     "LEAVE_HINT_CONTENT": "您的日记帐还未新增，您确定要离开吗？",
     "LEAVE": "离开",
-    "CANCEL": "取消",
     "FEE_EXCEEDS_TOTAL": "费用不能大于总金额"
   },
   "PROJECT": {
@@ -688,7 +691,6 @@
     "UPLOAD_DOCUMENT": "上传文件",
     "NEXT": "下一步",
     "SUBMIT": "提交",
-    "CANCEL": "取消",
     "CONFIRM": "确认",
     "BUSINESS_REGISTRATION_CERTIFICATE": "商业登记证书",
     "TAX_STATUS_CERTIFICATE": "税务状况证明",

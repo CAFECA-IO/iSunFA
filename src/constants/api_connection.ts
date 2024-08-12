@@ -2,6 +2,8 @@ import { IAPIConfig, IAPIInput, IAPIName, IAPIOutput } from '@/interfaces/api_co
 
 const apiVersion = 'v1';
 const apiPrefix = `/api/${apiVersion}`;
+const apiVersionBeta = 'v2';
+const apiPrefixBeta = `/api/${apiVersionBeta}`;
 const initialInput: IAPIInput = {
   header: {},
   body: {},
@@ -19,6 +21,8 @@ export enum HttpMethod {
 }
 
 export enum APIName {
+  LOGIN = 'LOGIN',
+  AGREEMENT = 'AGREEMENT',
   CREATE_CHALLENGE = 'CREATE_CHALLENGE',
   SIGN_UP = 'SIGN_UP',
   SIGN_IN = 'SIGN_IN',
@@ -81,6 +85,8 @@ export enum APIName {
 }
 
 export enum APIPath {
+  LOGIN = `${apiPrefixBeta}/login`,
+  AGREEMENT = `${apiPrefixBeta}/agreement`,
   CREATE_CHALLENGE = `${apiPrefix}/challenge`,
   SIGN_UP = `${apiPrefix}/sign-up`,
   SIGN_IN = `${apiPrefix}/sign-in`,
@@ -164,6 +170,16 @@ const createConfig = ({
 });
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
+  [APIName.LOGIN]: createConfig({
+    name: APIName.LOGIN,
+    method: HttpMethod.POST,
+    path: APIPath.LOGIN,
+  }),
+  [APIName.AGREEMENT]: createConfig({
+    name: APIName.AGREEMENT,
+    method: HttpMethod.POST,
+    path: APIPath.AGREEMENT,
+  }),
   [APIName.CREATE_CHALLENGE]: createConfig({
     name: APIName.CREATE_CHALLENGE,
     method: HttpMethod.GET,

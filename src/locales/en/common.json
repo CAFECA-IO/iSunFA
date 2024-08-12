@@ -326,6 +326,10 @@
     "V": "V",
     "OR": "OR",
     "ERROR_CODE": "Error Code: {{code}}",
+    "CANCEL": "Cancel",
+    "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "Please read and agree the first time you login",
+    "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "Agree with the Information Collection Statement",
+    "AGREE_WITH_TOS_N_PP": "Agree with Terms of Service & Privacy Policy",
     "ALPHA_TEST_REMINDER": "This is the iSunFA Alpha test version (data will be deleted after testing)."
   },
   "JOURNAL": {
@@ -442,7 +446,6 @@
     "LEAVE_HINT": "You journal is not added yet",
     "LEAVE_HINT_CONTENT": "You journal is not added yet. Are you sure you want to leave now?",
     "LEAVE": "Leave",
-    "CANCEL": "Cancel",
     "FEE_EXCEEDS_TOTAL": "Fee cannot exceed total amount"
   },
   "PROJECT": {
@@ -688,7 +691,6 @@
     "UPLOAD_DOCUMENT": "Upload Document",
     "NEXT": "Next",
     "SUBMIT": "Submit",
-    "CANCEL": "Cancel",
     "CONFIRM": "Confirm",
     "BUSINESS_REGISTRATION_CERTIFICATE": "Business Registration Certificate",
     "TAX_STATUS_CERTIFICATE": "Tax Status Certification",

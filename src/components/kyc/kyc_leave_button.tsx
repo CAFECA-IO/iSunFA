@@ -21,7 +21,7 @@ const LeaveButton = () => {
       subMsg: `${t('KYC.ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE')} ?`,
       submitBtnStr: t('KYC.LEAVE_NOW'),
       submitBtnFunction: handleBack,
-      backBtnStr: t('KYC.CANCEL'),
+      backBtnStr: t('COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
