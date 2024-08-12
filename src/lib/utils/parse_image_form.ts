@@ -17,7 +17,8 @@ export const parseForm = async (
     uploadDir,
   };
 
-  await fs.mkdir(uploadDir, { recursive: true });
+  // Deprecated: (20240812 - Murky) use instrumentation.ts instead to create folders when server starts
+  // await fs.mkdir(uploadDir, { recursive: true });
 
   const form = new IncomingForm(options);
   const parsePromise = new Promise<{ fields: Fields; files: Files<string> }>((resolve, reject) => {
