@@ -308,7 +308,7 @@ async function generateReport(
       );
       break;
     case ReportSheetType.REPORT_401:
-      content = await generate401Report(companyId, startDateInSecond);
+      content = await generate401Report(companyId, startDateInSecond, endDateInSecond);
       break;
     default:
       break;

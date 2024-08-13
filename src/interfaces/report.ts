@@ -304,47 +304,54 @@ interface BasicInfo {
   taxSerialNumber: string;
   businessAddress: string;
   currentYear: string;
-  currentMonth: string;
+  startMonth: string;
+  endMonth: string;
   usedInvoiceCount: number;
 }
 
-interface Sales {
+export interface Sales {
   breakdown: SalesBreakdown;
   totalTaxableAmount: number;
   includeFixedAsset: number;
 }
 
-interface SalesBreakdown {
-  triplicateAndElectronic: AmountAndTax;
-  cashRegisterTriplicate: AmountAndTax;
-  duplicateAndCashRegister: AmountAndTax;
-  taxExempt: AmountAndTax;
-  returnsAndAllowances: AmountAndTax;
-  total: AmountAndTax;
+export interface SalesBreakdown {
+  triplicateAndElectronic: SalesDetail;
+  cashRegisterTriplicate: SalesDetail;
+  duplicateAndCashRegister: SalesDetail;
+  invoiceExempt: SalesDetail;
+  returnsAndAllowances: SalesDetail;
+  total: SalesDetail;
 }
 
-interface AmountAndTax {
+interface SalesDetail {
+  sales: number;
+  tax: number;
+  zeroTax: number;
+}
+
+interface PurchasesDetail {
   amount: number;
   tax: number;
 }
 
-interface Purchases {
+export interface Purchases {
   breakdown: PurchaseBreakdown;
-  total: PurchaseCategory;
   totalWithNonDeductible: PurchaseTotal;
 }
 
-interface PurchaseBreakdown {
+export interface PurchaseBreakdown {
   uniformInvoice: PurchaseCategory;
   cashRegisterAndElectronic: PurchaseCategory;
   otherTaxableVouchers: PurchaseCategory;
   customsDutyPayment: PurchaseCategory;
   returnsAndAllowances: PurchaseCategory;
+  total: PurchaseCategory;
 }
 
 interface PurchaseCategory {
-  generalPurchases: AmountAndTax;
-  fixedAssets: AmountAndTax;
+  generalPurchases: PurchasesDetail;
+  fixedAssets: PurchasesDetail;
 }
 
 interface PurchaseTotal {
@@ -352,7 +359,7 @@ interface PurchaseTotal {
   fixedAssets: number;
 }
 
-interface TaxCalculation {
+export interface TaxCalculation {
   outputTax: number;
   deductibleInputTax: number;
   previousPeriodOffset: number;
@@ -364,7 +371,7 @@ interface TaxCalculation {
   currentPeriodAccumulatedOffset: number;
 }
 
-interface Imports {
+export interface Imports {
   taxExemptGoods: number;
   foreignServices: number;
 }

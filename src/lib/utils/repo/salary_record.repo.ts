@@ -7,9 +7,10 @@ import {
 } from '@/interfaces/salary_record';
 import { timestampInSeconds, calculateWorkingHours } from '@/lib/utils/common';
 import { IInvoiceBeta } from '@/interfaces/invoice';
-import { EventType, InvoiceType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
+import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IFolder } from '@/interfaces/folder';
 import { JOURNAL_EVENT } from '@/constants/journal';
+import { InvoiceType } from '@/constants/invoice';
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
