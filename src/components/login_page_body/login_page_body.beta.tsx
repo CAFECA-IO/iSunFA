@@ -1,36 +1,34 @@
-import React from 'react';
-import { signIn, SignInResponse } from 'next-auth/react';
+import React, { useEffect } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useGlobalCtx } from '@/contexts/global_context';
 import APIHandler from '@/lib/utils/api_handler';
-import { IUser } from '@/interfaces/user';
 import { APIName } from '@/constants/api_connection';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-enum AuthWith {
+enum Provider {
   GOOGLE = 'google',
   APPLE = 'apple',
 }
 
 const LoginPageBody = () => {
+  const session = useSession();
+  const { status, data, update } = session;
   const router = useRouter();
   const {
     isAgreeWithInfomationConfirmModalVisible,
     agreeWithInfomationConfirmModalVisibilityHandler,
     TOSNPrivacyPolicyConfirmModalCallbackHandler,
   } = useGlobalCtx();
-  const { trigger: logInTrigger } = APIHandler<{
-    user: IUser;
-    hasReadAgreement: boolean;
-  }>(APIName.LOGIN);
-  const { trigger: agreementTrigger } = APIHandler<null>(APIName.AGREEMENT);
 
-  const handleUserAgree = async (authWith: AuthWith) => {
+  const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
+
+  const handleUserAgree = async (provider: Provider) => {
     try {
       // 呼叫 API 紀錄用戶已同意條款
-      const response = await agreementTrigger({
-        body: { authWith, agreement: true },
+      const response = await agreementAPI({
+        body: { provider, agree: true },
       });
 
       const { success, code } = response;
@@ -43,78 +41,67 @@ const LoginPageBody = () => {
     }
   };
 
-  // 新增：呼叫後端 signInAPI
-  const callLogInAPI = async (authWith: AuthWith, oauthResponse: SignInResponse | undefined) => {
-    try {
-      const response = await logInTrigger({
-        body: { authWith, oauthResponse },
-      });
-
-      // 處理後端返回的 user 和 hasReadAgreement 資料
-      const { success, data } = response;
-      if (success && data) {
-        const { user, hasReadAgreement } = data;
-        if (!hasReadAgreement && !isAgreeWithInfomationConfirmModalVisible) {
-          // 如果用戶尚未同意條款，顯示同意條款的模態框
-          TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(authWith));
-          agreeWithInfomationConfirmModalVisibilityHandler();
-        } else {
-          // 用戶已經同意條款，直接進行登入後的邏輯處理。TODO: (20240812-Tzuhan) route to select-company page
-          // eslint-disable-next-line no-console
-          console.log('用戶已登入:', user);
-          router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-        }
-      } else {
-        // eslint-disable-next-line no-console
-        console.error('登入 API 錯誤:', response);
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('登入 API 錯誤:', error);
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('session:', session);
+    if (status === 'unauthenticated') {
+      update();
     }
-  };
+    if (status === 'authenticated') {
+      const user = data?.user;
+      if (user && !user?.hasReadAgreement && !isAgreeWithInfomationConfirmModalVisible) {
+        TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(user?.id));
+        agreeWithInfomationConfirmModalVisibilityHandler();
+      } else {
+        // 用户已同意條款，跳轉到公司選擇頁面
+        // eslint-disable-next-line no-console
+        console.log('用户已同意條款，跳轉到公司選擇頁面');
+        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      }
+    }
+  }, [session]);
 
   // 登入處理函數，呼叫 OAuth 登入並獲取響應後再呼叫 signInAPI
-  const loginHandler = async (authWith: AuthWith) => {
+  const authenticateUser = async (provider: Provider) => {
     try {
       // eslint-disable-next-line no-console
-      console.log('loginHandler:', authWith);
-      const oauthResponse = await signIn(authWith, { redirect: false });
-
-      if (oauthResponse?.error) {
+      console.log('authenticateUser:', provider);
+      const response = await signIn(provider, {
+        redirect: false,
+      });
+      if (response?.error) {
         // eslint-disable-next-line no-console
-        console.error('OAuth 登入失敗:', oauthResponse.error);
-      } else {
-        // 呼叫後端 signInAPI 處理登入
-        await callLogInAPI(authWith, oauthResponse);
+        console.error('OAuth 登入失敗:', response?.error);
+        throw new Error(response.error);
       }
+      // eslint-disable-next-line no-console
+      console.log('User authenticated successfully');
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('登入處理函數錯誤:', error);
+      console.error('Authentication failed', error);
+      // TODO: (20240813-Tzuhan) handle error
     }
   };
 
   // 處理 Apple 登入
-  const AuthWithApple = () => loginHandler(AuthWith.APPLE);
+  const AuthWithApple = () => authenticateUser(Provider.APPLE);
 
   // 處理 Google 登入
-  const AuthWithGoogle = () => loginHandler(AuthWith.GOOGLE);
+  const AuthWithGoogle = () => authenticateUser(Provider.GOOGLE);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
       {/* 背景圖片 */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 blur-md">
         <Image
           src="/images/login_bg.svg"
           alt="Background"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: 'cover' }}
           quality={100}
         />
-        {/* 白色透明遮罩 */}
-        <div className="absolute inset-0 bg-white opacity-10"></div>
       </div>
-      <div className="z-1 mb-8 flex flex-col items-center">
+      <div className="z-10 mb-8 flex flex-col items-center">
         <h1 className="mb-6 text-4xl font-bold text-gray-800">Log In</h1>
         <div className="mx-2.5 flex flex-col justify-center rounded-full">
           <div className="flex aspect-square items-center justify-center px-5 lg:px-10">
@@ -146,7 +133,6 @@ const LoginPageBody = () => {
                 </defs>
               </svg>
             </div>
-
             <div className="mx-2 flex items-center justify-center lg:hidden">
               {/* 匿名頭像 */}
               <svg
@@ -183,15 +169,28 @@ const LoginPageBody = () => {
             onClick={AuthWithGoogle}
             className="flex w-72 items-center justify-center space-x-2 rounded-lg border border-gray-300 bg-white py-3 shadow-md"
           >
-            <Image src="/icons/google_logo.svg" alt="Google" className="h-6 w-6" />
+            <Image
+              src="/icons/google_logo.svg"
+              alt="Google"
+              width={16}
+              height={16}
+              className="h-6 w-6"
+            />
             <span className="font-semibold">Log In with Google</span>
           </button>
           <button
             type="button"
             onClick={AuthWithApple}
-            className="flex w-72 items-center justify-center space-x-2 rounded-lg bg-black py-3 text-white shadow-md"
+            className="flex w-72 cursor-not-allowed items-center justify-center space-x-2 rounded-lg bg-black py-3 text-white shadow-md"
+            disabled
           >
-            <Image src="/icons/apple_logo.svg" alt="Apple" className="h-6 w-6" />
+            <Image
+              src="/icons/apple_logo.svg"
+              alt="Apple"
+              width={16}
+              height={16}
+              className="h-6 w-6"
+            />
             <span className="font-semibold">Log In with Apple</span>
           </button>
         </div>
