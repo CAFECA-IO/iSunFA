@@ -42,7 +42,7 @@ const AddJournalBody = () => {
     content: t('JOURNAL.LEAVE_HINT_CONTENT'), // 'Are you sure you want to leave the form?',
     submitBtnStr: t('JOURNAL.LEAVE'),
     submitBtnFunction: () => backClickHandler(),
-    backBtnStr: t('JOURNAL.CANCEL'),
+    backBtnStr: t('COMMON.CANCEL'),
     messageType: MessageType.WARNING,
   };
 

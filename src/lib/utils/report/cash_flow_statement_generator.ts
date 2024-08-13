@@ -9,7 +9,7 @@ import {
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
-import { IVoucherFromPrismaIncludeLineItems } from '@/interfaces/voucher';
+import { IVoucherFromPrismaIncludeJournalLineItems } from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
@@ -30,9 +30,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private voucherRelatedToCash: IVoucherFromPrismaIncludeLineItems[];
+  private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
 
-  private voucherLastPeriod: IVoucherFromPrismaIncludeLineItems[];
+  private voucherLastPeriod: IVoucherFromPrismaIncludeJournalLineItems[];
 
   private YEAR_RANGE = 5;
 
@@ -40,7 +40,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     companyId: number,
     startDateInSecond: number,
     endDateInSecond: number,
-    voucherRelatedToCash: IVoucherFromPrismaIncludeLineItems[]
+    voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[]
   ) {
     const reportSheetType = ReportSheetType.CASH_FLOW_STATEMENT;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
@@ -251,7 +251,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // Info: (20240710 - Murky) This method is only used in this class
   // eslint-disable-next-line class-methods-use-this
-  private getDebitCreditCodes(voucher: IVoucherFromPrismaIncludeLineItems) {
+  private getDebitCreditCodes(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
     const debitCodes = new Set<string>();
     const creditCodes = new Set<string>();
 
@@ -279,7 +279,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   // Info: (20240710 - Murky) This method is only used in this class
   // eslint-disable-next-line class-methods-use-this
-  private sumDebitAndCreditAmount(voucher: IVoucherFromPrismaIncludeLineItems) {
+  private sumDebitAndCreditAmount(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
     let debitAmount = 0;
     let creditAmount = 0;
     voucher.lineItems.forEach((lineItem) => {

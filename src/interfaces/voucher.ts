@@ -49,9 +49,19 @@ export interface IVoucherDataForSavingToDB {
   lineItems: ILineItem[];
 }
 
-export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
+export type IVoucherFromPrismaIncludeJournalLineItems = Prisma.VoucherGetPayload<{
   include: {
     journal: true;
+    lineItems: {
+      include: {
+        account: true;
+      };
+    };
+  };
+}>;
+
+export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
+  include: {
     lineItems: {
       include: {
         account: true;

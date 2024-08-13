@@ -5,7 +5,7 @@ import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import {
   IVoucherDataForAPIResponse,
   IVoucherDataForSavingToDB,
-  IVoucherFromPrismaIncludeLineItems,
+  IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
@@ -29,7 +29,7 @@ async function handleVoucherCreatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,
   companyId: number
 ) {
-  let updatedVoucher: IVoucherFromPrismaIncludeLineItems | null = null;
+  let updatedVoucher: IVoucherFromPrismaIncludeJournalLineItems | null = null;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
 
   try {

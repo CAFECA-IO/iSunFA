@@ -28,3 +28,16 @@ export const pageQueries: IPageQueries = {
     },
   },
 };
+
+export const loginPageQueries: IPageQueries = {
+  loginPage: {
+    options: {
+      invitation: 'invitation',
+      action: 'action',
+    },
+    actions: {
+      GOOGLE: 'google',
+      APPLE: 'apple',
+    },
+  },
+};

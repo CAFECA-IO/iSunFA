@@ -6,6 +6,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
   generateUUID,
+  timestampInMilliSeconds,
   timestampInSeconds,
   transformBytesToFileSizeString,
   transformOCRImageIDToURL,
@@ -27,6 +28,7 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { FileFolder } from '@/constants/file';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
+import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 
 // Info Murky (20240424) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -121,11 +123,11 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     type: string;
   }[] = [];
   if (files && files.image && files.image.length) {
-  // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
+    // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
     resultJson = await Promise.all(
       files.image.map(async (image) => {
-        const defaultResultId = "error-" + generateUUID;
-        let result:{
+        const defaultResultId = 'error-' + generateUUID;
+        let result: {
           resultStatus: IAccountResultStatus;
           imageName: string;
           imageUrl: string;
@@ -221,33 +223,31 @@ export async function fetchStatus(aichResultId: string) {
 }
 
 // Deprecated (20240809 - Murky) This function is not used
-// export function calculateProgress(createdAt: number, status: ProgressStatus) {
-//   const currentTime = new Date();
-//   const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
-//   let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
+export function calculateProgress(createdAt: number, status: ProgressStatus, ocrResultId: string) {
+  const currentTime = new Date();
+  const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
+  let process = Math.ceil((diffTime / AVERAGE_OCR_PROCESSING_TIME) * 100);
 
-//   if (process > 99) {
-//     process = 99;
-//   }
+  if (process > 99) {
+    process = 99;
+  }
 
-//   if (status === ProgressStatus.SUCCESS) {
-//     process = 100;
-//   } else if (status !== ProgressStatus.IN_PROGRESS) {
-//     process = 0;
-//   }
-//   return process;
-// }
+  const errorRegexp = /error/i;
 
-export function calculateProgress(imageUrl?: string | null) {
-  return (imageUrl && imageUrl.length > 0) ? 100 : 0;
+  if (errorRegexp.test(ocrResultId)) {
+    process = 0;
+  } else if (status !== ProgressStatus.IN_PROGRESS) {
+    process = 100;
+  }
+  return process;
 }
 
 export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
   const unprocessedOCRs = await Promise.all(
     ocrData.map(async (ocr) => {
       const status = await fetchStatus(ocr.aichResultId);
-      // const progress = calculateProgress(ocr.createdAt, status);
-      const progress = calculateProgress(ocr.imageUrl);
+      const progress = calculateProgress(ocr.createdAt, status, ocr.aichResultId);
+      // const progress = calculateProgress(ocr.imageUrl);
       const imageSize = transformBytesToFileSizeString(ocr.imageSize);
       const createdAt = timestampInSeconds(ocr.createdAt);
       const unprocessedOCR: IOCR = {
