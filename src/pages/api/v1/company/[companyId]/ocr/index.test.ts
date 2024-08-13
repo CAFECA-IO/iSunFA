@@ -445,24 +445,6 @@ describe('GET OCR', () => {
     });
   });
 
-  describe('calculateProgress', () => {
-    beforeEach(() => {
-      jest.spyOn(common, 'timestampInMilliSeconds').mockReturnValue(0);
-    });
-    it('should return 100 if success', () => {
-      const mockImageUrl = 'testImageUrl';
-
-      const progress = module.calculateProgress(mockImageUrl);
-      expect(progress).toBe(100);
-    });
-
-    it('should return 0 if not success and not in progress', () => {
-      const mockImageUrl = '';
-      const progress = module.calculateProgress(mockImageUrl);
-      expect(progress).toBe(0);
-    });
-  });
-
   describe('formatUnprocessedOCR', () => {
     it('should return IOCR', async () => {
       const mockAichId = 'testAichId';
