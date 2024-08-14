@@ -57,7 +57,7 @@ interface IAccountingContext {
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
-  addOCRHandler: (aichId: string) => void;
+  addOCRHandler: (aichId: string, imageName: string, imageSize: string) => void;
   deleteOCRHandler: (aichId: string) => void;
   accountList: IAccount[];
   getAccountListHandler: (
@@ -297,16 +297,16 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     });
   };
 
-  const addOCRHandler = (aichId: string) => {
+  const addOCRHandler = (aichId: string, imageName: string, imageSize: string) => {
     const now = getTimestampNow();
     const pendingOCR: IOCR = {
       id: now,
       aichResultId: aichId,
-      imageName: '',
+      imageName,
       imageUrl: '',
-      imageSize: '',
+      imageSize,
       progress: 0,
-      status: ProgressStatus.IN_PROGRESS,
+      status: ProgressStatus.WAITING_FOR_UPLOAD,
       createdAt: 0,
     };
     setOCRList((prev) => {

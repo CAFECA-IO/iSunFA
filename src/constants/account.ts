@@ -10,6 +10,7 @@ export enum ProgressStatus {
   SYSTEM_ERROR = 'systemError',
   PAUSED = 'paused',
   HAS_BEEN_USED = 'hasBeenUsed',
+  WAITING_FOR_UPLOAD = 'waitingForUpload',
 }
 
 export enum EventType {

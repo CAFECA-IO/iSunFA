@@ -65,6 +65,7 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
+    // TODO: in dev (20240814 - Shirley)
     // eslint-disable-next-line no-console
     console.log('OCRList in StepOneTab:', OCRList);
 
@@ -159,6 +160,7 @@ const StepOneTab = () => {
       pauseHandler={fileItemPauseHandler}
       deleteHandler={fileItemDeleteHandler}
       clickHandler={handleOCRClick}
+      isPending={data.status === ProgressStatus.WAITING_FOR_UPLOAD}
     />
   ));
 
