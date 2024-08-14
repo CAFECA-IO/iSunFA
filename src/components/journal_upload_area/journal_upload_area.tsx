@@ -9,12 +9,14 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
+import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
+import { ToastType } from '@/interfaces/toastify';
 
 const JournalUploadArea = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { setInvoiceIdHandler } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
   const {
     trigger: uploadInvoice,
@@ -82,20 +84,29 @@ const JournalUploadArea = () => {
           result.status === ProgressStatus.PAUSED ||
           result.status === ProgressStatus.IN_PROGRESS
         ) {
-          messageModalDataHandler({
-            // title: 'Upload Successful',
-            title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
-            /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
-            // content: result.status,
+          toastHandler({
+            id: `uploadInvoice-${result.status}`,
             content: translatedStatus,
-            messageType: MessageType.SUCCESS,
-            submitBtnStr: t('JOURNAL.DONE'),
-            submitBtnFunction: () => {
-              setInvoiceIdHandler(resultId);
-              messageModalVisibilityHandler();
-            },
+            closeable: true,
+            autoClose: MILLISECONDS_IN_A_SECOND,
+            type: ToastType.SUCCESS,
           });
-          messageModalVisibilityHandler();
+          setInvoiceIdHandler(resultId);
+
+          // messageModalDataHandler({
+          //   // title: 'Upload Successful',
+          //   title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
+          //   /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
+          //   // content: result.status,
+          //   content: translatedStatus,
+          //   messageType: MessageType.SUCCESS,
+          //   submitBtnStr: t('JOURNAL.DONE'),
+          //   submitBtnFunction: () => {
+          //     setInvoiceIdHandler(resultId);
+          //     messageModalVisibilityHandler();
+          //   },
+          // });
+          // messageModalVisibilityHandler();
           setIsShowSuccessModal(false); // Info: (20240528 - Julian) 顯示完後將 flag 降下
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
