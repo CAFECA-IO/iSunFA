@@ -19,7 +19,10 @@ import { SortOrder } from '@/constants/sort';
  * @param {number | undefined} companyId if you want to add more condition, use companyId, otherwise is undefined
  * @returns {Promise<IInvoiceIncludePaymentJournal | null>} return include payment and journal, will be null if not found or error
  */
-export async function findUniqueInvoiceById(invoiceId: number, companyId?: number) {
+export async function findUniqueInvoiceById(
+  invoiceId: number,
+  companyId?: number
+): Promise<IInvoiceIncludePaymentJournal | null> {
   let invoice: IInvoiceIncludePaymentJournal | null = null;
 
   const where: Prisma.InvoiceWhereUniqueInput = {

@@ -11,7 +11,7 @@ import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { InvoiceType } from '@/constants/account';
+import { InvoiceType } from '@/constants/invoice';
 
 export interface IPostApiResponseType {
   journalId: number;
