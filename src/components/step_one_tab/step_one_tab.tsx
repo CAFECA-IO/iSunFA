@@ -33,7 +33,8 @@ const StepOneTab = () => {
   const { t } = useTranslation('common');
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler } = useAccountingCtx();
+  const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler, deleteOCRHandler } =
+    useAccountingCtx();
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
@@ -114,6 +115,7 @@ const StepOneTab = () => {
         closeable: true,
       });
     } else if (success) {
+      deleteOCRHandler(aichResultId);
       toastHandler({
         id: `deleteUnprocessedOCR-${code}`,
         /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */

@@ -56,6 +56,7 @@ interface IAccountingContext {
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
+  deleteOCRHandler: (aichId: string) => void;
   accountList: IAccount[];
   getAccountListHandler: (
     companyId: number,
@@ -122,6 +123,7 @@ const initialAccountingContext: IAccountingContext = {
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
   updateOCRListHandler: () => {},
+  deleteOCRHandler: () => {},
   accountList: [],
   getAccountListHandler: () => {},
   getAIStatusHandler: () => {},
@@ -283,6 +285,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         update,
       });
     }
+  };
+
+  const deleteOCRHandler = (aichId: string) => {
+    setOCRList((prev) => {
+      const rs = prev.filter((ocr) => ocr.aichResultId !== aichId);
+      return rs;
+    });
   };
 
   useEffect(() => {
@@ -566,6 +575,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       OCRList,
       OCRListStatus,
       updateOCRListHandler,
+      deleteOCRHandler,
       accountList,
       getAccountListHandler,
       getAIStatusHandler,
