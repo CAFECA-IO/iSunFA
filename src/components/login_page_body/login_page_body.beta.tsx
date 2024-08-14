@@ -31,7 +31,7 @@ const AuthButton = ({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-72 items-center justify-center space-x-2 rounded-lg ${bgColor} py-3 shadow-md`}
+      className={`flex w-72 items-center justify-center space-x-2 rounded-sm ${bgColor} py-3 shadow-md`}
       disabled={disabled}
     >
       <Image src={providerLogo} alt={provider} width={16} height={16} className="h-6 w-6" />
@@ -56,6 +56,7 @@ const isJwtExpired = (expires: string) => {
 
 const LoginPageBody = () => {
   const { status, data, update } = useSession();
+  const user = data?.user;
   const [isLoading, setIsLoading] = useState(false);
   const [hasShowModal, setHasShowModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
@@ -63,16 +64,18 @@ const LoginPageBody = () => {
   const {
     isAgreeWithInfomationConfirmModalVisible,
     agreeWithInfomationConfirmModalVisibilityHandler,
-    TOSNPrivacyPolicyConfirmModalCallbackHandler,
+    userAgreeWithInfomationANDTOSNPrivacyPolicy,
   } = useGlobalCtx();
 
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
 
-  const handleUserAgree = async (provider: Provider) => {
+  const handleUserAgree = async (userId: number) => {
+    // eslint-disable-next-line no-console
+    console.log('handleUserAgree is called, userId', userId);
     try {
       setIsLoading(true);
       const response = await agreementAPI({
-        body: { provider, agree: true },
+        body: { userId, agree: true },
       });
       setIsLoading(false);
 
@@ -90,21 +93,23 @@ const LoginPageBody = () => {
   };
 
   const handleUserAuthenticated = async () => {
-    const user = data?.user;
-
     if (user?.hasReadAgreement) {
       agreeWithInfomationConfirmModalVisibilityHandler(false);
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-    } else {
-      TOSNPrivacyPolicyConfirmModalCallbackHandler(async () => {
-        await handleUserAgree(user.id);
-      });
-      if (!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) {
-        agreeWithInfomationConfirmModalVisibilityHandler(true);
-        setHasShowModal(true);
-      }
+    } else if (!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) {
+      agreeWithInfomationConfirmModalVisibilityHandler(true);
+      setHasShowModal(true);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log(
+      'userAgreeWithInfomationANDTOSNPrivacyPolicy',
+      userAgreeWithInfomationANDTOSNPrivacyPolicy
+    );
+    if (userAgreeWithInfomationANDTOSNPrivacyPolicy) handleUserAgree(user.id);
+  }, [userAgreeWithInfomationANDTOSNPrivacyPolicy]);
 
   useEffect(() => {
     if (status === 'loading') {

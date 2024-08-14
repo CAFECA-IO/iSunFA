@@ -36,7 +36,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
           {modalData.content === 'info_collection_statement' && <InformationStatement />}
           {modalData.content === 'term_n_privacy' && <TermsOfServiceAndPrivacyPolicy />}
         </div>
-        <div className="flex justify-end space-x-4">
+        <div className="mx-4 flex justify-end space-x-4">
           <button
             type="button"
             onClick={onCancel}
