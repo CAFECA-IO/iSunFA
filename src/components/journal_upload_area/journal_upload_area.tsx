@@ -15,7 +15,7 @@ import { ToastType } from '@/interfaces/toastify';
 const JournalUploadArea = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const { setInvoiceIdHandler } = useAccountingCtx();
+  const { setInvoiceIdHandler, addOCRHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
   const {
@@ -92,7 +92,7 @@ const JournalUploadArea = () => {
             type: ToastType.SUCCESS,
           });
           setInvoiceIdHandler(resultId);
-
+          addOCRHandler(resultId);
           // messageModalDataHandler({
           //   // title: 'Upload Successful',
           //   title: t('JOURNAL.UPLOAD_SUCCESSFUL'),

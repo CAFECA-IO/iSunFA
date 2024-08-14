@@ -5,6 +5,7 @@ import { IJournal } from '@/interfaces/journal';
 import { IOCR } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
+import { getTimestampNow } from '@/lib/utils/common';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 interface IAccountingProvider {
@@ -56,6 +57,7 @@ interface IAccountingContext {
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
+  addOCRHandler: (aichId: string) => void;
   deleteOCRHandler: (aichId: string) => void;
   accountList: IAccount[];
   getAccountListHandler: (
@@ -123,6 +125,7 @@ const initialAccountingContext: IAccountingContext = {
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
   updateOCRListHandler: () => {},
+  addOCRHandler: () => {},
   deleteOCRHandler: () => {},
   accountList: [],
   getAccountListHandler: () => {},
@@ -290,6 +293,24 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const deleteOCRHandler = (aichId: string) => {
     setOCRList((prev) => {
       const rs = prev.filter((ocr) => ocr.aichResultId !== aichId);
+      return rs;
+    });
+  };
+
+  const addOCRHandler = (aichId: string) => {
+    const now = getTimestampNow();
+    const pendingOCR: IOCR = {
+      id: now,
+      aichResultId: aichId,
+      imageName: '',
+      imageUrl: '',
+      imageSize: '',
+      progress: 0,
+      status: ProgressStatus.IN_PROGRESS,
+      createdAt: 0,
+    };
+    setOCRList((prev) => {
+      const rs = [...prev, pendingOCR];
       return rs;
     });
   };
@@ -575,6 +596,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       OCRList,
       OCRListStatus,
       updateOCRListHandler,
+      addOCRHandler,
       deleteOCRHandler,
       accountList,
       getAccountListHandler,

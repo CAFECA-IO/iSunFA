@@ -65,6 +65,8 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
+    // eslint-disable-next-line no-console
+    console.log('OCRList in StepOneTab:', OCRList);
 
     return () => {};
   }, [OCRList, OCRListStatus]);
