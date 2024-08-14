@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { getSession, signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useGlobalCtx } from '@/contexts/global_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+// import { ToastType } from '@/interfaces/toastify';
 
 enum Provider {
   GOOGLE = 'google',
@@ -80,15 +81,23 @@ const Loader = () => {
   );
 };
 
+const isJwtExpired = (expires: string) => {
+  const now = new Date();
+  const expirationDate = new Date(expires);
+  return now > expirationDate;
+};
+
 const LoginPageBody = () => {
   const { status, data, update } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [hasShowModal, setHasShowModal] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const router = useRouter();
   const {
     isAgreeWithInfomationConfirmModalVisible,
     agreeWithInfomationConfirmModalVisibilityHandler,
     TOSNPrivacyPolicyConfirmModalCallbackHandler,
+    // toastHandler,
   } = useGlobalCtx();
 
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
@@ -113,6 +122,21 @@ const LoginPageBody = () => {
     }
   };
 
+  const handleUserAuthenticated = async () => {
+    const user = data?.user;
+
+    if (user?.hasReadAgreement) {
+      agreeWithInfomationConfirmModalVisibilityHandler(false);
+      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    } else {
+      TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(user.id));
+      if (!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) {
+        agreeWithInfomationConfirmModalVisibilityHandler(true);
+        setHasShowModal(true);
+      }
+    }
+  };
+
   useEffect(() => {
     if (status === 'loading') {
       setIsLoading(true);
@@ -131,23 +155,19 @@ const LoginPageBody = () => {
     }
 
     if (status === 'authenticated') {
-      const user = data?.user;
-
-      if (user?.hasReadAgreement) {
-        agreeWithInfomationConfirmModalVisibilityHandler(false);
-        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-      } else {
-        TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(user.id));
-        if (!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) {
-          agreeWithInfomationConfirmModalVisibilityHandler(true);
-          setHasShowModal(true);
-        }
-      }
+      handleUserAuthenticated();
     }
   }, [status]);
 
   const authenticateUser = async (provider: Provider) => {
     try {
+      if (selectedProvider === provider && status === 'authenticated') {
+        const session = await getSession();
+        if (session && !isJwtExpired(session.expires)) {
+          handleUserAuthenticated();
+          return;
+        }
+      }
       setIsLoading(true);
       const response = await signIn(provider, { redirect: false });
       setIsLoading(false);
@@ -159,6 +179,7 @@ const LoginPageBody = () => {
       }
 
       update?.();
+      setSelectedProvider(provider);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Authentication failed', error);
@@ -170,10 +191,11 @@ const LoginPageBody = () => {
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
       <div className="absolute inset-0 z-0 h-full w-full blur-md">
         <Image
+          priority
           src="/images/login_bg.svg"
           alt="login_bg"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: 'cover' }}
           className="blur-md"
         />
       </div>

@@ -149,6 +149,7 @@ export default NextAuth({
           hasReadAgreement: token.hasReadAgreement as boolean,
           provider: token.provider as string,
           accessToken: token.accessToken as string,
+          expires: token.exp as string,
         },
       };
       // Deprecated: (20240815 - Tzuhan) Remove console.log
