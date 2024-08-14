@@ -21,8 +21,7 @@ export enum HttpMethod {
 }
 
 export enum APIName {
-  LOGIN = 'LOGIN',
-  AGREEMENT = 'AGREEMENT',
+  AGREE_TO_TERMS = 'AGREE_TO_TERMS',
   CREATE_CHALLENGE = 'CREATE_CHALLENGE',
   SIGN_UP = 'SIGN_UP',
   SIGN_IN = 'SIGN_IN',
@@ -85,8 +84,7 @@ export enum APIName {
 }
 
 export enum APIPath {
-  LOGIN = `${apiPrefixBeta}/login`,
-  AGREEMENT = `${apiPrefixBeta}/agreement`,
+  AGREE_TO_TERMS = `${apiPrefixBeta}/agree-to-terms`,
   CREATE_CHALLENGE = `${apiPrefix}/challenge`,
   SIGN_UP = `${apiPrefix}/sign-up`,
   SIGN_IN = `${apiPrefix}/sign-in`,
@@ -170,15 +168,10 @@ const createConfig = ({
 });
 
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
-  [APIName.LOGIN]: createConfig({
-    name: APIName.LOGIN,
+  [APIName.AGREE_TO_TERMS]: createConfig({
+    name: APIName.AGREE_TO_TERMS,
     method: HttpMethod.POST,
-    path: APIPath.LOGIN,
-  }),
-  [APIName.AGREEMENT]: createConfig({
-    name: APIName.AGREEMENT,
-    method: HttpMethod.POST,
-    path: APIPath.AGREEMENT,
+    path: APIPath.AGREE_TO_TERMS,
   }),
   [APIName.CREATE_CHALLENGE]: createConfig({
     name: APIName.CREATE_CHALLENGE,

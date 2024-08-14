@@ -804,7 +804,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isAgreeWithInfomationConfirmModalVisible}
         modalData={{
           title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: term_1,
+          content: 'info_collection_statement',
           buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
         }}
         onAgree={() => {
@@ -818,7 +818,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
         modalData={{
           title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
-          content: term_2,
+          content: 'term_n_privacy',
           buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
         }}
         onAgree={() => {

@@ -3,22 +3,24 @@ import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import LoginPageBody from '@/components/login_page_body/login_page_body.beta';
-import { useUserCtx } from '@/contexts/user_context';
 import { GetServerSideProps } from 'next';
-import { SkeletonList } from '@/components/skeleton/skeleton';
-import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+// import { useUserCtx } from '@/contexts/user_context';
+// import { SkeletonList } from '@/components/skeleton/skeleton';
+// import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const LoginPage = () => {
   const { t } = useTranslation('common');
-  const { isAuthLoading } = useUserCtx();
+  // const { isAuthLoading } = useUserCtx();
 
-  const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center">
-      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-    </div>
-  ) : (
-    <div className="pt-10">
+  const displayedBody = (
+    // isAuthLoading ? (
+    //   <div className="flex h-screen w-full items-center justify-center">
+    //     <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+    //   </div>
+    // ) :
+    <div className="pt-12">
       <LoginPageBody />
     </div>
   );
@@ -43,7 +45,7 @@ const LoginPage = () => {
         />
       </Head>
 
-      <div className="h-screen bg-gradient-to-br from-yellow-100 to-blue-100">
+      <div className="h-screen">
         <NavBar />
         {displayedBody}
       </div>
@@ -52,15 +54,44 @@ const LoginPage = () => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  const { invitation = '', action = '' } = query;
+  try {
+    // const session = await getSession({ req });
+    const { invitation = '', action = '' } = query;
 
-  return {
-    props: {
-      invitation: invitation as string,
-      action: action as string,
-      ...(await serverSideTranslations(locale as string, ['common'])),
-    },
-  };
+    // 如果没有 session，重定向到登录页面
+    // if (!session) {
+    //   return {
+    //     props: {
+    //       invitation: invitation as string,
+    //       action: action as string,
+    //       ...(await serverSideTranslations(locale as string, ['common'])),
+    //     },
+    //     redirect: {
+    //       destination: ISUNFA_ROUTE.LOGIN_BETA,
+    //       permanent: false,
+    //     },
+    //   };
+    // }
+
+    return {
+      props: {
+        // session,
+        invitation: invitation as string,
+        action: action as string,
+        ...(await serverSideTranslations(locale as string, ['common'])),
+      },
+    };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error in getServerSideProps:', error);
+
+    return {
+      redirect: {
+        destination: ISUNFA_ROUTE.LOGIN_BETA,
+        permanent: false,
+      },
+    };
+  }
 };
 
 export default LoginPage;
