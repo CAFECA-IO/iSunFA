@@ -8,11 +8,8 @@ import { GetServerSideProps } from 'next';
 // import { SkeletonList } from '@/components/skeleton/skeleton';
 // import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
-// import { getSession } from 'next-auth/react';
-// import { Session } from 'next-auth';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-// const LoginPage = ({ session }: { session: Session }) => {
 const LoginPage = () => {
   const { t } = useTranslation('common');
   // const { isAuthLoading } = useUserCtx();
@@ -25,7 +22,6 @@ const LoginPage = () => {
     // ) :
     <div className="pt-12">
       <LoginPageBody />
-      {/* <LoginPageBody session={session} /> */}
     </div>
   );
 
@@ -50,7 +46,6 @@ const LoginPage = () => {
       </Head>
 
       <div className="h-screen">
-        {/* bg-gradient-to-br from-yellow-100 to-blue-100" */}
         <NavBar />
         {displayedBody}
       </div>

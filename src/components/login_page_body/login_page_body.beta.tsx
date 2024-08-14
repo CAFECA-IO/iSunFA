@@ -45,21 +45,40 @@ const LoginPageBody = () => {
     // eslint-disable-next-line no-console
     console.log('session:', session);
     if (status === 'unauthenticated') {
-      update();
+      try {
+        if (typeof update === 'function') {
+          update();
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Session update failed:', error);
+        // 可能需要跳轉到錯誤頁面或顯示錯誤消息
+      }
     }
+    // eslint-disable-next-line no-console
+    console.log(
+      `status: ${status}, isAgreeWithInfomationConfirmModalVisible: ${isAgreeWithInfomationConfirmModalVisible}, user.hasReadAgreement: ${data?.user?.hasReadAgreement}`
+    );
     if (status === 'authenticated') {
       const user = data?.user;
-      if (user && !user?.hasReadAgreement && !isAgreeWithInfomationConfirmModalVisible) {
-        TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(user?.id));
-        agreeWithInfomationConfirmModalVisibilityHandler();
-      } else {
+      if (user && user?.hasReadAgreement) {
+        if (isAgreeWithInfomationConfirmModalVisible) {
+          agreeWithInfomationConfirmModalVisibilityHandler();
+        }
         // 用户已同意條款，跳轉到公司選擇頁面
         // eslint-disable-next-line no-console
         console.log('用户已同意條款，跳轉到公司選擇頁面');
         router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      } else if (user && !user?.hasReadAgreement) {
+        TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(user?.id));
+        // eslint-disable-next-line no-console
+        console.log('用户未同意條款，顯示確認框');
+        if (!isAgreeWithInfomationConfirmModalVisible) {
+          agreeWithInfomationConfirmModalVisibilityHandler();
+        }
       }
     }
-  }, [session]);
+  }, [isAgreeWithInfomationConfirmModalVisible, status]);
 
   // 登入處理函數，呼叫 OAuth 登入並獲取響應後再呼叫 signInAPI
   const authenticateUser = async (provider: Provider) => {
@@ -75,7 +94,9 @@ const LoginPageBody = () => {
         throw new Error(response.error);
       }
       // eslint-disable-next-line no-console
-      console.log('User authenticated successfully');
+      console.log('User authenticated successfully, response:', response);
+      // 更新 session 或執行其他後續動作
+      update();
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Authentication failed', error);
@@ -92,12 +113,15 @@ const LoginPageBody = () => {
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
       {/* 背景圖片 */}
-      <div className="absolute inset-0 z-0 blur-md">
+      <div className="absolute inset-0 z-0 h-full w-full blur-md">
         <Image
+          loading="lazy"
           src="/images/login_bg.svg"
-          alt="Background"
+          alt="login_bg"
           fill
-          style={{ objectFit: 'cover' }}
+          style={{
+            objectFit: 'cover',
+          }}
           quality={100}
         />
       </div>
