@@ -67,8 +67,8 @@ export async function fetchData<Data>(
 const useAPI = <Data>(
   apiConfig: IAPIConfig,
   options: IAPIInput,
+  triggerImmediately: boolean = false,
   cancel?: boolean,
-  triggerImmediately: boolean = true
 ): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [code, setCode] = useState<string | undefined>(undefined);

@@ -2,7 +2,7 @@ import React from 'react';
 
 const InformationStatement: React.FC = () => {
   return (
-    <div className="p-6 space-y-4 text-gray-800">
+    <div className="p-6 space-y-4 text-navyBlue">
       <p className="font-semibold">Dear User,</p>
       <p>
         Thank you for choosing to use our accounting software. During your use

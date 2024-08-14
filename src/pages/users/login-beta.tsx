@@ -20,7 +20,7 @@ const LoginPage = () => {
     //     <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
     //   </div>
     // ) :
-    <div className="pt-14">
+    <div className="pt-60px">
       <LoginPageBody />
     </div>
   );

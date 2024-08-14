@@ -833,6 +833,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           if (isTOSNPrivacyPolicyConfirmModalVisible) {
             TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
           }
+          console.log('LoginConfirmModal onAgree TOS_N_PP and call callback');
           await TOSNPrivacyPolicyConfirmModalCallback();
         }}
         onCancel={() => {

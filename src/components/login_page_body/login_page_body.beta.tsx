@@ -6,44 +6,12 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import { ToastType } from '@/interfaces/toastify';
+import AvatarSVG from '@/components/avater_svg/avater_svg';
 
 enum Provider {
   GOOGLE = 'google',
   APPLE = 'apple',
 }
-
-const AvatarSVG = ({ size }: { size: 'large' | 'small' }) => {
-  const width = size === 'large' ? 201 : 100;
-  const height = width;
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={width}
-      height={height}
-      fill="none"
-      viewBox="0 0 201 200"
-    >
-      <path
-        fill="#CDD1D9"
-        d="M.5 100C.5 44.772 45.272 0 100.5 0s100 44.772 100 100-44.772 100-100 100S.5 155.228.5 100z"
-      ></path>
-      <g clipPath="url(#clip0_13_13411)">
-        <path
-          fill="#7F8A9D"
-          fillRule="evenodd"
-          d="M100.5 68.013c-11.942 0-21.623 9.68-21.623 21.622 0 8.151 4.51 15.249 11.17 18.934a31.953 31.953 0 00-19.976 20.439 2.286 2.286 0 002.177 2.984h56.503a2.284 2.284 0 002.176-2.984 31.956 31.956 0 00-19.975-20.439c6.661-3.685 11.171-10.782 11.171-18.934 0-11.942-9.681-21.622-21.623-21.622z"
-          clipRule="evenodd"
-        ></path>
-      </g>
-      <defs>
-        <clipPath id="clip0_13_13411">
-          <path fill="#fff" d="M0 0H64V64H0z" transform="translate(68.5 68)"></path>
-        </clipPath>
-      </defs>
-    </svg>
-  );
-};
 
 const AuthButton = ({
   onClick,
@@ -72,7 +40,6 @@ const AuthButton = ({
   );
 };
 
-// Spinning Loader Component
 const Loader = () => {
   return (
     <div className="flex h-screen items-center justify-center">
@@ -97,7 +64,6 @@ const LoginPageBody = () => {
     isAgreeWithInfomationConfirmModalVisible,
     agreeWithInfomationConfirmModalVisibilityHandler,
     TOSNPrivacyPolicyConfirmModalCallbackHandler,
-    // toastHandler,
   } = useGlobalCtx();
 
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
@@ -113,12 +79,13 @@ const LoginPageBody = () => {
       if (response.success) {
         router.push(ISUNFA_ROUTE.SELECT_COMPANY);
       } else {
-        // TODO: Handle API response failure
+        // TODO: (20240814-Tzuhan) Handle API response failure
       }
     } catch (error) {
+      // Deprecate: (20240816-Tzuhan) dev
       // eslint-disable-next-line no-console
       console.error('紀錄用戶同意條款時發生錯誤:', error);
-      // TODO: Handle error case
+      // TODO: (20240814-Tzuhan) Handle error case
     }
   };
 
@@ -129,7 +96,9 @@ const LoginPageBody = () => {
       agreeWithInfomationConfirmModalVisibilityHandler(false);
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     } else {
-      TOSNPrivacyPolicyConfirmModalCallbackHandler(() => handleUserAgree(user.id));
+      TOSNPrivacyPolicyConfirmModalCallbackHandler(async () => {
+        await handleUserAgree(user.id);
+      });
       if (!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) {
         agreeWithInfomationConfirmModalVisibilityHandler(true);
         setHasShowModal(true);
@@ -149,6 +118,7 @@ const LoginPageBody = () => {
       try {
         update?.();
       } catch (error) {
+        // Deprecate: (20240816-Tzuhan) dev
         // eslint-disable-next-line no-console
         console.error('Session update failed:', error);
       }
@@ -173,6 +143,7 @@ const LoginPageBody = () => {
       setIsLoading(false);
 
       if (response?.error) {
+        // Deprecate: (20240816-Tzuhan) dev
         // eslint-disable-next-line no-console
         console.error('OAuth 登入失敗:', response?.error);
         throw new Error(response.error);
@@ -181,24 +152,16 @@ const LoginPageBody = () => {
       update?.();
       setSelectedProvider(provider);
     } catch (error) {
+      // Deprecate: (20240816-Tzuhan) dev
       // eslint-disable-next-line no-console
       console.error('Authentication failed', error);
-      // TODO: (20240813-Tzuhan) handle error
+      // TODO: (20240814-Tzuhan) (20240813-Tzuhan) handle error
     }
   };
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
-      <div className="absolute inset-0 z-0 h-full w-full blur-md">
-        <Image
-          priority
-          src="/images/login_bg.svg"
-          alt="login_bg"
-          fill
-          style={{ objectFit: 'cover' }}
-          className="blur-md"
-        />
-      </div>
+      <div className="bg-login_bg absolute inset-0 z-0 h-full w-full bg-cover bg-center bg-no-repeat blur-md"></div>
       {isLoading ? (
         <Loader />
       ) : (
