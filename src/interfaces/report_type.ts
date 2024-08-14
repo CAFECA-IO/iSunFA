@@ -3,6 +3,8 @@ export enum FinancialReportTypesKey {
   balance_sheet = 'balance_sheet',
   comprehensive_income_statement = 'comprehensive_income_statement',
   cash_flow_statement = 'cash_flow_statement',
+  // Info: (20240814 - Anna) 增加401報表
+  report_401 = 'report_401',
   //  change_in_equity_statement = 'change_in_equity_statement'
 }
 
@@ -56,6 +58,11 @@ export const FinancialReportTypesMap: Record<
   [FinancialReportTypesKey.cash_flow_statement]: {
     id: FinancialReportTypesKey.cash_flow_statement,
     name: 'Cash Flow Statement',
+  },
+  // Info: (20240814 - Anna) 增加401報表
+  [FinancialReportTypesKey.report_401]: {
+    id: FinancialReportTypesKey.report_401,
+    name: 'report_401',
   },
   // [FinancialReportTypesKey.change_in_equity_statement]: {
   //   id: FinancialReportTypesKey.change_in_equity_statement,

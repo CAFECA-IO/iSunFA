@@ -73,6 +73,8 @@ export const FinancialReportTypesKeyReportSheetTypeMapping: {
   [FinancialReportTypesKey.balance_sheet]: ReportSheetType.BALANCE_SHEET,
   [FinancialReportTypesKey.comprehensive_income_statement]: ReportSheetType.INCOME_STATEMENT,
   [FinancialReportTypesKey.cash_flow_statement]: ReportSheetType.CASH_FLOW_STATEMENT,
+  // Info: (20240814 - Anna) 增加401報表
+  [FinancialReportTypesKey.report_401]: ReportSheetType.REPORT_401,
   //  [FinancialReportTypesKey.change_in_equity_statement]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
 };
 
