@@ -438,7 +438,6 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     // lastPeriodEndDateInSecond,
     formattedReportType,
   } = formatPostRequestQuery(req);
-
   let thisPeriodReportId = -1;
   thisPeriodReportId = await generateReportIfNotExist(
     companyId,
