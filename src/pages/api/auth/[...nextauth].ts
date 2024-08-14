@@ -95,18 +95,25 @@ export default NextAuth({
        * Info: (20240813 - Tzuhan)
        * recommended user model:
          model User {
-           id               Int      @id @default(autoincrement())  // 用戶的唯一標示符
-           name             String   // 用户名
-           fullName         String?  // 全名
-           email            String?  // email
-           phone            String?  // 電話
-           imageId          String?  // 頭像ID
-           provider         String?  // OAuth 提供者（如 'google' 或 'apple'）
-           providerAccountId String?  @unique // OAuth 提供者帳號ID
-           hasReadAgreement Boolean  @default(false) // 用户是否同意了條款
-           createdAt        DateTime @default(now()) // 創建時間
-           updatedAt        DateTime @updatedAt // 更新時間
-           deletedAt        DateTime? // 删除時間（邏輯删除）
+           id           Int          @id @default(autoincrement())
+           name         String
+           fullName     String?      @map("full_name")
+           email        String?      @unique
+           phone        String?
+           credentialId String?      @unique @map("credential_id")
+           publicKey    String?      @map("public_key")
+           algorithm    String?
+           imageId      String?      @map("image_id")
+           [新增] googleId     String?      @unique @map("google_id")      // Google login ID
+           [新增] appleId      String?      @unique @map("apple_id")       // Apple login ID
+           [新增] hasReadAgreement Boolean @default(false) // 用户是否同意了條款
+           createdAt    Int          @map("created_at")
+           updatedAt    Int          @map("updated_at")
+           deletedAt    Int?         @map("deleted_at")
+           admins       Admin[]
+           invitations  Invitation[]
+
+           @@map("user")
          }
        */
       let newToken = token;

@@ -144,7 +144,7 @@ interface IGlobalContext {
   transferCompanyModalVisibilityHandler: () => void;
 
   isAgreeWithInfomationConfirmModalVisible: boolean;
-  agreeWithInfomationConfirmModalVisibilityHandler: () => void;
+  agreeWithInfomationConfirmModalVisibilityHandler: (visibility: boolean) => void;
 
   isTOSNPrivacyPolicyConfirmModalVisible: boolean;
   TOSNPrivacyPolicyConfirmModalCallbackHandler: (callback: () => Promise<void>) => void;
@@ -238,7 +238,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState(false);
 
   const [TOSNPrivacyPolicyConfirmModalCallback, setTOSNPrivacyPolicyConfirmModalCallback] =
-    useState<() => void>(() => {});
+    useState<() => Promise<void>>(() => Promise.resolve());
 
   const { width, height } = windowSize;
 
@@ -387,15 +387,15 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setFilterOptionsForContract(options);
   };
 
-  const agreeWithInfomationConfirmModalVisibilityHandler = () => {
-    setIsAgreeWithInfomationConfirmModalVisible(!isAgreeWithInfomationConfirmModalVisible);
+  const agreeWithInfomationConfirmModalVisibilityHandler = (visibility: boolean) => {
+    setIsAgreeWithInfomationConfirmModalVisible(visibility);
   };
 
-  const TOSNPrivacyPolicyConfirmModalVisibilityHandler = () => {
-    setIsTOSNPrivacyPolicyConfirmModalVisible(!isTOSNPrivacyPolicyConfirmModalVisible);
+  const TOSNPrivacyPolicyConfirmModalVisibilityHandler = (visibility: boolean) => {
+    setIsTOSNPrivacyPolicyConfirmModalVisible(visibility);
   };
 
-  const TOSNPrivacyPolicyConfirmModalCallbackHandler = (callback: () => void) => {
+  const TOSNPrivacyPolicyConfirmModalCallbackHandler = (callback: () => Promise<void>) => {
     setTOSNPrivacyPolicyConfirmModalCallback(callback);
   };
 
@@ -808,10 +808,18 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
         }}
         onAgree={() => {
-          agreeWithInfomationConfirmModalVisibilityHandler();
-          TOSNPrivacyPolicyConfirmModalVisibilityHandler();
+          if (isAgreeWithInfomationConfirmModalVisible) {
+            agreeWithInfomationConfirmModalVisibilityHandler(false);
+          }
+          if (!isTOSNPrivacyPolicyConfirmModalVisible) {
+            TOSNPrivacyPolicyConfirmModalVisibilityHandler(true);
+          }
         }}
-        onCancel={agreeWithInfomationConfirmModalVisibilityHandler}
+        onCancel={() => {
+          if (isAgreeWithInfomationConfirmModalVisible) {
+            agreeWithInfomationConfirmModalVisibilityHandler(false);
+          }
+        }}
       />
 
       <LoginConfirmModal
@@ -821,11 +829,17 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           content: 'term_n_privacy',
           buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
         }}
-        onAgree={() => {
-          TOSNPrivacyPolicyConfirmModalVisibilityHandler();
-          TOSNPrivacyPolicyConfirmModalCallback();
+        onAgree={async () => {
+          if (isTOSNPrivacyPolicyConfirmModalVisible) {
+            TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
+          }
+          await TOSNPrivacyPolicyConfirmModalCallback();
         }}
-        onCancel={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
+        onCancel={() => {
+          if (isTOSNPrivacyPolicyConfirmModalVisible) {
+            TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
+          }
+        }}
       />
       {children}
     </GlobalContext.Provider>
