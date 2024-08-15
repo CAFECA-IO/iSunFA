@@ -49,8 +49,8 @@ export function getReportTypeFromReport(report: IReport | null) {
   return reportType;
 }
 
-export async function getPeriodReport(companyId: number, reportId: number) {
-  const curPeriodReportFromDB = await findUniqueReportById(companyId, reportId);
+export async function getPeriodReport(reportId: number) {
+  const curPeriodReportFromDB = await findUniqueReportById(reportId);
   let curPeriodReport: IReport | null = null;
   let company: Company | null = null;
   if (curPeriodReportFromDB) {
@@ -209,16 +209,17 @@ export function formatPayloadFromIReport(report: IReport, company: Company): Fin
 export async function handleGETRequest(
   companyId: number,
   req: NextApiRequest
-): Promise<FinancialReport | null> {
+): Promise<FinancialReport | null | IReport> {
   const { reportIdNumber } = formatGetRequestQueryParams(req);
 
   let payload = null;
 
   if (reportIdNumber !== null) {
-    const { curPeriodReport, company } = await getPeriodReport(companyId, reportIdNumber);
-
-    if (curPeriodReport && company) {
+    const { curPeriodReport, company } = await getPeriodReport(reportIdNumber);
+    if (curPeriodReport && company && curPeriodReport.reportType !== ReportSheetType.REPORT_401) {
       payload = formatPayloadFromIReport(curPeriodReport, company);
+    } else {
+      payload = curPeriodReport;
     }
   }
 
@@ -227,10 +228,10 @@ export async function handleGETRequest(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<FinancialReport | null>>
+  res: NextApiResponse<IResponseData<FinancialReport | IReport | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: FinancialReport | null = null;
+  let payload: FinancialReport | IReport | null = null;
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
@@ -258,6 +259,9 @@ export default async function handler(
     console.log(error);
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<FinancialReport | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<FinancialReport | IReport | null>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }

@@ -33,12 +33,19 @@ const StepOneTab = () => {
   const { t } = useTranslation('common');
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
-  const { OCRList, OCRListStatus, updateOCRListHandler, selectOCRHandler, deleteOCRHandler } =
-    useAccountingCtx();
+  const {
+    OCRList,
+    OCRListStatus,
+    updateOCRListHandler,
+    selectOCRHandler,
+    deleteOCRHandler,
+    pendingOCRList,
+  } = useAccountingCtx();
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IOCR[]>(OCRList);
+  // const [pendingFileList, setPendingFileList] = useState<IOCR[]>(pendingOCRList);
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -82,6 +89,9 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
+
+  // eslint-disable-next-line no-console
+  console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));
@@ -160,12 +170,22 @@ const StepOneTab = () => {
       pauseHandler={fileItemPauseHandler}
       deleteHandler={fileItemDeleteHandler}
       clickHandler={handleOCRClick}
+    />
+  ));
+
+  const displayedPendingFileList = pendingOCRList.map((data) => (
+    <UploadedFileItem
+      key={data.id}
+      itemData={data}
+      pauseHandler={fileItemPauseHandler}
+      deleteHandler={fileItemDeleteHandler}
+      clickHandler={handleOCRClick}
       isPending={data.status === ProgressStatus.WAITING_FOR_UPLOAD}
     />
   ));
 
   const uploadedFileSection =
-    fileList.length > 0 ? (
+    fileList.length > 0 || pendingOCRList.length > 0 ? (
       <>
         <div className="my-5 flex items-center gap-4">
           <hr className="block flex-1 border-lightGray4 md:hidden" />
@@ -182,7 +202,11 @@ const StepOneTab = () => {
         </div>
         {/* Info: (20240523 - Julian) Uploaded File List */}
         <div className="mb-50px flex flex-col items-center gap-y-50px">
-          <div className="flex w-full flex-col items-center gap-y-12px">{displayedFileList}</div>
+          <div className="flex w-full flex-col items-center gap-y-12px">
+            {displayedFileList}
+            {displayedPendingFileList}
+          </div>
+
           {/* Info: (20240523 - Julian) Pagination */}
           {/* Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作 */}
           {/* {totalPages > 1 && (

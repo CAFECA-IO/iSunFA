@@ -57,8 +57,15 @@ interface IAccountingContext {
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
-  addOCRHandler: (aichId: string, imageName: string, imageSize: string) => void;
+  addOCRHandler: (
+    aichId: string,
+    imageName: string,
+    imageSize: string,
+    uploadIdentifier: string
+  ) => void;
   deleteOCRHandler: (aichId: string) => void;
+  addPendingOCRHandler: (imageName: string, imageSize: string, uploadIdentifier: string) => void;
+  deletePendingOCRHandler: (uploadIdentifier: string) => void;
   accountList: IAccount[];
   getAccountListHandler: (
     companyId: number,
@@ -114,6 +121,7 @@ interface IAccountingContext {
   generateAccountTitle: (account: IAccount | null) => string;
 
   deleteOwnAccountTitle: (companyId: number, id: number) => void;
+  pendingOCRList: IOCR[];
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -127,6 +135,8 @@ const initialAccountingContext: IAccountingContext = {
   updateOCRListHandler: () => {},
   addOCRHandler: () => {},
   deleteOCRHandler: () => {},
+  addPendingOCRHandler: () => {},
+  deletePendingOCRHandler: () => {},
   accountList: [],
   getAccountListHandler: () => {},
   getAIStatusHandler: () => {},
@@ -159,6 +169,7 @@ const initialAccountingContext: IAccountingContext = {
   generateAccountTitle: () => 'Account Title',
 
   deleteOwnAccountTitle: () => {},
+  pendingOCRList: [],
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -211,6 +222,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [inputDescription, setInputDescription] = useState<string>('');
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [pendingOCRList, setPendingOCRList] = useState<IOCR[]>([]);
 
   const getAccountListHandler = (
     companyId: number,
@@ -297,7 +311,12 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     });
   };
 
-  const addOCRHandler = (aichId: string, imageName: string, imageSize: string) => {
+  const addOCRHandler = (
+    aichId: string,
+    imageName: string,
+    imageSize: string,
+    uploadIdentifier: string
+  ) => {
     const now = getTimestampNow();
     const pendingOCR: IOCR = {
       id: now,
@@ -308,9 +327,35 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       progress: 0,
       status: ProgressStatus.WAITING_FOR_UPLOAD,
       createdAt: 0,
+      uploadIdentifier,
     };
     setOCRList((prev) => {
       const rs = [...prev, pendingOCR];
+      return rs;
+    });
+  };
+
+  const addPendingOCRHandler = (imageName: string, imageSize: string, uploadIdentifier: string) => {
+    const ocr: IOCR = {
+      id: getTimestampNow(),
+      aichResultId: getTimestampNow().toString(),
+      imageName,
+      imageUrl: '',
+      progress: 0,
+      status: ProgressStatus.WAITING_FOR_UPLOAD,
+      imageSize,
+      createdAt: 0,
+      uploadIdentifier,
+    };
+    setPendingOCRList((prev) => {
+      const rs = [...prev, ocr];
+      return rs;
+    });
+  };
+
+  const deletePendingOCRHandler = (uploadIdentifier: string) => {
+    setPendingOCRList((prev) => {
+      const rs = prev.filter((ocr) => ocr.uploadIdentifier !== uploadIdentifier);
       return rs;
     });
   };
@@ -598,6 +643,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       updateOCRListHandler,
       addOCRHandler,
       deleteOCRHandler,
+      addPendingOCRHandler,
+      deletePendingOCRHandler,
       accountList,
       getAccountListHandler,
       getAIStatusHandler,
@@ -628,6 +675,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteOwnAccountTitle,
       inputDescription,
       inputDescriptionHandler,
+
+      pendingOCRList,
     }),
     [
       OCRList,
@@ -652,6 +701,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectedJournal,
       selectJournalHandler,
       inputDescription,
+      pendingOCRList,
     ]
   );
 
