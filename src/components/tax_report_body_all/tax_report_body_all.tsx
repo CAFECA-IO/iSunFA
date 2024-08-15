@@ -6,7 +6,6 @@ import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, TaxReport401 } from '@/interfaces/report';
-import { generate401Report } from '@/lib/utils/report/report_401';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { useEffect, useState } from 'react';
 // import { format } from 'date-fns';
@@ -20,18 +19,33 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
   const [report401, setReport401] = useState<TaxReport401 | null>(null);
   useEffect(() => {
-    const fetchReport = async () => {
-      if (selectedCompany) {
-         const reportData = await generate401Report(
-           selectedCompany.id,
-           Date.now() / 1000,
-           Date.now() / 1000
-         );
-        // eslint-disable-next-line no-console
-        // console.log('Fetched report401 data:', reportData);
-        setReport401(reportData);
-      }
-    };
+ const fetchReport = async () => {
+   if (selectedCompany && reportId) {
+     const companyId = selectedCompany.id;
+
+     try {
+       const response = await fetch(
+         `https://isunfa.com/company/${companyId}/report/${reportId}`,
+         {
+           method: 'GET',
+           headers: {
+             'Content-Type': 'application/json',
+           },
+         }
+       );
+
+       if (!response.ok) {
+         throw new Error(`Error fetching report: ${response.statusText}`);
+       }
+
+       const reportData = await response.json();
+       setReport401(reportData);
+     } catch (error) {
+       // eslint-disable-next-line no-console
+       console.error('Failed to fetch report:', error);
+     }
+   }
+ };
 
     fetchReport();
   }, [selectedCompany]);
@@ -223,8 +237,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               三聯式發票、電子計算機發票
             </td>
             <td className="border border-black px-2 py-0">1</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">2</td>
             <td className="border border-black px-2 py-0">
               {report401?.sales.breakdown.triplicateAndElectronic.tax || 'N/A'}
@@ -242,8 +255,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               收銀機發票(三聯式)及電子發票
             </td>
             <td className="border border-black px-2 py-0">5</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">6</td>
             <td className="border border-black px-2 py-0">
               {report401?.sales.breakdown.cashRegisterTriplicate.tax || 'N/A'}
@@ -260,8 +272,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               二聯式發票、收銀機發票(二聯式)
             </td>
             <td className="border border-black px-2 py-0">9</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">10</td>
             <td className="border border-black px-2 py-0">
               {report401?.sales.breakdown.duplicateAndCashRegister.tax || 'N/A'}
@@ -279,11 +290,9 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               免用發票
             </td>
             <td className="border border-black px-2 py-0">13</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">14</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">15</td>
             <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">11</td>
@@ -296,8 +305,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               減:退回及折讓
             </td>
             <td className="border border-black px-2 py-0">17</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">18</td>
             <td className="border border-black px-2 py-0">
               {report401?.sales.breakdown.returnsAndAllowances.tax || 'N/A'}
@@ -314,8 +322,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               合計
             </td>
             <td className="border border-black px-2 py-0">21①</td>
-            <td className="border border-black px-2 py-0">
-            </td>
+            <td className="border border-black px-2 py-0"></td>
             <td className="border border-black px-2 py-0">22②</td>
             <td className="border border-black px-2 py-0">
               {report401?.sales.breakdown.total.tax || 'N/A'}
