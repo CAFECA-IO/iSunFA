@@ -53,9 +53,9 @@ const UploadedFileItem = ({
     clickHandler(itemData);
   };
 
-  // Info: (20240527 - Julian) 若檔名過長，則擷取前 3 個和後 4 個(副檔名)字元，中間以 ... 代替
+  // Info: (20240527 - Julian) 若檔名過長，則擷取前 5 個和後 4 個(副檔名)字元，中間以 ... 代替
   const truncatedFileName =
-    imageName.length > 20 ? `${imageName.slice(0, 3)}...${imageName.slice(-4)}` : imageName;
+    imageName.length > 20 ? `${imageName.slice(0, 5)}...${imageName.slice(-4)}` : imageName;
 
   const displayedPauseButton =
     status === ProgressStatus.PAUSED ? <FiPlay size={20} /> : <FiPauseCircle size={20} />;
@@ -81,8 +81,14 @@ const UploadedFileItem = ({
         <Skeleton width={56} height={56} /> {/* Info: 掃描動畫 (20240814 - Shirley) */}
         <Skeleton width={64} height={64} /> {/* Info: 文件縮略圖 (20240814 - Shirley) */}
         <div className="flex shrink grow flex-col items-start">
-          <Skeleton width={100} height={24} /> {/* Info: 文件名 (20240814 - Shirley) */}
-          <Skeleton width={50} height={16} /> {/* Info: 文件大小 (20240814 - Shirley) */}
+          <h3
+            className={`text-base font-semibold leading-normal tracking-tight text-file-uploading-text-primary`}
+          >
+            {truncatedFileName}
+          </h3>
+          <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
+            {imageSize}
+          </p>
         </div>
         <div className="absolute right-0 z-10 flex items-center gap-10px">
           <Skeleton width={20} height={20} /> {/* Info: 狀態圖標 (20240814 - Shirley) */}
