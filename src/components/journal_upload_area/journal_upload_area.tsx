@@ -86,9 +86,9 @@ const JournalUploadArea = () => {
       const uuid = uuidv4();
       formData.append('image', uploadFile.file);
       // TODO: in dev (20240815 - Shirley) 加上 imageSize, imageName, uploadIdentifier
-      // formData.append('imageSize', uploadFile.size);
-      // formData.append('imageName', uploadFile.name);
-      // formData.append('uploadIdentifier', uuid);
+      formData.append('imageSize', uploadFile.size);
+      formData.append('imageName', uploadFile.name);
+      formData.append('uploadIdentifier', uuid);
       // eslint-disable-next-line no-console
       // console.log('formData', formData);
 
