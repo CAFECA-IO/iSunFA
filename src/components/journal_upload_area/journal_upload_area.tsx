@@ -9,12 +9,20 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
+import { getTimestampNow } from '@/lib/utils/common';
+
+interface FileInfo {
+  file: File;
+  name: string;
+  size: string;
+}
 
 const JournalUploadArea = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const { setInvoiceIdHandler } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { setInvoiceIdHandler, addOCRHandler } = useAccountingCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
   const {
     trigger: uploadInvoice,
@@ -24,9 +32,9 @@ const JournalUploadArea = () => {
   } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD);
 
   // Info: (20240711 - Julian) 上傳的檔案
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
   // Info: (20240711 - Julian) 決定是否顯示 modal 的 flag
-  const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
+  // const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
@@ -35,7 +43,12 @@ const JournalUploadArea = () => {
     event.preventDefault();
     const { files } = event.target;
     if (files && files.length > 0) {
-      setUploadFile(files[0]);
+      const file = files[0];
+      setUploadFile({
+        file,
+        name: file.name,
+        size: file.size.toString(),
+      });
     }
   };
   // Info: (20240711 - Julian) 處理拖曳上傳檔案
@@ -50,9 +63,13 @@ const JournalUploadArea = () => {
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const droppedFile = event.dataTransfer.files[0]; // Info: 如果有多個檔案，只取第一個檔案 (20240701 - Shirley)
+    const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
-      setUploadFile(droppedFile);
+      setUploadFile({
+        file: droppedFile,
+        name: droppedFile.name,
+        size: droppedFile.size.toString(),
+      });
       setIsDragOver(false);
     }
   };
@@ -60,16 +77,18 @@ const JournalUploadArea = () => {
   useEffect(() => {
     if (uploadFile && selectedCompany) {
       const formData = new FormData();
-      formData.append('image', uploadFile);
+      formData.append('image', uploadFile.file);
 
       // Info: (20240711 - Julian) 點擊上傳後才升起 flag
-      setIsShowSuccessModal(true);
+      // setIsShowSuccessModal(true);
+      addOCRHandler(`${getTimestampNow()}`, uploadFile.name, uploadFile.size);
+
       uploadInvoice({ params: { companyId: selectedCompany.id }, body: formData });
     }
   }, [uploadFile]);
 
   useEffect(() => {
-    if (uploadSuccess && results && isShowSuccessModal) {
+    if (uploadSuccess && results) {
       results.forEach((result) => {
         const { resultId } = result;
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
@@ -82,21 +101,31 @@ const JournalUploadArea = () => {
           result.status === ProgressStatus.PAUSED ||
           result.status === ProgressStatus.IN_PROGRESS
         ) {
-          messageModalDataHandler({
-            // title: 'Upload Successful',
-            title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
-            /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
-            // content: result.status,
+          toastHandler({
+            id: `uploadInvoice-${result.status}`,
             content: translatedStatus,
-            messageType: MessageType.SUCCESS,
-            submitBtnStr: t('JOURNAL.DONE'),
-            submitBtnFunction: () => {
-              setInvoiceIdHandler(resultId);
-              messageModalVisibilityHandler();
-            },
+            closeable: true,
+            type: ToastType.SUCCESS,
           });
-          messageModalVisibilityHandler();
-          setIsShowSuccessModal(false); // Info: (20240528 - Julian) 顯示完後將 flag 降下
+          setInvoiceIdHandler(resultId);
+          // if (uploadFile) {
+          //   addOCRHandler(resultId, uploadFile.name, uploadFile.size);
+          // }
+          // messageModalDataHandler({
+          //   // title: 'Upload Successful',
+          //   title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
+          //   /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
+          //   // content: result.status,
+          //   content: translatedStatus,
+          //   messageType: MessageType.SUCCESS,
+          //   submitBtnStr: t('JOURNAL.DONE'),
+          //   submitBtnFunction: () => {
+          //     setInvoiceIdHandler(resultId);
+          //     messageModalVisibilityHandler();
+          //   },
+          // });
+          // messageModalVisibilityHandler();
+          // setIsShowSuccessModal(false); // Info: (20240528 - Julian) 顯示完後將 flag 降下
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
           messageModalDataHandler({
@@ -120,7 +149,7 @@ const JournalUploadArea = () => {
       });
       messageModalVisibilityHandler();
     }
-  }, [uploadSuccess, results, isShowSuccessModal]);
+  }, [uploadSuccess, results]);
 
   return (
     <div

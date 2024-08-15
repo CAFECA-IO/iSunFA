@@ -69,3 +69,10 @@ export type IJournalFromPrismaIncludeInvoicePayment = Prisma.JournalGetPayload<{
     };
   };
 }>;
+
+export type IJournalIncludeVoucherLineItemsInvoicePayment = Prisma.JournalGetPayload<{
+  include: {
+    invoice: { include: { payment: true } };
+    voucher: { include: { lineItems: { include: { account: true } } } };
+  };
+}>;

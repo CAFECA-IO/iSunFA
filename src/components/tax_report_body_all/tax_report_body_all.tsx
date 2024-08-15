@@ -22,7 +22,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
   useEffect(() => {
     const fetchReport = async () => {
       if (selectedCompany) {
-        const reportData = await generate401Report(selectedCompany.id, Date.now() / 1000);
+         const reportData = await generate401Report(
+           selectedCompany.id,
+           Date.now() / 1000,
+           Date.now() / 1000
+         );
         // eslint-disable-next-line no-console
         // console.log('Fetched report401 data:', reportData);
         setReport401(reportData);
@@ -121,8 +125,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <p className="text-xs">(一般稅額計算-專營應稅營業人使用)</p>
           <div className="flex justify-between text-xs">
             <p className="flex-1 text-center">
-              所屬年月份:{report401?.basicInfo.currentYear || 'N/A'}年
-              {report401?.basicInfo.currentMonth || 'N/A'}月
+              所屬年月份:{report401?.basicInfo.currentYear || 'N/A'}年 月
             </p>
             <p className="text-right">金額單位:新臺幣元</p>
           </div>
@@ -221,7 +224,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-2 py-0">1</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.triplicateAndElectronic.amount || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">2</td>
             <td className="border border-black px-2 py-0">
@@ -241,7 +243,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-2 py-0">5</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.cashRegisterTriplicate.amount || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">6</td>
             <td className="border border-black px-2 py-0">
@@ -260,7 +261,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-2 py-0">9</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.duplicateAndCashRegister.amount || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">10</td>
             <td className="border border-black px-2 py-0">
@@ -280,11 +280,9 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-2 py-0">13</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.taxExempt.amount || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">14</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.taxExempt.tax || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">15</td>
             <td className="border border-black px-2 py-0"></td>
@@ -299,7 +297,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-2 py-0">17</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.returnsAndAllowances.amount || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">18</td>
             <td className="border border-black px-2 py-0">
@@ -318,7 +315,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-2 py-0">21①</td>
             <td className="border border-black px-2 py-0">
-              {report401?.sales.breakdown.total.amount || 'N/A'}
             </td>
             <td className="border border-black px-2 py-0">22②</td>
             <td className="border border-black px-2 py-0">

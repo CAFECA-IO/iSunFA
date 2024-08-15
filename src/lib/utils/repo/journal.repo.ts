@@ -1,7 +1,10 @@
 import prisma from '@/client';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IJournalFromPrismaIncludeProjectContractInvoiceVoucher } from '@/interfaces/journal';
+import {
+  IJournalFromPrismaIncludeProjectContractInvoiceVoucher,
+  IJournalIncludeVoucherLineItemsInvoicePayment,
+} from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
 import { calculateTotalPages, getTimestampNow } from '@/lib/utils/common';
@@ -336,4 +339,28 @@ export async function deleteJournalInPrisma(
     }
   }
   return journal;
+}
+
+export async function listJournalFor401(
+  companyId: number,
+  startDateInSecond: number,
+  endDateInSecond: number
+): Promise<IJournalIncludeVoucherLineItemsInvoicePayment[]> {
+  const where: Prisma.JournalWhereInput = {
+    companyId,
+    invoice: {
+      date: {
+        gte: startDateInSecond,
+        lte: endDateInSecond,
+      },
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    OR: [{ deletedAt: 0 }, { deletedAt: null }],
+  };
+  const include = {
+    invoice: { include: { payment: true } },
+    voucher: { include: { lineItems: { include: { account: true } } } },
+  };
+  const journalList = await prisma.journal.findMany({ where, include });
+  return journalList;
 }

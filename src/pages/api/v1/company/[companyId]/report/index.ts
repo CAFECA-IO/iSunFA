@@ -308,7 +308,7 @@ async function generateReport(
       );
       break;
     case ReportSheetType.REPORT_401:
-      content = await generate401Report(companyId, startDateInSecond);
+      content = await generate401Report(companyId, startDateInSecond, endDateInSecond);
       break;
     default:
       break;
@@ -438,7 +438,6 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     // lastPeriodEndDateInSecond,
     formattedReportType,
   } = formatPostRequestQuery(req);
-
   let thisPeriodReportId = -1;
   thisPeriodReportId = await generateReportIfNotExist(
     companyId,
