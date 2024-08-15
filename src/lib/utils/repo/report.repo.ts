@@ -34,14 +34,13 @@ export async function findFirstReportByFromTo(
   return report;
 }
 
-export async function findUniqueReportById(companyId: number, reportId: number) {
+export async function findUniqueReportById(reportId: number) {
   let report: IReportIncludeCompanyProject | null = null;
 
   try {
     report = await prisma.report.findUnique({
       where: {
         id: reportId,
-        companyId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
