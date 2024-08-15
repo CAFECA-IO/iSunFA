@@ -1,16 +1,18 @@
+import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IAccountResultStatus } from '@/interfaces/accounting_account';
+// import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { getTimestampNow } from '@/lib/utils/common';
+import { transformBytesToFileSizeString } from '@/lib/utils/common';
+import { IOCR } from '@/interfaces/ocr';
 
 interface FileInfo {
   file: File;
@@ -21,7 +23,8 @@ interface FileInfo {
 const JournalUploadArea = () => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const { setInvoiceIdHandler, addOCRHandler } = useAccountingCtx();
+  const { setInvoiceIdHandler, addPendingOCRHandler, deletePendingOCRHandler, addOCRHandler } =
+    useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
   const {
@@ -29,7 +32,8 @@ const JournalUploadArea = () => {
     data: results,
     success: uploadSuccess,
     code: uploadCode,
-  } = APIHandler<IAccountResultStatus[]>(APIName.OCR_UPLOAD);
+  } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
+  // IAccountResultStatus[]
 
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
@@ -44,10 +48,11 @@ const JournalUploadArea = () => {
     const { files } = event.target;
     if (files && files.length > 0) {
       const file = files[0];
+      const fileSize = transformBytesToFileSizeString(file.size);
       setUploadFile({
         file,
         name: file.name,
-        size: file.size.toString(),
+        size: fileSize,
       });
     }
   };
@@ -65,10 +70,11 @@ const JournalUploadArea = () => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
+      const fileSize = transformBytesToFileSizeString(droppedFile.size);
       setUploadFile({
         file: droppedFile,
         name: droppedFile.name,
-        size: droppedFile.size.toString(),
+        size: fileSize,
       });
       setIsDragOver(false);
     }
@@ -77,11 +83,19 @@ const JournalUploadArea = () => {
   useEffect(() => {
     if (uploadFile && selectedCompany) {
       const formData = new FormData();
+      const uuid = uuidv4();
       formData.append('image', uploadFile.file);
+      // TODO: in dev (20240815 - Shirley) 加上 imageSize, imageName, uploadIdentifier
+      // formData.append('imageSize', uploadFile.size);
+      // formData.append('imageName', uploadFile.name);
+      // formData.append('uploadIdentifier', uuid);
+      // eslint-disable-next-line no-console
+      // console.log('formData', formData);
 
       // Info: (20240711 - Julian) 點擊上傳後才升起 flag
       // setIsShowSuccessModal(true);
-      addOCRHandler(`${getTimestampNow()}`, uploadFile.name, uploadFile.size);
+      // addOCRHandler(`${getTimestampNow()}`, uploadFile.name, uploadFile.size, uuid);
+      addPendingOCRHandler(uploadFile.name, uploadFile.size, uuid);
 
       uploadInvoice({ params: { companyId: selectedCompany.id }, body: formData });
     }
@@ -90,7 +104,7 @@ const JournalUploadArea = () => {
   useEffect(() => {
     if (uploadSuccess && results) {
       results.forEach((result) => {
-        const { resultId } = result;
+        // const { resultId } = result;
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
         const translatedStatus = t(
           `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
@@ -107,10 +121,25 @@ const JournalUploadArea = () => {
             closeable: true,
             type: ToastType.SUCCESS,
           });
-          setInvoiceIdHandler(resultId);
-          // if (uploadFile) {
-          //   addOCRHandler(resultId, uploadFile.name, uploadFile.size);
-          // }
+          setInvoiceIdHandler(result.aichResultId);
+          // setInvoiceIdHandler(resultId);
+          // TODO: in dev (20240815 - Shirley) 加上
+          // eslint-disable-next-line no-console
+          console.log('result in JournalUploadArea', result);
+          if (
+            result?.uploadIdentifier &&
+            result?.aichResultId &&
+            result?.imageName &&
+            result?.imageSize
+          ) {
+            addOCRHandler(
+              result.aichResultId,
+              result.imageName,
+              result.imageSize,
+              result.uploadIdentifier
+            );
+            deletePendingOCRHandler(result?.uploadIdentifier);
+          }
           // messageModalDataHandler({
           //   // title: 'Upload Successful',
           //   title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
