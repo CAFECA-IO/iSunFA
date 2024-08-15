@@ -82,6 +82,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
       },
     };
   } catch (error) {
+    // Deprecate: (20240820-Tzuhan) dev
     // eslint-disable-next-line no-console
     console.error('Error in getServerSideProps:', error);
 

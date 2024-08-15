@@ -55,8 +55,6 @@ const findOrCreateUser = async ({
   name: string;
   email: string;
 }) => {
-  // eslint-disable-next-line no-console
-  console.log('findOrCreateUser', provider, providerAccountId, name, email);
   return {
     id: '1',
     hasReadAgreement: false,
@@ -118,7 +116,7 @@ export default NextAuth({
        */
       let newToken = token;
       if (account && user) {
-        // 查找或創建新用户（不更新已有用户）
+        // Info: (20240815-Tzuhan) 查找或創建新用户（不更新已有用户）
         const dbUser = await findOrCreateUser({
           provider: account.provider,
           providerAccountId: account.providerAccountId,
@@ -133,8 +131,6 @@ export default NextAuth({
           hasReadAgreement: dbUser.hasReadAgreement,
         };
       }
-      // eslint-disable-next-line no-console
-      console.log('jwt newToken', newToken);
       return newToken;
     },
     async session({ session, token }) {
