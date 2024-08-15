@@ -71,6 +71,7 @@ export default NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
+    // Info: (20240813 - Tzuhan) Apple login is not provided in the beta version
     // AppleProvider({
     //   clientId: process.env.APPLE_CLIENT_ID as string,
     //   clientSecret: generateAppleClientSecret(),
