@@ -22,7 +22,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
   onCancel,
 }) => {
   const { t } = useTranslation('common');
-  return isModalVisible ? (
+  const displayModal = isModalVisible ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="absolute max-h-80vh w-full max-w-xl rounded-xs bg-white p-4 pt-0 shadow-lg">
         <div className="my-4 mb-8 flex items-center justify-between">
@@ -55,6 +55,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
       </div>
     </div>
   ) : null;
+  return displayModal;
 };
 
 export default LoginConfirmModal;

@@ -103,6 +103,7 @@ const LoginPageBody = () => {
   };
 
   useEffect(() => {
+    // Deprecate: (20240816-Tzuhan) dev
     // eslint-disable-next-line no-console
     console.log(
       'userAgreeWithInfomationANDTOSNPrivacyPolicy',
