@@ -18,6 +18,23 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
                 throw new Error('AICH Result ID is required');
             }
             return `${AICH_URI}/api/v1/ocr/${aichResultId}/process_status`;
+        case AICH_APIS_TYPES.GET_OCR_RESULT:
+            if (!aichResultId) {
+                throw new Error('AICH Result ID is required');
+            }
+            return `${AICH_URI}/api/v1/ocr/${aichResultId}/result`;
+        case AICH_APIS_TYPES.UPLOAD_GEMINI:
+            return `${AICH_URI}/api/v1/gemini/upload`;
+        case AICH_APIS_TYPES.GET_GEMINI_RESULT_ID:
+            if (!aichResultId) {
+                throw new Error('AICH Result ID is required');
+            }
+            return `${AICH_URI}/api/v1/gemini/${aichResultId}/process_status`;
+        case AICH_APIS_TYPES.GET_GEMINI_RESULT:
+            if (!aichResultId) {
+                throw new Error('AICH Result ID is required');
+            }
+            return `${AICH_URI}/api/v1/gemini/${aichResultId}/result`;
         default:
             throw new Error('Invalid AICH API Type');
     }

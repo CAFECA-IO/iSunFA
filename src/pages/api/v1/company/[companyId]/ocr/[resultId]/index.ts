@@ -1,6 +1,5 @@
 // Info Murky (20240416):  this is mock api need to migrate to microservice
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvoice } from '@/interfaces/invoice';
 import {
@@ -17,6 +16,8 @@ import { ProgressStatus } from '@/constants/account';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { getAichUrl } from '@/lib/utils/aich';
+import { AICH_APIS_TYPES } from '@/constants/aich';
 
 // Info (20240522 - Murky): This OCR now can only be used on Invoice
 
@@ -31,7 +32,8 @@ export async function fetchOCRResult(resultId: string) {
   let response: Response;
 
   try {
-    response = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
+    const fetchURL = getAichUrl(AICH_APIS_TYPES.GET_GEMINI_RESULT, resultId);
+    response = await fetch(fetchURL);
   } catch (error) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
