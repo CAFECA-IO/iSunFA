@@ -31,7 +31,7 @@ export enum ReportTypeToBaifaReportType {
   balance_sheet = 'balance',
   comprehensive_income_statement = 'comprehensive-income',
   cash_flow_statement = 'cash-flow',
-  report_401 = '401',
+  report_401 = 'report-401',
   //  change_in_equity_statement = 'change-in-equity'
 }
 
@@ -39,6 +39,7 @@ export enum BaifaReportTypeToReportType {
   balance = 'balance_sheet',
   'comprehensive-income' = 'comprehensive_income_statement',
   'cash-flow' = 'cash_flow_statement',
+  'report-401' = 'report_401',
   //  'change-in-equity' = 'change_in_equity_statement'
 }
 

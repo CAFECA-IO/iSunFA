@@ -14,6 +14,7 @@ import {
   CashFlowStatementReport,
   FinancialReport,
   IncomeStatementReport,
+  // TaxReport401,
 } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
@@ -31,7 +32,17 @@ interface IViewReportSectionProps {
   reportLink: string;
   reportId: string;
 }
-
+// Info: (20240815 - Anna)增加類型保護函數
+function isTaxReport401(report: FinancialReport): boolean {
+  return (
+    'basicInfo' in report &&
+    'sales' in report &&
+    'purchases' in report &&
+    'taxCalculation' in report &&
+    'imports' in report &&
+    'bondedAreaSalesToTaxArea' in report
+  );
+}
 const generateThumbnails = (count: number) => {
   return Array.from({ length: count }, (_, index) => ({
     number: index + 1,
@@ -44,11 +55,15 @@ const generateThumbnails = (count: number) => {
 const balanceReportThumbnails = generateThumbnails(12);
 const incomeReportThumbnails = generateThumbnails(9);
 const cashFlowReportThumbnails = generateThumbnails(11);
+// Info: (20240815 - Anna)增加401報表的縮圖
+const report401Thumbnails = generateThumbnails(1);
 
 enum TotalPages {
   BALANCE_SHEET = 12,
   INCOME_STATEMENT = 9,
   CASH_FLOW_STATEMENT = 11,
+  // Info: (20240815 - Anna)增加401報表的頁數
+  REPORT_401 = 1,
 }
 
 function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
@@ -84,7 +99,17 @@ function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolea
     report.otherInfo.freeCash
   );
 }
-
+// Info: (20240815 - Anna)增加401報表的判斷函數
+// function isValidReport401(report: TaxReport401): boolean {
+//   return !!(
+//     report.basicInfo &&
+//     report.sales &&
+//     report.purchases &&
+//     report.taxCalculation &&
+//     report.imports &&
+//     report.bondedAreaSalesToTaxArea !== undefined
+//   );
+// }
 const ViewFinancialSection = ({
   reportId,
 
@@ -135,6 +160,10 @@ const ViewFinancialSection = ({
         return !isValidBalanceSheetReport(reportFinancial as BalanceSheetReport);
       case ReportSheetType.CASH_FLOW_STATEMENT:
         return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
+      // Info:(20240815 - Anna) 新增定義 isValidReport401 函數
+      case ReportSheetType.REPORT_401:
+        // Info:(20240815 - Anna)使用 isTaxReport401 進行類型檢查
+        return !isTaxReport401(reportFinancial);
       default:
         return true;
     }
@@ -258,6 +287,11 @@ const ViewFinancialSection = ({
       case FinancialReportTypesKey.cash_flow_statement:
         setReportThumbnails(cashFlowReportThumbnails);
         setNumPages(TotalPages.CASH_FLOW_STATEMENT);
+        break;
+      // Info:(20240815 - Anna) 創建401
+      case FinancialReportTypesKey.report_401:
+        setReportThumbnails(report401Thumbnails);
+        setNumPages(TotalPages.REPORT_401);
         break;
       default:
         setReportThumbnails([]);
