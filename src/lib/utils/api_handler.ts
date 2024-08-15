@@ -28,8 +28,8 @@ function APIHandler<Data>(
   checkInput(apiConfig, options);
 
   if (apiConfig.useWorker) {
-    return useAPIWorker<Data>(apiConfig, options, cancel, triggerImmediately);
-  } else return useAPI<Data>(apiConfig, options, cancel, triggerImmediately);
+    return useAPIWorker<Data>(apiConfig, options, triggerImmediately, cancel);
+  } else return useAPI<Data>(apiConfig, options, triggerImmediately, cancel);
 }
 
 export default APIHandler;
