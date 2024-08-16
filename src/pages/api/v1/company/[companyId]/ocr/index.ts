@@ -158,13 +158,15 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
         };
         try {
           const imageBlob = await readImageFromFilePath(image);
-          const imageName = isIndexValid ? imageFields[index].imageName : getImageName(image);
+
+          const imageNameInLocal = getImageName(image);
+          const imageName = isIndexValid ? imageFields[index].imageName : imageNameInLocal;
           const imageSize = isIndexValid ? imageFields[index].imageSize : image.size;
 
           const fetchResult = uploadImageToAICH(imageBlob, imageName);
 
           const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
+          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageNameInLocal);
           result = {
             resultStatus,
             imageUrl,
