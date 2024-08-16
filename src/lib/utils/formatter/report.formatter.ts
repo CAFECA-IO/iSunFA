@@ -1,8 +1,6 @@
 import { ReportSheetType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, IReportIncludeCompanyProject } from '@/interfaces/report';
 import { isReportSheetType, isReportType } from '@/lib/utils/type_guard/report';
-import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
-import { isIAccountReadyForFrontendArray } from '@/lib/utils/type_guard/account';
 
 export function formatIReport(report: IReportIncludeCompanyProject): IReport {
   const type: ReportType = isReportType(report.reportType)
@@ -12,14 +10,8 @@ export function formatIReport(report: IReportIncludeCompanyProject): IReport {
     ? report.reportType
     : ReportSheetType.BALANCE_SHEET;
   const reportContent = JSON.parse(report.content as string);
-
+  const { content, otherInfo, ...rest } = reportContent;
   // Info: (20240729 - Murky) Bad code, not robust
-  const content: IAccountReadyForFrontend[] = isIAccountReadyForFrontendArray(reportContent.content)
-    ? reportContent.content
-    : [];
-
-  // Info: (20240729 - Murky) Bad code, not robust
-  const otherInfo = reportContent.otherInfo || {};
   const project = report.project
     ? {
         id: report.project.id.toString(),
@@ -47,7 +39,7 @@ export function formatIReport(report: IReportIncludeCompanyProject): IReport {
     downloadLink: report.downloadLink || '',
     blockChainExplorerLink: report.blockChainExplorerLink || '',
     evidenceId: report.evidenceId || '',
-    content,
+    content: content ?? rest,
     otherInfo,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
