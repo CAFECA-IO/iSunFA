@@ -19,7 +19,7 @@ export enum ReportSheetTypeDisplay {
   BALANCE_SHEET = 'Balance Sheet',
   INCOME_STATEMENT = 'Statement of Comprehensive Income',
   CASH_FLOW_STATEMENT = 'Statement of Cash Flows',
-  REPORT_401 = '401 Report',
+  REPORT_401 = 'Report 401',
   //  CHANGE_IN_EQUITY_STATEMENT = 'Statement of Changes in Equity',
 }
 
