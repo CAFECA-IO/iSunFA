@@ -1,7 +1,7 @@
 import { AccountType, EquityType, ProgressStatus } from '@/constants/account';
 import { Account } from '@prisma/client';
 import { ReportSheetType } from '@/constants/report';
-import { IPaginatedData } from './pagination';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 export interface IAccount {
   id: number;

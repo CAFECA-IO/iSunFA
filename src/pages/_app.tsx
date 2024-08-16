@@ -8,24 +8,27 @@ import { UserProvider } from '@/contexts/user_context';
 import { GlobalProvider } from '@/contexts/global_context';
 import { DashboardProvider } from '@/contexts/dashboard_context';
 import { AccountingProvider } from '@/contexts/accounting_context';
+import { SessionProvider } from 'next-auth/react';
 import '@/styles/globals.css';
 
-function App({ Component, pageProps }: AppProps) {
+function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID || '';
   return (
     <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
       <GoogleAnalytics gaId={gaId} />
-      <NotificationProvider>
-        <UserProvider>
-          <DashboardProvider>
-            <AccountingProvider>
-              <GlobalProvider>
-                <Component {...pageProps} />
-              </GlobalProvider>
-            </AccountingProvider>
-          </DashboardProvider>
-        </UserProvider>
-      </NotificationProvider>
+      <SessionProvider session={session}>
+        <NotificationProvider>
+          <UserProvider>
+            <DashboardProvider>
+              <AccountingProvider>
+                <GlobalProvider>
+                  <Component {...pageProps} />
+                </GlobalProvider>
+              </AccountingProvider>
+            </DashboardProvider>
+          </UserProvider>
+        </NotificationProvider>
+      </SessionProvider>
     </div>
   );
 }
