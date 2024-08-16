@@ -350,6 +350,30 @@ export function transformBytesToFileSizeString(bytes: number): string {
   return `${size} ${sizes[i]}`;
 }
 
+/**
+ * Info: (20240816 Murky): Transform file size string to bytes, file size string format should be like '1.00 MB'
+ * @param sizeString
+ * @returns
+ */
+export function transformFileSizeStringToBytes(sizeString: string): number {
+    const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
+
+    let bytes = 0;
+    if (regex.test(sizeString)) {
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+      const [size, unit] = sizeString.split(' ');
+
+      const sizeIndex = sizes.indexOf(unit);
+      if (sizeIndex === -1) {
+          throw new Error('Invalid file size unit');
+      }
+
+      bytes = parseFloat(size) * 1024 ** sizeIndex;
+    }
+
+    return Math.round(bytes);
+}
+
 // page, limit to offset
 export function pageToOffset(
   page: number = DEFAULT_PAGE_START_AT,
