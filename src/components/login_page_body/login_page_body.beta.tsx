@@ -48,7 +48,8 @@ const Loader = () => {
   );
 };
 
-const isJwtExpired = (expires: string) => {
+const isJwtExpired = (expires: string | undefined) => {
+  if (!expires) return true;
   const now = new Date();
   const expirationDate = new Date(expires);
   return now > expirationDate;
@@ -92,11 +93,15 @@ const LoginPageBody = () => {
     }
   };
 
-  const handleUserAuthenticated = async () => {
+  const handleUserAuthenticated = async (force?: boolean) => {
+    // Deprecate: (20240816-Tzuhan) dev
+    // eslint-disable-next-line no-console
+    console.log('user:', user);
+    setSelectedProvider(user.provider);
     if (user?.hasReadAgreement) {
       agreeWithInfomationConfirmModalVisibilityHandler(false);
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-    } else if (!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) {
+    } else if ((!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) || force) {
       agreeWithInfomationConfirmModalVisibilityHandler(true);
       setHasShowModal(true);
     }
@@ -106,7 +111,7 @@ const LoginPageBody = () => {
     // Deprecate: (20240816-Tzuhan) dev
     // eslint-disable-next-line no-console
     console.log(
-      'userAgreeWithInfomationANDTOSNPrivacyPolicy',
+      'useEffect userAgreeWithInfomationANDTOSNPrivacyPolicy',
       userAgreeWithInfomationANDTOSNPrivacyPolicy
     );
     if (userAgreeWithInfomationANDTOSNPrivacyPolicy) handleUserAgree(user.id);
@@ -131,16 +136,30 @@ const LoginPageBody = () => {
     }
 
     if (status === 'authenticated') {
+      // Deprecate: (20240816-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log(`useEffect: status === 'authenticated'`);
       handleUserAuthenticated();
     }
   }, [status]);
 
   const authenticateUser = async (provider: Provider) => {
     try {
+      // Deprecate: (20240816-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log(
+        `(selectedProvider === provider: ${selectedProvider === provider}) provider: ${provider}, selectedProvider: ${selectedProvider}, status: ${status}`
+      );
       if (selectedProvider === provider && status === 'authenticated') {
         const session = await getSession();
+        // Deprecate: (20240816-Tzuhan) dev
+        // eslint-disable-next-line no-console
+        console.log(
+          `!isJwtExpired(session.expires): ${!isJwtExpired(session?.expires)}, session:`,
+          session
+        );
         if (session && !isJwtExpired(session.expires)) {
-          handleUserAuthenticated();
+          handleUserAuthenticated(true);
           return;
         }
       }
@@ -178,11 +197,13 @@ const LoginPageBody = () => {
           </div>
           <div className="flex flex-col space-y-4">
             <AuthButton onClick={() => authenticateUser(Provider.GOOGLE)} provider="Google" />
+            {/* Info: (20240813 - Tzuhan) Apple login is not provided in the beta version
             <AuthButton
               onClick={() => authenticateUser(Provider.APPLE)}
               provider="Apple"
               disabled
             />
+            */}
           </div>
         </div>
       )}

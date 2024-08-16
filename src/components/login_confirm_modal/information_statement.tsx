@@ -1,115 +1,86 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const InformationStatement: React.FC = () => {
+  const { t } = useTranslation('common');
   return (
     <div className="space-y-4 p-6 text-navyBlue">
-      <p className="font-semibold">Dear User,</p>
-      <p>
-        Thank you for choosing to use our accounting software. During your use of this software, we
-        may collect and process some of your personal information. This statement aims to inform you
-        about the information we collect, how it is used, and how we protect your privacy.
-      </p>
+      <p className="font-semibold">{t('INFO_COLLECTION.DEAR_USER')}</p>
+      <p>{t('INFO_COLLECTION.THANK_YOU')}</p>
 
-      <p className="font-semibold">1. Types of Information Collected</p>
-      <p>During your use of the accounting software, we may collect the following information:</p>
+      <p className="font-semibold">{t('INFO_COLLECTION.TYPES_OF_INFO')}</p>
+      <p>{t('INFO_COLLECTION.COLLECT_INFO')}</p>
       <ul className="list-disc space-y-2 pl-6">
         <li>
-          <strong>Personal Identification Information:</strong> Including but not limited to your
-          name, email address, phone number, company name, etc.
+          <strong>{t('INFO_COLLECTION.PERSONAL_INFO')}</strong>
         </li>
         <li>
-          <strong>Usage Data:</strong> Such as your operation records within the software, usage
-          duration, access frequency, etc.
+          <strong>{t('INFO_COLLECTION.USAGE_DATA')}</strong>
         </li>
         <li>
-          <strong>Technical Information:</strong> Such as IP address, device information, operating
-          system, browser type, etc.
+          <strong>{t('INFO_COLLECTION.TECH_INFO')}</strong>
         </li>
       </ul>
 
-      <p className="font-semibold">2. Use of Information</p>
-      <p>The information we collect will primarily be used for the following purposes:</p>
+      <p className="font-semibold">{t('INFO_COLLECTION.USE_OF_INFO')}</p>
+      <p>{t('INFO_COLLECTION.USE_OF_INFO_DESC')}</p>
       <ul className="list-disc space-y-2 pl-6">
         <li>
-          <strong>Providing and Maintaining Services:</strong> Ensuring the normal operation of the
-          accounting software and improving the user experience.
+          <strong>{t('INFO_COLLECTION.SERVICES')}</strong>
         </li>
         <li>
-          <strong>Personalized Services:</strong> Providing customized features and recommendations
-          based on your needs and preferences.
+          <strong>{t('INFO_COLLECTION.PERSONALIZED_SERVICES')}</strong>
         </li>
         <li>
-          <strong>Customer Support:</strong> Addressing your questions, handling your requests and
-          complaints.
+          <strong>{t('INFO_COLLECTION.SUPPORT')}</strong>
         </li>
         <li>
-          <strong>Security Assurance:</strong> Detecting and preventing potential security threats,
-          protecting your data security.
+          <strong>{t('INFO_COLLECTION.SECURITY')}</strong>
         </li>
         <li>
-          <strong>Data Analysis:</strong> Conducting statistical analysis to improve our products
-          and services.
+          <strong>{t('INFO_COLLECTION.ANALYSIS')}</strong>
         </li>
       </ul>
 
-      <p className="font-semibold">3. Protection of Information</p>
-      <p>
-        We commit to taking reasonable technical and organizational measures to protect your
-        personal information from unauthorized access, disclosure, alteration, or destruction. These
-        measures include but are not limited to:
-      </p>
+      <p className="font-semibold">{t('INFO_COLLECTION.PROTECTION_OF_INFO')}</p>
+      <p>{t('INFO_COLLECTION.PROTECTION_DESC')}</p>
       <ul className="list-disc space-y-2 pl-6">
         <li>
-          <strong>Data Encryption:</strong> Encrypting sensitive data.
+          <strong>{t('INFO_COLLECTION.ENCRYPTION')}</strong>
         </li>
         <li>
-          <strong>Access Control:</strong> Restricting data access rights to employees and third
-          parties.
+          <strong>{t('INFO_COLLECTION.ACCESS_CONTROL')}</strong>
         </li>
         <li>
-          <strong>Regular Audits:</strong> Regularly reviewing our security measures and policies.
+          <strong>{t('INFO_COLLECTION.AUDITS')}</strong>
         </li>
       </ul>
 
-      <p className="font-semibold">4. Sharing of Information</p>
-      <p>
-        We will not sell, rent, or trade your personal information to any third party without your
-        consent. However, we may share your information in the following circumstances:
-      </p>
+      <p className="font-semibold">{t('INFO_COLLECTION.SHARING_OF_INFO')}</p>
+      <p>{t('INFO_COLLECTION.SHARING_DESC')}</p>
       <ul className="list-disc space-y-2 pl-6">
         <li>
-          <strong>Legal Requirements:</strong> When required by law or requested by government
-          authorities.
+          <strong>{t('INFO_COLLECTION.LEGAL')}</strong>
         </li>
         <li>
-          <strong>Service Providers:</strong> With third-party service providers who work with us,
-          provided they only use your information to perform our instructions and comply with
-          appropriate confidentiality and security measures.
+          <strong>{t('INFO_COLLECTION.PROVIDERS')}</strong>
         </li>
         <li>
-          <strong>Business Transfers:</strong> In the event of a company merger, acquisition, or
-          asset sale, we may transfer your information.
+          <strong>{t('INFO_COLLECTION.BUSINESS_TRANSFERS')}</strong>
         </li>
       </ul>
 
-      <p className="font-semibold">5. Your Rights</p>
-      <p>
-        You have the right to access, correct, or delete your personal information at any time. If
-        you wish to exercise these rights or have any questions, please contact us via:
-      </p>
-      <p>Email: support@isunfa.com</p>
-      <p>Phone: +123-456-7890</p>
-      <p>We will strive to respond to your request within a reasonable time frame.</p>
+      <p className="font-semibold">{t('INFO_COLLECTION.YOUR_RIGHTS')}</p>
+      <p>{t('INFO_COLLECTION.RIGHTS_DESC')}</p>
+      <p>{t('INFO_COLLECTION.EMAIL')}</p>
+      <p>{t('INFO_COLLECTION.PHONE')}</p>
+      <p>{t('INFO_COLLECTION.RESPONSE_TIME')}</p>
 
-      <p className="font-semibold">6. Changes to the Statement</p>
-      <p>
-        We may update this statement from time to time to reflect changes in our information
-        handling practices. When we make significant changes to this statement, we will notify you
-        through in-software notifications or via email.
-      </p>
+      <p className="font-semibold">{t('INFO_COLLECTION.CHANGES')}</p>
+      <p>{t('INFO_COLLECTION.CHANGES_DESC')}</p>
 
-      <p>Thank you for your trust and support in our accounting software!</p>
-      <p className="font-semibold">iSunFA August 6, 2024</p>
+      <p>{t('INFO_COLLECTION.THANK_YOU_END')}</p>
+      <p className="font-semibold">{t('INFO_COLLECTION.SIGN_OFF')}</p>
     </div>
   );
 };
