@@ -6,10 +6,9 @@ import { formatApiResponse, getDomains } from '@/lib/utils/common';
 import { server } from '@passwordless-id/webauthn';
 import { AuthenticationEncoded, NamedAlgo } from '@passwordless-id/webauthn/dist/esm/types';
 import { getSession, setSession } from '@/lib/utils/session';
-import { getUserByCredential } from '@/lib/utils/repo/user.repo';
-import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { useInvitation } from '@/lib/utils/invitation';
 import { verifyChallengeTimestamp } from '@/lib/utils/authorization';
+import { getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 
 async function authenticateUser(
   authentication: AuthenticationEncoded,
@@ -23,17 +22,18 @@ async function authenticateUser(
     if (!getUser) {
       isValid = false;
     } else {
-      user = await formatUser(getUser);
       const origins = getDomains();
       const expected = {
         challenge,
         origin: (target: string) => origins.includes(target),
         userVerified: true,
       };
-      const typeOfAlgorithm: NamedAlgo = user.algorithm === 'ES256' ? 'ES256' : 'RS256';
+      const authDataStr = JSON.stringify(getUser.authData);
+      const authData = JSON.parse(authDataStr);
+      const typeOfAlgorithm: NamedAlgo = authData.algorithm === 'ES256' ? 'ES256' : 'RS256';
       const registeredCredential = {
-        id: user.credentialId,
-        publicKey: user.publicKey,
+        id: getUser.credentialId,
+        publicKey: authData.publicKey,
         algorithm: typeOfAlgorithm,
       };
       try {

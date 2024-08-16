@@ -95,6 +95,22 @@ model Admin {
   @@map("admin")
 }
 
+model Authentication {
+  id           Int    @id @default(autoincrement())
+  userId       Int    @map("user_id")
+  credentialId String @unique @map("credential_id")
+  method       String
+  provider     String
+  authData     Json  @map("auth_data")
+  createdAt    Int    @map("created_at")
+  updatedAt    Int    @map("updated_at")
+  deletedAt    Int?   @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("authentication")
+}
+
 model Client {
   id        Int     @id @default(autoincrement())
   companyId Int     @map("company_id")
@@ -608,22 +624,35 @@ model SalaryRecordProjectHour {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
-  name         String
-  fullName     String?      @map("full_name")
-  email        String?
-  phone        String?
-  credentialId String       @unique @map("credential_id")
-  publicKey    String       @map("public_key")
-  algorithm    String
-  imageId      String?      @map("image_id")
-  createdAt    Int          @map("created_at")
-  updatedAt    Int          @map("updated_at")
-  deletedAt    Int?         @map("deleted_at")
-  admins       Admin[]
-  invitations  Invitation[]
+  id              Int              @id @default(autoincrement())
+  name            String
+  fullName        String?          @map("full_name")
+  email           String?
+  phone           String?
+  imageId         String?          @map("image_id")
+  createdAt       Int              @map("created_at")
+  updatedAt       Int              @map("updated_at")
+  deletedAt       Int?             @map("deleted_at")
+  admins          Admin[]
+  invitations     Invitation[]
+  authentications Authentication[]
+  userAgreements  UserAgreement[]
 
   @@map("user")
+}
+
+model UserAgreement {
+  id            Int    @id @default(autoincrement())
+  userId        Int    @map("user_id")
+  agreementHash String @map("agreement_hash")
+  createdAt     Int    @map("created_at")
+  updatedAt     Int    @map("updated_at")
+  deletedAt     Int?   @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, agreementHash]) // Ensures a user can't agree to the same term more than once
+  @@map("user_agreement")
 }
 
 model Voucher {

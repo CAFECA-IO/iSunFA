@@ -3,6 +3,10 @@ import GoogleProvider from 'next-auth/providers/google';
 // import AppleProvider from 'next-auth/providers/apple';
 // import jwt from 'jsonwebtoken';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { getSession, setSession } from '@/lib/utils/session';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
+import { generateIcon } from '@/lib/utils/generate_user_icon';
 
 /**
 * Info: (20240813 - Tzuhan)
@@ -43,128 +47,100 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 //   );
 // };
 
-// Deprecated: (20240815 - Tzuhan) Remove dummy function
-const findOrCreateUser = async ({
-  provider,
-  providerAccountId,
-  name,
-  email,
-}: {
-  provider: string;
-  providerAccountId: string;
-  name: string;
-  email: string;
-}) => {
-  return {
-    id: '1',
-    hasReadAgreement: false,
-    provider,
-    providerAccountId,
-    name,
-    email,
-  };
-};
-
-export default NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    }),
-    // Info: (20240813 - Tzuhan) Apple login is not provided in the beta version
-    // AppleProvider({
-    //   clientId: process.env.APPLE_CLIENT_ID as string,
-    //   clientSecret: generateAppleClientSecret(),
-    // }),
-  ],
-  pages: {
-    signIn: ISUNFA_ROUTE.LOGIN_BETA,
-  },
-  session: {
-    strategy: 'jwt',
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  callbacks: {
-    async jwt({ token, account, user }) {
-      // Deprecated: (20240815 - Tzuhan) Remove console.log
-      // eslint-disable-next-line no-console
-      console.log('jwt callback', token, account, user);
-      // TODO: (20240813 - Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
-      /**
-       * Info: (20240813 - Tzuhan)
-       * recommended user model:
-         model User {
-           id           Int          @id @default(autoincrement())
-           name         String
-           fullName     String?      @map("full_name")
-           email        String?      @unique
-           phone        String?
-           credentialId String?      @unique @map("credential_id")
-           publicKey    String?      @map("public_key")
-           algorithm    String?
-           imageId      String?      @map("image_id")
-           [新增] googleId     String?      @unique @map("google_id")      // Google login ID
-           [新增] appleId      String?      @unique @map("apple_id")       // Apple login ID
-           [新增] hasReadAgreement Boolean @default(false) // 用户是否同意了條款
-           createdAt    Int          @map("created_at")
-           updatedAt    Int          @map("updated_at")
-           deletedAt    Int?         @map("deleted_at")
-           admins       Admin[]
-           invitations  Invitation[]
-
-           @@map("user")
-         }
-       */
-      let newToken = token;
-      if (account && user) {
-        // Info: (20240815-Tzuhan) 查找或創建新用户（不更新已有用户）
-        const dbUser = await findOrCreateUser({
-          provider: account.provider,
-          providerAccountId: account.providerAccountId,
-          name: user.name ? user.name : '',
-          email: user.email ? user.email : '',
-        });
-        newToken = {
-          ...token,
-          accessToken: account.access_token,
-          provider: account.provider,
-          userId: dbUser.id,
-          hasReadAgreement: dbUser.hasReadAgreement,
-        };
-      }
-      return newToken;
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  return NextAuth(req, res, {
+    providers: [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID as string,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      }),
+      // Info: (20240813 - Tzuhan) Apple login is not provided in the beta version
+      // AppleProvider({
+      //   clientId: process.env.APPLE_CLIENT_ID as string,
+      //   clientSecret: generateAppleClientSecret(),
+      // }),
+    ],
+    pages: {
+      signIn: ISUNFA_ROUTE.LOGIN_BETA,
     },
-    async session({ session, token }) {
-      // Deprecated: (20240815 - Tzuhan) Remove console.log
-      // eslint-disable-next-line no-console
-      console.log('session callback', session, token);
-      const newSession = {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.userId as string,
-          hasReadAgreement: token.hasReadAgreement as boolean,
-          provider: token.provider as string,
-          accessToken: token.accessToken as string,
-          expires: token.exp as string,
-        },
-      };
-      // Deprecated: (20240815 - Tzuhan) Remove console.log
-      // eslint-disable-next-line no-console
-      console.log('newSession', newSession);
-      return newSession;
+    session: {
+      strategy: 'jwt',
     },
-    async redirect({ url, baseUrl }) {
-      // Deprecated: (20240815 - Tzuhan) Remove console.log
-      // eslint-disable-next-line no-console
-      console.log('redirect callback', url, baseUrl);
+    secret: process.env.NEXTAUTH_SECRET,
+    callbacks: {
+      async jwt({ token, account, user }) {
+        // Deprecated: (20240815 - Tzuhan) Remove console.log
+        // eslint-disable-next-line no-console
+        console.log('jwt callback', token, account, user);
+        const session = await getSession(req, res);
+        // TODO: (20240813 - Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
+        /**
+         * Info: (20240813 - Tzuhan)
+         * recommended user model:
+           model User {
+             id           Int          @id @default(autoincrement())
+             name         String
+             fullName     String?      @map("full_name")
+             email        String?      @unique
+             phone        String?
+             credentialId String?      @unique @map("credential_id")
+             publicKey    String?      @map("public_key")
+             algorithm    String?
+             imageId      String?      @map("image_id")
+             [新增] googleId     String?      @unique @map("google_id")      // Google login ID
+             [新增] appleId      String?      @unique @map("apple_id")       // Apple login ID
+             [新增] hasReadAgreement Boolean @default(false) // 用户是否同意了條款
+             createdAt    Int          @map("created_at")
+             updatedAt    Int          @map("updated_at")
+             deletedAt    Int?         @map("deleted_at")
+             admins       Admin[]
+             invitations  Invitation[]
 
-      if (url === `${baseUrl}${ISUNFA_ROUTE.LOGIN_BETA}`) {
-        return url;
-      } else {
-        return url.startsWith(baseUrl) ? url : baseUrl;
-      }
+             @@map("user")
+           }
+         */
+        const getUser = await getUserByCredential(token.sub || '');
+        let newToken = token;
+
+        if (!getUser) {
+          if (account && user) {
+            const imageUrl = user.image ?? (await generateIcon(user.name ?? ''));
+            const createdUser = await createUserByAuth({
+              name: user.name || '',
+              email: user.email || '',
+              provider: account.provider,
+              credentialId: account.providerAccountId,
+              method: account.type,
+              authData: account,
+              imageUrl,
+            });
+
+            await setSession(session, createdUser.user.id);
+
+            newToken = {
+              ...token,
+              accessToken: account.access_token,
+              provider: account.provider,
+              userId: createdUser.user.id,
+            };
+          }
+        } else {
+          await setSession(session, getUser.user.id);
+        }
+        return newToken;
+      },
+      async redirect({ url, baseUrl }) {
+        // Deprecated: (20240815 - Tzuhan) Remove console.log
+        // eslint-disable-next-line no-console
+        console.log('redirect callback', url, baseUrl);
+
+        if (url === `${baseUrl}${ISUNFA_ROUTE.LOGIN_BETA}`) {
+          return url;
+        } else {
+          return url.startsWith(baseUrl) ? url : baseUrl;
+        }
+      },
     },
-  },
-  debug: true,
-});
+    debug: true,
+  });
+}
