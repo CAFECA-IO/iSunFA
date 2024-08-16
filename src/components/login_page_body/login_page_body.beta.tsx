@@ -186,7 +186,7 @@ const LoginPageBody = () => {
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
-      <div className="bg-login_bg absolute inset-0 z-0 h-full w-full bg-cover bg-center bg-no-repeat blur-md"></div>
+      <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
       {isLoading ? (
         <Loader />
       ) : (

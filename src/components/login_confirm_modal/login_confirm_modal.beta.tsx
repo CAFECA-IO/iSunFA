@@ -32,7 +32,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
           </button>
         </div>
         <hr className="absolute left-0 top-60px w-full max-w-xl border-lightGray6" />
-        <div className="h-50vh m-4 overflow-y-auto rounded-xs border border-navyBlue bg-lightGray7 lg:p-4">
+        <div className="m-4 h-50vh overflow-y-auto rounded-xs border border-navyBlue bg-lightGray7 lg:p-4">
           {modalData.content === 'info_collection_statement' && <InformationStatement />}
           {modalData.content === 'term_n_privacy' && <TermsOfServiceAndPrivacyPolicy />}
         </div>

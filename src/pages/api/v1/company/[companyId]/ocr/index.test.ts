@@ -123,7 +123,7 @@ describe('POST OCR', () => {
       expect(promiseJson).toBeInstanceOf(Promise);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/ocr/upload'),
+        expect.stringContaining('/gemini/upload'),
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
       );
     });
@@ -227,7 +227,7 @@ describe('POST OCR', () => {
       expect(resultJson).toEqual(resultJsonArrayExpect);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/ocr/upload'),
+        expect.stringContaining('/gemini/upload'),
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
       );
     });
