@@ -7,7 +7,7 @@ export default function Document() {
       <Head>
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none';"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none'; img-src 'self' https://storage.googleapis.com;"
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
