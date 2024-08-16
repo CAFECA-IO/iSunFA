@@ -130,11 +130,13 @@ const JournalUploadArea = () => {
             result?.uploadIdentifier &&
             result?.aichResultId &&
             result?.imageName &&
+            result?.imageUrl &&
             result?.imageSize
           ) {
             addOCRHandler(
               result.aichResultId,
               result.imageName,
+              result.imageUrl,
               result.imageSize,
               result.uploadIdentifier
             );
