@@ -3,8 +3,7 @@ import { IVoucher } from '@/interfaces/voucher';
 import { ICompanyKYCForm } from './company_kyc';
 
 export type IAPIName =
-  | 'LOGIN'
-  | 'AGREEMENT'
+  | 'AGREE_TO_TERMS'
   | 'CREATE_CHALLENGE'
   | 'SIGN_UP'
   | 'SIGN_IN'
