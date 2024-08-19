@@ -31,7 +31,7 @@ import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 
-// Info Murky (20240424) 要使用formidable要先關掉bodyParser
+// Info: (20240424 - Murky) 要使用formidable要先關掉bodyParser
 export const config = {
   api: {
     bodyParser: false,
@@ -65,7 +65,7 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
       body: formData,
     });
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
@@ -92,7 +92,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
@@ -105,7 +105,7 @@ export async function getPayloadFromResponseJSON(
   return json.payload as IAccountResultStatus;
 }
 
-// Info (20240521-Murky) 回傳目前還是array 的型態，因為可能會有多張圖片一起上傳
+// Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
 export async function postImageToAICH(files: formidable.Files, imageFields: {
     imageSize: number;
@@ -130,13 +130,13 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
     uploadIdentifier: string;
   }[] = [];
   if (files && files.image && files.image.length) {
-    // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
+    // Info: (20240504 - Murky) 圖片會先被存在本地端，然後才讀取路徑後轉傳給 AICH
     resultJson = await Promise.all(
       files.image.map(async (image, index) => {
         const imageFieldsLength = imageFields.length;
         const isIndexValid = index < imageFieldsLength;
 
-        // Info (20240816 - Murky): 壞檔的Image會被標上特殊的resultId
+        // Info: (20240816 - Murky) 壞檔的 Image 會被標上特殊的 resultId
         const defaultResultId = 'error-' + generateUUID();
         let result: {
           resultStatus: IAccountResultStatus;
@@ -176,7 +176,7 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
             uploadIdentifier: isIndexValid ? imageFields[index].uploadIdentifier : '',
           };
         } catch (error) {
-          // Deprecated (20240611 - Murky) Debugging purpose
+          // Deprecated: (20240611 - Murky) Debugging purpose
           // eslint-disable-next-line no-console
           console.log(error);
         }
@@ -184,7 +184,7 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
       })
     );
   } else {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log('No image file found in formidable when upload ocr');
   }
@@ -225,7 +225,7 @@ export function extractDataFromFields(fields: formidable.Fields) {
     });
   }
 
-  // Info (20240815 - Murky) imageSize is string
+  // Info: (20240815 - Murky) imageSize is string
   return imageFieldsArray;
 }
 
@@ -239,7 +239,7 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
     files = parsedForm.files;
     fields = parsedForm.fields;
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
   }
@@ -262,7 +262,7 @@ export async function fetchStatus(aichResultId: string) {
 
       status = (await result.json()).payload;
     } catch (error) {
-      // Deprecated (20240611 - Murky) Debugging purpose
+      // Deprecated: (20240611 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(error);
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
@@ -272,7 +272,7 @@ export async function fetchStatus(aichResultId: string) {
   return status;
 }
 
-// Deprecated (20240809 - Murky) This function is not used
+// Deprecated: (20240809 - Murky) This function is not used
 export function calculateProgress(createdAt: number, status: ProgressStatus, ocrResultId: string) {
   const currentTime = new Date();
   const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
@@ -339,7 +339,7 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
@@ -376,11 +376,11 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     const { files, fields } = await getImageFileAndFormFromFormData(req);
     const imageFieldsArray = extractDataFromFields(fields);
     const aichResults = await postImageToAICH(files, imageFieldsArray);
-    // Deprecated (20240611 - Murky) This function is not used
+    // Deprecated: (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -398,7 +398,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
@@ -442,7 +442,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecated (20240611 - Murky) Debugging purpose
+      // Deprecated: (20240611 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
       console.error(error);
     }
