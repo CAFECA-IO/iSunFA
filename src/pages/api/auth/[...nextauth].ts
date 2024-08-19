@@ -71,7 +71,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       async jwt({ token, account, user }) {
         // Deprecated: (20240815 - Tzuhan) Remove console.log
         // eslint-disable-next-line no-console
-        console.log('jwt callback', token, account, user);
+        console.log('signIn callback', user, account);
+        const { invitation } = (account?.params || {}) as { invitation: string };
+
+        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // eslint-disable-next-line no-console
+        console.log('Custom Params:', invitation);
+
         const session = await getSession(req, res);
         // TODO: (20240813 - Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
         /**
