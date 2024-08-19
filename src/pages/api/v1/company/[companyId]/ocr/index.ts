@@ -235,6 +235,7 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
 
   try {
     const parsedForm = await parseForm(req, FileFolder.INVOICE);
+
     files = parsedForm.files;
     fields = parsedForm.fields;
   } catch (error) {
