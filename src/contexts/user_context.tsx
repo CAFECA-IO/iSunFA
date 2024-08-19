@@ -407,7 +407,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsAuthLoading(true);
       const response = await agreementAPI({
-        body: { userId: userAuth?.id, agree: true },
+        params: { userId: userAuth?.id },
+        body: { agreementHash: true },
       });
       setUserAgreeResponse(response);
       setIsAuthLoading(false);
@@ -492,11 +493,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAuthLoading(false);
   }, [router.pathname]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const authenticateUser = async (selectProvider: Provider, props: ILoginPageProps) => {
     try {
       setIsAuthLoading(true);
-      const response = await authSignIn(selectProvider, { redirect: false });
+      const response = await authSignIn(
+        selectProvider,
+        { redirect: false },
+        // eslint-disable-next-line react/prop-types
+        { invitation: props.invitation }
+      );
 
       // Deprecate: [Beta](20240819-Tzuhan) dev
       // eslint-disable-next-line no-console

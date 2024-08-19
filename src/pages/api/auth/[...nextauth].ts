@@ -72,6 +72,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         // Deprecate: [Beta](20240819-Tzuhan)dev
         // eslint-disable-next-line no-console
         console.log('signIn callback', user, account, profile);
+        const { invitation } = (account?.params || {}) as { invitation: string };
+
+        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // eslint-disable-next-line no-console
+        console.log('Custom Params:', invitation);
 
         const session = await getSession(req, res);
         // TODO: [Beta](20240813-Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
