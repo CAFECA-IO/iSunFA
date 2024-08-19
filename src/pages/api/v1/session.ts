@@ -1,9 +1,12 @@
-import prisma from '@/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { IUser } from '@/interfaces/user';
 import { formatApiResponse } from '@/lib/utils/common';
+import { formatCompany } from '@/lib/utils/formatter/company.formatter';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getUserById } from '@/lib/utils/repo/user.repo';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -16,20 +19,18 @@ export default async function handler(
       const session = await getSession(req, res);
       let user: IUser = {} as IUser;
       let company: ICompany = {} as ICompany;
-      const { userId, companyId } = session;
+      const { userId, companyId } = session || {};
       if (userId) {
-        user = (await prisma.user.findUnique({
-          where: {
-            id: userId,
-          },
-        })) as IUser;
+        const getUser = await getUserById(userId);
+        if (getUser) {
+          user = formatUser(getUser);
+        }
       }
       if (companyId) {
-        company = (await prisma.company.findUnique({
-          where: {
-            id: companyId,
-          },
-        })) as ICompany;
+        const getCompany = await getCompanyById(companyId);
+        if (getCompany) {
+          company = formatCompany(getCompany);
+        }
       }
       const sessionData: { user: IUser; company: ICompany } = {
         user,

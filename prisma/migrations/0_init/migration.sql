@@ -73,6 +73,20 @@ CREATE TABLE "admin" (
 
     CONSTRAINT "admin_pkey" PRIMARY KEY ("id")
 );
+-- CreateTable
+CREATE TABLE "authentication" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "credential_id" TEXT NOT NULL,
+    "method" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "auth_data" JSONB NOT NULL,
+    "created_at" INTEGER NOT NULL,
+    "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
+
+    CONSTRAINT "authentication_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "client" (
@@ -532,15 +546,24 @@ CREATE TABLE "user" (
     "full_name" TEXT,
     "email" TEXT,
     "phone" TEXT,
-    "credential_id" TEXT NOT NULL,
-    "public_key" TEXT NOT NULL,
-    "algorithm" TEXT NOT NULL,
     "image_id" TEXT,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_agreement" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "agreement_hash" TEXT NOT NULL,
+    "created_at" INTEGER NOT NULL,
+    "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
+
+    CONSTRAINT "user_agreement_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -615,6 +638,9 @@ CREATE TABLE "work_rate" (
 CREATE UNIQUE INDEX "account_code_key" ON "account"("code");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "authentication_credential_id_key" ON "authentication"("credential_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "company_code_key" ON "company"("code");
 
 -- CreateIndex
@@ -649,7 +675,7 @@ CREATE UNIQUE INDEX "plan_name_key" ON "plan"("name");
 CREATE UNIQUE INDEX "role_name_key" ON "role"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_credential_id_key" ON "user"("credential_id");
+CREATE UNIQUE INDEX "user_agreement_user_id_agreement_hash_key" ON "user_agreement"("user_id", "agreement_hash");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "voucher_journal_id_key" ON "voucher"("journal_id");
@@ -689,6 +715,9 @@ ALTER TABLE "admin" ADD CONSTRAINT "admin_role_id_fkey" FOREIGN KEY ("role_id") 
 
 -- AddForeignKey
 ALTER TABLE "admin" ADD CONSTRAINT "admin_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "authentication" ADD CONSTRAINT "authentication_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "client" ADD CONSTRAINT "client_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -791,6 +820,9 @@ ALTER TABLE "sale" ADD CONSTRAINT "sale_project_id_fkey" FOREIGN KEY ("project_i
 
 -- AddForeignKey
 ALTER TABLE "salary_record" ADD CONSTRAINT "salary_record_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_agreement" ADD CONSTRAINT "user_agreement_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "voucher" ADD CONSTRAINT "voucher_journal_id_fkey" FOREIGN KEY ("journal_id") REFERENCES "journal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

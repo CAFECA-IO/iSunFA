@@ -14,6 +14,39 @@ export async function listUser(): Promise<User[]> {
   return userList;
 }
 
+export async function createUser({
+  name,
+  fullName,
+  email,
+  phone,
+  imageUrl,
+}: {
+  name: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  imageUrl: string;
+}): Promise<User> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+
+  const createdUser: Prisma.UserCreateInput = {
+    name,
+    fullName,
+    email,
+    phone,
+    imageId: imageUrl,
+    createdAt: nowTimestamp,
+    updatedAt: nowTimestamp,
+  };
+
+  const user = await prisma.user.create({
+    data: createdUser,
+  });
+
+  return user;
+}
+
 export async function getUserById(userId: number): Promise<User | null> {
   let user = null;
   if (userId > 0) {
@@ -25,52 +58,6 @@ export async function getUserById(userId: number): Promise<User | null> {
     });
   }
   return user;
-}
-
-export async function getUserByCredential(credentialId: string): Promise<User | null> {
-  let user = null;
-  if (credentialId.trim() !== '') {
-    user = await prisma.user.findUnique({
-      where: {
-        credentialId,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      },
-    });
-  }
-  return user;
-}
-
-export async function createUser(
-  name: string,
-  credentialId: string,
-  publicKey: string,
-  algorithm: string,
-  imageUrl: string,
-  fullName?: string,
-  email?: string,
-  phone?: string
-): Promise<User> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-
-  const newUser: Prisma.UserCreateInput = {
-    name,
-    fullName,
-    email,
-    phone,
-    credentialId,
-    publicKey,
-    algorithm,
-    imageId: imageUrl, // ToDo: check the interface (20240516 - Luphia)
-    createdAt: nowTimestamp,
-    updatedAt: nowTimestamp,
-  };
-
-  const createdUser = await prisma.user.create({
-    data: newUser,
-  });
-
-  return createdUser;
 }
 
 export async function updateUserById(
