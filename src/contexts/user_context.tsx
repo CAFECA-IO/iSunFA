@@ -13,6 +13,9 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
+import { Provider } from '@/constants/provider';
+import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
+import { ILoginPageProps } from '@/interfaces/page_props';
 
 interface SignUpProps {
   username?: string;
@@ -27,6 +30,7 @@ interface UserContextType {
   userAuth: IUser | null;
   username: string | null;
   signedIn: boolean;
+  agreement: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
@@ -43,6 +47,15 @@ interface UserContextType {
     credentials: PublicKeyCredential,
     invitation: string | undefined
   ) => Promise<void>;
+
+  userAgreeResponse: {
+    success: boolean;
+    data: null;
+    code: string;
+    error: Error | null;
+  } | null;
+  handleUserAgree: () => Promise<void>;
+  authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -53,6 +66,7 @@ export const UserContext = createContext<UserContextType>({
   userAuth: null,
   username: null,
   signedIn: false,
+  agreement: false,
   isSignInError: false,
   selectedCompany: null,
   selectCompany: async () => {},
@@ -65,6 +79,10 @@ export const UserContext = createContext<UserContextType>({
     return { isRegistered: false, credentials: null };
   },
   handleExistingCredential: async () => {},
+
+  userAgreeResponse: null,
+  handleUserAgree: async () => {},
+  authenticateUser: async () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -94,6 +112,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [agreement, setAgreement, agreementRef] = useStateRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [expiration, setExpiration, expirationRef] = useStateRef<string | undefined>(undefined);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [userAgreeResponse, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
+    success: boolean;
+    data: null;
+    code: string;
+    error: Error | null;
+  } | null>(null);
   const isRouteChanging = useRef(false);
 
   const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
@@ -106,6 +135,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
     APIName.SESSION_GET
   );
+  const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -373,6 +403,33 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleUserAgree = async () => {
+    try {
+      setIsAuthLoading(true);
+      const response = await agreementAPI({
+        body: { userId: userAuth?.id, agree: true },
+      });
+      setUserAgreeResponse(response);
+      setIsAuthLoading(false);
+    } catch (error) {
+      setUserAgreeResponse({
+        success: false,
+        data: null,
+        code: '',
+        error: error as Error,
+      });
+    }
+  };
+
+  // TODO: [Beta](20240819-Tzuhan) handle expiration
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isJwtExpired = (expires: string | undefined) => {
+    if (!expires) return true;
+    const now = new Date();
+    const expirationDate = new Date(expires);
+    return now > expirationDate;
+  };
+
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
   const checkSession = useCallback(async () => {
     setIsAuthLoading(true);
@@ -400,6 +457,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setUsername(userSessionData.user.name);
           setSignedIn(true);
           setIsSignInError(false);
+          // TODO: [Beta](20240819-Tzuhan) Handle agreement
+          // TODO: [Beta](20240819-Tzuhan) Handle expiration
           if (
             'company' in userSessionData &&
             userSessionData.company &&
@@ -417,7 +476,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
               router.pathname.includes('users') &&
               !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
             ) {
-              router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+              if (agreementRef.current) router.push(ISUNFA_ROUTE.SELECT_COMPANY);
             }
           }
         } else {
@@ -432,6 +491,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setIsAuthLoading(false);
   }, [router.pathname]);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const authenticateUser = async (selectProvider: Provider, props: ILoginPageProps) => {
+    try {
+      setIsAuthLoading(true);
+      const response = await authSignIn(selectProvider, { redirect: false });
+
+      // Deprecate: [Beta](20240819-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log('authenticateUser authSignIn response:', response);
+
+      if (response?.error) {
+        // Deprecate: [Beta](20240819-Tzuhan) dev
+        // eslint-disable-next-line no-console
+        console.error('OAuth 登入失敗:', response?.error);
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      // Deprecate: [Beta](20240816-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.error('Authentication failed', error);
+      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+    }
+  };
 
   const throttledCheckSession = useCallback(
     throttle(() => {
@@ -465,7 +548,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
+        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
       },
     });
 
@@ -478,6 +561,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     signOutAPI();
+    authSignOut();
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
   };
@@ -529,6 +613,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
+      agreement: agreementRef.current,
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
@@ -539,6 +624,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleExistingCredential,
+      handleUserAgree,
+      authenticateUser,
+      userAgreeResponse: userAgreeResponseRef.current,
     }),
     [
       credentialRef.current,

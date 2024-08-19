@@ -142,11 +142,7 @@ interface IGlobalContext {
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
 
-  isAgreeWithInfomationConfirmModalVisible: boolean;
   agreeWithInfomationConfirmModalVisibilityHandler: (visibility: boolean) => void;
-
-  isTOSNPrivacyPolicyConfirmModalVisible: boolean;
-  userAgreeWithInfomationANDTOSNPrivacyPolicy: boolean;
 }
 
 export interface IGlobalProvider {
@@ -235,11 +231,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isTOSNPrivacyPolicyConfirmModalVisible, setIsTOSNPrivacyPolicyConfirmModalVisible] =
     useState(false);
-
-  const [
-    userAgreeWithInfomationANDTOSNPrivacyPolicy,
-    setUserAgreeWithInfomationANDTOSNPrivacyPolicy,
-  ] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -394,10 +385,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const TOSNPrivacyPolicyConfirmModalVisibilityHandler = (visibility: boolean) => {
     setIsTOSNPrivacyPolicyConfirmModalVisible(visibility);
-  };
-
-  const userAgreeWithInfomationANDTOSNPrivacyPolicyHandler = () => {
-    setUserAgreeWithInfomationANDTOSNPrivacyPolicy(true);
   };
 
   // Info: (20240509 - Julian) toast handler
@@ -667,11 +654,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isTransferCompanyModalVisible,
     transferCompanyModalVisibilityHandler,
 
-    isAgreeWithInfomationConfirmModalVisible,
     agreeWithInfomationConfirmModalVisibilityHandler,
-
-    isTOSNPrivacyPolicyConfirmModalVisible,
-    userAgreeWithInfomationANDTOSNPrivacyPolicy,
   };
 
   return (
@@ -802,45 +785,27 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       />
 
       <LoginConfirmModal
+        id="agree-with-information"
         isModalVisible={isAgreeWithInfomationConfirmModalVisible}
         modalData={{
           title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'info_collection_statement',
           buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
         }}
-        onAgree={() => {
-          if (isAgreeWithInfomationConfirmModalVisible) {
-            agreeWithInfomationConfirmModalVisibilityHandler(false);
-          }
-          if (!isTOSNPrivacyPolicyConfirmModalVisible) {
-            TOSNPrivacyPolicyConfirmModalVisibilityHandler(true);
-          }
-        }}
-        onCancel={() => {
-          if (isAgreeWithInfomationConfirmModalVisible) {
-            agreeWithInfomationConfirmModalVisibilityHandler(false);
-          }
-        }}
+        infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
+        tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
       />
 
       <LoginConfirmModal
+        id="tos-n-privacy-policy"
         isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
         modalData={{
           title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'term_n_privacy',
           buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
         }}
-        onAgree={async () => {
-          if (isTOSNPrivacyPolicyConfirmModalVisible) {
-            TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-          }
-          userAgreeWithInfomationANDTOSNPrivacyPolicyHandler();
-        }}
-        onCancel={() => {
-          if (isTOSNPrivacyPolicyConfirmModalVisible) {
-            TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-          }
-        }}
+        infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
+        tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
       />
       {children}
     </GlobalContext.Provider>

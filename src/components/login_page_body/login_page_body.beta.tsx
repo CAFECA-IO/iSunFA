@@ -1,193 +1,101 @@
-import React, { useEffect, useState } from 'react';
-import { getSession, signIn, useSession } from 'next-auth/react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { useGlobalCtx } from '@/contexts/global_context';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
-import { useRouter } from 'next/router';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import AvatarSVG from '@/components/avater_svg/avater_svg';
+import { ILoginPageProps } from '@/interfaces/page_props';
+import { Provider } from '@/constants/provider';
+import { useUserCtx } from '@/contexts/user_context';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useRouter } from 'next/router';
+import { ToastType } from '@/interfaces/toastify';
+import { useTranslation } from 'react-i18next';
 
-enum Provider {
-  GOOGLE = 'google',
-  APPLE = 'apple',
-}
-
-const AuthButton = ({
-  onClick,
-  provider,
-  disabled = false,
-}: {
-  onClick: () => void;
-  provider: string;
-  disabled?: boolean;
-}) => {
-  const providerLogo =
-    provider.toLowerCase() === 'google' ? '/icons/google_logo.svg' : '/icons/apple_logo.svg';
-  const bgColor = provider.toLowerCase() === 'google' ? 'bg-white' : 'bg-black';
-  const textColor = provider.toLowerCase() === 'google' ? 'text-black' : 'text-white';
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex w-72 items-center justify-center space-x-2 rounded-sm ${bgColor} py-3 shadow-md`}
-      disabled={disabled}
-    >
-      <Image src={providerLogo} alt={provider} width={16} height={16} className="h-6 w-6" />
-      <span className={`font-semibold ${textColor}`}>Log In with {provider}</span>
-    </button>
-  );
+const getProviderDetails = (provider: Provider) => {
+  return {
+    logo: provider === Provider.GOOGLE ? '/icons/google_logo.svg' : '/icons/apple_logo.svg',
+    bgColor: provider === Provider.GOOGLE ? 'bg-white' : 'bg-black',
+    textColor: provider === Provider.GOOGLE ? 'text-black' : 'text-white',
+  };
 };
 
-const Loader = () => {
+const AuthButton = React.memo(
+  ({
+    onClick,
+    provider,
+    disabled = false,
+  }: {
+    onClick: () => void;
+    provider: Provider;
+    disabled?: boolean;
+  }) => {
+    const { logo, bgColor, textColor } = getProviderDetails(provider);
+
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`flex w-72 items-center justify-center space-x-2 rounded-sm ${bgColor} py-3 shadow-md`}
+        disabled={disabled}
+      >
+        <Image src={logo} alt={provider} width={16} height={16} className="h-6 w-6" />
+        <span className={`font-semibold ${textColor}`}>
+          Log In with {provider.replace(provider[0], provider[0].toUpperCase())}
+        </span>
+      </button>
+    );
+  }
+);
+
+const Loader = React.memo(() => {
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="h-16 w-16 animate-spin rounded-full border-4 border-orange-400 border-t-transparent"></div>
     </div>
   );
-};
+});
 
-const isJwtExpired = (expires: string | undefined) => {
-  if (!expires) return true;
-  const now = new Date();
-  const expirationDate = new Date(expires);
-  return now > expirationDate;
-};
-
-const LoginPageBody = () => {
-  const { status, data, update } = useSession();
-  const user = data?.user;
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasShowModal, setHasShowModal] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const router = useRouter();
-  const {
-    isAgreeWithInfomationConfirmModalVisible,
-    agreeWithInfomationConfirmModalVisibilityHandler,
-    userAgreeWithInfomationANDTOSNPrivacyPolicy,
-  } = useGlobalCtx();
+  const { t } = useTranslation('common');
+  const { agreeWithInfomationConfirmModalVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { isAuthLoading, signedIn, agreement, authenticateUser, userAgreeResponse } = useUserCtx();
 
-  const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
-
-  const handleUserAgree = async (userId: number) => {
+  useEffect(() => {
+    // Deprecate: [Beta](20240819-Tzuhan) dev
     // eslint-disable-next-line no-console
-    console.log('handleUserAgree is called, userId', userId);
-    try {
-      setIsLoading(true);
-      const response = await agreementAPI({
-        body: { userId, agree: true },
-      });
-      setIsLoading(false);
+    console.log(`signedIn: ${signedIn}, agreement: ${agreement}`);
+    if (signedIn && !agreement) {
+      agreeWithInfomationConfirmModalVisibilityHandler(true);
+    }
+  }, [signedIn, agreement]);
 
-      if (response.success) {
+  useEffect(() => {
+    if (userAgreeResponse) {
+      if (userAgreeResponse.success) {
         router.push(ISUNFA_ROUTE.SELECT_COMPANY);
       } else {
-        // TODO: (20240814-Tzuhan) Handle API response failure
-      }
-    } catch (error) {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.error('紀錄用戶同意條款時發生錯誤:', error);
-      // TODO: (20240814-Tzuhan) Handle error case
-    }
-  };
-
-  const handleUserAuthenticated = async (force?: boolean) => {
-    // Deprecate: (20240816-Tzuhan) dev
-    // eslint-disable-next-line no-console
-    console.log('user:', user);
-    setSelectedProvider(user.provider);
-    if (user?.hasReadAgreement) {
-      agreeWithInfomationConfirmModalVisibilityHandler(false);
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-    } else if ((!isAgreeWithInfomationConfirmModalVisible && !hasShowModal) || force) {
-      agreeWithInfomationConfirmModalVisibilityHandler(true);
-      setHasShowModal(true);
-    }
-  };
-
-  useEffect(() => {
-    // Deprecate: (20240816-Tzuhan) dev
-    // eslint-disable-next-line no-console
-    console.log(
-      'useEffect userAgreeWithInfomationANDTOSNPrivacyPolicy',
-      userAgreeWithInfomationANDTOSNPrivacyPolicy
-    );
-    if (userAgreeWithInfomationANDTOSNPrivacyPolicy) handleUserAgree(user.id);
-  }, [userAgreeWithInfomationANDTOSNPrivacyPolicy]);
-
-  useEffect(() => {
-    if (status === 'loading') {
-      setIsLoading(true);
-      return;
-    }
-
-    setIsLoading(false);
-
-    if (status === 'unauthenticated') {
-      try {
-        update?.();
-      } catch (error) {
-        // Deprecate: (20240816-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.error('Session update failed:', error);
+        toastHandler({
+          id: `user-agree-error`,
+          type: ToastType.ERROR,
+          content: `${t('COMMON.ERROR')}: ${userAgreeResponse.code}`,
+          closeable: true,
+        });
       }
     }
+  }, [userAgreeResponse]);
 
-    if (status === 'authenticated') {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.log(`useEffect: status === 'authenticated'`);
-      handleUserAuthenticated();
-    }
-  }, [status]);
-
-  const authenticateUser = async (provider: Provider) => {
-    try {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.log(
-        `(selectedProvider === provider: ${selectedProvider === provider}) provider: ${provider}, selectedProvider: ${selectedProvider}, status: ${status}`
-      );
-      if (selectedProvider === provider && status === 'authenticated') {
-        const session = await getSession();
-        // Deprecate: (20240816-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.log(
-          `!isJwtExpired(session.expires): ${!isJwtExpired(session?.expires)}, session:`,
-          session
-        );
-        if (session && !isJwtExpired(session.expires)) {
-          handleUserAuthenticated(true);
-          return;
-        }
-      }
-      setIsLoading(true);
-      const response = await signIn(provider, { redirect: false });
-      setIsLoading(false);
-
-      if (response?.error) {
-        // Deprecate: (20240816-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.error('OAuth 登入失敗:', response?.error);
-        throw new Error(response.error);
-      }
-
-      update?.();
-      setSelectedProvider(provider);
-    } catch (error) {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.error('Authentication failed', error);
-      // TODO: (20240814-Tzuhan) (20240813-Tzuhan) handle error
-    }
+  const googleAuthSignIn = () => {
+    authenticateUser(Provider.GOOGLE, {
+      invitation,
+      action,
+    });
   };
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
-      <div className="bg-login_bg absolute inset-0 z-0 h-full w-full bg-cover bg-center bg-no-repeat blur-md"></div>
-      {isLoading ? (
+      <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
+      {isAuthLoading ? (
         <Loader />
       ) : (
         <div className="z-10 mb-8 flex flex-col items-center">
@@ -196,14 +104,9 @@ const LoginPageBody = () => {
             <AvatarSVG size="large" />
           </div>
           <div className="flex flex-col space-y-4">
-            <AuthButton onClick={() => authenticateUser(Provider.GOOGLE)} provider="Google" />
-            {/* Info: (20240813 - Tzuhan) Apple login is not provided in the beta version
-            <AuthButton
-              onClick={() => authenticateUser(Provider.APPLE)}
-              provider="Apple"
-              disabled
-            />
-            */}
+            <AuthButton onClick={googleAuthSignIn} provider={Provider.GOOGLE} />
+            {/* Info: [Beta](20240819-Tzuhan) Apple login is not supported in the beta version
+            <AuthButton onClick={appleAuthSignIn} provider="Apple" /> */}
           </div>
         </div>
       )}
