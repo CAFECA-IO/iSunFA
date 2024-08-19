@@ -25,6 +25,7 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   timestampInSeconds: jest.fn(),
   timestampInMilliSeconds: jest.fn(),
   transformBytesToFileSizeString: jest.fn(),
+  generateUUID: jest.fn(),
 }));
 
 jest.mock('../../../../../../lib/utils/repo/ocr.repo', () => {
@@ -124,7 +125,7 @@ describe('POST OCR', () => {
       expect(promiseJson).toBeInstanceOf(Promise);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/gemini/upload'),
+        expect.stringContaining('/invoices/upload'),
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
       );
     });
@@ -235,7 +236,7 @@ describe('POST OCR', () => {
       expect(resultJson).toEqual(resultJsonArrayExpect);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/gemini/upload'),
+        expect.stringContaining('/invoices/upload'),
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
       );
     });
@@ -463,12 +464,15 @@ describe('GET OCR', () => {
   describe('fetchStatus', () => {
     it('should return resultJson', async () => {
       const aichResultId = 'testAichResultId';
+
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({ payload: ProgressStatus.SUCCESS }),
       };
 
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      jest.spyOn(common, 'generateUUID').mockReturnValue(aichResultId);
 
       const resultJson = await module.fetchStatus(aichResultId);
       expect(resultJson).toEqual(ProgressStatus.SUCCESS);

@@ -58,7 +58,7 @@ describe('fetchOCRResult', () => {
     const result = await module.fetchOCRResult(resultId);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`/api/v1/gemini/${resultId}/result`)
+      expect.stringContaining(`/api/v1/invoices/${resultId}/result`)
     );
 
     expect(result).toEqual({ payload: 'testPayload' });
