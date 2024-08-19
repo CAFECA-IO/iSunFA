@@ -58,7 +58,7 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   const formData = createImageFormData(imageBlob, imageName);
 
   let response: Response;
-  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_GEMINI);
+  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_INVOICE);
   try {
     response = await fetch(uploadUrl, {
       method: 'POST',
@@ -137,7 +137,7 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
         const isIndexValid = index < imageFieldsLength;
 
         // Info (20240816 - Murky): 壞檔的Image會被標上特殊的resultId
-        const defaultResultId = 'error-' + generateUUID;
+        const defaultResultId = 'error-' + generateUUID();
         let result: {
           resultStatus: IAccountResultStatus;
           imageName: string;
@@ -252,7 +252,7 @@ export async function fetchStatus(aichResultId: string) {
 
   if (aichResultId.length > 0) {
     try {
-      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_GEMINI_RESULT_ID, aichResultId);
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT_ID, aichResultId);
       const result = await fetch(fetchUrl);
 
       if (!result.ok) {

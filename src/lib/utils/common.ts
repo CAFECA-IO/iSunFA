@@ -659,5 +659,6 @@ export function throttle<F extends (...args: unknown[]) => unknown>(
 }
 
 export function generateUUID(): string {
-  return Math.random().toString(36).substring(2, 12);
+  const randomUUID = Math.random().toString(36).substring(2, 12);
+  return randomUUID;
 }
