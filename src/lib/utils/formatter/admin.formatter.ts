@@ -1,12 +1,16 @@
 import { IAdmin } from '@/interfaces/admin';
-import { Admin, Company, CompanyKYC, Role, User } from '@prisma/client';
+import { Admin, Company, CompanyKYC, Role, User, UserAgreement } from '@prisma/client';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
 
 export async function formatAdminList(
-  listedAdmin: (Admin & { company: Company; user: User; role: Role })[]
+  listedAdmin: (Admin & {
+    company: Company;
+    user: User & { userAgreements: UserAgreement[] };
+    role: Role;
+  })[]
 ): Promise<IAdmin[]> {
   let adminList: IAdmin[] = [];
   if (listedAdmin.length > 0) {
@@ -27,7 +31,7 @@ export async function formatAdminList(
 }
 
 export async function formatAdmin(
-  admin: Admin & { company: Company; user: User; role: Role }
+  admin: Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role }
 ): Promise<IAdmin> {
   const formattedUser = await formatUser(admin.user);
   const formattedCompany = await formatCompany(admin.company);
