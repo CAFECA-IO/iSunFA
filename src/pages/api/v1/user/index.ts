@@ -56,7 +56,7 @@ export default async function handler(
           phone,
           imageUrl: imageId,
         });
-        const user = await formatUser(createdUser);
+        const user = formatUser(createdUser);
         const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
         res.status(httpCode).json(result);
       }
