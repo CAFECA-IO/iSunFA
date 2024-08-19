@@ -8,7 +8,7 @@ declare module 'next-auth' {
     user: {
       id: string;
       hasReadAgreement: boolean;
-    } & DefaultSession['user'] ;
+    } & DefaultSession['user'];
   }
 
   interface User {

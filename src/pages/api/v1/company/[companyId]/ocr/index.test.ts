@@ -11,6 +11,7 @@ import * as repository from '@/lib/utils/repo/ocr.repo';
 import { Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import * as authCheck from '@/lib/utils/auth_check';
+import { IOCR } from '@/interfaces/ocr';
 
 global.fetch = jest.fn();
 
@@ -24,6 +25,7 @@ jest.mock('../../../../../../lib/utils/common', () => ({
   timestampInSeconds: jest.fn(),
   timestampInMilliSeconds: jest.fn(),
   transformBytesToFileSizeString: jest.fn(),
+  generateUUID: jest.fn(),
 }));
 
 jest.mock('../../../../../../lib/utils/repo/ocr.repo', () => {
@@ -123,7 +125,7 @@ describe('POST OCR', () => {
       expect(promiseJson).toBeInstanceOf(Promise);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/ocr/upload'),
+        expect.stringContaining('/invoices/upload'),
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
       );
     });
@@ -175,6 +177,11 @@ describe('POST OCR', () => {
   describe('postImageToAICH', () => {
     let mockImages: MockProxy<formidable.Files<'image'>>;
     let mockImage: MockProxy<formidable.File>;
+    let mockImageFields: {
+      imageSize: number;
+      imageName: string;
+      uploadIdentifier: string;
+    }[];
     const mockPath = '/test';
     const mockMimetype = 'image/png';
     const mockFileContent = Buffer.from('mock image content');
@@ -182,6 +189,7 @@ describe('POST OCR', () => {
       mockImage = mock<formidable.File>();
       mockImage.filepath = mockPath;
       mockImage.mimetype = mockMimetype;
+      mockImageFields = [];
       mockImage.size = 1000;
       jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
       jest.spyOn(common, 'transformOCRImageIDToURL').mockReturnValue('testImageUrl');
@@ -201,7 +209,8 @@ describe('POST OCR', () => {
       mockImages = mock<formidable.Files<'image'>>({
         image: [],
       });
-      const result = await module.postImageToAICH(mockImages);
+      mockImageFields = [];
+      const result = await module.postImageToAICH(mockImages, mockImageFields);
       expect(result).toEqual([]);
     });
 
@@ -213,7 +222,7 @@ describe('POST OCR', () => {
 
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      const resultJson = await module.postImageToAICH(mockImages);
+      const resultJson = await module.postImageToAICH(mockImages, mockImageFields);
 
       const resultJsonExpect = expect.objectContaining({
         resultStatus: expect.any(String),
@@ -227,7 +236,7 @@ describe('POST OCR', () => {
       expect(resultJson).toEqual(resultJsonArrayExpect);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/ocr/upload'),
+        expect.stringContaining('/invoices/upload'),
         expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
       );
     });
@@ -271,7 +280,11 @@ describe('POST OCR', () => {
           },
         ],
       };
-      mockFields = mock<formidable.Fields>();
+      mockFields = {
+        imageSize: ["1 MB"],
+        imageName: ['test.png'],
+        uploadIdentifier: ['test'],
+      };
     });
 
     it('should return image file', async () => {
@@ -281,19 +294,28 @@ describe('POST OCR', () => {
       };
 
       jest.spyOn(parseImageForm, 'parseForm').mockResolvedValue(mockReturn);
-      const imageFile = await module.getImageFileFromFormData(req);
-      expect(imageFile).toEqual(mockFiles);
+      const imageFile = await module.getImageFileAndFormFromFormData(req);
+
+      expect(imageFile).toEqual(mockReturn);
     });
 
     it('should return empty object when parseForm failed', async () => {
       jest.spyOn(parseImageForm, 'parseForm').mockRejectedValue(new Error('parseForm failed'));
-      const result = await module.getImageFileFromFormData(req);
-      expect(result).toEqual({});
+      const result = await module.getImageFileAndFormFromFormData(req);
+
+      const expectReturn = {
+        fields: {},
+        files: {},
+      };
+
+      expect(result).toEqual(expectReturn);
     });
   });
 
   describe('createOcrFromAichResults', () => {
     it('should return resultJson', async () => {
+      jest.spyOn(common, 'timestampInSeconds').mockReturnValue(0);
+      jest.spyOn(common, 'transformBytesToFileSizeString').mockReturnValue('1 MB');
       const resultId = 'testResultId';
       const companyId = 1;
       const mockAichReturn = [
@@ -306,6 +328,8 @@ describe('POST OCR', () => {
           imageName: 'testImageName',
           imageSize: 1024,
           type: 'invoice',
+          uploadIdentifier: 'test',
+          createAt: 0,
         },
       ];
 
@@ -323,11 +347,18 @@ describe('POST OCR', () => {
         deletedAt: null,
       };
 
-      const expectResult: IAccountResultStatus[] = [
+      const expectResult: IOCR[] = [
         {
-          resultId,
-          status: ProgressStatus.SUCCESS,
-        },
+         aichResultId: "testResultId",
+         createdAt: 0,
+         id: 1,
+         imageName: "testImageName",
+         imageSize: "1 MB",
+         imageUrl: "testImageUrl",
+         progress: 0,
+         status: ProgressStatus.IN_PROGRESS,
+         uploadIdentifier: "test",
+        }
       ];
 
       jest.spyOn(repository, 'createOcrInPrisma').mockResolvedValue(mockOcrDbResult);
@@ -433,12 +464,15 @@ describe('GET OCR', () => {
   describe('fetchStatus', () => {
     it('should return resultJson', async () => {
       const aichResultId = 'testAichResultId';
+
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({ payload: ProgressStatus.SUCCESS }),
       };
 
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      jest.spyOn(common, 'generateUUID').mockReturnValue(aichResultId);
 
       const resultJson = await module.fetchStatus(aichResultId);
       expect(resultJson).toEqual(ProgressStatus.SUCCESS);
