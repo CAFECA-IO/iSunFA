@@ -98,8 +98,9 @@ export async function createOcrInPrisma(
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
+  let ocrData: Ocr | null = null;
   try {
-    const ocrData = await prisma.ocr.create({
+    ocrData = await prisma.ocr.create({
       data: {
         companyId,
         aichResultId: aichResult.resultStatus.resultId,
@@ -112,14 +113,13 @@ export async function createOcrInPrisma(
         updatedAt: nowTimestamp,
       },
     });
-
-    return ocrData;
   } catch (error) {
     // Deprecated (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
+
+  return ocrData;
 }
 
 export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
