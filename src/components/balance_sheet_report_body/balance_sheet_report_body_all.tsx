@@ -1,5 +1,3 @@
-/* eslint-disable tailwindcss/no-arbitrary-value */
-// TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley)
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
@@ -139,7 +137,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const displayedCurALRChart = isNoDataForCurALR ? (
     <div className="ml-20">
-      {' '}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="200"
@@ -148,7 +145,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         viewBox="0 0 200 200"
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
-        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
           {t('PROJECT.NO_DATA')}
         </text>
       </svg>
@@ -161,7 +158,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const displayedPreALRChart = isNoDataForPreALR ? (
     <div className="ml-20">
-      {' '}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="200"
@@ -170,7 +166,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         viewBox="0 0 200 200"
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
-        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
+        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
           {t('PROJECT.NO_DATA')}
         </text>
       </svg>
@@ -183,9 +179,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
-        <p className="m-0 text-[12px] text-white">{page}</p>
-        <div className="text-[16px] font-bold text-surface-brand-secondary">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-lightGray9 bg-surface-brand-secondary p-10px">
+        <p className="text-xs text-white">{page}</p>
+        <div className="text-base font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
         </div>
       </footer>
@@ -198,9 +194,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     preValue: number | undefined
   ) => (
     <tr>
-      <td className="border border-[#dee2e6] p-[10px] text-[14px]">{label}</td>
-      <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">{curValue}</td>
-      <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">{preValue}</td>
+      <td className="border border-lightGray8 p-10px text-sm">{label}</td>
+      <td className="border border-lightGray8 p-10px text-end text-sm">{curValue}</td>
+      <td className="border border-lightGray8 p-10px text-end text-sm">{preValue}</td>
     </tr>
   );
 
@@ -209,7 +205,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -220,18 +216,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -245,7 +241,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -256,18 +252,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -281,7 +277,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -291,18 +287,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -316,7 +312,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -327,18 +323,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -352,7 +348,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -363,18 +359,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -388,7 +384,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -399,18 +395,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -424,7 +420,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -435,18 +431,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -460,7 +456,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -471,18 +467,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -496,7 +492,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -507,18 +503,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -532,7 +528,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-[14px] font-bold">
+            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
               {item.name}
             </td>
           </tr>
@@ -543,18 +539,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         // Info: it's ok to use index in the static data (20240723 - Shirley)
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.code}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-[14px]">{item.name}</td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
+          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-end text-[14px]">
+          <td className="border border-lightGray8 p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-[#dee2e6] p-[10px] text-center text-[14px]">
+          <td className="border border-lightGray8 p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -577,7 +573,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </div>
 
       <header className="mb-12 flex justify-between pl-0 text-white">
-        <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
+        <div className="w-3/10 bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
             {reportFinancial && reportFinancial.company && (
               <>
@@ -585,8 +581,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="text-left text-[12px] font-bold leading-[20px] tracking-[0.01em]">
-                  {/* {reportFinancial.curDate.to} */}
+                <p className="text-left text-xs font-bold leading-5">
                   {curDate}
                   <br />
                   合併財務報告 - 資產負債表
@@ -596,37 +591,37 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
         </div>
         <div className="box-border w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-9/12 bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
 
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-[16px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="relative z-1 w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -652,36 +647,36 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-9/12 bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}{' '}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -705,29 +700,29 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           />
         </div>
 
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -746,45 +741,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page3 = (
     <div id="3" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -803,45 +798,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page4 = (
     <div id="4" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -860,45 +855,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page5 = (
     <div id="5" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
             </tr>
@@ -917,45 +912,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page6 = (
     <div id="6" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -974,45 +969,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page7 = (
     <div id="7" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -1031,45 +1026,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page8 = (
     <div id="8" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -1088,45 +1083,45 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page9 = (
     <div id="9" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
           <p>單位：新台幣仟元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 代號
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
             </tr>
@@ -1155,23 +1150,23 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page10 = (
     <div id="10" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>三、資產負債比例表</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
@@ -1184,7 +1179,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -1200,7 +1195,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -1224,23 +1219,23 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page11 = (
     <div id="11" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>四、資產分布圖</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
@@ -1253,7 +1248,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -1270,7 +1265,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -1294,18 +1289,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const page12 = (
     <div id="12" className="relative h-a4-height overflow-y-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="flex flex-col">
           <div className="h-1 bg-surface-brand-secondary"></div>
           <div className="mt-1 h-1 bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Balance Sheet
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -1317,11 +1312,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
-              <th className="whitespace-nowrap border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curYear}年度
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preYear}年度
               </th>
             </tr>
@@ -1334,18 +1329,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             )}
           </tbody>
         </table>
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>六、存貨週轉天數</p>
           <p>單位：天</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curYear}年度
               </th>
-              <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-[14px] font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preYear}年度
               </th>
             </tr>
