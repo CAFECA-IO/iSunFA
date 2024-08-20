@@ -319,21 +319,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     return mergedList;
   }, []);
 
-  // const mergeOCRLists = useCallback((apiList: IOCR[], currentList: IOCR[]) => {
-  //   const mergedList = [...apiList];
-
-  //   currentList.forEach((localOCR) => {
-  //     if (!apiList.some((apiOCR) => apiOCR.aichResultId === localOCR.aichResultId)) {
-  //       mergedList.push(localOCR);
-  //     }
-  //   });
-
-  //   // Info: 按創建時間排序，最舊的在前面 (20240820 - Shirley)
-  //   mergedList.sort((a, b) => a.createdAt - b.createdAt);
-
-  //   return mergedList;
-  // }, []);
-
   const deleteOCRHandler = useCallback((aichId: string) => {
     setOCRList((prevList) => prevList.filter((ocr) => ocr.aichResultId !== aichId));
   }, []);
