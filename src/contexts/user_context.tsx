@@ -13,6 +13,10 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
+import { Provider } from '@/constants/provider';
+import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
+import { ILoginPageProps } from '@/interfaces/page_props';
+import { Hash } from '@/constants/hash';
 
 interface SignUpProps {
   username?: string;
@@ -27,6 +31,8 @@ interface UserContextType {
   userAuth: IUser | null;
   username: string | null;
   signedIn: boolean;
+  isAgreeInfoCollection: boolean;
+  isAgreeTosNPrivacyPolicy: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
@@ -43,6 +49,15 @@ interface UserContextType {
     credentials: PublicKeyCredential,
     invitation: string | undefined
   ) => Promise<void>;
+
+  userAgreeResponse: {
+    success: boolean;
+    data: null;
+    code: string;
+    error: Error | null;
+  } | null;
+  handleUserAgree: (hash: Hash) => Promise<void>;
+  authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -53,6 +68,8 @@ export const UserContext = createContext<UserContextType>({
   userAuth: null,
   username: null,
   signedIn: false,
+  isAgreeInfoCollection: false,
+  isAgreeTosNPrivacyPolicy: false,
   isSignInError: false,
   selectedCompany: null,
   selectCompany: async () => {},
@@ -65,6 +82,10 @@ export const UserContext = createContext<UserContextType>({
     return { isRegistered: false, credentials: null };
   },
   handleExistingCredential: async () => {},
+
+  userAgreeResponse: null,
+  handleUserAgree: async () => {},
+  authenticateUser: async () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
@@ -94,6 +115,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isAgreeInfoCollection, setIsAgreeInfoCollection, isAgreeInfoCollectionRef] =
+    useStateRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isAgreeTosNPrivacyPolicy, setIsAgreeTosNPrivacyPolicy, isAgreeTosNPrivacyPolicyRef] =
+    useStateRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [userAgreeResponse, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
+    success: boolean;
+    data: null;
+    code: string;
+    error: Error | null;
+  } | null>(null);
   const isRouteChanging = useRef(false);
 
   const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
@@ -106,6 +140,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
     APIName.SESSION_GET
   );
+  const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -132,6 +167,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleSignInRoute = () => {
+    if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
+      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    }
+  };
+
   const handleSignInAPIResponse = (response: {
     success: boolean;
     data: IUser | null;
@@ -145,8 +186,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUsername(signInData.name);
         setUserAuth(signInData);
         setSignedIn(true);
-        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
         setIsSignInError(false);
+        handleSignInRoute();
       }
     }
     if (signInSuccess === false) {
@@ -244,8 +285,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUsername(signUpData.name);
         setUserAuth(signUpData);
         setSignedIn(true);
-        router.push(ISUNFA_ROUTE.SELECT_COMPANY);
         setIsSignInError(false);
+        handleSignInRoute();
       }
     }
     if (signUpSuccess === false) {
@@ -347,21 +388,32 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleReturnUrl = () => {
-    // eslint-disable-next-line no-console
-    console.log(
-      `handleReturnUrl returnUrl: ${decodeURIComponent(returnUrl ?? '')}, router.pathname: ${router.pathname}, selectedCompanyRef.current:`,
-      selectedCompanyRef.current
-    );
-    if (returnUrl) {
-      const urlString = decodeURIComponent(returnUrl);
-      setReturnUrl(null);
-      router.push(urlString);
-    } else if (
-      router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
-      (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
-    ) {
-      router.push(ISUNFA_ROUTE.DASHBOARD);
+    if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `handleReturnUrl returnUrl: ${decodeURIComponent(returnUrl ?? '')}, router.pathname: ${router.pathname}, selectedCompanyRef.current:`,
+        selectedCompanyRef.current
+      );
+      if (returnUrl) {
+        const urlString = decodeURIComponent(returnUrl);
+        setReturnUrl(null);
+        router.push(urlString);
+      } else if (
+        router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
+        (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
+      ) {
+        router.push(ISUNFA_ROUTE.DASHBOARD);
+      }
     }
+  };
+
+  // TODO: [Beta](20240819-Tzuhan) handle expiration
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isJwtExpired = (expires: string | undefined) => {
+    if (!expires) return true;
+    const now = new Date();
+    const expirationDate = new Date(expires);
+    return now > expirationDate;
   };
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
@@ -391,6 +443,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setUsername(userSessionData.user.name);
           setSignedIn(true);
           setIsSignInError(false);
+          if (userSessionData.user.agreementList.includes(Hash.INFO_COLLECTION)) {
+            setIsAgreeInfoCollection(true);
+          } else {
+            setIsAgreeInfoCollection(false);
+          }
+          if (userSessionData.user.agreementList.includes(Hash.TOS_N_PP)) {
+            setIsAgreeTosNPrivacyPolicy(true);
+          } else {
+            setIsAgreeTosNPrivacyPolicy(false);
+          }
           if (
             'company' in userSessionData &&
             userSessionData.company &&
@@ -408,7 +470,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
               router.pathname.includes('users') &&
               !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
             ) {
-              router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+              handleSignInRoute();
             }
           }
         } else {
@@ -423,6 +485,59 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setIsAuthLoading(false);
   }, [router.pathname]);
+
+  const handleUserAgree = async (hash: Hash) => {
+    try {
+      setIsAuthLoading(true);
+      const response = await agreementAPI({
+        params: { userId: userAuth?.id },
+        body: { agreementHash: hash },
+      });
+      setUserAgreeResponse(response);
+      setIsAuthLoading(false);
+      if (hash === Hash.INFO_COLLECTION) {
+        setIsAgreeInfoCollection(true);
+      }
+      if (hash === Hash.TOS_N_PP) {
+        setIsAgreeTosNPrivacyPolicy(true);
+      }
+    } catch (error) {
+      setUserAgreeResponse({
+        success: false,
+        data: null,
+        code: '',
+        error: error as Error,
+      });
+    }
+  };
+
+  const authenticateUser = async (selectProvider: Provider, props: ILoginPageProps) => {
+    try {
+      setIsAuthLoading(true);
+      const response = await authSignIn(
+        selectProvider,
+        { redirect: false },
+        // eslint-disable-next-line react/prop-types
+        { invitation: props.invitation }
+      );
+
+      // Deprecate: [Beta](20240819-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log('authenticateUser authSignIn response:', response);
+
+      if (response?.error) {
+        // Deprecate: [Beta](20240819-Tzuhan) dev
+        // eslint-disable-next-line no-console
+        console.error('OAuth 登入失敗:', response?.error);
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      // Deprecate: [Beta](20240816-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.error('Authentication failed', error);
+      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+    }
+  };
 
   const throttledCheckSession = useCallback(
     throttle(() => {
@@ -456,7 +571,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
+        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
       },
     });
 
@@ -469,6 +584,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     signOutAPI();
+    authSignOut();
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
   };
@@ -520,6 +636,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
+      isAgreeInfoCollection: isAgreeInfoCollectionRef.current,
+      isAgreeTosNPrivacyPolicy: isAgreeTosNPrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
@@ -530,6 +648,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleExistingCredential,
+      handleUserAgree,
+      authenticateUser,
+      userAgreeResponse: userAgreeResponseRef.current,
     }),
     [
       credentialRef.current,
