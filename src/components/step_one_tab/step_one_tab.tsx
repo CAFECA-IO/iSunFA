@@ -89,7 +89,7 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
-
+  // TODO: in dev (20240816 - Shirley)
   // eslint-disable-next-line no-console
   console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 

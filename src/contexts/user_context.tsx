@@ -144,7 +144,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (signInData) {
         setUsername(signInData.name);
         setUserAuth(signInData);
-        setCredential(signInData.credentialId);
         setSignedIn(true);
         router.push(ISUNFA_ROUTE.SELECT_COMPANY);
         setIsSignInError(false);
@@ -246,7 +245,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (signUpData) {
         setUsername(signUpData.name);
         setUserAuth(signUpData);
-        setCredential(signUpData.credentialId);
         setSignedIn(true);
         router.push(ISUNFA_ROUTE.SELECT_COMPANY);
         setIsSignInError(false);
@@ -400,7 +398,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         ) {
           setUserAuth(userSessionData.user);
           setUsername(userSessionData.user.name);
-          setCredential(userSessionData.user.credentialId);
           setSignedIn(true);
           setIsSignInError(false);
           if (

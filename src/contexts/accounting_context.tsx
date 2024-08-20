@@ -60,6 +60,7 @@ interface IAccountingContext {
   addOCRHandler: (
     aichId: string,
     imageName: string,
+    imageUrl: string,
     imageSize: string,
     uploadIdentifier: string
   ) => void;
@@ -314,6 +315,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const addOCRHandler = (
     aichId: string,
     imageName: string,
+    imageUrl: string,
     imageSize: string,
     uploadIdentifier: string
   ) => {
@@ -322,7 +324,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       id: now,
       aichResultId: aichId,
       imageName,
-      imageUrl: '',
+      imageUrl,
       imageSize,
       progress: 0,
       status: ProgressStatus.WAITING_FOR_UPLOAD,

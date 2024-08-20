@@ -49,17 +49,14 @@ export default async function handler(
       if (!isAuth) {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       } else {
-        const createdUser = await createUser(
+        const createdUser = await createUser({
           name,
-          credentialId,
-          publicKey,
-          algorithm,
-          imageId,
           fullName,
           email,
-          phone
-        );
-        const user = await formatUser(createdUser);
+          phone,
+          imageUrl: imageId,
+        });
+        const user = formatUser(createdUser);
         const { httpCode, result } = formatApiResponse<IUser>(STATUS_MESSAGE.CREATED, user);
         res.status(httpCode).json(result);
       }

@@ -331,7 +331,7 @@
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "Please read and agree the first time you login",
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "Agree with the Information Collection Statement",
     "AGREE_WITH_TOS_N_PP": "Agree with Terms of Service & Privacy Policy",
-    "ALPHA_TEST_REMINDER": "This is the iSunFA Alpha test version (data will be deleted after testing)."
+    "ALPHA_TEST_REMINDER": "The data used in the Alpha version is for testing purposes only."
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "Failed to fetch data",

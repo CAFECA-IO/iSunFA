@@ -1,29 +1,27 @@
 import { IUser } from '@/interfaces/user';
-import { User } from '@prisma/client';
+import { User, UserAgreement } from '@prisma/client';
 
-export async function formatUserList(userList: User[]): Promise<IUser[]> {
-  const formattedUserList: IUser[] = userList.map((user) => {
-    const formattedUser: IUser = {
-      ...user,
-      fullName: user.fullName ?? '',
-      email: user.email ?? '',
-      phone: user.phone ?? '',
-      imageId: user.imageId ?? '',
-    };
-    return formattedUser;
-  });
-
-  return formattedUserList;
-}
-
-export async function formatUser(user: User): Promise<IUser> {
+export function formatUser(user: User & { userAgreements: UserAgreement[] }): IUser {
+  const agreementList = user.userAgreements.map((userAgreement) => userAgreement.agreementHash);
   const formattedUser: IUser = {
     ...user,
     fullName: user.fullName ?? '',
     email: user.email ?? '',
     phone: user.phone ?? '',
     imageId: user.imageId ?? '',
+    agreementList,
   };
 
   return formattedUser;
+}
+
+export async function formatUserList(
+  userList: (User & { userAgreements: UserAgreement[] })[]
+): Promise<IUser[]> {
+  const formattedUserList: IUser[] = userList.map((user) => {
+    const formattedUser: IUser = formatUser(user);
+    return formattedUser;
+  });
+
+  return formattedUserList;
 }
