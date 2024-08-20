@@ -66,9 +66,7 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: (20240606 - Julian) i18n */}
-        <title>
-          {projectName} {t('REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA
-        </title>
+        <title>{`${projectName} ${t('REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA`}</title>
       </Head>
 
       <div className="h-screen font-barlow">

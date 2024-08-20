@@ -106,7 +106,12 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t(`PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}- iSunFA
+          {`${
+            FinancialReportTypesMap[
+              BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
+            ].name
+          }
+          - iSunFA`}
         </title>
 
         <meta
