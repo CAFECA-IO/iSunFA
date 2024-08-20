@@ -17,30 +17,23 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
-        const {
-          type,
-          language,
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          start_date,
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          end_date,
-        } = req.query;
+        const { type, language, start_date: queryStartDate, end_date: queryEndDate } = req.query;
 
         if (
           !type ||
           Array.isArray(type) ||
           !language ||
           Array.isArray(language) ||
-          !start_date ||
-          Array.isArray(start_date) ||
-          !end_date ||
-          Array.isArray(end_date)
+          !queryStartDate ||
+          Array.isArray(queryStartDate) ||
+          !queryEndDate ||
+          Array.isArray(queryEndDate)
         ) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
         }
 
-        const startDate = new Date(start_date);
-        const endDate = new Date(end_date);
+        const startDate = new Date(queryStartDate);
+        const endDate = new Date(queryEndDate);
 
         if (!isIAnalysisReportRequest({ type, language, startDate, endDate })) {
           throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);

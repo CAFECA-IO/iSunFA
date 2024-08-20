@@ -169,7 +169,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     );
   };
 
-  const renderedPage10_1 = () => {
+  const renderedPage10part1 = () => {
     return (
       <div className="mt-4 text-text-neutral-primary">
         <h3 className="text-base font-semibold leading-[24px] tracking-[0.16px]">
@@ -197,7 +197,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     );
   };
 
-  const renderedPage11_1 = () => {
+  const renderedPage11part1 = () => {
     return (
       <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px] text-text-neutral-primary">
         {thirdThought?.split('\n').map((line) => (
@@ -209,7 +209,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     );
   };
 
-  const renderedPage11_2 = (currentYear: string, previousYear: string) => {
+  const renderedPage11part2 = (currentYear: string, previousYear: string) => {
     if (!reportFinancial?.otherInfo?.freeCash) {
       return null;
     }
@@ -804,7 +804,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               reportFinancial.otherInfo.fourPointOneTitle}{' '}
           </p>
         </div>
-        {renderedPage10_1()}
+        {renderedPage10part1()}
       </section>
       {renderedFooter(10)}
     </div>
@@ -828,13 +828,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <h3 className="mt-8 text-base font-semibold leading-[24px] tracking-[0.16px] text-black">
             其他：
           </h3>
-          {renderedPage11_1()}
+          {renderedPage11part1()}
         </div>
         <div className="mb-4 mt-[32px] text-center text-xs font-semibold leading-[20px] tracking-[0.12px] text-surface-brand-secondary">
           <p className="text-start text-xs font-semibold">
             五、年度產生的自由現金：公司可以靈活運用的現金
           </p>
-          {renderedPage11_2(curYear, preYear)}
+          {renderedPage11part2(curYear, preYear)}
           <div className="relative -z-10">
             <Image
               className="absolute -top-180px right-0"
