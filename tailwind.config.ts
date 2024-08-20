@@ -723,6 +723,8 @@ module.exports = {
         lightGray5: '#58667F',
         lightGray6: '#CDD1D9',
         lightGray7: '#F4F5F7',
+        lightGray8: '#DEE2E6',
+        lightGray9: '#E0E0E0',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
@@ -1009,6 +1011,7 @@ module.exports = {
         '150px': '150px',
         '160px': '160px',
         '170px': '170px',
+        '177px': '177px',
         '180px': '180px',
         '190px': '190px',
         '200px': '200px',
@@ -1178,6 +1181,8 @@ module.exports = {
         '10%': '10%',
         '11%': '11%',
         '14%': '14%',
+        '17.5%': '17.5%',
+        '28%': '28%',
         '30%': '30%',
         '35%': '35%',
         '44%': '44%',
@@ -1186,6 +1191,7 @@ module.exports = {
         '60%': '60%',
         '70%': '70%',
         '75%': '75%',
+        '82.5%': '82.5%',
         '83%': '83%',
         '100%': '100%',
         0.5: '50%',
@@ -1283,7 +1289,8 @@ module.exports = {
         '120%': '120%',
         '140%': '140%',
       },
-      borderWidths: {
+      borderWidth: {
+        '0.5px': '0.5px',
         '1px': 'var(--stroke-width-lv-1)',
         '2px': 'var(--stroke-width-lv-2)',
         '3px': 'var(--stroke-width-lv-3)',
@@ -1425,11 +1432,6 @@ module.exports = {
       rotate: {
         135: '135deg',
         40: '40deg',
-      },
-      borderWidth: {
-        '0.5px': '0.5px',
-        '3px': '3px',
-        '5px': '5px',
       },
       backgroundSize: {
         150: '150%',
