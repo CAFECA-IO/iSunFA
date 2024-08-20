@@ -34,7 +34,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     },
     hasCompanyId
   );
-  // eslint-disable-next-line no-console
   // console.log('reportFinancial in reportId', reportFinancial);
   /* Info: 格式化數字為千分位 (20240730 - Anna) */
   const formatNumber = (num: number) => num.toLocaleString();
