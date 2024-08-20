@@ -305,37 +305,50 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   };
 
-  const deleteOCRHandler = (aichId: string) => {
-    setOCRList((prev) => {
-      const rs = prev.filter((ocr) => ocr.aichResultId !== aichId);
-      return rs;
-    });
-  };
+  // Info: 新增一個合併 OCR 列表的函數 (20240820 - Shirley)
+  const mergeOCRLists = useCallback((apiList: IOCR[], currentList: IOCR[]) => {
+    const mergedList = [...apiList];
 
-  const addOCRHandler = (
-    aichId: string,
-    imageName: string,
-    imageUrl: string,
-    imageSize: string,
-    uploadIdentifier: string
-  ) => {
-    const now = getTimestampNow();
-    const pendingOCR: IOCR = {
-      id: now,
-      aichResultId: aichId,
-      imageName,
-      imageUrl,
-      imageSize,
-      progress: 0,
-      status: ProgressStatus.WAITING_FOR_UPLOAD,
-      createdAt: 0,
-      uploadIdentifier,
-    };
-    setOCRList((prev) => {
-      const rs = [...prev, pendingOCR];
-      return rs;
+    currentList.forEach((localOCR) => {
+      if (!apiList.some((apiOCR) => apiOCR.aichResultId === localOCR.aichResultId)) {
+        mergedList.push(localOCR);
+      }
     });
-  };
+
+    // Info: 按創建時間排序，最舊的在前面 (20240820 - Shirley)
+    mergedList.sort((a, b) => a.createdAt - b.createdAt);
+
+    return mergedList;
+  }, []);
+
+  const deleteOCRHandler = useCallback((aichId: string) => {
+    setOCRList((prevList) => prevList.filter((ocr) => ocr.aichResultId !== aichId));
+  }, []);
+
+  const addOCRHandler = useCallback(
+    (
+      aichId: string,
+      imageName: string,
+      imageUrl: string,
+      imageSize: string,
+      uploadIdentifier: string
+    ) => {
+      const now = getTimestampNow();
+      const newOCR: IOCR = {
+        id: now,
+        aichResultId: aichId,
+        imageName,
+        imageUrl,
+        imageSize,
+        progress: 100,
+        status: ProgressStatus.SUCCESS,
+        createdAt: now,
+        uploadIdentifier,
+      };
+      setOCRList((prevList) => mergeOCRLists([newOCR], prevList));
+    },
+    [mergeOCRLists]
+  );
 
   const addPendingOCRHandler = (imageName: string, imageSize: string, uploadIdentifier: string) => {
     const ocr: IOCR = {
@@ -385,7 +398,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         });
       }
       if (listSuccess && unprocessOCRs) {
-        setOCRList(unprocessOCRs);
+        setOCRList((prevList) => mergeOCRLists(unprocessOCRs, prevList));
       }
       if (listSuccess === false) {
         setOCRListParams((prev) => (prev ? { ...prev, update: false } : prev));
