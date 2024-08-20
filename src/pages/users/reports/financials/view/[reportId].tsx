@@ -107,12 +107,12 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <link rel="icon" href="/favicon/favicon.ico" />
         {/* TODO: i18n (20240409 - Shirley) */}
         <title>
-          {
+          {`${
             FinancialReportTypesMap[
               BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
             ].name
           }
-          - iSunFA
+          - iSunFA`}
         </title>
 
         <meta

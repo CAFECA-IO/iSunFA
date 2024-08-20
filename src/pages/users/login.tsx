@@ -22,7 +22,7 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('NAV_BAR.LOGIN')} - iSunFA</title>
+        <title>{`${t('NAV_BAR.LOGIN')} - iSunFA`}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
