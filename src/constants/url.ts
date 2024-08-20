@@ -1,9 +1,9 @@
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
 export const ISUNFA_API = {
-  SIGN_UP: '/api/v1/sign-up',
-  SIGN_IN: '/api/v1/sign-in',
-  SIGN_OUT: '/api/v1/sign-out',
+  SIGN_UP: '/api/v1/sign_up',
+  SIGN_IN: '/api/v1/sign_in',
+  SIGN_OUT: '/api/v1/sign_out',
 };
 
 export const ISUNFA_ROUTE = {

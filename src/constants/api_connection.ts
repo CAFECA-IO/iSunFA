@@ -86,9 +86,9 @@ export enum APIName {
 export enum APIPath {
   AGREE_TO_TERMS = `${apiPrefixBeta}/agree-to-terms`,
   CREATE_CHALLENGE = `${apiPrefix}/challenge`,
-  SIGN_UP = `${apiPrefix}/sign-up`,
-  SIGN_IN = `${apiPrefix}/sign-in`,
-  SIGN_OUT = `${apiPrefix}/sign-out`,
+  SIGN_UP = `${apiPrefix}/sign_up`,
+  SIGN_IN = `${apiPrefix}/sign_in`,
+  SIGN_OUT = `${apiPrefix}/sign_out`,
   EMAIL = `${apiPrefix}/email`,
   USER_GET_BY_ID = `${apiPrefix}/user/:userId`,
   USER_UPDATE = `${apiPrefix}/user/:userId`,

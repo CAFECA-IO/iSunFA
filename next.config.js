@@ -36,7 +36,7 @@ const nextConfig = {
   },
   images: {
     loader: 'custom',
-    loaderFile: '/src/lib/utils/image-loader.js',
+    loaderFile: '/src/lib/utils/image_loader.js',
   },
   webpack: (config) => {
     const newConfig = cloneDeep(config);
