@@ -31,9 +31,9 @@ export enum ReportStatusType {
 export const ReportUrlMap: {
   [key in ReportSheetType]: string;
 } = {
-  [ReportSheetType.BALANCE_SHEET]: 'balance-sheet',
-  [ReportSheetType.INCOME_STATEMENT]: 'income-statement',
-  [ReportSheetType.CASH_FLOW_STATEMENT]: 'cash-flow-statement',
+  [ReportSheetType.BALANCE_SHEET]: 'balance_sheet',
+  [ReportSheetType.INCOME_STATEMENT]: 'income_statement',
+  [ReportSheetType.CASH_FLOW_STATEMENT]: 'cash_flow_statement',
   [ReportSheetType.REPORT_401]: '401-report',
 };
 
