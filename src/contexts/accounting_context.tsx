@@ -311,7 +311,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     const mergedList = [
       ...apiList,
       ...currentList.filter((localOCR) => !apiSet.has(localOCR.aichResultId)),
-    ]; // 過濾 currentList 中不在 apiSet 的項目
+    ];
 
     // Info: 按創建時間排序，最舊的在前面 (20240820 - Shirley)
     mergedList.sort((a, b) => a.createdAt - b.createdAt);
