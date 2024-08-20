@@ -1,39 +1,71 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
+import { IAdmin } from '@/interfaces/admin';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IAdmin } from '@/interfaces/admin';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { listAdminByCompanyId } from '@/lib/utils/repo/admin.repo';
 import { formatAdminList } from '@/lib/utils/formatter/admin.formatter';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-export default async function handler(
+async function handleGetRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAdmin | IAdmin[]>>
+  res: NextApiResponse<IResponseData<IAdmin[]>>
 ) {
-  try {
-    if (req.method === 'GET') {
-      const session = await getSession(req, res);
-      const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-      if (!isAuth) {
-        throw new Error(STATUS_MESSAGE.FORBIDDEN);
-      }
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAdmin[] = [];
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
       const listedAdmin = await listAdminByCompanyId(companyId);
       const adminList = await formatAdminList(listedAdmin);
-      const { httpCode, result } = formatApiResponse<IAdmin[]>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        adminList
-      );
-      res.status(httpCode).json(result);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      payload = adminList;
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IAdmin[] }>;
+} = {
+  GET: handleGetRequest,
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAdmin[]>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAdmin[] = [];
+
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<IAdmin>(error.message, {} as IAdmin);
+    statusMessage = error.message;
+    payload = [];
+  } finally {
+    const { httpCode, result } = formatApiResponse<IAdmin[]>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

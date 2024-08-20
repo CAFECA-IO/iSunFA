@@ -14,7 +14,6 @@ import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 function formatParams(companyId: unknown, accountId: string | string[] | undefined) {
-  // ToDo: (20240613 - Murky) - need to use type guard instead
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
   const isAccountIdValid = isParamNumeric(accountId);
 
@@ -33,6 +32,9 @@ function formatParams(companyId: unknown, accountId: string | string[] | undefin
 async function getCompanyIdAccountId(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession(req, res);
   const { userId, companyId } = session;
+  if (!userId) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -45,69 +47,86 @@ async function getCompanyIdAccountId(req: NextApiRequest, res: NextApiResponse) 
   };
 }
 
-export async function handleGetRequest(companyIdNumber: number, accountIdNumber: number) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAccount | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccount | null = null;
+
+  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
   const accountFromDb = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = accountFromDb ? formatAccount(accountFromDb) : ({} as IAccount);
-  const { httpCode, result } = formatApiResponse<IAccount>(STATUS_MESSAGE.SUCCESS, account);
-  return {
-    httpCode,
-    result,
-  };
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+  payload = account;
+
+  return { statusMessage, payload };
 }
 
-async function handlePutRequest(companyIdNumber: number, accountIdNumber: number, name: string) {
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAccount | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccount | null = null;
+
+  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
+  const { name } = req.body;
   const updatedAccount = await updateAccountInPrisma(accountIdNumber, companyIdNumber, name);
   const account = updatedAccount ? formatAccount(updatedAccount) : ({} as IAccount);
-  const { httpCode, result } = formatApiResponse<IAccount>(STATUS_MESSAGE.SUCCESS_UPDATE, account);
-  return {
-    httpCode,
-    result,
-  };
+  statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+  payload = account;
+
+  return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(companyIdNumber: number, accountIdNumber: number) {
+async function handleDeleteRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAccount | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccount | null = null;
+
+  const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
   const deletedAccount = await softDeleteAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = deletedAccount ? formatAccount(deletedAccount) : ({} as IAccount);
-  const { httpCode, result } = formatApiResponse<IAccount>(STATUS_MESSAGE.SUCCESS_DELETE, account);
-  return {
-    httpCode,
-    result,
-  };
+  statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+  payload = account;
+
+  return { statusMessage, payload };
 }
 
-export function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IAccount>(message, {} as IAccount);
-  return {
-    httpCode,
-    result,
-  };
-}
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IAccount | null }>;
+} = {
+  GET: handleGetRequest,
+  PUT: handlePutRequest,
+  DELETE: handleDeleteRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccount>>
+  res: NextApiResponse<IResponseData<IAccount | null>>
 ) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccount | null = null;
+
   try {
-    const { companyIdNumber, accountIdNumber } = await getCompanyIdAccountId(req, res);
-    if (req.method === 'GET') {
-      const { httpCode, result } = await handleGetRequest(companyIdNumber, accountIdNumber);
-      res.status(httpCode).json(result);
-    } else if (req.method === 'PUT') {
-      const { name } = req.body;
-      const { httpCode, result } = await handlePutRequest(companyIdNumber, accountIdNumber, name);
-      res.status(httpCode).json(result);
-    } else if (req.method === 'DELETE') {
-      const { httpCode, result } = await handleDeleteRequest(companyIdNumber, accountIdNumber);
-      res.status(httpCode).json(result);
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    // Info Murky (20240416): Debugging
-    // eslint-disable-next-line no-console
-    console.error(error.message);
-    const { httpCode, result } = handleErrorResponse(res, error.message);
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IAccount | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
