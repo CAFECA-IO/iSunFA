@@ -67,7 +67,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
     inputTotal === 0 ||
     inputUsefulLife === 0;
 
-  // ToDo: (20240508 - Julian) Add Property Submit Handler
+  // ToDo: [Beta] (20240508 - Julian) Add Property Submit Handler
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
   };

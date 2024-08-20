@@ -153,7 +153,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     filteredAccountList.length > 0 ? (
       filteredAccountList.map((accountItem: IAccount) => {
         const title = generateAccountTitle(accountItem);
-        const displayTitle = t(accountTitleMap[title]) || t(title); // ToDo: (20240712 - Julian) Translate account title
+        const displayTitle = t(accountTitleMap[title]) || t(title);
         // Info: (20240430 - Julian) 點擊選單選項
         const clickHandler = () => {
           setSelectAccount(accountItem);

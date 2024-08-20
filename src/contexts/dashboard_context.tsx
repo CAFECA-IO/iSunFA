@@ -5,17 +5,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;
-  toggleBookmark: (bookmarkName: string[]) => void;
-  addBookmarks: (bookmarks: string[]) => void;
-  removeBookmark: (bookmarkName: string) => void;
   addSelectedBookmarks: (bookmarks: string[]) => void;
 }
 
 const initialDashboardContext: DashboardContextType = {
   bookmarkList: {},
-  toggleBookmark: () => {},
-  addBookmarks: () => {},
-  removeBookmark: () => {},
   addSelectedBookmarks: () => {},
 };
 
@@ -687,56 +681,6 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   const [bookmarkList, setBookmarkList, bookmarkListRef] =
     useStateRef<Record<string, BookmarkItem>>(BookmarkAvailableList);
 
-  // Deprecated: 20240815 - Shirley
-  const toggleBookmark = (bookmarkNames: string[]) => {
-    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
-      const updatedBookmarkList = { ...prevBookmarkList };
-
-      bookmarkNames.forEach((bookmarkName: string) => {
-        if (updatedBookmarkList[bookmarkName]) {
-          updatedBookmarkList[bookmarkName] = {
-            ...updatedBookmarkList[bookmarkName],
-            added: !updatedBookmarkList[bookmarkName].added,
-          };
-        }
-      });
-      return updatedBookmarkList;
-    });
-  };
-
-  // Deprecated: 20240815 - Shirley
-  const removeBookmark = (bookmarkName: string) => {
-    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => ({
-      ...prevBookmarkList,
-      [bookmarkName]: {
-        ...prevBookmarkList[bookmarkName],
-        added: true,
-      },
-    }));
-  };
-
-  // Deprecated: 20240815 - Shirley
-  const addBookmarks = (bookmarks: string[]) => {
-    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
-      const updatedBookmarkList = { ...prevBookmarkList };
-      Object.entries(updatedBookmarkList).forEach(([key, value]) => {
-        updatedBookmarkList[key] = {
-          ...value,
-          added: true,
-        };
-      });
-      bookmarks.forEach((bookmarkName: string) => {
-        if (updatedBookmarkList[bookmarkName]) {
-          updatedBookmarkList[bookmarkName] = {
-            ...updatedBookmarkList[bookmarkName],
-            added: true,
-          };
-        }
-      });
-      return updatedBookmarkList;
-    });
-  };
-
   const addSelectedBookmarks = (bookmarks: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
       const updatedBookmarkList = { ...prevBookmarkList };
@@ -760,9 +704,6 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
   // eslint-disable-next-line react/jsx-no-constructed-context-values
   const value = {
     bookmarkList: bookmarkListRef.current,
-    toggleBookmark,
-    addBookmarks,
-    removeBookmark,
     addSelectedBookmarks,
   };
 

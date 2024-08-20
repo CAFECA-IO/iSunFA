@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { FaRegStar, FaStar } from 'react-icons/fa';
 import { FaRegSquarePlus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
@@ -39,15 +37,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   const { deleteOwnAccountTitle } = useAccountingCtx();
   const { id, code, name } = rowData;
 
-  // ToDo: (20240717 - Julian) favorite status from API
-  const [isFavorite, setIsFavorite] = useState(false);
-
   const codeAndName = `${code} - ${name}`;
-
-  // ToDo: (20240717 - Julian) call API to update favorite status
-  const handleFavorite = () => {
-    setIsFavorite(!isFavorite);
-  };
 
   const handleAddAccount = () => {
     addAccountTitleDataHandler(id);
@@ -73,28 +63,10 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     messageModalVisibilityHandler();
   };
 
-  const displayStar = isFavorite ? (
-    <FaStar className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
-  ) : (
-    <FaRegStar className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
-  );
-
   const actionsDesktop =
     actionType === ActionType.FAV_AND_ADD ? (
       // Info: (20240717 - Julian) Actions for Favorite and Add New Sub
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
-        {/* Info: (20240717 - Julian) Favorite button */}
-        {/* Info: (20240718 - Julian) 現階段不做 Favorite 功能 */}
-        <button
-          type="button"
-          className="group hidden items-center gap-4px"
-          onClick={handleFavorite}
-        >
-          {displayStar}
-          <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.FAVORITE')}
-          </p>
-        </button>
         {/* Info: (20240717 - Julian) Add New Sub button */}
         <button
           type="button"
@@ -139,15 +111,6 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     actionType === ActionType.FAV_AND_ADD ? (
       // Info: (20240717 - Julian) Actions for Favorite and Add New Sub
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
-        {/* Info: (20240717 - Julian) Favorite button */}
-        {/* Info: (20240718 - Julian) 現階段不做 Favorite 功能 */}
-        <button
-          type="button"
-          className="hidden items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
-          onClick={handleFavorite}
-        >
-          {displayStar}
-        </button>
         {/* Info: (20240717 - Julian) Add New Sub button */}
         <button
           type="button"

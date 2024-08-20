@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import { useUserCtx } from '@/contexts/user_context';
@@ -10,6 +11,7 @@ import CompanyInfoPageBody from '@/components/company_info_page_body/company_inf
 import SettingSidebar from '@/components/setting_sidebar/setting_sidebar';
 
 const CompanyInfoPage = () => {
+  const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -34,8 +36,7 @@ const CompanyInfoPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
-        <title>Setting - iSunFA</title>
+        <title>{t('SETTING.COMPANY_SETTING')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

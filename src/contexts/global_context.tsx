@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState, useContext, createContext, useMemo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
@@ -16,9 +15,12 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
+// eslint-disable-next-line import/no-cycle
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
 import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
+// eslint-disable-next-line import/no-cycle
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
+// eslint-disable-next-line import/no-cycle
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {
   IPreviewInvoiceModal,
@@ -27,7 +29,9 @@ import {
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
+// eslint-disable-next-line import/no-cycle
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
+// eslint-disable-next-line import/no-cycle
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
@@ -37,20 +41,27 @@ import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+// eslint-disable-next-line import/no-cycle
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
+// eslint-disable-next-line import/no-cycle
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+// eslint-disable-next-line import/no-cycle
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+// eslint-disable-next-line import/no-cycle
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+// eslint-disable-next-line import/no-cycle
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
+// eslint-disable-next-line import/no-cycle
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+// eslint-disable-next-line import/no-cycle
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
@@ -391,13 +402,21 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
     const {
+      // eslint-disable-next-line react/prop-types
       id,
+      // eslint-disable-next-line react/prop-types
       type,
+      // eslint-disable-next-line react/prop-types
       content,
+      // eslint-disable-next-line react/prop-types
       closeable,
+      // eslint-disable-next-line react/prop-types
       autoClose: isAutoClose,
+      // eslint-disable-next-line react/prop-types
       position: toastPosition,
+      // eslint-disable-next-line react/prop-types
       onClose = () => {},
+      // eslint-disable-next-line react/prop-types
       onOpen = () => {},
     } = props;
 

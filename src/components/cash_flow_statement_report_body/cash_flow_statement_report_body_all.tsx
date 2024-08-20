@@ -1,5 +1,3 @@
-/* eslint-disable tailwindcss/no-arbitrary-value */
-// TODO: 在 tailwindcss.config 註冊 css 變數，取消 eslint-disable (20240723 - Shirley Anna)
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
@@ -112,7 +110,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-[#e0e0e0] bg-surface-brand-secondary p-10px">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-lightGray9 bg-surface-brand-secondary p-10px">
         <p className="m-0 text-xs text-white">{page}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
@@ -126,16 +124,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <table className="relative w-full border-collapse bg-white">
         <thead>
           <tr>
-            <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-xs font-semibold">
+            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
               代號
             </th>
-            <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-xs font-semibold">
+            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
               會計項目
             </th>
-            <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-xxs font-semibold">
+            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
               {curDate.from}至{curDate.to}
             </th>
-            <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-end text-xxs font-semibold">
+            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
               {preDate.from}至{preDate.to}
             </th>
           </tr>
@@ -145,7 +143,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             if (!value.code) {
               return (
                 <tr key={value.code}>
-                  <td colSpan={6} className="border border-[#dee2e6] p-[10px] text-xs font-bold">
+                  <td colSpan={6} className="border border-lightGray8 p-10px text-xs font-bold">
                     {value.name}
                   </td>
                 </tr>
@@ -153,12 +151,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             }
             return (
               <tr key={value.code}>
-                <td className="border border-[#dee2e6] p-[10px] text-xs">{value.code}</td>
-                <td className="border border-[#dee2e6] p-[10px] text-xs">{value.name}</td>
-                <td className="border border-[#dee2e6] p-[10px] text-end text-xs">
+                <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
+                <td className="border border-lightGray8 p-10px text-xs">{value.name}</td>
+                <td className="border border-lightGray8 p-10px text-end text-xs">
                   {value.curPeriodAmount}
                 </td>
-                <td className="border border-[#dee2e6] p-[10px] text-end text-xs">
+                <td className="border border-lightGray8 p-10px text-end text-xs">
                   {value.prePeriodAmount}
                 </td>
               </tr>
@@ -172,10 +170,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const renderedPage10part1 = () => {
     return (
       <div className="mt-4 text-text-neutral-primary">
-        <h3 className="text-base font-semibold leading-[24px] tracking-[0.16px]">
-          不動產、廠房、設備的收支項目：
-        </h3>
-        <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px] text-text-neutral-primary">
+        <h3 className="text-base font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
+        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -183,10 +179,8 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           ))}
         </ol>
 
-        <h3 className="mt-4 text-base font-semibold leading-[24px] tracking-[0.16px]">
-          策略性投資項目：
-        </h3>
-        <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px] text-text-neutral-primary">
+        <h3 className="mt-4 text-base font-semibold leading-6">策略性投資項目：</h3>
+        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -199,7 +193,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
   const renderedPage11part1 = () => {
     return (
-      <ol className="list-decimal pl-6 text-xs font-normal leading-[20px] tracking-[0.12px] text-text-neutral-primary">
+      <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
         {thirdThought?.split('\n').map((line) => (
           <li key={line} className="mb-2 ml-1">
             {line}
@@ -219,50 +213,50 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       reportFinancial?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
-            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               營業活動現金流入
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[
                 currentYear
               ]?.operatingCashFlow.toLocaleString()}
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[
                 previousYear
               ]?.operatingCashFlow.toLocaleString()}
             </td>
           </tr>
           <tr>
-            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               不動產、廠房及設備
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
             </td>
           </tr>
           <tr>
-            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               無形資產支出
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset.toLocaleString()}
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset.toLocaleString()}
             </td>
           </tr>
           <tr>
-            <td className="border border-[#dee2e6] p-[10px] text-start text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               自由現金流量
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
-            <td className="border border-[#dee2e6] p-[10px] text-end text-[12px] font-normal leading-[20px] tracking-[0.12px] text-text-neutral-secondary">
+            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
             </td>
           </tr>
@@ -275,12 +269,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <div className="mt-4">
         <table className="w-full border-collapse bg-white">
           <thead>
-            <tr className="bg-[#ffd892]">
-              <th className="border border-[#c1c9d5] p-[10px] text-left text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary"></th>
-              <th className="border border-[#c1c9d5] p-[10px] text-center text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary">
+            <tr className="bg-surface-brand-primary-soft">
+              <th className="border border-stroke-brand-secondary-soft p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
+              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xxs font-semibold leading-5 text-text-neutral-secondary">
                 {currentYear}年度
               </th>
-              <th className="border border-[#c1c9d5] p-[10px] text-center text-[10px] font-semibold leading-[20px] tracking-[0.1px] text-text-neutral-secondary">
+              <th className="border border-stroke-brand-secondary-soft p-10px text-center text-xxs font-semibold leading-5 text-text-neutral-secondary">
                 {previousYear}年度
               </th>
             </tr>
@@ -294,7 +288,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page1 = (
     <div id="1" className="relative h-a4-height overflow-hidden">
       <header className="mb-10 flex justify-between text-white">
-        <div className="w-30% bg-surface-brand-secondary pb-14px pl-[10px] pr-14px pt-[40px] font-bold">
+        <div className="w-30% bg-surface-brand-secondary pb-14px pl-10px pr-14px pt-40px font-bold">
           <div className="">
             {reportFinancial && reportFinancial.company && (
               <>
@@ -302,7 +296,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {reportFinancial.company.code} <br />
                   {reportFinancial.company.name}
                 </h1>
-                <p className="text-left text-[12px] font-bold leading-[20px] tracking-[0.01em]">
+                <p className="text-left text-xs font-bold leading-5">
                   {curDate.from}至{curDate.to} <br />
                   合併財務報告 - 現金流量表
                 </p>
@@ -311,14 +305,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           </div>
         </div>
         <div className="box-border w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="relative mx-1 text-text-neutral-secondary">
-        <div className="mb-[16px] flex justify-between text-xs font-semibold text-surface-brand-secondary">
+        <div className="mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
           <p>單位：新台幣仟元</p>
         </div>
@@ -330,14 +324,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page2 = (
     <div id="2" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -379,14 +373,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page3 = (
     <div id="3" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -413,14 +407,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page4 = (
     <div id="4" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -447,14 +441,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page5 = (
     <div id="5" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -481,14 +475,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page6 = (
     <div id="6" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -515,14 +509,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page7 = (
     <div id="7" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
@@ -549,19 +543,19 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page8 = (
     <div id="8" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>
             {' '}
             {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.thirdTitle}
@@ -597,11 +591,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             <table className="relative w-full border-collapse bg-white">
               <thead>
                 <tr className="text-xxs">
-                  <th className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-left text-[14px] font-semibold"></th>
+                  <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
                   {lineChartLabels?.map((label) => (
                     <th
                       key={label}
-                      className="border border-[#c1c9d5] bg-[#ffd892] p-[10px] text-center text-[14px] font-semibold"
+                      className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold"
                     >
                       {label}
                     </th>
@@ -610,31 +604,28 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </thead>
               <tbody className="text-xs">
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold">A</td>
+                  <td className="border border-lightGray8 p-10px font-semibold">A</td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td
-                        key={year}
-                        className="border border-[#dee2e6] p-[10px] font-semibold"
-                      ></td>
+                      <td key={year} className="border border-lightGray8 p-10px font-semibold"></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">稅前淨利（淨損）</td>
+                  <td className="border border-lightGray8 p-10px">稅前淨利（淨損）</td>
                   {Object.entries(
                     reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
                   ).map(([year, value]) => (
-                    <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                    <td key={year} className="border border-lightGray8 p-10px text-end">
                       {value.toLocaleString()}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">折舊及攤銷費用</td>
+                  <td className="border border-lightGray8 p-10px">折舊及攤銷費用</td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                      <td key={year} className="border border-lightGray8 p-10px text-end">
                         {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
                           year
                         ].toLocaleString()}
@@ -643,49 +634,46 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">支付的所得稅</td>
+                  <td className="border border-lightGray8 p-10px">支付的所得稅</td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
-                      <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                      <td key={year} className="border border-lightGray8 p-10px text-end">
                         {value.toLocaleString()}
                       </td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px] font-semibold">B</td>
+                  <td className="border border-lightGray8 p-10px font-semibold">B</td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td
-                        key={year}
-                        className="border border-[#dee2e6] p-[10px] font-semibold"
-                      ></td>
+                      <td key={year} className="border border-lightGray8 p-10px font-semibold"></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">營業活動的現金</td>
+                  <td className="border border-lightGray8 p-10px">營業活動的現金</td>
                   {Object.entries(
                     reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
                   ).map(([year, value]) => (
-                    <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                    <td key={year} className="border border-lightGray8 p-10px text-end">
                       {value.toLocaleString()}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]"></td>
+                  <td className="border border-lightGray8 p-10px"></td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td key={year} className="border border-[#dee2e6] p-[10px]"></td>
+                      <td key={year} className="border border-lightGray8 p-10px"></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-[#dee2e6] p-[10px]">A和B比例關係</td>
+                  <td className="border border-lightGray8 p-10px">A和B比例關係</td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
-                      <td key={year} className="border border-[#dee2e6] p-[10px] text-end">
+                      <td key={year} className="border border-lightGray8 p-10px text-end">
                         {value.toFixed(2)}
                       </td>
                     )
@@ -711,19 +699,19 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page9 = (
     <div id="9" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="relative mx-1 text-xs text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px font-semibold text-surface-brand-secondary">
           <p className="break-words text-xs font-semibold leading-tight">
             {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}
           </p>
@@ -762,7 +750,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             <BarChart data={preBarChartData} labels={preBarChartLabels} />
           </div>
         </div>
-        <div className="mb-[16px] mt-4 font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary">
           <p className="text-xs font-semibold">
             {reportFinancial &&
               reportFinancial.otherInfo &&
@@ -785,19 +773,19 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page10 = (
     <div id="10" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] text-xs font-semibold leading-[20px] tracking-[0.12px] text-surface-brand-secondary">
+        <div className="mb-16px mt-32px text-xs font-semibold leading-5 text-surface-brand-secondary">
           <p className="text-xs font-semibold">
             {reportFinancial &&
               reportFinancial.otherInfo &&
@@ -812,25 +800,23 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const page11 = (
     <div id="11" className="relative h-a4-height overflow-hidden">
       <header className="flex justify-between text-white">
-        <div className="mt-[29px] flex w-[28%]">
-          <div className="h-[10px] w-[82.5%] bg-surface-brand-secondary"></div>
-          <div className="h-[10px] w-[17.5%] bg-surface-brand-primary"></div>
+        <div className="mt-30px flex w-28%">
+          <div className="h-10px w-82.5% bg-surface-brand-secondary"></div>
+          <div className="h-10px w-17.5% bg-surface-brand-primary"></div>
         </div>
         <div className="w-35% text-right">
-          <h2 className="relative whitespace-nowrap border-b-[10px] border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
+          <h2 className="relative whitespace-nowrap border-b-6px border-b-surface-brand-primary pr-5 pt-6 text-h6 font-bold text-surface-brand-secondary-soft">
             Cash Flow Statement
-            <span className="absolute bottom-[-20px] right-0 h-[5px] w-75% bg-surface-brand-secondary"></span>
+            <span className="absolute -bottom-20px right-0 h-5px w-75% bg-surface-brand-secondary"></span>
           </h2>
         </div>
       </header>
       <section className="relative mx-3 text-xs text-text-neutral-secondary">
-        <div className="mb-[16px] mt-[32px] text-xs font-semibold leading-[20px] tracking-[0.12px] text-surface-brand-secondary">
-          <h3 className="mt-8 text-base font-semibold leading-[24px] tracking-[0.16px] text-black">
-            其他：
-          </h3>
+        <div className="mb-16px mt-32px text-xs font-semibold leading-5 text-surface-brand-secondary">
+          <h3 className="mt-8 text-base font-semibold leading-6 text-black">其他：</h3>
           {renderedPage11part1()}
         </div>
-        <div className="mb-4 mt-[32px] text-center text-xs font-semibold leading-[20px] tracking-[0.12px] text-surface-brand-secondary">
+        <div className="mb-4 mt-32px text-center text-xs font-semibold leading-5 text-surface-brand-secondary">
           <p className="text-start text-xs font-semibold">
             五、年度產生的自由現金：公司可以靈活運用的現金
           </p>

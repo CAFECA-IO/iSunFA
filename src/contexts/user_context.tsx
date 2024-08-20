@@ -232,9 +232,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Invalid response type: Expected AuthenticatorAssertionResponse');
       }
     } catch (error) {
-      // Deprecated: dev (20240730 - Tzuhan)
-      // eslint-disable-next-line no-console
-      console.error('handleExistingCredential error:', error);
+      throw new Error('handleExistingCredential error thrown in userCtx');
     }
   };
 
@@ -338,9 +336,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
       handleSignUpAPIResponse(signUpResponse);
     } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signUp error:', error);
+      throw new Error('signUp error thrown in userCtx');
     }
   };
 
@@ -381,11 +377,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
       handleSignInAPIResponse(signInResponse);
     } catch (error) {
-      // Deprecated: dev (20240410 - Shirley)
-      // eslint-disable-next-line no-console
-      console.error('signIn error and try to call singUp function:', error);
-      // signUp({ username: '' });
-
       if (!(error instanceof DOMException)) {
         setIsSignInError(true);
 
