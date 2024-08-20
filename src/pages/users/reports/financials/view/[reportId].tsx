@@ -153,8 +153,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   // }
 
   // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { reportId = '', report_type = '' } = query;
+  const { reportId = '', report_type: reportType = '' } = query;
   // if (!report_id || !report_type) {
   //   return {
   //     notFound: true,
@@ -164,7 +163,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   return {
     props: {
       reportId: reportId as string,
-      reportType: report_type as string,
+      reportType: reportType as string,
       // reportLanguage: report_language as string,
       // startTimestamp: start_timestamp as string,
       // endTimestamp: end_timestamp as string,

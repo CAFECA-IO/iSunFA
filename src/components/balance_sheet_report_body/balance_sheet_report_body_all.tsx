@@ -272,7 +272,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     return rows;
   };
 
-  const rowsForPage2_1 = (items: Array<FinancialReportItem>) => {
+  const rowsForPage2part1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 2).map((item, index) => {
       if (!item.code) {
         return (
@@ -731,7 +731,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {reportFinancial &&
               reportFinancial.details &&
               Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage2_1(reportFinancial.details)}
+              rowsForPage2part1(reportFinancial.details)}
           </tbody>
         </table>
       </section>
