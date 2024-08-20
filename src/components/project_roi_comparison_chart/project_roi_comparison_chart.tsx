@@ -481,28 +481,6 @@ const ProjectRoiComparisonChart = () => {
                 setFilteredPeriod={setPeriod}
               />
             </div>
-
-            {/* Info: prev and next button (20240419 - Shirley) */}
-            {/* Deprecated: No relevant function in the latest mockup (20240618 - Shirley) */}
-            <div className="flex flex-1 justify-end space-x-2">
-              <Button
-                disabled={currentPage === 1}
-                onClick={goToPrevPage}
-                variant={'tertiaryOutline'}
-                className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
-              >
-                <AiOutlineLeft size={15} />
-              </Button>
-
-              <Button
-                disabled={currentPage === totalPages}
-                onClick={goToNextPage}
-                variant={'tertiaryOutline'}
-                className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
-              >
-                <AiOutlineRight size={15} />
-              </Button>
-            </div>
           </div>
         </div>
       </div>
