@@ -60,9 +60,6 @@ const LoginPageBody = ({ invitation, action }: ILoginPageBodyProps) => {
         registerHandler();
       }
     } catch (error) {
-      // Deprecated: (20240805 - tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.log('loginHandler error', error);
       if ((error as Error).name === 'NotAllowedError') {
         registerHandler(); // Info: 導入註冊流程 (20240801 - tzuhan)
       }
