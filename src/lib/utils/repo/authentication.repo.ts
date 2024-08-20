@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { Authentication, User } from '@prisma/client';
+import { Authentication, User, UserAgreement } from '@prisma/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function getUserByCredential(
@@ -40,7 +40,7 @@ export async function createUserByAuth({
   fullName?: string;
   email?: string;
   phone?: string;
-}): Promise<Authentication & { user: User }> {
+}): Promise<Authentication & { user: User & { userAgreements: UserAgreement[] } }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   // publicKey: string,
@@ -67,7 +67,11 @@ export async function createUserByAuth({
       updatedAt: nowTimestamp,
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
     },
   });
 
