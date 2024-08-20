@@ -99,7 +99,6 @@ const AddProjectModal = ({
   };
   const addProjectSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // ToDo: (20240611 - Julian) send data to API
     createProject({
       params: {
         companyId: selectedCompany?.id,
@@ -107,7 +106,7 @@ const AddProjectModal = ({
       body: {
         name: inputName,
         stage: selectedStage,
-        // ToDo: (20240802 - Julian) get member list
+        // ToDo: [Beta](20240802 - Julian) get member list
         memberIdList: [], // selectedMembers.map((member) => member.id),
       },
     });
@@ -144,7 +143,7 @@ const AddProjectModal = ({
     }
   }, [createSuccess, data]);
 
-  // ToDo: (20240612 - Julian) get member list from API
+  // ToDo: [Beta](20240612 - Julian) get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱
