@@ -11,7 +11,7 @@ import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;

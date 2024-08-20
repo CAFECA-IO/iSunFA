@@ -21,7 +21,6 @@
     "@passwordless-id/webauthn": "^1.5.0",
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
-    "@types/react-chartjs-2": "^2.5.7",
     "apexcharts": "^3.48.0",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
@@ -48,7 +47,7 @@
     "react-dom": "^18",
     "react-i18next": "^14.1.2",
     "react-icons": "^5.0.1",
-    "react-pdf": "^8.0.2",
+    "react-pdf": "^9.1.0",
     "react-toastify": "^10.0.5",
     "react-usestateref": "^1.0.8",
     "sharp": "^0.33.3",
@@ -90,6 +89,15 @@
     "tailwindcss": "^3.4.0",
     "ts-jest": "^29.1.4",
     "typescript": "^5.3.3"
+  },
+  "overrides": {
+    "glob": "10.4.5",
+    "rimraf": "4.0.0",
+    "inflight": {
+      "version": "1.0.6",
+      "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.6.tgz",
+      "integrity": "sha512-k92I/bzJV/A7GyX5t8Saa2zKe2ST0NjsiK9gFrTm+TRM5ffWl6NstPsj+jlfRuqdrVtkABM4Cz8VBV5HHi38TA=="
+    }
   },
   "husky": {
     "hooks": {
