@@ -35,7 +35,6 @@ const MyReportsPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
         <title>{t('REPORTS_SIDEBAR.MY_REPORTS')} - iSunFA</title>
         <meta
           name="description"
