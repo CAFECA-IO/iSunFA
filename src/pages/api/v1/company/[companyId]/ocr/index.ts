@@ -9,6 +9,7 @@ import {
   timestampInMilliSeconds,
   timestampInSeconds,
   transformBytesToFileSizeString,
+  transformFileSizeStringToBytes,
   transformOCRImageIDToURL,
 } from '@/lib/utils/common';
 import { parseForm } from '@/lib/utils/parse_image_form';
@@ -30,7 +31,7 @@ import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 
-// Info Murky (20240424) 要使用formidable要先關掉bodyParser
+// Info: (20240424 - Murky) 要使用formidable要先關掉bodyParser
 export const config = {
   api: {
     bodyParser: false,
@@ -57,14 +58,14 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   const formData = createImageFormData(imageBlob, imageName);
 
   let response: Response;
-  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_OCR);
+  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_INVOICE);
   try {
     response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
     });
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
@@ -91,7 +92,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
@@ -104,15 +105,20 @@ export async function getPayloadFromResponseJSON(
   return json.payload as IAccountResultStatus;
 }
 
-// Info (20240521-Murky) 回傳目前還是array 的型態，因為可能會有多張圖片一起上傳
+// Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-export async function postImageToAICH(files: formidable.Files): Promise<
+export async function postImageToAICH(files: formidable.Files, imageFields: {
+    imageSize: number;
+    imageName: string;
+    uploadIdentifier: string;
+  }[]): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
     imageUrl: string;
     imageSize: number;
     type: string;
+    uploadIdentifier: string;
   }[]
 > {
   let resultJson: {
@@ -121,18 +127,24 @@ export async function postImageToAICH(files: formidable.Files): Promise<
     imageUrl: string;
     imageSize: number;
     type: string;
+    uploadIdentifier: string;
   }[] = [];
   if (files && files.image && files.image.length) {
-    // Info (20240504 - Murky): 圖片會先被存在本地端，然後才讀取路徑後轉傳給AICH
+    // Info: (20240504 - Murky) 圖片會先被存在本地端，然後才讀取路徑後轉傳給 AICH
     resultJson = await Promise.all(
-      files.image.map(async (image) => {
-        const defaultResultId = 'error-' + generateUUID;
+      files.image.map(async (image, index) => {
+        const imageFieldsLength = imageFields.length;
+        const isIndexValid = index < imageFieldsLength;
+
+        // Info: (20240816 - Murky) 壞檔的 Image 會被標上特殊的 resultId
+        const defaultResultId = 'error-' + generateUUID();
         let result: {
           resultStatus: IAccountResultStatus;
           imageName: string;
           imageUrl: string;
           imageSize: number;
           type: string;
+          uploadIdentifier: string;
         } = {
           resultStatus: {
             status: ProgressStatus.IN_PROGRESS,
@@ -142,24 +154,29 @@ export async function postImageToAICH(files: formidable.Files): Promise<
           imageName: '',
           imageSize: 0,
           type: 'invoice',
+          uploadIdentifier: '',
         };
         try {
           const imageBlob = await readImageFromFilePath(image);
-          const imageName = getImageName(image);
+
+          const imageNameInLocal = getImageName(image);
+          const imageName = isIndexValid ? imageFields[index].imageName : imageNameInLocal;
+          const imageSize = isIndexValid ? imageFields[index].imageSize : image.size;
 
           const fetchResult = uploadImageToAICH(imageBlob, imageName);
 
           const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageName);
+          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageNameInLocal);
           result = {
             resultStatus,
             imageUrl,
             imageName,
-            imageSize: image.size,
+            imageSize,
             type: 'invoice',
+            uploadIdentifier: isIndexValid ? imageFields[index].uploadIdentifier : '',
           };
         } catch (error) {
-          // Deprecated (20240611 - Murky) Debugging purpose
+          // Deprecated: (20240611 - Murky) Debugging purpose
           // eslint-disable-next-line no-console
           console.log(error);
         }
@@ -167,7 +184,7 @@ export async function postImageToAICH(files: formidable.Files): Promise<
       })
     );
   } else {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log('No image file found in formidable when upload ocr');
   }
@@ -184,26 +201,59 @@ export function isCompanyIdValid(companyId: any): companyId is number {
   return true;
 }
 
-export async function getImageFileFromFormData(req: NextApiRequest) {
+export function extractDataFromFields(fields: formidable.Fields) {
+  const { imageSize, imageName, uploadIdentifier } = fields;
+
+  const imageFieldsArray: {
+    imageSize: number;
+    imageName: string;
+    uploadIdentifier: string;
+  }[] = [];
+
+  if (
+    imageSize && imageSize.length &&
+    imageName && imageName.length &&
+    uploadIdentifier && uploadIdentifier.length &&
+    imageSize.length === imageName.length && imageSize.length === uploadIdentifier.length
+  ) {
+    imageSize.forEach((size, index) => {
+      imageFieldsArray.push({
+        imageSize: transformFileSizeStringToBytes(size),
+        imageName: imageName[index],
+        uploadIdentifier: uploadIdentifier[index],
+      });
+    });
+  }
+
+  // Info: (20240815 - Murky) imageSize is string
+  return imageFieldsArray;
+}
+
+export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
   let files: formidable.Files = {};
+  let fields: formidable.Fields = {};
 
   try {
     const parsedForm = await parseForm(req, FileFolder.INVOICE);
+
     files = parsedForm.files;
+    fields = parsedForm.fields;
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
   }
-  return files;
+  return {
+    files,
+    fields
+  };
 }
-
 export async function fetchStatus(aichResultId: string) {
   let status: ProgressStatus = ProgressStatus.SYSTEM_ERROR;
 
   if (aichResultId.length > 0) {
     try {
-      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT_ID, aichResultId);
       const result = await fetch(fetchUrl);
 
       if (!result.ok) {
@@ -212,7 +262,7 @@ export async function fetchStatus(aichResultId: string) {
 
       status = (await result.json()).payload;
     } catch (error) {
-      // Deprecated (20240611 - Murky) Debugging purpose
+      // Deprecated: (20240611 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(error);
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
@@ -222,7 +272,7 @@ export async function fetchStatus(aichResultId: string) {
   return status;
 }
 
-// Deprecated (20240809 - Murky) This function is not used
+// Deprecated: (20240809 - Murky) This function is not used
 export function calculateProgress(createdAt: number, status: ProgressStatus, ocrResultId: string) {
   const currentTime = new Date();
   const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
@@ -275,37 +325,62 @@ export async function createOcrFromAichResults(
     imageName: string;
     imageSize: number;
     type: string;
+    uploadIdentifier: string;
   }[]
 ) {
-  const resultJson: IAccountResultStatus[] = [];
+  const resultJson: IOCR[] = [];
+  const ocrData: (Ocr | null)[] = [];
 
   try {
     await Promise.all(
       aichResults.map(async (aichResult) => {
-        await createOcrInPrisma(companyId, aichResult);
-        resultJson.push(aichResult.resultStatus);
+        const ocr = await createOcrInPrisma(companyId, aichResult);
+        ocrData.push(ocr);
       })
     );
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
+
+  aichResults.forEach((aichResult, index) => {
+    const ocr = ocrData[index];
+    if (ocr) {
+      const imageSize = transformBytesToFileSizeString(aichResult.imageSize);
+      const createdAt = timestampInSeconds(ocr.createdAt);
+      const unprocessedOCR: IOCR = {
+        id: ocr.id,
+        aichResultId: ocr.aichResultId,
+        imageUrl: aichResult.imageUrl,
+        imageName: aichResult.imageName,
+        imageSize,
+        status: ProgressStatus.IN_PROGRESS,
+        progress: 0,
+        createdAt,
+        uploadIdentifier: aichResult.uploadIdentifier,
+      };
+
+      resultJson.push(unprocessedOCR);
+    }
+  });
+
   return resultJson;
 }
 
 export async function handlePostRequest(companyId: number, req: NextApiRequest) {
-  let resultJson: IAccountResultStatus[] = [];
+  let resultJson: IOCR[] = [];
 
   try {
-    const files = await getImageFileFromFormData(req);
-    const aichResults = await postImageToAICH(files);
-    // Deprecated (20240611 - Murky) This function is not used
+    const { files, fields } = await getImageFileAndFormFromFormData(req);
+    const imageFieldsArray = extractDataFromFields(fields);
+    const aichResults = await postImageToAICH(files, imageFieldsArray);
+    // Deprecated: (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -323,7 +398,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
+    // Deprecated: (20240611 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
@@ -335,7 +410,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   return unprocessedOCRs;
 }
 
-type ApiReturnType = IAccountResultStatus[] | IOCR[];
+type ApiReturnType = IOCR[];
 
 export default async function handler(
   req: NextApiRequest,
@@ -367,7 +442,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecated (20240611 - Murky) Debugging purpose
+      // Deprecated: (20240611 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
       console.error(error);
     }

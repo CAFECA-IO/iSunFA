@@ -41,7 +41,11 @@ export async function transferOwnership(
             endDate: nowTimestamp,
           },
           include: {
-            user: true,
+            user: {
+              include: {
+                userAgreements: true,
+              },
+            },
             company: true,
             role: true,
           },
@@ -60,7 +64,11 @@ export async function transferOwnership(
               updatedAt: nowTimestamp,
             },
             include: {
-              user: true,
+              user: {
+                include: {
+                  userAgreements: true,
+                },
+              },
               company: true,
               role: true,
             },
@@ -80,7 +88,11 @@ export async function transferOwnership(
               updatedAt: nowTimestamp,
             },
             include: {
-              user: true,
+              user: {
+                include: {
+                  userAgreements: true,
+                },
+              },
               company: true,
               role: true,
             },
