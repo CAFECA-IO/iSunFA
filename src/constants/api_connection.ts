@@ -2,8 +2,6 @@ import { IAPIConfig, IAPIInput, IAPIName, IAPIOutput } from '@/interfaces/api_co
 
 const apiVersion = 'v1';
 const apiPrefix = `/api/${apiVersion}`;
-const apiVersionBeta = 'v2';
-const apiPrefixBeta = `/api/${apiVersionBeta}`;
 const initialInput: IAPIInput = {
   header: {},
   body: {},
@@ -84,7 +82,7 @@ export enum APIName {
 }
 
 export enum APIPath {
-  AGREE_TO_TERMS = `${apiPrefixBeta}/agree-to-terms`,
+  AGREE_TO_TERMS = `${apiPrefix}/user/:userId/agreement`,
   CREATE_CHALLENGE = `${apiPrefix}/challenge`,
   SIGN_UP = `${apiPrefix}/sign_up`,
   SIGN_IN = `${apiPrefix}/sign_in`,
