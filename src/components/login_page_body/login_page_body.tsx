@@ -6,7 +6,7 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastType } from '@/interfaces/toastify';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 const getProviderDetails = (provider: Provider) => {
   return {

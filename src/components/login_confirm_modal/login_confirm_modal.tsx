@@ -1,6 +1,6 @@
 import React from 'react';
 import { RxCross2 } from 'react-icons/rx';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import InformationStatement from '@/components/login_confirm_modal/information_statement';
 import TermsOfServiceAndPrivacyPolicy from '@/components/login_confirm_modal/term_n_privacy';
 import { useUserCtx } from '@/contexts/user_context';
