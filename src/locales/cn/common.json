@@ -330,7 +330,7 @@
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "第一次登录时，请阅读并同意",
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意信息收集声明",
     "AGREE_WITH_TOS_N_PP": "同意服务条款和隐私政策",
-    "ALPHA_TEST_REMINDER": "现为 iSunFA Alpha 测试版本 (测试后资料将被删除)"
+    "ALPHA_TEST_REMINDER": "Alpha 版本的资料只用于测试"
   },
   "JOURNAL": {
     "FAILED_TO_FETCH_DATA": "获取数据失败",
