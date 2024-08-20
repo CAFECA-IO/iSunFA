@@ -56,22 +56,6 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   try {
     const { invitation = '', action = '' } = query;
 
-    // Info: (20240815 - Tzuhan) Deprecate: 如果没有 session，重定向到登录页面
-    // const session = await getSession({ req });
-    // if (!session) {
-    //   return {
-    //     props: {
-    //       invitation: invitation as string,
-    //       action: action as string,
-    //       ...(await serverSideTranslations(locale as string, ['common'])),
-    //     },
-    //     redirect: {
-    //       destination: ISUNFA_ROUTE.LOGIN_BETA,
-    //       permanent: false,
-    //     },
-    //   };
-    // }
-
     return {
       props: {
         // session,
@@ -81,10 +65,6 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
       },
     };
   } catch (error) {
-    // Deprecate: (20240820-Tzuhan) dev
-    // eslint-disable-next-line no-console
-    console.error('Error in getServerSideProps:', error);
-
     return {
       redirect: {
         destination: ISUNFA_ROUTE.LOGIN_BETA,

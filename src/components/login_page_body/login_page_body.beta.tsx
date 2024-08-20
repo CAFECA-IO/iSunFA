@@ -86,17 +86,11 @@ const LoginPageBody = () => {
         // TODO: (20240814-Tzuhan) Handle API response failure
       }
     } catch (error) {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.error('紀錄用戶同意條款時發生錯誤:', error);
       // TODO: (20240814-Tzuhan) Handle error case
     }
   };
 
   const handleUserAuthenticated = async (force?: boolean) => {
-    // Deprecate: (20240816-Tzuhan) dev
-    // eslint-disable-next-line no-console
-    console.log('user:', user);
     setSelectedProvider(user.provider);
     if (user?.hasReadAgreement) {
       agreeWithInfomationConfirmModalVisibilityHandler(false);
@@ -108,12 +102,6 @@ const LoginPageBody = () => {
   };
 
   useEffect(() => {
-    // Deprecate: (20240816-Tzuhan) dev
-    // eslint-disable-next-line no-console
-    console.log(
-      'useEffect userAgreeWithInfomationANDTOSNPrivacyPolicy',
-      userAgreeWithInfomationANDTOSNPrivacyPolicy
-    );
     if (userAgreeWithInfomationANDTOSNPrivacyPolicy) handleUserAgree(user.id);
   }, [userAgreeWithInfomationANDTOSNPrivacyPolicy]);
 
@@ -129,35 +117,19 @@ const LoginPageBody = () => {
       try {
         update?.();
       } catch (error) {
-        // Deprecate: (20240816-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.error('Session update failed:', error);
+        throw new Error(`Session update failed: ${error}`);
       }
     }
 
     if (status === 'authenticated') {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.log(`useEffect: status === 'authenticated'`);
       handleUserAuthenticated();
     }
   }, [status]);
 
   const authenticateUser = async (provider: Provider) => {
     try {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.log(
-        `(selectedProvider === provider: ${selectedProvider === provider}) provider: ${provider}, selectedProvider: ${selectedProvider}, status: ${status}`
-      );
       if (selectedProvider === provider && status === 'authenticated') {
         const session = await getSession();
-        // Deprecate: (20240816-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.log(
-          `!isJwtExpired(session.expires): ${!isJwtExpired(session?.expires)}, session:`,
-          session
-        );
         if (session && !isJwtExpired(session.expires)) {
           handleUserAuthenticated(true);
           return;
@@ -168,25 +140,19 @@ const LoginPageBody = () => {
       setIsLoading(false);
 
       if (response?.error) {
-        // Deprecate: (20240816-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.error('OAuth 登入失敗:', response?.error);
         throw new Error(response.error);
       }
 
       update?.();
       setSelectedProvider(provider);
     } catch (error) {
-      // Deprecate: (20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.error('Authentication failed', error);
       // TODO: (20240814-Tzuhan) (20240813-Tzuhan) handle error
     }
   };
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
-      <div className="bg-login_bg absolute inset-0 z-0 h-full w-full bg-cover bg-center bg-no-repeat blur-md"></div>
+      <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
       {isLoading ? (
         <Loader />
       ) : (
