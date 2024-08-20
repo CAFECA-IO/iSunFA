@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import InformationStatement from '@/components/login_confirm_modal/information_statement';
 import TermsOfServiceAndPrivacyPolicy from '@/components/login_confirm_modal/term_n_privacy';
 import { useUserCtx } from '@/contexts/user_context';
+import { Hash } from '@/constants/hash';
 
 interface ILoginConfirmProps {
   id: string;
@@ -25,21 +26,23 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
   tosModalVisibilityHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { handleUserAgree } = useUserCtx();
+  const { handleUserAgree, signOut } = useUserCtx();
 
   const onAgree = async () => {
     if (id === 'agree-with-information') {
       infoModalVisibilityHandler(false);
+      await handleUserAgree(Hash.INFO_COLLECTION);
       tosModalVisibilityHandler(true);
     }
     if (id === 'tos-n-privacy-policy') {
       tosModalVisibilityHandler(false);
-      await handleUserAgree();
+      await handleUserAgree(Hash.TOS_N_PP);
     }
   };
   const onCancel = () => {
     infoModalVisibilityHandler(false);
     tosModalVisibilityHandler(false);
+    signOut();
   };
   const displayModal = isModalVisible ? (
     <div id={id} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

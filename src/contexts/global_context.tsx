@@ -53,7 +53,7 @@ import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_ac
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
-import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal.beta';
+import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 
 interface IGlobalContext {
   width: number;
@@ -156,7 +156,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn, selectedCompany } = useUserCtx();
+  const { signedIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
+    useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -534,6 +535,25 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //   });
     // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
+
+  useEffect(() => {
+    if (signedIn) {
+      if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
+        if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
+        if (!isAgreeInfoCollection) agreeWithInfomationConfirmModalVisibilityHandler(true);
+        if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
+          TOSNPrivacyPolicyConfirmModalVisibilityHandler(true);
+        }
+      } else {
+        agreeWithInfomationConfirmModalVisibilityHandler(false);
+        TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
+        if (router.pathname === ISUNFA_ROUTE.LOGIN) {
+          if (selectedCompany) router.push(ISUNFA_ROUTE.DASHBOARD);
+          else router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+        }
+      }
+    }
+  }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
 
   useEffect(() => {
     if (signedIn) {

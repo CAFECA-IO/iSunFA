@@ -61,7 +61,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       // }),
     ],
     pages: {
-      signIn: ISUNFA_ROUTE.LOGIN_BETA,
+      signIn: ISUNFA_ROUTE.LOGIN,
     },
     // session: {
     //   strategy: 'jwt',
