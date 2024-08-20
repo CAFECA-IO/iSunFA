@@ -1,6 +1,6 @@
 import UploadArea from '@/components/kyc/upload_area';
 import RadioButtonComponent from '@/components/kyc/radio_button_component';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { IUploadDocuments } from '@/interfaces/kyc_document_upload';
 import { UploadDocumentKeys, RepresentativeIDType, KYCFiles } from '@/constants/kyc';
 

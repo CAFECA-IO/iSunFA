@@ -24,6 +24,7 @@ module.exports = {
       parser: '@typescript-eslint/parser',
       plugins: ['@typescript-eslint'],
       rules: {
+        camelcase: ['error', { properties: 'never' }],
         'object-curly-newline': 'off',
         'react/jsx-props-no-spreading': 'off',
         'no-console': 'error',
@@ -89,6 +90,7 @@ module.exports = {
     'plugin:react/recommended',
   ],
   rules: {
+    camelcase: ['error', { properties: 'never' }],
     'object-curly-newline': 'off',
     'react/jsx-props-no-spreading': 'off',
     'no-console': 'error',

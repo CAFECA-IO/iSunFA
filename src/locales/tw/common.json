@@ -860,7 +860,6 @@
     "DESCRIPTION": "融合區塊鏈會計與人工智能審計的先進會計解決方案",
     "KEYWORDS": "iSunFA, 區塊鏈, AI, 法務, 會計, 審計"
   },
-  "INFO_COLLECTION_HASH": "dd5670d2ac91405dc01d4655a1cd22cef8f2602bdafb94aef2ccc93a2c20c69a",
   "INFO_COLLECTION": {
     "DEAR_USER": "親愛的用戶，",
     "THANK_YOU": "感謝您選擇使用我們的會計軟體。在您使用本軟體期間，我們可能會收集並處理您的一些個人資訊。本聲明旨在告知您我們收集的資訊、其用途以及我們如何保護您的隱私。",
@@ -896,7 +895,6 @@
     "THANK_YOU_END": "感謝您對我們會計軟體的信任和支持！",
     "SIGN_OFF": "iSunFA  2024年8月6日"
   },
-  "TOS_N_PP_HASH": "05b58e30c03a54fd1b060a8112ac0edee9c759b05f428ea50c982bb8c57443f2",
   "TOS_N_PP": {
     "DEAR_USER": "親愛的用戶，",
     "WELCOME": "歡迎使用我們的會計軟體。為了確保您充分了解我們的服務以及我們如何保護您的個人資訊，請仔細閱讀以下服務條款和隱私政策。",

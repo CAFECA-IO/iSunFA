@@ -19,7 +19,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
 

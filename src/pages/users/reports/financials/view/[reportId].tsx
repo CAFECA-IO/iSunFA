@@ -105,14 +105,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
         <title>
-          {
-            FinancialReportTypesMap[
-              BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-            ].name
-          }
-          - iSunFA
+          {t(`PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}- iSunFA
         </title>
 
         <meta
@@ -154,8 +148,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   // }
 
   // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { reportId = '', report_type = '' } = query;
+  const { reportId = '', report_type: reportType = '' } = query;
   // if (!report_id || !report_type) {
   //   return {
   //     notFound: true,
@@ -165,7 +158,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   return {
     props: {
       reportId: reportId as string,
-      reportType: report_type as string,
+      reportType: reportType as string,
       // reportLanguage: report_language as string,
       // startTimestamp: start_timestamp as string,
       // endTimestamp: end_timestamp as string,

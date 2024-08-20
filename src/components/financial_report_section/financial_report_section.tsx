@@ -121,9 +121,9 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       });
     }
   };
-  // Info: (20240807 - Anna) 定義導航到 "my-reports" 頁面的函數
+  // Info: (20240807 - Anna) 定義導航到 "my_reports" 頁面的函數
   const navigateToMyReports = () => {
-    router.push('/users/reports/my-reports');
+    router.push('/users/reports/my_reports');
   };
   useEffect(() => {
     setDatePickerType(() => {

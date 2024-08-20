@@ -435,7 +435,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                 )}
               </p>
             </div>
-            <ol className=" max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
+            <ol className="max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
               {isBalanceSheetChecked && <li>{t('PLUGIN.BALANCE_SHEET')}</li>}
               {isIncomeStatementChecked && <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>}
               <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
