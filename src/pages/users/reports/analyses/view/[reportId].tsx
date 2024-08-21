@@ -24,7 +24,7 @@ interface IServerSideProps {
   endTimestamp: string;
 }
 
-// TODO: dummy data to be replaced (20240429 - Shirley)
+// TODO: [Beta] dummy data to be replaced (20240429 - Shirley)
 const ReportLink = {
   [AnalysisReportTypesKey.financial_performance]: ``,
   [AnalysisReportTypesKey.cost_analysis]: ``,
@@ -49,7 +49,7 @@ const ViewAnalysisReportPage = ({
     reportLink: ReportLink[reportType],
   });
 
-  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+  // TODO: [Beta] Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
   const {
     data: reportAnalysis,
     code: getARCode,
@@ -100,14 +100,13 @@ const ViewAnalysisReportPage = ({
     </>
   );
 
-  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: [Beta] replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
         <title>{`${AnalysisReportTypesMap[reportType].name} - iSunFA`}</title>
 
         <meta

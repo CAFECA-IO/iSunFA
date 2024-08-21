@@ -447,7 +447,10 @@
     "LEAVE_HINT": "您的日记帐还未新增",
     "LEAVE_HINT_CONTENT": "您的日记帐还未新增，您确定要离开吗？",
     "LEAVE": "离开",
-    "FEE_EXCEEDS_TOTAL": "费用不能大于总金额"
+    "FEE_EXCEEDS_TOTAL": "费用不能大于总金额",
+    "DATE_HINT": "请选择日期",
+    "AMOUNT_HINT": "请填入金额",
+    "TIMES_HINT": "请填入次数"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",

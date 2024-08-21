@@ -93,7 +93,7 @@ const CompanyInvitationModal = ({
     e.preventDefault();
 
     // Info: (20240515 - Julian) Verify invitation code
-    const codeRegex = /^[A-Za-z0-9]{8}$/; // ToDo: (20240515 - Julian) code regex
+    const codeRegex = /^[A-Za-z0-9]{8}$/;
     setIsCodeValid(codeRegex.test(codeInput));
 
     // Info: (20240515 - Julian) Check if the code is valid

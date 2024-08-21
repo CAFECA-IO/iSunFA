@@ -39,9 +39,8 @@ function ContactForm() {
 
   const {
     trigger: email,
-    error: enmailError,
-    code: emailCode,
-    success: enmailSuccess,
+    error: emailError,
+    success: emailSuccess,
   } = APIHandler<void>(APIName.EMAIL);
 
   // Info: (20230731 - Shirley) 送出失敗事件處理
@@ -78,37 +77,17 @@ function ContactForm() {
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // Info: (20230731 - Shirley) call API
-    // const res = await fetch('/api/v1/email', {
-    //   method: 'POST',
-    //   body: JSON.stringify(emailData),
-    //   headers: {
-    //     'Content-Type': 'application/json; charset=UTF-8',
-    //   },
-    // });
-
     email({ header: { 'Content-Type': 'application/json; charset=UTF-8' }, body: emailData });
-    // const result = await res.json();
-
-    // const { success } = result;
-    // if (success) {
-    //   await successProcess();
-    // } else {
-    //   await failedProcess();
-    // }
   };
 
   useEffect(() => {
-    if (enmailSuccess) {
+    if (emailSuccess) {
       successProcess();
     }
-    if (enmailError) {
+    if (emailError) {
       failedProcess();
-      // Info: TODO error handling @Shirley (20240513 - tzuhan)
-      // eslint-disable-next-line no-console
-      console.log(`enmailError(${emailCode}): `, enmailError);
     }
-  }, [enmailSuccess, enmailError]);
+  }, [emailSuccess, emailError]);
 
   // Info: (20230731 - Shirley) 點擊送出按鈕
   const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {

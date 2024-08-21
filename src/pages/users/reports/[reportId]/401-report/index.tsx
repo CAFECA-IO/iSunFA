@@ -32,9 +32,7 @@ const TaxReportPage = ({ reportId }: ITaxReportPageProps) => {
         <title>Tax Report</title>
       </Head>
 
-      <div className="h-full bg-white font-barlow">
-        {displayedBody}
-      </div>
+      <div className="h-full bg-white font-barlow">{displayedBody}</div>
     </>
   );
 };

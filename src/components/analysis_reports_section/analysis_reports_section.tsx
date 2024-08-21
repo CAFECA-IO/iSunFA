@@ -73,7 +73,7 @@ const AnalysisReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  // TODO: 這邊要改成申請 report 然後顯示成功 / 失敗的 modal (20240524 - Shirley)
+  // TODO: [Beta] 這邊要改成申請 report 然後顯示成功 / 失敗的 modal (20240524 - Shirley)
   const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}/REPORT_ID?project=${DUMMY_PROJECTS_MAP[selectedProjectName].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   useEffect(() => {

@@ -25,7 +25,7 @@ interface IPopulateDatesParams {
   type: DatePickerType;
 }
 
-// TODO: refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE (20240529 - Shirley)
+// TODO: [Beta] refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE (20240529 - Shirley)
 export enum DatePickerType {
   ICON_PERIOD = 'ICON_PERIOD',
   TEXT_DATE = 'TEXT_DATE',

@@ -245,13 +245,13 @@ const ViewFinancialSection = ({
     if (reportLink) {
       printPDF();
     }
-    // TODO: get PDF file (20240802 - Shirley)
+    // TODO: [Beta] get PDF file (20240802 - Shirley)
     // if (pdfFile) {
     //   window.open(pdfFile, '_blank');
     // }
   };
 
-  // TODO: get PDF file (20240802 - Shirley)
+  // TODO: [Beta] get PDF file (20240802 - Shirley)
   // const fetchPDF = async () => {
   //   try {
   //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
@@ -376,7 +376,7 @@ const ViewFinancialSection = ({
     </div>
   );
 
-  // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
+  // TODO: [Beta] no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
       {/* Info: financial title, print button and share button (20240426 - Shirley) */}
@@ -441,7 +441,7 @@ const ViewFinancialSection = ({
               </div>
             </Button>
             <Button
-              // TODO: yet to dev (20240507 - Shirley)
+              // TODO: [Beta] yet to dev (20240507 - Shirley)
               disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -474,7 +474,7 @@ const ViewFinancialSection = ({
             {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
             {/* <div className="text-text-neutral-tertiary">Token Contract </div> */}
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: [Beta] link (20240507 - Shirley) */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
@@ -510,7 +510,7 @@ const ViewFinancialSection = ({
             {/* <div className="text-text-neutral-tertiary">Token ID </div> */}
 
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: [Beta] link (20240507 - Shirley) */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenId}
               </Link> */}
@@ -580,7 +580,7 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
+            {/* TODO: [Beta] link (20240507 - Shirley) */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -621,7 +621,7 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
+            {/* TODO: [Beta] link (20240507 - Shirley) */}
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>
