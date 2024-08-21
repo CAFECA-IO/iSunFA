@@ -3,8 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 import type { Config } from 'jest';
-// eslint-disable-next-line import/extensions
-import nextJest from 'next/jest.js';
+import nextJest from 'next/jest';
 
 const createJestConfig = nextJest({
   // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
