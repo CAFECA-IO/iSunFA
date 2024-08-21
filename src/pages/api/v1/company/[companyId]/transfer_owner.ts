@@ -9,22 +9,33 @@ import { getSession } from '@/lib/utils/session';
 import { transferOwnership } from '@/lib/utils/repo/transaction/admin_role.tx';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IAdmin[] | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAdmin[] = [];
+  let payload: IAdmin[] | null = null;
+
   const { newOwnerId } = req.body;
   const newOwnerIdNum = convertStringToNumber(newOwnerId);
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], { userId, companyId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const updatedAdmin = await transferOwnership(userId, companyId, newOwnerIdNum);
-    const admin = await formatAdminList(updatedAdmin);
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = admin;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], { userId, companyId });
+
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const updatedAdmin = await transferOwnership(userId, companyId, newOwnerIdNum);
+      const admin = await formatAdminList(updatedAdmin);
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+      payload = admin;
+    }
   }
+
   return { statusMessage, payload };
 }
 
@@ -42,7 +53,7 @@ export default async function handler(
   res: NextApiResponse<IResponseData<IAdmin[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAdmin | IAdmin[] | null = null;
+  let payload: IAdmin[] | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];

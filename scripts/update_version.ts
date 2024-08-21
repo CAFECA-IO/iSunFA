@@ -31,8 +31,7 @@ try {
   packageJson = JSON.parse(packageJsonContent);
 } catch (error) {
   // Info:(20240701-Jacky) - Log the error
-  // eslint-disable-next-line no-console
-  console.error('Error reading package.json:', error);
+  // console.error('Error reading package.json:', error);
   process.exit(1); // Exit the process with an error code
 }
 
@@ -67,11 +66,9 @@ try {
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 } catch (error) {
   // Info:(20240701-Jacky) - Log the error
-  // eslint-disable-next-line no-console
-  console.error('Error writing package.json:', error);
+  // console.error('Error writing package.json:', error);
   process.exit(1); // Exit the process with an error code
 }
 
 // Info:(20240701-Jacky) - Log the updated version
-// eslint-disable-next-line no-console
-console.log(`Version updated to ${newVersion}`);
+// console.log(`Version updated to ${newVersion}`);

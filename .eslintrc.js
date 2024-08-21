@@ -66,7 +66,10 @@ module.exports = {
         'react/jsx-tag-spacing': 'off',
         'react/jsx-wrap-multilines': 'off',
         'no-else-return': 'off',
-        'import/no-extraneous-dependencies': 'off',
+        'import/no-extraneous-dependencies': [
+          'error',
+          { devDependencies: false, optionalDependencies: false, peerDependencies: false },
+        ],
         'no-nested-ternary': 'off',
         'react/require-default-props': 'off',
         '@typescript-eslint/naming-convention': [

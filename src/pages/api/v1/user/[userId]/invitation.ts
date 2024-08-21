@@ -27,6 +27,9 @@ export default async function handler(
       case 'PUT': {
         const session = await getSession(req, res);
         const { userId } = session;
+        if (!userId) {
+          statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+        }
         const { invitation } = req.body;
         const isValid = await checkInput(invitation);
         if (!isValid) {

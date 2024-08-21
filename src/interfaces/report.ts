@@ -375,3 +375,27 @@ export interface Imports {
   taxExemptGoods: number;
   foreignServices: number;
 }
+
+export interface TaxReport401Content {
+  id: number;
+  companyId: number;
+  tokenContract: string;
+  tokenId: string;
+  name: string;
+  from: number;
+  to: number;
+  type: string;
+  reportType: string;
+  status: string;
+  remainingSeconds: number;
+  paused: boolean;
+  projectId: number | null;
+  project: string | null;
+  reportLink: string;
+  downloadLink: string;
+  blockChainExplorerLink: string;
+  evidenceId: string;
+  content: TaxReport401;
+  createdAt: number;
+  updatedAt: number;
+}
