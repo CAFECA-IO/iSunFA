@@ -12,6 +12,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 type ApiResponseType = IVoucherDataForSavingToDB | IContract | null;
 // Info: （ 20240522 - Murky）目前只可以使用Voucher Return
@@ -90,56 +91,43 @@ async function handleGetRequest(req: NextApiRequest) {
   if (!isParamString(resultId) || !isParamString(aiApi)) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const fetchResult = fetchResultFromAICH(aiApi, resultId);
+    switch (aiApi) {
+      case 'vouchers': {
+        const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+        const fetchResult = fetchResultFromAICH(fetchUrl);
+        const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
+          lineItems: ILineItemFromAICH[];
+        };
 
-  switch (aiApi) {
-    case 'vouchers': {
-      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
-      const fetchResult = fetchResultFromAICH(fetchUrl);
-      const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
-        lineItems: ILineItemFromAICH[];
-      };
-
-      const lineItems = await formatLineItemsFromAICH(rawLineItems);
-      const voucher = {
-        lineItems,
-      } as IVoucherDataForSavingToDB;
-      if (!isIVoucherDataForSavingToDB(voucher)) {
-        // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('Voucher is not valid');
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-      }
-      case 'contracts': {
-        payload = (await fetchResult) as IContract;
+        const lineItems = await formatLineItemsFromAICH(rawLineItems);
+        const voucher = {
+          lineItems,
+        } as IVoucherDataForSavingToDB;
+        if (!isIVoucherDataForSavingToDB(voucher)) {
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
+          break;
+        }
+        payload = voucher;
         statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         break;
       }
-      default:
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+        case 'contracts': {
+          const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+          const fetchResult = fetchResultFromAICH(fetchUrl);
+          payload = (await fetchResult) as IContract;
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          break;
+        }
+        default:
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
-    case 'contracts': {
-      // Todo (20240625 - Jacky): Implement contract return
-      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
-      const fetchResult = fetchResultFromAICH(fetchUrl);
-      payload = (await fetchResult) as IContract;
-      break;
-    }
-    default:
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  return payload;
+  return {
+    payload,
+    statusMessage,
+  };
 }
-
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ApiResponseType }>;
-} = {
-  GET: handleGetRequest,
-};
 
 export default async function handler(
   req: NextApiRequest,
@@ -155,8 +143,9 @@ export default async function handler(
     try {
       switch (req.method) {
         case "GET": {
-          payload = await handleGetRequest(req);
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          const result = await handleGetRequest(req);
+          payload = result.payload;
+          statusMessage = result.statusMessage;
           break;
         }
         default: {

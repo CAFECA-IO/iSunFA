@@ -192,14 +192,6 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
   return resultJson;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isCompanyIdValid(companyId: any): companyId is number {
-  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
-    return false;
-  }
-  return true;
-}
-
 export function extractDataFromFields(fields: formidable.Fields) {
   const { imageSize, imageName, uploadIdentifier } = fields;
 
