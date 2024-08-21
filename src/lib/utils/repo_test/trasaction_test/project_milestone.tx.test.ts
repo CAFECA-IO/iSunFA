@@ -10,7 +10,7 @@ import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 import { IMilestone } from '@/interfaces/project';
 
 let milestoneList: IMilestone[] = [];
-const testProjectId = 1000;
+const testProjectId = 1009;
 
 beforeAll(async () => {
   const listedMilestone = await listProjectMilestone(testProjectId);
@@ -18,8 +18,8 @@ beforeAll(async () => {
 });
 
 describe('Project Milestone Tests', () => {
-  const defaultStage = 'Beta Testing';
-  const updateStage = 'Sold';
+  const defaultStage = 'Develop';
+  const updateStage = 'Selling';
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 

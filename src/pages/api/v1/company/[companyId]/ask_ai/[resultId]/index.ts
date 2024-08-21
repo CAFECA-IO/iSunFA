@@ -1,7 +1,6 @@
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamString } from '@/lib/utils/common';
 import { ILineItem, ILineItemFromAICH } from '@/interfaces/line_item';
 import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
@@ -27,17 +26,13 @@ export async function fetchResultFromAICH(fetchUrl: string) {
   if (response.status === 404) {
     throw new Error(STATUS_MESSAGE.AICH_API_NOT_FOUND);
   }
-
   if (!response.ok) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
-
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-export async function getPayloadFromResponseJSON(
-  responseJSON: Promise<{ payload?: unknown } | null>
-) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
@@ -49,9 +44,6 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecated: （ 20240522 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -69,9 +61,7 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
       const accountInDB = await fuzzySearchAccountByName(account);
 
       if (!accountInDB) {
-        // Deprecated: （ 20240522 - Murkky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`Account ${account} not found in database`);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
 
       const resultAccount = {
@@ -84,9 +74,6 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
       } as ILineItem;
 
       if (!isILineItem(resultAccount)) {
-        // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`LineItem ${account} is not valid`);
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
       return resultAccount;
@@ -95,13 +82,15 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
   return lineItems;
 }
 
-export async function handleGetRequest(req: NextApiRequest) {
+async function handleGetRequest(req: NextApiRequest) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IVoucherDataForSavingToDB | IContract | null = null;
   const { resultId, aiApi = 'vouchers' } = req.query;
-  // Info Murky (20240416): Check if resultId is string
+
   if (!isParamString(resultId) || !isParamString(aiApi)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+  } else {
+    const fetchResult = fetchResultFromAICH(aiApi, resultId);
 
   switch (aiApi) {
     case 'vouchers': {
@@ -121,8 +110,13 @@ export async function handleGetRequest(req: NextApiRequest) {
         console.log('Voucher is not valid');
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
-      payload = voucher;
-      break;
+      case 'contracts': {
+        payload = (await fetchResult) as IContract;
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        break;
+      }
+      default:
+        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
     case 'contracts': {
       // Todo (20240625 - Jacky): Implement contract return
@@ -137,6 +131,15 @@ export async function handleGetRequest(req: NextApiRequest) {
 
   return payload;
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: ApiResponseType }>;
+} = {
+  GET: handleGetRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
