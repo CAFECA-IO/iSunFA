@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamString } from '@/lib/utils/common';
 import { ILineItem, ILineItemFromAICH } from '@/interfaces/line_item';
-import { fuzzySearchAccountByName } from '@/pages/api/v1/company/[companyId]/ask_ai/[resultId]/index.repository';
+import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
 import { isILineItem } from '@/lib/utils/type_guard/line_item';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IContract } from '@/interfaces/contract';

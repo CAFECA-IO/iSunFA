@@ -74,7 +74,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
+      body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
@@ -124,9 +124,6 @@ export async function handlePutRequest(
   journalId: number;
   resultStatus: IAccountResultStatus;
 }> {
-  // ToDo: (20240719 - Murky) 目前先從journal來決定是要upload哪一個invoice而不是從invoiceId, 需要再調整
-  // const { invoiceId } = req.query;
-  // const invoiceIdNumber = formatInvoiceId(invoiceId);
   const { invoice: invoiceFromBody } = req.body;
   const invoiceToUpdate = formatInvoiceFromBody(invoiceFromBody);
   const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);

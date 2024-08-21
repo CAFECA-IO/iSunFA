@@ -56,7 +56,6 @@ function formatOcrId(ocrId: any): number | undefined {
     return undefined;
   }
 
-  // ToDo (20240618 - Murky) Need to use type guard instead
   if (typeof ocrId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -75,7 +74,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
+      body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose

@@ -1,4 +1,3 @@
-// ToDo (20240605 - Murk): 不同的type guard 需要放在屬於他的資料夾，不要都放在這個檔案裡
 import {
   AccountType,
   EquityType,

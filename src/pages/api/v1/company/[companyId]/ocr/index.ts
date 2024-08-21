@@ -192,7 +192,6 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
   return resultJson;
 }
 
-// ToDo: (20240617 - Murky) Need to use function in type guard instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isCompanyIdValid(companyId: any): companyId is number {
   if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
@@ -389,7 +388,6 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
 }
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
-  // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
   const { ocrType } = req.query;
 
@@ -404,7 +402,6 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
-  // ToDo: (20240611 - Murky) format prisma ocr to IOCR
   const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
 
   return unprocessedOCRs;

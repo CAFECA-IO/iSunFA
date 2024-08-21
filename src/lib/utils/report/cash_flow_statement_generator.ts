@@ -244,8 +244,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       percentage: null,
     });
 
-    // ToDo: (20240710 - Murky) 特殊 indirect cash flow的項目都還沒有實作
-    // ToDo: (20240710 - Murky) 現在暫時用Map內的順序，之後需要用DevTool的表格排序
     return indirectOperatingCashFlow;
   }
 
@@ -465,13 +463,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return result;
   }
 
-  // ToDo: (20240710 - Murky) Need to implement later
   // eslint-disable-next-line class-methods-use-this
   public override async generateFinancialReportTree(): Promise<IAccountNode[]> {
     return [];
   }
 
-  // ToDo: (20240710 - Murky) Need to implement later
   // eslint-disable-next-line class-methods-use-this
   public override async generateFinancialReportMap(): Promise<
     Map<
@@ -491,7 +487,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     >();
   }
 
-  // ToDo: (20240710 - Murky) Need to implement complete cash flow not just indirect
   public override async generateFinancialReportArray(
     curPeriod: boolean
   ): Promise<IAccountForSheetDisplay[]> {
