@@ -9,6 +9,9 @@ export async function getProjectLists(companyId: number) {
     where: {
       companyId,
     },
+    orderBy: {
+      id: 'asc',
+    },
   });
 }
 
