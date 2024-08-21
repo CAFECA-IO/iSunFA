@@ -16,12 +16,11 @@ interface IFinancialsReportsPageProps {
 }
 
 const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
-  // eslint-disable-next-line no-console
-  console.log(
-    'reportType on FinancialsReportsPage',
-    reportType,
-    FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey]
-  );
+  // console.log(
+  //   'reportType on FinancialsReportsPage',
+  //   reportType,
+  //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey]
+  // );
 
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();

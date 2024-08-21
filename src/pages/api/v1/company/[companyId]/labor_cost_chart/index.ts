@@ -46,19 +46,16 @@ async function calculateProjectCosts(
     {} as Record<string, typeof workRates>
   );
   // Deprecated: using console.log to debug (20240619 - Gibbs)
-  // eslint-disable-next-line no-console
   // console.log("groupedWorkRates", groupedWorkRates);
   // Info: (20240618 - Gibbs) 遍歷每一組 workRates
   Object.values(groupedWorkRates).forEach((group) => {
     const { createdAt } = group[0];
     const { employeeId } = group[0].employeeProject;
     // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
     // console.log("employeeId", employeeId);
     // Info: (20240618 - Gibbs) 計算該員工在該日期的總工作時數
     const totalHours = group.reduce((sum, current) => sum + current.actualHours, 0);
     // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
     // console.log("totalHours", totalHours);
     // Info: (20240618 - Gibbs) 找到該員工在該日期的薪資記錄
     const salaryRecordList = salaryRecords.filter(
@@ -73,13 +70,11 @@ async function calculateProjectCosts(
       { total_payment: 0 }
     );
     // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
     // console.log("salaryRecord", salaryRecord);
     if (!salaryRecord) return; // Info: (20240618 - Gibbs) 如果沒有找到薪資記錄，則跳過
     // Info: (20240618 - Gibbs) 計算每小時薪資
     const hourlyWage = salaryRecord.total_payment / totalHours;
     // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
     // console.log("hourlyWage", hourlyWage);
     // Info: (20240618 - Gibbs) 根據每個專案的工作時數比例分配薪資
     group.forEach((employeeWorkRate) => {
@@ -91,7 +86,6 @@ async function calculateProjectCosts(
     });
   });
   // Deprecated: using console.log to debug (20240619 - Gibbs)
-  // eslint-disable-next-line no-console
   // console.log("projectCosts", projectCosts);
   return projectCosts;
 }
@@ -120,16 +114,13 @@ export default async function handler(
       const dateTimestampInSeconds = timestampInSeconds(dateTimestamp);
       const workRates = await getWorkRatesByCompanyId(companyId, dateTimestampInSeconds);
       // Deprecated: using console.log to debug (20240619 - Gibbs)
-      // eslint-disable-next-line no-console
       // console.log("workRates", workRates);
       const salaryRecords = await getSalaryRecords(dateTimestampInSeconds);
       // Deprecated: using console.log to debug (20240619 - Gibbs)
-      // eslint-disable-next-line no-console
       // console.log("salaryRecords", salaryRecords);
       const projectCosts = await calculateProjectCosts(workRates, salaryRecords);
       const isEmpty = await checkEmpty(projectCosts);
       // Deprecated: using console.log to debug (20240619 - Gibbs)
-      // eslint-disable-next-line no-console
       // console.log("isEmpty", isEmpty);
       const responseData = {
         date: dateTimestampInSeconds,

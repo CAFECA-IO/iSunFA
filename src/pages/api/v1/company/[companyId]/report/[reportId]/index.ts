@@ -255,8 +255,7 @@ export default async function handler(
     const error = _error as Error;
 
     // Info: (20240729 - Murky) Debugging
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<FinancialReport | IReport | null>(

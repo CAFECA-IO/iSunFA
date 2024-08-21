@@ -65,8 +65,7 @@ export async function uploadFileToGoogleCloud(
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
     // Info: For debugging purpose
-    // eslint-disable-next-line no-console
-    console.error('Failed to upload SVG to Google Cloud', error);
+    // console.error('Failed to upload SVG to Google Cloud', error);
   }
   return url;
 }

@@ -90,8 +90,7 @@ export async function findManyAccountsInPrisma({
     totalCount = await prisma.account.count({ where });
   } catch (error) {
     // Info (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
 
   const totalPage = Math.ceil(totalCount / limit);
@@ -111,8 +110,7 @@ export async function findManyAccountsInPrisma({
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
     // Info (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
 
   const hasNextPage = accounts.length > limit;
@@ -155,8 +153,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
     });
   } catch (error) {
     // Info (20240516 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
 
   return account;
@@ -180,8 +177,7 @@ export async function updateAccountInPrisma(
     });
   } catch (error) {
     // Info (20240702 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
 
   return account;
@@ -203,8 +199,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
     });
   } catch (error) {
     // Info (20240702 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
   return account;
 }
@@ -224,8 +219,7 @@ export async function findLatestSubAccountInPrisma(
     });
   } catch (error) {
     // Info (20240703 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
   return latestSubAccount;
 }

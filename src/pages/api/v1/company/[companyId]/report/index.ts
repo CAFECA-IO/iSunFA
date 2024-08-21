@@ -268,8 +268,7 @@ async function generateFinancialReport(
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
     // Deprecate: (20240710 - Murky) console.error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
   }
   return reportContent;
 }

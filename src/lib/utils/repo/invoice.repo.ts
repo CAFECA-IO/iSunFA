@@ -34,8 +34,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -60,8 +59,7 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -80,8 +78,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
     });
   } catch (error) {
     // Info: (20240526 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -116,8 +113,7 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId?: n
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -143,8 +139,7 @@ export async function createPaymentInPrisma(paymentData: IPaymentBeta) {
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return payment;
@@ -196,13 +191,11 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: n
 
     if (!invoice) {
       // Deprecate: ( 20240605 - Murky ) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
+      // console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
     }
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return invoice;
@@ -253,8 +246,7 @@ export async function createInvoiceInPrisma(
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -280,8 +272,7 @@ export async function createInvoiceAndPaymentInPrisma(
     });
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -330,8 +321,7 @@ export async function updateInvoiceInPrisma(
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -367,8 +357,7 @@ export async function updateInvoiceAndPaymentInPrisma(
     updatedInvoiceId = invoice.id;
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
   return updatedInvoiceId;
 }
@@ -423,8 +412,7 @@ export async function createJournalInPrisma(
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -472,8 +460,7 @@ export async function updateJournalInPrisma(
     });
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -517,15 +504,14 @@ export async function handlePrismaSavingLogic(
       }
     } catch (error) {
       // Deprecate ( 20240522 - Murky ) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(error);
+
+      // console.log(error);
     }
 
     return journalIdBeCreated;
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -572,8 +558,7 @@ export async function handlePrismaUpdateLogic(
     );
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return journalIdBeUpdated;

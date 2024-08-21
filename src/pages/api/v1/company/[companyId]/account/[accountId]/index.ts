@@ -105,8 +105,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     // Info Murky (20240416): Debugging
-    // eslint-disable-next-line no-console
-    console.error(error.message);
+    // console.error(error.message);
     const { httpCode, result } = handleErrorResponse(res, error.message);
     res.status(httpCode).json(result);
   }

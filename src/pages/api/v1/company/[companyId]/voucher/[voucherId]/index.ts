@@ -76,8 +76,7 @@ async function handleVoucherUpdatePrismaLogic(
   } catch (_error) {
     const error = _error as Error;
     // Deprecate: (20240524 - Murky) Deprecate this error message
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -109,8 +108,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
       statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
       // Deprecate: (20240524 - Murky) Deprecate this error message
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // console.error(error);
     }
   }
 
@@ -148,8 +146,7 @@ export default async function handler(
     } catch (_error) {
       const error = _error as Error;
       // Deprecate: (20240524 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // console.error(error);
       statusMessage = error.message;
     }
   }

@@ -79,8 +79,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
     });
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -106,8 +105,7 @@ export async function getPayloadFromResponseJSON(
     json = await responseJSON;
   } catch (error) {
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -189,8 +187,7 @@ export default async function handler(
     const error = _error as Error;
 
     // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     handleErrorResponse(res, error.message);
   }
 }

@@ -201,7 +201,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 9).map((item, index) => {
+    const rows = items.slice(0, 9).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -214,8 +214,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: it's ok to use index in the static data (20240723 - Shirley)
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">

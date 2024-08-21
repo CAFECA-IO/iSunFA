@@ -39,8 +39,7 @@ export async function getLatestVoucherNo(companyId: number) {
     voucher = await prisma.voucher.findFirst(findFirstArgs);
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   const localToday = new Date();
@@ -90,8 +89,7 @@ export async function findUniqueVoucherById(voucherId: number) {
     voucherData = await prisma.voucher.findUnique(findUniqueArgs);
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
   return voucherData;
 }
@@ -128,8 +126,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
     voucherData = await prisma.voucher.create(voucherCreateArgs);
   } catch (error) {
     // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return voucherData;
@@ -187,8 +184,7 @@ export async function findManyVoucherWithCashInPrisma(
     vouchers = await prisma.voucher.findMany(findManyArgs);
   } catch (error) {
     // Info: （ 20240710 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return vouchers;

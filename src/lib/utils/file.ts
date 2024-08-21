@@ -6,12 +6,10 @@ export async function createFileFoldersIfNotExists(): Promise<void> {
         try {
             await fs.mkdir(folder, { recursive: true });
             // Deprecate: (20240812 - Murky): Debugging purpose
-            // eslint-disable-next-line no-console
-            console.log(`Folder ${folder} created.`);
+            // console.log(`Folder ${folder} created.`);
         } catch (error) {
             // Deprecate: (20240812 - Murky): Debugging purpose
-            // eslint-disable-next-line no-console
-            console.error(`Error while creating folder: ${error}`);
+            // console.error(`Error while creating folder: ${error}`);
         }
     });
 }

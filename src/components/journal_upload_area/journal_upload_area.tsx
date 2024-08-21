@@ -89,7 +89,6 @@ const JournalUploadArea = () => {
       formData.append('imageSize', uploadFile.size);
       formData.append('imageName', uploadFile.name);
       formData.append('uploadIdentifier', uuid);
-      // eslint-disable-next-line no-console
       // console.log('formData', formData);
 
       // Info: (20240711 - Julian) 點擊上傳後才升起 flag
@@ -124,8 +123,7 @@ const JournalUploadArea = () => {
           setInvoiceIdHandler(result.aichResultId);
           // setInvoiceIdHandler(resultId);
           // TODO: in dev (20240815 - Shirley) 加上
-          // eslint-disable-next-line no-console
-          console.log('result in JournalUploadArea', result);
+          // console.log('result in JournalUploadArea', result);
           if (
             result?.uploadIdentifier &&
             result?.aichResultId &&

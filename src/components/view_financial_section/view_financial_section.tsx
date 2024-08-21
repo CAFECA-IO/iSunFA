@@ -269,7 +269,6 @@ const ViewFinancialSection = ({
   //     setPdfFile(pdfUrl);
   //   } catch (error) {
   //     // TODO: error handling (20240502 - Shirley)
-  //     // eslint-disable-next-line no-console
   //     console.error(error);
   //   }
   // };

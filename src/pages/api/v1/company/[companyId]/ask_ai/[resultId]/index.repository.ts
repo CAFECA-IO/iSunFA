@@ -15,8 +15,7 @@ export async function fuzzySearchAccountByName(name: string) {
     [account] = accounts;
   } catch (error) {
     // Deprecated: （ 20240619 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 

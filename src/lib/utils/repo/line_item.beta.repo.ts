@@ -124,8 +124,7 @@ export async function listLineItems({
     lineItems = await prisma.lineItem.findMany(findManyArgs);
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   const hasNextPage = lineItems.length > pageSize;
@@ -204,8 +203,7 @@ export async function createLineItem({
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return result;
@@ -271,8 +269,7 @@ export async function updateLineItem(
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return result;
@@ -307,8 +304,7 @@ export async function deleteLineItem(
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return result;

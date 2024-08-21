@@ -60,8 +60,7 @@ async function handleVoucherCreatePrismaLogic(
   } catch (_error) {
     const error = _error as Error;
     // Deprecate: (20240806 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
 
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
@@ -130,10 +129,9 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     } catch (_error) {
-      const error = _error as Error;
+      // const error = _error as Error;
       // Deprecate: (20240524 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // console.error(error);
     }
   }
   const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);

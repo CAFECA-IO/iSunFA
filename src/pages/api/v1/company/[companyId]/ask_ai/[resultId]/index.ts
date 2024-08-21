@@ -46,8 +46,7 @@ export async function getPayloadFromResponseJSON(
     json = await responseJSON;
   } catch (error) {
     // Deprecated: （ 20240522 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -66,8 +65,7 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
 
       if (!accountInDB) {
         // Deprecated: （ 20240522 - Murkky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`Account ${account} not found in database`);
+        // console.log(`Account ${account} not found in database`);
       }
 
       const resultAccount = {
@@ -81,8 +79,7 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
 
       if (!isILineItem(resultAccount)) {
         // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`LineItem ${account} is not valid`);
+        // console.log(`LineItem ${account} is not valid`);
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
       return resultAccount;
@@ -113,8 +110,7 @@ export async function handleGetRequest(req: NextApiRequest) {
       } as IVoucherDataForSavingToDB;
       if (!isIVoucherDataForSavingToDB(voucher)) {
         // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('Voucher is not valid');
+        // console.log('Voucher is not valid');
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
       payload = voucher;
@@ -151,8 +147,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     // Deprecated: （ 20240522 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // console.error(error);
     const { httpCode, result } = formatApiResponse<ApiResponseType>(
       error.message,
       {} as ApiResponseType

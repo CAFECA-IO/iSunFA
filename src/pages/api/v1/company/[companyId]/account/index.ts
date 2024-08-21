@@ -191,8 +191,7 @@ export async function handleGetRequest(
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
     // Deprecate (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.log('error', error);
+    // console.log('error', error);
   }
 
   return paginatedAccount;
@@ -277,8 +276,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     // Deprecate (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.log('error', error);
+    // console.log('error', error);
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

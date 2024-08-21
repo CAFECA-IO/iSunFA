@@ -536,8 +536,7 @@ export const loadFileFromLocalStorage = (
 ) => {
   try {
     const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
-    // eslint-disable-next-line no-console
-    console.log('Loaded from localStorage:', data);
+    // console.log('Loaded from localStorage:', data);
 
     let fileObject: {
       id: string | undefined;
@@ -578,8 +577,7 @@ export const loadFileFromLocalStorage = (
 
     return fileObject;
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error loading file from localStorage:', error);
+    // console.error('Error loading file from localStorage:', error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 };

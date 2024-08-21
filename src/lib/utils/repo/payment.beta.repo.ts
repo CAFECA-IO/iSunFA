@@ -27,8 +27,7 @@ export async function createPayment(payment: IPaymentBeta) {
     result = await prisma.payment.create(paymentCreateArgs);
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return result;
@@ -62,8 +61,7 @@ export async function updatePayment(paymentId: number, payment: IPaymentBeta) {
     result = await prisma.payment.update(paymentUpdateArgs);
   } catch (error) {
     // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
   }
 
   return result;

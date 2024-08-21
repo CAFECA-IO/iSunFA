@@ -153,8 +153,7 @@ const ConfirmModal = ({
       });
     } catch (err) {
       // Debug: (20240726 - Tzuhan) Show error message
-      // eslint-disable-next-line no-console
-      console.log(`importVoucherHandler err: `, err);
+      // console.log(`importVoucherHandler err: `, err);
     }
   };
 

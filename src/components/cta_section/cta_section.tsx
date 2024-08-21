@@ -29,7 +29,6 @@ const CTASection = () => {
   //     },
   //     body: JSON.stringify({ authentication }),
   //   });
-  //   // eslint-disable-next-line no-console
   //   console.log('authentication', authentication);
   // };
   */

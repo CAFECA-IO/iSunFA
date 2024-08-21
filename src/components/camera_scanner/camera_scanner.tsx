@@ -104,9 +104,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           video.play();
         }
       })
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error('Error: ', err);
+      .catch(() => {
+        // console.error('Error: ', err);
       });
   };
 
