@@ -173,7 +173,7 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
     sortBy: formattedSortBy,
     sortOrder: formattedSortOrder,
     searchKey: formattedSearchKey,
-    isDeleted: formattedIsDeleted
+    isDeleted: formattedIsDeleted,
   };
 }
 
@@ -219,6 +219,9 @@ export async function handlePostRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
   const { accountId, name } = req.body;
+  if (!userId) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -232,7 +235,7 @@ export async function handlePostRequest(
   }
   const latestSubAccount = await findLatestSubAccountInPrisma(parentAccount);
   const newCode = setNewCode(parentAccount, latestSubAccount);
-  const newName = parentAccount.name + "-" + String(name);
+  const newName = parentAccount.name + '-' + String(name);
   const newOwnAccount = {
     companyId: companyIdNumber,
     system: parentAccount.system,

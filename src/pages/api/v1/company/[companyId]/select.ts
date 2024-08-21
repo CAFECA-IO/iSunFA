@@ -10,23 +10,32 @@ import { formatCompany } from '@/lib/utils/formatter/company.formatter';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 
-async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ICompany | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompany | null = null;
 
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const getCompany = await getCompanyById(companyIdNum);
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    const companyId = getCompany ? companyIdNum : NON_EXISTING_COMPANY_ID;
-    const company = getCompany ? formatCompany(getCompany) : null;
-    await setSession(session, undefined, companyId);
-    payload = company;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const getCompany = await getCompanyById(companyIdNum);
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+      const companyId = getCompany ? companyIdNum : NON_EXISTING_COMPANY_ID;
+      const company = getCompany ? formatCompany(getCompany) : null;
+      await setSession(session, undefined, companyId);
+      payload = company;
+    }
   }
 
   return { statusMessage, payload };
