@@ -73,10 +73,10 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  const { report_type } = query;
+  const { report_type: reportType } = query;
   return {
     props: {
-      reportType: report_type,
+      reportType,
       ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };

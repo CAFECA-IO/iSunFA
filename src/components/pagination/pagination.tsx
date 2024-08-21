@@ -32,56 +32,6 @@ const Pagination = ({
   const [targetPage, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
   const router = useRouter();
 
-  /* Deprecated: (20240716 - Shirley)
-  // useEffect(() => {
-  //   // Info: (20240419 - Julian) 更新當前頁數到 URL
-  //   const handleUrlChange = () => {
-  //     const url = new URL(window.location.href);
-  //     const pageParam = url.searchParams.get(pagePrefix);
-  //     const page = pageParam ? parseInt(pageParam, 10) : 1;
-  //     if (!Number.isNaN(page) && page !== currentPage) {
-  //       setCurrentPage(page);
-  //     }
-  //   };
-
-  //   window.addEventListener('popstate', handleUrlChange);
-  //   return () => window.removeEventListener('popstate', handleUrlChange);
-  // }, [currentPage, setCurrentPage, pagePrefix]);
-
-  // // const updateUrl = useCallback(
-  // //   (newPage: number) => {
-  // //     const queryKey = pagePrefix;
-  // //     const newQuery = { ...router.query, [queryKey]: newPage.toString() };
-  // //     router.replace({
-  // //       pathname: router.pathname,
-  // //       query: newQuery,
-  // //     });
-  // //   },
-  // //   [pagePrefix]
-  // // );
-
-  // // 更新 URL
-  // const updateUrl = useCallback(
-  //   (newPage: number) => {
-  //     router.push(
-  //       {
-  //         pathname: router.pathname,
-  //         query: { ...router.query, [pagePrefix]: newPage },
-  //       },
-  //       undefined,
-  //       { shallow: true }
-  //     );
-  //   },
-  //   [router, pagePrefix]
-  // );
-
-  // // Info: (20240419 - Julian) 當 currentPage 改變時，更新目標頁碼和 URL
-  // useEffect(() => {
-  //   setTargetPage(currentPage);
-  //   updateUrl(currentPage);
-  // }, [currentPage, setTargetPage, updateUrl]);
-  */
-
   // Info: 從 URL 獲取初始頁碼 (20240712 - Shirley)
   useEffect(() => {
     const pageFromUrl = Number(router.query[pagePrefix]);

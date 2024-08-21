@@ -113,10 +113,7 @@ export function isKYCFormComplete(data: ICompanyKYCForm): {
   if (typeof data.contactEmail !== 'string' || !data.contactEmail) {
     missingFields.push('contactEmail');
   }
-  // Deprecated: (20240801 - Liz) Don't need to check website field
-  // if (typeof data.website !== 'string' || !data.website) {
-  //   missingFields.push('website');
-  // } // Info: this field should be optional, but db schema is not nullable (20240719 - Tzuhan)}
+  // Info: this field should be optional, but db schema is not nullable (20240719 - Tzuhan)}
   if (
     !Object.values(RepresentativeIDType).includes(data.representativeIdType) ||
     !data.representativeIdType

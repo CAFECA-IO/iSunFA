@@ -9,7 +9,6 @@ export const parseForm = async (
   req: NextApiRequest,
   subDir: string = FileFolder.TMP // Info: 預設子資料夾名稱為tmp (20240726 - Jacky)
 ) => {
-  // const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || 'kyc'; // Deprecated: useless code (20240726 - Jacky)
   const uploadDir =
     process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
   const options = {
