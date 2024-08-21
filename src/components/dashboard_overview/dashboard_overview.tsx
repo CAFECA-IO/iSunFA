@@ -31,7 +31,6 @@ const DashboardOverview = () => {
     hasCompanyId
   );
 
-  // TODO: i18n (20240620 - Shirley)
   const displayedProfitChangeRate =
     dashboardOverview.emptyProfitChange ||
     (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)

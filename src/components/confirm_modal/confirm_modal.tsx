@@ -73,8 +73,6 @@ const ConfirmModal = ({
 
   const [eventType, setEventType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // ToDo: (20240527 - Julian) Add paymentReason
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reason, setReason] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -119,7 +117,7 @@ const ConfirmModal = ({
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // Info: (20240430 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
-  // ToDo: (20240711 - Julian) Check if AI result is successful
+  // Info: (20240711 - Julian) Check if AI result is successful
   const hasAIResult = AIResultSuccess && AIResult && AIResult.lineItems.length > 0;
 
   const addRowHandler = () => addVoucherRowHandler(1);
@@ -332,7 +330,7 @@ const ConfirmModal = ({
     getAIStatusHandler({ companyId: selectedCompany.id!, askAIId: askAIId! }, true);
   }, [isModalVisible]);
 
-  // ToDo: (20240528 - Julian) Error handling
+  // Info: (20240528 - Julian) Error handling
   useEffect(() => {
     if (hasCompanyId && AIStatus === ProgressStatus.SUCCESS) {
       getAIResult({
@@ -381,12 +379,10 @@ const ConfirmModal = ({
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  // ToDo: (20240527 - Julian) Interface lacks paymentReason
-  // ToDo: (20240729 - Julian) Add Tag functionality
+  // ToDo: [Beta] (20240729 - Julian) Add Tag functionality
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
       <p>{reason}</p>
-      {/* ToDo: (20240711 - Julian) Add Tag functionality */}
       <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
         <LuTag size={14} />
         {t('CONFIRM_MODAL.PRINTER')}

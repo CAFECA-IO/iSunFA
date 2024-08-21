@@ -70,16 +70,15 @@ const PendingReportItem = ({
   };
 
   const deleteClickHandler = () => {
-    // TODO: show notification modal (20240514 - Shirley)
     messageModalDataHandler({
       title: '',
       subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes\n 
+      content: `It will take 30 - 40 minutes\n
       if you want to apply it again.`,
       submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
