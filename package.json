@@ -19,7 +19,6 @@
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
     "@next/third-parties": "^14.2.5",
-    "@passwordless-id/webauthn": "^1.5.0",
     "@prisma/client": "^5.14.0",
     "@types/formidable": "^3.4.5",
     "apexcharts": "^3.48.0",

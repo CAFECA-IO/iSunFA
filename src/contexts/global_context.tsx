@@ -6,10 +6,8 @@ import {
   DUMMY_FILTER_OPTIONS,
   FilterOptionsModalType,
   IFilterOptions,
-  RegisterFormModalProps,
 } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
-import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
@@ -73,11 +71,6 @@ interface IGlobalContext {
 
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
-
-  isRegisterModalVisible: boolean;
-  registerModalVisibilityHandler: () => void;
-  registerModalData: RegisterFormModalProps;
-  registerModalDataHandler: (data: RegisterFormModalProps) => void;
 
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
@@ -174,10 +167,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
-  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
-  const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    invitation: '',
-  });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
 
@@ -252,14 +241,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const passKeySupportModalVisibilityHandler = () => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
-  };
-
-  const registerModalVisibilityHandler = () => {
-    setIsRegisterModalVisible(!isRegisterModalVisible);
-  };
-
-  const registerModalDataHandler = (data: RegisterFormModalProps) => {
-    setRegisterModalData(data);
   };
 
   const addBookmarkModalVisibilityHandler = () => {
@@ -630,10 +611,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     layoutAssertion,
     isPasskeySupportModalVisible,
     passKeySupportModalVisibilityHandler,
-    isRegisterModalVisible,
-    registerModalVisibilityHandler,
-    registerModalData,
-    registerModalDataHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
     isMessageModalVisible,
@@ -701,12 +678,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <PasskeySupportModal
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
-      />
-
-      <RegisterFormModal
-        isModalVisible={isRegisterModalVisible}
-        modalVisibilityHandler={registerModalVisibilityHandler}
-        data={registerModalData}
       />
 
       <EditBookmarkModal
