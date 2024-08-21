@@ -23,7 +23,7 @@ interface ICreateCompanyModal {
   modalVisibilityHandler: () => void;
 }
 
-// ToDo: (20240514 - Julian) Replace with actual country list
+// ToDo: [Beta] (20240514 - Julian) Replace with actual country list
 const countryList = [
   {
     name: 'Taiwan',
@@ -38,7 +38,7 @@ const countryList = [
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { messageModalDataHandler, messageModalVisibilityHandler, } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
   const {
     targetRef: menuRef,

@@ -65,7 +65,6 @@ const JournalListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (20240419 - Julian) i18n */}
         <title>{t('JOURNAL.JOURNAL_LIST_ISUNFA')}</title>
       </Head>
 
