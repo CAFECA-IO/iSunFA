@@ -85,7 +85,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Stage Title */}
         <div
           key={`${item.id}-stage-title`}
-          className={`flex w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
+          className={`flex h-40px w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
         >
           <div className={`${stageColor.bg} h-6px w-6px rounded-full`}></div>
           <p>{item.status}</p>
@@ -122,7 +122,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Stage Title */}
         <div
           key={`${item.id}-stage-title`}
-          className={`flex w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
+          className={`flex h-40px w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
         >
           <div className={`${stageColor.bg} h-6px w-6px rounded-full`}></div>
           <p>{item.status}</p>

@@ -249,7 +249,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
               className="flex flex-1 flex-col gap-y-36px py-40px text-input-text-primary"
             >
               <div className="flex flex-col items-center gap-40px md:flex-row">
-                {/* ToDo: (20240617 - Julian) open profile update modal */}
+                {/* Info: (20240617 - Julian) open profile update modal */}
                 <button
                   type="button"
                   onClick={profileUploadClickHandler}
@@ -350,8 +350,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
-        <title>{`${t('PROJECT.PROJECT_SETTING')} - iSunFA`}</title>
+        <title>{t('PROJECT.PROJECT_SETTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">

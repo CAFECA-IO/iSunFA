@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { RxCross2 } from 'react-icons/rx';
-// import { LuTag } from 'react-icons/lu';
+import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
@@ -383,17 +383,16 @@ const ConfirmModal = ({
 
   // ToDo: (20240527 - Julian) Interface lacks paymentReason
   // ToDo: (20240729 - Julian) Add Tag functionality
-  // const displayReason =
-  //   (
-  //     <div className="flex flex-col items-center gap-x-12px md:flex-row">
-  //       <p>{reason}</p>
-  //       {/* ToDo: (20240711 - Julian) Add Tag functionality */}
-  //       <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
-  //         <LuTag size={14} />
-  //         {t('CONFIRM_MODAL.PRINTER')}
-  //       </div>
-  //     </div>
-  //   );
+  const displayReason = (
+    <div className="flex flex-col items-center gap-x-12px md:flex-row">
+      <p>{reason}</p>
+      {/* ToDo: (20240711 - Julian) Add Tag functionality */}
+      <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+        <LuTag size={14} />
+        {t('CONFIRM_MODAL.PRINTER')}
+      </div>
+    </div>
+  );
 
   const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
 
@@ -672,10 +671,10 @@ const ConfirmModal = ({
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
-            {/* <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
-            </div> */}
+            </div>
             {/* Info: (20240429 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>

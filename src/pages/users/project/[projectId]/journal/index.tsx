@@ -36,7 +36,6 @@ const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
         <title>{t('JOURNAL.PROJECT_ADD_JOURNAL_ISUNFA')}</title>
       </Head>
 
