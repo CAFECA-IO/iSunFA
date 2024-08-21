@@ -9,6 +9,7 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { useInvitation } from '@/lib/utils/invitation';
 import { verifyChallengeTimestamp } from '@/lib/utils/authorization';
 import { getUserByCredential } from '@/lib/utils/repo/authentication.repo';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
 
 async function authenticateUser(
   authentication: AuthenticationEncoded,
@@ -38,6 +39,7 @@ async function authenticateUser(
       };
       try {
         await server.verifyAuthentication(authentication, registeredCredential, expected);
+        user = formatUser(getUser.user);
       } catch (error) {
         isValid = false;
         user = null;
