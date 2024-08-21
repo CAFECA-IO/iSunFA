@@ -84,9 +84,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    // clearCompany();
     selectCompany(null);
-    // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const redirectTo = (target: string) => {

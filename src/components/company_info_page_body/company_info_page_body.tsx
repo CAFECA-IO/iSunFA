@@ -16,7 +16,7 @@ import { timestampToString } from '@/lib/utils/common';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { FiEdit } from 'react-icons/fi';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';

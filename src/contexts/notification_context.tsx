@@ -31,18 +31,6 @@ export const NotificationProvider = ({ children }: INotificationProvider) => {
     setReportGeneratedStatus(status);
   };
 
-  // Deprecated: demo (20240527 - Shirley)
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setReportPendingStatus((prev) => !prev);
-  //     setReportGeneratedStatus((prev) => !prev);
-  //   }, 10000);
-
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, []);
-
   // TODO: websocket connection of pending report and generated report (20240517 - Shirley)
 
   /* eslint-disable react/jsx-no-constructed-context-values */
@@ -62,17 +50,5 @@ export const useNotificationCtx = () => {
     throw new Error('useNotificationContext must be used within a NotificationProvider');
   }
 
-  // Deprecated: Debug tool [to be removed](20240517 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g: any =
-    typeof globalThis === 'object'
-      ? globalThis
-      : typeof window === 'object'
-        ? window
-        : typeof global === 'object'
-          ? global
-          : null; // Info: Causes an error on the next line
-
-  g.notificationContext = context;
   return context;
 };

@@ -1,14 +1,17 @@
 import prisma from '@/client';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, UserAgreement } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
-export async function listUser(): Promise<User[]> {
+export async function listUser(): Promise<(User & { userAgreements: UserAgreement[] })[]> {
   const userList = await prisma.user.findMany({
     where: {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
       id: 'asc',
+    },
+    include: {
+      userAgreements: true,
     },
   });
   return userList;
@@ -26,7 +29,7 @@ export async function createUser({
   email: string;
   phone: string;
   imageUrl: string;
-}): Promise<User> {
+}): Promise<User & { userAgreements: UserAgreement[] }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
@@ -42,18 +45,26 @@ export async function createUser({
 
   const user = await prisma.user.create({
     data: createdUser,
+    include: {
+      userAgreements: true,
+    },
   });
 
   return user;
 }
 
-export async function getUserById(userId: number): Promise<User | null> {
+export async function getUserById(
+  userId: number
+): Promise<(User & { userAgreements: UserAgreement[] }) | null> {
   let user = null;
   if (userId > 0) {
     user = await prisma.user.findUnique({
       where: {
         id: userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        userAgreements: true,
       },
     });
   }
@@ -67,7 +78,7 @@ export async function updateUserById(
   email?: string,
   phone?: string,
   imageUrl?: string
-): Promise<User> {
+): Promise<User & { userAgreements: UserAgreement[] }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
@@ -85,12 +96,17 @@ export async function updateUserById(
       id: userId,
     },
     data: updatedUser,
+    include: {
+      userAgreements: true,
+    },
   });
 
   return user;
 }
 
-export async function deleteUserById(userId: number): Promise<User> {
+export async function deleteUserById(
+  userId: number
+): Promise<User & { userAgreements: UserAgreement[] }> {
   const nowInSecond = getTimestampNow();
 
   const where: Prisma.UserWhereUniqueInput = {
@@ -103,12 +119,15 @@ export async function deleteUserById(userId: number): Promise<User> {
     deletedAt: nowInSecond,
   };
 
-  const updateArgs: Prisma.UserUpdateArgs = {
-    where,
-    data,
+  const include: Prisma.UserInclude = {
+    userAgreements: true,
   };
 
-  const user = await prisma.user.update(updateArgs);
+  const user = await prisma.user.update({
+    where,
+    data,
+    include,
+  });
   return user;
 }
 

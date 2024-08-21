@@ -170,7 +170,12 @@ function ContactForm() {
         {animation === FormAnimation.LOADING ? (
           /* Info:(20230731 - Shirley) Loading animation */
           <div className="flex flex-col items-center space-y-10">
-            <Image src="/animations/Loading.svg" width={100} height={100} alt="loading_animation" />
+            <Image
+              src="/animations/loading_animation.svg"
+              width={100}
+              height={100}
+              alt="loading_animation"
+            />
             <p className="text-sm">{t('CONTACT_US.SENDING')}</p>
           </div>
         ) : animation === FormAnimation.SUCCESS ? (
