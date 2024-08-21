@@ -131,6 +131,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },
-    debug: true,
+    debug: false,
   });
 }
