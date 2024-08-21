@@ -16,7 +16,8 @@ async function checkInput(
   email: string,
   phone: string
 ): Promise<boolean> {
-  return !!userId && !!name && !!fullName && !!email && !!phone;
+  const isValid = !!userId && !!name && !!fullName && !!email && !!phone;
+  return isValid;
 }
 
 async function handleGetRequest(
@@ -25,21 +26,30 @@ async function handleGetRequest(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
+
   const session = await getSession(req, res);
-  const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.superAdmin], { userId, companyId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  const { userId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const getUser = await getUserById(userId);
-    if (!getUser) {
-      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.user], {
+      userId,
+    });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const user = formatUser(getUser);
-      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-      payload = user;
+      const getUser = await getUserById(userId);
+      if (!getUser) {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      } else {
+        const user = formatUser(getUser);
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        payload = user;
+      }
     }
   }
+
   return { statusMessage, payload };
 }
 
@@ -49,30 +59,47 @@ async function handlePutRequest(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
+
   const queryUserId = req.query.userId as string;
   const { name, fullName, email, phone, imageId } = req.body;
   const isValid = await checkInput(queryUserId, name, fullName, email, phone);
+
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
     const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.superAdmin], { userId, companyId });
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    const { userId } = session;
+
+    if (!userId) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     } else {
-      const userIdNum = convertStringToNumber(queryUserId);
-      const getUser = await getUserById(userIdNum);
-      if (!getUser) {
-        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], {
+        userId,
+      });
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
-        const updatedUser = await updateUserById(userIdNum, name, fullName, email, phone, imageId);
-        const user = formatUser(updatedUser);
-        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-        payload = user;
+        const userIdNum = convertStringToNumber(queryUserId);
+        const getUser = await getUserById(userIdNum);
+        if (!getUser) {
+          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        } else {
+          const updatedUser = await updateUserById(
+            userIdNum,
+            name,
+            fullName,
+            email,
+            phone,
+            imageId
+          );
+          const user = await formatUser(updatedUser);
+          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+          payload = user;
+        }
       }
     }
   }
+
   return { statusMessage, payload };
 }
 

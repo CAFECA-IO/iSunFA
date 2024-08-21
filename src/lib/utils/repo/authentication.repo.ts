@@ -4,8 +4,8 @@ import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function getUserByCredential(
   credentialId: string
-): Promise<(Authentication & { user: User }) | null> {
-  let user: (Authentication & { user: User }) | null = null;
+): Promise<(Authentication & { user: User & { userAgreements: UserAgreement[] } }) | null> {
+  let user: (Authentication & { user: User & { userAgreements: UserAgreement[] } }) | null = null;
   if (credentialId.trim() !== '') {
     user = await prisma.authentication.findUnique({
       where: {
@@ -13,7 +13,11 @@ export async function getUserByCredential(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            userAgreements: true,
+          },
+        },
       },
     });
   }

@@ -9,27 +9,103 @@ import {
   formatCompanyAndRoleList,
 } from '@/lib/utils/formatter/admin.formatter';
 import { createCompanyAndRole, listCompanyAndRole } from '@/lib/utils/repo/admin.repo';
-import { getUserById } from '@/lib/utils/repo/user.repo';
-import { getSession } from '@/lib/utils/session';
 import { getCompanyByCode } from '@/lib/utils/repo/company.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
+import { getSession } from '@/lib/utils/session';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function checkAuth(userId: number) {
-  let isValid = true;
-  const getUser = await getUserById(userId);
-  if (!getUser) {
-    isValid = false;
-  }
-  return isValid;
+async function checkInput(code: string, name: string, regional: string): Promise<boolean> {
+  return !!code && !!name && !!regional;
 }
 
-async function checkInput(code: string, name: string, regional: string) {
-  let isValid = true;
-  if (!code || !name || !regional) {
-    isValid = false;
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<Array<{ company: ICompany; role: IRole }> | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: Array<{ company: ICompany; role: IRole }> | null = null;
+  const session = await getSession(req, res);
+  const { userId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const listedCompanyAndRole = await listCompanyAndRole(userId);
+      const companyAndRoleList = await formatCompanyAndRoleList(listedCompanyAndRole);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      payload = companyAndRoleList;
+    }
   }
-  return isValid;
+
+  return { statusMessage, payload };
 }
+
+async function handlePostRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<{ company: ICompany; role: IRole } | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: { company: ICompany; role: IRole } | null = null;
+  const { code, name, regional } = req.body;
+  const isValid = await checkInput(code, name, regional);
+
+  if (!isValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+  } else {
+    const session = await getSession(req, res);
+    const { userId } = session;
+
+    if (!userId) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    } else {
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      } else {
+        const getCompany = await getCompanyByCode(code);
+
+        if (getCompany) {
+          statusMessage = getCompany.kycStatus
+            ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
+            : STATUS_MESSAGE.DUPLICATE_COMPANY;
+        } else {
+          const companyIcon = await generateIcon(name);
+          const createdCompanyRoleList = await createCompanyAndRole(
+            userId,
+            code,
+            name,
+            regional,
+            companyIcon
+          );
+          const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
+          statusMessage = STATUS_MESSAGE.CREATED;
+          payload = newCompanyRoleList;
+        }
+      }
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{
+    statusMessage: string;
+    payload: { company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }> | null;
+  }>;
+} = {
+  GET: handleGetRequest,
+  POST: handlePostRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -46,66 +122,20 @@ export default async function handler(
     | null = null;
 
   try {
-    switch (req.method) {
-      case 'GET': {
-        const session = await getSession(req, res);
-        const { userId } = session;
-        const isAuth = await checkAuth(userId);
-        if (!isAuth) {
-          statusMessage = STATUS_MESSAGE.FORBIDDEN;
-        } else {
-          const listedCompanyAndRole = await listCompanyAndRole(userId);
-          const companyAndRoleList = await formatCompanyAndRoleList(listedCompanyAndRole);
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          payload = companyAndRoleList;
-        }
-        break;
-      }
-      case 'POST': {
-        const { code, name, regional } = req.body;
-        const isValid = await checkInput(code, name, regional);
-        if (!isValid) {
-          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-        } else {
-          const session = await getSession(req, res);
-          const { userId } = session;
-          const isAuth = await checkAuth(userId);
-          if (!isAuth) {
-            statusMessage = STATUS_MESSAGE.FORBIDDEN;
-          } else {
-            const getCompany = await getCompanyByCode(code);
-            if (getCompany) {
-              statusMessage = getCompany.kycStatus
-                ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
-                : STATUS_MESSAGE.DUPLICATE_COMPANY;
-            } else {
-              const companyIcon = await generateIcon(name);
-              const createdCompanyRoleList = await createCompanyAndRole(
-                userId,
-                code,
-                name,
-                regional,
-                companyIcon
-              );
-              const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
-              statusMessage = STATUS_MESSAGE.CREATED;
-              payload = newCompanyRoleList;
-            }
-          }
-        }
-        break;
-      }
-      default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
     payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<
+      { company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }> | null
+    >(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-
-  const { httpCode, result } = formatApiResponse<
-    { company: ICompany; role: IRole } | Array<{ company: ICompany; role: IRole }> | null
-  >(statusMessage, payload);
-  res.status(httpCode).json(result);
 }
