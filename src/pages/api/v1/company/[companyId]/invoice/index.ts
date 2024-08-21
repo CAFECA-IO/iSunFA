@@ -19,13 +19,11 @@ export interface IPostApiResponseType {
 }
 
 // Info Murky (20240416): Utils
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isCompanyIdValid(companyId: any): companyId is number {
+function isCompanyIdValid(companyId: unknown): companyId is number {
   return typeof companyId === 'number';
 }
 
 // Info Murky (20240416): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatInvoice(invoice: IInvoice) {
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   const now = Date.now(); // Info (20240807 - Jacky): for fake unique invoice number
@@ -50,8 +48,7 @@ function formatInvoice(invoice: IInvoice) {
 }
 
 // Info Murky (20240612): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatOcrId(ocrId: any): number | undefined {
+function formatOcrId(ocrId: unknown): number | undefined {
   if (!ocrId) {
     return undefined;
   }
