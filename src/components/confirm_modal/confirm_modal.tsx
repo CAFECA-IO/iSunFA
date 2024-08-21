@@ -150,8 +150,7 @@ const ConfirmModal = ({
         changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
       });
     } catch (err) {
-      // Debug: (20240726 - Tzuhan) Show error message
-      // console.log(`importVoucherHandler err: `, err);
+      // ToDo: (20240726 - Tzuhan) Show error message
     }
   };
 
@@ -193,7 +192,7 @@ const ConfirmModal = ({
           accountId: voucher.account!.id,
           lineItemIndex: `${voucher.id}`,
           account: generateAccountTitle(voucher.account),
-          // // Info: (20240801 - Anna) 使用 generateAccountTitleWithTranslation 函數生成會計科目的標題(翻譯後的)，取代原本的 generateAccountTitle 函數）
+          // Info: (20240801 - Anna) 使用 generateAccountTitleWithTranslation 函數生成會計科目的標題(翻譯後的)，取代原本的 generateAccountTitle 函數）
           // account: generateAccountTitleWithTranslation(voucher.account),
           description: voucher.particulars,
           debit: isDebit,
