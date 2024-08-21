@@ -10,49 +10,76 @@ import { listJournal } from '@/lib/utils/repo/journal.repo';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { EVENT_TYPE } from '@/constants/account';
-import { JOURNAL_EVENT } from '@/constants/journal';
+import { EVENT_TYPE, EventType } from '@/constants/account';
+import { JOURNAL_EVENT, SortBy } from '@/constants/journal';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { isEnumValue } from '@/lib/utils/type_guard/common';
+import { SortOrder } from '@/constants/sort';
 
-// ToDo: (20240617 - Murky) Need to use function in type guard instead
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isCompanyIdValid(companyId: any): companyId is number {
-  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
-    return false;
-  }
-  return true;
+export function isCompanyIdValid(companyId: unknown): companyId is number {
+  const isNumber = typeof companyId === 'number';
+  return isNumber;
 }
 
-// ToDo: (20240625 - Murky) Need to move to type guard
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function formatQuery(query: any) {
-  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } = query;
+function isValidQuery(query: unknown): query is {
+  page?: string;
+  pageSize?: string;
+  eventType?: EventType;
+  sortBy?: SortBy;
+  sortOrder?: SortOrder;
+  startDate?: string;
+  endDate?: string;
+  searchQuery?: string;
+} {
+  if (typeof query !== 'object' || query === null) {
+    return false;
+  }
 
-  if (
-    (page && !Number.isInteger(Number(page))) ||
-    (pageSize && !Number.isInteger(Number(pageSize))) ||
-    (sortBy && typeof sortBy !== 'string') ||
-    (sortOrder && typeof sortOrder !== 'string') ||
-    (startDate && !Number.isInteger(Number(startDate))) ||
-    (endDate && !Number.isInteger(Number(endDate))) ||
-    (searchQuery && typeof searchQuery !== 'string') ||
-    (eventType && !Object.values(EVENT_TYPE).includes(eventType))
-  ) {
+  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
+    query as {
+      page?: string;
+      pageSize?: string;
+      eventType?: EventType;
+      sortBy?: SortBy;
+      sortOrder?: SortOrder;
+      startDate?: string;
+      endDate?: string;
+      searchQuery?: string;
+    };
+
+  return (
+    (page === undefined || Number.isInteger(Number(page))) &&
+    (pageSize === undefined || Number.isInteger(Number(pageSize))) &&
+    (sortBy === undefined || isEnumValue(SortBy, sortBy)) &&
+    (sortOrder === undefined || isEnumValue(SortOrder, sortOrder)) &&
+    (startDate === undefined || Number.isInteger(Number(startDate))) &&
+    (endDate === undefined || Number.isInteger(Number(endDate))) &&
+    (searchQuery === undefined || typeof searchQuery === 'string') &&
+    (eventType === undefined || isEnumValue(EVENT_TYPE, eventType))
+  );
+}
+
+export function formatQuery(query: unknown) {
+  if (typeof query !== 'object' || query === null || !isValidQuery(query)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
+
+  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } = query;
+
   const startDateNumber = startDate ? convertStringToNumber(startDate) : undefined;
   const endDateNumber = endDate ? convertStringToNumber(endDate) : undefined;
   const startDateInSecond =
     startDateNumber !== undefined ? timestampInSeconds(startDateNumber) : undefined;
   const endDateInSecond =
     endDateNumber !== undefined ? timestampInSeconds(endDateNumber) : undefined;
+
   const cleanQuery = {
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
     pageSize: pageSize ? Number(pageSize) : DEFAULT_PAGE_LIMIT,
     eventType: eventType || undefined,
-    sortBy: sortBy || 'createdAt',
-    sortOrder: sortOrder || 'desc',
+    sortBy: sortBy || SortBy.CREATED_AT,
+    sortOrder: sortOrder || SortOrder.DESC,
     startDate: startDateInSecond,
     endDate: endDateInSecond,
     searchQuery: searchQuery || undefined,
