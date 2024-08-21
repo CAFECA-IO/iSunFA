@@ -1,19 +1,18 @@
-import { AICH_URI } from '@/constants/config';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamString } from '@/lib/utils/common';
 import { ILineItem, ILineItemFromAICH } from '@/interfaces/line_item';
 import { fuzzySearchAccountByName } from '@/pages/api/v1/company/[companyId]/ask_ai/[resultId]/index.repository';
 import { isILineItem } from '@/lib/utils/type_guard/line_item';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IContract } from '@/interfaces/contract';
+import { AICH_URI } from '@/constants/config';
 
 type ApiResponseType = IVoucherDataForSavingToDB | IContract | null;
-// Info: （ 20240522 - Murkky）目前只可以使用Voucher Return
 
-export async function fetchResultFromAICH(aiApi: string, resultId: string) {
+async function fetchResultFromAICH(aiApi: string, resultId: string) {
   let response: Response;
   try {
     response = await fetch(`${AICH_URI}/api/v1/${aiApi}/${resultId}/result`);
@@ -23,17 +22,13 @@ export async function fetchResultFromAICH(aiApi: string, resultId: string) {
   if (response.status === 404) {
     throw new Error(STATUS_MESSAGE.AICH_API_NOT_FOUND);
   }
-
   if (!response.ok) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
-
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-export async function getPayloadFromResponseJSON(
-  responseJSON: Promise<{ payload?: unknown } | null>
-) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
@@ -45,9 +40,6 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecated: （ 20240522 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -65,9 +57,7 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
       const accountInDB = await fuzzySearchAccountByName(account);
 
       if (!accountInDB) {
-        // Deprecated: （ 20240522 - Murkky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`Account ${account} not found in database`);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
       }
 
       const resultAccount = {
@@ -80,9 +70,6 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
       } as ILineItem;
 
       if (!isILineItem(resultAccount)) {
-        // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`LineItem ${account} is not valid`);
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
       return resultAccount;
@@ -91,72 +78,76 @@ async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
   return lineItems;
 }
 
-export async function handleGetRequest(req: NextApiRequest) {
+async function handleGetRequest(req: NextApiRequest) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IVoucherDataForSavingToDB | IContract | null = null;
   const { resultId, aiApi = 'vouchers' } = req.query;
-  // Info Murky (20240416): Check if resultId is string
+
   if (!isParamString(resultId) || !isParamString(aiApi)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+  } else {
+    const fetchResult = fetchResultFromAICH(aiApi, resultId);
 
-  const fetchResult = fetchResultFromAICH(aiApi, resultId);
+    switch (aiApi) {
+      case 'vouchers': {
+        const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
+          lineItems: ILineItemFromAICH[];
+        };
 
-  switch (aiApi) {
-    case 'vouchers': {
-      const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
-        lineItems: ILineItemFromAICH[];
-      };
-
-      const lineItems = await formatLineItemsFromAICH(rawLineItems);
-      const voucher = {
-        lineItems,
-      } as IVoucherDataForSavingToDB;
-      if (!isIVoucherDataForSavingToDB(voucher)) {
-        // Deprecated: （ 20240522 - Murky）Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('Voucher is not valid');
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+        const lineItems = await formatLineItemsFromAICH(rawLineItems);
+        const voucher = {
+          lineItems,
+        } as IVoucherDataForSavingToDB;
+        if (!isIVoucherDataForSavingToDB(voucher)) {
+          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        } else {
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          payload = voucher;
+        }
+        break;
       }
-      payload = voucher;
-      break;
+      case 'contracts': {
+        payload = (await fetchResult) as IContract;
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        break;
+      }
+      default:
+        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
-    case 'contracts': {
-      // Todo (20240625 - Jacky): Implement contract return
-      payload = (await fetchResult) as IContract;
-      break;
-    }
-    default:
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { httpCode, result } = formatApiResponse<ApiResponseType>(
-    STATUS_MESSAGE.SUCCESS_GET,
-    payload
-  );
-
-  return { httpCode, result };
+  return { statusMessage, payload };
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: ApiResponseType }>;
+} = {
+  GET: handleGetRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ApiResponseType = null;
+
   try {
-    if (req.method === 'GET') {
-      const { httpCode, result } = await handleGetRequest(req);
-      res.status(httpCode).json(result);
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    // Deprecated: （ 20240522 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
-    const { httpCode, result } = formatApiResponse<ApiResponseType>(
-      error.message,
-      {} as ApiResponseType
-    );
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
