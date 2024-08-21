@@ -1,4 +1,3 @@
-import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -9,14 +8,19 @@ import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
 import { isILineItem } from '@/lib/utils/type_guard/line_item';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IContract } from '@/interfaces/contract';
+import { getSession } from '@/lib/utils/session';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { getAichUrl } from '@/lib/utils/aich';
+import { AICH_APIS_TYPES } from '@/constants/aich';
 
 type ApiResponseType = IVoucherDataForSavingToDB | IContract | null;
-// Info: （ 20240522 - Murkky）目前只可以使用Voucher Return
+// Info: （ 20240522 - Murky）目前只可以使用Voucher Return
 
-export async function fetchResultFromAICH(aiApi: string, resultId: string) {
+export async function fetchResultFromAICH(fetchUrl: string) {
   let response: Response;
   try {
-    response = await fetch(`${AICH_URI}/api/v1/${aiApi}/${resultId}/result`);
+    response = await fetch(fetchUrl);
   } catch (error) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
@@ -99,10 +103,10 @@ export async function handleGetRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const fetchResult = fetchResultFromAICH(aiApi, resultId);
-
   switch (aiApi) {
     case 'vouchers': {
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+      const fetchResult = fetchResultFromAICH(fetchUrl);
       const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
         lineItems: ILineItemFromAICH[];
       };
@@ -122,6 +126,8 @@ export async function handleGetRequest(req: NextApiRequest) {
     }
     case 'contracts': {
       // Todo (20240625 - Jacky): Implement contract return
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+      const fetchResult = fetchResultFromAICH(fetchUrl);
       payload = (await fetchResult) as IContract;
       break;
     }
@@ -129,34 +135,41 @@ export async function handleGetRequest(req: NextApiRequest) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { httpCode, result } = formatApiResponse<ApiResponseType>(
-    STATUS_MESSAGE.SUCCESS_GET,
-    payload
-  );
-
-  return { httpCode, result };
+  return payload;
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
-  try {
-    if (req.method === 'GET') {
-      const { httpCode, result } = await handleGetRequest(req);
-      res.status(httpCode).json(result);
-    } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
+  let payload: IVoucherDataForSavingToDB | IContract | null = null;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  if (isAuth) {
+    try {
+      switch (req.method) {
+        case "GET": {
+          payload = await handleGetRequest(req);
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          break;
+        }
+        default: {
+          statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+          break;
+        }
+      }
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecated: （ 20240522 - Murky）Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    // Deprecated: （ 20240522 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
-    const { httpCode, result } = formatApiResponse<ApiResponseType>(
-      error.message,
-      {} as ApiResponseType
-    );
-    res.status(httpCode).json(result);
   }
+
+  const { httpCode, result } = formatApiResponse(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

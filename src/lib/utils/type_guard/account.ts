@@ -13,40 +13,35 @@ import {
   IAccountResultStatus,
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
+import { isEnumValue } from './common';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isEventType(data: any): data is EventType {
-  const isValid = Object.values(EventType).includes(data as EventType);
+export function isEventType(data: unknown): data is EventType {
+  const isValid = isEnumValue(EventType, data);
   return isValid;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAccountType(data: any): data is AccountType {
-  const isValid = Object.values(AccountType).includes(data as AccountType);
+export function isAccountType(data: unknown): data is AccountType {
+  const isValid = isEnumValue(AccountType, data);
   return isValid;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isVoucherType(data: any): data is VoucherType {
-  const isValid = Object.values(VoucherType).includes(data as VoucherType);
+export function isVoucherType(data: unknown): data is VoucherType {
+  const isValid = isEnumValue(VoucherType, data);
   return isValid;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isPaymentStatusType(data: any): data is PaymentStatusType {
-  const isValid = Object.values(PaymentStatusType).includes(data as PaymentStatusType);
+export function isPaymentStatusType(data: unknown): data is PaymentStatusType {
+  const isValid = isEnumValue(PaymentStatusType, data);
   return isValid;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isPaymentPeriodType(data: any): data is PaymentPeriodType {
-  const isValid = Object.values(PaymentPeriodType).includes(data as PaymentPeriodType);
+export function isPaymentPeriodType(data: unknown): data is PaymentPeriodType {
+  const isValid = isEnumValue(PaymentPeriodType, data);
   return isValid;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isProgressStatus(data: any): data is ProgressStatus {
-  const isValid = Object.values(ProgressStatus).includes(data as ProgressStatus);
+export function isProgressStatus(data: unknown): data is ProgressStatus {
+  const isValid = isEnumValue(ProgressStatus, data);
   return isValid;
 }
 
