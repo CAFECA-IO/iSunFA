@@ -138,12 +138,6 @@ const UploadArea = ({
             },
           };
           localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
-          // console.log(
-          //   `onloadend filename: ${file.name}, file:`,
-          //   file,
-          //   `newData in localStorage:`,
-          //   newData
-          // );
           setUploadedFile(file);
 
           await handleFileUpload(file);
