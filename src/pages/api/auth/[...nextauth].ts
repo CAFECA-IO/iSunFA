@@ -9,7 +9,7 @@ import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authenti
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 
 /**
-* Info: (20240813 - Tzuhan)
+* Info: [Beta](20240813-Tzuhan)
 * 1. 檔案名稱與路徑
   * 檔案名稱為 [...nextauth].ts，路徑為 pages/api/auth/[...nextauth].ts。這是 Next.js 中一種特殊的檔案命名方式，用於動態路由。[...] 表示捕獲所有路由段，nextauth 是自定義名稱，表示該檔案處理 next-auth 的所有請求。
 * 2. 檔案的作用
@@ -54,28 +54,34 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       }),
-      // Info: (20240813 - Tzuhan) Apple login is not provided in the beta version
+      // Info: (20240813-Tzuhan) Apple login is not provided in the beta version
       // AppleProvider({
       //   clientId: process.env.APPLE_CLIENT_ID as string,
       //   clientSecret: generateAppleClientSecret(),
       // }),
     ],
     pages: {
-      signIn: ISUNFA_ROUTE.LOGIN_BETA,
+      signIn: ISUNFA_ROUTE.LOGIN,
     },
-    session: {
-      strategy: 'jwt',
-    },
+    // session: {
+    //   strategy: 'jwt',
+    // },
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-      async jwt({ token, account, user }) {
-        // Deprecated: (20240815 - Tzuhan) Remove console.log
+      async signIn({ user, account, profile }) {
+        // Deprecate: [Beta](20240819-Tzuhan)dev
         // eslint-disable-next-line no-console
-        console.log('jwt callback', token, account, user);
+        console.log('signIn callback', user, account, profile);
+        const { invitation } = (account?.params || {}) as { invitation: string };
+
+        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // eslint-disable-next-line no-console
+        console.log('Custom Params:', invitation);
+
         const session = await getSession(req, res);
-        // TODO: (20240813 - Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
+        // TODO: [Beta](20240813-Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
         /**
-         * Info: (20240813 - Tzuhan)
+         * Info: [Beta](20240813-Tzuhan)
          * recommended user model:
            model User {
              id           Int          @id @default(autoincrement())
@@ -99,8 +105,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
              @@map("user")
            }
          */
-        const getUser = await getUserByCredential(token.sub || '');
-        let newToken = token;
+        const getUser = await getUserByCredential(account?.providerAccountId || user.id);
 
         if (!getUser) {
           if (account && user) {
@@ -116,29 +121,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             });
 
             await setSession(session, createdUser.user.id);
-
-            newToken = {
-              ...token,
-              accessToken: account.access_token,
-              provider: account.provider,
-              userId: createdUser.user.id,
-            };
           }
         } else {
           await setSession(session, getUser.user.id);
         }
-        return newToken;
+        return true;
       },
       async redirect({ url, baseUrl }) {
-        // Deprecated: (20240815 - Tzuhan) Remove console.log
-        // eslint-disable-next-line no-console
-        console.log('redirect callback', url, baseUrl);
-
-        if (url === `${baseUrl}${ISUNFA_ROUTE.LOGIN_BETA}`) {
-          return url;
-        } else {
-          return url.startsWith(baseUrl) ? url : baseUrl;
-        }
+        return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },
     debug: true,

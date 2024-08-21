@@ -123,7 +123,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
       filteredAccountList.map((acc: IAccount) => {
         const title = generateAccountTitle(acc);
 
-        const displayTitle = accountTitleMap[title] || title; // ToDo: (20240712 - Julian) Translate account title
+        const displayTitle = t(accountTitleMap[title]) || t(title);
 
         // Info: (20240712 - Julian) 點擊選單選項
         const clickHandler = () => {

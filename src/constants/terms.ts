@@ -1,4 +1,4 @@
-export const term_1 = `
+export const term1 = `
 Dear User,
 Thank you for choosing to use our accounting software. During your use of this software, we may collect and process some of your personal information. This statement aims to inform you about the information we collect, how it is used, and how we protect your privacy.
 
@@ -42,7 +42,7 @@ Thank you for your trust and support in our accounting software!
 iSunFA  August 6, 2024
 `;
 
-export const term_2 = `
+export const term2 = `
 Dear User,
 Welcome to our accounting software. To ensure you fully understand our services and how we protect your personal information, please carefully read the following Terms of Service and Privacy Policy.
 

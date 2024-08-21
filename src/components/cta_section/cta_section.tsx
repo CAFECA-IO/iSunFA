@@ -13,7 +13,7 @@ const CTASection = () => {
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
 
-  /* TODO: implement sign-in check (20240403 - Shirley)
+  /* TODO: implement sign_in check (20240403 - Shirley)
   // const signInClickHandler = async () => {
   //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
   //   const authentication = await client.authenticate([], challenge, {
