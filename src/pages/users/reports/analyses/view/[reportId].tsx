@@ -24,7 +24,7 @@ interface IServerSideProps {
   endTimestamp: string;
 }
 
-// TODO: dummy data to be replaced (20240429 - Shirley)
+// TODO: [Beta] dummy data to be replaced (20240429 - Shirley)
 const ReportLink = {
   [AnalysisReportTypesKey.financial_performance]: ``,
   [AnalysisReportTypesKey.cost_analysis]: ``,
@@ -49,7 +49,7 @@ const ViewAnalysisReportPage = ({
     reportLink: ReportLink[reportType],
   });
 
-  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+  // TODO: [Beta] Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
   const {
     data: reportAnalysis,
     code: getARCode,
@@ -100,7 +100,7 @@ const ViewAnalysisReportPage = ({
     </>
   );
 
-  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: [Beta] replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>

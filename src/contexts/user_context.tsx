@@ -340,8 +340,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO: refactor the signIn function (20240409 - Shirley)
-  /* TODO: (20240410 - Shirley)
+  // TODO: [Beta] refactor the signIn function (20240409 - Shirley)
+  /* TODO: [Beta] (20240410 - Shirley)
       拿登入聲明書 / 用戶條款 / challenge
       先檢查 cookie ，然後檢查是否有 credential 、驗證 credential 有沒有過期或亂寫，
       拿著 credential 跟 server 去拿 member 資料、付錢資料

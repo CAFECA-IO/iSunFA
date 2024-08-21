@@ -197,7 +197,7 @@ const LaborCostChart = () => {
   const { t } = useTranslation('common');
   const { layoutAssertion } = useGlobalCtx();
 
-  // TODO: 改成 company startDate (20240618 - Shirley)
+  // TODO: [Beta] 改成 company startDate (20240618 - Shirley)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);

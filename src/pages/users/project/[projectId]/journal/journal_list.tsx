@@ -22,7 +22,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
-  // ToDo: (20240621 - Julian) Replace with api data
+  // ToDo: [Beta] (20240621 - Julian) Replace with api data
   const projectName = 'BAIFA';
 
   const backClickHandler = () => window.history.back();

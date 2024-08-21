@@ -298,7 +298,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                     .includes(searchQuery.toLowerCase())
                 // eslint-disable-next-line function-paren-newline
               )
-              // TODO: 串上 API 之後把 filter 拿掉 (20240726 - Shirley)
+              // TODO: [Beta] 串上 API 之後把 filter 拿掉 (20240726 - Shirley)
               .filter((project) => {
                 return project.includes('Overall');
               })
@@ -558,7 +558,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         </div>
         <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
-            {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
+            {/* Info: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
             {/* Info: 左橫線 (20240425 - Shirley) */}
             <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
               <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />

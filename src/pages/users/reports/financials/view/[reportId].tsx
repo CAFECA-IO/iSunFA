@@ -31,7 +31,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  // TODO: refactor and delete it (20240723 - Shirley)
+  // TODO: [Beta] refactor and delete it (20240723 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
@@ -98,7 +98,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </div>
     );
 
-  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: [Beta] replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>

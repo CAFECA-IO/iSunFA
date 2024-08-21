@@ -85,7 +85,7 @@ const JournalUploadArea = () => {
       const formData = new FormData();
       const uuid = uuidv4();
       formData.append('image', uploadFile.file);
-      // TODO: in dev (20240815 - Shirley) 加上 imageSize, imageName, uploadIdentifier
+      // TODO: [Beta] in dev (20240815 - Shirley) 加上 imageSize, imageName, uploadIdentifier
       formData.append('imageSize', uploadFile.size);
       formData.append('imageName', uploadFile.name);
       formData.append('uploadIdentifier', uuid);
@@ -123,7 +123,7 @@ const JournalUploadArea = () => {
           });
           setInvoiceIdHandler(result.aichResultId);
           // setInvoiceIdHandler(resultId);
-          // TODO: in dev (20240815 - Shirley) 加上
+          // TODO: [Beta] in dev (20240815 - Shirley) 加上
           // eslint-disable-next-line no-console
           console.log('result in JournalUploadArea', result);
           if (
