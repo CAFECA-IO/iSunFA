@@ -11,7 +11,7 @@ import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -272,7 +272,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     return rows;
   };
 
-  const rowsForPage2_1 = (items: Array<FinancialReportItem>) => {
+  const rowsForPage2part1 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 2).map((item, index) => {
       if (!item.code) {
         return (
@@ -731,7 +731,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {reportFinancial &&
               reportFinancial.details &&
               Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-              rowsForPage2_1(reportFinancial.details)}
+              rowsForPage2part1(reportFinancial.details)}
           </tbody>
         </table>
       </section>

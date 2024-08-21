@@ -3,6 +3,8 @@ export enum FinancialReportTypesKey {
   balance_sheet = 'balance_sheet',
   comprehensive_income_statement = 'comprehensive_income_statement',
   cash_flow_statement = 'cash_flow_statement',
+  // Info: (20240814 - Anna) 增加401報表
+  report_401 = 'report_401',
   //  change_in_equity_statement = 'change_in_equity_statement'
 }
 
@@ -10,7 +12,7 @@ export enum FinancialReportTypeName {
   balance_sheet = 'Balance Sheet',
   comprehensive_income_statement = 'Comprehensive Income Statement',
   cash_flow_statement = 'Cash Flow Statement',
-  report_401 = '401 Report',
+  report_401 = 'Report 401',
   //  change_in_equity_statement = 'change_in_equity_statement'
 }
 
@@ -29,7 +31,7 @@ export enum ReportTypeToBaifaReportType {
   balance_sheet = 'balance',
   comprehensive_income_statement = 'comprehensive-income',
   cash_flow_statement = 'cash-flow',
-  report_401 = '401',
+  report_401 = 'report-401',
   //  change_in_equity_statement = 'change-in-equity'
 }
 
@@ -37,6 +39,7 @@ export enum BaifaReportTypeToReportType {
   balance = 'balance_sheet',
   'comprehensive-income' = 'comprehensive_income_statement',
   'cash-flow' = 'cash_flow_statement',
+  'report-401' = 'report_401',
   //  'change-in-equity' = 'change_in_equity_statement'
 }
 
@@ -56,6 +59,11 @@ export const FinancialReportTypesMap: Record<
   [FinancialReportTypesKey.cash_flow_statement]: {
     id: FinancialReportTypesKey.cash_flow_statement,
     name: 'Cash Flow Statement',
+  },
+  // Info: (20240814 - Anna) 增加401報表
+  [FinancialReportTypesKey.report_401]: {
+    id: FinancialReportTypesKey.report_401,
+    name: 'report_401',
   },
   // [FinancialReportTypesKey.change_in_equity_statement]: {
   //   id: FinancialReportTypesKey.change_in_equity_statement,

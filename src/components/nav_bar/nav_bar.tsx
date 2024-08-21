@@ -84,9 +84,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    // clearCompany();
     selectCompany(null);
-    // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const redirectTo = (target: string) => {
@@ -328,7 +326,7 @@ const NavBar = () => {
         </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
+            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           {/* Info: edit name button (20240809 - Shirley) */}
           <button

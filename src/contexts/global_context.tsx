@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState, useContext, createContext, useMemo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
@@ -16,9 +15,12 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
+// eslint-disable-next-line import/no-cycle
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
 import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
+// eslint-disable-next-line import/no-cycle
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
+// eslint-disable-next-line import/no-cycle
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {
   IPreviewInvoiceModal,
@@ -27,7 +29,9 @@ import {
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
+// eslint-disable-next-line import/no-cycle
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
+// eslint-disable-next-line import/no-cycle
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
@@ -37,23 +41,30 @@ import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+// eslint-disable-next-line import/no-cycle
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
+// eslint-disable-next-line import/no-cycle
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+// eslint-disable-next-line import/no-cycle
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+// eslint-disable-next-line import/no-cycle
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+// eslint-disable-next-line import/no-cycle
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
+// eslint-disable-next-line import/no-cycle
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+// eslint-disable-next-line import/no-cycle
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
-import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal.beta';
+import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 
 interface IGlobalContext {
   width: number;
@@ -142,11 +153,7 @@ interface IGlobalContext {
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
 
-  isAgreeWithInfomationConfirmModalVisible: boolean;
   agreeWithInfomationConfirmModalVisibilityHandler: (visibility: boolean) => void;
-
-  isTOSNPrivacyPolicyConfirmModalVisible: boolean;
-  userAgreeWithInfomationANDTOSNPrivacyPolicy: boolean;
 }
 
 export interface IGlobalProvider {
@@ -160,7 +167,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn, selectedCompany } = useUserCtx();
+  const { signedIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
+    useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -235,11 +243,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isTOSNPrivacyPolicyConfirmModalVisible, setIsTOSNPrivacyPolicyConfirmModalVisible] =
     useState(false);
-
-  const [
-    userAgreeWithInfomationANDTOSNPrivacyPolicy,
-    setUserAgreeWithInfomationANDTOSNPrivacyPolicy,
-  ] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -396,20 +399,24 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsTOSNPrivacyPolicyConfirmModalVisible(visibility);
   };
 
-  const userAgreeWithInfomationANDTOSNPrivacyPolicyHandler = () => {
-    setUserAgreeWithInfomationANDTOSNPrivacyPolicy(true);
-  };
-
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
     const {
+      // eslint-disable-next-line react/prop-types
       id,
+      // eslint-disable-next-line react/prop-types
       type,
+      // eslint-disable-next-line react/prop-types
       content,
+      // eslint-disable-next-line react/prop-types
       closeable,
+      // eslint-disable-next-line react/prop-types
       autoClose: isAutoClose,
+      // eslint-disable-next-line react/prop-types
       position: toastPosition,
+      // eslint-disable-next-line react/prop-types
       onClose = () => {},
+      // eslint-disable-next-line react/prop-types
       onOpen = () => {},
     } = props;
 
@@ -550,6 +557,25 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   useEffect(() => {
     if (signedIn) {
+      if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
+        if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
+        if (!isAgreeInfoCollection) agreeWithInfomationConfirmModalVisibilityHandler(true);
+        if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
+          TOSNPrivacyPolicyConfirmModalVisibilityHandler(true);
+        }
+      } else {
+        agreeWithInfomationConfirmModalVisibilityHandler(false);
+        TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
+        if (router.pathname === ISUNFA_ROUTE.LOGIN) {
+          if (selectedCompany) router.push(ISUNFA_ROUTE.DASHBOARD);
+          else router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+        }
+      }
+    }
+  }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
+
+  useEffect(() => {
+    if (signedIn) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
         eliminateToast(ToastId.ALPHA_TEST_REMINDER);
         if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
@@ -667,11 +693,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     isTransferCompanyModalVisible,
     transferCompanyModalVisibilityHandler,
 
-    isAgreeWithInfomationConfirmModalVisible,
     agreeWithInfomationConfirmModalVisibilityHandler,
-
-    isTOSNPrivacyPolicyConfirmModalVisible,
-    userAgreeWithInfomationANDTOSNPrivacyPolicy,
   };
 
   return (
@@ -802,45 +824,27 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       />
 
       <LoginConfirmModal
+        id="agree-with-information"
         isModalVisible={isAgreeWithInfomationConfirmModalVisible}
         modalData={{
           title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'info_collection_statement',
           buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
         }}
-        onAgree={() => {
-          if (isAgreeWithInfomationConfirmModalVisible) {
-            agreeWithInfomationConfirmModalVisibilityHandler(false);
-          }
-          if (!isTOSNPrivacyPolicyConfirmModalVisible) {
-            TOSNPrivacyPolicyConfirmModalVisibilityHandler(true);
-          }
-        }}
-        onCancel={() => {
-          if (isAgreeWithInfomationConfirmModalVisible) {
-            agreeWithInfomationConfirmModalVisibilityHandler(false);
-          }
-        }}
+        infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
+        tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
       />
 
       <LoginConfirmModal
+        id="tos-n-privacy-policy"
         isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
         modalData={{
           title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'term_n_privacy',
           buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
         }}
-        onAgree={async () => {
-          if (isTOSNPrivacyPolicyConfirmModalVisible) {
-            TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-          }
-          userAgreeWithInfomationANDTOSNPrivacyPolicyHandler();
-        }}
-        onCancel={() => {
-          if (isTOSNPrivacyPolicyConfirmModalVisible) {
-            TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-          }
-        }}
+        infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
+        tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
       />
       {children}
     </GlobalContext.Provider>
@@ -852,5 +856,18 @@ export const useGlobalCtx = () => {
   if (!context) {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
+
+  // Deprecated: Debug tool [to be removed](20231120 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g: any =
+    typeof globalThis === 'object'
+      ? globalThis
+      : typeof window === 'object'
+        ? window
+        : typeof global === 'object'
+          ? global
+          : null; // Info: Causes an error on the next line
+
+  g.globalContext = context;
   return context;
 };

@@ -1,10 +1,10 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 const TermsOfServiceAndPrivacyPolicy: React.FC = () => {
   const { t } = useTranslation('common');
   return (
-    <div className="p-6 space-y-4 text-navyBlue">
+    <div className="space-y-4 p-6 text-navyBlue">
       <p className="font-semibold">{t('TOS_N_PP.DEAR_USER')}</p>
       <p>{t('TOS_N_PP.WELCOME')}</p>
 

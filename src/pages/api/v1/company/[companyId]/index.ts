@@ -1,94 +1,103 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { IUser } from '@/interfaces/user';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
-import { checkAuthorization } from '@/lib/utils/auth_check';
+import { getUserById, updateUserById } from '@/lib/utils/repo/user.repo';
+import { formatUser } from '@/lib/utils/formatter/user.formatter';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/utils/session';
-import {
-  getCompanyById,
-  deleteCompanyById,
-  updateCompanyById,
-} from '@/lib/utils/repo/company.repo';
-import { formatCompany } from '@/lib/utils/formatter/company.formatter';
-import {
-  deleteAdminListByCompanyId,
-  getCompanyDetailAndRoleByCompanyId,
-} from '@/lib/utils/repo/admin.repo';
-import { formatCompanyDetailAndRole } from '@/lib/utils/formatter/admin.formatter';
+import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | ICompanyAndRole | null = null;
+async function checkInput(
+  userId: string,
+  name: string,
+  fullName: string,
+  email: string,
+  phone: string
+): Promise<boolean> {
+  return !!userId && !!name && !!fullName && !!email && !!phone;
+}
 
-  const companyIdNum = convertStringToNumber(req.query.companyId);
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IUser | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IUser | null = null;
+
   const session = await getSession(req, res);
-  const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const companyWithOwner = await getCompanyDetailAndRoleByCompanyId(userId, companyIdNum);
-    if (companyWithOwner) {
-      const companyDetailAndRole = formatCompanyDetailAndRole(companyWithOwner);
-      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-      payload = companyDetailAndRole;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.superAdmin], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const getUser = await getUserById(userId);
+      if (!getUser) {
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      } else {
+        const user = formatUser(getUser);
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        payload = user;
+      }
     }
   }
 
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IUser | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
+  let payload: IUser | null = null;
 
-  const companyIdNum = convertStringToNumber(req.query.companyId);
-  const { code, name, regional } = req.body;
-  const session = await getSession(req, res);
-  const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
-    userId,
-    companyId: companyIdNum,
-  });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  const queryUserId = req.query.userId as string;
+  const { name, fullName, email, phone, imageId } = req.body;
+  const isValid = await checkInput(queryUserId, name, fullName, email, phone);
+
+  if (!isValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const getCompany = await getCompanyById(companyIdNum);
-    if (getCompany) {
-      const updatedCompany = await updateCompanyById(companyIdNum, code, name, regional);
-      const company = formatCompany(updatedCompany);
-      payload = company;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+
+    if (!userId) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    } else {
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.superAdmin], {
+        userId,
+        companyId,
+      });
+
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      } else {
+        const userIdNum = convertStringToNumber(queryUserId);
+        const getUser = await getUserById(userIdNum);
+
+        if (!getUser) {
+          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        } else {
+          const updatedUser = await updateUserById(
+            userIdNum,
+            name,
+            fullName,
+            email,
+            phone,
+            imageId
+          );
+          const user = formatUser(updatedUser);
+          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+          payload = user;
+        }
+      }
     }
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-  }
-
-  return { statusMessage, payload };
-}
-
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | null = null;
-
-  const companyIdNum = convertStringToNumber(req.query.companyId);
-  const session = await getSession(req, res);
-  const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
-    userId,
-    companyId: companyIdNum,
-  });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
-  } else {
-    const getCompany = await getCompanyById(companyIdNum);
-    if (getCompany) {
-      const deletedCompany = await deleteCompanyById(companyIdNum);
-      await deleteAdminListByCompanyId(companyIdNum);
-      const company = formatCompany(deletedCompany);
-      payload = company;
-    }
-    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
   }
 
   return { statusMessage, payload };
@@ -98,19 +107,18 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ICompany | ICompanyAndRole | null }>;
+  ) => Promise<{ statusMessage: string; payload: IUser | null }>;
 } = {
   GET: handleGetRequest,
-  DELETE: handleDeleteRequest,
   PUT: handlePutRequest,
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompany | ICompanyAndRole | null>>
+  res: NextApiResponse<IResponseData<IUser | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompany | ICompanyAndRole | null = null;
+  let payload: IUser | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -124,10 +132,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ICompany | ICompanyAndRole | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IUser | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

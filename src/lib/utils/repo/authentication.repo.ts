@@ -1,11 +1,11 @@
 import prisma from '@/client';
-import { Authentication, User } from '@prisma/client';
+import { Authentication, User, UserAgreement } from '@prisma/client';
 import { timestampInSeconds } from '@/lib/utils/common';
 
 export async function getUserByCredential(
   credentialId: string
-): Promise<(Authentication & { user: User }) | null> {
-  let user: (Authentication & { user: User }) | null = null;
+): Promise<(Authentication & { user: User & { userAgreements: UserAgreement[] } }) | null> {
+  let user: (Authentication & { user: User & { userAgreements: UserAgreement[] } }) | null = null;
   if (credentialId.trim() !== '') {
     user = await prisma.authentication.findUnique({
       where: {
@@ -13,7 +13,11 @@ export async function getUserByCredential(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            userAgreements: true,
+          },
+        },
       },
     });
   }
@@ -40,7 +44,7 @@ export async function createUserByAuth({
   fullName?: string;
   email?: string;
   phone?: string;
-}): Promise<Authentication & { user: User }> {
+}): Promise<Authentication & { user: User & { userAgreements: UserAgreement[] } }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   // publicKey: string,
@@ -67,7 +71,11 @@ export async function createUserByAuth({
       updatedAt: nowTimestamp,
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
     },
   });
 

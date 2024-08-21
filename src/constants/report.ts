@@ -19,7 +19,7 @@ export enum ReportSheetTypeDisplay {
   BALANCE_SHEET = 'Balance Sheet',
   INCOME_STATEMENT = 'Statement of Comprehensive Income',
   CASH_FLOW_STATEMENT = 'Statement of Cash Flows',
-  REPORT_401 = '401 Report',
+  REPORT_401 = 'Report 401',
   //  CHANGE_IN_EQUITY_STATEMENT = 'Statement of Changes in Equity',
 }
 
@@ -31,9 +31,9 @@ export enum ReportStatusType {
 export const ReportUrlMap: {
   [key in ReportSheetType]: string;
 } = {
-  [ReportSheetType.BALANCE_SHEET]: 'balance-sheet',
-  [ReportSheetType.INCOME_STATEMENT]: 'income-statement',
-  [ReportSheetType.CASH_FLOW_STATEMENT]: 'cash-flow-statement',
+  [ReportSheetType.BALANCE_SHEET]: 'balance_sheet',
+  [ReportSheetType.INCOME_STATEMENT]: 'income_statement',
+  [ReportSheetType.CASH_FLOW_STATEMENT]: 'cash_flow_statement',
   [ReportSheetType.REPORT_401]: '401-report',
 };
 
@@ -73,6 +73,8 @@ export const FinancialReportTypesKeyReportSheetTypeMapping: {
   [FinancialReportTypesKey.balance_sheet]: ReportSheetType.BALANCE_SHEET,
   [FinancialReportTypesKey.comprehensive_income_statement]: ReportSheetType.INCOME_STATEMENT,
   [FinancialReportTypesKey.cash_flow_statement]: ReportSheetType.CASH_FLOW_STATEMENT,
+  // Info: (20240814 - Anna) 增加401報表
+  [FinancialReportTypesKey.report_401]: ReportSheetType.REPORT_401,
   //  [FinancialReportTypesKey.change_in_equity_statement]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
 };
 

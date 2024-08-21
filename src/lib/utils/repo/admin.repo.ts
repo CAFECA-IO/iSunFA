@@ -1,11 +1,13 @@
 import prisma from '@/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Admin, Company, CompanyKYC, Prisma, Role, User } from '@prisma/client';
+import { Admin, Company, CompanyKYC, Prisma, Role, User, UserAgreement } from '@prisma/client';
 
 export async function listAdminByCompanyId(
   companyId: number
-): Promise<(Admin & { company: Company; user: User; role: Role })[]> {
+): Promise<
+  (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })[]
+> {
   const listedAdmin = await prisma.admin.findMany({
     where: {
       companyId,
@@ -15,7 +17,11 @@ export async function listAdminByCompanyId(
       id: 'asc',
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
       company: true,
       role: true,
     },
@@ -25,7 +31,10 @@ export async function listAdminByCompanyId(
 
 export async function getAdminById(
   adminId: number
-): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+): Promise<
+  | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
+  | null
+> {
   let admin = null;
   if (adminId > 0) {
     admin = await prisma.admin.findUnique({
@@ -34,7 +43,11 @@ export async function getAdminById(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            userAgreements: true,
+          },
+        },
         company: true,
         role: true,
       },
@@ -45,7 +58,10 @@ export async function getAdminById(
 
 export async function getOwnerByCompanyId(
   companyId: number
-): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+): Promise<
+  | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
+  | null
+> {
   const owner = await prisma.admin.findFirst({
     where: {
       companyId,
@@ -55,7 +71,11 @@ export async function getOwnerByCompanyId(
       },
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
       company: true,
       role: true,
     },
@@ -67,7 +87,10 @@ export async function getOwnerByCompanyId(
 export async function getAdminByCompanyIdAndUserId(
   companyId: number,
   userId: number
-): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
+): Promise<
+  | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
+  | null
+> {
   let admin = null;
   if (companyId > 0 && userId > 0) {
     admin = await prisma.admin.findFirst({
@@ -77,7 +100,11 @@ export async function getAdminByCompanyIdAndUserId(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            userAgreements: true,
+          },
+        },
         company: true,
         role: true,
       },
@@ -90,8 +117,13 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
   companyId: number,
   userId: number,
   roleName: RoleName
-): Promise<(Admin & { company: Company; user: User; role: Role }) | null> {
-  let admin: (Admin & { company: Company; user: User; role: Role }) | null = null;
+): Promise<
+  | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
+  | null
+> {
+  let admin:
+    | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
+    | null = null;
   if (companyId > 0 && userId > 0) {
     admin = await prisma.admin.findFirst({
       where: {
@@ -103,7 +135,11 @@ export async function getAdminByCompanyIdAndUserIdAndRoleName(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            userAgreements: true,
+          },
+        },
         company: true,
         role: true,
       },
@@ -116,7 +152,9 @@ export async function createAdmin(
   userId: number,
   companyId: number,
   roleId: number
-): Promise<Admin & { company: Company; user: User; role: Role }> {
+): Promise<
+  Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role }
+> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const createdAdmin = await prisma.admin.create({
@@ -143,7 +181,11 @@ export async function createAdmin(
       updatedAt: nowTimestamp,
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
       company: true,
       role: true,
     },
@@ -155,7 +197,9 @@ export async function updateAdminById(
   adminId: number,
   status?: boolean,
   roleId?: number
-): Promise<Admin & { company: Company; user: User; role: Role }> {
+): Promise<
+  Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role }
+> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const updatedAdmin = await prisma.admin.update({
@@ -168,7 +212,11 @@ export async function updateAdminById(
       updatedAt: nowTimestamp,
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
       company: true,
       role: true,
     },
@@ -178,7 +226,9 @@ export async function updateAdminById(
 
 export async function deleteAdminById(
   adminId: number
-): Promise<Admin & { company: Company; user: User; role: Role }> {
+): Promise<
+  Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role }
+> {
   const nowInSecond = getTimestampNow();
 
   const where: Prisma.AdminWhereUniqueInput = {
@@ -186,23 +236,23 @@ export async function deleteAdminById(
     deletedAt: null,
   };
 
-  const include: Prisma.AdminInclude = {
-    user: true,
-    company: true,
-    role: true,
-  };
-
   const data: Prisma.AdminUpdateInput = {
     updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
-
-  const updateArgs = {
-    data,
+  const deletedAdmin = await prisma.admin.update({
     where,
-    include,
-  };
-  const deletedAdmin = await prisma.admin.update(updateArgs);
+    data,
+    include: {
+      user: {
+        include: {
+          userAgreements: true,
+        },
+      },
+      company: true,
+      role: true,
+    },
+  });
 
   return deletedAdmin;
 }
