@@ -11,6 +11,9 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { APIName } from '@/constants/api_connection';
+import { IProject } from '@/interfaces/project';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface IProjectContractPageProps {
   projectId: string;
@@ -18,12 +21,21 @@ interface IProjectContractPageProps {
 
 const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
   const { t } = useTranslation('common');
-  // ToDo: (20240618 - Julian) replace with actual data
-  const projectName = 'BAIFA';
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  // Info: (20240821 - Julian) 取得專案資料
+  const { data: projectData } = APIHandler<IProject>(
+    APIName.GET_PROJECT_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id, projectId },
+    },
+    hasCompanyId
+  );
+
+  const projectName = projectData?.name || '-';
 
   const backClickHandler = () => window.history.back();
-
-  const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center">
@@ -85,7 +97,6 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
         <title>{t('JOURNAL.PROJECT_CONTRACT_ISUNFA')}</title>
       </Head>
 

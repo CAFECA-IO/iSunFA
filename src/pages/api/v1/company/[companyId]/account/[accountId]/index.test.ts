@@ -22,7 +22,6 @@ it('should pass', () => {
 // const session = {
 //   companyId,
 //   // Info (20240516 - Murky) - Mocking session
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 // } as any;
 // const mockAccountInDB: Account = {
 //   id: testAccountId,

@@ -222,7 +222,6 @@ const NewJournalForm = () => {
     }
   }, [selectedCompany, selectedJournal, selectedOCR]);
 
-  // TODO: update with backend data (20240523 - tzuhan)
   useEffect(() => {
     if (getSuccess && OCRResult) {
       // Info: (20240506 - Julian) 設定表單的預設值
@@ -267,18 +266,6 @@ const NewJournalForm = () => {
       messageModalVisibilityHandler();
     }
   }, [getSuccess]);
-
-  // ToDo: (20240503 - Julian) Pop up a confirm modal when the user tries to leave the page with unsaved changes
-  // useEffect(() => {
-  // const onBeforeUnload = (e: BeforeUnloadEvent) => {
-  //   if (formHasChanged) {
-  //     e.preventDefault();
-  //     e.returnValue = '';
-  //   }
-  // };
-  // window.addEventListener('beforeunload', onBeforeUnload);
-  // return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  // }, [formHasChanged]);
 
   const {
     targetRef: eventMenuRef,
@@ -738,11 +725,10 @@ const NewJournalForm = () => {
               setFilteredPeriod={setDatePeriod}
               type={DatePickerType.TEXT_DATE}
             />
-            {/* ToDo: (20240723 - Julian) i18n */}
             <div
               className={`ml-auto text-sm text-input-text-error ${isSelectingDate ? 'opacity-0' : 'opacity-100'}`}
             >
-              <p>請選擇日期</p>
+              <p>{t('JOURNAL.DATE_HINT')}</p>
             </div>
           </div>
 
@@ -892,11 +878,10 @@ const NewJournalForm = () => {
               </div>
             </div>
             {/* Info: (20240723 - Julian) Hint */}
-            {/* ToDo: (20240723 - Julian) i18n */}
             <div
               className={`ml-auto text-sm text-input-text-error ${isPriceValid ? 'opacity-0' : 'opacity-100'}`}
             >
-              <p>請填入金額</p>
+              <p>{t('JOURNAL.AMOUNT_HINT')}</p>
             </div>
           </div>
 
@@ -1110,11 +1095,10 @@ const NewJournalForm = () => {
                     </div>
                   </div>
                 </div>
-                {/* ToDo: (20240723 - Julian) i18n */}
                 <div
                   className={`ml-auto text-sm text-input-text-error ${isInstallmentValid ? 'opacity-0' : 'opacity-100'}`}
                 >
-                  <p>請填入次數</p>
+                  <p>{t('JOURNAL.TIMES_HINT')}</p>
                 </div>
               </div>
             </div>
@@ -1183,11 +1167,10 @@ const NewJournalForm = () => {
                   </div>
                 </div>
 
-                {/* ToDo: (20240723 - Julian) i18n */}
                 <div
                   className={`ml-auto text-sm text-input-text-error ${isPartialPaidValid ? 'opacity-0' : 'opacity-100'}`}
                 >
-                  <p>請填入金額</p>
+                  <p>{t('JOURNAL.AMOUNT_HINT')}</p>
                 </div>
               </div>
               {/* Info: (20240424 - Julian) Paid */}

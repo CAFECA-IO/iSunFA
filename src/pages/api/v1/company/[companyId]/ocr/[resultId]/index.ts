@@ -72,14 +72,22 @@ export async function getPayloadFromResponseJSON(
 
 export function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
   // Info: (20240522 - Murky) This function is used to set journalId to the OCR result
-  // eslint-disable-next-line no-param-reassign
-  ocrResult.journalId = journalId;
+  const newOcrResult = {
+    ...ocrResult,
+    journalId,
+  };
+
+  return newOcrResult;
 }
 
 export function formatOCRResultDate(ocrResult: IInvoice) {
   // Info: (20240522 - Murky) This function is used to format the date in OCR result
-  // eslint-disable-next-line no-param-reassign
-  ocrResult.date = timestampInSeconds(ocrResult.date);
+  const date = timestampInSeconds(ocrResult.date);
+  const newOcrResult = {
+    ...ocrResult,
+    date,
+  };
+  return newOcrResult;
 }
 
 export async function handleGetRequest(resultId: string, type: string = 'invoice') {

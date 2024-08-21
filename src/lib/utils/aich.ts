@@ -35,6 +35,16 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
                 throw new Error('AICH Result ID is required');
             }
             return `${AICH_URI}/api/v1/invoices/${aichResultId}/result`;
+        case AICH_APIS_TYPES.GET_VOUCHER_RESULT:
+            if (!aichResultId) {
+                throw new Error('AICH Result ID is required');
+            }
+            return `${AICH_URI}/api/v1/vouchers/${aichResultId}/result`;
+        case AICH_APIS_TYPES.GET_CONTRACT_RESULT:
+            if (!aichResultId) {
+                throw new Error('AICH Result ID is required');
+            }
+            return `${AICH_URI}/api/v1/contracts/${aichResultId}/result`;
         default:
             throw new Error('Invalid AICH API Type');
     }

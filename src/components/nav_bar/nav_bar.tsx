@@ -121,7 +121,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: [Beta] (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
@@ -143,7 +143,7 @@ const NavBar = () => {
       </Link>
       <button
         type="button"
-        // TODO: temp disabled (20240517 - Shirley)
+        // TODO: [Beta] temp disabled (20240517 - Shirley)
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
@@ -153,7 +153,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: [Beta] (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
@@ -240,7 +240,7 @@ const NavBar = () => {
 
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: [Beta] (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -268,7 +268,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Contract button */}
       <button
         type="button"
-        // TODO: temp disabled (20240517 - Shirley)
+        // TODO: [Beta] temp disabled (20240517 - Shirley)
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -279,7 +279,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Salary button */}
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: [Beta] (20240802 - Julian) Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -326,12 +326,12 @@ const NavBar = () => {
         </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
+            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           {/* Info: edit name button (20240809 - Shirley) */}
           <button
             type="button"
-            // TODO: temp disabled (20240517 - Shirley)
+            // TODO: [Beta] temp disabled (20240517 - Shirley)
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
             className="hidden shrink-0 flex-col justify-center rounded-xs px-2 text-button-surface-strong-secondary disabled:text-button-text-disable"
@@ -479,7 +479,6 @@ const NavBar = () => {
         onClick={companyChangeClickHandler}
         className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
       >
-        {/* ToDo: (20240516 - Julian) icon */}
         <Image
           alt={`${selectedCompany?.name}_icon`}
           src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
@@ -487,7 +486,7 @@ const NavBar = () => {
           height={16}
           className="rounded-full"
         />
-        {/* ToDo: (20240521 - Julian) company name abbreviation */}
+        {/* ToDo: [Beta] (20240521 - Julian) company name abbreviation */}
         <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
         <GoArrowSwitch size={14} />
       </button>

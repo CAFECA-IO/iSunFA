@@ -447,7 +447,10 @@
     "LEAVE_HINT": "您的日記帳還未新增",
     "LEAVE_HINT_CONTENT": "您的日記帳還未新增，您確定要離開嗎？",
     "LEAVE": "離開",
-    "FEE_EXCEEDS_TOTAL": "費用不能大於總金額"
+    "FEE_EXCEEDS_TOTAL": "費用不能大於總金額",
+    "DATE_HINT": "請選擇日期",
+    "AMOUNT_HINT": "請填入金額",
+    "TIMES_HINT": "請填入次數"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",

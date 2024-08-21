@@ -177,7 +177,6 @@ it('should pass', () => {
 //     });
 //   });
 
-//   // ToDo: (20240605 - Murky) update invoice related steps need to change to PUT?
 //   describe('update invoice related steps', () => {
 //     const invoiceId = 1;
 //     const paymentId = 2;
@@ -433,7 +432,6 @@ it('should pass', () => {
 //     });
 //   });
 
-  // ToDo: (20240605 - Murky) write integration after separate logic to PUT
   // describe("handlePrismaSavingLogic", () => {
   //   const journalId = 1;
   //   const invoiceId = 2;

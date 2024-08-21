@@ -10,7 +10,6 @@ import { ProgressStatus } from '@/constants/account';
 import * as repository from '@/lib/utils/repo/ocr.repo';
 import { Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import * as authCheck from '@/lib/utils/auth_check';
 import { IOCR } from '@/interfaces/ocr';
 
 global.fetch = jest.fn();
@@ -242,27 +241,6 @@ describe('POST OCR', () => {
     });
   });
 
-  describe('isCompanyIdValid', () => {
-    it('should return true if companyId is number', () => {
-      const companyId = 1;
-      expect(module.isCompanyIdValid(companyId)).toBe(true);
-    });
-
-    it('should return false if companyId is not number', () => {
-      const companyId = 'a';
-      expect(module.isCompanyIdValid(companyId)).toBe(false);
-    });
-
-    it('should return false if companyId is undefined', () => {
-      const companyId = undefined;
-      expect(module.isCompanyIdValid(companyId)).toBe(false);
-    });
-    it('should return false if companyId is array', () => {
-      const companyId = ['1'];
-      expect(module.isCompanyIdValid(companyId)).toBe(false);
-    });
-  });
-
   describe('getImageFileFromFormData', () => {
     let mockFiles: MockProxy<formidable.Files<'image'>>;
     let mockFields: MockProxy<formidable.Fields>;
@@ -371,7 +349,6 @@ describe('POST OCR', () => {
 
   describe('handlePostRequest', () => {
     it('should return resultJson', async () => {
-      const companyId = 1;
       const resultId = 'testResultId';
       const mockFields = mock<formidable.Fields>();
       const mockFiles: MockProxy<formidable.Files<'image'>> = {
@@ -423,10 +400,6 @@ describe('POST OCR', () => {
           createJournalsAndOcrFromAichResults: jest.fn().mockResolvedValue(mockResult),
         };
       });
-
-      // Info Murky (20240424) This is for mock session
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(authCheck, 'checkAdmin').mockResolvedValue({ companyId } as any);
 
       jest.spyOn(parseImageForm, 'parseForm').mockResolvedValue({
         fields: mockFields,
