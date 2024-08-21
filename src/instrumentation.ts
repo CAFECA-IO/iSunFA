@@ -12,5 +12,7 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { createFileFoldersIfNotExists } = await import("@/lib/utils/file");
     await createFileFoldersIfNotExists();
+    await import('pino');
+    await import('next-logger');
   }
 }
