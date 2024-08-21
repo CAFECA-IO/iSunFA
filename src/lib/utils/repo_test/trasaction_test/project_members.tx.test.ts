@@ -45,6 +45,18 @@ describe('ProjectMembers Transaction Tests', () => {
       });
       expect(existingMembers.length).toBe(2);
       await updateProjectMembers(testProjectId, memberIdList); // Reset the members
+      await prisma.employeeProject.deleteMany({
+        where: {
+          projectId: testProjectId,
+          employeeId: {
+            in: [1000, 1001, 1002],
+          },
+          endDate: { not: null },
+          id: {
+            gte: 10000000,
+          },
+        },
+      });
     }, 10000);
   });
 });
