@@ -105,7 +105,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         }
       })
       .catch(() => {
-        // console.error('Error: ', err);
+        // ToDo: (20240507 - Julian) Show error message
       });
   };
 
