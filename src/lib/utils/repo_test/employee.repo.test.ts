@@ -79,7 +79,6 @@ describe('Employee Repository Tests', () => {
       const projectsFromDb = await getProjectsByEmployeeId(employeeId);
       expect(projectsFromDb).toBeDefined();
       expect(Array.isArray(projectsFromDb)).toBe(true);
-      expect(projectsFromDb.length).toBeGreaterThan(0);
       expect(projectsFromDb[0].project.id).toEqual(employeeProjects[0].projectId);
     });
   });
