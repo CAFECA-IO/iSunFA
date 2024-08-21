@@ -238,13 +238,8 @@ export async function getProjectsByEmployeeId(employeeIdNumber: number) {
       employeeId: employeeIdNumber,
       endDate: null,
     },
-    select: {
-      project: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+    include: {
+      project: true,
     },
   });
   return projects;
