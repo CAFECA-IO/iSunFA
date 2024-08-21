@@ -42,7 +42,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
-  // ToDo: (20240617 - Julian) Replace with real data
+  // ToDo: [Beta](20240617 - Julian) Replace with real data
   const projectName = 'BAIFA';
   const projectImageSrc = DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
@@ -99,7 +99,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
     profileUploadModalVisibilityHandler();
   };
 
-  // ToDo: (20240612 - Julian) get member list from API
+  // ToDo: [Beta](20240612 - Julian) get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱
@@ -236,7 +236,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
               >
                 <FaArrowLeft />
               </button>
-              {/* ToDo: (20240611 - Julian) Project Name */}
+              {/* Info: (20240611 - Julian) Project Name */}
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
                 {projectName} - {t('NAV_BAR.SETTING')}
               </h1>

@@ -96,11 +96,11 @@ const ProjectMilestoneBlock = () => {
           key={`${item.id}-period`}
           className="flex items-center justify-center gap-16px text-sm"
         >
-          <p className="w-80px whitespace-normal text-right">
+          <p className="w-100px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
           <p className="text-text-neutral-secondary">{t('REPORTS_HISTORY_ITEM.TO')}</p>
-          <p className="w-80px whitespace-normal text-left">
+          <p className="w-100px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>
         </div>

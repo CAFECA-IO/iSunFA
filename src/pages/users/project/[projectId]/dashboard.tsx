@@ -173,7 +173,6 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
         <title>
           {projectName} {t('NAV_BAR.DASHBOARD')} - iSunFA
         </title>
