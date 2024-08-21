@@ -13,7 +13,7 @@ import {
   IAccountResultStatus,
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
-import { isEnumValue } from './common';
+import { isEnumValue } from '@/lib/utils/type_guard/common';
 
 export function isEventType(data: unknown): data is EventType {
   const isValid = isEnumValue(EventType, data);

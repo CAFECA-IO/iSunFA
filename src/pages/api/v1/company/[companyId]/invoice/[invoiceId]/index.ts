@@ -50,7 +50,6 @@ function formatInvoiceFromBody(invoice: unknown) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
 
-  // 类型断言，将 invoice 转换为一个带有可能 undefined 的属性对象
   const formattedInvoice = {
     ...invoice,
     projectId: (invoice as { projectId?: unknown }).projectId
