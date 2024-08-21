@@ -357,8 +357,6 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     return inventoryTurnoverDays;
   }
 
-  // Info: (20240729 - Murky) temporary not using this
-  // eslint-disable-next-line class-methods-use-this
   public override generateOtherInfo(
     balanceSheetContent: IAccountReadyForFrontend[],
     incomeStatementContent: IAccountReadyForFrontend[]

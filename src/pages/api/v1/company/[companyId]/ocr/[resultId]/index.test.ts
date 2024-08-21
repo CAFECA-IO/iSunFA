@@ -110,9 +110,9 @@ describe('setOCRResultJournalId', () => {
     } as IInvoice;
     const journalId = 123;
 
-    module.setOCRResultJournalId(ocrResult, journalId);
+    const newOcrResult = module.setOCRResultJournalId(ocrResult, journalId);
 
-    expect(ocrResult?.journalId).toEqual(journalId);
+    expect(newOcrResult?.journalId).toEqual(journalId);
   });
 });
 
@@ -123,9 +123,9 @@ describe('formatOCRResultDate', () => {
       date: mockSeconds * 1000,
     } as IInvoice;
 
-    module.formatOCRResultDate(ocrResult);
+    const newOcrResult = module.formatOCRResultDate(ocrResult);
 
-    expect(ocrResult?.date).toEqual(mockSeconds);
+    expect(newOcrResult?.date).toEqual(mockSeconds);
   });
 
   it('should not format the date in OCR result if date is already in seconds', () => {

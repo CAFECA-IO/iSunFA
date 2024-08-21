@@ -1,21 +1,26 @@
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { formatApiResponse, isParamString } from '@/lib/utils/common';
 import { ILineItem, ILineItemFromAICH } from '@/interfaces/line_item';
-import { fuzzySearchAccountByName } from '@/pages/api/v1/company/[companyId]/ask_ai/[resultId]/index.repository';
+import { fuzzySearchAccountByName } from '@/lib/utils/repo/account.repo';
 import { isILineItem } from '@/lib/utils/type_guard/line_item';
 import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { IContract } from '@/interfaces/contract';
-import { AICH_URI } from '@/constants/config';
+import { getSession } from '@/lib/utils/session';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { getAichUrl } from '@/lib/utils/aich';
+import { AICH_APIS_TYPES } from '@/constants/aich';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 type ApiResponseType = IVoucherDataForSavingToDB | IContract | null;
+// Info: （ 20240522 - Murky）目前只可以使用Voucher Return
 
-async function fetchResultFromAICH(aiApi: string, resultId: string) {
+export async function fetchResultFromAICH(fetchUrl: string) {
   let response: Response;
   try {
-    response = await fetch(`${AICH_URI}/api/v1/${aiApi}/${resultId}/result`);
+    response = await fetch(fetchUrl);
   } catch (error) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
@@ -86,10 +91,10 @@ async function handleGetRequest(req: NextApiRequest) {
   if (!isParamString(resultId) || !isParamString(aiApi)) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const fetchResult = fetchResultFromAICH(aiApi, resultId);
-
     switch (aiApi) {
       case 'vouchers': {
+        const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+        const fetchResult = fetchResultFromAICH(fetchUrl);
         const { lineItems: rawLineItems } = (await getPayloadFromResponseJSON(fetchResult)) as {
           lineItems: ILineItemFromAICH[];
         };
@@ -99,55 +104,64 @@ async function handleGetRequest(req: NextApiRequest) {
           lineItems,
         } as IVoucherDataForSavingToDB;
         if (!isIVoucherDataForSavingToDB(voucher)) {
-          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-        } else {
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          payload = voucher;
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
+          break;
         }
-        break;
-      }
-      case 'contracts': {
-        payload = (await fetchResult) as IContract;
+        payload = voucher;
         statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         break;
       }
-      default:
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+        case 'contracts': {
+          const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+          const fetchResult = fetchResultFromAICH(fetchUrl);
+          payload = (await fetchResult) as IContract;
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          break;
+        }
+        default:
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
   }
 
-  return { statusMessage, payload };
+  return {
+    payload,
+    statusMessage,
+  };
 }
-
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ApiResponseType }>;
-} = {
-  GET: handleGetRequest,
-};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ApiResponseType>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ApiResponseType = null;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
 
-  try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+  let payload: IVoucherDataForSavingToDB | IContract | null = null;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  if (isAuth) {
+    try {
+      switch (req.method) {
+        case "GET": {
+          const result = await handleGetRequest(req);
+          payload = result.payload;
+          statusMessage = result.statusMessage;
+          break;
+        }
+        default: {
+          statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+          break;
+        }
+      }
+    } catch (_error) {
+      const error = _error as Error;
+      // Deprecated: （ 20240522 - Murky）Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(error);
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);
-    res.status(httpCode).json(result);
   }
+
+  const { httpCode, result } = formatApiResponse(statusMessage, payload);
+  res.status(httpCode).json(result);
 }
