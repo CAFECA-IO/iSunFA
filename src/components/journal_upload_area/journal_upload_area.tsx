@@ -89,7 +89,6 @@ const JournalUploadArea = () => {
       formData.append('imageSize', uploadFile.size);
       formData.append('imageName', uploadFile.name);
       formData.append('uploadIdentifier', uuid);
-      // console.log('formData', formData);
 
       // Info: (20240711 - Julian) 點擊上傳後才升起 flag
       // setIsShowSuccessModal(true);
