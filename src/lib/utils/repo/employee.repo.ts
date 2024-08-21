@@ -241,6 +241,9 @@ export async function getProjectsByEmployeeId(employeeIdNumber: number) {
     include: {
       project: true,
     },
+    orderBy: {
+      startDate: 'asc',
+    },
   });
   return projects;
 }
