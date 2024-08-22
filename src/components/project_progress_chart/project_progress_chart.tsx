@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
-// import { TranslateFunction } from '@/interfaces/locale';
+// import { TranslateFunction } from '@/interfaces/locale'; // Info: (20240524 - Tzuhan)
 import Tooltip from '@/components/tooltip/tooltip';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
 import {
@@ -91,7 +91,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 
     yaxis: {
       title: {
-        // text: 'Units',
+        // text: 'Units', // Info: (20240418 - Shirley)
       },
       labels: {
         style: {
@@ -129,6 +129,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       marker: {
         show: false,
       },
+      // Info: (20240418 - Shirley)
       // y: {
       //   formatter: function (val: number) {
       //     return val + ' units';
@@ -172,7 +173,6 @@ const ProjectProgressChart = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { t } = useTranslation('common');
 
-  // const { t }: { t: TranslateFunction } = useTranslation('common');
   // TODO: (20240618 - Shirley) 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
