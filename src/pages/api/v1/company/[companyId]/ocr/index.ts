@@ -107,11 +107,14 @@ export async function getPayloadFromResponseJSON(
 
 // Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-export async function postImageToAICH(files: formidable.Files, imageFields: {
+export async function postImageToAICH(
+  files: formidable.Files,
+  imageFields: {
     imageSize: number;
     imageName: string;
     uploadIdentifier: string;
-  }[]): Promise<
+  }[]
+): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
@@ -192,15 +195,6 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
   return resultJson;
 }
 
-// ToDo: (20240617 - Murky) Need to use function in type guard instead
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isCompanyIdValid(companyId: any): companyId is number {
-  if (Array.isArray(companyId) || !companyId || typeof companyId !== 'number') {
-    return false;
-  }
-  return true;
-}
-
 export function extractDataFromFields(fields: formidable.Fields) {
   const { imageSize, imageName, uploadIdentifier } = fields;
 
@@ -211,10 +205,14 @@ export function extractDataFromFields(fields: formidable.Fields) {
   }[] = [];
 
   if (
-    imageSize && imageSize.length &&
-    imageName && imageName.length &&
-    uploadIdentifier && uploadIdentifier.length &&
-    imageSize.length === imageName.length && imageSize.length === uploadIdentifier.length
+    imageSize &&
+    imageSize.length &&
+    imageName &&
+    imageName.length &&
+    uploadIdentifier &&
+    uploadIdentifier.length &&
+    imageSize.length === imageName.length &&
+    imageSize.length === uploadIdentifier.length
   ) {
     imageSize.forEach((size, index) => {
       imageFieldsArray.push({
@@ -245,7 +243,7 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
   }
   return {
     files,
-    fields
+    fields,
   };
 }
 export async function fetchStatus(aichResultId: string) {
@@ -389,7 +387,6 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
 }
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
-  // ToDo: (20240611 - Murky) check companyId is valid
   // Info Murky (20240416): Check if companyId is string
   const { ocrType } = req.query;
 
@@ -404,7 +401,6 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
-  // ToDo: (20240611 - Murky) format prisma ocr to IOCR
   const unprocessedOCRs = await formatUnprocessedOCR(ocrData);
 
   return unprocessedOCRs;

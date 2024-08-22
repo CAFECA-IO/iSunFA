@@ -320,8 +320,7 @@ export function eventTypeToVoucherType(eventType: EventType): VoucherType {
 }
 
 // Info Murky (20240505): type guards can input any type and return a boolean
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isStringNumber(value: any): value is string {
+export function isStringNumber(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Number(value));
 }
 
@@ -356,22 +355,22 @@ export function transformBytesToFileSizeString(bytes: number): string {
  * @returns
  */
 export function transformFileSizeStringToBytes(sizeString: string): number {
-    const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
+  const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
 
-    let bytes = 0;
-    if (regex.test(sizeString)) {
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-      const [size, unit] = sizeString.split(' ');
+  let bytes = 0;
+  if (regex.test(sizeString)) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const [size, unit] = sizeString.split(' ');
 
-      const sizeIndex = sizes.indexOf(unit);
-      if (sizeIndex === -1) {
-          throw new Error('Invalid file size unit');
-      }
-
-      bytes = parseFloat(size) * 1024 ** sizeIndex;
+    const sizeIndex = sizes.indexOf(unit);
+    if (sizeIndex === -1) {
+      throw new Error('Invalid file size unit');
     }
 
-    return Math.round(bytes);
+    bytes = parseFloat(size) * 1024 ** sizeIndex;
+  }
+
+  return Math.round(bytes);
 }
 
 // page, limit to offset
@@ -636,7 +635,6 @@ export function throttle<F extends (...args: unknown[]) => unknown>(
   let lastRan: number | null = null;
 
   function returnFunc(this: unknown, ...args: Parameters<F>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const context = this as unknown as F;
     if (lastRan === null) {
       func.apply(context, args);

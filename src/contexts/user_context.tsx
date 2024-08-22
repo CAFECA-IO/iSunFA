@@ -1,13 +1,8 @@
-import { client } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-// import { toast as toastify } from 'react-toastify';
-// import { createChallenge } from '@/lib/utils/authorization';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
@@ -18,15 +13,8 @@ import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 
-interface SignUpProps {
-  username?: string;
-  invitation?: string;
-}
-
 interface UserContextType {
   credential: string | null;
-  signUp: ({ username, invitation }: SignUpProps) => Promise<void>;
-  signIn: ({ invitation }: { invitation?: string }) => Promise<void>;
   signOut: () => void;
   userAuth: IUser | null;
   username: string | null;
@@ -45,10 +33,6 @@ interface UserContextType {
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
   }>;
-  handleExistingCredential: (
-    credentials: PublicKeyCredential,
-    invitation: string | undefined
-  ) => Promise<void>;
 
   userAgreeResponse: {
     success: boolean;
@@ -62,8 +46,6 @@ interface UserContextType {
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
-  signUp: async () => {},
-  signIn: async () => {},
   signOut: () => {},
   userAuth: null,
   username: null,
@@ -81,7 +63,6 @@ export const UserContext = createContext<UserContextType>({
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
-  handleExistingCredential: async () => {},
 
   userAgreeResponse: null,
   handleUserAgree: async () => {},
@@ -134,8 +115,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     body: { credential: credentialRef.current },
   });
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
-  const { trigger: signInAPI } = APIHandler<IUser>(APIName.SIGN_IN);
-  const { trigger: signUpAPI } = APIHandler<IUser>(APIName.SIGN_UP);
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
   const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
     APIName.SESSION_GET
@@ -173,69 +152,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const handleSignInAPIResponse = (response: {
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }) => {
-    setIsAuthLoading(false);
-    const { data: signInData, success: signInSuccess, code: signInCode } = response;
-    if (signInSuccess) {
-      if (signInData) {
-        setUsername(signInData.name);
-        setUserAuth(signInData);
-        setSignedIn(true);
-        setIsSignInError(false);
-        handleSignInRoute();
-      }
-    }
-    if (signInSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signInCode ?? '');
-    }
-  };
-
-  const handleExistingCredential = async (
-    credentials: PublicKeyCredential,
-    invitation: string | undefined
-  ) => {
-    try {
-      const { id, response } = credentials;
-      if (response instanceof AuthenticatorAssertionResponse) {
-        const { authenticatorData, clientDataJSON, signature, userHandle } = response;
-
-        const authentication: AuthenticationEncoded = {
-          credentialId: id,
-          authenticatorData: btoa(String.fromCharCode(...new Uint8Array(authenticatorData))),
-          clientData: btoa(String.fromCharCode(...new Uint8Array(clientDataJSON))),
-          signature: btoa(String.fromCharCode(...new Uint8Array(signature))),
-          userHandle: userHandle
-            ? btoa(String.fromCharCode(...new Uint8Array(userHandle)))
-            : undefined,
-        };
-
-        let signInResponse: {
-          success: boolean;
-          data: IUser | null;
-          code: string;
-          error: Error | null;
-        };
-        setIsAuthLoading(true);
-        if (invitation) {
-          signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
-        } else {
-          signInResponse = await signInAPI({ body: { authentication } });
-        }
-        handleSignInAPIResponse(signInResponse);
-      } else {
-        throw new Error('Invalid response type: Expected AuthenticatorAssertionResponse');
-      }
-    } catch (error) {
-      throw new Error('handleExistingCredential error thrown in userCtx');
-    }
-  };
-
   const checkIsRegistered = async (): Promise<{
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
@@ -270,121 +186,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isRegistered: false,
       credentials: null,
     };
-  };
-
-  const handleSignUpAPIResponse = (response: {
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }) => {
-    setIsAuthLoading(false);
-    const { data: signUpData, success: signUpSuccess, code: signUpCode } = response;
-    if (signUpSuccess) {
-      if (signUpData) {
-        setUsername(signUpData.name);
-        setUserAuth(signUpData);
-        setSignedIn(true);
-        setIsSignInError(false);
-        handleSignInRoute();
-      }
-    }
-    if (signUpSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signUpCode ?? '');
-    }
-  };
-
-  const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
-    try {
-      const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
-      setIsSignInError(false);
-
-      const { data: newChallenge, success, code } = await createChallengeAPI();
-
-      if (!success || !newChallenge) {
-        setErrorCode(code);
-        return;
-      }
-
-      // Info: (20240730 - Tzuhan) 生成 userHandle
-      const userHandleArray = new Uint8Array(32);
-      window.crypto.getRandomValues(userHandleArray);
-      const userHandle = btoa(String.fromCharCode(...userHandleArray));
-
-      const registration = await client.register(name, newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
-        attestation: true,
-        userHandle, // Info: optional userId less than 64 bytes (20240403 - Shirley)
-        debug: false,
-        discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
-      });
-
-      let signUpResponse: {
-        success: boolean;
-        data: IUser | null;
-        code: string;
-        error: Error | null;
-      };
-      setIsAuthLoading(true);
-      if (invitation) {
-        signUpResponse = await signUpAPI({ body: { registration }, query: { invitation } });
-      } else {
-        signUpResponse = await signUpAPI({ body: { registration } });
-      }
-      handleSignUpAPIResponse(signUpResponse);
-    } catch (error) {
-      throw new Error('signUp error thrown in userCtx');
-    }
-  };
-
-  // TODO: refactor the signIn function (20240409 - Shirley)
-  /* TODO: (20240410 - Shirley)
-      拿登入聲明書 / 用戶條款 / challenge
-      先檢查 cookie ，然後檢查是否有 credential 、驗證 credential 有沒有過期或亂寫，
-      拿著 credential 跟 server 去拿 member 資料、付錢資料
-  */
-  const signIn = async ({ invitation }: { invitation?: string }) => {
-    try {
-      setIsSignInError(false);
-
-      const { data: newChallenge, success, code } = await createChallengeAPI();
-
-      if (!success || !newChallenge) {
-        setErrorCode(code);
-        return;
-      }
-      const authentication: AuthenticationEncoded = await client.authenticate([], newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
-        debug: false,
-      });
-
-      let signInResponse: {
-        success: boolean;
-        data: IUser | null;
-        code: string;
-        error: Error | null;
-      };
-      setIsAuthLoading(true);
-      if (invitation) {
-        signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
-      } else {
-        signInResponse = await signInAPI({ body: { authentication } });
-      }
-      handleSignInAPIResponse(signInResponse);
-    } catch (error) {
-      if (!(error instanceof DOMException)) {
-        setIsSignInError(true);
-
-        throw new Error('signIn error thrown in userCtx');
-      } else {
-        throw new Error(`signIn error thrown in userCtx: ${error.message}`);
-      }
-    }
   };
 
   const handleReturnUrl = () => {
@@ -571,7 +372,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
+        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
 
@@ -630,8 +431,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
-      signUp,
-      signIn,
       signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
@@ -647,7 +446,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
       checkIsRegistered,
-      handleExistingCredential,
       handleUserAgree,
       authenticateUser,
       userAgreeResponse: userAgreeResponseRef.current,

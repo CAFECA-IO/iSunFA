@@ -12,7 +12,6 @@ const DashboardPageBody = () => {
   const companyName = selectedCompany?.name ?? 'iSunFA';
 
   const pageHeader = (
-    // TODO: (20240415 - Shirley) i18n
     <div className="my-auto flex-1 text-2xl font-semibold text-tertiaryBlue max-md:max-w-full lg:text-5xl lg:leading-52px">
       {t('DASHBOARD.HELLO_WELCOME_TO')}
       <span className="text-primaryYellow">{companyName}</span>

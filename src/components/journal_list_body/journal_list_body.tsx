@@ -145,7 +145,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
+          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
         },
       });
 
@@ -298,7 +298,6 @@ const JournalListBody = () => {
     </div>
   );
 
-  // ToDo: (20240419 - Julian) 邊框顏色與設計稿不一致，需要調整
   const displayedDatePicker = (
     <div className="hidden md:flex">
       <DatePicker

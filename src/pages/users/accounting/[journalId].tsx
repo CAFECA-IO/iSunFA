@@ -40,8 +40,9 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (20240503 - Julian) i18n */}
-        <title>{`${t('JOURNAL.JOURNAL')} ${journalId} - iSunFA`}</title>
+        <title>
+          {t('JOURNAL.JOURNAL')} {journalId} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

@@ -276,15 +276,18 @@ export interface IFinancialReportsProgressStatusResponse extends IAccountResultS
 }
 
 // Info Murky (20240505): type guards can input any type and return a boolean
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isIAnalysisReportRequest(obj: any): obj is IAnalysisReportRequest {
+export function isIAnalysisReportRequest(obj: unknown): obj is IAnalysisReportRequest {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.type === 'string' &&
-    typeof obj.language === 'string' &&
-    obj.start_date instanceof Date &&
-    obj.end_date instanceof Date
+    'type' in obj &&
+    typeof (obj as { type: unknown }).type === 'string' &&
+    'language' in obj &&
+    typeof (obj as { language: unknown }).language === 'string' &&
+    'start_date' in obj &&
+    (obj as { start_date: unknown }).start_date instanceof Date &&
+    'end_date' in obj &&
+    (obj as { end_date: unknown }).end_date instanceof Date
   );
 }
 

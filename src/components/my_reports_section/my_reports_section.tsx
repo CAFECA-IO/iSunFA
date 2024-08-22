@@ -35,13 +35,13 @@ const MyReportsSection = () => {
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  // TODO: (20240528 - Shirley) 區分 pending 跟 history 兩種 filter options
-  // TODO: (20240528 - Shirley) filterOptionsGotFromModal for API queries in mobile devices
+  // TODO: (20240528 - Shirley) [Beta] 區分 pending 跟 history 兩種 filter options
+  // TODO: (20240528 - Shirley) [Beta] filterOptionsGotFromModal for API queries in mobile devices
   // eslint-disable-next-line no-unused-vars
   const {
     toastHandler,
     filterOptionsModalVisibilityHandler,
-    // TODO: (20240613 - Shirley) get filter options and send to API queries
+    // TODO: (20240613 - Shirley) [Beta] get filter options and send to API queries
     // filterOptionsForHistory,
     // filterOptionsForPending,
   } = useGlobalCtx();

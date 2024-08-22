@@ -40,7 +40,6 @@ function ContactForm() {
   const {
     trigger: email,
     error: emailError,
-    code: emailCode,
     success: emailSuccess,
   } = APIHandler<void>(APIName.EMAIL);
 
@@ -78,25 +77,7 @@ function ContactForm() {
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // Info: (20230731 - Shirley) call API
-    // const res = await fetch('/api/v1/email', {
-    //   method: 'POST',
-    //   body: JSON.stringify(emailData),
-    //   headers: {
-    //     'Content-Type': 'application/json; charset=UTF-8',
-    //   },
-    // });
-
     email({ header: { 'Content-Type': 'application/json; charset=UTF-8' }, body: emailData });
-    // Info: (20240507 - Emily)
-    // const result = await res.json();
-
-    // const { success } = result;
-    // if (success) {
-    //   await successProcess();
-    // } else {
-    //   await failedProcess();
-    // }
   };
 
   useEffect(() => {
@@ -105,9 +86,6 @@ function ContactForm() {
     }
     if (emailError) {
       failedProcess();
-      // Info: (20240513 - tzuhan) TODO error handling @Shirley
-      // eslint-disable-next-line no-console
-      console.log(`emailError(${emailCode}): `, emailError);
     }
   }, [emailSuccess, emailError]);
 

@@ -132,7 +132,6 @@ function formatIsDeleted(isDeleted: unknown): boolean | undefined {
 }
 
 export function formatGetQuery(companyId: number, req: NextApiRequest): IAccountQueryArgs {
-  // ToDo: (20240613 - Murky) - need to move to type guard
   const {
     includeDefaultAccount,
     liquidity,

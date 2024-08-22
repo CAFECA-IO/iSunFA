@@ -270,7 +270,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   );
 
   const displayMainBtn = isPhotoEditorMode ? (
-    // ToDo: (20240506 - Julian) [BETA] function not implemented
+    // ToDo: (20240506 - Julian) [Beta] function not implemented
     <div className="flex items-center gap-x-24px">
       {/* Info: (20240506 - Julian) crop button */}
       <button

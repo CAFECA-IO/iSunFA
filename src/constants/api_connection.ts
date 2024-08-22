@@ -79,6 +79,7 @@ export enum APIName {
   PROJECT_LIST = 'PROJECT_LIST',
   CREATE_PROJECT = 'CREATE_PROJECT',
   GET_PROJECT_BY_ID = 'GET_PROJECT_BY_ID',
+  UPDATE_PROJECT_BY_ID = 'UPDATE_PROJECT_BY_ID',
 }
 
 export enum APIPath {
@@ -141,6 +142,7 @@ export enum APIPath {
   PROJECT_LIST = `${apiPrefix}/company/:companyId/project`,
   CREATE_PROJECT = `${apiPrefix}/company/:companyId/project`,
   GET_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
+  UPDATE_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
 }
 const createConfig = ({
   name,
@@ -460,5 +462,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_PROJECT_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.GET_PROJECT_BY_ID,
+  }),
+  [APIName.UPDATE_PROJECT_BY_ID]: createConfig({
+    name: APIName.UPDATE_PROJECT_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_PROJECT_BY_ID,
   }),
 };

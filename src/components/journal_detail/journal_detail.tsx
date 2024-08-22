@@ -60,8 +60,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [journalTokenId, setJournalTokenId] = useState<string>('');
   const [type, setType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reason, setReason] = useState<string>('');
+  // const [reason, setReason] = useState<string>('');
   const [vendor, setVendor] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);

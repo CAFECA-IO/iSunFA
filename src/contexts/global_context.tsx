@@ -2,14 +2,8 @@ import React, { useState, useContext, createContext, useMemo, useCallback, useEf
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import {
-  DUMMY_FILTER_OPTIONS,
-  FilterOptionsModalType,
-  IFilterOptions,
-  RegisterFormModalProps,
-} from '@/interfaces/modals';
+import { DUMMY_FILTER_OPTIONS, FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
-import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
@@ -73,11 +67,6 @@ interface IGlobalContext {
 
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
-
-  isRegisterModalVisible: boolean;
-  registerModalVisibilityHandler: () => void;
-  registerModalData: RegisterFormModalProps;
-  registerModalDataHandler: (data: RegisterFormModalProps) => void;
 
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
@@ -174,10 +163,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
-  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
-  const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    invitation: '',
-  });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
 
@@ -252,14 +237,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const passKeySupportModalVisibilityHandler = () => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
-  };
-
-  const registerModalVisibilityHandler = () => {
-    setIsRegisterModalVisible(!isRegisterModalVisible);
-  };
-
-  const registerModalDataHandler = (data: RegisterFormModalProps) => {
-    setRegisterModalData(data);
   };
 
   const addBookmarkModalVisibilityHandler = () => {
@@ -427,7 +404,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
-    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const autoClose = closeable ? (isAutoClose ?? 5000) : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
     const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable; // Info:(20240513 - Julian) default draggable true
@@ -537,7 +514,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    // TODO: Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // TODO: [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
     // if (reportPendingStatus) {
     //   toastHandler({
     //     type: ToastType.INFO,
@@ -630,10 +607,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     layoutAssertion,
     isPasskeySupportModalVisible,
     passKeySupportModalVisibilityHandler,
-    isRegisterModalVisible,
-    registerModalVisibilityHandler,
-    registerModalData,
-    registerModalDataHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
     isMessageModalVisible,
@@ -701,12 +674,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <PasskeySupportModal
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
-      />
-
-      <RegisterFormModal
-        isModalVisible={isRegisterModalVisible}
-        modalVisibilityHandler={registerModalVisibilityHandler}
-        data={registerModalData}
       />
 
       <EditBookmarkModal

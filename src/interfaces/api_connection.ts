@@ -61,7 +61,8 @@ export type IAPIName =
   | 'TRANSFER_OWNER'
   | 'PROJECT_LIST'
   | 'CREATE_PROJECT'
-  | 'GET_PROJECT_BY_ID';
+  | 'GET_PROJECT_BY_ID'
+  | 'UPDATE_PROJECT_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

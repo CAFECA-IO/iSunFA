@@ -209,9 +209,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
   return account;
 }
 
-export async function findLatestSubAccountInPrisma(
-  parentAccount: Account
-) {
+export async function findLatestSubAccountInPrisma(parentAccount: Account) {
   let latestSubAccount: Account | null = null;
   try {
     latestSubAccount = await prisma.account.findFirst({
@@ -247,5 +245,25 @@ export async function findUniqueAccountByCodeInPrisma(code: string, companyId?: 
       code,
     },
   });
+  return account;
+}
+
+export async function fuzzySearchAccountByName(name: string) {
+  let account: Account | null = null;
+
+  try {
+    const accounts: Account[] = await prisma.$queryRaw`
+      SELECT * FROM public."account"
+      WHERE for_user = true
+      ORDER BY SIMILARITY(name, ${name}) DESC
+      LIMIT 1;
+    `;
+    [account] = accounts;
+  } catch (error) {
+    // Deprecated: （ 20240619 - Murky）Debugging purpose
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+
   return account;
 }

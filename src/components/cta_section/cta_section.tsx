@@ -13,27 +13,6 @@ const CTASection = () => {
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
 
-  /* TODO: (20240403 - Shirley) implement sign_in check
-  // const signInClickHandler = async () => {
-  //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
-  //   const authentication = await client.authenticate([], challenge, {
-  //     authenticatorType: 'both',
-  //     userVerification: 'required',
-  //     timeout: 60000,
-  //   });
-
-  //   const isSignedIn = await fetch(ISUNFA_API.SIGN_IN, {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({ authentication }),
-  //   });
-  //   // eslint-disable-next-line no-console
-  //   console.log('authentication', authentication);
-  // };
-  */
-
   useEffect(() => {
     const waitForCTA = setTimeout(() => {
       setIsAnimeRef1Visible(true);
