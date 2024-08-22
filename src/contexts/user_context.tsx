@@ -139,6 +139,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      // Info: (20240808 - Shirley)
       // if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
       //   setReturnUrl(encodeURIComponent(router.asPath));
       // }
@@ -208,7 +209,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO: (20240819-Tzuhan) [Beta] handle expiration
+  // TODO: (20240819 - Tzuhan) [Beta] handle expiration
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isJwtExpired = (expires: string | undefined) => {
     if (!expires) return true;
@@ -322,21 +323,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         { invitation: props.invitation }
       );
 
-      // Deprecate: (20240819-Tzuhan) [Beta] dev
+      // Deprecated: (20240819 - Tzuhan) [Beta] dev
       // eslint-disable-next-line no-console
       console.log('authenticateUser authSignIn response:', response);
 
       if (response?.error) {
-        // Deprecate: (20240819-Tzuhan) [Beta] dev
+        // Deprecated: (20240819 - Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.error('OAuth 登入失敗:', response?.error);
         throw new Error(response.error);
       }
     } catch (error) {
-      // Deprecate: (20240816-Tzuhan) [Beta] dev
+      // Deprecated: (20240816 - Tzuhan) [Beta] dev
       // eslint-disable-next-line no-console
       console.error('Authentication failed', error);
-      // TODO: (20240814-Tzuhan) [Beta] handle error
+      // TODO: (20240814 - Tzuhan) [Beta] handle error
     }
   };
 

@@ -514,7 +514,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    // TODO: [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // TODO: (20240529 - Shirley) [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented
     // if (reportPendingStatus) {
     //   toastHandler({
     //     type: ToastType.INFO,
@@ -824,7 +824,7 @@ export const useGlobalCtx = () => {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
 
-  // Deprecated: Debug tool [to be removed](20231120 - Shirley)
+  // Deprecated: (20231120 - Shirley) Debug tool [to be removed]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const g: any =
     typeof globalThis === 'object'
@@ -833,7 +833,7 @@ export const useGlobalCtx = () => {
         ? window
         : typeof global === 'object'
           ? global
-          : null; // Info: Causes an error on the next line
+          : null; // Info: (20240409 - Shirley) Causes an error on the next line
 
   g.globalContext = context;
   return context;

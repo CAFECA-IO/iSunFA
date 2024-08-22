@@ -50,6 +50,7 @@ export const accountTitleMap: AccountTitleMap = {
 };
 
 interface IAccountingContext {
+  // Info: (20240430 - Julian)
   // tempJournalList: IJournal[];
   // addTempJournal: (journal: IJournal) => void;
   // duplicateTempJournal: (id: string) => void;
@@ -74,7 +75,7 @@ interface IAccountingContext {
     liquidity?: string,
     page?: number,
     limit?: number,
-    // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
+    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
     includeDefaultAccount?: boolean,
     reportType?: string,
     equityType?: string,
@@ -126,6 +127,7 @@ interface IAccountingContext {
 }
 
 const initialAccountingContext: IAccountingContext = {
+  // Info: (20240430 - Julian)
   // tempJournalList: [],
   // addTempJournal: () => {},
   // duplicateTempJournal: () => {},
@@ -234,7 +236,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     page?: number,
     limit?: number,
     // ToDo: (20240719 - Julian) lack of keyword search
-    // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
+    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
     includeDefaultAccount?: boolean,
     reportType?: string,
     equityType?: string,
@@ -242,7 +244,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     sortBy?: string,
     sortOrder?: string,
     searchKey?: string
-    // isDeleted?: boolean
+    // isDeleted?: boolean // Info: (20240806 - Murky)
   ) => {
     getAccountList({
       params: { companyId },
@@ -597,7 +599,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [voucherPreview]
   );
 
-  // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
+  // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------ [Start]
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
 
   // // Info: (20240426 - Julian) 新增暫存日記帳
@@ -630,6 +632,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   //   },
   //   [tempJournalList]
   // );
+  // ------------ 目前已經取消暫存日記帳的功能，預計刪除以上程式碼 ------------ [End]
 
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {
