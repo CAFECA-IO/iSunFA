@@ -237,7 +237,6 @@ export default async function handler(
     const { userId, companyId } = session;
 
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    // ToDo: (20240703 - Murky) Need to check Auth
     if (isAuth) {
       switch (req.method) {
         case 'GET': {
