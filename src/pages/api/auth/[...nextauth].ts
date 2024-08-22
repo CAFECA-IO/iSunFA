@@ -69,12 +69,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
       async signIn({ user, account, profile }) {
-        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // Deprecate: (20240819-Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.log('signIn callback', user, account, profile);
         const { invitation } = (account?.params || {}) as { invitation: string };
 
-        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // Deprecate: (20240819-Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.log('Custom Params:', invitation);
 
