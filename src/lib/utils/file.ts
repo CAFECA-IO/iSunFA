@@ -5,13 +5,9 @@ export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
     try {
       await fs.mkdir(folder, { recursive: true });
-      // Deprecated: (20240812 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`Folder ${folder} created.`);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     } catch (error) {
-      // Deprecated: (20240812 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(`Error while creating folder: ${error}`);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   });
 }

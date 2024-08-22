@@ -30,8 +30,7 @@ try {
   packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
   packageJson = JSON.parse(packageJsonContent);
 } catch (error) {
-  // Info:(20240701-Jacky) - Log the error
-  // console.error('Error reading package.json:', error);
+  // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }
 
@@ -65,10 +64,9 @@ try {
   // Info:(20240730 - Jacky) - Add last line to prevent EOF error
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 } catch (error) {
-  // Info:(20240701-Jacky) - Log the error
-  // console.error('Error writing package.json:', error);
+  // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }
 
 // Info:(20240701-Jacky) - Log the updated version
-// console.log(`Version updated to ${newVersion}`);
+// Todo: (20240822 - Anna) feat. Murky - 使用 logger

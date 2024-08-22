@@ -191,11 +191,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleReturnUrl = () => {
     if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `handleReturnUrl returnUrl: ${decodeURIComponent(returnUrl ?? '')}, router.pathname: ${router.pathname}, selectedCompanyRef.current:`,
-        selectedCompanyRef.current
-      );
       if (returnUrl) {
         const urlString = decodeURIComponent(returnUrl);
         setReturnUrl(null);
@@ -230,12 +225,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
     if (getUserSessionSuccess) {
       if (userSessionData) {
-        // eslint-disable-next-line no-console
-        console.log(
-          'checkSession userSessionData',
-          userSessionData,
-          `'company' in userSessionData && Object.keys(userSessionData.company).length > 0: ${'company' in userSessionData && userSessionData.company && Object.keys(userSessionData.company).length > 0}`
-        );
         if (
           'user' in userSessionData &&
           userSessionData.user &&
@@ -266,8 +255,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           } else {
             setSuccessSelectCompany(undefined);
             setSelectedCompany(null);
-            // eslint-disable-next-line no-console
-            console.log('checkSession: no company');
             if (
               router.pathname.includes('users') &&
               !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
@@ -323,21 +310,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         { invitation: props.invitation }
       );
 
-      // Deprecated: (20240819 - Tzuhan) [Beta] dev
-      // eslint-disable-next-line no-console
-      console.log('authenticateUser authSignIn response:', response);
-
       if (response?.error) {
-        // Deprecated: (20240819 - Tzuhan) [Beta] dev
-        // eslint-disable-next-line no-console
-        console.error('OAuth 登入失敗:', response?.error);
         throw new Error(response.error);
       }
     } catch (error) {
-      // Deprecated: (20240816 - Tzuhan) [Beta] dev
-      // eslint-disable-next-line no-console
-      console.error('Authentication failed', error);
-      // TODO: (20240814 - Tzuhan) [Beta] handle error
+      // TODO: (20240814-Tzuhan) [Beta] handle error
     }
   };
 
