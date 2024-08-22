@@ -40,16 +40,16 @@ const nextConfig = {
   },
   webpack: (config) => {
     const newConfig = cloneDeep(config);
-    // Info: do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf) (20240502 - Shirley)
+    // Info: (20240502 - Shirley) do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf)
     // eslint-disable-next-line no-param-reassign
     newConfig.resolve.alias.canvas = false;
 
-    // Fixes npm packages that depend on `fs` module
+    // Info: (20240531 - Murky) Fixes npm packages that depend on `fs` module
     newConfig.resolve.fallback = { fs: false };
     return newConfig;
   },
   experimental: {
-    instrumentationHook: true, // Info (20240812 - Murky) this is for function run before server start
+    instrumentationHook: true, // Info: (20240812 - Murky) this is for function run before server start
   },
 };
 
