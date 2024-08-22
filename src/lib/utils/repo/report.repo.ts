@@ -26,7 +26,7 @@ export async function findFirstReportByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
+    // Deprecated: (20240710 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -50,7 +50,7 @@ export async function findUniqueReportById(reportId: number) {
     });
   } catch (error) {
     report = null;
-    // Deprecate: (20240710 - Murky) Debugging purpose
+    // Deprecated: (20240710 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -79,7 +79,7 @@ export async function getReportIdByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging perpose
+    // Deprecated: (20240710 - Murky) Debugging perpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -118,7 +118,7 @@ export async function createReport(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
+    // Deprecated: (20240710 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -172,7 +172,7 @@ export async function findManyReports(
   try {
     reports = await prisma.report.findMany(findManyArgs);
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
+    // Deprecated: (20240710 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }

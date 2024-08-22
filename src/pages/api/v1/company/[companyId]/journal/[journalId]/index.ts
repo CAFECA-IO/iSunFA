@@ -43,7 +43,7 @@ async function handleGetRequest(companyId: number, req: NextApiRequest) {
         journal = formatIJournal(journalData);
       }
     } catch (error) {
-      // Deprecated: Debugging purpose (20240724 - Luphia)
+      // Deprecated: (20240724 - Luphia) Debugging purpose
       // eslint-disable-next-line no-console
       console.log('error', error);
     }
@@ -64,7 +64,7 @@ async function handleDeleteRequest(companyId: number, req: NextApiRequest) {
         journal = formatIJournal(journalData);
       }
     } catch (error) {
-      // Deprecated: Debugging purpose (20240724 - Luphia)
+      // Deprecated: (20240724 - Luphia) Debugging purpose
       // eslint-disable-next-line no-console
       console.log('error', error);
     }

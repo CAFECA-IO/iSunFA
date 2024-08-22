@@ -169,7 +169,7 @@ export function formatStartAndEndDateFromQuery(
     endDateInSecond = timestampInSeconds(endDate);
   }
 
-  // Deprecate: (20240729 - Murky) Move to financial report
+  // Deprecated: (20240729 - Murky) Move to financial report
   // const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
   //   reportSheetType,
   //   startDateInSecond,
@@ -180,7 +180,7 @@ export function formatStartAndEndDateFromQuery(
     startDateInSecond,
     endDateInSecond,
 
-    // Deprecate: (20240729 - Murky) Move to financial report
+    // Deprecated: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
   };
@@ -207,7 +207,7 @@ export function formatReportLanguageFromQuery(
 }
 
 export function formatReportTypeFromQuery(reportType: string): ReportType {
-  // Deprecate: (20240710 - Murky) this function is to separate financial and analysis temperately
+  // Deprecated: (20240710 - Murky) this function is to separate financial and analysis temperately
   const reportTypeString = convertStringToReportType(reportType);
   return reportTypeString;
 }
@@ -225,7 +225,7 @@ export function formatPostRequestQuery(req: NextApiRequest) {
     startDateInSecond,
     endDateInSecond,
 
-    // Deprecate: (20240729 - Murky) Move to financial report
+    // Deprecated: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
   } = formatStartAndEndDateFromQuery(reportSheetType, from, to);
@@ -239,7 +239,7 @@ export function formatPostRequestQuery(req: NextApiRequest) {
     startDateInSecond,
     endDateInSecond,
 
-    // Deprecate: (20240729 - Murky) Move to financial report
+    // Deprecated: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
     formattedReportType,
@@ -267,7 +267,7 @@ async function generateFinancialReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Deprecate: (20240710 - Murky) console.error
+    // Deprecated: (20240710 - Murky) console.error
     // eslint-disable-next-line no-console
     console.error(error);
   }
@@ -433,7 +433,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     reportSheetType,
     startDateInSecond,
     endDateInSecond,
-    // Deprecate: (20240729 - Murky) Move to financial report
+    // Deprecated: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
     formattedReportType,

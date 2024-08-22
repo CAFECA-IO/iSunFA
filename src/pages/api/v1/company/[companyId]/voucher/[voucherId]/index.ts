@@ -75,7 +75,7 @@ async function handleVoucherUpdatePrismaLogic(
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate: (20240524 - Murky) Deprecate this error message
+    // Deprecated: (20240524 - Murky) Deprecate this error message
     // eslint-disable-next-line no-console
     console.error(error);
     switch (error.message) {
@@ -108,7 +108,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
       voucherUpdated = voucherUpdatedData.voucherUpdated;
       statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
-      // Deprecate: (20240524 - Murky) Deprecate this error message
+      // Deprecated: (20240524 - Murky) Deprecate this error message
       // eslint-disable-next-line no-console
       console.error(error);
     }
@@ -147,7 +147,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecate: (20240524 - Murky) Debugging purpose
+      // Deprecated: (20240524 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
       console.error(error);
       statusMessage = error.message;

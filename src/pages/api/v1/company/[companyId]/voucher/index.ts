@@ -59,7 +59,7 @@ async function handleVoucherCreatePrismaLogic(
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate: (20240806 - Murky) Debugging purpose
+    // Deprecated: (20240806 - Murky) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(error);
 
@@ -131,7 +131,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecate: (20240524 - Murky) Debugging purpose
+      // Deprecated: (20240524 - Murky) Debugging purpose
       // eslint-disable-next-line no-console
       console.error(error);
     }
