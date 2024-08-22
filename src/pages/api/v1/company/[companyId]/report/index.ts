@@ -245,8 +245,6 @@ async function generateReport(
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
     // Todo: (20240710 - Murky) Please use logger to log the error
-    // eslint-disable-next-line no-console
-    console.error(error);
   }
   return reportContent;
 }

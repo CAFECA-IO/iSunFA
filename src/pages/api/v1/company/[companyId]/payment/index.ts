@@ -14,6 +14,7 @@ import { createSubscription } from '@/lib/utils/repo/subscription.repo';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
 
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -75,7 +76,7 @@ async function handlePostRequest(req: NextApiRequest) {
         body: JSON.stringify({
           merchantId: oenMerchantId,
           amount: getOrder.plan.monthlyFee,
-          currency: 'TWD', // TODO: Need to modify in the future
+          currency: OEN_CURRENCY[CurrencyType.TWD],
           token,
           orderId: customId,
         }),
@@ -95,11 +96,12 @@ async function handlePostRequest(req: NextApiRequest) {
       const createDate = convertDateToTimestamp(transactionResponseJson.data.createdAt);
       const createDateInSec = timestampInSeconds(createDate);
       // Create payment record
+      const paymentDescription = JSON.stringify(transactionResponseJson.data);
       const paymentRecord = await createPaymentRecord(
         orderId,
         transactionResponseJson.data.transactionId,
         createDateInSec,
-        transactionResponseJson.message, // TODO: not sure what to put
+        paymentDescription, // Info (20240822 - Murky) OEN API do not return meaningful message, store entire data for now
         transactionResponseJson.data.amount,
         transactionResponseJson.data.paymentInfo.method,
         transactionResponseJson.data.status
