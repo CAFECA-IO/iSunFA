@@ -22,7 +22,7 @@ beforeEach(() => {
 afterEach(() => {
   jest.clearAllMocks();
 });
-// ToDo: Add unit tests for profit insight (20240607 - Gibbs)
+// ToDo: (20240607 - Gibbs) Add unit tests for profit insight
 xdescribe('Result API Handler Tests', () => {
   it('should handle GET requests successfully', async () => {
     req.method = 'GET';

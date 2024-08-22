@@ -140,7 +140,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('expired_at');
   };
 
-  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
@@ -370,7 +370,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(response.error);
       }
     } catch (error) {
-      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+      // TODO: (20240814-Tzuhan) [Beta] handle error
     }
   };
 
@@ -463,7 +463,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [signOut]);
 
-  // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
+  // Info: (20240522 - Shirley) dependency array 的值改變，才會讓更新後的 value 傳到其他 components
   const value = useMemo(
     () => ({
       credential: credentialRef.current,

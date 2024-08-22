@@ -6,7 +6,7 @@ import eventManager from '@/lib/utils/event_manager';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 function checkInput(apiConfig: IAPIConfig, input?: IAPIInput) {
-  // TODO: check if params match the input schema (20240504 - Luphia)
+  // TODO: (20240504 - Luphia) check if params match the input schema
   if (!input) {
     throw new Error('Input is required');
   }

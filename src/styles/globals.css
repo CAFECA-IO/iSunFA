@@ -1128,7 +1128,7 @@ a {
     0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* Info: Hide horizontal scrollbar (20240415 - Shirley) */
+/* Info: (20240415 - Shirley) Hide horizontal scrollbar */
 /* For Webkit browser */
 .hideScrollbar::-webkit-scrollbar {
   display: none;
@@ -1138,7 +1138,7 @@ a {
   scrollbar-width: none;
 }
 
-/* Info: hide scroll bar of all div (20240415 - Shirley) */
+/* Info: (20240415 - Shirley) hide scroll bar of all div */
 /* div {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -1214,7 +1214,7 @@ div::-webkit-scrollbar {
 }
 
 @page {
-  /* Info: size: A4 (20240729 - Shirley) */
+  /* Info: (20240729 - Shirley) size: A4 */
   size: 595px 843px;
   margin: 0cm;
 }
@@ -1246,7 +1246,7 @@ input[type='checkbox']:checked::before {
   opacity: 1;
 }
 
-/* Info: Dashboard page is white background (20240411 - Shirley) */
+/* Info: (20240411 - Shirley) Dashboard page is white background */
 /* @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
@@ -1257,7 +1257,7 @@ input[type='checkbox']:checked::before {
   }
 } */
 
-/* Info: customize style of scroll bar of container (20240415 - Shirley) */
+/* Info: (20240415 - Shirley) customize style of scroll bar of container */
 /* @layer components {
   .scrollbar::-webkit-scrollbar {
     width: 15px;

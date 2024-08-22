@@ -21,7 +21,7 @@ interface IJournalItemProps {
   // isChecked: boolean;
   // checkHandler: (e: React.ChangeEvent<HTMLInputElement>) => void;
   companyId: number;
-  // ToDo: [Beta] (20240528 - Julian) 這裡的 interface 需要再確認
+  // ToDo: (20240528 - Julian) [Beta] 這裡的 interface 需要再確認
   journal: IJournalListItem;
   onDelete: (companyId: number, journalId: number) => Promise<void>;
 }
@@ -287,7 +287,7 @@ const JournalItem = ({
       <td className="px-16px text-left">
         {/* Info: (20240808 - Anna) Alpha版先隱藏(會計事件配對專案名稱) */}
         {/* <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-          ToDo: [Beta] (20240517 - Julian) Replace with project icon
+          ToDo: (20240517 - Julian) [Beta] Replace with project icon
           <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
             BF
           </div>
@@ -324,7 +324,7 @@ export const JournalItemMobile = ({
 }: IJournalItemProps) => {
   const { t } = useTranslation('common');
   const { id, date, type: eventType, particulars: description, voucherNo } = journal;
-  const price = 0; // ToDo: [Beta] (20240528 - Julian) Interface lacks price
+  const price = 0; // ToDo: (20240528 - Julian) [Beta] Interface lacks price
 
   const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 

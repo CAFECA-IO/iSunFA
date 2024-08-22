@@ -54,7 +54,7 @@ export enum APIName {
   VOUCHER_UPDATE = 'VOUCHER_UPDATE',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
-  // JOURNAL_UPDATE = 'JOURNAL_UPDATE',
+  // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
@@ -117,7 +117,7 @@ export enum APIPath {
   VOUCHER_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
-  // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`,
+  // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`, // Info: (20240720 - Tzuhan)
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/journal/:journalId`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
@@ -323,6 +323,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ASSET_MANAGEMENT_UPDATE,
   }),
+  // Info: (20240720 - Tzuhan)
   // JOURNAL_UPDATE: createConfig({
   //   name: APIName.JOURNAL_UPDATE,
   //   method: HttpMethod.PUT,
