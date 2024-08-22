@@ -543,10 +543,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       } else {
         agreeWithInfomationConfirmModalVisibilityHandler(false);
         TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-        if (router.pathname === ISUNFA_ROUTE.LOGIN) {
-          if (selectedCompany) router.push(ISUNFA_ROUTE.DASHBOARD);
-          else router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-        }
       }
     }
   }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
