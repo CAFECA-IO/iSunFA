@@ -355,22 +355,22 @@ export function transformBytesToFileSizeString(bytes: number): string {
  * @returns
  */
 export function transformFileSizeStringToBytes(sizeString: string): number {
-    const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
+  const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
 
-    let bytes = 0;
-    if (regex.test(sizeString)) {
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-      const [size, unit] = sizeString.split(' ');
+  let bytes = 0;
+  if (regex.test(sizeString)) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const [size, unit] = sizeString.split(' ');
 
-      const sizeIndex = sizes.indexOf(unit);
-      if (sizeIndex === -1) {
-          throw new Error('Invalid file size unit');
-      }
-
-      bytes = parseFloat(size) * 1024 ** sizeIndex;
+    const sizeIndex = sizes.indexOf(unit);
+    if (sizeIndex === -1) {
+      throw new Error('Invalid file size unit');
     }
 
-    return Math.round(bytes);
+    bytes = parseFloat(size) * 1024 ** sizeIndex;
+  }
+
+  return Math.round(bytes);
 }
 
 // page, limit to offset
@@ -535,7 +535,6 @@ export const loadFileFromLocalStorage = (
 ) => {
   try {
     const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
-    // console.log('Loaded from localStorage:', data);
 
     let fileObject: {
       id: string | undefined;
@@ -576,7 +575,6 @@ export const loadFileFromLocalStorage = (
 
     return fileObject;
   } catch (error) {
-    // console.error('Error loading file from localStorage:', error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 };
