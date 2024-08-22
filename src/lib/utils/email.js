@@ -1,4 +1,4 @@
-// TODO: temp solution (20240115 - Shirley)
+// TODO: (20240115 - Shirley) temp solution
 /* eslint-disable */
 const nodemailer = require('nodemailer');
 

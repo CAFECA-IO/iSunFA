@@ -25,7 +25,7 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
   }
 
-  // Info: Calculate revenue and expense ratio (20240416 - Murky)
+  // Info: (20240416 - Murky) Calculate revenue and expense ratio
   public override async generateFinancialReportTree(curPeriod: boolean): Promise<IAccountNode[]> {
     const lineItemsFromDB = await this.getAllLineItemsByReportSheet(curPeriod);
     const accountForest = await this.getAccountForestByReportSheet();
@@ -57,13 +57,13 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   ): Promise<IAccountForSheetDisplay[]> {
     const accountMap = await this.generateFinancialReportMap(curPeriod);
 
-    // Info: Calculate revenue and expense ratio (20240726 - Murky)
+    // Info: (20240726 - Murky) Calculate revenue and expense ratio
     const accountList = mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
 
     return accountList;
   }
 
-  // Info: Calculate revenue and expense ratio (20240726 - Murky)
+  // Info: (20240726 - Murky) Calculate revenue and expense ratio
   private static calculateRevenueAndExpenseRatio(
     revenue?: IAccountReadyForFrontend,
     totalCost?: IAccountReadyForFrontend,

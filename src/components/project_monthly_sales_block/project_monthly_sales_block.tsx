@@ -85,9 +85,9 @@ const ProjectMonthlySalesBlock = () => {
       fontWeight: 500,
       markers: {
         fillColors: ['#ffa50266', '#FFB632'],
-        // width: 8, // 標記的寬度
-        // height: 8, // 標記的高度
-        // radius: 4, // 標記的半徑（如果是圓形）
+        // width: 8, // 標記的寬度 // Info: (20240706 - Luphia)
+        // height: 8, // 標記的高度 // Info: (20240706 - Luphia)
+        // radius: 4, // 標記的半徑（如果是圓形）// Info: (20240722 - Shirley)
       },
     },
 
@@ -112,6 +112,7 @@ const ProjectMonthlySalesBlock = () => {
       followCursor: false,
       intersect: false,
       inverseOrder: true,
+      // Info: (20240622 - Julian)
       // custom: function t({ series, seriesIndex, dataPointIndex, w }) {
       //   const currentYear = series[1][dataPointIndex];
       //   const passYear = series[0][dataPointIndex];
@@ -137,12 +138,12 @@ const ProjectMonthlySalesBlock = () => {
 
   const series = [
     {
-      // name: 'Pass Year',
+      // name: 'Pass Year', // Info: (20240715 - Anna)
       name: translate('DASHBOARD.PASS_YEAR'),
       data: data.seriesData[0],
     },
     {
-      // name: 'Current Year',
+      // name: 'Current Year', // Info: (20240715 - Anna)
       name: translate('DASHBOARD.CURRENT_YEAR'),
       data: data.seriesData[1],
     },

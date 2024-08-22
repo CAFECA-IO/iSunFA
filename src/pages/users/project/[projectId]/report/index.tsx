@@ -20,7 +20,7 @@ interface IProjectReportPageProps {
 const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
-  // ToDo: [Beta](20240624 - Julian) Replace with api data
+  // ToDo: (20240624 - Julian) [Beta] Replace with api data
   const projectName = 'BAIFA';
 
   const displayedBody = isAuthLoading ? (

@@ -404,7 +404,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
-    const autoClose = closeable ? (isAutoClose ?? 5000) : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
     const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable; // Info:(20240513 - Julian) default draggable true
@@ -514,7 +514,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    // TODO: [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // TODO: (20240529 - Shirley) [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented
     // if (reportPendingStatus) {
     //   toastHandler({
     //     type: ToastType.INFO,
@@ -543,10 +543,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       } else {
         agreeWithInfomationConfirmModalVisibilityHandler(false);
         TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-        if (router.pathname === ISUNFA_ROUTE.LOGIN) {
-          if (selectedCompany) router.push(ISUNFA_ROUTE.DASHBOARD);
-          else router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-        }
       }
     }
   }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
@@ -824,7 +820,7 @@ export const useGlobalCtx = () => {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
 
-  // Deprecated: Debug tool [to be removed](20231120 - Shirley)
+  // Deprecated: (20231120 - Shirley) Debug tool [to be removed]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const g: any =
     typeof globalThis === 'object'
@@ -833,7 +829,7 @@ export const useGlobalCtx = () => {
         ? window
         : typeof global === 'object'
           ? global
-          : null; // Info: Causes an error on the next line
+          : null; // Info: (20240409 - Shirley) Causes an error on the next line
 
   g.globalContext = context;
   return context;

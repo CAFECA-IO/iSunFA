@@ -76,7 +76,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
     yaxis: {
       title: {
-        // text: 'Values (units)',
+        // text: 'Values (units)', // Info: (20240419 - Shirley)
       },
       labels: {
         style: {
@@ -101,6 +101,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       },
       showForSingleSeries: true,
 
+      // Info: (20240419 - Shirley)
       // customLegendItems: [
       //   {
       //     text: 'income',

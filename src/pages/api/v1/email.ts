@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import SendMail from '@/lib/utils/email';
 
-// TODO: temp solution (20240115 - Shirley)
+// TODO: (20240115 - Shirley) temp solution
 // eslint-disable-next-line @typescript-eslint/naming-convention
 type emailConfig = {
   googleClientID: string;

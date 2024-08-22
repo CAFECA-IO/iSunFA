@@ -62,7 +62,7 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess === false) {
       toastHandler({
         id: `listUnprocessedOCR-${OCRListStatus.listCode}`,
-        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯
         // content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
         content: t('JOURNAL.FAILED_TO_LIST_UNPROCESSED_OCRS', { code: OCRListStatus.listCode }),
         type: ToastType.ERROR,
@@ -131,7 +131,7 @@ const StepOneTab = () => {
       deleteOCRHandler(aichResultId);
       toastHandler({
         id: `deleteUnprocessedOCR-${code}`,
-        /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
+        // Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯
         // content: `Successfully deleted unprocessed OCR: ${code}`,
         content: t('JOURNAL.SUCCESSFULLY_DELETED_UNPROCESSED_OCR', { code }),
         type: ToastType.SUCCESS,

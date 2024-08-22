@@ -23,7 +23,7 @@ interface ICreateCompanyModal {
   modalVisibilityHandler: () => void;
 }
 
-// ToDo: [Beta] (20240514 - Julian) Replace with actual country list
+// ToDo: (20240514 - Julian) [Beta] Replace with actual country list
 const countryList = [
   {
     name: 'Taiwan',

@@ -42,7 +42,7 @@ export type IAPIName =
   | 'REPORT_LIST'
   | 'REPORT_GET_BY_ID'
   | 'REPORT_GENERATE'
-  | 'SESSION_GET'
+  | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
   | 'FILE_DELETE'

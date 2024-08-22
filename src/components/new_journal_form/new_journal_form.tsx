@@ -190,7 +190,7 @@ const NewJournalForm = () => {
         setFeeToggle(invoice.payment.hasFee);
         setInputFee(invoice.payment.fee);
         setSelectedMethod(invoice.payment.method as PAYMENT_METHOD);
-        // setInputAccountNumber(invoice.payment.accountNumber);
+        // setInputAccountNumber(invoice.payment.accountNumber); // Info: (20240527 - Tzuhan)
         setPaymentPeriod(invoice.payment.period as PaymentPeriodType);
         setInputInstallment(invoice.payment.installmentPeriod);
         setPaymentStatus(invoice.payment.status as PaymentStatusType);
@@ -236,7 +236,7 @@ const NewJournalForm = () => {
       setFeeToggle(OCRResult.payment.hasFee);
       setInputFee(OCRResult.payment.fee);
       setSelectedMethod(OCRResult.payment.method as PAYMENT_METHOD);
-      // setInputAccountNumber(OCRResult.payment.accountNumber);
+      // setInputAccountNumber(OCRResult.payment.accountNumber); // Info: (20240527 - Tzuhan)
       setPaymentPeriod(OCRResult.payment.period);
       setInputInstallment(OCRResult.payment.installmentPeriod);
       setPaymentStatus(OCRResult.payment.status);

@@ -121,6 +121,7 @@ const ViewFinancialSection = ({
   const { t } = useTranslation('common');
   const router = useRouter();
 
+  // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -203,7 +204,7 @@ const ViewFinancialSection = ({
       }
     }
   };
-  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContract = () => {
   //   navigator.clipboard.writeText(tokenContract);
 
@@ -215,7 +216,8 @@ const ViewFinancialSection = ({
   //     autoClose: 500,
   //   });
   // };
-  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏
   // const copyTokenId = () => {
   //   navigator.clipboard.writeText(tokenId);
 
@@ -227,11 +229,13 @@ const ViewFinancialSection = ({
   //     autoClose: 500,
   //   });
   // };
-  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContractClickHandler = () => {
   //   copyTokenContract();
   // };
-  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏
   // const copyTokenIdClickHandler = () => {
   //   copyTokenId();
   // };
@@ -298,6 +302,7 @@ const ViewFinancialSection = ({
     }
   }, []);
 
+  /* Info: (20240729 - Shirley)
   // useEffect(() => {
   //   if (reportLink) {
   //     fetchPDF();
@@ -310,6 +315,7 @@ const ViewFinancialSection = ({
   //     import.meta.url
   //   ).toString();
   // }, []);
+  */
 
   const displayedReportType = getReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
@@ -317,7 +323,7 @@ const ViewFinancialSection = ({
     <p>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
   );
 
-  // Info:創建一個新的變數來儲存翻譯後的字串 (20240730 - Anna)
+  // Info: (20240730 - Anna) 創建一個新的變數來儲存翻譯後的字串
   const reportTypeString =
     !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
       ? displayedReportType.props.children
@@ -404,6 +410,7 @@ const ViewFinancialSection = ({
             </svg>
           </div>
         </Button>
+        {/* Info: (20240723 - Shirley) */}
         {/* <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
           {displayedReportType}
         </div> */}
