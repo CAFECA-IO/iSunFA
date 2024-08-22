@@ -44,17 +44,15 @@ const ProfileUploadModal = ({
     uploadType === UploadType.USER
       ? t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')
       : uploadType === UploadType.COMPANY
-        ? // ToDo: (20240801 - Julian) i18n
-          'Company Image'
-        : 'Project Image';
+        ? t('PROFILE_UPLOAD_MODAL.COMPANY_IMAGE')
+        : t('PROFILE_UPLOAD_MODAL.PROJECT_IMAGE');
 
   const modalDescription =
     uploadType === UploadType.USER
       ? t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
       : uploadType === UploadType.COMPANY
-        ? // ToDo: (20240801 - Julian) i18n
-          'Please upload your company image'
-        : 'Please upload your project image';
+        ? t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_COMPANY_PICTURE')
+        : t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROJECT_PICTURE');
 
   const cancelHandler = () => {
     setUploadedImage(null);
@@ -89,9 +87,8 @@ const ProfileUploadModal = ({
   const uploadedError = () => {
     messageModalDataHandler({
       messageType: MessageType.ERROR,
-      // ToDo: (20240801 - Julian) i18n
-      title: 'Upload Failed',
-      content: `Please try again later. Error code: ${code}`,
+      title: t('PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
+      content: `${t('PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
       submitBtnStr: t('PROJECT.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
