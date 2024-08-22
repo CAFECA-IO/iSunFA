@@ -1,8 +1,11 @@
-import prisma from "@/client";
-import { CASH_AND_CASH_EQUIVALENTS_CODE } from "@/constants/cash_flow/common_cash_flow";
-import { IVoucherDataForSavingToDB, IVoucherFromPrismaIncludeJournalLineItems } from "@/interfaces/voucher";
-import { getTimestampNow, timestampInSeconds } from "@/lib/utils/common";
-import { Prisma, Voucher } from "@prisma/client";
+import prisma from '@/client';
+import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
+import {
+  IVoucherDataForSavingToDB,
+  IVoucherFromPrismaIncludeJournalLineItems,
+} from '@/interfaces/voucher';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { Prisma, Voucher } from '@prisma/client';
 
 /**
  * This function can get the latest voucher no
@@ -10,9 +13,9 @@ import { Prisma, Voucher } from "@prisma/client";
  * @returns {Promise<string>} return the latest voucher no (type: Promise<string>)
  */
 export async function getLatestVoucherNo(companyId: number) {
-  let voucherNo: string | null = "";
+  let voucherNo: string | null = '';
 
-  let voucher:Voucher | null = null;
+  let voucher: Voucher | null = null;
 
   const where: Prisma.VoucherWhereInput = {
     journal: {
@@ -38,8 +41,7 @@ export async function getLatestVoucherNo(companyId: number) {
   try {
     voucher = await prisma.voucher.findFirst(findFirstArgs);
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   const localToday = new Date();
@@ -77,7 +79,7 @@ export async function findUniqueVoucherById(voucherId: number) {
       include: {
         account: true,
       },
-    }
+    },
   };
 
   const findUniqueArgs = {
@@ -88,8 +90,7 @@ export async function findUniqueVoucherById(voucherId: number) {
   try {
     voucherData = await prisma.voucher.findUnique(findUniqueArgs);
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
   return voucherData;
 }
@@ -125,8 +126,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
   try {
     voucherData = await prisma.voucher.create(voucherCreateArgs);
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return voucherData;
@@ -183,8 +183,7 @@ export async function findManyVoucherWithCashInPrisma(
   try {
     vouchers = await prisma.voucher.findMany(findManyArgs);
   } catch (error) {
-    // Info: （ 20240710 - Murky）Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return vouchers;

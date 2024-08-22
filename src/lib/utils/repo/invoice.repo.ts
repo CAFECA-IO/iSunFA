@@ -33,8 +33,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -58,8 +57,7 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -77,8 +75,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Info: (20240526 - Murky) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -112,8 +109,7 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId?: n
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -138,8 +134,7 @@ export async function createPaymentInPrisma(paymentData: IPaymentBeta) {
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return payment;
@@ -190,12 +185,10 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: n
     });
 
     if (!invoice) {
-      // Deprecate: ( 20240605 - Murky ) Debugging purpose
-      // console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
+      // Todo: (20240822 - Murky Anna) 使用 logger
     }
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return invoice;
@@ -245,8 +238,7 @@ export async function createInvoiceInPrisma(
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -271,8 +263,7 @@ export async function createInvoiceAndPaymentInPrisma(
       return invoice.id;
     });
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -320,8 +311,7 @@ export async function updateInvoiceInPrisma(
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -356,8 +346,7 @@ export async function updateInvoiceAndPaymentInPrisma(
 
     updatedInvoiceId = invoice.id;
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
   return updatedInvoiceId;
 }
@@ -411,8 +400,7 @@ export async function createJournalInPrisma(
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -459,8 +447,7 @@ export async function updateJournalInPrisma(
       },
     });
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -503,15 +490,12 @@ export async function handlePrismaSavingLogic(
         await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
       }
     } catch (error) {
-      // Deprecate ( 20240522 - Murky ) Debugging purpose
-
-      // console.log(error);
+      // Todo: (20240822 - Murky Anna) 使用 logger
     }
 
     return journalIdBeCreated;
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -557,8 +541,7 @@ export async function handlePrismaUpdateLogic(
       contractId
     );
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return journalIdBeUpdated;

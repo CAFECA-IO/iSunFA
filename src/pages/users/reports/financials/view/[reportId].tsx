@@ -53,7 +53,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     hasCompanyId
   );
 
-  // console.log('reportFinancial in reportId', reportFinancial);
+  // Todo: (20240822 - Murky Anna) 使用 logger ('reportFinancial in reportId', reportFinancial)
 
   useEffect(() => {
     if (getFRSuccess === false) {

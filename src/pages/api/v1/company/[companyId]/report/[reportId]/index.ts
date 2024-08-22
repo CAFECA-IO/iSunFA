@@ -254,8 +254,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Info: (20240729 - Murky) Debugging
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<FinancialReport | IReport | null>(

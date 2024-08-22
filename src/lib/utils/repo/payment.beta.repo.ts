@@ -26,8 +26,7 @@ export async function createPayment(payment: IPaymentBeta) {
   try {
     result = await prisma.payment.create(paymentCreateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return result;
@@ -60,8 +59,7 @@ export async function updatePayment(paymentId: number, payment: IPaymentBeta) {
   try {
     result = await prisma.payment.update(paymentUpdateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return result;

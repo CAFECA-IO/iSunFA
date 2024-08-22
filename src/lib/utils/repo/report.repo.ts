@@ -26,8 +26,7 @@ export async function findFirstReportByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return report;
@@ -49,8 +48,7 @@ export async function findUniqueReportById(reportId: number) {
     });
   } catch (error) {
     report = null;
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return report;
@@ -77,8 +75,7 @@ export async function getReportIdByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging perpose
-    // console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return report?.id;
@@ -115,8 +112,7 @@ export async function createReport(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return report;
@@ -168,8 +164,7 @@ export async function findManyReports(
   try {
     reports = await prisma.report.findMany(findManyArgs);
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   const filteredReports = reports.filter((report) => {

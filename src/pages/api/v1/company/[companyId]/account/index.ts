@@ -189,8 +189,7 @@ export async function handleGetRequest(
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    // Deprecate (20240722 - Murky) - Debugging error
-    // console.log('error', error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return paginatedAccount;
@@ -277,8 +276,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate (20240722 - Murky) - Debugging error
-    // console.log('error', error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

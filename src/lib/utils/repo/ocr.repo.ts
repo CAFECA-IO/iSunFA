@@ -16,8 +16,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -57,8 +56,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   try {
     ocrData = await prisma.ocr.findMany(findManyOptions);
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -112,8 +110,7 @@ export async function createOcrInPrisma(
       },
     });
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return ocrData;
