@@ -14,7 +14,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^210[0-8]/]), // Short-term borrowings
+          codes: new Set([/^210[0-8]/]), // Info: (20240730 - Shirley) Short-term borrowings
         },
       },
     },
@@ -27,7 +27,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^210[0-8]/]), // Short-term borrowings
+          codes: new Set([/^210[0-8]/]), // Info: (20240730 - Shirley) Short-term borrowings
         },
         credit: {
           type: 'CODE',
@@ -48,7 +48,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^211[0-9]/]), // Short-term notes payable
+          codes: new Set([/^211[0-9]/]), // Info: (20240730 - Shirley) Short-term notes payable
         },
       },
     },
@@ -61,7 +61,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^211[0-9]/]), // Short-term notes payable
+          codes: new Set([/^211[0-9]/]), // Info: (20240730 - Shirley) Short-term notes payable
         },
         credit: {
           type: 'CODE',
@@ -70,7 +70,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info Murky (20240712): 在投資現金流量就已經有了
+  // Info: (20240712 - Murky) 在投資現金流量就已經有了
   [
     'C00900',
     {
@@ -79,7 +79,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set(), // Hedging financial assets
+          codes: new Set(), // Info: (20240730 - Shirley) Hedging financial assets
         },
         credit: {
           type: 'CODE',
@@ -134,7 +134,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^2531/]), // Corporate bonds issued
+          codes: new Set([/^2531/]), // Info: (20240730 - Shirley) Corporate bonds issued
         },
       },
     },
@@ -147,7 +147,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2531/]), // Corporate bonds repaid
+          codes: new Set([/^2531/]), // Info: (20240730 - Shirley) Corporate bonds repaid
         },
         credit: {
           type: 'CODE',
@@ -202,7 +202,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^2542/]), // Other borrowings
+          codes: new Set([/^2542/]), // Info: (20240730 - Shirley) Other borrowings
         },
       },
     },
@@ -215,7 +215,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2542/]), // Other borrowings repaid
+          codes: new Set([/^2542/]), // Info: (20240730 - Shirley) Other borrowings repaid
         },
         credit: {
           type: 'CODE',
@@ -338,7 +338,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^2325/, /^2635/]), // Preferred stock liabilities issued
+          codes: new Set([/^2325/, /^2635/]), // Info: (20240730 - Shirley) Preferred stock liabilities issued
         },
       },
     },
@@ -351,7 +351,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2325/, /^2635/]), // Preferred stock liabilities repaid
+          codes: new Set([/^2325/, /^2635/]), // Info: (20240730 - Shirley) Preferred stock liabilities repaid
         },
         credit: {
           type: 'CODE',
@@ -385,7 +385,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2645/]), // Deposits received
+          codes: new Set([/^2645/]), // Info: (20240730 - Shirley) Deposits received
         },
         credit: {
           type: 'CODE',
@@ -424,7 +424,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^2219/, /^2612/]), // Accounts payable
+          codes: new Set([/^2219/, /^2612/]), // Info: (20240730 - Shirley) Accounts payable
         },
       },
     },
@@ -437,7 +437,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2219/, /^2612/]), // Accounts payable
+          codes: new Set([/^2219/, /^2612/]), // Info: (20240730 - Shirley) Accounts payable
         },
         credit: {
           type: 'CODE',
@@ -544,7 +544,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^2305/]), // Other financial liabilities
+          codes: new Set([/^2305/]), // Info: (20240730 - Shirley) Other financial liabilities
         },
       },
     },
@@ -557,7 +557,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2305/]), // Other financial liabilities
+          codes: new Set([/^2305/]), // Info: (20240730 - Shirley) Other financial liabilities
         },
         credit: {
           type: 'CODE',
@@ -578,7 +578,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^2600/]), // Other non-current liabilities
+          codes: new Set([/^2600/]), // Info: (20240730 - Shirley) Other non-current liabilities
         },
       },
     },
@@ -591,7 +591,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2600/]), // Other non-current liabilities
+          codes: new Set([/^2600/]), // Info: (20240730 - Shirley) Other non-current liabilities
         },
         credit: {
           type: 'CODE',
@@ -608,7 +608,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^2216/]), // Dividends payable
+          codes: new Set([/^2216/]), // Info: (20240730 - Shirley) Dividends payable
         },
         credit: {
           type: 'CODE',
@@ -629,7 +629,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^3120/, /^3110/]), // Capital increase
+          codes: new Set([/^3120/, /^3110/]), // Info: (20240730 - Shirley) Capital increase
         },
       },
     },
@@ -748,7 +748,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^3491/]), // Employee purchase of treasury stock
+          codes: new Set([/^3491/]), // Info: (20240730 - Shirley) Employee purchase of treasury stock
         },
       },
     },
@@ -842,7 +842,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 不曉得該怎麼做，暫時暫時先不implement
+  // Info: (20240710 - Murky) 不曉得該怎麼做，暫時暫時先不implement
   [
     'C05700',
     {
@@ -860,7 +860,7 @@ export const FINANCING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 暫時先不implement
+  // Info: (20240710 - Murky) 暫時先不implement
   [
     'C09900',
     {
