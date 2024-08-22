@@ -233,7 +233,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     liquidity?: string,
     page?: number,
     limit?: number,
-    // ToDo: (20240719 - Julian) lack of keyword search
+    // ToDo: [Beta] (20240719 - Julian) lack of keyword search
     // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
     includeDefaultAccount?: boolean,
     reportType?: string,

@@ -336,7 +336,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // Deprecate: [Beta](20240816-Tzuhan) dev
       // eslint-disable-next-line no-console
       console.error('Authentication failed', error);
-      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+      // TODO: [Beta](20240814-Tzuhan) handle error
     }
   };
 
