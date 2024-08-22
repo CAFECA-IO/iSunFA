@@ -12,6 +12,7 @@ import { Provider } from '@/constants/provider';
 import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
+import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 
 interface UserContextType {
   credential: string | null;
@@ -388,6 +389,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     authSignOut();
     clearState();
     router.push(ISUNFA_ROUTE.LOGIN);
+    clearAllItems(); // Info: 清空 IndexedDB 中的數據 (20240822 - Shirley)
   };
 
   const handleVisibilityChange = useCallback(() => {

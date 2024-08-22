@@ -6,6 +6,7 @@ import { IOCR } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
+import { getAllItems, initDB } from '@/lib/utils/indexed_db/ocr';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 interface IAccountingProvider {
@@ -224,8 +225,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [inputDescription, setInputDescription] = useState<string>('');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pendingOCRList, setPendingOCRList] = useState<IOCR[]>([]);
+  const [isDBReady, setIsDBReady] = useState(false);
 
   const getAccountListHandler = (
     companyId: number,
@@ -372,6 +373,35 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       return rs;
     });
   };
+
+  const initPendingOCRList = async () => {
+    const allItems = await getAllItems();
+    const pendingOCRs = allItems.map((item) => {
+      return {
+        id: item.id,
+        imageName: item.data.name,
+        imageSize: item.data.size,
+        uploadIdentifier: item.data.uploadIdentifier,
+      };
+    });
+    pendingOCRs.forEach((ocr) => {
+      addPendingOCRHandler(ocr.imageName, ocr.imageSize, ocr.uploadIdentifier);
+    });
+  };
+
+  useEffect(() => {
+    const initializeDB = async () => {
+      await initDB();
+      setIsDBReady(true);
+    };
+    initializeDB();
+  }, []);
+
+  useEffect(() => {
+    if (isDBReady) {
+      initPendingOCRList();
+    }
+  }, [isDBReady]);
 
   useEffect(() => {
     if (accountSuccess && accountTitleList) {
