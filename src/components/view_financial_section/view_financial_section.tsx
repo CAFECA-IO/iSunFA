@@ -132,7 +132,7 @@ const ViewFinancialSection = ({
   const [reportThumbnails, setReportThumbnails] = useState<
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
-  // TODO: download PDF file (20240802 - Shirley)
+  // TODO: [Beta] download PDF file (20240802 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -377,7 +377,6 @@ const ViewFinancialSection = ({
     </div>
   );
 
-  // TODO: [Beta] no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
       {/* Info: financial title, print button and share button (20240426 - Shirley) */}
@@ -581,7 +580,6 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: [Beta] link (20240507 - Shirley) */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -622,7 +620,6 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: [Beta] link (20240507 - Shirley) */}
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>

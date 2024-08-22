@@ -13,6 +13,7 @@ interface ITeamSettingModal {
   modalVisibilityHandler: () => void;
 }
 
+// ToDo: [Beta] (20240822 - Julian) i18n
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
   const { selectedCompany, selectCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
@@ -128,7 +129,6 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
         </div>
         <div className="flex w-full items-end justify-end bg-white px-5 py-4 text-sm font-medium">
           <div className="flex w-full gap-3">
-            {/* TODO: button component (20240409 - Shirley) */}
             <Button
               variant={'secondaryOutline'}
               onClick={modalVisibilityHandler}

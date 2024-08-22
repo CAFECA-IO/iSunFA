@@ -31,7 +31,7 @@ const SettingSidebar = () => {
           {/* Info: Menu (20240423 - Shirley) */}
           <div className="flex w-full flex-col items-start justify-center py-16px">
             <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-              {/* TODO: to be developed (20240715 - Shirley) */}
+              {/* TODO: [Beta] to be developed (20240715 - Shirley) */}
               {/* <Link
                 href={ISUNFA_ROUTE.USERS_MY_REPORTS}
                 className={cn(
@@ -142,7 +142,7 @@ const SettingSidebar = () => {
               </Link>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: [Beta] to be developed (20240715 - Shirley) */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -178,7 +178,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: [Beta] to be developed (20240715 - Shirley) */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -213,7 +213,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: [Beta] to be developed (20240715 - Shirley) */}
                 {/* <Link
                 href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
                 className={cn(
@@ -252,7 +252,7 @@ const SettingSidebar = () => {
         </div>
       </div>
 
-      {/* TODO: developing (20240715 - Shirley) */}
+      {/* TODO: [Beta] developing (20240715 - Shirley) */}
       {/* Info: ----- mobile version (20240507 - Shirley) ----- */}
       <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-white px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
         <Link
