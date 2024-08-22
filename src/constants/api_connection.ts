@@ -59,7 +59,7 @@ export enum APIName {
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
   REPORT_GENERATE = 'REPORT_GENERATE',
-  SESSION_GET = 'SESSION_GET',
+  STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
@@ -122,7 +122,7 @@ export enum APIPath {
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
-  SESSION_GET = `${apiPrefix}/session`,
+  STATUS_INFO_GET = `${apiPrefix}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
@@ -364,10 +364,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.OCR_LIST,
   }),
-  [APIName.SESSION_GET]: createConfig({
-    name: APIName.SESSION_GET,
+  [APIName.STATUS_INFO_GET]: createConfig({
+    name: APIName.STATUS_INFO_GET,
     method: HttpMethod.GET,
-    path: APIPath.SESSION_GET,
+    path: APIPath.STATUS_INFO_GET,
   }),
   [APIName.ACCOUNT_LIST]: createConfig({
     name: APIName.ACCOUNT_LIST,

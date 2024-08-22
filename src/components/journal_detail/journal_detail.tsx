@@ -72,6 +72,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [imgSrcHasError, setImgSrcHasError] = useState(false);
 
   const backClickHandler = () => {
     window.location.href = ISUNFA_ROUTE.JOURNAL_LIST;
@@ -157,7 +158,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     });
 
   // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
-  const invoicePreviewSrc = journalDetail?.imageUrl ?? '';
+  const invoicePreviewSrc = imgSrcHasError
+    ? '/elements/default_certificate.svg'
+    : (journalDetail?.imageUrl ?? '');
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);
@@ -550,7 +553,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
                 height={300}
                 alt="certificate"
                 onError={(e) => {
-                  e.currentTarget.src = '/elements/default_certificate.svg';
+                  if (e && !imgSrcHasError) {
+                    setImgSrcHasError(true);
+                  }
                 }}
               />
             </button>
