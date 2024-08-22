@@ -240,7 +240,7 @@ async function createLineItems() {
 }
 
 async function main() {
-  // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
+  // Todo: (20240611 - Gibbs) Murky will modify createAccount seed data and uncomment related codes
   await createRole();
   await createUser();
   await createCompany();
