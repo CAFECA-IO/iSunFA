@@ -166,20 +166,9 @@ export function formatStartAndEndDateFromQuery(
     endDateInSecond = timestampInSeconds(endDate);
   }
 
-  // Deprecate: (20240729 - Murky) Move to financial report
-  // const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } = getLastPeriodStartAndEndDate(
-  //   reportSheetType,
-  //   startDateInSecond,
-  //   endDateInSecond
-  // );
-
   return {
     startDateInSecond,
     endDateInSecond,
-
-    // Deprecate: (20240729 - Murky) Move to financial report
-    // lastPeriodStartDateInSecond,
-    // lastPeriodEndDateInSecond,
   };
 }
 
@@ -204,7 +193,6 @@ export function formatReportLanguageFromQuery(
 }
 
 export function formatReportTypeFromQuery(reportType: string): ReportType {
-  // Deprecate: (20240710 - Murky) this function is to separate financial and analysis temperately
   const reportTypeString = convertStringToReportType(reportType);
   return reportTypeString;
 }
@@ -221,10 +209,6 @@ export function formatPostRequestQuery(req: NextApiRequest) {
   const {
     startDateInSecond,
     endDateInSecond,
-
-    // Deprecate: (20240729 - Murky) Move to financial report
-    // lastPeriodStartDateInSecond,
-    // lastPeriodEndDateInSecond,
   } = formatStartAndEndDateFromQuery(reportSheetType, from, to);
 
   const formattedReportType = formatReportTypeFromQuery(reportType);
@@ -235,83 +219,9 @@ export function formatPostRequestQuery(req: NextApiRequest) {
     reportSheetType,
     startDateInSecond,
     endDateInSecond,
-
-    // Deprecate: (20240729 - Murky) Move to financial report
-    // lastPeriodStartDateInSecond,
-    // lastPeriodEndDateInSecond,
     formattedReportType,
   };
 }
-
-// async function generateFinancialReport(
-//   companyId: number,
-//   startDateInSecond: number,
-//   endDateInSecond: number,
-//   reportSheetType: ReportSheetType
-// ) {
-//   // Info: (20240710 - Murky) Financial Report Generator
-//   let reportContent: {
-//     content: IAccountReadyForFrontend[];
-//     otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
-//   } = { content: [], otherInfo: {} as BalanceSheetOtherInfo };
-//   try {
-//     const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
-//       companyId,
-//       startDateInSecond,
-//       endDateInSecond,
-//       reportSheetType
-//     );
-
-//     reportContent = await financialReportGenerator.generateReport();
-//   } catch (error) {
-//     // Deprecate: (20240710 - Murky) console.error
-//     // eslint-disable-next-line no-console
-//     console.error(error);
-//   }
-//   return reportContent;
-// }
-
-// async function generateReport(
-//   companyId: number,
-//   startDateInSecond: number,
-//   endDateInSecond: number,
-//   reportSheetType: ReportSheetType
-// ): Promise<object> {
-//   // Todo (20240808 - Jacky): return type should change to IReportContent
-//   let content = {};
-//   switch (reportSheetType) {
-//     case ReportSheetType.BALANCE_SHEET:
-//       content = await generateFinancialReport(
-//         companyId,
-//         startDateInSecond,
-//         endDateInSecond,
-//         ReportSheetType.BALANCE_SHEET
-//       );
-//       break;
-//     case ReportSheetType.INCOME_STATEMENT:
-//       content = await generateFinancialReport(
-//         companyId,
-//         startDateInSecond,
-//         endDateInSecond,
-//         ReportSheetType.INCOME_STATEMENT
-//       );
-//       break;
-//     case ReportSheetType.CASH_FLOW_STATEMENT:
-//       content = await generateFinancialReport(
-//         companyId,
-//         startDateInSecond,
-//         endDateInSecond,
-//         ReportSheetType.CASH_FLOW_STATEMENT
-//       );
-//       break;
-//     case ReportSheetType.REPORT_401:
-//       content = await generate401Report(companyId, startDateInSecond, endDateInSecond);
-//       break;
-//     default:
-//       break;
-//   }
-//   return content;
-// }
 
 async function generateReport(
   companyId: number,
@@ -335,6 +245,8 @@ async function generateReport(
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
     // Todo: (20240710 - Murky) Please use logger to log the error
+    // eslint-disable-next-line no-console
+    console.error(error);
   }
   return reportContent;
 }

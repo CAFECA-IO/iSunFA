@@ -89,26 +89,27 @@ export default class Report401Generator extends ReportGenerator {
         };
         if (journal.voucher?.lineItems) {
             if (journal.invoice?.deductible) {
-            journal.voucher?.lineItems.forEach((lineItem) => {
-                if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-                fixedAssets.amount += lineItem.amount;
-                fixedAssets.tax += lineItem.amount * (journal.invoice?.payment.taxPercentage ?? 0.05);
-                }
-            });
-            generalPurchases = {
-                amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
-                tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
-            };
+                journal.voucher?.lineItems.forEach((lineItem) => {
+                    if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
+                    fixedAssets.amount += lineItem.amount;
+                    fixedAssets.tax += lineItem.amount * (journal.invoice?.payment.taxPercentage ?? 0.05);
+                    }
+                });
+                generalPurchases = {
+                    amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
+                    tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
+                };
             } else {
-            journal.voucher?.lineItems.forEach((lineItem) => {
-                if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-                unDeductible.fixedAssets += lineItem.amount;
+                journal.voucher?.lineItems.forEach((lineItem) => {
+                    if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
+                        unDeductible.fixedAssets += lineItem.amount;
+                    }
+                });
+                unDeductible.generalPurchases =
+                    journal.invoice?.payment.price ?? 0 - unDeductible.fixedAssets;
                 }
-            });
-            unDeductible.generalPurchases =
-                journal.invoice?.payment.price ?? 0 - unDeductible.fixedAssets;
-            }
         }
+
         updatedPurchase.breakdown[category].generalPurchases.amount += generalPurchases.amount;
         updatedPurchase.breakdown[category].generalPurchases.tax += generalPurchases.tax;
         updatedPurchase.breakdown[category].fixedAssets.amount += fixedAssets.amount;
@@ -277,13 +278,13 @@ export default class Report401Generator extends ReportGenerator {
         if (journal.invoice && journal.invoice.type) {
             const { type } = journal.invoice;
             if (type in salesCategories) {
-                const category = type as keyof SalesBreakdown;
+                const category = salesCategories[type as keyof typeof salesCategories] as keyof SalesBreakdown;
                 Report401Generator.updateSalesResult(sales, journal, category);
             } else if (type in purchasesCategories) {
-                const category = type as keyof PurchaseBreakdown;
+                const category = purchasesCategories[type as keyof typeof purchasesCategories] as keyof PurchaseBreakdown;
                 Report401Generator.updatePurchasesResult(purchases, journal, category);
             } else if (type in importsCategories) {
-                const category = type as keyof Imports;
+                const category = importsCategories[type as keyof typeof importsCategories] as keyof Imports;
                 Report401Generator.updateImportsResult(imports, journal, category);
             }
         }
@@ -307,6 +308,7 @@ export default class Report401Generator extends ReportGenerator {
         content: TaxReport401
     }> {
         const report401 = await Report401Generator.generate401Report(this.companyId, this.startDateInSecond, this.endDateInSecond);
+
         return {
             content: report401,
         };
