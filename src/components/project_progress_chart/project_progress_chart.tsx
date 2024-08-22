@@ -101,7 +101,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         },
       },
     },
-    // Info: 顯示圖例 (20240522 - Shirley)
+    // Info: (20240522 - Shirley) 顯示圖例
     // legend: {
     //   show: true,
     //   position: 'bottom',
@@ -173,7 +173,7 @@ const ProjectProgressChart = () => {
   const { t } = useTranslation('common');
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
-  // TODO: [Beta] 改成 company startDate (20240618 - Shirley)
+  // TODO: [Beta] (20240618 - Shirley) 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 

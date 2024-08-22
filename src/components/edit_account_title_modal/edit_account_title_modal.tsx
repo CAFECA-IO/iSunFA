@@ -155,7 +155,7 @@ const EditAccountTitleModal = ({
     <input
       id="input-accounting-type"
       type="text"
-      // value={accountingType}
+      // Info: (20240805 - Anna) value={accountingType}
       value={t(`SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
@@ -168,7 +168,7 @@ const EditAccountTitleModal = ({
     <input
       id="input-liquidity"
       type="text"
-      // value={liquidityText}
+      // Info: (20240805 - Anna) value={liquidityText}
       value={t(`SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
@@ -230,7 +230,7 @@ const EditAccountTitleModal = ({
               type="text"
               value={nameValue}
               onChange={handleNameChange}
-              // placeholder="Enter name"
+              // Info: (20240805 - Anna) placeholder="Enter name"
               placeholder={t('SETTING.ENTER_NAME')}
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />

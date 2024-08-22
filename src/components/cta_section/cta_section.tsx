@@ -76,7 +76,7 @@ const CTASection = () => {
           </Button>
         </Link>
       </div>
-      {/* Info: iSunFA 大字 (20240318 - Shirley) */}
+      {/* Info: (20240318 - Shirley) iSunFA 大字 */}
       <div className={`mt-1/8 hidden items-start lg:flex`}>
         <Image
           alt="isunfa_pop"

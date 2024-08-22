@@ -34,15 +34,15 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     },
     hasCompanyId
   );
-  // console.log('reportFinancial in reportId', reportFinancial);
-  /* Info: 格式化數字為千分位 (20240730 - Anna) */
+  // Todo: (20240822 - Murky Anna) 使用 logger('reportFinancial in reportId', reportFinancial)
+  /* Info: (20240730 - Anna) 格式化數字為千分位 */
   const formatNumber = (num: number) => num.toLocaleString();
-  /* Info: 轉換和格式化日期 (20240816 - Anna) */
+  /* Info: (20240816 - Anna) 轉換和格式化日期 */
   const createdAt = reportFinancial?.createdAt ? new Date(reportFinancial.createdAt * 1000) : null;
   const updatedAt = reportFinancial?.updatedAt ? new Date(reportFinancial.updatedAt * 1000) : null;
 
   const formatToTaiwanDate = (timestamp: number | null) => {
-    // Info: 如果 timestamp 為 null，返回 'N/A'(20240816 - Anna)
+    // Info: (20240816 - Anna) 如果 timestamp 為 null，返回 'N/A'
     if (timestamp === null) return 'N/A';
     const date = new Date(timestamp);
     const taiwanYear = date.getFullYear() - 1911;

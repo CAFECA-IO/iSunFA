@@ -25,7 +25,7 @@ function LandingI18n() {
     };
 
     return (
-      // Info: it's okay to use index as key in this case (20240115 - Shirley)
+      // Info: (20240115 - Shirley) it's okay to use index as key in this case
       // eslint-disable-next-line react/no-array-index-key
       <li key={index} className="py-2 hover:cursor-pointer hover:bg-purpleLinear">
         <Link
@@ -80,7 +80,7 @@ function LandingI18n() {
         <span className="ml-2 h-12px w-12px -rotate-45 border-b-2 border-r-2 border-white" />
       </div>
       <ul
-        className={`absolute left-0 top-0 flex h-95vh w-full flex-col items-center rounded  ${
+        className={`absolute left-0 top-0 flex h-95vh w-full flex-col items-center rounded ${
           componentVisible ? 'visible translate-x-0' : 'invisible translate-x-full'
         } bg-secondaryBlue py-2 font-sans transition-all duration-300 ease-in-out`}
       >

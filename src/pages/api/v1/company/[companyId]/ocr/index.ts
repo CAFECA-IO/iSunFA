@@ -65,9 +65,7 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
       body: formData,
     });
   } catch (error) {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -92,9 +90,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -107,11 +103,14 @@ export async function getPayloadFromResponseJSON(
 
 // Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-export async function postImageToAICH(files: formidable.Files, imageFields: {
+export async function postImageToAICH(
+  files: formidable.Files,
+  imageFields: {
     imageSize: number;
     imageName: string;
     uploadIdentifier: string;
-  }[]): Promise<
+  }[]
+): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
@@ -176,17 +175,13 @@ export async function postImageToAICH(files: formidable.Files, imageFields: {
             uploadIdentifier: isIndexValid ? imageFields[index].uploadIdentifier : '',
           };
         } catch (error) {
-          // Deprecated: (20240611 - Murky) Debugging purpose
-          // eslint-disable-next-line no-console
-          console.log(error);
+          // Todo: (20240822 - Murky Anna) 使用 logger
         }
         return result;
       })
     );
   } else {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('No image file found in formidable when upload ocr');
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return resultJson;
@@ -202,10 +197,14 @@ export function extractDataFromFields(fields: formidable.Fields) {
   }[] = [];
 
   if (
-    imageSize && imageSize.length &&
-    imageName && imageName.length &&
-    uploadIdentifier && uploadIdentifier.length &&
-    imageSize.length === imageName.length && imageSize.length === uploadIdentifier.length
+    imageSize &&
+    imageSize.length &&
+    imageName &&
+    imageName.length &&
+    uploadIdentifier &&
+    uploadIdentifier.length &&
+    imageSize.length === imageName.length &&
+    imageSize.length === uploadIdentifier.length
   ) {
     imageSize.forEach((size, index) => {
       imageFieldsArray.push({
@@ -230,13 +229,11 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
     files = parsedForm.files;
     fields = parsedForm.fields;
   } catch (error) {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
   return {
     files,
-    fields
+    fields,
   };
 }
 export async function fetchStatus(aichResultId: string) {
@@ -253,9 +250,7 @@ export async function fetchStatus(aichResultId: string) {
 
       status = (await result.json()).payload;
     } catch (error) {
-      // Deprecated: (20240611 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(error);
+      // Todo: (20240822 - Murky Anna) 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
   }
@@ -330,9 +325,7 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -371,9 +364,7 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
 
   return resultJson;
@@ -388,9 +379,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
-    // Deprecated: (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -430,10 +419,7 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const error = _error as Error;
-      // Deprecated: (20240611 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Murky Anna) 使用 logger
     }
   }
 

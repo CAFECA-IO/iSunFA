@@ -61,20 +61,20 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   };
   const otherInfo = reportFinancial?.otherInfo as IncomeStatementOtherInfo;
 
-  /* Info: 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 (20240730 - Anna) */
+  /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
   const curPeriodTotal =
     (otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || 0) +
     (otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || 0);
   const prePeriodTotal =
     (otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || 0) +
     (otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || 0);
-  /* Info: 提取 curRatio 、 preRatio 、revenueToRD (20240730 - Anna) */
+  /* Info: (20240730 - Anna) 提取 curRatio 、 preRatio 、revenueToRD */
   const curRatio = otherInfo?.revenueAndExpenseRatio.ratio.curRatio || 0;
   const preRatio = otherInfo?.revenueAndExpenseRatio.ratio.preRatio || 0;
   const revenueToRD = otherInfo?.revenueToRD;
-  /* Info: 格式化數字為千分位 (20240730 - Anna) */
+  /* Info: (20240730 - Anna) 格式化數字為千分位 */
   const formatNumber = (num: number) => num.toLocaleString();
-  /* Info: 轉換和格式化日期 (20240730 - Anna) */
+  /* Info: (20240730 - Anna) 轉換和格式化日期 */
   const curDateFrom = new Date(reportFinancial.curDate.from * 1000);
   const curDateTo = new Date(reportFinancial.curDate.to * 1000);
   const preDateFrom = new Date(reportFinancial.preDate.from * 1000);
@@ -86,7 +86,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
 
   const page1 = (
     <div id="1" className="relative h-a4-height overflow-hidden">
-      {/* Info: watermark logo (20240723 - Anna) */}
+      {/* Info: (20240723 - Anna) watermark logo */}
       <div className="relative right-0 top-16 z-0">
         <Image
           className="absolute right-0 top-0"
@@ -876,7 +876,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               ))}
           </tbody>
         </table>
-        {/* Info: watermark logo (20240724 - Anna) */}
+        {/* Info: (20240724 - Anna) watermark logo */}
         <div className="relative right-0 -z-10" style={{ top: '-280px' }}>
           <Image
             className="absolute right-0"
@@ -1133,7 +1133,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </td>
                   <td className="border border-lightGray8 p-10px text-end text-xs">
                     {' '}
-                    {/* Info: 保留兩位小數 (20240724 - Anna) */}
+                    {/* Info: (20240724 - Anna) 保留兩位小數 */}
                     {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td className="border border-lightGray8 p-10px text-end text-xs">
@@ -1145,7 +1145,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             )}
           </tbody>
         </table>
-        {/* Info: watermark logo (20240724 - Anna) */}
+        {/* Info: (20240724 - Anna) watermark logo */}
         <div className="relative right-0 -z-10" style={{ top: '-350px' }}>
           <Image
             className="absolute right-0"

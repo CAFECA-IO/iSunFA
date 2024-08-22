@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 // Info: (20240531 - Murky) - Use "lodash-es" for esm support, but eslint doesn't support it, so disable the rule
+// eslint-disable-next-line import/no-extraneous-dependencies
 const cloneDeep = require('lodash/cloneDeep');
 const { i18n } = require('./next-i18next.config');
 
@@ -40,7 +41,6 @@ const nextConfig = {
   webpack: (config) => {
     const newConfig = cloneDeep(config);
     // Info: do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf) (20240502 - Shirley)
-    // eslint-disable-next-line no-param-reassign
     newConfig.resolve.alias.canvas = false;
 
     // Fixes npm packages that depend on `fs` module

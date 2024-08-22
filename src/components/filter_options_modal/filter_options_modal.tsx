@@ -13,7 +13,7 @@ interface IFilterOptionsModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
   filterType: FilterOptionsModalType;
-  getFilterOptions?: (filterOptions: IFilterOptions) => void; // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
+  getFilterOptions?: (filterOptions: IFilterOptions) => void; // Info: (20240528 - Shirley) 把 filterOptions 透過 callback function 傳出去
 }
 
 const FilterOptionsModal = ({
@@ -70,7 +70,7 @@ const FilterOptionsModal = ({
 
   useEffect(() => {
     if (!isModalVisible) {
-      // Info: 把 filterOptions 透過 callback function 傳出去 (20240528 - Shirley)
+      // Info: (20240528 - Shirley) 把 filterOptions 透過 callback function 傳出去
       if (getFilterOptions) {
         getFilterOptions({
           period: periodRef.current,
@@ -80,7 +80,7 @@ const FilterOptionsModal = ({
         });
       }
 
-      // Info: 關掉 modal 後把資料清空 (20240528 - Shirley)
+      // Info: (20240528 - Shirley) 關掉 modal 後把資料清空
       setPeriod(default30DayPeriodInSec);
       setSort(SortOptions.newest);
       setSelectedReportType(AllReportTypesKey.all as keyof typeof AllReportTypesOptions);
@@ -98,7 +98,7 @@ const FilterOptionsModal = ({
       className={`group relative flex w-full cursor-pointer max-md:max-w-full lg:w-auto ${isTypeMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isTypeMenuOpen ? ' text-primaryYellow' : isTypeMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
       >
         {AllReportTypesOptions[selectedReportType as keyof typeof AllReportTypesOptions]}
       </p>
@@ -120,7 +120,7 @@ const FilterOptionsModal = ({
       <div
         className={`absolute left-0 top-50px grid w-full grid-rows-0 overflow-hidden shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} rounded-sm border transition-all duration-150 ease-in-out`}
       >
-        {/* Info: 超過高度就顯示卷軸 (20240528 - Shirley) */}
+        {/* Info: (20240528 - Shirley) 超過高度就顯示卷軸 */}
         <ul className="z-10 flex max-h-200px w-full flex-col items-start overflow-y-auto bg-white p-8px">
           {Object.entries(AllReportTypesOptions).map(([key, value]) => (
             <li
@@ -145,7 +145,7 @@ const FilterOptionsModal = ({
       className={`group relative flex w-full cursor-pointer max-md:max-w-full ${isStatusMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isStatusMenuOpen ? ' text-primaryYellow' : isStatusMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isStatusMenuOpen ? 'text-primaryYellow' : isStatusMenuSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
       >
         {ContractStatusWithAll[selectedStatus as keyof typeof ContractStatusWithAll]}
       </p>
@@ -191,7 +191,7 @@ const FilterOptionsModal = ({
       className={`group relative flex w-full cursor-pointer max-md:max-w-full lg:w-auto ${isHistorySortMenuOpen ? 'border-primaryYellow text-primaryYellow' : ''} items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <p
-        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? ' text-primaryYellow' : isSortSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap group-hover:text-primaryYellow ${isHistorySortMenuOpen ? 'text-primaryYellow' : isSortSelected ? 'text-black' : 'text-input-text-input-placeholder'}`}
       >
         {t(sort)}
       </p>
@@ -242,7 +242,7 @@ const FilterOptionsModal = ({
         <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
           Type{' '}
         </div>
-        {/* Info: type menu (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) type menu */}
         {displayedTypeMenu}
       </div>
     );
@@ -253,7 +253,7 @@ const FilterOptionsModal = ({
         <div className="flex w-full justify-between whitespace-nowrap bg-white px-5 py-4 text-xl font-bold leading-8 text-card-text-primary">
           <div className="flex-1">{t('COMMON.FILTER')}</div>
 
-          {/* Info: close button (20240528 - Shirley) */}
+          {/* Info: (20240528 - Shirley) close button */}
           <Button
             onClick={modalVisibilityHandler}
             className="p-0 text-icon-surface-single-color-primary hover:text-icon-surface-single-color-primary"
@@ -296,7 +296,7 @@ const FilterOptionsModal = ({
             <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
               {t('MY_REPORTS_SECTION.SORT_BY')}
             </div>
-            {/* Info: sort menu (20240513 - Shirley) */}
+            {/* Info: (20240513 - Shirley) sort menu */}
             {displayedSortMenu}
           </div>
         </div>

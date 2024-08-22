@@ -103,7 +103,7 @@ const HowWeWork = () => {
             <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
           </div>
 
-          {/* Info: ----- `lg` and above ----- (20240321 - Shirley) */}
+          {/* Info: (20240321 - Shirley) ----- `lg` and above ----- */}
           <div className="mt-20 hidden flex-col space-y-5 text-start lg:mt-0 lg:flex lg:max-w-lg lg:space-y-8">
             {' '}
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
@@ -112,7 +112,7 @@ const HowWeWork = () => {
             <p className="w-full text-white md:text-base">{t(content)}</p>
           </div>
 
-          {/* Info: ----- below `lg` ----- (20240321 - Shirley) */}
+          {/* Info: (20240321 - Shirley) ----- below `lg` ----- */}
           <div className="-mt-16 flex w-full flex-col space-y-5 text-wrap text-center md:-mt-0 md:text-start lg:hidden">
             {' '}
             <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">

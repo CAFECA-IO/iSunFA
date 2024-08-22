@@ -267,9 +267,7 @@ async function generateFinancialReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Deprecate: (20240710 - Murky) console.error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
   }
   return reportContent;
 }

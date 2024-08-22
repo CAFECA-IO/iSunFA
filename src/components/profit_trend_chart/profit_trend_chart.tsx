@@ -157,7 +157,7 @@ const LineChart = ({ data }: LineChartProps) => {
         highlightDataSeries: false,
       },
       x: {
-        show: false, // Info: 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值 (20240416 - Shirley)
+        show: false, // Info: (20240416 - Shirley) 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值
         format: 'dd MMM',
         // formatter: value => `${value}`,
       },

@@ -55,7 +55,7 @@ const ReportsHistoryItem = ({
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdAt} />
       </td>
-      {/* Info: report name (20240528 - Shirley) */}
+      {/* Info: (20240528 - Shirley) report name */}
       <td className="pl-5 text-start text-base text-text-neutral-primary">
         <div className="flex w-full flex-col justify-start">
           <Link
@@ -96,7 +96,7 @@ const ReportsHistoryItem = ({
           )}
         </span>
       </td>
-      {/* Info: period (20240528 - Shirley) */}
+      {/* Info: (20240528 - Shirley) period */}
       <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
@@ -128,13 +128,13 @@ const ReportsHistoryItem = ({
           </Link>
         ) : null}
       </td>
-      {/* Info: project (20240528 - Shirley) */}
+      {/* Info: (20240528 - Shirley) project */}
       <td className="hidden px-16px text-left lg:table-cell">{displayedProject}</td>
-      {/* Info: operation buttons (20240516 - Shirley) */}
+      {/* Info: (20240516 - Shirley) operation buttons */}
       <td className="hidden min-w-100px px-16px lg:table-cell">
         <div className="flex items-center justify-between">
           {/* Info: (20240808 - Anna) Alpha版先隱藏(下載按鈕) */}
-          {/* Info: download button (20240516 - Shirley) */}
+          {/* Info: (20240516 - Shirley) download button */}
           {/* <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +152,7 @@ const ReportsHistoryItem = ({
             </svg>
           </Button> */}
           {/* Info: (20240808 - Anna) Alpha版先隱藏(分享按鈕) */}
-          {/* Info: share button (20240516 - Shirley) */}
+          {/* Info: (20240516 - Shirley) share button */}
           {/* <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"

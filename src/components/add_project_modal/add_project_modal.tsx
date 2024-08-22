@@ -85,7 +85,7 @@ const AddProjectModal = ({
     setComponentVisible: setMembersVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const isConfirmValid = inputName !== ''; // && selectedMembers.length > 0;
+  const isConfirmValid = inputName !== ''; // Info: (20240802 - Julian) && selectedMembers.length > 0;
   const membersAmount = selectedMembers.length;
 
   const stageMenuClickHandler = () => setStageOptionsVisible(!isStageOptionsVisible);
@@ -106,7 +106,7 @@ const AddProjectModal = ({
       body: {
         name: inputName,
         stage: selectedStage,
-        // ToDo: [Beta](20240802 - Julian) get member list
+        // ToDo: (20240802 - Julian) [Beta] get member list
         memberIdList: [], // selectedMembers.map((member) => member.id),
       },
     });
@@ -143,7 +143,7 @@ const AddProjectModal = ({
     }
   }, [createSuccess, data]);
 
-  // ToDo: [Beta](20240612 - Julian) get member list from API
+  // ToDo: (20240612 - Julian) [Beta] get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱

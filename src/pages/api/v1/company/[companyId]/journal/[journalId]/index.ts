@@ -43,9 +43,7 @@ async function handleGetRequest(companyId: number, req: NextApiRequest) {
         journal = formatIJournal(journalData);
       }
     } catch (error) {
-      // Deprecated: Debugging purpose (20240724 - Luphia)
-      // eslint-disable-next-line no-console
-      console.log('error', error);
+      // Todo: (20240822 - Murky Anna) 使用 logger
     }
   }
   return journal;
@@ -64,9 +62,7 @@ async function handleDeleteRequest(companyId: number, req: NextApiRequest) {
         journal = formatIJournal(journalData);
       }
     } catch (error) {
-      // Deprecated: Debugging purpose (20240724 - Luphia)
-      // eslint-disable-next-line no-console
-      console.log('error', error);
+      // Todo: (20240822 - Murky Anna) 使用 logger
     }
   }
   return journal;

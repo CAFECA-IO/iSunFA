@@ -280,10 +280,14 @@ export function isIAnalysisReportRequest(obj: unknown): obj is IAnalysisReportRe
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    'type' in obj && typeof (obj as { type: unknown }).type === 'string' &&
-    'language' in obj && typeof (obj as { language: unknown }).language === 'string' &&
-    'start_date' in obj && (obj as { start_date: unknown }).start_date instanceof Date &&
-    'end_date' in obj && (obj as { end_date: unknown }).end_date instanceof Date
+    'type' in obj &&
+    typeof (obj as { type: unknown }).type === 'string' &&
+    'language' in obj &&
+    typeof (obj as { language: unknown }).language === 'string' &&
+    'start_date' in obj &&
+    (obj as { start_date: unknown }).start_date instanceof Date &&
+    'end_date' in obj &&
+    (obj as { end_date: unknown }).end_date instanceof Date
   );
 }
 

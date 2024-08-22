@@ -72,7 +72,7 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
-    // TODO: [Beta] in dev (20240814 - Shirley)
+    // TODO: [Beta] (20240814 - Shirley) in dev
     // eslint-disable-next-line no-console
     console.log('OCRList in StepOneTab:', OCRList);
 
@@ -89,7 +89,7 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
-  // TODO: [Beta] in dev (20240816 - Shirley)
+  // TODO: [Beta] (20240816 - Shirley) in dev
   // eslint-disable-next-line no-console
   console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
