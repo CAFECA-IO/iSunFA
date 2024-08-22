@@ -78,8 +78,8 @@ const UploadedFileItem = ({
       className={`relative inline-flex w-90vw flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 hover:cursor-pointer hover:border-slider-surface-bar disabled:hover:border-file-uploading-stroke-outline md:w-full`}
     >
       <div className="relative inline-flex w-full items-center gap-20px">
-        <Skeleton width={56} height={56} /> {/* Info: 掃描動畫 (20240814 - Shirley) */}
-        <Skeleton width={64} height={64} /> {/* Info: 文件縮略圖 (20240814 - Shirley) */}
+        <Skeleton width={56} height={56} /> {/* Info: (20240814 - Shirley) 掃描動畫 */}
+        <Skeleton width={64} height={64} /> {/* Info: (20240814 - Shirley) 文件縮略圖 */}
         <div className="flex shrink grow flex-col items-start">
           <h3
             className={`text-base font-semibold leading-normal tracking-tight text-file-uploading-text-primary`}
@@ -91,16 +91,16 @@ const UploadedFileItem = ({
           </p>
         </div>
         <div className="absolute right-0 z-10 flex items-center gap-10px">
-          <Skeleton width={20} height={20} /> {/* Info: 狀態圖標 (20240814 - Shirley) */}
-          <Skeleton width={20} height={20} /> {/* Info: 刪除按鈕 (20240814 - Shirley) */}
+          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 狀態圖標 */}
+          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 刪除按鈕 */}
         </div>
       </div>
       <div className="inline-flex w-full items-center gap-16px">
-        <Skeleton width={150} height={20} /> {/* Info: AI 識別文字 (20240814 - Shirley) */}
+        <Skeleton width={150} height={20} /> {/* Info: (20240814 - Shirley) AI 識別文字 */}
         <div className="relative h-5px flex-1 rounded-full">
-          <Skeleton width={100} height={5} /> {/* Info: 進度條 (20240814 - Shirley) */}
+          <Skeleton width={100} height={5} /> {/* Info: (20240814 - Shirley) 進度條 */}
         </div>
-        <Skeleton width={40} height={16} /> {/* Info: 進度百分比 (20240814 - Shirley) */}
+        <Skeleton width={40} height={16} /> {/* Info: (20240814 - Shirley) 進度百分比 */}
       </div>
     </div>
   ) : (

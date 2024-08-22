@@ -12,12 +12,12 @@ interface IReportListProps {
 const PendingReportList = ({ reports }: IReportListProps) => {
   const { t } = useTranslation('common');
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
-  // Info: 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來 (20240514 - Shirley)
+  // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   const [reportItems, setReportItems] = useState<IReport[]>(reports);
 
   const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
 
-  // Info: 如果選取的項目都已暫停，則顯示 resume 按鈕；如果選取的項目並非全部都已暫停，則顯示 pause 按鈕 (20240515 - Shirley)
+  // Info: (20240515 - Shirley) 如果選取的項目都已暫停，則顯示 resume 按鈕；如果選取的項目並非全部都已暫停，則顯示 pause 按鈕
   const [isSelectedItemPaused, setIsSelectedItemPaused] = useState(false);
 
   const [allChecked, setAllChecked] = useState(false);
@@ -33,12 +33,12 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   const handleReportItemUpdate = (updatedReportItem: IReport) => {
     setReportItems(
       (prevReportItems) =>
-        // Info: result from prettier format rules (20240515 - Shirley)
+        // Info: (20240515 - Shirley) result from prettier format rules
         // eslint-disable-next-line implicit-arrow-linebreak
         prevReportItems.map((item) => {
           return item.id === updatedReportItem.id ? updatedReportItem : item;
         })
-      // Info: result from prettier format rules (20240515 - Shirley)
+      // Info: (20240515 - Shirley) result from prettier format rules
       // eslint-disable-next-line function-paren-newline
     );
   };
@@ -75,7 +75,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: (20240528 - Shirley) i18n
     });
     messageModalVisibilityHandler();
   };
@@ -85,8 +85,8 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       return;
     }
     toggleAllPaused();
-    // TODO: LOCK and send paused request (20240514 - Shirley)
-    // Info: 將所有選中的報告項目暫停 (20240515 - Shirley)
+    // TODO: (20240514 - Shirley) LOCK and send paused request
+    // Info: (20240515 - Shirley) 將所有選中的報告項目暫停
     const updatedReports = reportItems.map((report) => {
       if (
         individualChecks.some((checked, index) => {
@@ -104,7 +104,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
 
   const resumeClickHandler = () => {
     toggleAllPaused();
-    // TODO: LOCK and send resumed request (20240514 - Shirley)
+    // TODO: (20240514 - Shirley) LOCK and send resumed request
     const updatedReports = reportItems.map((report) => {
       if (
         individualChecks.some((checked, index) => {
@@ -138,7 +138,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       setAllChecked(false);
     }
 
-    // Info: 檢查選中的報告項目是否都已暫停 (20240515 - Shirley)
+    // Info: (20240515 - Shirley) 檢查選中的報告項目是否都已暫停
     const selectedReports = reportItems.filter((_, index) => individualChecks[index]);
     const allSelectedPaused =
       selectedReports.length > 0 ? selectedReports.every((report) => report.paused) : false;
@@ -148,7 +148,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   const displayedPauseOrResumeButton = !isSelectedItemPaused ? (
     <Button onClick={pauseClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
       {' '}
-      {/* Info: Pause (20240513 - Shirley) */}
+      {/* Info: (20240513 - Shirley) Pause */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -167,7 +167,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   ) : (
     <Button onClick={resumeClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
       {' '}
-      {/* Info: Resume (20240514 - Shirley) */}
+      {/* Info: (20240514 - Shirley) Resume */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -193,7 +193,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
           {displayedPauseOrResumeButton}
           <Button onClick={deleteClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
             {' '}
-            {/* Info: Delete (20240514 - Shirley) */}
+            {/* Info: (20240514 - Shirley) Delete */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -211,7 +211,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
           </Button>
         </div>
       ) : null}
-      {/* Info: Select or Cancel (20240514 - Shirley) */}
+      {/* Info: (20240514 - Shirley) Select or Cancel */}
       <Button
         size={'extraSmall'}
         onClick={toggleCheckboxVisibility}

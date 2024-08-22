@@ -11,11 +11,11 @@ const SettingSidebar = () => {
 
   return (
     <>
-      {/* Info: ----- desktop version (20240423 - Shirley) ----- */}
+      {/* Info: (20240423 - Shirley) ----- desktop version ----- */}
       <div
         className={`fixed z-10 hidden h-screen w-240px flex-col items-center bg-white px-12px pb-40px pt-100px lg:flex`}
       >
-        {/* Info: Main icon (20240423 - Shirley) */}
+        {/* Info: (20240423 - Shirley) Main icon */}
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
           {/* <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>Setting</p> */}
@@ -25,13 +25,13 @@ const SettingSidebar = () => {
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
-          {/* Info: Divider (20240423 - Shirley) */}
+          {/* Info: (20240423 - Shirley) Divider */}
           <div className={`h-15px w-full border-b border-divider-stroke-lv-4`}></div>
 
-          {/* Info: Menu (20240423 - Shirley) */}
+          {/* Info: (20240423 - Shirley) Menu */}
           <div className="flex w-full flex-col items-start justify-center py-16px">
             <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-              {/* TODO: to be developed (20240715 - Shirley) */}
+              {/* TODO: (20240715 - Shirley) to be developed */}
               {/* <Link
                 href={ISUNFA_ROUTE.USERS_MY_REPORTS}
                 className={cn(
@@ -65,7 +65,7 @@ const SettingSidebar = () => {
               {/* </Link> */}
             </div>
 
-            {/* Info: Divider (20240423 - Shirley) */}
+            {/* Info: (20240423 - Shirley) Divider */}
             {/* <div className={`h-12px w-full border-b border-lightGray6 `}></div> */}
             <div className="mt-4 flex gap-4 text-sm leading-5 tracking-normal text-divider-text-lv-1">
               <div className="flex gap-2">
@@ -142,7 +142,7 @@ const SettingSidebar = () => {
               </Link>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: (20240715 - Shirley) to be developed */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -178,7 +178,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: (20240715 - Shirley) to be developed */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -213,7 +213,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: (20240715 - Shirley) to be developed */}
                 {/* <Link
                 href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
                 className={cn(
@@ -252,8 +252,8 @@ const SettingSidebar = () => {
         </div>
       </div>
 
-      {/* TODO: developing (20240715 - Shirley) */}
-      {/* Info: ----- mobile version (20240507 - Shirley) ----- */}
+      {/* TODO: (20240715 - Shirley) developing */}
+      {/* Info: (20240507 - Shirley) ----- mobile version ----- */}
       <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-white px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
         <Link
           href={ISUNFA_ROUTE.COMPANY_INFO}

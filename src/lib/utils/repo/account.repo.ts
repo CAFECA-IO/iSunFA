@@ -209,9 +209,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
   return account;
 }
 
-export async function findLatestSubAccountInPrisma(
-  parentAccount: Account
-) {
+export async function findLatestSubAccountInPrisma(parentAccount: Account) {
   let latestSubAccount: Account | null = null;
   try {
     latestSubAccount = await prisma.account.findFirst({

@@ -163,7 +163,7 @@ const SelectCompanyPageBody = () => {
         <button
           type="button"
           onClick={companyInvitationModalVisibilityHandler}
-          // Info: disabled for now (20240809 - Shirley)
+          // Info: (20240809 - Shirley) disabled for now
           className="hidden w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />

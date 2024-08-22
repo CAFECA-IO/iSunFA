@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 // Info: (20240531 - Murky) - Use "lodash-es" for esm support, but eslint doesn't support it, so disable the rule
+// eslint-disable-next-line import/no-extraneous-dependencies
 const cloneDeep = require('lodash/cloneDeep');
 const { i18n } = require('./next-i18next.config');
 

@@ -259,7 +259,7 @@ describe('POST OCR', () => {
         ],
       };
       mockFields = {
-        imageSize: ["1 MB"],
+        imageSize: ['1 MB'],
         imageName: ['test.png'],
         uploadIdentifier: ['test'],
       };
@@ -327,16 +327,16 @@ describe('POST OCR', () => {
 
       const expectResult: IOCR[] = [
         {
-         aichResultId: "testResultId",
-         createdAt: 0,
-         id: 1,
-         imageName: "testImageName",
-         imageSize: "1 MB",
-         imageUrl: "testImageUrl",
-         progress: 0,
-         status: ProgressStatus.IN_PROGRESS,
-         uploadIdentifier: "test",
-        }
+          aichResultId: 'testResultId',
+          createdAt: 0,
+          id: 1,
+          imageName: 'testImageName',
+          imageSize: '1 MB',
+          imageUrl: 'testImageUrl',
+          progress: 0,
+          status: ProgressStatus.IN_PROGRESS,
+          uploadIdentifier: 'test',
+        },
       ];
 
       jest.spyOn(repository, 'createOcrInPrisma').mockResolvedValue(mockOcrDbResult);

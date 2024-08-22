@@ -10,13 +10,13 @@ datasource db {
 model Account {
   id         Int     @id @default(autoincrement())
   companyId  Int     @default(0) @map("company_id")
-  system     String // ex "IFRS" 
-  type       String // ex "Asset"
-  debit      Boolean // true: debit, false: credit
+  system     String // Info: (20240625 - Murky) ex "IFRS" 
+  type       String // Info: (20240625 - Murky) ex "Asset"
+  debit      Boolean // Info: (20240625 - Murky) true: debit, false: credit
   liquidity  Boolean
   code       String  @unique
-  name       String // empty if is not sub account
-  forUser    Boolean @map("for_user") // is account the last layer of account tree
+  name       String // Info: (20240625 - Murky) empty if is not sub account
+  forUser    Boolean @map("for_user") // Info: (20240625 - Murky) is account the last layer of account tree
   parentCode String  @map("parent_code")
   rootCode   String  @map("root_code")
   createdAt  Int     @map("created_at")
@@ -488,13 +488,13 @@ model Payment {
 model PaymentRecord {
   id            Int    @id @default(autoincrement())
   orderId       Int    @map("order_id")
-  // Info: Third party payment transaction id (20240604 - Jacky)
+  // Info: (20240604 - Jacky) Third party payment transaction id 
   transactionId String @map("transaction_id")
   date          Int
   description   String
   amount        Int
   method        String
-  status        String // completed、failed、pending
+  status        String // Info: (20240621 - Murky) completed、failed、pending
   createdAt     Int    @map("created_at")
   updatedAt     Int    @map("updated_at")
   deletedAt     Int?   @map("deleted_at")
@@ -651,7 +651,7 @@ model UserAgreement {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@unique([userId, agreementHash]) // Ensures a user can't agree to the same term more than once
+  @@unique([userId, agreementHash]) // Info: (20240816 - Jacky) Ensures a user can't agree to the same term more than once
   @@map("user_agreement")
 }
 

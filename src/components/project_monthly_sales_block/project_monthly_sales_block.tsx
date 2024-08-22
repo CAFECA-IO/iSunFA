@@ -49,7 +49,7 @@ const ProjectMonthlySalesBlock = () => {
     stroke: {
       show: true,
       width: layoutAssertion === LayoutAssertion.MOBILE ? 5 : 2,
-      colors: ['transparent'], // Info: 讓每一個欄位裡面的 column 有空隙的方式 (20240419 - Shirley)
+      colors: ['transparent'], // Info: (20240419 - Shirley) 讓每一個欄位裡面的 column 有空隙的方式
     },
 
     colors: ['#ffa50266', '#FFB632'],

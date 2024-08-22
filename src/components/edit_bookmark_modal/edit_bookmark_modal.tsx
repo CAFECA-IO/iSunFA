@@ -96,7 +96,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
         </div>
         <div className="flex items-center justify-center text-base lg:text-xl">
           <div
-            className={`text-base transition-transform duration-300 lg:text-xl ${isMenuOpen ? '' : ''}`} // Info: be consistent with other dropdown menu, so remove `-rotate-180` (20240425 - Shirley)
+            className={`text-base transition-transform duration-300 lg:text-xl ${isMenuOpen ? '' : ''}`} // Info: (20240425 - Shirley) be consistent with other dropdown menu, so remove `-rotate-180`
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +115,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
           </div>
         </div>
       </button>
-      {/* Info: Bookmark Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Bookmark Menu */}
       <div
         className={`grid-cols-0 absolute left-0 top-[3.5rem] z-20 grid max-h-[250px] w-full overflow-hidden overflow-y-auto rounded-sm border bg-white pb-2 transition-all duration-300 ease-in-out lg:max-h-[250px] ${
           isMenuOpen
