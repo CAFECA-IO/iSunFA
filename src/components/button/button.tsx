@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/common';
 
-// Info: 用 cva 來定義 button 的樣式 (20240319 - Shirley)
+// Info: (20240319 - Shirley) 用 cva 來定義 button 的樣式
 const buttonVariants = cva(
   '"gap space-x-2 ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
   {
@@ -41,7 +41,7 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
-// Info: 使用 forwardRef 將引用傳遞給 DOM 元素 (20240319 - Shirley)
+// Info: (20240319 - Shirley) 使用 forwardRef 將引用傳遞給 DOM 元素
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => {
     const Comp = 'button';

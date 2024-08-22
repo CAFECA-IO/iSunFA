@@ -222,7 +222,7 @@ const NewJournalForm = () => {
     }
   }, [selectedCompany, selectedJournal, selectedOCR]);
 
-  // TODO: update with backend data (20240523 - tzuhan)
+  // TODO: (20240523 - tzuhan) update with backend data
   useEffect(() => {
     if (getSuccess && OCRResult) {
       // Info: (20240506 - Julian) 設定表單的預設值

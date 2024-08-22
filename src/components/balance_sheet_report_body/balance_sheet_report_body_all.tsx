@@ -213,7 +213,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -249,7 +249,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -284,7 +284,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         );
       }
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -320,7 +320,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -356,7 +356,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -392,7 +392,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -428,7 +428,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -464,7 +464,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -500,7 +500,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -536,7 +536,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: it's ok to use index in the static data (20240723 - Shirley)
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
         // eslint-disable-next-line react/no-array-index-key
         <tr key={index}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
@@ -561,7 +561,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
   const page1 = (
     <div id="1" className="relative h-a4-height overflow-y-hidden">
-      {/* Info: watermark logo (20240723 - Shirley) */}
+      {/* Info: (20240723 - Shirley) watermark logo */}
       <div className="relative right-0 top-16 z-0">
         <Image
           className="absolute right-0 top-0"
@@ -689,7 +689,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </tbody>
         </table>
 
-        {/* Info: watermark logo (20240723 - Shirley) */}
+        {/* Info: (20240723 - Shirley) watermark logo */}
         <div className="relative bottom-20 right-0 -z-10">
           <Image
             className="absolute right-0 top-0"
@@ -1133,7 +1133,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               rowsForPage9(reportFinancial.details)}
           </tbody>
         </table>
-        {/* Info: watermark logo (20240723 - Anna) */}
+        {/* Info: (20240723 - Anna) watermark logo */}
         <div className="relative -z-10">
           <Image
             className="absolute -top-300px right-0"

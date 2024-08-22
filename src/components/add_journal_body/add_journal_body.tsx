@@ -39,7 +39,7 @@ const AddJournalBody = () => {
 
   const leaveMessageModal: IMessageModal = {
     title: t('JOURNAL.LEAVE_HINT'),
-    content: t('JOURNAL.LEAVE_HINT_CONTENT'), // 'Are you sure you want to leave the form?',
+    content: t('JOURNAL.LEAVE_HINT_CONTENT'), // Info: (20240809 - Emily) 'Are you sure you want to leave the form?',
     submitBtnStr: t('JOURNAL.LEAVE'),
     submitBtnFunction: () => backClickHandler(),
     backBtnStr: t('COMMON.CANCEL'),

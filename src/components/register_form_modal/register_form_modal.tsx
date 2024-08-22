@@ -145,7 +145,7 @@ const RegisterFormModal = ({
         </p>
         <div className="flex w-full items-end justify-end bg-white px-5 py-4 text-sm font-medium">
           <div className="flex gap-3">
-            {/* TODO: button component (20240409 - Shirley) */}
+            {/* TODO: (20240409 - Shirley) button component */}
             <button
               type="button"
               onClick={modalVisibilityHandler}

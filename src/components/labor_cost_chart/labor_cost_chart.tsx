@@ -28,7 +28,8 @@ interface PieChartProps {
 }
 
 const originalColors = ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'];
-// const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7']; // TODO: implement hover colors (20240523 - Shirley)
+// const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'];
+// TODO: (20240523 - Shirley) implement hover colors
 
 const PieChart = ({ data }: PieChartProps) => {
   const globalCtx = useGlobalCtx();
@@ -106,11 +107,11 @@ const PieChart = ({ data }: PieChartProps) => {
       offsetY,
       offsetX: -30,
       markers: {
-        // width: 20,
-        // height: 12,
-        // radius: 0,
+        // width: 20, // Info: (20240706 - Luphia)
+        // height: 12, // Info: (20240706 - Luphia)
+        // radius: 0, // Info: (20240722 - Shirley)
       },
-      width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
+      width: space, // Info: (20240522 - Shirley) 讓 legend 跟 pie chart 之間的距離拉開
       height: 140,
     },
     tooltip: {
@@ -120,7 +121,7 @@ const PieChart = ({ data }: PieChartProps) => {
           return `${value.toString()}`;
         },
 
-        // Info: 自己去算百分比然後顯示在 tooltip 上 (20240523 - Shirley)
+        // Info: (20240523 - Shirley) 自己去算百分比然後顯示在 tooltip 上
         // formatter: (value: number, { seriesIndex, w }: { seriesIndex: number; w: any }) => {
         //   const total = data.series.reduce((a: number, b: number) => a + b, 0);
         //   const percent = Math.round((value / total) * 100);
@@ -197,7 +198,7 @@ const LaborCostChart = () => {
   const { t } = useTranslation('common');
   const { layoutAssertion } = useGlobalCtx();
 
-  // TODO: 改成 company startDate (20240618 - Shirley)
+  // TODO: (20240618 - Shirley) 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);

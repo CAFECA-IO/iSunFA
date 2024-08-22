@@ -13,7 +13,7 @@ const CTASection = () => {
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
 
-  /* TODO: implement sign_in check (20240403 - Shirley)
+  /* TODO: (20240403 - Shirley) implement sign_in check
   // const signInClickHandler = async () => {
   //   const challenge = 'RklETzIuVEVTVC5yZWctMTcxMjE3Njg1MC1oZWxsbw';
   //   const authentication = await client.authenticate([], challenge, {
@@ -97,7 +97,7 @@ const CTASection = () => {
           </Button>
         </Link>
       </div>
-      {/* Info: iSunFA 大字 (20240318 - Shirley) */}
+      {/* Info: (20240318 - Shirley) iSunFA 大字 */}
       <div className={`mt-1/8 hidden items-start lg:flex`}>
         <Image
           alt="isunfa_pop"

@@ -35,13 +35,13 @@ const MyReportsSection = () => {
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  // TODO: 區分 pending 跟 history 兩種 filter options (20240528 - Shirley)
-  // TODO: filterOptionsGotFromModal for API queries in mobile devices (20240528 - Shirley)
+  // TODO: (20240528 - Shirley) 區分 pending 跟 history 兩種 filter options
+  // TODO: (20240528 - Shirley) filterOptionsGotFromModal for API queries in mobile devices
   // eslint-disable-next-line no-unused-vars
   const {
     toastHandler,
     filterOptionsModalVisibilityHandler,
-    // TODO: get filter options and send to API queries (20240613 - Shirley)
+    // TODO: (20240613 - Shirley) get filter options and send to API queries
     // filterOptionsForHistory,
     // filterOptionsForPending,
   } = useGlobalCtx();
@@ -385,16 +385,16 @@ const MyReportsSection = () => {
 
   const displayedPendingFilterOptionsSection = (
     <div>
-      {/* Info: desktop (20240527 - Shirley) */}
+      {/* Info: (20240527 - Shirley) desktop */}
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             {t('MY_REPORTS_SECTION.SORT_BY')}
           </div>
-          {/* Info: sort menu (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) sort menu */}
           {displayedPendingSortMenu}
         </div>
-        {/* Info: date picker (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) date picker */}
         <DatePicker
           disabled={isPendingDataLoading}
           datePickerHandler={handlePendingDatePickerClose}
@@ -404,15 +404,15 @@ const MyReportsSection = () => {
           btnClassName="w-250px"
           datePickerClassName="lg:w-auto"
         />{' '}
-        {/* Info: Search bar (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) Search bar */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedPendingSearchBar}
         </div>
       </div>
 
-      {/* Info: mobile (20240527 - Shirley) */}
+      {/* Info: (20240527 - Shirley) mobile */}
       <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
-        {/* Info: Search bar (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) Search bar */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedPendingSearchBar}
         </div>
@@ -422,7 +422,7 @@ const MyReportsSection = () => {
             () =>
               !isPendingDataLoading &&
               filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)
-            // Info: conflict with prettier (20240809 - Shirley)
+            // Info: (20240809 - Shirley) conflict with prettier
             // eslint-disable-next-line react/jsx-curly-newline
           }
           className="px-3 py-3"
@@ -466,7 +466,7 @@ const MyReportsSection = () => {
       </div>
     </div>
   ) : (
-    // Info: empty icon section (20240513 - Shirley)
+    // Info: (20240513 - Shirley) empty icon section
     <div className="mt-20 flex w-full items-center justify-center">
       {' '}
       <section className="flex flex-col items-center">
@@ -623,16 +623,16 @@ const MyReportsSection = () => {
 
   const displayedHistoryFilterOptionsSection = (
     <div>
-      {/* Info: desktop (20240527 - Shirley) */}
+      {/* Info: (20240527 - Shirley) desktop */}
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
             {t('MY_REPORTS_SECTION.SORT_BY')}
           </div>
-          {/* Info: sort menu (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) sort menu */}
           {displayedHistorySortMenu}
         </div>
-        {/* Info: date picker (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) date picker */}
         <DatePicker
           disabled={isHistoryDataLoading}
           datePickerHandler={handleHistoryDatePickerClose}
@@ -642,15 +642,15 @@ const MyReportsSection = () => {
           btnClassName="w-250px"
           datePickerClassName="lg:w-auto"
         />{' '}
-        {/* Info: Search bar (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) Search bar */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedHistorySearchBar}
         </div>
       </div>
 
-      {/* Info: mobile (20240527 - Shirley) */}
+      {/* Info: (20240527 - Shirley) mobile */}
       <div className="flex flex-wrap items-center justify-between space-x-6 lg:hidden">
-        {/* Info: Search bar (20240513 - Shirley) */}
+        {/* Info: (20240513 - Shirley) Search bar */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedHistorySearchBar}
         </div>
@@ -660,7 +660,7 @@ const MyReportsSection = () => {
             () =>
               !isHistoryDataLoading &&
               filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)
-            // Info: conflict with prettier (20240809 - Shirley)
+            // Info: (20240809 - Shirley) conflict with prettier
             // eslint-disable-next-line react/jsx-curly-newline
           }
           className="px-3 py-3"
@@ -772,13 +772,13 @@ const MyReportsSection = () => {
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-          {/* Info: desktop heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-16 lg:px-28">
               {t('MY_REPORTS_SECTION.MY_REPORTS')}
             </div>
           </div>
-          {/* Info: mobile heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <div>
@@ -794,7 +794,7 @@ const MyReportsSection = () => {
             </div>
           </div>
 
-          {/* Info: Divider beneath Heading (20240528 - Shirley) */}
+          {/* Info: (20240528 - Shirley) Divider beneath Heading */}
           <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:pl-28">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
@@ -803,7 +803,7 @@ const MyReportsSection = () => {
         </div>
       </div>
 
-      {/* Info: ----- pending reports (20240513 - Shirley) ----- */}
+      {/* Info: (20240513 - Shirley) ----- pending reports ----- */}
       <div className="mt-5 flex flex-col px-6 max-md:mt-0 max-md:max-w-full md:px-16 lg:mx-10 lg:pl-20 lg:pr-5">
         {displayedPendingFilterOptionsSection}
 
@@ -838,7 +838,7 @@ const MyReportsSection = () => {
         {displayedPendingDataSection}
       </div>
 
-      {/* Info: ----- reports history (20240513 - Shirley) ----- */}
+      {/* Info: (20240513 - Shirley) ----- reports history ----- */}
       <div className="mt-10 flex flex-col px-6 max-md:max-w-full md:px-16 lg:mx-10 lg:pl-20 lg:pr-5">
         {displayedHistoryFilterOptionsSection}
 

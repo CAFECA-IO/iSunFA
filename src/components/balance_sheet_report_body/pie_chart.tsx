@@ -1,4 +1,4 @@
-// pie_chart.tsx
+// Info: (20240724 - Anna) pie_chart.tsx
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts'; // Info: (20240726 - Anna) 導入 ApexOptions 類型

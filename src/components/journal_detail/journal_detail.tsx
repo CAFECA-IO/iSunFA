@@ -104,7 +104,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       if (invoice) {
         setType(invoice.eventType);
         setDateTimestamp(invoice.date);
-        // setReason(invoice.reason); ToDo: (20240503 - Julian) interface lacks reason
+        // setReason(invoice.reason); // ToDo: (20240503 - Julian) interface lacks reason
         setVendor(invoice.vendorOrSupplier);
         setDescription(invoice.description);
         setTotalPrice(invoice.payment.price);
@@ -232,7 +232,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       </div>
     ) : null;
 
-  // const displayType = <p className="text-lightRed">{type}</p>;
+  // const displayType = <p className="text-lightRed">{type}</p>; // Info: (20240731 - Anna)
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   const typeString = type && typeof type === 'string' ? type : '';
@@ -572,7 +572,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
-            {/*             <div className="flex items-center justify-between gap-x-10px">
+            {/* <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
             </div> */}

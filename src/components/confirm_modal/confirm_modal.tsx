@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { RxCross2 } from 'react-icons/rx';
-// import { LuTag } from 'react-icons/lu';
+// Info: (20240723 - Julian) import { LuTag } from 'react-icons/lu';
 import { FiPlus } from 'react-icons/fi';
 import { timestampToString } from '@/lib/utils/common';
 import APIHandler from '@/lib/utils/api_handler';
@@ -152,7 +152,7 @@ const ConfirmModal = ({
         changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
       });
     } catch (err) {
-      // Debug: (20240726 - Tzuhan) Show error message
+      // Info: (20240726 - Tzuhan) [Debug:] Show error message
       // eslint-disable-next-line no-console
       console.log(`importVoucherHandler err: `, err);
     }
@@ -196,7 +196,7 @@ const ConfirmModal = ({
           accountId: voucher.account!.id,
           lineItemIndex: `${voucher.id}`,
           account: generateAccountTitle(voucher.account),
-          // // Info: (20240801 - Anna) 使用 generateAccountTitleWithTranslation 函數生成會計科目的標題(翻譯後的)，取代原本的 generateAccountTitle 函數）
+          // Info: (20240801 - Anna) 使用 generateAccountTitleWithTranslation 函數生成會計科目的標題(翻譯後的)，取代原本的 generateAccountTitle 函數）
           // account: generateAccountTitleWithTranslation(voucher.account),
           description: voucher.particulars,
           debit: isDebit,
@@ -321,7 +321,7 @@ const ConfirmModal = ({
   };
 
   useEffect(() => {
-    if (!isModalVisible || !hasCompanyId) return; // Info: 在其他頁面沒用到 modal 時不調用 API (20240530 - Shirley)
+    if (!isModalVisible || !hasCompanyId) return; // Info: (20240530 - Shirley) 在其他頁面沒用到 modal 時不調用 API
     openHandler();
     // Info: (20240529 - Julian) 清空 accountingVoucher
     resetVoucherHandler();
@@ -351,7 +351,7 @@ const ConfirmModal = ({
     const isNotEmpty = accountingVoucher.every((voucher) => !!voucher.debit || !!voucher.credit);
     const isEveryLineItemHasAccount = accountingVoucher.every((voucher) => !!voucher.account);
 
-    // Info: 計算借貸方科目加總 (20240806 - Shirley)
+    // Info: (20240806 - Shirley) 計算借貸方科目加總
     const totalDebitAmount = accountingVoucher.reduce(
       (sum, voucher) => sum + (voucher.debit || 0),
       0
@@ -361,8 +361,8 @@ const ConfirmModal = ({
       0
     );
 
-    // Info: 檢查借方總額和貸方總額是否分別等於總金額 (20240806 - Shirley)
-    const isDebitValid = Math.abs(totalDebitAmount - totalPrice) < BUFFER_AMOUNT; // Info: 使用小於0.01來避免浮點數精度問題 (20240806 - Shirley)
+    // Info: (20240806 - Shirley) 檢查借方總額和貸方總額是否分別等於總金額
+    const isDebitValid = Math.abs(totalDebitAmount - totalPrice) < BUFFER_AMOUNT; // Info: (20240806 - Shirley) 使用小於0.01來避免浮點數精度問題
     const isCreditValid = Math.abs(totalCreditAmount - totalPrice) < BUFFER_AMOUNT;
 
     setIsBalance(isCreditEqualDebit);
@@ -574,7 +574,7 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isEveryRowHasAccount ? 'text-text-state-success' : 'text-text-state-error'}>
-        {/* Each row includes an accounting account. */}
+        {/* Info: (20240731 - Anna) Each row includes an accounting account. */}
         {t('JOURNAL.EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT')}
       </p>
     </div>
@@ -588,7 +588,7 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isNoEmptyRow ? 'text-text-state-success' : 'text-text-state-error'}>
-        {/* Each row includes a debit or credit. */}
+        {/* Info: (20240731 - Anna) Each row includes a debit or credit. */}
         {t('JOURNAL.EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT')}
       </p>
     </div>
@@ -602,7 +602,7 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isBalance ? 'text-text-state-success' : 'text-text-state-error'}>
-        {/* Debits and credits balance out. */}
+        {/* Info: (20240731 - Anna) Debits and credits balance out. */}
         {t('JOURNAL.DEBITS_AND_CREDITS_BALANCE_OUT')}
       </p>
     </div>
@@ -712,7 +712,7 @@ const ConfirmModal = ({
               {translatedStatus && (
                 <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
               )}
-              {/* {displayStatus} */}
+              {/* Info: (20240731 - Anna) {displayStatus} */}
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">
@@ -774,7 +774,7 @@ const ConfirmModal = ({
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="my-24px flex flex-wrap justify-between gap-y-4px">
             <p className="text-sm font-semibold text-navyBlue2">
-              {/* Info: eslint recommandation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint (tzuhan - 20230513) */}
+              {/* Info: (tzuhan - 20230513) eslint recommendation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint  */}
               {t('CONFIRM_MODAL.ATTENTION')}
             </p>
             <label
