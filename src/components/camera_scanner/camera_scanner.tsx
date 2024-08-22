@@ -132,7 +132,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     const blob = await new Promise((resolve) => {
       photo.toBlob(resolve, 'image/png');
     });
-    // Create a new file from the blob (optional but helpful for naming)
+    // Info: (20240508 - Emily) Create a new file from the blob (optional but helpful for naming)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
 
@@ -152,7 +152,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   };
 
   useEffect(() => {
-    if (!isModalVisible || !selectedCompany) return; // Info: 在 modal 隱藏時，不做任何事情 (20240523 - Shirley)
+    if (!isModalVisible || !selectedCompany) return; // Info: (20240523 - Shirley) 在 modal 隱藏時，不做任何事情
 
     // Info: (20240522 - Julian) 清空 invoiceId
     setInvoiceIdHandler(undefined);
@@ -179,9 +179,8 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           result.status === ProgressStatus.IN_PROGRESS
         ) {
           messageModalDataHandler({
-            // title: 'Upload Successful',
             title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
-            /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
+            // Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的
             // content: result.status,
             content: translatedStatus,
             messageType: MessageType.SUCCESS,
@@ -270,7 +269,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   );
 
   const displayMainBtn = isPhotoEditorMode ? (
-    // ToDo: [Beta] (20240506 - Julian) function not implemented
+    // ToDo: (20240506 - Julian) [Beta] function not implemented
     <div className="flex items-center gap-x-24px">
       {/* Info: (20240506 - Julian) crop button */}
       <button

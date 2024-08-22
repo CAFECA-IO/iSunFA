@@ -238,7 +238,7 @@ const WhyISunFASection = () => {
             </div>
           </div>
 
-          {/* Info: mac img for 1440 px and above (20240321- Shirley) */}
+          {/* Info: (20240321- Shirley) mac img for 1440 px and above */}
           <div className={`hidden flex-col max-lg:ml-0 xl:flex`}>
             <Image
               alt="partial mac"
@@ -249,7 +249,7 @@ const WhyISunFASection = () => {
             />
           </div>
 
-          {/* Info: mac img for width below 1440 px but above 744 px (20240321- Shirley) */}
+          {/* Info: (20240321- Shirley) mac img for width below 1440 px but above 744 px */}
           <div className="hidden md:flex xl:hidden">
             <Image
               alt="partial mac"
@@ -260,7 +260,7 @@ const WhyISunFASection = () => {
             />
           </div>
 
-          {/* Info: mac img for width below 744 px (20240321- Shirley) */}
+          {/* Info: (20240321- Shirley) mac img for width below 744 px */}
           <div className="flex h-420px md:hidden">
             <Image
               alt="partial mac"

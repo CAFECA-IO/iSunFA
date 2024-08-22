@@ -4,7 +4,7 @@ const DashboardWithoutData = () => {
   const { t } = useTranslation('common');
   const displayedPageBody = (
     <div>
-      {/* Info: empty icon section (20240415 - Shirley) */}
+      {/* Info: (20240415 - Shirley) empty icon section */}
       <div className="flex h-screen w-full items-center justify-center">
         {' '}
         <section className="flex flex-col items-center">

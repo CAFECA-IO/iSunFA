@@ -72,8 +72,9 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
-    // TODO: in dev (20240814 - Shirley)
-    // console.log('OCRList in StepOneTab:', OCRList);
+    // TODO: (20240814 - Shirley) in dev
+    // eslint-disable-next-line no-console
+    console.log('OCRList in StepOneTab:', OCRList);
 
     return () => {};
   }, [OCRList, OCRListStatus]);
@@ -88,8 +89,9 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
-  // TODO: in dev (20240816 - Shirley)
-  // console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
+  // TODO: (20240816 - Shirley) in dev
+  // eslint-disable-next-line no-console
+  console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));

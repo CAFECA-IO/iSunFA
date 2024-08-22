@@ -119,19 +119,19 @@ function ContactForm() {
     }
   };
 
-  // Info: Remove unuse function @Shirley (20240513 - tzuhan)
+  // Info: (20240513 - tzuhan) Remove unused function @Shirley
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const autoResize = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto'; // Reset height so the scrollHeight measurement is accurate
+      textarea.style.height = 'auto'; // Info: (20240318 - Shirley) Reset height so the scrollHeight measurement is accurate
       textarea.style.height = textarea.scrollHeight + 'px';
     }
   };
 
   const messageChangeHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
-    // autoResize();   // Info: Automatically resize the textarea to fit initial content (if any) (20240321 - Shirley)
+    // autoResize();   // Info: (20240321 - Shirley) Automatically resize the textarea to fit initial content (if any)
   };
 
   const animPart = (
@@ -158,13 +158,13 @@ function ContactForm() {
             <p className="text-sm">{t('CONTACT_US.SENDING')}</p>
           </div>
         ) : animation === FormAnimation.SUCCESS ? (
-          /* Info:(20230731 - Shirley) Success animation */
+          /* Info: (20230731 - Shirley) Success animation */
           <div className="flex flex-col items-center space-y-10">
             <Image src="/animations/success.gif" width={150} height={150} alt="loading_animation" />
             <p className="text-sm">{t('CONTACT_US.SUCCESS')}</p>
           </div>
         ) : animation === FormAnimation.ERROR ? (
-          /* Info:(20230731 - Shirley) Error animation */
+          /* Info: (20230731 - Shirley) Error animation */
           <div className="flex flex-col items-center">
             <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
             <p className="text-sm">{t('CONTACT_US.ERROR')}</p>
@@ -189,7 +189,7 @@ function ContactForm() {
       } mt-20 flex w-330px max-w-full flex-col rounded-2xl bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5 md:w-620px lg:w-800px`}
     >
       <div className="flex flex-col">
-        {/* Info: remove arbitrary value? @Shirley (tzuhan - 20240513) */}
+        {/* Info: (tzuhan - 20240513) remove arbitrary value? @Shirley  */}
         {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
         <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">
           {t('CONTACT_US.TITLE')}
@@ -200,7 +200,7 @@ function ContactForm() {
       </div>
       <div className="mt-12">
         <div className="flex flex-col pb-4">
-          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley  */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.NAME')}
@@ -216,7 +216,7 @@ function ContactForm() {
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
@@ -234,7 +234,7 @@ function ContactForm() {
           )}
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.PHONE')}
@@ -248,7 +248,7 @@ function ContactForm() {
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: A form label must be associated with a control? @Shirley (tzuhan - 20240513) */}
+          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
             {t('CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>

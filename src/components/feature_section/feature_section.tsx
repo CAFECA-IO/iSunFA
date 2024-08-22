@@ -93,7 +93,7 @@ const FeatureSection = () => {
           <div className="relative">
             <div
               ref={animeRef31}
-              // Info: 從左邊移到中間 (20240319 - Shirley)
+              // Info: (20240319 - Shirley) 從左邊移到中間
               className={`overflow-x-hidden ${isAnimeRef31Visible ? `translate-x-0` : `md:-translate-x-140%`} relative aspect-4/3 w-80vw duration-1000 md:h-515px md:w-650px lg:w-865px`}
             >
               <Image
@@ -107,7 +107,7 @@ const FeatureSection = () => {
 
             <div
               ref={animeRef32}
-              // Info: 從右邊移到中間 (20240319 - Shirley)
+              // Info: (20240319 - Shirley) 從右邊移到中間
               className={`overflow-x-hidden ${isAnimeRef32Visible ? `translate-x-0` : `md:translate-x-140%`} relative bottom-2/5 left-1/2 aspect-4/3 w-40vw duration-1000 md:bottom-21rem md:left-20rem md:w-330px lg:bottom-19rem lg:left-32rem lg:w-432px`}
             >
               <Image
@@ -123,7 +123,7 @@ const FeatureSection = () => {
 
       <div
         ref={animeRef33}
-        // Info: 從下面移到中間 (20240319 - Shirley)
+        // Info: (20240319 - Shirley) 從下面移到中間
         className={`overflow-x-hidden ${isAnimeRef33Visible ? `lg:translate-y-0` : `lg:translate-y-140%`} -mt-10 grid w-full grid-cols-1 justify-center gap-20 duration-1000 md:-mt-40 md:mb-40 lg:mt-40 lg:flex-1 lg:grid-cols-3 lg:gap-0 lg:px-10`}
       >
         {heroList}

@@ -91,7 +91,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
           </div>
           <div className="flex flex-col space-y-4">
             <AuthButton onClick={googleAuthSignIn} provider={Provider.GOOGLE} />
-            {/* Info: [Beta](20240819-Tzuhan) Apple login is not supported in the beta version
+            {/* Info: (20240819-Tzuhan) [Beta] Apple login is not supported in the beta version
             <AuthButton onClick={appleAuthSignIn} provider="Apple" /> */}
           </div>
         </div>

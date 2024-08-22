@@ -37,13 +37,13 @@ const Tooltip = ({ children }: TooltipProps) => {
     >
       <div className="text-lightGray1 opacity-70">{hintIcon}</div>
 
-      {/* Info: tooltip content (20240416 - Shirley) */}
+      {/* Info: (20240416 - Shirley) tooltip content */}
       {showTooltip ? (
         <div
           role="tooltip"
           className={`absolute -top-3 right-[2rem] z-20 w-[250px] rounded-lg bg-white p-4 text-sm shadow-tooltip`}
         >
-          {/* Info: triangle arrow svg (20240416 - Shirley) */}
+          {/* Info: (20240416 - Shirley) triangle arrow svg */}
           <div className="absolute -right-3 top-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +60,7 @@ const Tooltip = ({ children }: TooltipProps) => {
         </div>
       ) : null}
 
-      {/* TODO: 出現在下面的 tooltip content (20240416 - Shirley) */}
+      {/* TODO: (20240416 - Shirley) 出現在下面的 tooltip content */}
       {/* {showTooltip ? (
         <div
           role="tooltip"

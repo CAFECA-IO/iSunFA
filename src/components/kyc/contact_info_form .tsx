@@ -75,7 +75,7 @@ const ContactInfoForm = ({
 
   return (
     <section className="flex flex-col gap-40px md:w-600px">
-      {/* ===== Key Contact Person ===== */}
+      {/* Info: (20240718 - Liz) ===== Key Contact Person ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
           {t('KYC.KEY_CONTACT_PERSON')}
@@ -91,12 +91,12 @@ const ContactInfoForm = ({
         />
       </div>
 
-      {/* ===== Area Code & Contact Number ===== */}
+      {/* Info: (20240718 - Liz) ===== Area Code & Contact Number ===== */}
       <div className="flex flex-col gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.CONTACT_NUMBER')}</h6>
 
         <div className="relative flex rounded-sm bg-white">
-          {/* Area Code */}
+          {/* Info: (20240718 - Liz) ----- Area Code */}
           <div
             id="areaCode"
             onClick={areaCodeMenuOpenHandler}
@@ -126,7 +126,7 @@ const ContactInfoForm = ({
                 />
               </svg>
             </div>
-            {/* Info: Dropmenu */}
+            {/* Info: (20240718 - Liz) Dropmenu */}
             <div
               className={`absolute left-0 top-50px grid w-fit grid-cols-1 shadow-dropmenu ${isAreaCodeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
             >
@@ -139,7 +139,7 @@ const ContactInfoForm = ({
             </div>
           </div>
 
-          {/* Contact Number */}
+          {/* Info: (20240718 - Liz) ----- Contact Number */}
           <input
             id="contactNumber"
             type="text"
@@ -152,7 +152,7 @@ const ContactInfoForm = ({
         </div>
       </div>
 
-      {/* ===== Email Address ===== */}
+      {/* Info: (20240718 - Liz) ===== Email Address ===== */}
       <div className="flex flex-col gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.EMAIL_ADDRESS')}</h6>
         <div className="flex rounded-sm bg-white">
@@ -190,7 +190,7 @@ const ContactInfoForm = ({
         </div>
       </div>
 
-      {/* ===== Company Website (Optional) ===== */}
+      {/* Info: (20240718 - Liz) ===== Company Website (Optional) ===== */}
       <div className="flex flex-col gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
           {t('KYC.COMPANY_WEBSITE_OPTIONAL')}

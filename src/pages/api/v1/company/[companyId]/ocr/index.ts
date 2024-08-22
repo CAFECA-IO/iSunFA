@@ -105,11 +105,14 @@ export async function getPayloadFromResponseJSON(
 
 // Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
-export async function postImageToAICH(files: formidable.Files, imageFields: {
+export async function postImageToAICH(
+  files: formidable.Files,
+  imageFields: {
     imageSize: number;
     imageName: string;
     uploadIdentifier: string;
-  }[]): Promise<
+  }[]
+): Promise<
   {
     resultStatus: IAccountResultStatus;
     imageName: string;
@@ -198,10 +201,14 @@ export function extractDataFromFields(fields: formidable.Fields) {
   }[] = [];
 
   if (
-    imageSize && imageSize.length &&
-    imageName && imageName.length &&
-    uploadIdentifier && uploadIdentifier.length &&
-    imageSize.length === imageName.length && imageSize.length === uploadIdentifier.length
+    imageSize &&
+    imageSize.length &&
+    imageName &&
+    imageName.length &&
+    uploadIdentifier &&
+    uploadIdentifier.length &&
+    imageSize.length === imageName.length &&
+    imageSize.length === uploadIdentifier.length
   ) {
     imageSize.forEach((size, index) => {
       imageFieldsArray.push({
@@ -231,7 +238,7 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
   }
   return {
     files,
-    fields
+    fields,
   };
 }
 export async function fetchStatus(aichResultId: string) {

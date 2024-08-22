@@ -65,7 +65,7 @@ const DashboardBookmark = () => {
   };
 
   useEffect(() => {
-    // Info: 如果書籤不夠多，就不需要顯示往右滑的按鈕 (20240603 - Shirley)
+    // Info: (20240603 - Shirley) 如果書籤不夠多，就不需要顯示往右滑的按鈕
     if (
       containerRef.current &&
       containerRef.current.scrollWidth - containerRef.current.scrollLeft <=
@@ -85,7 +85,7 @@ const DashboardBookmark = () => {
     currentContainerRef?.addEventListener('scroll', handleScroll);
 
     return () => currentContainerRef?.removeEventListener('scroll', handleScroll);
-  }, [bookmarkList]); // Info: 如果書籤不夠多，就不需要顯示往右滑的按鈕 (20240603 - Shirley)
+  }, [bookmarkList]); // Info: (20240603 - Shirley) 如果書籤不夠多，就不需要顯示往右滑的按鈕
 
   const slideLeft = () => slide(-BOOKMARK_SCROLL_STEP);
   const slideRight = () => slide(BOOKMARK_SCROLL_STEP);
@@ -173,7 +173,7 @@ const DashboardBookmark = () => {
           </button>
         </div>
         {/* Info: (20240808 - Anna) Alpha版先隱藏(編輯書籤列) */}
-        {/* Info: remove or add button (20240411 - Shirley) */}
+        {/* Info: (20240411 - Shirley) remove or add button */}
         {/* <div className="rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px lg:w-100px">
           {displayedRemoveOrAddButton}
         </div> */}
