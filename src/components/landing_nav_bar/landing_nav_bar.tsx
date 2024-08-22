@@ -257,12 +257,12 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </Link>
         </li>
 
-        {/* TODO: refactor i18n (20240315 - Shirley) */}
+        {/* TODO: (20240315 - Shirley) refactor i18n */}
         <li>{/* <I18n /> */}</li>
       </ul>
 
       <ul className="flex items-center space-x-0 lg:mr-10">
-        {/* TODO: refactor i18n (20240315 - Shirley) */}
+        {/* TODO: (20240315 - Shirley) refactor i18n */}
         <div>
           <li>
             <div
@@ -349,7 +349,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
     <div
       className={`${bgStyle} flex w-screen shrink-0 items-center justify-between gap-5 p-4 pr-5 text-white shadow-xl lg:hidden`}
     >
-      {/* Info: logo (20240321 - Shirley) */}
+      {/* Info: (20240321 - Shirley) logo */}
       <div>
         <div className="flex items-end justify-end space-x-2">
           <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="">
@@ -367,7 +367,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
       </div>
       <div className="flex flex-1 items-center justify-end space-x-0">
         {' '}
-        {/* TODO: refactor i18n (20240315 - Shirley) */}
+        {/* TODO: (20240315 - Shirley) refactor i18n */}
         <div ref={dropdownRef} className="z-50">
           <div className="flex items-center">
             <div
@@ -558,7 +558,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
 
         {/* Contact Us */}
         <li className="w-full px-6 py-4">
-          {/* Info: contact us section (20240321 - Shirley) */}
+          {/* Info: (20240321 - Shirley) contact us section */}
           <Link
             href={ISUNFA_ROUTE.CONTACT_US}
             className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
@@ -620,7 +620,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </Link>
         </li>
 
-        {/* TODO: separate i18n component (20240403 - Shirley) */}
+        {/* TODO: (20240403 - Shirley) separate i18n component */}
         {/* <li className="px-10 py-4"></li> */}
         {/* <li className="px-10 py-4">
           <I18n />

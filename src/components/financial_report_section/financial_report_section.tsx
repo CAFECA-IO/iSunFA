@@ -32,8 +32,8 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   const { selectedCompany } = useUserCtx();
   const {
     trigger: generateFinancialReport,
-    // data: generatedResult,
-    // error: generatedError,
+    // Info: (20240516 - Shirley) data: generatedResult,
+    // Info: (20240516 - Shirley) error: generatedError,
     code: generatedCode,
     isLoading: generatedLoading,
     success: generatedSuccess,
@@ -76,7 +76,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   };
 
   const projectOptionClickHandler = (projectName: keyof typeof DUMMY_PROJECTS_MAP) => {
-    //   setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
+    // Info: (20240709 - Anna)  setSelectedProjectName(DUMMY_PROJECTS_MAP[projectName].name);
     setSelectedProjectName(projectName);
     setIsProjectMenuOpen(false);
   };
@@ -137,13 +137,13 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     });
   }, [selectedReportType]);
   useEffect(() => {
-    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    // Info: (20240509 - Shirley) 每次展開 menu 之前都要清空 searchQuery
     if (isProjectMenuOpen) {
       setSearchQuery('');
     }
   }, [isProjectMenuOpen]);
 
-  // Info: 點下 Generate 後，依照申請成功或申請失敗，顯示不同的 message (20240517 - Shirley)
+  // Info: (20240517 - Shirley) 點下 Generate 後，依照申請成功或申請失敗，顯示不同的 message
   useEffect(() => {
     if (generatedCode && !generatedLoading) {
       if (generatedSuccess) {
@@ -248,7 +248,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         </button>
       </div>
 
-      {/* Info: Project Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Project Menu */}
       <div
         // eslint-disable-next-line tailwindcss/no-arbitrary-value, tailwindcss/no-unnecessary-arbitrary-value
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
@@ -298,7 +298,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                     .includes(searchQuery.toLowerCase())
                 // eslint-disable-next-line function-paren-newline
               )
-              // TODO: [Beta] 串上 API 之後把 filter 拿掉 (20240726 - Shirley)
+              // TODO: (20240726 - Shirley) [Beta] 串上 API 之後把 filter 拿掉
               .filter((project) => {
                 return project.includes('Overall');
               })
@@ -325,7 +325,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
+                      {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
                         ? t('PROJECT.OVERALL')
@@ -371,7 +371,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           </div>
         </div>
       </button>
-      {/* Info: Report Type Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) ===== Report Type Menu ===== */}
       <div
         // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
@@ -387,7 +387,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               onClick={() => menuOptionClickHandler(id as FinancialReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
-              {/* {name} */}
+              {/* Info: (20240710 - Anna) {name} */}
               {t(`PLUGIN.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
@@ -433,7 +433,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           </div>
         </div>
       </button>
-      {/* Info: Language Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Language Menu */}
       <div
         // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
@@ -500,13 +500,13 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-          {/* Info: desktop heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley)  desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
               {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
             </div>
           </div>
-          {/* Info: mobile heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <div>
@@ -529,7 +529,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           </div>
         </div>
       </div>
-      {/* Info: options for generation (20240513 - Shirley) */}
+      {/* Info: (20240513 - Shirley) options for generation */}
       <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
@@ -559,7 +559,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
             {/* Info: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
-            {/* Info: 左橫線 (20240425 - Shirley) */}
+            {/* Info: (20240425 - Shirley) 左橫線 */}
             <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
               <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
             </div>
@@ -598,7 +598,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               </div>
             </div>
 
-            {/* Info: 右橫線 (20240425 - Shirley) */}
+            {/* Info: (20240425 - Shirley) 右橫線 */}
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
             </div>

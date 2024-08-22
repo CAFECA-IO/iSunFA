@@ -25,7 +25,7 @@ interface IPopulateDatesParams {
   type: DatePickerType;
 }
 
-// TODO: [Beta] refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE (20240529 - Shirley)
+// TODO: (20240529 - Shirley) [Beta] refactor to ICON_DATE, ICON_PERIOD, TEXT_PERIOD, TEXT_DATE
 export enum DatePickerType {
   ICON_PERIOD = 'ICON_PERIOD',
   TEXT_DATE = 'TEXT_DATE',
@@ -44,7 +44,9 @@ interface IDatePickerProps {
   btnClassName?: string;
   calenderClassName?: string;
   buttonStyleAfterDateSelected?: string;
-  onClose?: (start: number, end: number) => void; // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback // Info: (20240809 - Tzuhan) 更新傳入參數 start, end 用在 RegistrationInfoForm
+  onClose?: (start: number, end: number) => void;
+  // Info: (20240509 - Shirley) 關閉日期選擇器時的 callback
+  // Info: (20240809 - Tzuhan) 更新傳入參數 start, end 用在 RegistrationInfoForm
   alignCalendar?: DatePickerAlign;
   datePickerClassName?: string;
   disabled?: boolean;
@@ -219,6 +221,7 @@ const DatePicker = ({
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 0 (January) to 11 (December).
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
 
+  // Info: (20240802 - Shirley)
   // useEffect(() => {
   //   setDateOne(new Date(period.startTimeStamp * MILLISECONDS_IN_A_SECOND));
   //   setDateTwo(new Date(period.endTimeStamp * MILLISECONDS_IN_A_SECOND));
@@ -249,7 +252,7 @@ const DatePicker = ({
           isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp
         );
       }
-      // Info: 都選好日期之後執行 onClose callback (20240509 - Shirley)
+      // Info: (20240509 - Shirley) 都選好日期之後執行 onClose callback
       if (onClose) {
         onClose(dateOneStamp, isSameDate ? dateTwoStamp + SECONDS_TO_TOMORROW : dateTwoStamp);
       }
@@ -289,7 +292,7 @@ const DatePicker = ({
       const date = {
         date: i + 1,
         time: dateTime,
-        disable: dateTime < minTime || dateTime > maxTime, // Info: 禁用小於最小日期或大於最大日期的日期 (20240424 - Shirley)
+        disable: dateTime < minTime || dateTime > maxTime, // Info: (20240424 - Shirley) 禁用小於最小日期或大於最大日期的日期
       };
       dates.push(date);
     }
@@ -386,11 +389,11 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          // default style
+          // Info: (20240426 - Liz) ===== default style =====
           'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
-          // props control style
+          // Info: (20240426 - Liz) ===== props control style =====
           btnClassName,
-          // variables control style
+          // Info: (20240426 - Liz) ===== variables control style =====
           {
             [buttonStyleAfterDateSelected]: isDateSelected,
             'border-primaryYellow text-primaryYellow': componentVisible,
@@ -501,7 +504,7 @@ const DatePicker = ({
           </button>
 
           <div className="flex w-full items-center justify-between">
-            {/* Info: Previous button (20240417 - Shirley) */}
+            {/* Info: (20240417 - Shirley) Previous button  */}
             <button
               type="button"
               onClick={goToPrevMonth}
@@ -516,7 +519,7 @@ const DatePicker = ({
               <p className="text-secondaryBlue">{displayedMonth}</p>
             </div>
 
-            {/* Info: Next button (20240417 - Shirley) */}
+            {/* Info: (20240417 - Shirley) Next button */}
             <button
               type="button"
               onClick={goToNextMonth}

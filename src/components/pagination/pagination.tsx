@@ -32,7 +32,7 @@ const Pagination = ({
   const [targetPage, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
   const router = useRouter();
 
-  // Info: 從 URL 獲取初始頁碼 (20240712 - Shirley)
+  // Info: (20240712 - Shirley) 從 URL 獲取初始頁碼
   useEffect(() => {
     const pageFromUrl = Number(router.query[pagePrefix]);
     if (!Number.isNaN(pageFromUrl) && pageFromUrl !== currentPage) {
@@ -40,7 +40,7 @@ const Pagination = ({
     }
   }, [router.query, pagePrefix, setCurrentPage]);
 
-  // Info: 更新 URL (20240712 - Shirley)
+  // Info: (20240712 - Shirley) 更新 URL
   const updateUrl = useCallback(
     (newPage: number) => {
       router.push(
@@ -61,7 +61,7 @@ const Pagination = ({
   const isLastPage = currentPage === totalPages;
 
   // Info: (20240419 - Julian)  限制輸入的頁數在 1 ~ totalPages 之間
-  // Info: 用來處理頁數變更邏輯 (20240712 - Shirley)
+  // Info: (20240712 - Shirley) 用來處理頁數變更邏輯
   const changePage = useCallback(
     (newPage: number) => {
       if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
@@ -76,7 +76,7 @@ const Pagination = ({
     [currentPage, totalPages, setCurrentPage, updateUrl]
   );
 
-  // Info: input 的 onChange 事件處理函數 (20240712 - Shirley)
+  // Info: (20240712 - Shirley) input 的 onChange 事件處理函數
   const pageChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
     const value = Math.min(Math.max(1, parseInt(e.target.value, 10)), totalPages);
     if (!Number.isNaN(value)) {
@@ -91,7 +91,7 @@ const Pagination = ({
     }
   };
 
-  // Info: 按鈕處理函數 (20240712 - Shirley)
+  // Info: (20240712 - Shirley) 按鈕處理函數
   const firstPageHandler = () => changePage(1);
   const previousPageHandler = () => changePage(currentPage - 1);
   const nextPageHandler = () => changePage(currentPage + 1);

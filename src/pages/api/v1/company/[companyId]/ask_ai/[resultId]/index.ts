@@ -111,15 +111,15 @@ async function handleGetRequest(req: NextApiRequest) {
         statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         break;
       }
-        case 'contracts': {
-          const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
-          const fetchResult = fetchResultFromAICH(fetchUrl);
-          payload = (await fetchResult) as IContract;
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          break;
-        }
-        default:
-          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+      case 'contracts': {
+        const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+        const fetchResult = fetchResultFromAICH(fetchUrl);
+        payload = (await fetchResult) as IContract;
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        break;
+      }
+      default:
+        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
   }
 
@@ -142,7 +142,7 @@ export default async function handler(
   if (isAuth) {
     try {
       switch (req.method) {
-        case "GET": {
+        case 'GET': {
           const result = await handleGetRequest(req);
           payload = result.payload;
           statusMessage = result.statusMessage;

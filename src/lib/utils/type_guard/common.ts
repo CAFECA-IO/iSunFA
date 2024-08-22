@@ -11,7 +11,10 @@ import { Prisma } from '@prisma/client';
  * @param data - The data(string) to check if it is a value of the enum
  * @returns boolean
  */
-export function isEnumValue<T extends { [s: string]: unknown | ArrayLike<unknown> }>(enumObj: T, data: unknown): data is T[keyof T] {
+export function isEnumValue<T extends { [s: string]: unknown | ArrayLike<unknown> }>(
+  enumObj: T,
+  data: unknown
+): data is T[keyof T] {
   return Object.values(enumObj).includes(data as T[keyof T]);
 }
 

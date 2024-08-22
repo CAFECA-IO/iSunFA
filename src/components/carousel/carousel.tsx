@@ -73,7 +73,7 @@ export default function Carousel({
             </div>
           ))}
         </div>
-        {/* Info: 往前往後的按鈕 (20240315 - Shirley)*/}
+        {/* Info: (20240315 - Shirley) 往前往後的按鈕 */}
         <div className="absolute inset-0 z-10 flex items-center justify-between p-0">
           <button
             onClick={prev}
@@ -89,7 +89,7 @@ export default function Carousel({
           </button>
         </div>
 
-        {/* Info: 點點點 (20240315 - Shirley)*/}
+        {/* Info: (20240315 - Shirley) 點點點 */}
         <div className="absolute bottom-4 left-1/2 -translate-x-2/3 transform lg:left-1/3 lg:-translate-x-0">
           <div className="flex items-center justify-center gap-2">
             {children.map((_, i) => (

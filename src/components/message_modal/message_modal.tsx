@@ -88,7 +88,7 @@ const MessageModal = ({
     </Button>
   ) : null;
 
-  // Info: 換行處理 (20240515 - Shirley)
+  // Info: (20240515 - Shirley) 換行處理
   const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
     // eslint-disable-next-line react/no-array-index-key
     <div key={index}>
@@ -97,7 +97,7 @@ const MessageModal = ({
     </div>
   ));
 
-  // Info: 換行處理 (20240515 - Shirley)
+  // Info: (20240515 - Shirley) 換行處理
   const displayedContent =
     typeof content === 'string'
       ? content.split('\n').map((line, index) => (

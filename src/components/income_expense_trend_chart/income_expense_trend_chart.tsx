@@ -91,20 +91,20 @@ const LineChart = ({ data }: LineChartProps) => {
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // Info: (20240417 - Shirley) formatter: value => `${value}%`,
       },
     },
     yaxis: {
-      // min: -15, // Adjust according to your data range
-      // max: 65, // Adjust according to your data range
-      forceNiceScale: false, // Turn off nice scale to use exact min/max values
+      // min: -15, // Info: (20240521 - Shirley) Adjust according to your data range
+      // max: 65, // Info: (20240521 - Shirley) Adjust according to your data range
+      forceNiceScale: false, // Info: (20240417 - Shirley) Turn off nice scale to use exact min/max values
       labels: {
         style: {
           colors: '#919EB4',
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // Info: (20240417 - Shirley) formatter: value => `${value}%`,
       },
     },
     legend: {
@@ -116,12 +116,13 @@ const LineChart = ({ data }: LineChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#4BD394', '#FB5C5C', '#FFA502'],
-        // width: 20, // 標記的寬度
-        // height: 12, // 標記的高度
-        // radius: 0, // 標記的半徑（如果是圓形）
+        // width: 20, // Info: (20240706 - Luphia) 標記的寬度
+        // height: 12, // Info: (20240706 - Luphia) 標記的高度
+        // radius: 0, // Info: (20240722 - Shirley) 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
 
+      // Info: (20240417 - Shirley)
       // customLegendItems: [
       //   {
       //     text: 'income',
@@ -158,8 +159,8 @@ const LineChart = ({ data }: LineChartProps) => {
         },
       },
       padding: {
-        // left: 50,
-        // right: 50,
+        // left: 50,  // Info: (20240417 - Shirley)
+        // right: 50, // Info: (20240417 - Shirley)
       },
     },
 
@@ -171,15 +172,15 @@ const LineChart = ({ data }: LineChartProps) => {
         highlightDataSeries: false,
       },
       x: {
-        show: false, // Info: 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值 (20240416 - Shirley)
+        show: false, // Info: (20240416 - Shirley) 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值
         format: 'dd MMM',
-        // formatter: value => `${value}`,
+        // formatter: value => `${value}`, // Info: (20240417 - Shirley)
       },
       y: {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         formatter: (value, { series, seriesIndex, dataPointIndex }) => {
           const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
-          const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
+          const formattedAbsoluteValue = absoluteValue.toLocaleString(); // Info: (20240521 - Shirley) 使用 toLocaleString() 方法加上千分位逗號
 
           return `${formattedAbsoluteValue}`;
         },
