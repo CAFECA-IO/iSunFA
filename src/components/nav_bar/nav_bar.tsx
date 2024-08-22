@@ -569,7 +569,7 @@ const NavBar = () => {
             </div>
           </div>
 
-          {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
+          {/* TODO: [Beta] links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
           <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:ml-10 lg:flex">
             <Link
               href={ISUNFA_ROUTE.DASHBOARD}

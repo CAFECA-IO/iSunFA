@@ -48,12 +48,12 @@ const PendingReportItem = ({
 
   const pauseItem = () => {
     togglePausedStatus();
-    // TODO: send paused request (20240514 - Shirley)
+    // TODO: [Beta] send paused request (20240514 - Shirley)
   };
 
   const resumeItem = () => {
     togglePausedStatus();
-    // TODO: send resumed request (20240514 - Shirley)
+    // TODO: [Beta] send resumed request (20240514 - Shirley)
   };
 
   const pauseClickHandler = () => {

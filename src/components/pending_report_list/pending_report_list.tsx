@@ -70,12 +70,12 @@ const PendingReportList = ({ reports }: IReportListProps) => {
     messageModalDataHandler({
       title: '',
       subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes\n 
+      content: `It will take 30 - 40 minutes\n
       if you want to apply it again.`,
       submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -85,7 +85,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       return;
     }
     toggleAllPaused();
-    // TODO: LOCK and send paused request (20240514 - Shirley)
+    // TODO: [Beta] LOCK and send paused request (20240514 - Shirley)
     // Info: 將所有選中的報告項目暫停 (20240515 - Shirley)
     const updatedReports = reportItems.map((report) => {
       if (
@@ -104,7 +104,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
 
   const resumeClickHandler = () => {
     toggleAllPaused();
-    // TODO: LOCK and send resumed request (20240514 - Shirley)
+    // TODO: [Beta] LOCK and send resumed request (20240514 - Shirley)
     const updatedReports = reportItems.map((report) => {
       if (
         individualChecks.some((checked, index) => {

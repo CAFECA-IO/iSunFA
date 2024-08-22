@@ -257,12 +257,12 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </Link>
         </li>
 
-        {/* TODO: refactor i18n (20240315 - Shirley) */}
+        {/* TODO: [Beta] refactor i18n (20240315 - Shirley) */}
         <li>{/* <I18n /> */}</li>
       </ul>
 
       <ul className="flex items-center space-x-0 lg:mr-10">
-        {/* TODO: refactor i18n (20240315 - Shirley) */}
+        {/* TODO: [Beta] refactor i18n (20240315 - Shirley) */}
         <div>
           <li>
             <div
@@ -367,7 +367,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
       </div>
       <div className="flex flex-1 items-center justify-end space-x-0">
         {' '}
-        {/* TODO: refactor i18n (20240315 - Shirley) */}
+        {/* TODO: [Beta] refactor i18n (20240315 - Shirley) */}
         <div ref={dropdownRef} className="z-50">
           <div className="flex items-center">
             <div
@@ -620,7 +620,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </Link>
         </li>
 
-        {/* TODO: separate i18n component (20240403 - Shirley) */}
+        {/* TODO: [Beta] separate i18n component (20240403 - Shirley) */}
         {/* <li className="px-10 py-4"></li> */}
         {/* <li className="px-10 py-4">
           <I18n />

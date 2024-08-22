@@ -127,7 +127,7 @@
 //     </div>
 //   );
 
-//   // TODO: ongoing development of mobile menu (20240606 - Shirley)
+//   // TODO: [Beta] ongoing development of mobile menu (20240606 - Shirley)
 //   const displayedMobileMenu = (
 //     <div
 //       className={`transition-all duration-300 ${

@@ -103,7 +103,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       if (invoice) {
         setType(invoice.eventType);
         setDateTimestamp(invoice.date);
-        // setReason(invoice.reason); ToDo: (20240503 - Julian) interface lacks reason
+        // setReason(invoice.reason); ToDo: [Beta] (20240503 - Julian) interface lacks reason
         setVendor(invoice.vendorOrSupplier);
         setDescription(invoice.description);
         setTotalPrice(invoice.payment.price);
