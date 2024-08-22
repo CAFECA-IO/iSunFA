@@ -43,7 +43,7 @@ export enum BaifaReportTypeToReportType {
   //  'change-in-equity' = 'change_in_equity_statement'
 }
 
-// TODO: i18n (20240430 - Shirley)
+// TODO: (20240430 - Shirley) i18n
 export const FinancialReportTypesMap: Record<
   FinancialReportTypesKey,
   { id: FinancialReportTypesKey; name: string }

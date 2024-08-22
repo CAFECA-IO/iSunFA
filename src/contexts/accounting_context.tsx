@@ -305,15 +305,15 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   };
 
-  // Info: 新增一個合併 OCR 列表的函數 (20240820 - Shirley)
+  // Info: (20240820 - Shirley) 新增一個合併 OCR 列表的函數
   const mergeOCRLists = useCallback((apiList: IOCR[], currentList: IOCR[]) => {
-    const apiSet = new Set(apiList.map((ocr) => ocr.aichResultId)); // Info: 使用 Set 儲存 apiList 的 aichResultId ，避免雙重迴圈 (20240820 - Shirley)
+    const apiSet = new Set(apiList.map((ocr) => ocr.aichResultId)); // Info: (20240820 - Shirley) 使用 Set 儲存 apiList 的 aichResultId ，避免雙重迴圈
     const mergedList = [
       ...apiList,
       ...currentList.filter((localOCR) => !apiSet.has(localOCR.aichResultId)),
     ];
 
-    // Info: 按創建時間排序，最舊的在前面 (20240820 - Shirley)
+    // Info: (20240820 - Shirley) 按創建時間排序，最舊的在前面
     mergedList.sort((a, b) => a.createdAt - b.createdAt);
 
     return mergedList;

@@ -4,7 +4,7 @@ export interface IIncomeExpenseTrendChartData {
   categories: string[];
   series: {
     name: string;
-    data: number[]; // Info: absolute (20240521 - Shirley)
+    data: number[]; // Info: (20240521 - Shirley) absolute
   }[];
   annotations: {
     name: string;
