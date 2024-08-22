@@ -36,7 +36,7 @@ const PreviewInvoiceModal = ({
       content: 'Are you sure you want to download the selected items?',
       messageType: MessageType.INFO,
       submitBtnStr: t('JOURNAL.DOWNLOAD'),
-      // ToDo: (20240508 - Julian) 下載功能
+      // ToDo: [Beta] (20240508 - Julian) 下載功能
       submitBtnFunction: () => {
         modalVisibilityHandler();
       },
@@ -72,7 +72,7 @@ const PreviewInvoiceModal = ({
             >
               <MdOutlineFileDownload size={20} />
             </button>
-            {/* ToDo: (20240508 - Julian) Share Button */}
+            {/* ToDo: [Beta] (20240508 - Julian) Share Button */}
             <button
               type="button"
               className="rounded-xs bg-navyBlue2 p-12px text-white hover:bg-primaryYellow disabled:bg-lightGray5"

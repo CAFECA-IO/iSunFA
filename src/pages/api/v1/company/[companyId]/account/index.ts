@@ -189,7 +189,7 @@ export async function handleGetRequest(
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return paginatedAccount;
@@ -276,7 +276,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

@@ -46,7 +46,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
   } = contract;
   const { price, alreadyPaid } = payment;
 
-  // ToDo: [Beta] (20240619 - Julian) temporary abbreviation for project name
+  // ToDo: (20240619 - Julian) [Beta] temporary abbreviation for project name
   const abbvProjectName = projectName
     .split(' ')
     .map((word) => word[0])

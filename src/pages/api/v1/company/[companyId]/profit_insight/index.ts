@@ -15,7 +15,7 @@ import {
 } from '@/lib/utils/repo/profit_insight.repo';
 
 async function getProfitChange(targetTime: number, companyId: number) {
-  // Info: startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime (20240607 - Gibbs)
+  // Info: (20240607 - Gibbs) startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime
   const startDayTimestampOfTargetTime = timestampInSeconds(
     new Date(targetTime).setHours(0, 0, 0, 0)
   );

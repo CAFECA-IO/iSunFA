@@ -1,5 +1,5 @@
-// Info: this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition (20240416 - Murky)
-// Info: type (20240416 - Murky)
+// Info: (20240416 - Murky) this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition
+// Info: (20240416 - Murky) type
 export enum ProgressStatus {
   SUCCESS = 'success',
   IN_PROGRESS = 'inProgress',
@@ -30,7 +30,7 @@ export enum AccountType {
   GAIN_OR_LOSS = 'gainOrLoss',
   OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
   CASH_FLOW = 'cashFlow',
-  //  CHANGE_IN_EQUITY = 'changeInEquity', // ToDo: (20240802 - Julian) change in equity statement is not released yet
+  //  CHANGE_IN_EQUITY = 'changeInEquity', // ToDo: [Beta] (20240802 - Julian) change in equity statement is not released yet
   OTHER = 'other',
 }
 

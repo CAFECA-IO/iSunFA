@@ -29,7 +29,7 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
 
     return result;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -47,7 +47,7 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
 
     return result?.id || null;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -74,7 +74,7 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 
     return result;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -96,7 +96,7 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return voucherData;
@@ -121,7 +121,7 @@ export async function createLineItemInPrisma(
 
     // Deprecated: (20240619 - Murky) LineItem has accountId, no need to check
     if (!lineItem.accountId) {
-      // Todo: (20240822 - Murky Anna) 使用 logger
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
@@ -131,7 +131,7 @@ export async function createLineItemInPrisma(
     );
 
     if (!accountBelongsToCompany) {
-      // Todo: (20240822 - Murky Anna) 使用 logger
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
@@ -162,7 +162,7 @@ export async function createLineItemInPrisma(
 
     return result.id;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -198,7 +198,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
 
     return `${localTodayNo}${newVoucherNo}`;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -226,7 +226,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
 
     return voucherData;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -271,7 +271,7 @@ export async function findManyVoucherWithCashInPrisma(
 
     return vouchers;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }

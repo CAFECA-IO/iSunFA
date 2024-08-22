@@ -1,7 +1,6 @@
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
-// import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { TaxReport401Content } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -21,6 +20,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     data: reportFinancial,
+    // Info: (20240816 - Anna)
     // code: getReportFinancialCode,
     // success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
@@ -34,10 +34,12 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     },
     hasCompanyId
   );
-  // Todo: (20240822 - Murky Anna) 使用 logger('reportFinancial in reportId', reportFinancial)
-  /* Info: (20240730 - Anna) 格式化數字為千分位 */
+  // Todo: (20240822 - Anna) feat. Murky - 使用 logger('reportFinancial in reportId', reportFinancial)
+
+  // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();
-  /* Info: (20240816 - Anna) 轉換和格式化日期 */
+
+  // Info: (20240816 - Anna) 轉換和格式化日期
   const createdAt = reportFinancial?.createdAt ? new Date(reportFinancial.createdAt * 1000) : null;
   const updatedAt = reportFinancial?.updatedAt ? new Date(reportFinancial.updatedAt * 1000) : null;
 
@@ -197,7 +199,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               {t('TAX_REPORT.NUMBER_OF_USED_INVOICES')}
             </td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.basicInfo.usedInvoiceCount ?? 'N/A'} */}
               {reportFinancial?.content.basicInfo.usedInvoiceCount !== undefined &&
               reportFinancial?.content.basicInfo.usedInvoiceCount !== null
                 ? formatNumber(reportFinancial.content.basicInfo.usedInvoiceCount)
@@ -786,6 +787,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">31</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
+              {/* Info: (20240816 - Anna) */}
               {/* {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !==
                 undefined &&
@@ -810,8 +812,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">32</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
-                .generalPurchases.amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
                 .generalPurchases.amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
@@ -824,8 +824,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">33</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
-                .generalPurchases.tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
                 .generalPurchases.tax !== undefined &&
               reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic
@@ -852,8 +850,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">34</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
-                .amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
                 .amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
@@ -866,8 +862,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">35</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
-                .tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
                 .tax !== undefined &&
               reportFinancial?.content.purchases.breakdown.cashRegisterAndElectronic.fixedAssets
@@ -994,8 +988,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">36</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
-                .amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
                 .amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
@@ -1008,8 +1000,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">37</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
-                .tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
                 .tax !== undefined &&
               reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.generalPurchases
@@ -1028,8 +1018,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">38</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
-                .amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
                 .amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets
@@ -1042,8 +1030,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">39</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax ??
-                'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
                 undefined &&
               reportFinancial?.content.purchases.breakdown.otherTaxableVouchers.fixedAssets.tax !==
@@ -1066,8 +1052,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">78</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                .amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                 .amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
@@ -1080,8 +1064,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">79</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
-                .tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
                 .tax !== undefined &&
               reportFinancial?.content.purchases.breakdown.customsDutyPayment.generalPurchases
@@ -1100,8 +1082,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">80</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.amount ??
-                'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets
                 .amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.amount !==
@@ -1114,8 +1094,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">81</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax ??
-                'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
                 undefined &&
               reportFinancial?.content.purchases.breakdown.customsDutyPayment.fixedAssets.tax !==
@@ -1140,8 +1118,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">40</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
-                .amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases
                 .amount !== undefined &&
               reportFinancial?.content.purchases.breakdown.returnsAndAllowances.generalPurchases

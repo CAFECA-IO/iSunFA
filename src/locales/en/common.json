@@ -628,7 +628,13 @@
   "PROFILE_UPLOAD_MODAL": {
     "DROP_YOUR_FILES_HERE_OR": "Drop your files here or",
     "PROFILE_PIC": "Profile Pic",
-    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "Please upload your profile picture"
+    "COMPANY_IMAGE": "Company Image",
+    "PROJECT_IMAGE": "Project Image",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "Please upload your profile picture",
+    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "Please upload your company image",
+    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "Please upload your project image",
+    "UPLOAD_FAILED": "Upload failed",
+    "PLEASE_TRY_LATER": "Please try again later. Error code:"
   },
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "Profit Status Trend Chart",

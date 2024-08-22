@@ -86,7 +86,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -111,7 +111,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 

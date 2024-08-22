@@ -59,7 +59,7 @@ async function handleVoucherCreatePrismaLogic(
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
-    // Todo: (20240822 - Murky Anna) 使用 logger
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
 
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
@@ -128,7 +128,7 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     } catch (_error) {
-      // Todo: (20240822 - Murky Anna) 使用 logger
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   }
   const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);

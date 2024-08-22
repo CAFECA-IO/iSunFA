@@ -106,7 +106,7 @@ export const OPERATING_REVENUE_AND_EXPENSE_MAPPING: Map<string, IOperatingCashFl
         operatingFunction: adjustNonCashExpenseFromNetIncome,
       },
     ],
-    // Info:(20240708 - Murky) 應付公司債匯率影響數不知道怎麼算
+    // Info: (20240708 - Murky) 應付公司債匯率影響數不知道怎麼算
     [
       'A22000',
       {
@@ -474,7 +474,7 @@ export const OPERATING_ASSETS_MAPPING: Map<string, IOperatingCashFlowMapping> = 
   [
     'A31990',
     {
-      fromCode: [], // 需要進一步確定對應代碼
+      fromCode: [], // Info: (20240712 - Gibbs) 需要進一步確定對應代碼
       name: '其他營業資產（增加）減少',
       debit: true,
       operatingFunction: adjustAssetIncreaseFromNetIncome,
@@ -594,7 +594,7 @@ export const OPERATING_LIABILITIES_MAPPING: Map<string, IOperatingCashFlowMappin
   [
     'A32230',
     {
-      fromCode: ['2325', '2330', '2335', '2350', '2355', '2360', '2365', '2370', '2399'], // 其他流動負債
+      fromCode: ['2325', '2330', '2335', '2350', '2355', '2360', '2365', '2370', '2399'], // Info: (20240712 - Gibbs) 其他流動負債
       name: '其他流動負債增加（減少）',
       debit: false,
       operatingFunction: adjustLiabilityIncreaseFromNetIncome,
