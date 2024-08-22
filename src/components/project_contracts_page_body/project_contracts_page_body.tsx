@@ -81,7 +81,7 @@ const ProjectContractsPageBody = () => {
     }
   }, [periodFromFilterModal, sortFromFilterModal, statusFromFilterModal]);
 
-  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: (20240620 - Julian) Replace with actual data
+  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: [Beta] (20240620 - Julian) Replace with actual data
 
   const {
     targetRef: statusRef,
@@ -113,9 +113,7 @@ const ProjectContractsPageBody = () => {
 
   const statusDropdown = (
     <div
-      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-      ${statusVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-      z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${statusVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {statusListWithAll.map((status) => {
         const clickHandler = () => {
@@ -138,9 +136,7 @@ const ProjectContractsPageBody = () => {
 
   const sortDropdown = (
     <div
-      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-      ${sortVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-      z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${sortVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       <button
         type="button"
@@ -185,9 +181,7 @@ const ProjectContractsPageBody = () => {
           <div
             ref={statusRef}
             onClick={statusClickHandler}
-            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input 
-            ${statusVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-            bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input ${statusVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
             <p className="text-text-neutral-primary">{filterStatus}</p>
             <FaChevronDown size={16} />
@@ -201,9 +195,7 @@ const ProjectContractsPageBody = () => {
           <div
             ref={sortRef}
             onClick={sortClickHandler}
-            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input 
-            ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-            bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
             <p className="text-text-neutral-primary">
               {/* {sorting} */}

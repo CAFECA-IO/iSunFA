@@ -40,7 +40,7 @@ const ProjectPageBody = () => {
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = 10; // ToDo: (2024606 - Julian) Get total page from API
+  const totalPages = 10; // ToDo: [Beta] (2024606 - Julian) Get total page from API
 
   const { trigger: getProjectList, data: projectList } = APIHandler<IProject[]>(
     APIName.PROJECT_LIST

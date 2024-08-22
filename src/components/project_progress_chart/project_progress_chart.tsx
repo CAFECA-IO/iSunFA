@@ -173,7 +173,7 @@ const ProjectProgressChart = () => {
   const { t } = useTranslation('common');
 
   // const { t }: { t: TranslateFunction } = useTranslation('common');
-  // TODO: 改成 company startDate (20240618 - Shirley)
+  // TODO: [Beta] 改成 company startDate (20240618 - Shirley)
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 
