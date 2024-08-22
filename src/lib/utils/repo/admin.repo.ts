@@ -388,7 +388,7 @@ export async function createCompanyAndRole(
           },
           create: {
             name: ROLE_NAME.OWNER,
-            // Todo: (20240822 - Murky) Should enum the permissions,
+            // Todo: [Beta] (20240822 - Murky) Should enum the permissions,
             // however, since Beta version will change the permission type,
             // and what permission per type is not clear yet, so just put it as string array
             // and change it after beta mockup is clear
