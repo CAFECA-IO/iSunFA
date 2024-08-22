@@ -25,12 +25,10 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import {
   BalanceSheetOtherInfo,
-  CashFlowStatementOtherInfo,
-  IncomeStatementOtherInfo,
   IPaginatedReport,
+  IReportContent,
 } from '@/interfaces/report';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
-import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import {
   convertStringToReportSheetType,
@@ -38,8 +36,7 @@ import {
   isReportLanguagesKey,
   isReportSheetType,
 } from '@/lib/utils/type_guard/report';
-import { generate401Report } from '@/lib/utils/report/report_401';
-import FinancialReportGeneratorFactory from '@/lib/utils/report/financial_report_generator_factory';
+import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -246,19 +243,89 @@ export function formatPostRequestQuery(req: NextApiRequest) {
   };
 }
 
-async function generateFinancialReport(
+// async function generateFinancialReport(
+//   companyId: number,
+//   startDateInSecond: number,
+//   endDateInSecond: number,
+//   reportSheetType: ReportSheetType
+// ) {
+//   // Info: (20240710 - Murky) Financial Report Generator
+//   let reportContent: {
+//     content: IAccountReadyForFrontend[];
+//     otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+//   } = { content: [], otherInfo: {} as BalanceSheetOtherInfo };
+//   try {
+//     const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
+//       companyId,
+//       startDateInSecond,
+//       endDateInSecond,
+//       reportSheetType
+//     );
+
+//     reportContent = await financialReportGenerator.generateReport();
+//   } catch (error) {
+//     // Deprecate: (20240710 - Murky) console.error
+//     // eslint-disable-next-line no-console
+//     console.error(error);
+//   }
+//   return reportContent;
+// }
+
+// async function generateReport(
+//   companyId: number,
+//   startDateInSecond: number,
+//   endDateInSecond: number,
+//   reportSheetType: ReportSheetType
+// ): Promise<object> {
+//   // Todo (20240808 - Jacky): return type should change to IReportContent
+//   let content = {};
+//   switch (reportSheetType) {
+//     case ReportSheetType.BALANCE_SHEET:
+//       content = await generateFinancialReport(
+//         companyId,
+//         startDateInSecond,
+//         endDateInSecond,
+//         ReportSheetType.BALANCE_SHEET
+//       );
+//       break;
+//     case ReportSheetType.INCOME_STATEMENT:
+//       content = await generateFinancialReport(
+//         companyId,
+//         startDateInSecond,
+//         endDateInSecond,
+//         ReportSheetType.INCOME_STATEMENT
+//       );
+//       break;
+//     case ReportSheetType.CASH_FLOW_STATEMENT:
+//       content = await generateFinancialReport(
+//         companyId,
+//         startDateInSecond,
+//         endDateInSecond,
+//         ReportSheetType.CASH_FLOW_STATEMENT
+//       );
+//       break;
+//     case ReportSheetType.REPORT_401:
+//       content = await generate401Report(companyId, startDateInSecond, endDateInSecond);
+//       break;
+//     default:
+//       break;
+//   }
+//   return content;
+// }
+
+async function generateReport(
   companyId: number,
   startDateInSecond: number,
   endDateInSecond: number,
   reportSheetType: ReportSheetType
-) {
-  // Info: (20240710 - Murky) Financial Report Generator
-  let reportContent: {
-    content: IAccountReadyForFrontend[];
-    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
-  } = { content: [], otherInfo: {} as BalanceSheetOtherInfo };
+): Promise<IReportContent> {
+  // Info: (20240710 - Murky) Report Generator
+  let reportContent: IReportContent = { content: {
+    content: [],
+    otherInfo: {} as BalanceSheetOtherInfo
+  } };
   try {
-    const financialReportGenerator = await FinancialReportGeneratorFactory.createGenerator(
+    const financialReportGenerator = await ReportGeneratorFactory.createGenerator(
       companyId,
       startDateInSecond,
       endDateInSecond,
@@ -267,53 +334,9 @@ async function generateFinancialReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Deprecate: (20240710 - Murky) console.error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240710 - Murky) Please use logger to log the error
   }
   return reportContent;
-}
-
-async function generateReport(
-  companyId: number,
-  startDateInSecond: number,
-  endDateInSecond: number,
-  reportSheetType: ReportSheetType
-): Promise<object> {
-  // Todo (20240808 - Jacky): return type should change to IReportContent
-  let content = {};
-  switch (reportSheetType) {
-    case ReportSheetType.BALANCE_SHEET:
-      content = await generateFinancialReport(
-        companyId,
-        startDateInSecond,
-        endDateInSecond,
-        ReportSheetType.BALANCE_SHEET
-      );
-      break;
-    case ReportSheetType.INCOME_STATEMENT:
-      content = await generateFinancialReport(
-        companyId,
-        startDateInSecond,
-        endDateInSecond,
-        ReportSheetType.INCOME_STATEMENT
-      );
-      break;
-    case ReportSheetType.CASH_FLOW_STATEMENT:
-      content = await generateFinancialReport(
-        companyId,
-        startDateInSecond,
-        endDateInSecond,
-        ReportSheetType.CASH_FLOW_STATEMENT
-      );
-      break;
-    case ReportSheetType.REPORT_401:
-      content = await generate401Report(companyId, startDateInSecond, endDateInSecond);
-      break;
-    default:
-      break;
-  }
-  return content;
 }
 
 async function generateReportName(
@@ -346,7 +369,7 @@ export async function generateReportIfNotExist(
     reportSheetType
   );
   if (!reportId) {
-    const content = await generateReport(
+    const { content } = await generateReport(
       companyId,
       startDateInSecond,
       endDateInSecond,

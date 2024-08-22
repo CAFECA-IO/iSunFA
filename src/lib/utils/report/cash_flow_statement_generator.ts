@@ -16,9 +16,8 @@ import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financ
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
 import {
-  BalanceSheetOtherInfo,
   CashFlowStatementOtherInfo,
-  IncomeStatementOtherInfo,
+  IFinancialReportInDB,
 } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { timestampInMilliSeconds } from '@/lib/utils/common';
@@ -795,13 +794,14 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   public override async generateReport(): Promise<{
-    content: IAccountReadyForFrontend[];
-    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+    content: IFinancialReportInDB
   }> {
     const cashFlowAccounts = await this.generateIAccountReadyForFrontendArray();
     const incomeStatementAccount =
       await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(cashFlowAccounts, incomeStatementAccount);
-    return { content: cashFlowAccounts, otherInfo };
+    const financialReportInDB = { content: cashFlowAccounts, otherInfo };
+
+    return { content: financialReportInDB };
   }
 }
