@@ -1,9 +1,11 @@
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
+/* Info: (20240430 - Julian)
 // import { PiCopySimple } from 'react-icons/pi';
 // import { FiEdit } from 'react-icons/fi';
 // import { RiDeleteBinLine } from 'react-icons/ri';
 // import { useAccountingCtx } from '@/contexts/accounting_context';
+*/
 
 // ToDo: (20240430 - Julian) 預計刪除
 

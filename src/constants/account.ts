@@ -1,5 +1,5 @@
-// Info: this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition (20240416 - Murky)
-// Info: type (20240416 - Murky)
+// Info: (20240416 - Murky) this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition
+// Info: (20240416 - Murky) type
 export enum ProgressStatus {
   SUCCESS = 'success',
   IN_PROGRESS = 'inProgress',

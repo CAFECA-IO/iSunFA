@@ -61,7 +61,7 @@ export function generateRandomPaginatedData(
 
   const paginatedSeriesData = newSeries.map(
     (series: number[]) =>
-      // TODO: eslint disable for workaround (20240513 - Shirley)
+      // TODO: (20240513 - Shirley) eslint disable for workaround
       // eslint-disable-next-line implicit-arrow-linebreak
       series.slice(startIndex, endIndex)
     // eslint-disable-next-line function-paren-newline
@@ -81,5 +81,5 @@ export function generateRandomPaginatedData(
   };
 }
 
-// Info: 註冊日期或第一個專案的日期 (20240513 - Shirley)
+// Info: (20240513 - Shirley) 註冊日期或第一個專案的日期
 export const DUMMY_START_DATE = '2024/02/12';

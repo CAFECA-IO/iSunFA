@@ -34,6 +34,7 @@ const NumericInput = ({
 }: INumericInputProps) => {
   // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
   const [displayValue, setDisplayValue] = useState<string>(value.toString());
+
   // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
   const [dbValue, setDbValue] = useState<number>(value);
 
@@ -55,19 +56,22 @@ const NumericInput = ({
         .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
         .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
 
-    // 轉換成數值 (整數或浮點數) 為了存入 DB
+    // Info: (20240723 - Liz) 轉換成數值 (整數或浮點數) 為了存入 DB
     const numericValue = isDecimal
       ? parseFloat(sanitizedValue) // 如果解析失敗，會是 NaN
       : parseInt(sanitizedValue, 10); // 如果解析失敗，會是 NaN
 
-    // 處理 NaN 的情況
+    // Info: (20240723 - Liz) 處理 NaN 的情況
     const validNumericValue = Number.isNaN(numericValue) ? 0 : numericValue;
 
-    // 根據 isDecimal 和 hasComma 的值來決定顯示值的格式
+    // Info: (20240723 - Liz) 根據 isDecimal 和 hasComma 的值來決定顯示值的格式
     const formattedDisplayValue = formatDisplayValue(sanitizedValue, isDecimal, hasComma);
 
-    setDbValue(validNumericValue); // 更新儲存值
-    setDisplayValue(formattedDisplayValue); // 更新顯示值
+    // Info: (20240723 - Liz) 更新儲存值
+    setDbValue(validNumericValue);
+
+    // Info: (20240723 - Liz) 更新顯示值
+    setDisplayValue(formattedDisplayValue);
 
     if (triggerWhenChanged) {
       triggerWhenChanged(validNumericValue, event);

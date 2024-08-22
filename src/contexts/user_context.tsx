@@ -135,10 +135,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
   };
 
-  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      // Info: (20240808 - Shirley)
       // if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
       //   setReturnUrl(encodeURIComponent(router.asPath));
       // }
@@ -203,7 +204,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO: [Beta](20240819-Tzuhan) handle expiration
+  // TODO: (20240819 - Tzuhan) [Beta] handle expiration
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isJwtExpired = (expires: string | undefined) => {
     if (!expires) return true;
@@ -212,7 +213,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return now > expirationDate;
   };
 
-  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
+  // Info: (20240409 - Shirley) 在用戶一進到網站後就去驗證是否登入
   const checkSession = useCallback(async () => {
     setIsAuthLoading(true);
     const {
@@ -313,7 +314,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(response.error);
       }
     } catch (error) {
-      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+      // TODO: (20240814-Tzuhan) [Beta] handle error
     }
   };
 
@@ -404,7 +405,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     checkSession,
   ]);
 
-  // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
+  // Info: (20240522 - Shirley) dependency array 的值改變，才會讓更新後的 value 傳到其他 components
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
