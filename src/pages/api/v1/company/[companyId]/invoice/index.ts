@@ -74,9 +74,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -101,9 +99,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -184,9 +180,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Murky Anna) 使用 logger
     handleErrorResponse(res, error.message);
   }
 }

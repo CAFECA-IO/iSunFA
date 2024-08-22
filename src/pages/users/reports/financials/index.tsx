@@ -16,12 +16,9 @@ interface IFinancialsReportsPageProps {
 }
 
 const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
-  // eslint-disable-next-line no-console
-  console.log(
-    'reportType on FinancialsReportsPage',
-    reportType,
-    FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey]
-  );
+  // Todo: (20240822 - Murky Anna) 使用 logger
+  // ('reportType on FinancialsReportsPage',reportType,
+  //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey])
 
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
