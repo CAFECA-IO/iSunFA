@@ -150,9 +150,7 @@ const ConfirmModal = ({
         changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
       });
     } catch (err) {
-      // Info: (20240726 - Tzuhan) [Debug:] Show error message
-      // eslint-disable-next-line no-console
-      console.log(`importVoucherHandler err: `, err);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   };
 
