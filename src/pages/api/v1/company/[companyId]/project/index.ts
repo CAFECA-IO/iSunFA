@@ -9,7 +9,6 @@ import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.
 import { getSession } from '@/lib/utils/session';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import logger from '@/lib/utils/logger';
 
 export default async function handler(
   req: NextApiRequest,
