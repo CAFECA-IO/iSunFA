@@ -34,7 +34,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     },
     hasCompanyId
   );
-  // console.log('reportFinancial in reportId', reportFinancial);
+  // Todo: (20240822 - Murky Anna) 使用 logger('reportFinancial in reportId', reportFinancial)
   /* Info: (20240730 - Anna) 格式化數字為千分位 */
   const formatNumber = (num: number) => num.toLocaleString();
   /* Info: (20240816 - Anna) 轉換和格式化日期 */

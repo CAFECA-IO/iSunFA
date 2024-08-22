@@ -53,8 +53,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     hasCompanyId
   );
 
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial in reportId', reportFinancial);
+  // Todo: (20240822 - Murky Anna) 使用 logger ('reportFinancial in reportId', reportFinancial)
 
   useEffect(() => {
     if (getFRSuccess === false) {
@@ -138,7 +137,6 @@ export default ViewFinancialReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
   // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   // const { report_type, report_language, start_timestamp, end_timestamp } = query;
 
   // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
