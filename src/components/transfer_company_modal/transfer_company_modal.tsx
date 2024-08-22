@@ -79,7 +79,7 @@ const TransferCompanyModal = ({
 
   const saveClickHandler = async () => {
     if (inputRef.current) {
-      // TODO: (20240717 - Shirley) send API request
+      // TODO: [Beta] (20240717 - Shirley) send API request
       if (inputRef.current.value === '') {
         modalVisibilityHandler();
         return;
@@ -88,8 +88,7 @@ const TransferCompanyModal = ({
       const newOwnerId = inputRef.current.value;
       modalVisibilityHandler();
 
-      // TODO: (20240717 - Shirley) validate the userId
-      // TODO: (20240717 - Shirley) show message modal
+      // TODO: [Beta] (20240717 - Shirley) validate the userId
       messageModalDataHandler({
         messageType: MessageType.WARNING,
         title: 'Transfer company',
@@ -100,8 +99,8 @@ const TransferCompanyModal = ({
             </p>
             <p className="text-text-neutral-primary">{inputRef.current.value}</p>
           </div>
-        ), // TODO: (20240717 - Shirley) message color
-        // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: (20240717 - Shirley) message color
+        ), // TODO: [Beta] (20240717 - Shirley) message color
+        // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`,
         backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
         submitBtnStr: t('JOURNAL.TRANSFER'),
         submitBtnFunction: () => handleSubmit(newOwnerId),
@@ -185,7 +184,6 @@ const TransferCompanyModal = ({
         </div>
         <div className="flex w-full items-end justify-end bg-white px-5 py-4 text-sm font-medium">
           <div className="flex w-full gap-3">
-            {/* TODO: (20240409 - Shirley) button component */}
             <Button
               variant={'secondaryOutline'}
               onClick={modalVisibilityHandler}

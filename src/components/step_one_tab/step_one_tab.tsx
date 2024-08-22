@@ -72,7 +72,7 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
-    // TODO: (20240814 - Shirley) in dev
+    // TODO: [Beta] (20240814 - Shirley) in dev
     // eslint-disable-next-line no-console
     console.log('OCRList in StepOneTab:', OCRList);
 
@@ -89,7 +89,7 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
-  // TODO: (20240816 - Shirley) in dev
+  // TODO: [Beta] (20240816 - Shirley) in dev
   // eslint-disable-next-line no-console
   console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
@@ -267,7 +267,7 @@ const StepOneTab = () => {
           <button
             type="button"
             onClick={qrCodeScanClickHandler}
-            // ToDo: (20240802 - Julian) Not released yet
+            // ToDo: [Beta] (20240802 - Julian) Not released yet
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
             className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable disabled:text-drag-n-drop-text-disable md:p-48px"

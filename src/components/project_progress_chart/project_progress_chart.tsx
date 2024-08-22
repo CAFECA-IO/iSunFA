@@ -173,7 +173,7 @@ const ProjectProgressChart = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { t } = useTranslation('common');
 
-  // TODO: (20240618 - Shirley) 改成 company startDate
+  // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 

@@ -628,7 +628,13 @@
   "PROFILE_UPLOAD_MODAL": {
     "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
     "PROFILE_PIC": "使用者照片",
-    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "請上傳您的個人資料照片"
+    "COMPANY_IMAGE": "公司圖片",
+    "PROJECT_IMAGE": "專案圖片",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "請上傳您的個人資料照片",
+    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "請上傳您的公司圖片",
+    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "請上傳您的專案圖片",
+    "UPLOAD_FAILED": "上傳失敗",
+    "PLEASE_TRY_LATER": "請稍後再試。錯誤代碼："
   },
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "獲利狀況趨勢圖",

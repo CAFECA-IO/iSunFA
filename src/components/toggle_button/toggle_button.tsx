@@ -6,7 +6,6 @@ interface IToggleButtonProps {
   offText?: string;
   checked: boolean;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  // className?: string; // ToDo: (240426 - Liz) 搭配 { cn, timestampToString } 可以擴充樣式寫法
 }
 
 const ToggleButton = ({ onText, offText, checked, onChange }: IToggleButtonProps) => {
@@ -42,7 +41,6 @@ const ToggleButton = ({ onText, offText, checked, onChange }: IToggleButtonProps
 ToggleButton.defaultProps = {
   onText: '',
   offText: '',
-  // className: '', // ToDo: (240426 - Liz) 可以擴充樣式
 };
 
 export default ToggleButton;

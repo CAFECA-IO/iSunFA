@@ -15,7 +15,6 @@ export interface IAccount {
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
-  // ToDo: (20240717 - Julian) Missing 'isFavorite' property
 }
 
 export interface IPaginatedAccount extends IPaginatedData<IAccount[]> {}

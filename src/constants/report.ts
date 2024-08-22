@@ -1,4 +1,4 @@
-// ToDo: (20240802 - Julian) change in equity statement is not released yet
+// ToDo: [Beta] (20240802 - Julian) change in equity statement is not released yet
 import { AccountType } from '@/constants/account';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
