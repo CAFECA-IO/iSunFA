@@ -6,10 +6,10 @@ import { IAsset, mockAssetData } from '@/interfaces/asset';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAsset | IAsset[]>>
+  res: NextApiResponse<IResponseData<IAsset | IAsset[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload = {} as IAsset | IAsset[];
+  let payload: IAsset | IAsset[] | null = null;
   try {
     switch (req.method) {
       case 'GET': {
