@@ -138,31 +138,12 @@ export default ViewAnalysisReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
   // Info: (20240429 - Shirley) variable from URL query
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  // const { reportType, report_language, start_timestamp, end_timestamp } = query;
-
-  // if (!reportType || !report_language || !start_timestamp || !end_timestamp) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
-
-  // Info: (20240429 - Shirley) variable from URL query
   const { reportId = '', report_type: reportType = '' } = query;
-  // if (!reportId || !reportType) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
 
   return {
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
-      // Info: (20240524 - Shirley)
-      // reportLanguage: report_language as string,
-      // startTimestamp: start_timestamp as string,
-      // endTimestamp: end_timestamp as string,
       ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };
