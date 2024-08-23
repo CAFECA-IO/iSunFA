@@ -105,7 +105,7 @@ describe('Admin Repository Tests', () => {
     it("should update an admin's details", async () => {
       const status = false;
       const admin = await updateAdminById(testAdminId, status);
-      await updateAdminById(testAdminId, admins[0].status, testRoleId); // Reset
+      await updateAdminById(testAdminId, admins[0].status, testRoleId); // Info: (20240704 - Jacky) Reset
       expect(admin).toBeDefined();
       expect(admin.id).toBe(testAdminId);
       expect(admin.status).toBe(status);

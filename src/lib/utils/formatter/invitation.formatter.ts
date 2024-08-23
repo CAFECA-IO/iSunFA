@@ -1,6 +1,7 @@
 import { IInvitation } from '@/interfaces/invitation';
 import { Invitation } from '@prisma/client';
 
+// Info: (20240704 - Jacky)
 // Assuming the Invitation model from schema.prisma looks similar to the IInvitation interface
 export function formatInvitation(getInvitation: Invitation): IInvitation {
   const formattedInvitation: IInvitation = {

@@ -91,7 +91,7 @@ export default abstract class FinancialReportGenerator {
     creditCodes: Set<string>
   ): boolean {
     if (!either) {
-      return true; // If no either pattern is specified, return true
+      return true; // If no either pattern is specified, return true // Info: (20240721 - Gibbs)
     }
     return (
       this.matchPattern(either.debit, debitCodes) || this.matchPattern(either.credit, creditCodes)
@@ -99,6 +99,7 @@ export default abstract class FinancialReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
+    // Info: (20240801 - Murky)
     // const forUser = undefined;
     // const page = 1;
     // const limit = Number.MAX_SAFE_INTEGER;

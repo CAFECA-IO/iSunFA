@@ -132,8 +132,8 @@ export async function listLineItems({
   }
 
   const sort: {
-    sortBy: string; // 排序欄位的鍵
-    sortOrder: string; // 排序欄位的值
+    sortBy: string; // Info: (20240812 - Murky) 排序欄位的鍵
+    sortOrder: string; // Info: (20240812 - Murky) 排序欄位的值
   }[] = [{ sortBy, sortOrder }];
 
   const paginatedLineItemList = {
@@ -149,7 +149,7 @@ export async function listLineItems({
   return paginatedLineItemList;
 }
 
-/**
+/** Info: (20240812 - Murky)
  * Create line item record by ILineItem and connect to voucher by voucherId
  * @param {number} voucherId voucher id that line item will be connected to (type: number)
  * @param {ILineItem} lineItem line item data that will be created (type: ILineItem)
@@ -205,7 +205,7 @@ export async function createLineItem({
   return result;
 }
 
-/**
+/** Info: (20240812 - Murky)
  * Update line item record (identify by lineItemId) by ILineItem and connect to voucher by voucherId
  * @param {number} lineItemId line item id that will be updated (type: number)
  * @param {number} voucherId voucher id that line item will be connected to (type: number)

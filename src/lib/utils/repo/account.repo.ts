@@ -248,7 +248,7 @@ export async function fuzzySearchAccountByName(name: string) {
     `;
     [account] = accounts;
   } catch (error) {
-    // Deprecated: （ 20240619 - Murky）Debugging purpose
+    // Deprecated:（ 20240619 - Murky）Debugging purpose
     // eslint-disable-next-line no-console
     console.error(error);
   }

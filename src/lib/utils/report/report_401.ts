@@ -15,7 +15,7 @@ import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { IJournalIncludeVoucherLineItemsInvoicePayment } from '@/interfaces/journal';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
 
-/** Info (20240814 - Jacky): 更新銷項資料
+/** Info: (20240814 - Jacky) 更新銷項資料
  * Updates the sales result based on the provided journal, category, and sales object.
  * If the journal's invoice payment has tax, the payment price is added to the specified category in the sales object.
  * If the journal's invoice payment does not have tax, the payment price is added to the specified category in the sales object.
@@ -51,7 +51,7 @@ function updateSalesResult(
     updatedSales.breakdown.total.sales + updatedSales.breakdown.total.zeroTax;
 }
 
-/** Info (20240814 - Jacky): 更新進項資料
+/** Info: (20240814 - Jacky) 更新進項資料
  * Updates the purchases result based on the provided journal, category, and purchases object.
  * If the journal's invoice payment has tax, the payment price is added to the specified category in the purchases object.
  * If the journal's invoice payment does not have tax, the payment price is added to the specified category in the purchases object.
@@ -112,7 +112,7 @@ function updatePurchasesResult(
   updatedPurchase.totalWithNonDeductible.fixedAssets += unDeductible.fixedAssets;
 }
 
-/** Info (20240814 - Jacky): 更新進口資料
+/** Info: (20240814 - Jacky) 更新進口資料
  * Updates the imports result based on the provided journal, category, and imports object.
  * If the journal's invoice payment does not have tax, the payment price is added to the specified category in the imports object.
  *
@@ -131,7 +131,7 @@ function updateImportsResult(
   }
 }
 
-/** Info (20240814 - Jacky): 稅額計算
+/** Info: (20240814 - Jacky) 稅額計算
  * Calculates the total tax amounts based on the provided tax calculation, sales, and purchases objects.
  * The total output tax is the total tax amount from the sales object.
  * The total deductible input tax is the total tax amount from the general purchases and fixed assets in the purchases object.
@@ -170,7 +170,7 @@ function calculateTotals(taxCalculation: TaxCalculation, sales: Sales, purchases
   }
 }
 
-/** Info (20240814 - Jacky): 產生401報表
+/** Info: (20240814 - Jacky) 產生401報表
  * Generates a 401 tax report based on the provided company ID, start date, and end date.
  * The report includes the basic information, sales breakdown, purchases breakdown, tax calculation, imports, and bonded area sales to tax area.
  *
@@ -190,13 +190,13 @@ export async function generate401Report(
   }
   const ROCStartDate = convertTimestampToROCDate(from);
   const ROCEndDate = convertTimestampToROCDate(to);
-  // 1. 獲取所有發票
+  // Info: (20240813 - Jacky) 1. 獲取所有發票
   const journalList = await listJournalFor401(companyId, from, to);
   const basicInfo = {
     uniformNumber: companyKYC.registrationNumber,
     businessName: companyKYC.legalName,
     personInCharge: companyKYC.representativeName,
-    taxSerialNumber: 'ABC123', // TODO (20240808 - Jacky): Implement this field in next sprint
+    taxSerialNumber: 'ABC123', // TODO: (20240808 - Jacky) Implement this field in next sprint
     businessAddress: companyKYC.address,
     currentYear: ROCStartDate.year.toString(),
     startMonth: ROCStartDate.month.toString(),

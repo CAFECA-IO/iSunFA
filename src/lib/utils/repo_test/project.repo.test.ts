@@ -28,11 +28,11 @@ describe('Project Repository', () => {
       const projectId = 1000;
       const project = await getProjectById(projectId);
 
-      // Assert that project is defined
+      // Info: (20240704 - Jacky) Assert that project is defined
       expect(project).toBeDefined();
       expect(project).toBeTruthy();
 
-      // TypeScript now knows project is defined, no need for optional chaining
+      // Info: (20240704 - Jacky) TypeScript now knows project is defined, no need for optional chaining
       expect(project!.id).toBe(projectId);
       expect(project!.companyId).toBe(projects[0].companyId);
       expect(project!.name).toContain(projects[0].name);

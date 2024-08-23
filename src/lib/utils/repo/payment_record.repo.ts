@@ -3,7 +3,7 @@ import { IPaymentRecord } from '@/interfaces/payment_record';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma } from '@prisma/client';
 
-// Create
+// Info: (20240620 - Jacky) Create
 export async function createPaymentRecord(
   orderId: number,
   transactionId: string,
@@ -31,7 +31,7 @@ export async function createPaymentRecord(
   return newPaymentRecord;
 }
 
-// Read
+// Info: (20240620 - Jacky) Read
 export async function getPaymentRecordById(id: number): Promise<IPaymentRecord | null> {
   let paymentRecord = null;
   if (id > 0) {
@@ -46,7 +46,7 @@ export async function getPaymentRecordById(id: number): Promise<IPaymentRecord |
   return paymentRecord;
 }
 
-// List
+// Info: (20240620 - Jacky) List
 export async function listPaymentRecords(orderId: number): Promise<IPaymentRecord[]> {
   const listedPaymentRecords = await prisma.paymentRecord.findMany({
     where: {

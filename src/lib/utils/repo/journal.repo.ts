@@ -93,7 +93,7 @@ export async function findManyJournalsInPrisma(
 export async function listJournal(
   companyId: number,
   journalEvent?: JOURNAL_EVENT,
-  page: number = 1, // 将 pageDelta 改为 targetPage，默认值为 1
+  page: number = 1, // Info: (202040717 - Jacky) 將 pageDelta 改為 targetPage，預設值為 1
   pageSize: number = DEFAULT_PAGE_LIMIT,
   eventType: string | undefined = undefined,
   sortBy: SortBy = SortBy.CREATED_AT,
@@ -160,12 +160,12 @@ export async function listJournal(
     const hasPreviousPage = page > 1;
 
     if (journalList.length > pageSize) {
-      journalList.pop(); // 移除多余的记录
+      journalList.pop(); // Info: (202040717 - Jacky) 移除多餘的紀錄
     }
 
     const sort: {
-      sortBy: string; // 排序欄位的鍵
-      sortOrder: string; // 排序欄位的值
+      sortBy: string; // Info: (202040717 - Jacky) 排序欄位的鍵
+      sortOrder: string; // Info: (202040717 - Jacky) 排序欄位的值
     }[] = [{ sortBy, sortOrder }];
 
     if (journalEvent) {
