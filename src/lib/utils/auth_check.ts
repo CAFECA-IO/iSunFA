@@ -102,7 +102,6 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   }
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
-    // throw new Error(STATUS_MESSAGE.FORBIDDEN); // Info: (20240708 - Anna)
     throw new Error(`${STATUS_MESSAGE.FORBIDDEN} - Missing role: ${translatedRoleName}`);
   }
   return session;
