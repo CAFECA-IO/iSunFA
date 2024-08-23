@@ -48,6 +48,3 @@ next-env.d.ts
 # backup
 *.backup
 pnpm-lock.yaml
-
-# logs
-/logs

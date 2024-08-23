@@ -10,7 +10,6 @@ import { useInvitation } from '@/lib/utils/invitation';
 import { verifyChallengeTimestamp } from '@/lib/utils/authorization';
 import { getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
-import logger from '@/lib/utils/logger';
 
 async function authenticateUser(
   authentication: AuthenticationEncoded,
@@ -88,12 +87,6 @@ export default async function handler(
 ): Promise<void> {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUser | null = null;
-  logger.fatal('@@@@@@@@@@@fatal');
-  logger.error('@@@@@@@@@@@error');
-  logger.warn('@@@@@@@@@@@warn');
-  logger.info('@@@@@@@@@@@info');
-  logger.debug('@@@@@@@@@@@debug');
-  logger.trace('@@@@@@@@@@@trace');
   try {
     const handleRequest = methodHandlers[req.method || ''];
     if (handleRequest) {
