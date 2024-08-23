@@ -35,7 +35,6 @@ export default async function handler(
           updatedAt: nowTimestamp,
         },
       });
-      // const { company, ...role } = createdRole; // Info: (20240513 - Jacky)
 
       const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.CREATED, createdRole);
       res.status(httpCode).json(result);
