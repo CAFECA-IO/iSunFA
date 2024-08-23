@@ -188,7 +188,7 @@ describe('POST OCR', () => {
       jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
       jest.spyOn(common, 'transformOCRImageIDToURL').mockReturnValue('testImageUrl');
 
-      // help me mock formidable.Files<"image"> // Info: (20240604 - Murky)
+      // Info: (20240604 - Murky) help me mock formidable.Files<"image">
 
       mockImages = mock<formidable.Files<'image'>>({
         image: [mockImage],
