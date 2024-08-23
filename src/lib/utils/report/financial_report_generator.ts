@@ -82,7 +82,7 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     creditCodes: Set<string>
   ): boolean {
     if (!either) {
-      return true; // If no either pattern is specified, return true // Info: (20240721 - Gibbs)
+      return true; // Info: (20240721 - Gibbs) If no either pattern is specified, return true
     }
     return (
       this.matchPattern(either.debit, debitCodes) || this.matchPattern(either.credit, creditCodes)
@@ -90,27 +90,6 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
-    // Info: (20240801 - Murky)
-    // const forUser = undefined;
-    // const page = 1;
-    // const limit = Number.MAX_SAFE_INTEGER;
-    // const liquidity = undefined;
-    // const isDeleted = false;
-    // const accounts = await findManyAccountsInPrisma({
-    //   companyId: this.companyId,
-    //   includeDefaultAccount: undefined,
-    //   liquidity,
-    //   type: accountType,
-    //   reportType: undefined,
-    //   equityType: undefined,
-    //   forUser,
-    //   isDeleted,
-    //   page,
-    //   limit,
-    //   sortBy: 'code',
-    //   sortOrder: 'asc',
-    // });
-
     const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
     const forest = buildAccountForest(accounts);
 
