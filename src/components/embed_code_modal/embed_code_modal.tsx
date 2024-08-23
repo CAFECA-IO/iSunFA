@@ -162,7 +162,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {/* {selectedProjectName} */}
             {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
           </div>
 
@@ -253,7 +252,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
                         ? t('PROJECT.OVERALL')
@@ -429,7 +427,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             <div className="flex space-x-3 text-input-text-primary">
               <Image src={'/icons/rocket.svg'} width={20} height={20} alt="rocket_icon" />
               <p className="text-input-text-primary">
-                {/* {selectedProjectName} */}
                 {t(
                   `PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
                 )}

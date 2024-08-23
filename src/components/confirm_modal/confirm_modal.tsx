@@ -693,7 +693,6 @@ const ConfirmModal = ({
             <div className="flex items-center justify-between">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
               {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
-              {/* {displayPeriod} */}
               {translatedPeriod && (
                 <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
               )}

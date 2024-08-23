@@ -145,7 +145,6 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                       {bookmarkList[key].iconOnModal}
                     </div>
                     <p className="items-center justify-center text-start text-xs sm:text-sm">
-                      {/* {bookmarkList[key].name} */}
                       {t(bookmarkNameMap[bookmarkList[key].name])}
                     </p>
 
