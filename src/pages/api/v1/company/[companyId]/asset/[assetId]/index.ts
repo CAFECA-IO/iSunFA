@@ -14,8 +14,8 @@ export default async function handler(
     switch (req.method) {
       case 'GET': {
         // let shouldContinue: boolean = true;
-        // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) listContract
+        // TODO: [Beta] (20240625 - Jacky) checkAuth
+        // TODO: [Beta] (20240625 - Jacky) listContract
         const assetList = mockAssetData;
         statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
         payload = assetList;
@@ -23,8 +23,8 @@ export default async function handler(
       }
       case 'PUT': {
         // let shouldContinue: boolean = true;
-        // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) createContract
+        // TODO: [Beta] (20240625 - Jacky) checkAuth
+        // TODO: [Beta] (20240625 - Jacky) createContract
         const asset: IAsset = mockAssetData[0];
         statusMessage = STATUS_MESSAGE.CREATED;
         payload = asset;
@@ -32,8 +32,8 @@ export default async function handler(
       }
       case 'DELETE': {
         // let shouldContinue: boolean = true;
-        // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) createContract
+        // TODO: [Beta] (20240625 - Jacky) checkAuth
+        // TODO: [Beta] (20240625 - Jacky) createContract
         const asset: IAsset = mockAssetData[0];
         statusMessage = STATUS_MESSAGE.CREATED;
         payload = asset;

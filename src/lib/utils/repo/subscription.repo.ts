@@ -12,7 +12,7 @@ export async function createSubscription(
 ): Promise<ISubscription> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  // TODO (20240617 - Jacky): Need to get plan details to calculate expired date
+  // TODO (20240617 - Jacky): [Beta] Need to get plan details to calculate expired date
   const expiredDate = nowTimestamp + 30 * ONE_DAY_IN_S;
   const newSubscription = await prisma.subscription.create({
     data: {

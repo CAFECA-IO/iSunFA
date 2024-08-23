@@ -75,7 +75,7 @@ async function handlePostRequest(req: NextApiRequest) {
         body: JSON.stringify({
           merchantId: oenMerchantId,
           amount: getOrder.plan.monthlyFee,
-          currency: 'TWD', // TODO: Need to modify in the future
+          currency: 'TWD', // TODO: (20240823 - Jacky) [Beta] Need to modify in the future
           token,
           orderId: customId,
         }),
@@ -99,7 +99,7 @@ async function handlePostRequest(req: NextApiRequest) {
         orderId,
         transactionResponseJson.data.transactionId,
         createDateInSec,
-        transactionResponseJson.message, // TODO: not sure what to put
+        transactionResponseJson.message, // TODO: (20240823 - Jacky) [Beta] not sure what to put
         transactionResponseJson.data.amount,
         transactionResponseJson.data.paymentInfo.method,
         transactionResponseJson.data.status

@@ -41,7 +41,7 @@ export async function getLatestVoucherNo(companyId: number) {
   try {
     voucher = await prisma.voucher.findFirst(findFirstArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const localToday = new Date();
@@ -90,7 +90,7 @@ export async function findUniqueVoucherById(voucherId: number) {
   try {
     voucherData = await prisma.voucher.findUnique(findUniqueArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return voucherData;
 }
@@ -126,7 +126,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
   try {
     voucherData = await prisma.voucher.create(voucherCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return voucherData;
@@ -183,7 +183,7 @@ export async function findManyVoucherWithCashInPrisma(
   try {
     vouchers = await prisma.voucher.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return vouchers;

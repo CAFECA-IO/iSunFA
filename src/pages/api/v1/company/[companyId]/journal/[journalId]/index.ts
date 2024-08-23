@@ -43,7 +43,7 @@ async function handleGetRequest(companyId: number, req: NextApiRequest) {
         journal = formatIJournal(journalData);
       }
     } catch (error) {
-      // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
   return journal;
@@ -62,7 +62,7 @@ async function handleDeleteRequest(companyId: number, req: NextApiRequest) {
         journal = formatIJournal(journalData);
       }
     } catch (error) {
-      // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
   return journal;

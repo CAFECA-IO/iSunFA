@@ -65,7 +65,7 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
       body: formData,
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -90,7 +90,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -175,13 +175,13 @@ export async function postImageToAICH(
             uploadIdentifier: isIndexValid ? imageFields[index].uploadIdentifier : '',
           };
         } catch (error) {
-          // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
         }
         return result;
       })
     );
   } else {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return resultJson;
@@ -229,7 +229,7 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
     files = parsedForm.files;
     fields = parsedForm.fields;
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return {
     files,
@@ -250,7 +250,7 @@ export async function fetchStatus(aichResultId: string) {
 
       status = (await result.json()).payload;
     } catch (error) {
-      // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
   }
@@ -325,7 +325,7 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -364,7 +364,7 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return resultJson;
@@ -379,7 +379,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -419,7 +419,7 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
 

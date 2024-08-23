@@ -16,7 +16,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -56,7 +56,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   try {
     ocrData = await prisma.ocr.findMany(findManyOptions);
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -110,7 +110,7 @@ export async function createOcrInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return ocrData;

@@ -14,8 +14,8 @@ export default async function handler(
     switch (req.method) {
       case 'GET': {
         // let shouldContinue: boolean = true;
-        // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) getContract
+        // TODO: (20240625 - Jacky) [Beta] checkAuth
+        // TODO: (20240625 - Jacky) [Beta] getContract
         const getContract = newDummyContracts[0];
         statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
         payload = getContract;
@@ -23,8 +23,8 @@ export default async function handler(
       }
       case 'PUT': {
         // let shouldContinue: boolean = true;
-        // TODO: (20240625 - Jacky) checkAuth
-        // TODO: (20240625 - Jacky) updateContract
+        // TODO: (20240625 - Jacky) [Beta] checkAuth
+        // TODO: (20240625 - Jacky) [Beta] updateContract
         const updatedContract: IContract = newDummyContracts[0];
         statusMessage = STATUS_MESSAGE.CREATED;
         payload = updatedContract;

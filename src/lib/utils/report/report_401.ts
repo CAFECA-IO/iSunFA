@@ -150,7 +150,7 @@ function calculateTotals(taxCalculation: TaxCalculation, sales: Sales, purchases
   updatedTaxCalculation.outputTax = sales.breakdown.total.tax;
   updatedTaxCalculation.deductibleInputTax =
     purchases.breakdown.total.generalPurchases.tax + purchases.breakdown.total.fixedAssets.tax;
-  updatedTaxCalculation.previousPeriodOffset = 0; // TODO (20240808 - Jacky): Implement this field in next change
+  updatedTaxCalculation.previousPeriodOffset = 0; // TODO (20240808 - Jacky): [Beta] Implement this field in next change
   updatedTaxCalculation.subtotal =
     updatedTaxCalculation.deductibleInputTax + updatedTaxCalculation.previousPeriodOffset;
   const tempTax = updatedTaxCalculation.outputTax - updatedTaxCalculation.subtotal;
@@ -196,7 +196,7 @@ export async function generate401Report(
     uniformNumber: companyKYC.registrationNumber,
     businessName: companyKYC.legalName,
     personInCharge: companyKYC.representativeName,
-    taxSerialNumber: 'ABC123', // TODO (20240808 - Jacky): Implement this field in next sprint
+    taxSerialNumber: 'ABC123', // TODO (20240808 - Jacky): [Beta] Implement this field in next sprint
     businessAddress: companyKYC.address,
     currentYear: ROCStartDate.year.toString(),
     startMonth: ROCStartDate.month.toString(),

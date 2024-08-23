@@ -267,7 +267,7 @@ async function generateFinancialReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return reportContent;
 }
@@ -278,7 +278,7 @@ async function generateReport(
   endDateInSecond: number,
   reportSheetType: ReportSheetType
 ): Promise<object> {
-  // Todo (20240808 - Jacky): return type should change to IReportContent
+  // Todo (20240808 - Jacky): [Beta] return type should change to IReportContent
   let content = {};
   switch (reportSheetType) {
     case ReportSheetType.BALANCE_SHEET:

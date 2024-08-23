@@ -504,7 +504,7 @@ export async function updateSalaryRecordById(
   return formatUpdatedSalaryRecord;
 }
 
-// TODO: (20240807 - Jacky) Invoice is not exist in createSalaryRecord flow, need to delete in the future
+// TODO: [Beta] (20240807 - Jacky) Invoice is not exist in createSalaryRecord flow, need to delete in the future
 export async function generateInvoiceFromSalaryRecord(
   companyId: number,
   salaryRecordsIdsList: number[]
