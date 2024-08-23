@@ -74,35 +74,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         console.log('Custom Params:', invitation);
 
         const session = await getSession(req, res);
-        // TODO: (20240813-Tzuhan) [Beta] To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
-        /**
-         * Info: (20240813-Tzuhan) [Beta]
-         * recommended user model:
-           model User {
-             id           Int          @id @default(autoincrement())
-             name         String
-             fullName     String?      @map("full_name")
-             email        String?      @unique
-             phone        String?
-             credentialId String?      @unique @map("credential_id")
-             publicKey    String?      @map("public_key")
-             algorithm    String?
-             imageId      String?      @map("image_id")
-             [新增] googleId     String?      @unique @map("google_id")      // Google login ID
-             [新增] appleId      String?      @unique @map("apple_id")       // Apple login ID
-             [新增] hasReadAgreement Boolean @default(false) // 用户是否同意了條款
-             createdAt    Int          @map("created_at")
-             updatedAt    Int          @map("updated_at")
-             deletedAt    Int?         @map("deleted_at")
-             admins       Admin[]
-             invitations  Invitation[]
-
-             @@map("user")
-           }
-         */
         const getUser = await getUserByCredential(account?.providerAccountId || user.id);
 
         if (!getUser) {
+          // Info: (20240813-Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
           if (account && user) {
             const imageUrl = user.image ?? (await generateIcon(user.name ?? ''));
             const createdUser = await createUserByAuth({
