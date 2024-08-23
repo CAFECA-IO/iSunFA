@@ -298,7 +298,7 @@ main()
   })
   .catch(async () => {
     // Info (20240316 - Murky) - disconnect prisma
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
     await prisma.$disconnect();
     process.exit(1);
   });

@@ -89,7 +89,7 @@ export async function findManyAccountsInPrisma({
   try {
     totalCount = await prisma.account.count({ where });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   const totalPage = Math.ceil(totalCount / limit);
@@ -108,7 +108,7 @@ export async function findManyAccountsInPrisma({
   try {
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   const hasNextPage = accounts.length > limit;
@@ -150,7 +150,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return account;
@@ -173,7 +173,7 @@ export async function updateAccountInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return account;
@@ -194,7 +194,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
   return account;
 }
@@ -211,7 +211,7 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
   return latestSubAccount;
 }

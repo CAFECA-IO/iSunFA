@@ -150,7 +150,7 @@ const ConfirmModal = ({
         changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
       });
     } catch (err) {
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
     }
   };
 

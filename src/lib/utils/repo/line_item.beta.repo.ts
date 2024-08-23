@@ -121,7 +121,7 @@ export async function listLineItems({
   try {
     lineItems = await prisma.lineItem.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   const hasNextPage = lineItems.length > pageSize;
@@ -199,7 +199,7 @@ export async function createLineItem({
   try {
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return result;
@@ -262,7 +262,7 @@ export async function updateLineItem({
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return result;
@@ -294,7 +294,7 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return result;

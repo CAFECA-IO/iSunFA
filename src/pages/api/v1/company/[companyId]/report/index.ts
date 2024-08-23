@@ -267,7 +267,7 @@ async function generateFinancialReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
   return reportContent;
 }

@@ -26,7 +26,7 @@ export async function createPayment(payment: IPaymentBeta) {
   try {
     result = await prisma.payment.create(paymentCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return result;
@@ -59,7 +59,7 @@ export async function updatePayment(paymentId: number, payment: IPaymentBeta) {
   try {
     result = await prisma.payment.update(paymentUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
   }
 
   return result;

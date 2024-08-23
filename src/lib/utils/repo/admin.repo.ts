@@ -388,7 +388,7 @@ export async function createCompanyAndRole(
           },
           create: {
             name: ROLE_NAME.OWNER,
-            // Todo: (20240517 - Jacky) Should enum the permissions
+            // Todo: [Beta] (20240517 - Jacky) Should enum the permissions
             permissions: ['read', 'write', 'delete', 'invite'],
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,

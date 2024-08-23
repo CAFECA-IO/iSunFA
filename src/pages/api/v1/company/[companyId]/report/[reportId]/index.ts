@@ -254,7 +254,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna) [Beta] feat. Murky - 使用 logger
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<FinancialReport | IReport | null>(
