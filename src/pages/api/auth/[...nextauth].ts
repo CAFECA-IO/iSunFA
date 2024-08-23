@@ -1,7 +1,5 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-// import AppleProvider from 'next-auth/providers/apple'; // Info: (20240813-Tzuhan)
-// import jwt from 'jsonwebtoken'; // Info: (20240813-Tzuhan)
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
