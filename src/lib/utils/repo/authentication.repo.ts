@@ -47,8 +47,6 @@ export async function createUserByAuth({
 }): Promise<Authentication & { user: User & { userAgreements: UserAgreement[] } }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  // publicKey: string, // Info: (20240816 - Jacky)
-  // algorithm: string, // Info: (20240816 - Jacky)
 
   const createdAuthentication = await prisma.authentication.create({
     data: {
