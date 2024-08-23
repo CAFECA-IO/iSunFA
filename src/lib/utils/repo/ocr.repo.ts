@@ -27,7 +27,6 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
   return company;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   companyId: number,
   ocrType: string = 'invoice'

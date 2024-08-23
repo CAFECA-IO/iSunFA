@@ -24,14 +24,14 @@ export default async function handler(
     try {
       switch (req.method) {
         case 'GET': {
-          // TODO: (20240625 - Jacky) listContract
+          // TODO: [Beta] (20240625 - Jacky) listContract
           const assetList = mockAssetData;
           statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
           payload = assetList;
           break;
         }
         case 'POST': {
-          // TODO: (20240625 - Jacky) createContract
+          // TODO: [Beta] (20240625 - Jacky) createContract
           const asset: IAsset = mockAssetData[0];
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = asset;
@@ -43,10 +43,8 @@ export default async function handler(
       }
     } catch (_error) {
       // ToDo: (20240822 - Murky) please used logger to print error
-      // const error = _error as Error;
 
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-      payload = {} as IAsset;
     }
   }
   const { httpCode, result } = formatApiResponse<IAsset | IAsset[] | null>(statusMessage, payload);
