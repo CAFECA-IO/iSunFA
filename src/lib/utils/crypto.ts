@@ -8,9 +8,18 @@
     6. 需保密的 `symmetricKey` 不能存在任何地方，需透過`encryptedSymmetricKey`跟`privateKey`獲得
     7. 需保密的 `privateKey` 要妥善保存，不能洩漏
 */
-const ENCRYPTION_ALGORITHM = 'RSA-OAEP';
-const ENCRYPTION_KEY_LENGTH = 2048;
+const ASYMMETRIC_CRYPTO_ALGORITHM = 'RSA-OAEP';
+const ASYMMETRIC_KEY_LENGTH = 2048;
 const HASH_ALGORITHM = 'SHA-256';
+const SYMMETRIC_CRYPTO_ALGORITHM = 'AES-GCM';
+const SYMMETRIC_KEY_LENGTH = 256;
+const FERMAT_PRIME_NUMBER_IN_HEX = [0x01, 0x00, 0x01];
+const ASYMMETRIC_KEY_FORMAT = 'jwk';
+const SYMMETRIC_KEY_FORMAT = 'raw';
+enum CryptoOperationMode {
+  ENCRYPT = 'encrypt',
+  DECRYPT = 'decrypt',
+}
 
 /*
   Info: [0x01, 0x00, 0x01]，對應到十進制的 65537 (20240822 - Shirley)
@@ -22,47 +31,47 @@ const HASH_ALGORITHM = 'SHA-256';
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
   return crypto.subtle.generateKey(
     {
-      name: ENCRYPTION_ALGORITHM,
-      modulusLength: ENCRYPTION_KEY_LENGTH,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+      name: ASYMMETRIC_CRYPTO_ALGORITHM,
+      modulusLength: ASYMMETRIC_KEY_LENGTH,
+      publicExponent: new Uint8Array(FERMAT_PRIME_NUMBER_IN_HEX),
       hash: HASH_ALGORITHM,
     },
     true,
-    ['encrypt', 'decrypt']
+    [CryptoOperationMode.ENCRYPT, CryptoOperationMode.DECRYPT]
   );
 }
 
 export async function exportPublicKey(publicKey: CryptoKey): Promise<JsonWebKey> {
-  return crypto.subtle.exportKey('jwk', publicKey);
+  return crypto.subtle.exportKey(ASYMMETRIC_KEY_FORMAT, publicKey);
 }
 
 export async function exportPrivateKey(privateKey: CryptoKey): Promise<JsonWebKey> {
-  return crypto.subtle.exportKey('jwk', privateKey);
+  return crypto.subtle.exportKey(ASYMMETRIC_KEY_FORMAT, privateKey);
 }
 
 export async function importPublicKey(keyData: JsonWebKey): Promise<CryptoKey> {
   return crypto.subtle.importKey(
-    'jwk',
+    ASYMMETRIC_KEY_FORMAT,
     keyData,
     {
-      name: ENCRYPTION_ALGORITHM,
+      name: ASYMMETRIC_CRYPTO_ALGORITHM,
       hash: HASH_ALGORITHM,
     },
     true,
-    ['encrypt']
+    [CryptoOperationMode.ENCRYPT]
   );
 }
 
 export async function importPrivateKey(keyData: JsonWebKey): Promise<CryptoKey> {
   return crypto.subtle.importKey(
-    'jwk',
+    ASYMMETRIC_KEY_FORMAT,
     keyData,
     {
-      name: ENCRYPTION_ALGORITHM,
+      name: ASYMMETRIC_CRYPTO_ALGORITHM,
       hash: HASH_ALGORITHM,
     },
     true,
-    ['decrypt']
+    [CryptoOperationMode.DECRYPT]
   );
 }
 
@@ -71,7 +80,7 @@ export async function encryptData(data: string, publicKey: CryptoKey): Promise<U
   return new Uint8Array(
     await crypto.subtle.encrypt(
       {
-        name: ENCRYPTION_ALGORITHM,
+        name: ASYMMETRIC_CRYPTO_ALGORITHM,
       },
       publicKey,
       encoder.encode(data)
@@ -86,7 +95,7 @@ export async function decryptData(
   const decoder = new TextDecoder();
   const decryptedData = await crypto.subtle.decrypt(
     {
-      name: ENCRYPTION_ALGORITHM,
+      name: ASYMMETRIC_CRYPTO_ALGORITHM,
     },
     privateKey,
     encryptedData
@@ -110,17 +119,18 @@ export const encryptFile = async (
   publicKey: CryptoKey,
   iv: Uint8Array
 ): Promise<{ encryptedContent: ArrayBuffer; encryptedSymmetricKey: string }> => {
-  const symmetricKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
-    'encrypt',
-    'decrypt',
-  ]);
+  const symmetricKey = await crypto.subtle.generateKey(
+    { name: SYMMETRIC_CRYPTO_ALGORITHM, length: SYMMETRIC_KEY_LENGTH },
+    true,
+    [CryptoOperationMode.ENCRYPT, CryptoOperationMode.DECRYPT]
+  );
   const encryptedContent = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
+    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
     symmetricKey,
     fileArrayBuffer
   );
 
-  const exportedSymmetricKey = await crypto.subtle.exportKey('raw', symmetricKey);
+  const exportedSymmetricKey = await crypto.subtle.exportKey(SYMMETRIC_KEY_FORMAT, symmetricKey);
   const encryptedSymmetricKey = await encrypt(
     JSON.stringify(Array.from(new Uint8Array(exportedSymmetricKey))),
     publicKey
@@ -139,15 +149,15 @@ export const decryptFile = async (
   const decryptedSymmetricKeyJSON = await decrypt(encryptedSymmetricKey, privateKey);
   const decryptedSymmetricKey = new Uint8Array(JSON.parse(decryptedSymmetricKeyJSON)).buffer;
   const importedSymmetricKey = await crypto.subtle.importKey(
-    'raw',
+    SYMMETRIC_KEY_FORMAT,
     decryptedSymmetricKey,
-    { name: 'AES-GCM', length: 256 },
+    { name: SYMMETRIC_CRYPTO_ALGORITHM, length: SYMMETRIC_KEY_LENGTH },
     true,
-    ['decrypt']
+    [CryptoOperationMode.DECRYPT]
   );
 
   const decryptedContent = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
+    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
     importedSymmetricKey,
     encryptedContent
   );

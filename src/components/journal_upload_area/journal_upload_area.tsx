@@ -11,16 +11,9 @@ import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
-import { IOCR } from '@/interfaces/ocr';
-import {
-  encryptFile,
-  exportPrivateKey,
-  exportPublicKey,
-  generateKeyPair,
-  importPublicKey,
-} from '@/lib/utils/crypto';
-import { IOCRItem } from '@/interfaces/indexed_db_item';
+import { encryptFile, exportPublicKey, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
 import { addItem, deleteItem } from '@/lib/utils/indexed_db/ocr';
+import { IOCR, IOCRItem } from '@/interfaces/ocr';
 
 interface FileInfo {
   file: File;
@@ -63,7 +56,6 @@ const JournalUploadArea = () => {
     // Info: 生成 RSA 密鑰對 (20240822 - Shirley)
     const keyPair = await generateKeyPair();
     const publicKey = await exportPublicKey(keyPair.publicKey);
-    const privateKey = await exportPrivateKey(keyPair.privateKey);
 
     // Info: 生成初始向量 (20240822 - Shirley)
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -87,7 +79,6 @@ const JournalUploadArea = () => {
       uploadIdentifier: uuid,
       encryptedSymmetricKey,
       publicKey,
-      privateKey,
       companyId: selectedCompany?.id || -1,
       iv,
       userId: userAuth?.id || -1,

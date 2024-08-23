@@ -1,4 +1,4 @@
-import { IOCRItem, IOCRItemDB } from '@/interfaces/indexed_db_item';
+import { IOCRItem, IOCRItemFromIndexedDB } from '@/interfaces/ocr';
 import { getTimestampNow } from '@/lib/utils/common';
 
 export const DB_NAME = 'iSunFA';
@@ -122,7 +122,7 @@ export async function deleteItem(id: string): Promise<void> {
   });
 }
 
-export async function getAllItems(): Promise<Array<IOCRItemDB>> {
+export async function getAllItems(): Promise<Array<IOCRItemFromIndexedDB>> {
   const gotDB = await getDB();
   return new Promise((resolve, reject) => {
     const transaction = gotDB.transaction([STORE_NAME], 'readonly');
@@ -155,7 +155,7 @@ export async function clearAllItems(): Promise<void> {
     };
   });
 }
-/* eslint-disable no-console */
+
 export async function updateAndDeleteOldItems(maxAgeInMinutes: number): Promise<void> {
   const gotDB = await getDB();
   return new Promise((resolve, reject) => {
@@ -168,29 +168,22 @@ export async function updateAndDeleteOldItems(maxAgeInMinutes: number): Promise<
       if (cursor) {
         const item = cursor.value;
         const now = getTimestampNow();
-        const itemAge = now - item.data.timestamp; // 轉換為秒
+        const itemAge = now - item.data.timestamp;
         const maxAgeInTimestamp = maxAgeInMinutes * 60;
 
-        console.log('itemAge', itemAge);
-        console.log('maxAgeInTimestamp', maxAgeInTimestamp);
-
         if (itemAge > maxAgeInTimestamp) {
-          console.log(`刪除過期項目：${item.id}`);
           cursor.delete();
         } else {
-          console.log(`更新項目：${item.id}`);
           item.data.lastUpdated = now;
           cursor.update(item);
         }
         cursor.continue();
       } else {
-        console.log('更新和刪除完成');
         resolve();
       }
     };
 
     request.onerror = (event: Event) => {
-      console.error('更新和刪除項目時出錯', event);
       reject(event);
     };
   });

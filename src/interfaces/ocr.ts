@@ -11,3 +11,23 @@ export interface IOCR {
   createdAt: number;
   uploadIdentifier?: string; // Info: from frontend (20240815 - Shirley)
 }
+
+export interface IOCRItem {
+  name: string;
+  size: string;
+  type: string;
+  encryptedContent: ArrayBuffer;
+  uploadIdentifier: string;
+
+  iv: Uint8Array;
+  timestamp: number;
+  encryptedSymmetricKey: string;
+  publicKey: JsonWebKey;
+  companyId: number;
+  userId: number;
+}
+
+export interface IOCRItemFromIndexedDB {
+  id: string;
+  data: IOCRItem;
+}
