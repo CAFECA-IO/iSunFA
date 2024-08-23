@@ -37,7 +37,6 @@ export type IAPIName =
   | 'VOUCHER_UPDATE'
   | 'JOURNAL_GET_BY_ID'
   | 'JOURNAL_LIST'
-  // | 'JOURNAL_UPDATE' // Info: (20240723 - Tzuhan)
   | 'JOURNAL_DELETE'
   | 'REPORT_LIST'
   | 'REPORT_GET_BY_ID'
