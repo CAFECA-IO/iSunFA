@@ -533,7 +533,7 @@ const NavBar = () => {
             ></span>
           </button>
 
-          {/* Info: cover when burger menu is open (202400607 - Shirley) */}
+          {/* Info: (20240607 - Shirley) cover when burger menu is open */}
           <div
             className={`absolute bottom-5 h-7 w-7 bg-transparent ${isBurgerMenuOpen ? 'pointer-events-auto' : 'hidden'} hover:cursor-pointer`}
           ></div>
