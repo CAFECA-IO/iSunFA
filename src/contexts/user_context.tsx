@@ -260,7 +260,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
-  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
+  // Info: (20240409 - Shirley) 在用戶一進到網站後就去驗證是否登入
   const getStatusInfo = useCallback(async () => {
     const isNeed = isProfileFetchNeeded();
     // Deprecate: [Beta](20240826-Tzuhan) dev
@@ -399,7 +399,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
+        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
 

@@ -75,7 +75,7 @@ const SalarySidebar = () => {
             > */}
             <button
               type="button"
-              // ToDo: [Beta] (20240802 - Julian) Not released yet
+              // ToDo: (20240802 - Julian) [Beta] Not released yet
               // eslint-disable-next-line react/jsx-boolean-value
               disabled={true}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"

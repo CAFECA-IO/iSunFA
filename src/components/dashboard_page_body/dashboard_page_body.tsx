@@ -17,7 +17,7 @@ const DashboardPageBody = () => {
       <span className="text-primaryYellow">{companyName}</span>
     </div>
   );
-  // TODO: [Beta] (20240603 - Shirley) Loading -> get data from API -> display data or no data
+  // TODO: (20240603 - Shirley) [Beta] Loading -> get data from API -> display data or no data
   const displayedPageBody = NO_DATA_FOR_DEMO ? <DashboardWithoutData /> : <DashboardWithData />;
 
   return (

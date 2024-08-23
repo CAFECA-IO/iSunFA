@@ -81,7 +81,7 @@ const ProjectContractsPageBody = () => {
     }
   }, [periodFromFilterModal, sortFromFilterModal, statusFromFilterModal]);
 
-  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: [Beta] (20240620 - Julian) Replace with actual data
+  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: (20240620 - Julian) [Beta] Replace with actual data
 
   const {
     targetRef: statusRef,

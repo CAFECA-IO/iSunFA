@@ -17,7 +17,7 @@ enum Department {
   BACKEND = 'Backend',
 }
 
-// ToDo: [Beta] (20240715 - Julian) i18n
+// ToDo: (20240715 - Julian) [Beta] i18n
 const SalaryRecordForm = () => {
   const { t } = useTranslation('common');
   const { salaryBookConfirmModalVisibilityHandler } = useGlobalCtx();
@@ -68,7 +68,7 @@ const SalaryRecordForm = () => {
 
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // ToDo: [Beta] (20240716 - Julian) Submit
+    // ToDo: (20240716 - Julian) [Beta] Submit
 
     salaryBookConfirmModalVisibilityHandler();
   };
@@ -192,7 +192,7 @@ const SalaryRecordForm = () => {
             >
               <p className="flex-1 text-text-brand-secondary-lv3">{selectedDepartment}</p>
               <FaChevronDown />
-              {/* ToDo: [Beta] (20240715 - Julian) Dropdown */}
+              {/* ToDo: (20240715 - Julian) [Beta] Dropdown */}
             </div>
 
             {departmentMenu}
