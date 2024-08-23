@@ -16,7 +16,7 @@ describe('Order Repository Tests', () => {
   describe('createOrder', () => {
     it('should create a new order and return it', async () => {
       const newOrder = await createOrder(testCompanyId, testPlanId, testStatus);
-      await deleteOrderForTesting(newOrder.id); // Clean up after test
+      await deleteOrderForTesting(newOrder.id); // Info: (20240723 - Murky) Clean up after test
       expect(newOrder).toBeDefined();
       expect(newOrder.companyId).toBe(testCompanyId);
       expect(newOrder.planId).toBe(testPlanId);
@@ -30,7 +30,7 @@ describe('Order Repository Tests', () => {
       expect(orderList).toBeDefined();
       expect(Array.isArray(orderList)).toBe(true);
       expect(orderList.length).toBeGreaterThan(0);
-      // Ensure the created order is in the list
+      // Info: (20240704 - Jacky) Ensure the created order is in the list
       expect(orderList[0].id).toEqual(orders[0].id);
       expect(orderList[0].companyId).toEqual(orders[0].companyId);
       expect(orderList[0].planId).toEqual(orders[0].planId);
@@ -56,7 +56,7 @@ describe('Order Repository Tests', () => {
     it('should update the status of an order', async () => {
       const newStatus = 'completed';
       const updatedOrder = await updateOrder(testOrderId, newStatus);
-      await updateOrder(testOrderId, testStatus); // Rollback the status
+      await updateOrder(testOrderId, testStatus); // Info: (20240704 - Jacky) Rollback the status
       expect(updatedOrder).toBeDefined();
       expect(updatedOrder.status).toBe(newStatus);
     });

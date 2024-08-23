@@ -171,7 +171,7 @@ async function handlePostRequest(req: NextApiRequest) {
       const transactionResponseJson = await transactionResponse.json();
       const createDate = convertDateToTimestamp(transactionResponseJson.data.createdAt);
       const createDateInSec = timestampInSeconds(createDate);
-      // Create payment record
+      // Info: (20240806 - Jacky) Create payment record
       const paymentDescription = `${subPlan} - ${subPeriod}`;
       const paymentRecord = await createPaymentRecord(
         orderId,
@@ -183,7 +183,7 @@ async function handlePostRequest(req: NextApiRequest) {
         transactionResponseJson.data.status
       );
       payload = paymentRecord.status;
-      // Update order status
+      // Info: (20240806 - Jacky) Update order status
       const updatedOrder = await updateOrder(orderId, transactionResponseJson.data.status);
       statusMessage = STATUS_MESSAGE.CREATED;
       if (transactionResponseJson.data.status === 'charged') {

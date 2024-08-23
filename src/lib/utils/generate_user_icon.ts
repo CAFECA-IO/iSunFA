@@ -72,7 +72,6 @@ function generateUserIconSvg(
 export async function generateIcon(name: string) {
   let iconUrl = '';
   try {
-    // await mkUploadFolder();
     const initials = generateInitials(name);
     const backgroundColor = generateRandomColor();
     const iconSvg = generateUserIconSvg(

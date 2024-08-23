@@ -157,6 +157,7 @@ const ReportsSidebar = () => {
               </p>
             </Link>
 
+            {/* Info: (20240802 - Julian) */}
             {/* <Link
               href={ISUNFA_ROUTE.USERS_ANALYSES_REPORTS}
               className={cn(
@@ -288,6 +289,7 @@ const ReportsSidebar = () => {
             </defs>
           </svg>{' '}
         </Link>
+        {/* Info: (20240802 - Julian) */}
         {/* <Link
           href={ISUNFA_ROUTE.USERS_ANALYSES_REPORTS}
           className={cn(

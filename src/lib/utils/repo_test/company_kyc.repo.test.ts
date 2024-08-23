@@ -38,7 +38,7 @@ describe('CompanyKYC Repository Tests', () => {
   xdescribe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
       const companyKYC = await createCompanyKYC(testCompanyId, newCompanyKYCData);
-      await deleteCompanyKYCForTesting(companyKYC.id); // Clean up after test
+      await deleteCompanyKYCForTesting(companyKYC.id); // Info: (20240723 - Murky) Clean up after test
       expect(companyKYC).toBeDefined();
       expect(companyKYC.companyId).toBe(testCompanyId);
       expect(companyKYC.legalName).toBe(newCompanyKYCData.legalName);
@@ -59,7 +59,7 @@ describe('getCompanyKYCByCompanyId', () => {
   });
 
   it('should return null if the companyId is invalid', async () => {
-    const companyId = -1; // Replace with an invalid companyId
+    const companyId = -1; // Info: (20240808 - Jacky) Replace with an invalid companyId
     const companyKYC = await getCompanyKYCByCompanyId(companyId);
     expect(companyKYC).toBeNull();
   });

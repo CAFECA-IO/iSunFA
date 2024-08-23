@@ -178,7 +178,6 @@ const AddAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          {/* <h1>Add New Accounting Title</h1> */}
           <h1>{t('SETTING.ADD_NEW_ACCOUNTING_TITLE')}</h1>
           <button
             type="button"
@@ -202,7 +201,6 @@ const AddAccountTitleModal = ({
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
-            {/* <p className="text-sm font-semibold text-input-text-primary lg:text-base">Liquidity</p> */}
             <p className="text-sm font-semibold text-input-text-primary lg:text-base">
               {t('SETTING.LIQUIDITY')}
             </p>

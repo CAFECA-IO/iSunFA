@@ -68,7 +68,7 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
       const filePath = await findFileByName(tmpFolder, filename);
       if (filePath) {
         const stat = await fs.stat(filePath);
-        await fs.unlink(filePath); // 删除文件
+        await fs.unlink(filePath); // Info: (20240723 - Jacky) 删除文件
         statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
         payload = { id: fileIdStr, size: stat.size, existed: false };
       } else {

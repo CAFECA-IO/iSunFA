@@ -35,7 +35,7 @@ export async function createOrder(
   return newOrder;
 }
 
-// Read
+// Info: (20240620 - Jacky) Read
 export async function getOrderById(id: number): Promise<IOrder | null> {
   let order = null;
   if (id > 0) {
@@ -65,7 +65,7 @@ export async function getOrderDetailById(id: number): Promise<(IOrder & { plan: 
   return order;
 }
 
-// Update
+// Info: (20240620 - Jacky) Update
 export async function updateOrder(id: number, status: string): Promise<IOrder> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);

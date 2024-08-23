@@ -26,7 +26,6 @@ const ProjectStageBlock = ({ stage, projects }: IProjectStageBlockProps) => {
   return (
     <div className="flex w-full flex-none flex-col items-center gap-y-16px rounded-xs border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 px-20px py-16px md:w-380px">
       <h2 className="text-2xl font-semibold text-text-neutral-primary">
-        {/* {stage} */}
         {t(`STAGE_NAME_MAP.${stage.toUpperCase().replace(/ /g, '_')}`)}
       </h2>
       <div className="flex h-330px w-full flex-col gap-y-8px overflow-y-auto border-t border-stroke-neutral-quaternary py-14px md:h-500px">

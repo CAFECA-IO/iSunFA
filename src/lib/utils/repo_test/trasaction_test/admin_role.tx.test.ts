@@ -8,7 +8,7 @@ describe('transferOwnership', () => {
     const companyId = 1000;
     const newOwnerId = 1002;
     const result = await transferOwnership(currentOwnerId, companyId, newOwnerId);
-    await transferOwnership(newOwnerId, companyId, currentOwnerId); // rollback the change
+    await transferOwnership(newOwnerId, companyId, currentOwnerId); // Info: (20240722 - Jacky) rollback the change
     await deleteAdminByIdForTesting(result[0].id);
     await deleteAdminByIdForTesting(result[1].id);
     expect(result).toHaveLength(2);

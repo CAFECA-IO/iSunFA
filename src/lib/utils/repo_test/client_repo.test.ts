@@ -49,7 +49,7 @@ describe('Client Repository Tests', () => {
         updatedClientData.taxId,
         updatedClientData.favorite
       );
-      await updateClientById(testClientId, clients[0].name, clients[0].taxId, clients[0].favorite); // Reset the client data
+      await updateClientById(testClientId, clients[0].name, clients[0].taxId, clients[0].favorite); // Info: (20240704 - Jacky) Reset the client data
       expect(client).toBeDefined();
       expect(client.name).toBe(updatedClientData.name);
       expect(client.taxId).toBe(updatedClientData.taxId);
@@ -76,7 +76,7 @@ describe('Client Repository Tests', () => {
       expect(client.name).toBe(newClientData.name);
       expect(client.taxId).toBe(newClientData.taxId);
       expect(client.favorite).toBe(newClientData.favorite);
-      // Assuming deletion of the newly created client is handled elsewhere or not needed for this test
+      // Info: (20240704 - Jacky) Assuming deletion of the newly created client is handled elsewhere or not needed for this test
     });
   });
 });

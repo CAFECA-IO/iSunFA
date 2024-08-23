@@ -53,8 +53,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     hasCompanyId
   );
 
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger ('reportFinancial in reportId', reportFinancial)
-
   useEffect(() => {
     if (getFRSuccess === false) {
       toastHandler({
@@ -63,9 +61,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         type: ToastType.ERROR,
         closeable: true,
       });
-    }
-    if (getFRSuccess && reportFinancial) {
-      // setReportData(reportFinancial);
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 
@@ -97,7 +92,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </div>
     );
 
-  // TODO: (20240517 - Shirley) [Beta] replace ALL dummy data after api calling
   return (
     <div>
       <Head>
@@ -137,29 +131,12 @@ export default ViewFinancialReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
   // Info: (20240429 - Shirley) variable from URL query
-  // const { report_type, report_language, start_timestamp, end_timestamp } = query;
-
-  // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
-
-  // Info: (20240429 - Shirley) variable from URL query
   const { reportId = '', report_type: reportType = '' } = query;
-  // if (!report_id || !report_type) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
 
   return {
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
-      // reportLanguage: report_language as string,
-      // startTimestamp: start_timestamp as string,
-      // endTimestamp: end_timestamp as string,
       ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };

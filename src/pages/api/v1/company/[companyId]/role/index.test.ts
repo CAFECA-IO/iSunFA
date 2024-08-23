@@ -105,9 +105,7 @@ describe('test role API handler', () => {
 
   it('should return error for missing input parameters', async () => {
     req.method = 'POST';
-    req.body = {
-      // name: 'John Doe',
-    };
+    req.body = {};
     await handler(req, res);
     const expectedResponse = expect.objectContaining({
       powerby: expect.any(String),

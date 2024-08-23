@@ -27,7 +27,7 @@ describe('Payment Record Repository', () => {
     });
 
     it('should return an empty object if the payment record is not found', async () => {
-      const paymentRecordId = -1; // Assuming -1 is an invalid ID
+      const paymentRecordId = -1; // Info: (20240704 - Jacky) Assuming -1 is an invalid ID
       const paymentRecord = await getPaymentRecordById(paymentRecordId);
       expect(paymentRecord).toBeNull();
     });
@@ -60,7 +60,7 @@ describe('Payment Record Repository', () => {
       expect(paymentRecord.amount).toBe(newPaymentRecord.amount);
       expect(paymentRecord.method).toBe(newPaymentRecord.method);
       expect(paymentRecord.status).toBe(newPaymentRecord.status);
-      // Clean up after test
+      // Info: (20240704 - Jacky) Clean up after test
       await deletePaymentRecordForTesting(paymentRecord.id);
     });
   });

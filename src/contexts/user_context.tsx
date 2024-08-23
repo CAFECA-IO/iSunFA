@@ -221,7 +221,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const expiredAt = localStorage.getItem('expired_at');
     const isUserAuthAvailable = !!userAuthRef.current;
 
-    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // Deprecated: (20240826-Tzuhan) [Beta] dev
     // eslint-disable-next-line no-console
     console.log(
       'isProfileFetchNeeded userId:',
@@ -240,7 +240,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (Date.now() < Number(expiredAt)) {
         return true;
       } else {
-        // Deprecate: [Beta](20240826-Tzuhan) dev
+        // Deprecated: (20240826-Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.log('expiredAt is expired, isNeed signOut');
         signOut();
@@ -262,10 +262,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
-  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
+  // Info: (20240409 - Shirley) 在用戶一進到網站後就去驗證是否登入
   const getStatusInfo = useCallback(async () => {
     const isNeed = isProfileFetchNeeded();
-    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // Deprecated: (20240826-Tzuhan) [Beta] dev
     // eslint-disable-next-line no-console
     console.log('isProfileFetchNeeded isNeed:', isNeed);
     if (!isNeed) return;
@@ -451,7 +451,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const handleUnauthorizedAccess = () => {
-      // Deprecate: [Beta](20240826-Tzuhan) dev
+      // Deprecated: (20240826-Tzuhan) [Beta] dev
       // eslint-disable-next-line no-console
       console.log('useEffect message on "unauthorized": called signOut');
       signOut();

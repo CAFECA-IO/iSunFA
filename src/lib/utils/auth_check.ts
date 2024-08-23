@@ -102,7 +102,6 @@ export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleN
   }
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
   if (!admin) {
-    // throw new Error(STATUS_MESSAGE.FORBIDDEN);
     throw new Error(`${STATUS_MESSAGE.FORBIDDEN} - Missing role: ${translatedRoleName}`);
   }
   return session;
@@ -136,7 +135,7 @@ export async function checkInvitation(params: { invitation: Invitation }): Promi
   return isAuth;
 }
 
-// 检查函数的映射表
+// Info: (20240729 - Jacky) 檢查函數的映射表
 export const authFunctions: AuthFunctions = {
   user: checkUser,
   admin: checkUserAdmin,
@@ -153,7 +152,7 @@ export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
 ): Promise<boolean> {
   let isAuthorized = false;
 
-  // 檢查 companyId 是否為 FREE_COMPANY_ID
+  // Info: (20240729 - Jacky) 檢查 companyId 是否為 FREE_COMPANY_ID
   if (
     typeof authParams === 'object' &&
     authParams !== null &&

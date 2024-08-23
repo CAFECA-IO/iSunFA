@@ -307,12 +307,12 @@ export async function listInvoice({
   const hasPreviousPage = page > 1;
 
   if (invoices.length > pageSize) {
-    invoices.pop(); // 移除多余的记录
+    invoices.pop(); // Info: (202040808 - Jacky) 移除多餘的記錄
   }
 
   const sort: {
-    sortBy: string; // 排序欄位的鍵
-    sortOrder: string; // 排序欄位的值
+    sortBy: string; // Info: (202040808 - Jacky) 排序欄位的鍵
+    sortOrder: string; // Info: (202040808 - Jacky) 排序欄位的值
   }[] = [{ sortBy, sortOrder }];
 
   const paginatedInvoiceList = {

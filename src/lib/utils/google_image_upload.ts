@@ -60,7 +60,7 @@ export async function uploadFileToGoogleCloud(
       },
     });
 
-    // 將文件設置為公開
+    // Info: (20240712 - Jacky) 將文件設置為公開
     await file.makePublic();
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
@@ -83,7 +83,7 @@ export async function uploadFile(file: File) {
 export async function uploadFiles(files: File[]) {
   const uploadPromises = files.map(uploadFile);
 
-  // 等待所有文件上傳完成
+  // Info: (20240712 - Jacky) 等待所有文件上傳完成
   const urls = await Promise.all(uploadPromises);
-  return urls; // 返回所有文件的URLs
+  return urls; // Info: (20240712 - Jacky) 回傳所有文件的 URLs
 }

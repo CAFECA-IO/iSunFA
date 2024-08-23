@@ -1,6 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-// import { IInvoice } from '@/interfaces/invoice';
-// import { IResponseData } from '@/interfaces/response_data';
 import fs from 'fs';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -13,7 +11,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!invoiceId) {
       throw new Error('Invalid input parameter');
     }
-    // Find the invoice with the given id
+    // Info: (20240508 - Jacky) Find the invoice with the given id
     const invoiceFileNameRegex = new RegExp(`.*${invoiceId}.*`);
     const uploadDir =
       process.env.VERCEL === '1'

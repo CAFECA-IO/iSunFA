@@ -63,7 +63,7 @@ export async function addPrefixToFile(
 ): Promise<string> {
   const targetFolder = path.join(BASE_STORAGE_FOLDER, folder); // Info: (20240726 - Jacky) 確保是從專案根目錄開始找目標資料夾
 
-  // 檔案的完整路徑
+  // Info: (20240723 - Jacky) 檔案的完整路徑
   const oldFilePath = path.join(targetFolder, fileName);
   const currentExt = path.extname(fileName).slice(1); // Info: (20240726 - Jacky) 去除開頭的點 (.)
 

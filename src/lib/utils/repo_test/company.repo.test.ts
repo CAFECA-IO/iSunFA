@@ -24,7 +24,7 @@ describe('Company Repository Tests', () => {
 
   describe('getCompanyByCode', () => {
     it('should return a company when a valid code is provided', async () => {
-      const validCode = 'TEST123'; // Assuming 'VALIDCODE' exists in the database
+      const validCode = 'TEST123'; // Info: (20240704 - Jacky) Assuming 'VALIDCODE' exists in the database
       const company = await getCompanyByCode(validCode);
       expect(company).toBeDefined();
       expect(company?.code).toEqual(validCode);
@@ -55,7 +55,7 @@ describe('Company Repository Tests', () => {
         companies[0].code,
         companies[0].name,
         companies[0].regional
-      ); // Rollback the changes
+      ); // Info: (20240704 - Jacky) Rollback the changes
       expect(company).toBeDefined();
       expect(company!.code).toBe(updatedCompany.code);
       expect(company!.name).toBe(updatedCompany.name);

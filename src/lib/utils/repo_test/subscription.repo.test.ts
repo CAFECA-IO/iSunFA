@@ -30,7 +30,7 @@ describe('Subscription Repository', () => {
     });
 
     it('should return null if the subscription is not found', async () => {
-      const subscriptionId = -1; // Assuming -1 is an invalid ID
+      const subscriptionId = -1; // Info: (20240704 - Jacky) Assuming -1 is an invalid ID
       const subscription = await getSubscriptionById(subscriptionId);
       expect(subscription).toBeNull();
     });
@@ -45,7 +45,7 @@ describe('Subscription Repository', () => {
         testStatus,
         SubscriptionPeriod.MONTHLY
       );
-      await deleteSubscriptionForTesting(subscription.id); // Clean up after test
+      await deleteSubscriptionForTesting(subscription.id); // Info: (20240723 - Murky) Clean up after test
       expect(subscription).toBeDefined();
       expect(subscription.companyId).toBe(testCompanyId);
       expect(subscription.planId).toBe(testPlanId);
