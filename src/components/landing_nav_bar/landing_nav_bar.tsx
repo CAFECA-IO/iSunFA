@@ -352,7 +352,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         </div>
       </div>
       <div className="flex flex-1 items-center justify-end space-x-0">
-        {/* TODO: [Beta] refactor i18n (20240315 - Shirley) */}
+        {/* TODO: [Beta] (20240315 - Shirley) refactor i18n */}
         <div ref={dropdownRef} className="z-50">
           <div className="flex items-center">
             <div

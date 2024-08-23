@@ -298,7 +298,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                     .includes(searchQuery.toLowerCase())
                 // eslint-disable-next-line function-paren-newline
               )
-              // TODO: (20240726 - Shirley) [Beta] 串上 API 之後把 filter 拿掉
+              // TODO: [Beta] (20240726 - Shirley) 串上 API 之後把 filter 拿掉
               .filter((project) => {
                 return project.includes('Overall');
               })

@@ -76,7 +76,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const generateClickHandler = () => {
     setStep(1);
 
-    // TODO: (20240507 - Shirley) [Beta] dummy data
+    // TODO: [Beta] (20240507 - Shirley) dummy data
     const balanceLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`;
     const comprehensiveIncomeLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`;
     const cashFlowLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`;
