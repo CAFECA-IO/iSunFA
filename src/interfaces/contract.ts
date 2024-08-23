@@ -110,5 +110,5 @@ export const newDummyContracts: IContract[] = [
     createdAt: 0,
     updatedAt: 0,
   },
-  // Add more dummy contracts here...
+  // Info: (20240619 - Jacky) Add more dummy contracts here...
 ];

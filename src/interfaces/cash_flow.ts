@@ -1,6 +1,6 @@
 export interface IOperatingCashFlowMapping {
   fromCode: string[];
-  // toCode: string;
+  // toCode: string; // Info: (20240712 - Gibbs)
   name: string;
   debit: boolean; // Info: (20240708 - Murky) 這個項目原始應該要是借方還是貸方, 項目加總時如果該科目是相反的方向, 需要改用減的
   operatingFunction: (...args: number[]) => number;

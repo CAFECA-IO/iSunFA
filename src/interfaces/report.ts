@@ -148,7 +148,7 @@ export interface FinancialReportItem {
 export interface YearlyData {
   [year: string]: number;
 }
-// Info Murky (20240729): To Shirley, New Interface need to be connect to front end
+// Info: (20240729 - Murky): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
   company: {
     id: number;
@@ -246,17 +246,17 @@ export interface CashFlowStatementOtherInfo {
   };
 }
 
-// Todo Murky (20240729):
+// ToDo: (20240729 - Murky)
 export interface BalanceSheetReport extends FinancialReport {
   otherInfo: BalanceSheetOtherInfo;
 }
 
-// Todo Murky (20240729):
+// ToDo: (20240729 - Murky)
 export interface IncomeStatementReport extends FinancialReport {
   otherInfo: IncomeStatementOtherInfo;
 }
 
-// Todo Murky (2024729):
+// ToDo: (2024729 - Murky)
 export interface CashFlowStatementReport extends FinancialReport {
   otherInfo: CashFlowStatementOtherInfo;
 }
@@ -275,7 +275,7 @@ export interface IFinancialReportsProgressStatusResponse extends IAccountResultS
   endDate: Date;
 }
 
-// Info Murky (20240505): type guards can input any type and return a boolean
+// Info: (20240505 - Murky): type guards can input any type and return a boolean
 export function isIAnalysisReportRequest(obj: unknown): obj is IAnalysisReportRequest {
   return (
     typeof obj === 'object' &&
