@@ -1,60 +1,82 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import handler from '@/pages/api/v1/company/[companyId]/profit_insight/index';
+import * as module from '@/pages/api/v1/company/[companyId]/profit_insight/index';
+import * as repository from '@/lib/utils/repo/profit_insight.repo';
 
-let req: jest.Mocked<NextApiRequest>;
-let res: jest.Mocked<NextApiResponse>;
+jest.mock('../../../../../../lib/utils/repo/profit_insight.repo', () => {
+  return {
+    getIncomeExpenseToday: jest.fn(),
+    getIncomeExpenseYesterday: jest.fn(),
+    getProjectsIncomeExpense: jest.fn(),
+    getPreLaunchProjectCount: jest.fn(),
+  };
+});
 
+const companyId = 1;
 beforeEach(() => {
-  req = {
-    headers: {},
-    body: null,
-    query: {},
-    method: '',
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiRequest>;
+  const mockIncomeExpenseToday = [
+    {
+      income: 1000,
+      expense: 500,
+    },
+  ];
 
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
+  const mockIncomeExpenseYesterday = [
+    {
+      income: 2000,
+      expense: 1000,
+    },
+  ];
+
+  const mockProjectsIncomeExpense = [
+    {
+      projectId: 1,
+      _sum: {
+        income: 3000,
+        expense: 1500,
+      },
+    },
+  ];
+
+  const mockPreLaunchProjectCount = 1;
+  jest.spyOn(repository, 'getIncomeExpenseToday').mockResolvedValue(mockIncomeExpenseToday);
+  jest.spyOn(repository, 'getIncomeExpenseYesterday').mockResolvedValue(mockIncomeExpenseYesterday);
+  jest.spyOn(repository, 'getProjectsIncomeExpense').mockResolvedValue(mockProjectsIncomeExpense);
+  jest.spyOn(repository, 'getPreLaunchProjectCount').mockResolvedValue(mockPreLaunchProjectCount);
 });
 
 afterEach(() => {
   jest.clearAllMocks();
 });
-// ToDo: (20240607 - Gibbs) Add unit tests for profit insight
-xdescribe('Result API Handler Tests', () => {
-  it('should handle GET requests successfully', async () => {
-    req.method = 'GET';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(200);
-    const expectedPayload = expect.objectContaining({
-      profitChange: expect.any(Number),
-      topProjectRoi: expect.any(Number),
-      preLaunchProject: expect.any(Number),
-    });
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('200'),
-        message: expect.any(String),
-        payload: expectedPayload,
-      })
-    );
+describe('getProfitChange', () => {
+  it('should return profit change', async () => {
+    const result = await module.getProfitChange(1623057600000, companyId);
+    expect(result).toEqual({ profitChange: -0.5, emptyProfitChange: false });
   });
-  it('should handle invalid method requests', async () => {
-    req.method = 'POST';
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        powerby: expect.any(String),
-        success: expect.any(Boolean),
-        code: expect.stringContaining('405'),
-        message: expect.any(String),
-        payload: expect.any(Object),
-      })
-    );
+});
+
+describe('getTopProjectRoi', () => {
+  it('should return top project roi', async () => {
+    const result = await module.getTopProjectRoi(companyId);
+    expect(result).toEqual({ topProjectRoi: 0.5, emptyTopProjectRoi: false });
+  });
+});
+
+describe('getPreLaunchProject', () => {
+  it('should return pre launch project', async () => {
+    const result = await module.getPreLaunchProject(companyId);
+    expect(result).toEqual({ preLaunchProject: 1, emptyPreLaunchProject: false });
+  });
+});
+
+describe('handleGetRequest', () => {
+  it('should return profit insight', async () => {
+    const result = await module.handleGetRequest(companyId);
+    expect(result).toEqual({
+      profitChange: -0.5,
+      emptyProfitChange: false,
+      topProjectRoi: 0.5,
+      emptyTopProjectRoi: false,
+      preLaunchProject: 1,
+      emptyPreLaunchProject: false,
+    });
   });
 });

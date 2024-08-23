@@ -51,7 +51,7 @@ function formatGetQuery(req: NextApiRequest) {
   const orderIdNum = convertStringToNumber(orderId);
   const subPlan = formatSubscriptionPlan(subscriptionPlan);
   const subPeriod = formatSubscriptionPeriod(subscriptionPeriod);
-  return { orderIdNum, subPlan, subPeriod };
+  return { orderId: orderIdNum, subPlan, subPeriod };
 }
 
 /**
@@ -70,9 +70,9 @@ function decryptCustomId(customId: unknown) {
 
   if (typeof customId === 'string') {
     const customIdJson = JSON.parse(customId);
-      orderId = convertStringToNumber(customIdJson.orderId);
-      subPlan = formatSubscriptionPlan(customIdJson.subPlan);
-      subPeriod = formatSubscriptionPeriod(customIdJson.subPeriod);
+    orderId = convertStringToNumber(customIdJson.orderId);
+    subPlan = formatSubscriptionPlan(customIdJson.subPlan);
+    subPeriod = formatSubscriptionPeriod(customIdJson.subPeriod);
   }
 
   return { orderId, subPlan, subPeriod };
@@ -80,10 +80,10 @@ function decryptCustomId(customId: unknown) {
 
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   /* Info: (20240823 - Murky) 流程： 1. 前端呼叫Get payment 傳入資訊，後端可以用 "customId" 來讓資料與第三方之間做傳遞
-  * 2. 後端呼叫第三方 API，取得 token(CHECKOUT_TOKEN)
-  * 3. 第三方webhook Post payment, 後端從customId 取得get的資訊, 並使用TOKEN_TRANSACTION付款
-  * 4. 最後用GET_TRANSACTION確認交易資訊
-  */
+   * 2. 後端呼叫第三方 API，取得 token(CHECKOUT_TOKEN)
+   * 3. 第三方webhook Post payment, 後端從customId 取得get的資訊, 並使用TOKEN_TRANSACTION付款
+   * 4. 最後用GET_TRANSACTION確認交易資訊
+   */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = '';
   const oenToken = process.env.PAYMENT_TOKEN;
