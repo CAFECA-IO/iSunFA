@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SubscriptionPeriod } from '@/constants/subscription';
 import { ONE_DAY_IN_S } from '@/constants/time';
 import { ISubscription } from '@/interfaces/subscription';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
@@ -8,12 +9,13 @@ import { Prisma } from '@prisma/client';
 export async function createSubscription(
   companyId: number,
   planId: number,
-  status: boolean
+  status: boolean,
+  subscriptionPeriod: SubscriptionPeriod
 ): Promise<ISubscription> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  // TODO (20240617 - Jacky): Need to get plan details to calculate expired date
-  const expiredDate = nowTimestamp + 30 * ONE_DAY_IN_S;
+
+  const expiredDate = nowTimestamp + subscriptionPeriod * ONE_DAY_IN_S;
   const newSubscription = await prisma.subscription.create({
     data: {
       companyId,
