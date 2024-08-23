@@ -75,9 +75,7 @@ async function handleVoucherUpdatePrismaLogic(
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate: (20240524 - Murky) Deprecate this error message
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -108,9 +106,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
       voucherUpdated = voucherUpdatedData.voucherUpdated;
       statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
-      // Deprecate: (20240524 - Murky) Deprecate this error message
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   }
 
@@ -147,9 +143,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecate: (20240524 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
       statusMessage = error.message;
     }
   }

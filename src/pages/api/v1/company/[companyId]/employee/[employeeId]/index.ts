@@ -66,9 +66,7 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
   try {
     await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
-    // Info: (20240627 - Gibbs) console error only
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 }
 
@@ -94,9 +92,7 @@ async function updateEmployee(
     );
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
-    // Info: (20240627 - Gibbs) console error only
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
   const employee = await getEmployeeById(employeeIdNumber);
   const projects = await getProjectsByEmployeeId(employeeIdNumber);

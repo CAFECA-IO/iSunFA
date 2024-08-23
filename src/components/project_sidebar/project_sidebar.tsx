@@ -33,7 +33,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
       href={ISUNFA_ROUTE.PROJECT_LIST}
       className={`my-20px flex ${isExpanded ? 'h-60px w-60px text-3xl' : 'h-40px w-40px text-2xl'} items-center justify-center rounded-full bg-avatar-surface-background-indigo font-bold text-avatar-text-in-dark-background transition-all duration-300 ease-in-out`}
     >
-      {/* ToDo: (20240801 - Julian) Replace to real project image */}
+      {/* ToDo: [Beta] (20240801 - Julian) Replace to real project image */}
       {projectId.charAt(0)}
     </Link>
   ) : null;

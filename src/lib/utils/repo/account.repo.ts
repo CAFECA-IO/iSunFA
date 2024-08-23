@@ -89,9 +89,7 @@ export async function findManyAccountsInPrisma({
   try {
     totalCount = await prisma.account.count({ where });
   } catch (error) {
-    // Info (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   const totalPage = Math.ceil(totalCount / limit);
@@ -110,9 +108,7 @@ export async function findManyAccountsInPrisma({
   try {
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
-    // Info (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   const hasNextPage = accounts.length > limit;
@@ -154,9 +150,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
       },
     });
   } catch (error) {
-    // Info (20240516 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return account;
@@ -179,9 +173,7 @@ export async function updateAccountInPrisma(
       },
     });
   } catch (error) {
-    // Info (20240702 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return account;
@@ -202,9 +194,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
       },
     });
   } catch (error) {
-    // Info (20240702 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
   return account;
 }
@@ -221,9 +211,7 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
       },
     });
   } catch (error) {
-    // Info (20240703 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
   return latestSubAccount;
 }

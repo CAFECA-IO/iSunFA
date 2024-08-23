@@ -59,28 +59,6 @@ const Tooltip = ({ children }: TooltipProps) => {
           {children}
         </div>
       ) : null}
-
-      {/* TODO: (20240416 - Shirley) 出現在下面的 tooltip content */}
-      {/* {showTooltip ? (
-        <div
-          role="tooltip"
-          className={`absolute -right-2 top-8 z-20 w-fit rounded-lg bg-white p-4 text-sm shadow-xl`}
-        >
-          <div className="absolute -top-3 right-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 16 8"
-            >
-              <path fill="#fff" d="M16 8H0L6.586 1.414a2 2 0 012.828 0L16 8z"></path>
-            </svg>
-          </div>
-
-          {children}
-        </div>
-      ) : null} */}
     </div>
   );
 };

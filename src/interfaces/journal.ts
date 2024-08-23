@@ -16,8 +16,7 @@ export interface IJournal {
   voucher: IVoucherDataForSavingToDB;
 }
 
-// ToDo: (20240528 - Julian) 根據 Murky 寫在 src/pages/api/v1/company/[companyId]/journal/index.ts
-// 用於 journal list 的 dummy interface，之後會被取代
+// ToDo: [Beta] (20240528 - Julian) 用於 journal list 的 dummy interface，之後會被取代
 export interface IJournalListItem {
   id: number;
   date: number;

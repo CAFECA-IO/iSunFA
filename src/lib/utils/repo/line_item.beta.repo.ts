@@ -1,7 +1,12 @@
 import prisma from '@/client';
 import { AccountType } from '@/constants/account';
 import { Prisma } from '@prisma/client';
-import { getTimestampNow, pageToOffset, setTimestampToDayEnd, setTimestampToDayStart } from '@/lib/utils/common';
+import {
+  getTimestampNow,
+  pageToOffset,
+  setTimestampToDayEnd,
+  setTimestampToDayStart,
+} from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortBy } from '@/constants/journal';
 import { SortOrder } from '@/constants/sort';
@@ -52,24 +57,20 @@ export async function listLineItems({
   const startDateInSecond = setTimestampToDayStart(startDate);
   const endDateInSecond = setTimestampToDayEnd(endDate);
 
-  const deletedAtQuery: Prisma.LineItemWhereInput = isDeleted ? { AND: [
-    { deletedAt: { not: null } },
-    { deletedAt: { not: 0 } },
-  ] } : isDeleted === false ? { OR: [
-    { deletedAt: { equals: 0 } },
-    { deletedAt: { equals: null } },
-  ] } : {
-    OR: [
-      { deletedAt: { equals: undefined } },
-    ]
-  };
+  const deletedAtQuery: Prisma.LineItemWhereInput = isDeleted
+    ? { AND: [{ deletedAt: { not: null } }, { deletedAt: { not: 0 } }] }
+    : isDeleted === false
+      ? { OR: [{ deletedAt: { equals: 0 } }, { deletedAt: { equals: null } }] }
+      : {
+          OR: [{ deletedAt: { equals: undefined } }],
+        };
 
   const searchQueryArray: Prisma.LineItemWhereInput = {
     OR: [
       { description: { contains: searchQuery, mode: 'insensitive' } },
       { account: { code: { contains: searchQuery, mode: 'insensitive' } } },
       { account: { name: { contains: searchQuery, mode: 'insensitive' } } },
-    ]
+    ],
   };
 
   const where: Prisma.LineItemWhereInput = {
@@ -87,10 +88,7 @@ export async function listLineItems({
         },
       },
     },
-    AND: [
-      deletedAtQuery,
-      searchQueryArray
-    ]
+    AND: [deletedAtQuery, searchQueryArray],
   };
 
   const include: Prisma.LineItemInclude = {
@@ -123,9 +121,7 @@ export async function listLineItems({
   try {
     lineItems = await prisma.lineItem.findMany(findManyArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   const hasNextPage = lineItems.length > pageSize;
@@ -161,12 +157,12 @@ export async function listLineItems({
  */
 export async function createLineItem({
   voucherId,
-  lineItem
+  lineItem,
 }: {
   voucherId: number;
   lineItem: ILineItem;
 }): Promise<ILineItemIncludeAccount | null> {
-  let result:ILineItemIncludeAccount | null = null;
+  let result: ILineItemIncludeAccount | null = null;
   const nowInSecond = getTimestampNow();
 
   const accountConnect: Prisma.AccountCreateNestedOneWithoutLineItemInput = {
@@ -197,15 +193,13 @@ export async function createLineItem({
 
   const lineItemCreateArgs = {
     data,
-    include
+    include,
   };
 
   try {
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return result;
@@ -218,18 +212,16 @@ export async function createLineItem({
  * @param {ILineItem} lineItem line item data that will be updated to lineItemId provided (type: ILineItem)
  * @returns {Promise<ILineItemIncludeAccount | null>} return line item record or null if failed
  */
-export async function updateLineItem(
-  {
-    lineItemId,
-    voucherId,
-    lineItem
-  }:{
-    lineItemId: number;
-    voucherId: number;
-    lineItem: ILineItem;
-  }
-): Promise<ILineItemIncludeAccount | null> {
-  let result:ILineItemIncludeAccount | null = null;
+export async function updateLineItem({
+  lineItemId,
+  voucherId,
+  lineItem,
+}: {
+  lineItemId: number;
+  voucherId: number;
+  lineItem: ILineItem;
+}): Promise<ILineItemIncludeAccount | null> {
+  let result: ILineItemIncludeAccount | null = null;
   const nowInSecond = getTimestampNow();
 
   const accountConnect: Prisma.AccountUpdateOneRequiredWithoutLineItemNestedInput = {
@@ -264,24 +256,20 @@ export async function updateLineItem(
   const lineItemUpdateArgs = {
     where,
     data,
-    include
+    include,
   };
 
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return result;
 }
 
-export async function deleteLineItem(
-  lineItemId: number
-): Promise<ILineItemIncludeAccount | null> {
-  let result:ILineItemIncludeAccount | null = null;
+export async function deleteLineItem(lineItemId: number): Promise<ILineItemIncludeAccount | null> {
+  let result: ILineItemIncludeAccount | null = null;
   const nowInSecond = getTimestampNow();
 
   const where: Prisma.LineItemWhereUniqueInput = {
@@ -300,15 +288,13 @@ export async function deleteLineItem(
   const lineItemUpdateArgs = {
     where,
     data,
-    include
+    include,
   };
 
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return result;

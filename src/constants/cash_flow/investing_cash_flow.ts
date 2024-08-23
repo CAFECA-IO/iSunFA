@@ -57,7 +57,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
           codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
         },
       },
-      // Info: Murky (20240710): 有調整的才算是處分，不然算減資
+      // Info: (20240710 - Murky) 有調整的才算是處分，不然算減資
       either: {
         type: 'EITHER',
         debit: {
@@ -105,7 +105,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: (20240710 - Murky):有備抵損失，不然算到期還本?
+  // Info: (20240710 - Murky) 有備抵損失，不然算到期還本?
   [
     'B00050',
     {
@@ -185,7 +185,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710) 避險工具都不太確定
+  // Info: (20240710 - Murky) 避險工具都不太確定
   [
     'B01500',
     {
@@ -305,7 +305,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 收購子公司我先抓借方有應收帳款, 存貨, 機器, 貸方有應付帳款
+  // Info: (20240710 - Murky) 收購子公司我先抓借方有應收帳款, 存貨, 機器, 貸方有應付帳款
   [
     'B02200',
     {
@@ -384,7 +384,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 這個和B01900一樣的結構，暫時暫時先不
+  // Info: (20240710 - Murky) 這個和B01900一樣的結構，暫時暫時先不
   [
     'B02400',
     {
@@ -410,7 +410,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^1461/]), // 假設1461為待出售非流動資產的科目代碼
+          codes: new Set([/^1461/]), // Info: (20240712 - Gibbs) 假設1461為待出售非流動資產的科目代碼
         },
         credit: {
           type: 'CODE',
@@ -431,7 +431,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^1461/]), // 假設1461為待出售非流動資產的科目代碼
+          codes: new Set([/^1461/]), // Info: (20240712 - Gibbs) 假設1461為待出售非流動資產的科目代碼
         },
       },
     },
@@ -444,7 +444,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set(PPE_REGEX), // 不動產、廠房及設備的代碼
+          codes: new Set(PPE_REGEX), // Info: (20240712 - Gibbs) 不動產、廠房及設備的代碼
         },
         credit: {
           type: 'CODE',
@@ -465,12 +465,12 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set(PPE_REGEX), // 不動產、廠房及設備的代碼
+          codes: new Set(PPE_REGEX), // Info: (20240712 - Gibbs) 不動產、廠房及設備的代碼
         },
       },
     },
   ],
-  // Info: Murky (20240710): 不確定“資產”指什麼
+  // Info: (20240710 - Murky) 不確定“資產”指什麼
   [
     'B02900',
     {
@@ -497,7 +497,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 不確定“資產”指什麼
+  // Info: (20240710 - Murky) 不確定“資產”指什麼
   [
     'B03000',
     {
@@ -532,7 +532,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^1478/, /^1920/]), // 假設1920為存出保證金的科目代碼
+          codes: new Set([/^1478/, /^1920/]), // Info: (20240712 - Gibbs) 假設1920為存出保證金的科目代碼
         },
         credit: {
           type: 'CODE',
@@ -553,7 +553,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^1478/, /^1920/]), // 假設1920為存出保證金的科目代碼
+          codes: new Set([/^1478/, /^1920/]), // Info: (20240712 - Gibbs) 假設1920為存出保證金的科目代碼
         },
       },
     },
@@ -600,7 +600,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^121[1-2]/]), // 假設1210為其他應收款－關係人的科目代碼
+          codes: new Set([/^121[1-2]/]), // Info: (20240712 - Gibbs) 假設1210為其他應收款－關係人的科目代碼
         },
         credit: {
           type: 'CODE',
@@ -621,7 +621,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^121[1-2]/]), // 假設1210為其他應收款－關係人的科目代碼
+          codes: new Set([/^121[1-2]/]), // Info: (20240712 - Gibbs) 假設1210為其他應收款－關係人的科目代碼
         },
       },
     },
@@ -634,7 +634,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^17[8-9][0-9]/, /^18[0-1][1-5]/]), // 無形資產的代碼
+          codes: new Set([/^17[8-9][0-9]/, /^18[0-1][1-5]/]), // Info: (20240712 - Gibbs) 無形資產的代碼
         },
         credit: {
           type: 'CODE',
@@ -655,12 +655,12 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^17[8-9][0-9]/, /^18[0-1][1-5]/]), // 無形資產的代碼
+          codes: new Set([/^17[8-9][0-9]/, /^18[0-1][1-5]/]), // Info: (20240712 - Gibbs) 無形資產的代碼
         },
       },
     },
   ],
-  // Info: Murky (20240710): 和權益法與子公司一樣的結構，暫時先不實作
+  // Info: (20240710 - Murky) 和權益法與子公司一樣的結構，暫時先不實作
   [
     'B04900',
     {
@@ -681,7 +681,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 和權益法與子公司一樣的結構，暫時先不實作
+  // Info: (20240710 - Murky) 和權益法與子公司一樣的結構，暫時先不實作
   [
     'B05000',
     {
@@ -694,12 +694,12 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set(), // 假設科目代碼
+          codes: new Set(), // Info: (20240712 - Gibbs) 假設科目代碼
         },
       },
     },
   ],
-  // Info: Murky (20240710): 和權益法與子公司一樣的結構，暫時先不實作
+  // Info: (20240710 - Murky) 和權益法與子公司一樣的結構，暫時先不實作
   [
     'B05100',
     {
@@ -779,7 +779,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^193[1-7]/, /^194[1-6]/]), // 假設應收款項的代碼
+          codes: new Set([/^193[1-7]/, /^194[1-6]/]), // Info: (20240712 - Gibbs) 假設應收款項的代碼
         },
         credit: {
           type: 'CODE',
@@ -800,7 +800,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^193[1-7]/, /^194[1-6]/]), // 假設應收款項的代碼
+          codes: new Set([/^193[1-7]/, /^194[1-6]/]), // Info: (20240712 - Gibbs) 假設應收款項的代碼
         },
       },
     },
@@ -813,7 +813,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^194B/, /^194E/, /^194I/, /^194L/, /^194M/]), // 長期應收租賃款的代碼
+          codes: new Set([/^194B/, /^194E/, /^194I/, /^194L/, /^194M/]), // Info: (20240712 - Gibbs) 長期應收租賃款的代碼
         },
         credit: {
           type: 'CODE',
@@ -881,7 +881,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^199[2-6]/]), // 其他非流動資產的代碼
+          codes: new Set([/^199[2-6]/]), // Info: (20240712 - Gibbs) 其他非流動資產的代碼
         },
         credit: {
           type: 'CODE',
@@ -902,7 +902,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^199[2-6]/]), // 其他非流動資產的代碼
+          codes: new Set([/^199[2-6]/]), // Info: (20240712 - Gibbs) 其他非流動資產的代碼
         },
       },
     },
@@ -915,7 +915,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^1915/]), // 預付設備款的代碼
+          codes: new Set([/^1915/]), // Info: (20240712 - Gibbs) 預付設備款的代碼
         },
         credit: {
           type: 'CODE',
@@ -936,7 +936,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^1915/]), // 預付設備款的代碼
+          codes: new Set([/^1915/]), // Info: (20240712 - Gibbs) 預付設備款的代碼
         },
       },
     },
@@ -949,7 +949,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       voucherPattern: {
         debit: {
           type: 'CODE',
-          codes: new Set([/^1429/]), // 假設為其他預付款項的科目代碼
+          codes: new Set([/^1429/]), // Info: (20240712 - Gibbs) 假設為其他預付款項的科目代碼
         },
         credit: {
           type: 'CODE',
@@ -970,7 +970,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^1429/]), // 假設為其他預付款項的科目代碼
+          codes: new Set([/^1429/]), // Info: (20240712 - Gibbs) 假設為其他預付款項的科目代碼
         },
       },
     },
@@ -987,7 +987,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^1174/, /^1183/, /^4240/, /^710[1-7]/]), // 假設為利息收入的科目代碼
+          codes: new Set([/^1174/, /^1183/, /^4240/, /^710[1-7]/]), // Info: (20240712 - Gibbs) 假設為利息收入的科目代碼
         },
       },
     },
@@ -1004,12 +1004,12 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
         },
         credit: {
           type: 'CODE',
-          codes: new Set([/^4221/, /7130/]), // 假設為股利收入的科目代碼
+          codes: new Set([/^4221/, /7130/]), // Info: (20240712 - Gibbs) 假設為股利收入的科目代碼
         },
       },
     },
   ],
-  // Info: Murky (20240710): 不曉得該怎麼做，暫時暫時先不implement
+  // Info: (20240710 - Murky) 不曉得該怎麼做，暫時暫時先不implement
   [
     'B07700',
     {
@@ -1027,7 +1027,7 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       },
     },
   ],
-  // Info: Murky (20240710): 不曉得該怎麼做，暫時暫時先不implement
+  // Info: (20240710 - Murky) 不曉得該怎麼做，暫時暫時先不implement
   [
     'B09900',
     {

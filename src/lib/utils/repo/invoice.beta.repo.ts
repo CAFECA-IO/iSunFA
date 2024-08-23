@@ -49,14 +49,10 @@ export async function findUniqueInvoiceById(
     });
 
     if (!invoice) {
-      // Deprecate: ( 20240605 - Murky ) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
   return invoice;
 }
@@ -126,9 +122,7 @@ export async function createInvoice(
   try {
     invoiceBeCreated = await prisma.invoice.create(invoiceCreateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return invoiceBeCreated;
@@ -208,9 +202,7 @@ export async function updateInvoice(
   try {
     invoiceBeUpdated = await prisma.invoice.update(invoiceUpdateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return invoiceBeUpdated;
@@ -308,9 +300,7 @@ export async function listInvoice({
   try {
     invoices = await prisma.invoice.findMany(findManyArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   const hasNextPage = invoices.length > pageSize;

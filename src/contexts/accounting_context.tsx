@@ -51,6 +51,7 @@ export const accountTitleMap: AccountTitleMap = {
 };
 
 interface IAccountingContext {
+  // Info: (20240430 - Julian)
   // tempJournalList: IJournal[];
   // addTempJournal: (journal: IJournal) => void;
   // duplicateTempJournal: (id: string) => void;
@@ -75,7 +76,7 @@ interface IAccountingContext {
     liquidity?: string,
     page?: number,
     limit?: number,
-    // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
+    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
     includeDefaultAccount?: boolean,
     reportType?: string,
     equityType?: string,
@@ -127,6 +128,7 @@ interface IAccountingContext {
 }
 
 const initialAccountingContext: IAccountingContext = {
+  // Info: (20240430 - Julian)
   // tempJournalList: [],
   // addTempJournal: () => {},
   // duplicateTempJournal: () => {},
@@ -234,8 +236,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     liquidity?: string,
     page?: number,
     limit?: number,
-    // ToDo: (20240719 - Julian) lack of keyword search
-    // Info (20240722 - Murky) @Julian, query will match IAccountQueryArgs
+    // ToDo: (20240719 - Julian) [Beta] lack of keyword search
+    // Info: (20240722 - Murky) @Julian, query will match IAccountQueryArgs
     includeDefaultAccount?: boolean,
     reportType?: string,
     equityType?: string,
@@ -243,7 +245,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     sortBy?: string,
     sortOrder?: string,
     searchKey?: string
-    // isDeleted?: boolean
+    // isDeleted?: boolean // Info: (20240806 - Murky)
   ) => {
     getAccountList({
       params: { companyId },
@@ -306,15 +308,15 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   };
 
-  // Info: 新增一個合併 OCR 列表的函數 (20240820 - Shirley)
+  // Info: (20240820 - Shirley) 新增一個合併 OCR 列表的函數
   const mergeOCRLists = useCallback((apiList: IOCR[], currentList: IOCR[]) => {
-    const apiSet = new Set(apiList.map((ocr) => ocr.aichResultId)); // Info: 使用 Set 儲存 apiList 的 aichResultId ，避免雙重迴圈 (20240820 - Shirley)
+    const apiSet = new Set(apiList.map((ocr) => ocr.aichResultId)); // Info: (20240820 - Shirley) 使用 Set 儲存 apiList 的 aichResultId ，避免雙重迴圈
     const mergedList = [
       ...apiList,
       ...currentList.filter((localOCR) => !apiSet.has(localOCR.aichResultId)),
     ];
 
-    // Info: 按創建時間排序，最舊的在前面 (20240820 - Shirley)
+    // Info: (20240820 - Shirley) 按創建時間排序，最舊的在前面
     mergedList.sort((a, b) => a.createdAt - b.createdAt);
 
     return mergedList;
@@ -627,7 +629,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [voucherPreview]
   );
 
-  // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------
+  // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------ [Start]
   // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
 
   // // Info: (20240426 - Julian) 新增暫存日記帳
@@ -660,6 +662,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   //   },
   //   [tempJournalList]
   // );
+  // ------------ 目前已經取消暫存日記帳的功能，預計刪除以上程式碼 ------------ [End]
 
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {

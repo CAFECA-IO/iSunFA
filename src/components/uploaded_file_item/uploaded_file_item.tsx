@@ -29,7 +29,7 @@ const UploadedFileItem = ({
 
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
-    // Info (20240809 - Murky): To Julian 設定成P
+    // Info: (20240809 - Murky) To Julian 設定成P
     // status === ProgressStatus.IN_PROGRESS ||
     // status === ProgressStatus.SUCCESS ||
     // status === ProgressStatus.PAUSED
@@ -70,7 +70,6 @@ const UploadedFileItem = ({
     </button>
   );
 
-  // const displayedProgress = progress === 100 ? 'Completed' : `${progress}%`;
   const displayedProgress = progress === 100 ? t('PROJECT.COMPLETED') : `${progress}%`;
 
   const displayedFileItem = isPending ? (

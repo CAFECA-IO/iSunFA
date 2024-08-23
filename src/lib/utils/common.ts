@@ -24,7 +24,7 @@ export const numberWithCommas = (x: number | string) => {
   return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 };
 
-// Info: truncate the string to the given length (20240416 - Shirley)
+// Info: (20240416 - Shirley) truncate the string to the given length
 export const truncateString = (str: string, length: number) => {
   const result = str.length > length ? str.slice(0, length) + '...' : str;
   return result;
@@ -124,7 +124,7 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   };
 };
 
-/** Info: 回傳這個月第一天跟今天的 timestamp in seconds (20240419 - Shirley)
+/** Info: (20240419 - Shirley) 回傳這個月第一天跟今天的 timestamp in seconds
  *
  * @returns {startTimeStamp: number, endTimeStamp: number} - The start and present time of the current month in seconds
  */
@@ -133,11 +133,11 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
 
-  // Info: 取得當前月份第一天的 00:00:00 (20240419 - Shirley)
+  // Info: (20240419 - Shirley) 取得當前月份第一天的 00:00:00
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   const startTimeStamp = Math.floor(firstDayOfMonth.getTime() / MILLISECONDS_IN_A_SECOND);
 
-  // Info: 取得今天的 23:59:59 (20240419 - Shirley)
+  // Info: (20240419 - Shirley) 取得今天的 23:59:59
   const endOfToday = new Date(currentYear, currentMonth, today.getDate(), 23, 59, 59);
   const endTimeStamp = Math.floor(endOfToday.getTime() / MILLISECONDS_IN_A_SECOND);
 
@@ -535,8 +535,6 @@ export const loadFileFromLocalStorage = (
 ) => {
   try {
     const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
-    // eslint-disable-next-line no-console
-    console.log('Loaded from localStorage:', data);
 
     let fileObject: {
       id: string | undefined;
@@ -577,8 +575,6 @@ export const loadFileFromLocalStorage = (
 
     return fileObject;
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error loading file from localStorage:', error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 };

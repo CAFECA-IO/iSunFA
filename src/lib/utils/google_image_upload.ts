@@ -64,9 +64,7 @@ export async function uploadFileToGoogleCloud(
     await file.makePublic();
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
-    // Info: For debugging purpose
-    // eslint-disable-next-line no-console
-    console.error('Failed to upload SVG to Google Cloud', error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
   return url;
 }

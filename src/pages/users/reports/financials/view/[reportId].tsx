@@ -31,7 +31,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  // TODO: [Beta] refactor and delete it (20240723 - Shirley)
+  // TODO: (20240723 - Shirley) [Beta] refactor and delete it
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportData, setReportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
@@ -53,8 +53,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     hasCompanyId
   );
 
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial in reportId', reportFinancial);
+  // Todo: (20240822 - Anna) feat. Murky - 使用 logger ('reportFinancial in reportId', reportFinancial)
 
   useEffect(() => {
     if (getFRSuccess === false) {
@@ -98,7 +97,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </div>
     );
 
-  // TODO: [Beta] replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: (20240517 - Shirley) [Beta] replace ALL dummy data after api calling
   return (
     <div>
       <Head>
@@ -137,8 +136,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
 export default ViewFinancialReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  // Info: (20240429 - Shirley) variable from URL query
   // const { report_type, report_language, start_timestamp, end_timestamp } = query;
 
   // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
@@ -147,7 +145,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   //   };
   // }
 
-  // Info: variable from URL query (20240429 - Shirley)
+  // Info: (20240429 - Shirley) variable from URL query
   const { reportId = '', report_type: reportType = '' } = query;
   // if (!report_id || !report_type) {
   //   return {

@@ -150,9 +150,7 @@ const ConfirmModal = ({
         changeVoucherAmountHandler(index, rowAmount, rowType, rowDescription);
       });
     } catch (err) {
-      // Info: (20240726 - Tzuhan) [Debug:] Show error message
-      // eslint-disable-next-line no-console
-      console.log(`importVoucherHandler err: `, err);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   };
 
@@ -379,7 +377,7 @@ const ConfirmModal = ({
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
 
-  // ToDo: [Beta] (20240729 - Julian) Add Tag functionality
+  // ToDo: (20240729 - Julian) [Beta] Add Tag functionality
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
       <p>{reason}</p>

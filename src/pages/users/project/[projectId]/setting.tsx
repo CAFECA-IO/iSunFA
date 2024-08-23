@@ -42,7 +42,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
-  // ToDo: [Beta](20240617 - Julian) Replace with real data
+  // ToDo: (20240617 - Julian) [Beta] Replace with real data
   const projectName = 'BAIFA';
   const projectImageSrc = DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
@@ -99,7 +99,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
     profileUploadModalVisibilityHandler();
   };
 
-  // ToDo: [Beta](20240612 - Julian) get member list from API
+  // ToDo: (20240612 - Julian) [Beta] get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱

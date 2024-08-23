@@ -1,4 +1,4 @@
-// ToDo: (20240802 - Julian) change in equity statement is not released yet
+// ToDo: [Beta] (20240802 - Julian) change in equity statement is not released yet
 export enum FinancialReportTypesKey {
   balance_sheet = 'balance_sheet',
   comprehensive_income_statement = 'comprehensive_income_statement',
@@ -43,7 +43,6 @@ export enum BaifaReportTypeToReportType {
   //  'change-in-equity' = 'change_in_equity_statement'
 }
 
-// TODO: i18n (20240430 - Shirley)
 export const FinancialReportTypesMap: Record<
   FinancialReportTypesKey,
   { id: FinancialReportTypesKey; name: string }
