@@ -23,10 +23,15 @@ import { SPECIAL_ACCOUNTS } from '@/constants/account';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
+
   private incomeStatementGenerator: IncomeStatementGenerator;
+
   private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
+
   private voucherLastPeriod: IVoucherFromPrismaIncludeJournalLineItems[];
+
   private YEAR_RANGE = 5;
+
   private eslintEscape = '';
 
   constructor(
