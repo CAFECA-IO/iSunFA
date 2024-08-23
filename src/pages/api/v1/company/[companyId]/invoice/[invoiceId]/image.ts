@@ -1,7 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-// Info: (20240508 - Jacky)
-// import { IInvoice } from '@/interfaces/invoice';
-// import { IResponseData } from '@/interfaces/response_data';
 import fs from 'fs';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
