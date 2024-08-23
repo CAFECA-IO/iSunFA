@@ -14,7 +14,7 @@ import {
   IAccountNode,
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
-import { IncomeStatementOtherInfo } from '@/interfaces/report';
+import { IFinancialReportInDB, IncomeStatementOtherInfo } from '@/interfaces/report';
 import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
@@ -215,15 +215,18 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   }
 
   public override async generateReport(): Promise<{
-    content: IAccountReadyForFrontend[];
-    otherInfo: IncomeStatementOtherInfo;
+    content: IFinancialReportInDB
   }> {
     const content = await this.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(content);
 
-    return {
+    const financialReportInDB = {
       content,
       otherInfo,
+    };
+
+    return {
+      content: financialReportInDB,
     };
   }
 }

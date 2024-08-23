@@ -1,3 +1,4 @@
+import ReportGenerator from '@/lib/utils/report/report_generator';
 import { buildAccountForest } from '@/lib/utils/account/common';
 import { easyFindManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
@@ -12,22 +13,15 @@ import { AccountType } from '@/constants/account';
 import {
   BalanceSheetOtherInfo,
   CashFlowStatementOtherInfo,
+  IFinancialReportInDB,
   IncomeStatementOtherInfo,
 } from '@/interfaces/report';
 import { formatNumberSeparateByComma, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
 
-export default abstract class FinancialReportGenerator {
-  protected companyId: number;
-
-  protected startDateInSecond: number;
-
-  protected endDateInSecond: number;
-
+export default abstract class FinancialReportGenerator extends ReportGenerator {
   protected lastPeriodStartDateInSecond: number;
 
   protected lastPeriodEndDateInSecond: number;
-
-  protected reportSheetType: ReportSheetType;
 
   protected curPeriodContent: IAccountForSheetDisplay[] = [];
 
@@ -39,10 +33,7 @@ export default abstract class FinancialReportGenerator {
     endDateInSecond: number,
     reportSheetType: ReportSheetType
   ) {
-    this.companyId = companyId;
-    this.startDateInSecond = startDateInSecond;
-    this.endDateInSecond = endDateInSecond;
-    this.reportSheetType = reportSheetType;
+    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
     const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } =
       FinancialReportGenerator.getLastPeriodStartAndEndDate(
         reportSheetType,
@@ -232,8 +223,7 @@ export default abstract class FinancialReportGenerator {
     ...contents: IAccountReadyForFrontend[][]
   ): BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
 
-  public abstract generateReport(): Promise<{
-    content: IAccountReadyForFrontend[];
-    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+  public abstract override generateReport(): Promise<{
+    content: IFinancialReportInDB
   }>;
 }

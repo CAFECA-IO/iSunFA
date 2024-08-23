@@ -27,8 +27,6 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
   return company;
 }
 
-// Todo: (20240625 - Jacky) Should change prisma to add type
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   companyId: number,
   ocrType: string = 'invoice'
