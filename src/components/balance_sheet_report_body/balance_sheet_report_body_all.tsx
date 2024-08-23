@@ -201,7 +201,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 
   const rowsForPage1 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 9).map((item, index) => {
+    const rows = items.slice(0, 9).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -214,8 +214,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -237,7 +236,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage2 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(9, 20).map((item, index) => {
+    const rows = items.slice(9, 20).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -250,8 +249,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -273,7 +271,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage2part1 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 2).map((item, index) => {
+    const rows = items.slice(0, 2).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -285,8 +283,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -308,7 +305,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 13).map((item, index) => {
+    const rows = items.slice(0, 13).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -321,8 +318,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -344,7 +340,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage4 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(13, 26).map((item, index) => {
+    const rows = items.slice(13, 26).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -357,8 +353,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -380,7 +375,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage5 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(26, 40).map((item, index) => {
+    const rows = items.slice(26, 40).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -393,8 +388,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -416,7 +410,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage6 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(40, 54).map((item, index) => {
+    const rows = items.slice(40, 54).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -429,8 +423,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -452,7 +445,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage7 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(54, 68).map((item, index) => {
+    const rows = items.slice(54, 68).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -465,8 +458,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -488,7 +480,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage8 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(68, 80).map((item, index) => {
+    const rows = items.slice(68, 80).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -501,8 +493,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">
@@ -524,7 +515,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   };
 
   const rowsForPage9 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(80, 91).map((item, index) => {
+    const rows = items.slice(80, 91).map((item) => {
       if (!item.code) {
         return (
           <tr key={item.code}>
@@ -537,8 +528,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
-        // eslint-disable-next-line react/no-array-index-key
-        <tr key={index}>
+        <tr key={item.code}>
           <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
           <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
           <td className="border border-lightGray8 p-10px text-end text-sm">

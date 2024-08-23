@@ -244,7 +244,7 @@ async function generateReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Todo: (20240710 - Murky) Please use logger to log the error
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
   return reportContent;
 }
@@ -366,7 +366,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     reportSheetType,
     startDateInSecond,
     endDateInSecond,
-    // Deprecate: (20240729 - Murky) Move to financial report
+    // Deprecated: (20240729 - Murky) Move to financial report
     // lastPeriodStartDateInSecond,
     // lastPeriodEndDateInSecond,
     formattedReportType,

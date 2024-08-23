@@ -1,4 +1,5 @@
 import useStateRef from 'react-usestateref';
+import eventManager from '@/lib/utils/event_manager';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { FREE_COMPANY_ID } from '@/constants/config';
@@ -12,6 +13,7 @@ import { Provider } from '@/constants/provider';
 import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 interface UserContextType {
   credential: string | null;
@@ -58,7 +60,7 @@ export const UserContext = createContext<UserContextType>({
   successSelectCompany: undefined,
   errorCode: null,
   toggleIsSignInError: () => {},
-  isAuthLoading: true,
+  isAuthLoading: false,
   returnUrl: null,
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
@@ -71,6 +73,7 @@ export const UserContext = createContext<UserContextType>({
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
+  const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [signedIn, setSignedIn, signedInRef] = useStateRef(false);
@@ -93,7 +96,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
+  const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -116,8 +119,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
-  const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
-    APIName.SESSION_GET
+  const { trigger: getStatusInfoAPI } = APIHandler<{ user: IUser; company: ICompany }>(
+    APIName.STATUS_INFO_GET
   );
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
 
@@ -133,15 +136,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
+    localStorage.removeItem('userId');
+    localStorage.removeItem('expired_at');
   };
 
-  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      // if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
-      //   setReturnUrl(encodeURIComponent(router.asPath));
-      // }
       router.push(ISUNFA_ROUTE.LOGIN);
     }
   };
@@ -203,52 +205,107 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO: [Beta](20240819-Tzuhan) handle expiration
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isJwtExpired = (expires: string | undefined) => {
-    if (!expires) return true;
-    const now = new Date();
-    const expirationDate = new Date(expires);
-    return now > expirationDate;
+  const signOut = async () => {
+    clearState();
+    await signOutAPI();
+    await authSignOut({ redirect: false });
+    if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      router.push(ISUNFA_ROUTE.LOGIN);
+    }
+  };
+
+  const isProfileFetchNeeded = () => {
+    const userId = localStorage.getItem('userId');
+    const expiredAt = localStorage.getItem('expired_at');
+    const isUserAuthAvailable = !!userAuthRef.current;
+
+    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // eslint-disable-next-line no-console
+    console.log(
+      'isProfileFetchNeeded userId:',
+      userId,
+      'expiredAt:',
+      expiredAt,
+      'isUserAuthAvailable:',
+      isUserAuthAvailable,
+      'Date.now() < Number(expiredAt)',
+      Date.now() < Number(expiredAt)
+    );
+
+    // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
+    if (!isUserAuthAvailable && userId && expiredAt) {
+      // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
+      if (Date.now() < Number(expiredAt)) {
+        return true;
+      } else {
+        // Deprecate: [Beta](20240826-Tzuhan) dev
+        // eslint-disable-next-line no-console
+        console.log('expiredAt is expired, isNeed signOut');
+        signOut();
+        return false;
+      }
+    }
+
+    // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
+    if (isUserAuthAvailable && (!userId || !expiredAt)) {
+      return true;
+    }
+
+    // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
+    if (!isUserAuthAvailable && (!userId || !expiredAt)) {
+      return true;
+    }
+
+    // Info: (20240822-Tzuhan) 以上情況都不滿足，則不需要重新獲取 profile
+    return false;
   };
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
-  const checkSession = useCallback(async () => {
+  const getStatusInfo = useCallback(async () => {
+    const isNeed = isProfileFetchNeeded();
+    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // eslint-disable-next-line no-console
+    console.log('isProfileFetchNeeded isNeed:', isNeed);
+    if (!isNeed) return;
     setIsAuthLoading(true);
     const {
-      data: userSessionData,
-      success: getUserSessionSuccess,
-      code: getUserSessionCode,
-    } = await getUserSessionData();
+      data: StatusInfo,
+      success: getStatusInfoSuccess,
+      code: getStatusInfoCode,
+    } = await getStatusInfoAPI();
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
-    if (getUserSessionSuccess) {
-      if (userSessionData) {
-        if (
-          'user' in userSessionData &&
-          userSessionData.user &&
-          Object.keys(userSessionData.user).length > 0
-        ) {
-          setUserAuth(userSessionData.user);
-          setUsername(userSessionData.user.name);
+    if (getStatusInfoSuccess) {
+      if (StatusInfo) {
+        // eslint-disable-next-line no-console
+        console.log(
+          'getStatusInfo StatusInfo',
+          StatusInfo,
+          `'company' in StatusInfo && Object.keys(StatusInfo.company).length > 0: ${'company' in StatusInfo && StatusInfo.company && Object.keys(StatusInfo.company).length > 0}`
+        );
+        if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
+          setUserAuth(StatusInfo.user);
+          setUsername(StatusInfo.user.name);
           setSignedIn(true);
           setIsSignInError(false);
-          if (userSessionData.user.agreementList.includes(Hash.INFO_COLLECTION)) {
+          localStorage.setItem('userId', StatusInfo.user.id.toString());
+          localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
+          if (StatusInfo.user.agreementList.includes(Hash.INFO_COLLECTION)) {
             setIsAgreeInfoCollection(true);
           } else {
             setIsAgreeInfoCollection(false);
           }
-          if (userSessionData.user.agreementList.includes(Hash.TOS_N_PP)) {
+          if (StatusInfo.user.agreementList.includes(Hash.TOS_N_PP)) {
             setIsAgreeTosNPrivacyPolicy(true);
           } else {
             setIsAgreeTosNPrivacyPolicy(false);
           }
           if (
-            'company' in userSessionData &&
-            userSessionData.company &&
-            Object.keys(userSessionData.company).length > 0
+            'company' in StatusInfo &&
+            StatusInfo.company &&
+            Object.keys(StatusInfo.company).length > 0
           ) {
-            setSelectedCompany(userSessionData.company);
+            setSelectedCompany(StatusInfo.company);
             setSuccessSelectCompany(true);
             handleReturnUrl();
           } else {
@@ -266,10 +323,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     }
-    if (getUserSessionSuccess === false) {
+    if (getStatusInfoSuccess === false) {
       handleNotSignedIn();
       setIsSignInError(true);
-      setErrorCode(getUserSessionCode ?? '');
+      setErrorCode(getStatusInfoCode ?? '');
     }
     setIsAuthLoading(false);
   }, [router.pathname]);
@@ -313,16 +370,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(response.error);
       }
     } catch (error) {
-      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+      // TODO: (20240814-Tzuhan) [Beta] handle error
     }
   };
-
-  const throttledCheckSession = useCallback(
-    throttle(() => {
-      checkSession();
-    }, 100),
-    [checkSession]
-  );
 
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
@@ -349,7 +399,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
+        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
       },
     });
 
@@ -359,34 +409,32 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     await handleSelectCompanyResponse(res);
   };
-
-  const signOut = async () => {
-    signOutAPI();
-    authSignOut();
-    clearState();
-    router.push(ISUNFA_ROUTE.LOGIN);
-  };
+  const throttledGetStatusInfo = useCallback(
+    throttle(() => {
+      getStatusInfo();
+    }, 100),
+    [getStatusInfo]
+  );
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === 'visible' && !isRouteChanging.current) {
-      throttledCheckSession();
+      throttledGetStatusInfo();
     }
-  }, [throttledCheckSession]);
+  }, [throttledGetStatusInfo]);
 
   const handleRouteChangeStart = useCallback(() => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
-      throttledCheckSession();
+      throttledGetStatusInfo();
     }
-  }, [throttledCheckSession, router.pathname]);
+  }, [throttledGetStatusInfo, router.pathname]);
 
   const handleRouteChangeComplete = useCallback(() => {
     isRouteChanging.current = false;
   }, []);
 
   useEffect(() => {
-    checkSession();
-
+    getStatusInfo();
     document.addEventListener('visibilitychange', handleVisibilityChange);
     router.events.on('routeChangeStart', handleRouteChangeStart);
     router.events.on('routeChangeComplete', handleRouteChangeComplete);
@@ -396,15 +444,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       router.events.off('routeChangeStart', handleRouteChangeStart);
       router.events.off('routeChangeComplete', handleRouteChangeComplete);
     };
-  }, [
-    handleVisibilityChange,
-    handleRouteChangeStart,
-    handleRouteChangeComplete,
-    router.events,
-    checkSession,
-  ]);
+  }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
-  // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
+  useEffect(() => {
+    const handleUnauthorizedAccess = () => {
+      // Deprecate: [Beta](20240826-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log('useEffect message on "unauthorized": called signOut');
+      signOut();
+    };
+
+    // Info: (20240822-Tzuhan) 確保只有一個監聽器
+    eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
+    eventManager.on(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
+
+    return () => {
+      eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
+    };
+  }, [signOut]);
+
+  // Info: (20240522 - Shirley) dependency array 的值改變，才會讓更新後的 value 傳到其他 components
   const value = useMemo(
     () => ({
       credential: credentialRef.current,

@@ -2,7 +2,7 @@ import { PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IPayment } from '@/interfaces/payment';
 
 /*
-Todo: (20240603 - Jacky) Should change whole interface to the new format.
+Todo: [Beta](20240603 - Jacky) Should change whole interface to the new format.
 Besides, the contract content should be added.
 */
 export interface IContract {
@@ -31,8 +31,7 @@ export interface IContract {
   updatedAt: number;
 }
 
-// ToDo: (20240619 - Jacky) New mock data for interface change
-// ToDo: (20240619 - Julian) Remove this after API integration
+// ToDo: [Beta] (20240619 - Jacky) New mock data for interface change
 export const newDummyContracts: IContract[] = [
   {
     id: 1,

@@ -35,7 +35,7 @@ export const ALLOWED_ORIGINS = [
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
 
-// 定義 Formidable 的 options
+// Info: (20240718 - Jacky) 定義 Formidable 的 options
 export const FORMIDABLE_OPTIONS: Partial<Options> = {
   encoding: 'utf-8',
   keepExtensions: true,
@@ -43,7 +43,7 @@ export const FORMIDABLE_OPTIONS: Partial<Options> = {
   maxFields: 1000,
   multiples: false,
 
-  // 過濾器例子，保留圖片類型
+  // Info: (20240718 - Jacky) 過濾器例子，保留圖片類型
   filter({ mimetype }) {
     return !!(mimetype && (mimetype.includes('image') || mimetype.includes('pdf')));
   },

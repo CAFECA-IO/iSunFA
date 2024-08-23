@@ -181,14 +181,14 @@ export interface IFinancialReportInDB {
 export interface BalanceSheetOtherInfo {
   assetLiabilityRatio: {
     [date: string]: {
-      data: number[]; // Info: [資產,負債,權益] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
-      labels: string[]; // Info: ["資產", "負債", "權益"] (20240730 - Shirley)
+      data: number[]; // Info: (20240730 - Shirley) [資產,負債,權益], 數字是已經*100的數字, 不會有小數點
+      labels: string[]; // Info: (20240730 - Shirley) ["資產", "負債", "權益"]
     };
   };
   assetMixRatio: {
-    // Info: 資產組成，包含數量最大的五種資產跟其他 (20240730 - Shirley)
+    // Info: (20240730 - Shirley) 資產組成，包含數量最大的五種資產跟其他
     [date: string]: {
-      data: number[]; // Info: [資產1, 資產2, 資產3, 資產4, 資產5, 其他] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      data: number[]; // Info: (20240730 - Shirley) [資產1, 資產2, 資產3, 資產4, 資產5, 其他], 數字是已經*100的數字, 不會有小數點
       labels: string[];
     };
   };
@@ -226,7 +226,7 @@ export interface IncomeStatementOtherInfo {
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: {
     beforeIncomeTax: YearlyData;
-    amortizationDepreciation: YearlyData; // Info: 折舊攤銷費用 (20240730 - Shirley)
+    amortizationDepreciation: YearlyData; // Info: (20240730 - Shirley) 折舊攤銷費用
     tax: YearlyData;
     operatingIncomeCashFlow: YearlyData;
     ratio: YearlyData;

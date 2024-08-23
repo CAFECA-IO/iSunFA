@@ -6,9 +6,9 @@ const useWindowSize = () => {
     height: 100,
   });
   useEffect(() => {
-    // Info: Handler to call on window resize (20240417 - Shirley)
+    // Info: (20240417 - Shirley) Handler to call on window resize
     function handleResize() {
-      // Info: Set window width/height to state (20240417 - Shirley)
+      // Info: (20240417 - Shirley) Set window width/height to state
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,

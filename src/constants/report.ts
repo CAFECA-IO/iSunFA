@@ -1,4 +1,4 @@
-// ToDo: (20240802 - Julian) change in equity statement is not released yet
+// ToDo: [Beta] (20240802 - Julian) change in equity statement is not released yet
 import { AccountType } from '@/constants/account';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 
@@ -12,6 +12,7 @@ export enum ReportSheetType {
   INCOME_STATEMENT = 'comprehensive_income_statement',
   CASH_FLOW_STATEMENT = 'cash_flow_statement',
   REPORT_401 = 'report_401',
+  // Info: (20240802 - Julian)
   //  CHANGE_IN_EQUITY_STATEMENT = 'changeInEquityStatement',
 }
 
@@ -20,6 +21,7 @@ export enum ReportSheetTypeDisplay {
   INCOME_STATEMENT = 'Statement of Comprehensive Income',
   CASH_FLOW_STATEMENT = 'Statement of Cash Flows',
   REPORT_401 = 'Report 401',
+  // Info: (20240802 - Julian)
   //  CHANGE_IN_EQUITY_STATEMENT = 'Statement of Changes in Equity',
 }
 
@@ -75,6 +77,7 @@ export const FinancialReportTypesKeyReportSheetTypeMapping: {
   [FinancialReportTypesKey.cash_flow_statement]: ReportSheetType.CASH_FLOW_STATEMENT,
   // Info: (20240814 - Anna) 增加401報表
   [FinancialReportTypesKey.report_401]: ReportSheetType.REPORT_401,
+  // Info: (20240802 - Julian)
   //  [FinancialReportTypesKey.change_in_equity_statement]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
 };
 
@@ -91,6 +94,7 @@ export const ACCOUNT_TYPE_REPORT_SHEET_TYPE_MAPPING: {
   [AccountType.GAIN_OR_LOSS]: ReportSheetType.INCOME_STATEMENT,
   [AccountType.OTHER_COMPREHENSIVE_INCOME]: ReportSheetType.INCOME_STATEMENT,
   [AccountType.CASH_FLOW]: ReportSheetType.CASH_FLOW_STATEMENT,
+  // Info: (20240802 - Julian)
   //  [AccountType.CHANGE_IN_EQUITY]: ReportSheetType.CHANGE_IN_EQUITY_STATEMENT,
   [AccountType.OTHER]: ReportSheetType.BALANCE_SHEET,
 };

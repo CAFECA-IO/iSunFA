@@ -39,7 +39,6 @@ const ViewAnalysisSection = ({
     window.history.back();
   };
 
-  // TODO: (20240502 - Shirley) no `map` and `conditional rendering` in return
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
       {/* Info: (20240426 - Shirley) financial title, print button and share button */}
@@ -73,7 +72,7 @@ const ViewAnalysisSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              // TODO: (20240507 - Shirley) yet to dev
+              // TODO: [Beta] (20240507 - Shirley) yet to dev
               disabled={true}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -96,7 +95,7 @@ const ViewAnalysisSection = ({
               </div>
             </Button>
             <Button
-              // TODO: (20240507 - Shirley) yet to dev
+              // TODO: [Beta] (20240507 - Shirley) yet to dev
               disabled={true}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -128,7 +127,7 @@ const ViewAnalysisSection = ({
           <div className="flex space-x-5">
             <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_CONTRACT')} </div>
             <div className="flex items-center space-x-3">
-              {/* TODO: (20240507 - Shirley) link */}
+              {/* TODO: [Beta] (20240507 - Shirley) link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
@@ -157,7 +156,7 @@ const ViewAnalysisSection = ({
             <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_ID')}</div>
 
             <div className="flex items-center space-x-3">
-              {/* TODO: (20240507 - Shirley) link */}
+              {/* TODO: [Beta] (20240507 - Shirley) link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenId}
               </Link> */}
@@ -213,7 +212,7 @@ const ViewAnalysisSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: (20240507 - Shirley) link */}
+            {/* TODO: [Beta] (20240507 - Shirley) link */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -246,7 +245,7 @@ const ViewAnalysisSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: (20240507 - Shirley) link */}
+            {/* TODO: [Beta] (20240507 - Shirley) link */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>

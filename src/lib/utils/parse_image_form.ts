@@ -7,7 +7,7 @@ import { BASE_STORAGE_FOLDER, FileFolder, VERCEL_STORAGE_FOLDER } from '@/consta
 
 export const parseForm = async (
   req: NextApiRequest,
-  subDir: string = FileFolder.TMP // Info: 預設子資料夾名稱為tmp (20240726 - Jacky)
+  subDir: string = FileFolder.TMP // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
 ) => {
   const uploadDir =
     process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
@@ -50,7 +50,7 @@ export async function findFileByName(baseFolder: string, fileName: string): Prom
 }
 
 /**
- * Info: 讀取目標資料夾中的某個檔案，並將其加上前綴後改名 (20240726 - Jacky)
+ * Info: (20240726 - Jacky) 讀取目標資料夾中的某個檔案，並將其加上前綴後改名
  * @param fileName - 要加前綴的檔案名稱
  * @param prefix - 要加的前綴
  * @param ext - 新的副檔名
@@ -61,19 +61,19 @@ export async function addPrefixToFile(
   prefix: string,
   ext: string
 ): Promise<string> {
-  const targetFolder = path.join(BASE_STORAGE_FOLDER, folder); // Info: 確保是從專案根目錄開始找目標資料夾 (20240726 - Jacky)
+  const targetFolder = path.join(BASE_STORAGE_FOLDER, folder); // Info: (20240726 - Jacky) 確保是從專案根目錄開始找目標資料夾
 
   // 檔案的完整路徑
   const oldFilePath = path.join(targetFolder, fileName);
-  const currentExt = path.extname(fileName).slice(1); // Info: 去除開頭的點 (.) (20240726 - Jacky)
+  const currentExt = path.extname(fileName).slice(1); // Info: (20240726 - Jacky) 去除開頭的點 (.)
 
-  // Info: 根據現有副檔名與新的副檔名來決定是否需要更改 (20240726 - Jacky)
+  // Info: (20240726 - Jacky) 根據現有副檔名與新的副檔名來決定是否需要更改
   const newFilename = `${prefix}-${fileName}${currentExt === ext ? '' : `.${ext}`}`;
   const newFilePath = path.join(targetFolder, newFilename);
 
-  // Info: 檢查檔案是否存在 (20240726 - Jacky)
+  // Info: (20240726 - Jacky) 檢查檔案是否存在
   await fs.access(oldFilePath);
-  // Info: 改名檔案 (20240726 - Jacky)
+  // Info: (20240726 - Jacky) 改名檔案
   await fs.rename(oldFilePath, newFilePath);
   return newFilename;
 }

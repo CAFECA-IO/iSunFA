@@ -18,7 +18,7 @@ async function checkEmpty(
     };
   }[]
 ) {
-  // Info: add eslint-disable-next-line no-underscore-dangle for prisma groupBy function (20240614 - Gibbs)
+  // Info: (20240614 - Gibbs) add eslint-disable-next-line no-underscore-dangle for prisma groupBy function
   // eslint-disable-next-line no-underscore-dangle
   return statusNumber.every((status) => status._count.id === 0);
 }
