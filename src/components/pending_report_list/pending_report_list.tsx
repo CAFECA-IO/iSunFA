@@ -85,7 +85,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       return;
     }
     toggleAllPaused();
-    // TODO: [Beta] (20240514 - Shirley) LOCK and send paused request
+    // TODO: (20240514 - Shirley) [Beta] LOCK and send paused request
     // Info: (20240515 - Shirley) 將所有選中的報告項目暫停
     const updatedReports = reportItems.map((report) => {
       if (
@@ -104,7 +104,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
 
   const resumeClickHandler = () => {
     toggleAllPaused();
-    // TODO: [Beta] (20240514 - Shirley) LOCK and send resumed request
+    // TODO: (20240514 - Shirley) [Beta] LOCK and send resumed request
     const updatedReports = reportItems.map((report) => {
       if (
         individualChecks.some((checked, index) => {

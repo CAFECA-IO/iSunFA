@@ -22,14 +22,14 @@ export default async function handler(
     try {
       switch (req.method) {
         case 'GET': {
-          // TODO: [Beta] (20240625 - Jacky) getContract
+          // ToDo: (20240625 - Jacky) [Beta] getContract
           const getContract = newDummyContracts[0];
           statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
           payload = getContract;
           break;
         }
         case 'PUT': {
-          // TODO: [Beta] (20240625 - Jacky) updateContract
+          // ToDo: (20240625 - Jacky) [Beta] updateContract
           const updatedContract: IContract = newDummyContracts[0];
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = updatedContract;
@@ -41,9 +41,7 @@ export default async function handler(
           break;
       }
     } catch (_error) {
-      // ToDo: [Beta] (20240822 - Murky) please used logger to print error
-      // const error = _error as Error;
-
+      // ToDo: (20240822 - Murky) [Beta] please used logger to print error
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

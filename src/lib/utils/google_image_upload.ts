@@ -64,7 +64,7 @@ export async function uploadFileToGoogleCloud(
     await file.makePublic();
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return url;
 }

@@ -34,7 +34,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     },
     hasCompanyId
   );
-  // Todo: (20240822 - Anna) feat. Murky - 使用 logger('reportFinancial in reportId', reportFinancial)
+  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('reportFinancial in reportId', reportFinancial)
 
   // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();

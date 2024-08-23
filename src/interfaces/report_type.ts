@@ -1,4 +1,4 @@
-// ToDo: [Beta] (20240802 - Julian) change in equity statement is not released yet
+// ToDo: (20240802 - Julian) [Beta] change in equity statement is not released yet
 export enum FinancialReportTypesKey {
   balance_sheet = 'balance_sheet',
   comprehensive_income_statement = 'comprehensive_income_statement',

@@ -14,7 +14,6 @@ export async function createSubscription(
 ): Promise<ISubscription> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-
   const expiredDate = nowTimestamp + subscriptionPeriod * ONE_DAY_IN_S;
   const newSubscription = await prisma.subscription.create({
     data: {

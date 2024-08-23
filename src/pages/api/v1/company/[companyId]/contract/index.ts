@@ -23,7 +23,7 @@ export default async function handler(
       switch (req.method) {
         case 'GET': {
           // let shouldContinue: boolean = true;
-          // TODO: [Beta] (20240625 - Jacky) listContract
+          // TODO: (20240625 - Jacky) [Beta] listContract
           const contractList = newDummyContracts;
           statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
           payload = contractList;
@@ -31,7 +31,7 @@ export default async function handler(
         }
         case 'POST': {
           // let shouldContinue: boolean = true;
-          // TODO: [Beta] (20240625 - Jacky) createContract
+          // TODO: (20240625 - Jacky) [Beta] createContract
           const contract: IContract = newDummyContracts[0];
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = contract;
@@ -42,12 +42,13 @@ export default async function handler(
           break;
       }
     } catch (_error) {
-      // ToDo: [Beta] (20240822 - Murky) please used logger to print error
-      // const error = _error as Error;
-
+      // ToDo: (20240822 - Murky) [Beta] please used logger to print error
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
-  const { httpCode, result } = formatApiResponse<IContract | IContract[] | null>(statusMessage, payload);
+  const { httpCode, result } = formatApiResponse<IContract | IContract[] | null>(
+    statusMessage,
+    payload
+  );
   res.status(httpCode).json(result);
 }

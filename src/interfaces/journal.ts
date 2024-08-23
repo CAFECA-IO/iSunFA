@@ -16,7 +16,7 @@ export interface IJournal {
   voucher: IVoucherDataForSavingToDB;
 }
 
-// ToDo: [Beta] (20240528 - Julian) 用於 journal list 的 dummy interface，之後會被取代
+// ToDo: (20240528 - Julian) [Beta] 用於 journal list 的 dummy interface，之後會被取代
 export interface IJournalListItem {
   id: number;
   date: number;

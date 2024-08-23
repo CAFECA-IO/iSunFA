@@ -23,11 +23,7 @@ import { formatIPaginatedReport } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import {
-  BalanceSheetOtherInfo,
-  IPaginatedReport,
-  IReportContent,
-} from '@/interfaces/report';
+import { BalanceSheetOtherInfo, IPaginatedReport, IReportContent } from '@/interfaces/report';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import {
@@ -206,10 +202,11 @@ export function formatPostRequestQuery(req: NextApiRequest) {
 
   const reportSheetType = formatReportSheetTypeFromQuery(type);
 
-  const {
-    startDateInSecond,
-    endDateInSecond,
-  } = formatStartAndEndDateFromQuery(reportSheetType, from, to);
+  const { startDateInSecond, endDateInSecond } = formatStartAndEndDateFromQuery(
+    reportSheetType,
+    from,
+    to
+  );
 
   const formattedReportType = formatReportTypeFromQuery(reportType);
 
@@ -230,10 +227,12 @@ async function generateReport(
   reportSheetType: ReportSheetType
 ): Promise<IReportContent> {
   // Info: (20240710 - Murky) Report Generator
-  let reportContent: IReportContent = { content: {
-    content: [],
-    otherInfo: {} as BalanceSheetOtherInfo
-  } };
+  let reportContent: IReportContent = {
+    content: {
+      content: [],
+      otherInfo: {} as BalanceSheetOtherInfo,
+    },
+  };
   try {
     const financialReportGenerator = await ReportGeneratorFactory.createGenerator(
       companyId,
@@ -244,7 +243,7 @@ async function generateReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return reportContent;
 }

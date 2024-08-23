@@ -224,6 +224,6 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
   ): BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
 
   public abstract override generateReport(): Promise<{
-    content: IFinancialReportInDB
+    content: IFinancialReportInDB;
   }>;
 }

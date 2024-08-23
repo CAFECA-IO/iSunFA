@@ -24,14 +24,14 @@ export default async function handler(
     try {
       switch (req.method) {
         case 'GET': {
-          // TODO: [Beta] (20240625 - Jacky) listContract
+          // ToDo: (20240625 - Jacky) [Beta] listContract
           const assetList = mockAssetData;
           statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
           payload = assetList;
           break;
         }
         case 'POST': {
-          // TODO: [Beta] (20240625 - Jacky) createContract
+          // ToDo: (20240625 - Jacky) [Beta] createContract
           const asset: IAsset = mockAssetData[0];
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = asset;
@@ -43,7 +43,6 @@ export default async function handler(
       }
     } catch (_error) {
       // ToDo: (20240822 - Murky) please used logger to print error
-
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

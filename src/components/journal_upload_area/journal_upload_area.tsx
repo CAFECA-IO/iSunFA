@@ -166,7 +166,6 @@ const JournalUploadArea = () => {
             type: ToastType.SUCCESS,
           });
           setInvoiceIdHandler(result.aichResultId);
-
           if (
             result?.uploadIdentifier &&
             result?.aichResultId &&

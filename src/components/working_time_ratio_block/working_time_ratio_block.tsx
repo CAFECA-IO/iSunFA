@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 
-// ToDo: [Beta] (20240614 - Julian) replace with actual data
+// ToDo: (20240614 - Julian) [Beta] replace with actual data
 const dummyEmployeeData = [
   {
     name: 'Emily',

@@ -215,7 +215,7 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
   }
 
   public override async generateReport(): Promise<{
-    content: IFinancialReportInDB
+    content: IFinancialReportInDB;
   }> {
     const content = await this.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(content);

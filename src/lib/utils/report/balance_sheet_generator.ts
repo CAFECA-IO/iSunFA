@@ -396,7 +396,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   public override async generateReport(): Promise<{
-    content: IFinancialReportInDB
+    content: IFinancialReportInDB;
   }> {
     // const currentDateInMillisecond = timestampInMilliSeconds(this.endDateInSecond);
     // const currentDate = new Date(currentDateInMillisecond);

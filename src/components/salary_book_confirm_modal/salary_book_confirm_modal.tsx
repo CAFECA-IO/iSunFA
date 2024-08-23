@@ -15,7 +15,7 @@ const SalaryBookConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: ISalaryBookConfirmModal) => {
-  // ToDo: [Beta] (20240716 - Julian) Replace with real data
+  // ToDo: (20240716 - Julian) [Beta] Replace with real data
   const type = 'Salary Bookkeeping';
   const dateTimestamp = 1705646390;
   const employeeName = 'John Doe';
@@ -26,7 +26,7 @@ const SalaryBookConfirmModal = ({
   const paymentStatus = 'Paid';
 
   const confirmHandler = () => {
-    // ToDo: [Beta] (20240716 - Julian) Add confirm handler
+    // ToDo: (20240716 - Julian) [Beta] Add confirm handler
 
     modalVisibilityHandler();
   };

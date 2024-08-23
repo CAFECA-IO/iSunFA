@@ -125,7 +125,7 @@ const ProfileUploadModal = ({
       }
       // Info: (20240801 - Julian) 上傳專案圖片
       case UploadType.PROJECT: {
-        targetId = '-1'; // ToDo: [Beta] (20240801 - Julian) get project id
+        targetId = '-1'; // ToDo: (20240801 - Julian) [Beta] get project id
 
         formData.append('file', uploadedImage as File);
         break;

@@ -170,7 +170,7 @@ export interface FinancialReport {
 }
 
 export interface IReportContent {
-  content : IFinancialReportInDB | TaxReport401;
+  content: IFinancialReportInDB | TaxReport401;
 }
 
 export interface IFinancialReportInDB {
