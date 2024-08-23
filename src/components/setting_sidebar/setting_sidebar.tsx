@@ -31,7 +31,7 @@ const SettingSidebar = () => {
           {/* Info: (20240423 - Shirley) Menu */}
           <div className="flex w-full flex-col items-start justify-center py-16px">
             <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-              {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
+              {/* TODO: (20240715 - Shirley) [Beta] to be developed */}
               {/* <Link
                 href={ISUNFA_ROUTE.USERS_MY_REPORTS}
                 className={cn(
@@ -140,7 +140,7 @@ const SettingSidebar = () => {
               </Link>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
+                {/* TODO: (20240715 - Shirley) [Beta] to be developed */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -176,7 +176,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
+                {/* TODO: (20240715 - Shirley) [Beta] to be developed */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -208,7 +208,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
+                {/* TODO: (20240715 - Shirley) [Beta] to be developed */}
                 {/* <Link
                 href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
                 className={cn(
@@ -244,7 +244,7 @@ const SettingSidebar = () => {
         </div>
       </div>
 
-      {/* TODO: [Beta] (20240715 - Shirley) developing */}
+      {/* TODO: (20240715 - Shirley) [Beta] developing */}
       {/* Info: (20240507 - Shirley) ----- mobile version ----- */}
       <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-white px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
         <Link

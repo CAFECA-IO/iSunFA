@@ -151,7 +151,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240424 - Shirley) link
+    link: '', // TODO: (20240424 - Shirley) [Beta] link
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -194,7 +194,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240424 - Shirley) link
+    link: '', // TODO: (20240424 - Shirley) [Beta] link
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -280,7 +280,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240807 - Shirley) link
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.ACCOUNTING,
     added: false,
     tempSelectedOnSection: false,
@@ -492,7 +492,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240807 - Shirley) link
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -550,7 +550,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240807 - Shirley) link
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -608,7 +608,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240807 - Shirley) link
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -666,7 +666,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: [Beta] (20240807 - Shirley) link
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,

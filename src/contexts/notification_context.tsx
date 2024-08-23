@@ -14,7 +14,7 @@ interface INotificationContext {
 
 const NotificationContext = createContext<INotificationContext | undefined>(undefined);
 
-// TODO: [Beta] (20240429 - Shirley) notification context
+// TODO: (20240429 - Shirley) [Beta] notification context
 export const NotificationProvider = ({ children }: INotificationProvider) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportPendingStatus, setReportPendingStatus, reportPendingStatusRef] =
@@ -31,7 +31,7 @@ export const NotificationProvider = ({ children }: INotificationProvider) => {
     setReportGeneratedStatus(status);
   };
 
-  // TODO: [Beta] (20240517 - Shirley) websocket connection of pending report and generated report
+  // TODO: (20240517 - Shirley) [Beta] websocket connection of pending report and generated report
 
   /* eslint-disable react/jsx-no-constructed-context-values */
   const value = {

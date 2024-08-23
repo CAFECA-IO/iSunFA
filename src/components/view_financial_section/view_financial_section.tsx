@@ -133,7 +133,7 @@ const ViewFinancialSection = ({
   const [reportThumbnails, setReportThumbnails] = useState<
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
-  // TODO: [Beta] (20240802 - Shirley) download PDF file
+  // TODO: (20240802 - Shirley) [Beta] download PDF file
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -249,13 +249,13 @@ const ViewFinancialSection = ({
     if (reportLink) {
       printPDF();
     }
-    // TODO: [Beta] (20240802 - Shirley) get PDF file
+    // TODO: (20240802 - Shirley) [Beta] get PDF file
     // if (pdfFile) {
     //   window.open(pdfFile, '_blank');
     // }
   };
 
-  // TODO: [Beta] (20240802 - Shirley) get PDF file
+  // TODO: (20240802 - Shirley) [Beta] get PDF file
   // const fetchPDF = async () => {
   //   try {
   //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
@@ -448,7 +448,7 @@ const ViewFinancialSection = ({
               </div>
             </Button>
             <Button
-              // TODO: [Beta] (20240507 - Shirley) yet to dev
+              // TODO: (20240507 - Shirley) [Beta] yet to dev
               disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -481,7 +481,7 @@ const ViewFinancialSection = ({
             {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
             {/* <div className="text-text-neutral-tertiary">Token Contract </div> */}
             <div className="flex items-center space-x-3">
-              {/* TODO: [Beta] (20240507 - Shirley) link */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
@@ -517,7 +517,7 @@ const ViewFinancialSection = ({
             {/* <div className="text-text-neutral-tertiary">Token ID </div> */}
 
             <div className="flex items-center space-x-3">
-              {/* TODO: [Beta] (20240507 - Shirley) link */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenId}
               </Link> */}

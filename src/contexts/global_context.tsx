@@ -514,7 +514,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    // TODO: [Beta] (20240529 - Shirley) Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented
+    // TODO: (20240529 - Shirley) [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented
     // if (reportPendingStatus) {
     //   toastHandler({
     //     type: ToastType.INFO,

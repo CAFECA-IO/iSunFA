@@ -7,7 +7,7 @@ import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-// ToDo: [Beta] (20240612 - Julian) data format
+// ToDo: (20240612 - Julian) [Beta] data format
 const data = {
   categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   seriesData: [

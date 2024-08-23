@@ -121,7 +121,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        // ToDo: [Beta] (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
@@ -143,7 +143,7 @@ const NavBar = () => {
       </Link>
       <button
         type="button"
-        // TODO: [Beta] (20240517 - Shirley) temp disabled
+        // TODO: (20240517 - Shirley) [Beta] temp disabled
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
@@ -153,7 +153,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        // ToDo: [Beta] (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
@@ -240,7 +240,7 @@ const NavBar = () => {
 
       <button
         type="button"
-        // ToDo: [Beta] (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -268,7 +268,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Contract button */}
       <button
         type="button"
-        // TODO: [Beta] (20240517 - Shirley) temp disabled
+        // TODO: (20240517 - Shirley) [Beta] temp disabled
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -279,7 +279,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Salary button */}
       <button
         type="button"
-        // ToDo: [Beta] (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -331,7 +331,7 @@ const NavBar = () => {
           {/* Info: (20240809 - Shirley) edit name button */}
           <button
             type="button"
-            // TODO: [Beta] (20240517 - Shirley) temp disabled
+            // TODO: (20240517 - Shirley) [Beta] temp disabled
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
             className="hidden shrink-0 flex-col justify-center rounded-xs px-2 text-button-surface-strong-secondary disabled:text-button-text-disable"
@@ -486,7 +486,7 @@ const NavBar = () => {
           height={16}
           className="rounded-full"
         />
-        {/* ToDo: [Beta] (20240521 - Julian) company name abbreviation */}
+        {/* ToDo: (20240521 - Julian) [Beta] company name abbreviation */}
         <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
         <GoArrowSwitch size={14} />
       </button>
@@ -569,7 +569,7 @@ const NavBar = () => {
             </div>
           </div>
 
-          {/* TODO: [Beta] (20240408 - Shirley) links on mobile is hidden for the sake of no design spec */}
+          {/* TODO: (20240408 - Shirley) [Beta] links on mobile is hidden for the sake of no design spec */}
           <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:ml-10 lg:flex">
             <Link
               href={ISUNFA_ROUTE.DASHBOARD}

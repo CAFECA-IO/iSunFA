@@ -31,7 +31,7 @@ export interface IContract {
   updatedAt: number;
 }
 
-// ToDo: [Beta] (20240619 - Jacky) New mock data for interface change
+// ToDo: (20240619 - Jacky) [Beta] New mock data for interface change
 export const newDummyContracts: IContract[] = [
   {
     id: 1,

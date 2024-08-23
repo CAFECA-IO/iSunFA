@@ -29,7 +29,7 @@ interface PieChartProps {
 
 const originalColors = ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'];
 // const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'];
-// TODO: [Beta] (20240523 - Shirley) implement hover colors
+// TODO: (20240523 - Shirley) [Beta] implement hover colors
 
 const PieChart = ({ data }: PieChartProps) => {
   const globalCtx = useGlobalCtx();
@@ -198,7 +198,7 @@ const LaborCostChart = () => {
   const { t } = useTranslation('common');
   const { layoutAssertion } = useGlobalCtx();
 
-  // TODO: [Beta] (20240618 - Shirley) 改成 company startDate
+  // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);

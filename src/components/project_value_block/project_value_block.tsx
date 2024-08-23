@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 
 const ProjectValueBlock = () => {
   const { t } = useTranslation('common');
-  // ToDo: [Beta] (20240612 - Julian) replace with actual data
+  // ToDo: (20240612 - Julian) [Beta] replace with actual data
   const totalValue = 187000;
   const apy = 1.5;
   const totalRevenue = 10000;

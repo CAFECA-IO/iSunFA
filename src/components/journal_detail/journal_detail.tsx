@@ -104,7 +104,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       if (invoice) {
         setType(invoice.eventType);
         setDateTimestamp(invoice.date);
-        // setReason(invoice.reason); ToDo: [Beta] (20240503 - Julian) interface lacks reason
+        // setReason(invoice.reason); ToDo: (20240503 - Julian) [Beta] interface lacks reason
         setVendor(invoice.vendorOrSupplier);
         setDescription(invoice.description);
         setTotalPrice(invoice.payment.price);
@@ -160,7 +160,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
   const invoicePreviewSrc = imgSrcHasError
     ? '/elements/default_certificate.svg'
-    : journalDetail?.imageUrl ?? '';
+    : (journalDetail?.imageUrl ?? '');
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);

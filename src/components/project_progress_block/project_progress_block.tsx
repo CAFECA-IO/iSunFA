@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 
 const ProjectProgressBlock = () => {
   const { t } = useTranslation('common');
-  // ToDo: [Beta] (20240612 - Julian) replace with actual data
+  // ToDo: (20240612 - Julian) [Beta] replace with actual data
   const progress = 64;
 
   return (

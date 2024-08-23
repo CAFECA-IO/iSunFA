@@ -44,7 +44,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     useState<IDatePeriod>(default30DayPeriodInSec);
   const [historySearch, setHistorySearch] = useState<string>('');
 
-  // ToDo: [Beta] (20240624 - Julian) Replace with api data
+  // ToDo: (20240624 - Julian) [Beta] Replace with api data
   const pendingTotalPages = 5;
   const historyTotalPages = 5;
 
@@ -59,7 +59,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       query: {
         status: ReportStatusType.PENDING,
         projectId,
-      }, // ToDo: [Beta] (20240701 - Julian) Add query for filtering
+      }, // ToDo: (20240701 - Julian) [Beta] Add query for filtering
     },
     hasCompanyId
   );
@@ -75,7 +75,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       query: {
         status: ReportStatusType.GENERATED,
         projectId,
-      }, //  ToDo: [Beta] (20240701 - Julian) Add query for filtering
+      }, //  ToDo: (20240701 - Julian) [Beta] Add query for filtering
     },
     hasCompanyId
   );
