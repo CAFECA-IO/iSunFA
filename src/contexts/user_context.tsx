@@ -14,6 +14,7 @@ import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 
 interface UserContextType {
   credential: string | null;
@@ -138,6 +139,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
+    clearAllItems(); // Info: 清空 IndexedDB 中的數據 (20240822 - Shirley)
   };
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
@@ -409,6 +411,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     await handleSelectCompanyResponse(res);
   };
+
   const throttledGetStatusInfo = useCallback(
     throttle(() => {
       getStatusInfo();

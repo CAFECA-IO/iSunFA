@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.8.0+38",
+  "version": "0.8.0+36",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -39,8 +39,12 @@
     "next": "^14.2.5",
     "next-auth": "^4.24.7",
     "next-i18next": "^15.2.0",
+    "next-logger": "^5.0.0",
     "next-session": "^4.0.5",
     "nodemailer": "^6.9.8",
+    "pino": "^9.3.2",
+    "pino-multi-stream": "^6.0.0",
+    "pino-pretty": "^11.2.2",
     "react": "^18.3.1",
     "react-apexcharts": "^1.4.1",
     "react-chartjs-2": "^5.2.0",
@@ -50,6 +54,7 @@
     "react-pdf": "^9.1.0",
     "react-toastify": "^10.0.5",
     "react-usestateref": "^1.0.8",
+    "rotating-file-stream": "^3.2.3",
     "sharp": "^0.33.3",
     "tailwind-merge": "^2.2.2",
     "ts-node": "^10.9.2",

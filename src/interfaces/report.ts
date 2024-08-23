@@ -169,6 +169,15 @@ export interface FinancialReport {
   otherInfo: unknown;
 }
 
+export interface IReportContent {
+  content: IFinancialReportInDB | TaxReport401;
+}
+
+export interface IFinancialReportInDB {
+  content: IAccountReadyForFrontend[];
+  otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+}
+
 export interface BalanceSheetOtherInfo {
   assetLiabilityRatio: {
     [date: string]: {

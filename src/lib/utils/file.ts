@@ -1,4 +1,4 @@
-import { UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER } from '@/constants/file';
+import { LOG_FOLDER, UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER } from '@/constants/file';
 import { promises as fs } from 'fs';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
@@ -10,4 +10,5 @@ export async function createFileFoldersIfNotExists(): Promise<void> {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   });
+  await fs.mkdir(LOG_FOLDER, { recursive: true });
 }

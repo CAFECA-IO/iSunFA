@@ -461,7 +461,6 @@ export async function handlePrismaSavingLogic(
   companyId: number,
   ocrId: number | undefined
 ) {
-  // ToDo: (20240522 - Murky) [Beta] 如果AICJ回傳的resultId已經存在於journal，會因為unique key而無法upsert，導致error
   try {
     const { projectId, contractId } = formattedInvoice;
 

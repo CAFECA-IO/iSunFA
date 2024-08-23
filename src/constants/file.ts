@@ -23,6 +23,9 @@ export const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || '.';
 
 export const VERCEL_STORAGE_FOLDER = '/tmp';
 
-export const UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER = process.env.VERCEL === '1'
-  ? [VERCEL_STORAGE_FOLDER]
-  : Object.values(FileFolder).map((folder) => path.join(BASE_STORAGE_FOLDER, folder));
+export const LOG_FOLDER = path.join(BASE_STORAGE_FOLDER, './log');
+
+export const UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER =
+  process.env.VERCEL === '1'
+    ? [VERCEL_STORAGE_FOLDER]
+    : Object.values(FileFolder).map((folder) => path.join(BASE_STORAGE_FOLDER, folder));
