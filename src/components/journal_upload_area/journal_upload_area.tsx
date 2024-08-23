@@ -12,7 +12,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
 import { encryptFile, exportPublicKey, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
-import { addItem, deleteItem, getAllItems } from '@/lib/utils/indexed_db/ocr';
+import { addItem, deleteItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 
 interface FileInfo {
@@ -41,7 +41,6 @@ const JournalUploadArea = () => {
   // const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
-  const [dataStoredToIndexedDB, setDataStoredToIndexedDB] = useState<IOCRItem | null>(null);
 
   const generateKeyPairAndEncryptFile = async (fileArrayBuffer: ArrayBuffer) => {
     // TODO: 暫時生成 RSA 密鑰對，但 public key 應該要從後端來 (20240822 - Shirley)
@@ -89,8 +88,7 @@ const JournalUploadArea = () => {
       iv,
       userId: userAuth?.id || -1,
     };
-    setDataStoredToIndexedDB(data);
-    // setDataStoredToIndexedDB([...dataStoredToIndexedDB, data]);
+
     await addItem(id, data);
   };
 
@@ -134,17 +132,6 @@ const JournalUploadArea = () => {
     }
   };
 
-  const handleAllDataFromIndexedDB = async () => {
-    const data = await getAllItems();
-    // eslint-disable-next-line no-console
-    console.log('data in handleAllDataFromIndexedDB', data);
-    // setDataStoredToIndexedDB(data.map((item) => item.data));
-  };
-
-  useEffect(() => {
-    handleAllDataFromIndexedDB();
-  }, []);
-
   useEffect(() => {
     if (uploadFile && selectedCompany) {
       const formData = new FormData();
@@ -153,18 +140,11 @@ const JournalUploadArea = () => {
       formData.append('imageSize', uploadFile.size);
       formData.append('imageName', uploadFile.name);
       formData.append('uploadIdentifier', uuid);
-      if (!dataStoredToIndexedDB) return;
-      // eslint-disable-next-line no-console
-      console.log('dataStoredToIndexedDB', dataStoredToIndexedDB);
-
-      formData.append('encryptedSymmetricKey', dataStoredToIndexedDB.encryptedSymmetricKey);
-      formData.append('publicKey', JSON.stringify(dataStoredToIndexedDB.publicKey));
-      formData.append('iv', Array.from(dataStoredToIndexedDB.iv).join(','));
 
       addPendingOCRHandler(uploadFile.name, uploadFile.size, uuid);
       uploadInvoice({ params: { companyId: selectedCompany.id }, body: formData });
     }
-  }, [uploadFile, dataStoredToIndexedDB]);
+  }, [uploadFile]);
 
   useEffect(() => {
     if (uploadSuccess && results) {
