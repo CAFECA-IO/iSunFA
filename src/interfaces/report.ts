@@ -246,17 +246,14 @@ export interface CashFlowStatementOtherInfo {
   };
 }
 
-// Todo Murky (20240729):
 export interface BalanceSheetReport extends FinancialReport {
   otherInfo: BalanceSheetOtherInfo;
 }
 
-// Todo Murky (20240729):
 export interface IncomeStatementReport extends FinancialReport {
   otherInfo: IncomeStatementOtherInfo;
 }
 
-// Todo Murky (2024729):
 export interface CashFlowStatementReport extends FinancialReport {
   otherInfo: CashFlowStatementOtherInfo;
 }
