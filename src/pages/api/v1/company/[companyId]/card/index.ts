@@ -6,7 +6,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 
 async function getCardList() {
-  // TODO: (20240530 - Jacky) Implement the function to get the list of cards
+  // ToDo: (20240530 - Jacky) [Beta] Implement the function to get the list of cards
   // const cardList = await prisma.card.findMany();
   const cardList: ICard[] = [
     {
@@ -42,7 +42,7 @@ async function createCard(
   name: string,
   companyId: number
 ): Promise<ICard> {
-  // TODO: (20240530 - Jacky) Implement the function to create a card
+  // ToDo: (20240530 - Jacky) [Beta] Implement the function to create a card
   const createdCard: ICard = {
     id: 3,
     type,

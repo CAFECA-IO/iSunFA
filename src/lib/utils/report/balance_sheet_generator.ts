@@ -12,7 +12,7 @@ import {
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
-import { BalanceSheetOtherInfo } from '@/interfaces/report';
+import { BalanceSheetOtherInfo, IFinancialReportInDB } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
@@ -394,20 +394,20 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     return otherInfo;
   }
 
-  public override async generateReport() {
-    // Info: (20240731 - Murky)
-    // const currentDateInMillisecond = timestampInMilliSeconds(this.endDateInSecond);
-    // const currentDate = new Date(currentDateInMillisecond);
-    // const lastPeriodDateInMillisecond = timestampInMilliSeconds(this.lastPeriodEndDateInSecond);
-    // const lastPeriodDate = new Date(lastPeriodDateInMillisecond);
+  public override async generateReport(): Promise<{
+    content: IFinancialReportInDB;
+  }> {
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
-
     const incomeStatementContent =
       await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
-    return {
+    const financialReportInDB = {
       content: balanceSheetContent,
       otherInfo,
+    };
+
+    return {
+      content: financialReportInDB,
     };
   }
 }

@@ -110,7 +110,7 @@ export async function handleGetRequest(resultId: string, type: string = 'invoice
           formatOCRResultDate(ocrResult);
 
           if (!isIInvoice(ocrResult)) {
-            // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+            // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
             ocrResult = null;
           }
         }
@@ -178,7 +178,7 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

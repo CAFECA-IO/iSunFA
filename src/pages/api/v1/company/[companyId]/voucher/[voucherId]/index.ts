@@ -75,7 +75,7 @@ async function handleVoucherUpdatePrismaLogic(
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -106,7 +106,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
       voucherUpdated = voucherUpdatedData.voucherUpdated;
       statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
 
@@ -129,7 +129,6 @@ export default async function handler(
 
   if (isAuth) {
     try {
-      // ToDo: (20240703 - Murky) Need to check Auth
       switch (req.method) {
         case 'PUT': {
           const { voucherUpdated, statusMessage: message } = await handlePutRequest(companyId, req);
@@ -143,7 +142,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       statusMessage = error.message;
     }
   }

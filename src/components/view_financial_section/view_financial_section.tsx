@@ -587,7 +587,6 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: (20240507 - Shirley) [Beta] link */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -628,7 +627,6 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: (20240507 - Shirley) [Beta] link */}
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>

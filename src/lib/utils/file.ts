@@ -1,13 +1,14 @@
-import { UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER } from '@/constants/file';
+import { LOG_FOLDER, UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER } from '@/constants/file';
 import { promises as fs } from 'fs';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
     try {
       await fs.mkdir(folder, { recursive: true });
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     } catch (error) {
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   });
+  await fs.mkdir(LOG_FOLDER, { recursive: true });
 }
