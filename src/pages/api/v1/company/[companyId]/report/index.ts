@@ -278,7 +278,7 @@ async function generateReport(
   endDateInSecond: number,
   reportSheetType: ReportSheetType
 ): Promise<object> {
-  // Todo (20240808 - Jacky): return type should change to IReportContent
+  // Todo: (20240808 - Jacky) return type should change to IReportContent
   let content = {};
   switch (reportSheetType) {
     case ReportSheetType.BALANCE_SHEET:

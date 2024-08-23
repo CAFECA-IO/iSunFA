@@ -159,6 +159,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
     props: {
       reportId: reportId as string,
       reportType: reportType as string,
+      // Info: (20240524 - Shirley)
       // reportLanguage: report_language as string,
       // startTimestamp: start_timestamp as string,
       // endTimestamp: end_timestamp as string,

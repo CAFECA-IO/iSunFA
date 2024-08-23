@@ -65,7 +65,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       });
     }
     if (getFRSuccess && reportFinancial) {
-      // setReportData(reportFinancial);
+      // setReportData(reportFinancial); // Info: (20240723 - Shirley)
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 

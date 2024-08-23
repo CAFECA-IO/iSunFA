@@ -36,7 +36,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
       },
       body: JSON.stringify({
         merchantId: oenMerchantId,
-        customId: orderIdNum, // order id
+        customId: orderIdNum, // Info: (20240806 - Jacky) order id
         successUrl: `https://www.google.com`,
         failureUrl: `https://www.bing.com`,
       }),
@@ -94,18 +94,18 @@ async function handlePostRequest(req: NextApiRequest) {
       const transactionResponseJson = await transactionResponse.json();
       const createDate = convertDateToTimestamp(transactionResponseJson.data.createdAt);
       const createDateInSec = timestampInSeconds(createDate);
-      // Create payment record
+      // Info: (20240806 - Jacky) Create payment record
       const paymentRecord = await createPaymentRecord(
         orderId,
         transactionResponseJson.data.transactionId,
         createDateInSec,
-        transactionResponseJson.message, // TODO: not sure what to put
+        transactionResponseJson.message, // ToDo: (20240806 - Jacky) not sure what to put
         transactionResponseJson.data.amount,
         transactionResponseJson.data.paymentInfo.method,
         transactionResponseJson.data.status
       );
       payload = paymentRecord.status;
-      // Update order status
+      // Info: (20240806 - Jacky) Update order status
       const updatedOrder = await updateOrder(orderId, transactionResponseJson.data.status);
       statusMessage = STATUS_MESSAGE.CREATED;
       if (transactionResponseJson.data.status === 'charged') {

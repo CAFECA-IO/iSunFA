@@ -41,7 +41,7 @@ jest.mock('../../../../../../lib/utils/auth_check', () => ({
 }));
 
 let req: jest.Mocked<NextApiRequest>;
-// let res: jest.Mocked<NextApiResponse>;
+// let res: jest.Mocked<NextApiResponse>; // Info: (20240729 - Jacky)
 
 beforeEach(() => {
   req = {
@@ -51,6 +51,7 @@ beforeEach(() => {
     json: jest.fn(),
     body: {},
   } as unknown as jest.Mocked<NextApiRequest>;
+  // Info: (20240729 - Jacky)
   // res = {
   //   status: jest.fn().mockReturnThis(),
   //   json: jest.fn(),
@@ -97,9 +98,9 @@ describe('POST OCR', () => {
       const mockName = 'test';
       const formData = module.createImageFormData(mockBlob, mockName);
 
-      // Info Murky (20240424) FormData return will be "File" type, so we can't use "toEqual" to compare
+      // Info: (20240424 - Murky) FormData return will be "File" type, so we can't use "toEqual" to compare
       const imageFile = formData.get('image') as File;
-      // Info Murky (20240424) test if content is correct
+      // Info: (20240424 - Murky) test if content is correct
       imageFile.text().then((text) => {
         expect(text).toBe('testBlob');
       });
@@ -148,7 +149,7 @@ describe('POST OCR', () => {
     });
   });
 
-  // Info Murky (20240424) This function is still editing
+  // Info: (20240424 - Murky) This function is still editing
   describe('getPayloadFromResponseJSON', () => {
     it('should return payload', async () => {
       const mockResponse: {
@@ -193,7 +194,7 @@ describe('POST OCR', () => {
       jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
       jest.spyOn(common, 'transformOCRImageIDToURL').mockReturnValue('testImageUrl');
 
-      // help me mock formidable.Files<"image">
+      // help me mock formidable.Files<"image"> // Info: (20240604 - Murky)
 
       mockImages = mock<formidable.Files<'image'>>({
         image: [mockImage],
@@ -406,7 +407,7 @@ describe('POST OCR', () => {
         files: mockFiles,
       });
 
-      // Deprecate ( 20240605 - Murky ) - This is not necessary
+      // Deprecated: (20240605 - Murky) - This is not necessary
       jest
         .spyOn(common, 'formatApiResponse')
         .mockReturnValue({ httpCode: 201, result: mockReturn });
@@ -423,7 +424,7 @@ describe('POST OCR', () => {
 
       // const { httpCode, result } = await module.handlePostRequest(req, res);
 
-      // // Deprecate ( 20240605 - Murky ) - Use createOcrInPrisma instead
+      // // Deprecated: (20240605 - Murky) - Use createOcrInPrisma instead
       // // expect(repository.createJournalAndOcrInPrisma).toHaveBeenCalled();
       // expect(repository.createOcrInPrisma).toHaveBeenCalled();
 

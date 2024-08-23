@@ -4,7 +4,7 @@ import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import * as common from '@/lib/utils/common';
 
-// Info (20240806 - Murky): Temporary not use
+// Info: (20240806 - Murky) Temporary not use
 // let res: jest.Mocked<NextApiResponse>;
 
 global.fetch = jest.fn();
@@ -15,7 +15,7 @@ jest.mock('../../../../../../../lib/utils/common', () => ({
 }));
 
 beforeEach(() => {
-  // Info (20240806 - Murky): Temporary not use
+  // Info: (20240806 - Murky) Temporary not use
   // res = {
   //   status: jest.fn().mockReturnThis(),
   //   json: jest.fn(),

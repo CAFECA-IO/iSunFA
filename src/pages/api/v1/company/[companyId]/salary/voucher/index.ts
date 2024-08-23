@@ -85,16 +85,16 @@ async function handlePostRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      // create journal
+      // create journal // Info: (20240715 - Gibbs)
       const journalId = await createSalaryRecordJournal(companyId);
-      // create voucher
+      // create voucher // Info: (20240715 - Gibbs)
       const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
       const voucherData = await createVoucherInPrisma(newVoucherNo, journalId);
-      // create line items
+      // create line items // Info: (20240715 - Gibbs)
       await createLineItems(voucherType, voucherData.id, companyId, salaryRecordsIdsList);
-      // create folder
+      // create folder // Info: (20240715 - Gibbs)
       const voucherFolder = await createVoucherFolder(voucherType, newVoucherNo, companyId);
-      // voucher_salary_record_folder_mapping
+      // voucher_salary_record_folder_mapping // Info: (20240715 - Gibbs)
       await createVoucherSalaryRecordFolderMapping(
         voucherFolder.id,
         salaryRecordsIdsList,

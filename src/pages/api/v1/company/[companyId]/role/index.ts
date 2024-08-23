@@ -11,7 +11,7 @@ export default async function handler(
 ) {
   try {
     if (req.method === 'GET') {
-      // get all roles
+      // Info: (20240509 - Jacky) get all roles
       const roleList: IRole[] = await prisma.role.findMany();
 
       const { httpCode, result } = formatApiResponse<IRole[]>(
@@ -35,7 +35,7 @@ export default async function handler(
           updatedAt: nowTimestamp,
         },
       });
-      // const { company, ...role } = createdRole;
+      // const { company, ...role } = createdRole; // Info: (20240513 - Jacky)
 
       const { httpCode, result } = formatApiResponse<IRole>(STATUS_MESSAGE.CREATED, createdRole);
       res.status(httpCode).json(result);

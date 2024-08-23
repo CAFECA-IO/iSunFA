@@ -1,4 +1,4 @@
-// Info Murky (20240416):  this is mock api need to migrate to microservice
+// Info: (20240416 - Murky)  this is mock api need to migrate to microservice
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvoice } from '@/interfaces/invoice';
@@ -19,7 +19,7 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 
-// Info (20240522 - Murky): This OCR now can only be used on Invoice
+// Info: (20240522 - Murky) This OCR now can only be used on Invoice
 
 export function isResultIdValid(resultId: string | string[] | undefined): resultId is string {
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
@@ -62,6 +62,7 @@ export async function getPayloadFromResponseJSON(
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
+  // Info: (20240809 - Murky)
   // if (!json || !json.payload) {
   //   throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   // }
@@ -128,7 +129,7 @@ export async function handleDeleteRequest(resultId: string) {
   let payload: IOCR | null = null;
   const getOCR = await getOcrByResultId(resultId, false);
 
-  // (20240715 - Jacky): payload should add ad unify formatter @TinyMurky
+  // Info: (20240715 - Jacky) payload should add ad unify formatter @TinyMurky
   if (getOCR) {
     const deletedOCR = await deleteOcrByResultId(resultId);
     const imageSize = transformBytesToFileSizeString(deletedOCR.imageSize);

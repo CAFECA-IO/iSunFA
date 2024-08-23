@@ -92,7 +92,7 @@ describe('CARD API Handler Tests', () => {
       expireYear: '29',
       expireMonth: '01',
       cvc: '330',
-      // Missing name parameter
+      // Missing name parameter // Info: (20240502 - Jacky)
     };
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(422);

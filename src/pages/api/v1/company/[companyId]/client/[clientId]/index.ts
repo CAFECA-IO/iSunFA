@@ -11,8 +11,7 @@ async function checkAuth(userId: number, companyId: number): Promise<boolean> {
   const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
   return !!admin;
 }
-
-// 分離的處理函數
+// Info: (20240705 - Jacky) 分離的處理函數
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IClient | IClient[] | null = null;
@@ -69,7 +68,7 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
   return { statusMessage, payload };
 }
 
-// 映射 HTTP 方法到處理函數
+// Info: (20240705 - Jacky) 映射 HTTP 方法到處理函數
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
