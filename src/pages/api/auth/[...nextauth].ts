@@ -52,7 +52,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         clientId: process.env.GOOGLE_CLIENT_ID as string,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       }),
-      // Info: (20240813-Tzuhan) Apple login is not provided in the beta version
+      // ToDo: (20240813-Tzuhan) Apple login is not provided in the beta version
       // AppleProvider({
       //   clientId: process.env.APPLE_CLIENT_ID as string,
       //   clientSecret: generateAppleClientSecret(),
@@ -61,10 +61,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     pages: {
       signIn: ISUNFA_ROUTE.LOGIN,
     },
-    // Info: (20240819-Tzuhan)
-    // session: {
-    //   strategy: 'jwt',
-    // },
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
       async signIn({ user, account, profile }) {
