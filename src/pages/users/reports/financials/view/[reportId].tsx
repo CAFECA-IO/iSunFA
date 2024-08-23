@@ -62,8 +62,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         closeable: true,
       });
     }
-    if (getFRSuccess && reportFinancial) {
-    }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 
   const displayedBody =
