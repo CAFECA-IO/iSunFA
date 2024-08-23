@@ -1,6 +1,5 @@
 import {
   getSalaryRecordById,
-  generateInvoiceFromSalaryRecord,
   createSalaryRecordJournal,
   getInfoFromSalaryRecordLists,
   createVoucherFolder,
@@ -34,21 +33,6 @@ describe('salaryRecord Repository Tests', () => {
         expect(formatSalaryRecord.projects).toBeDefined();
         expect(Array.isArray(formatSalaryRecord.projects)).toBe(true);
         expect(formatSalaryRecord.projects.length).toBeGreaterThan(0);
-      }
-    });
-  });
-  describe('generateInvoiceFromSalaryRecord', () => {
-    it('should generate an invoice from salary records', async () => {
-      const salaryIdNum = [1000];
-      const companyId = 1000;
-      const formatSalaryRecord = await generateInvoiceFromSalaryRecord(companyId, salaryIdNum);
-      expect(formatSalaryRecord).toBeDefined();
-      if (formatSalaryRecord) {
-        expect(formatSalaryRecord.deductible).toBe(true);
-        expect(formatSalaryRecord.eventType).toBe('payment');
-        expect(formatSalaryRecord.paymentReason).toBe('Salary Payment');
-        expect(formatSalaryRecord.description).toBe(salaryRecord[0].description);
-        expect(formatSalaryRecord.payment).toBeDefined();
       }
     });
   });

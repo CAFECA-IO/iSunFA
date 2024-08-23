@@ -4,15 +4,16 @@ import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-// import { IAccountResultStatus } from '@/interfaces/accounting_account'; // Info: (20240815 - Shirley)
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { transformBytesToFileSizeString } from '@/lib/utils/common';
-import { IOCR } from '@/interfaces/ocr';
+import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
+import { encryptFile, exportPublicKey, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
+import { addItem, deleteItem } from '@/lib/utils/indexed_db/ocr';
+import { IOCR, IOCRItem } from '@/interfaces/ocr';
 
 interface FileInfo {
   file: File;
@@ -22,7 +23,7 @@ interface FileInfo {
 
 const JournalUploadArea = () => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { userAuth, selectedCompany } = useUserCtx();
   const { setInvoiceIdHandler, addPendingOCRHandler, deletePendingOCRHandler, addOCRHandler } =
     useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
@@ -33,7 +34,6 @@ const JournalUploadArea = () => {
     success: uploadSuccess,
     code: uploadCode,
   } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
-  // IAccountResultStatus[] // Info: (20240815 - Shirley)
 
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
@@ -42,8 +42,58 @@ const JournalUploadArea = () => {
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
+  const generateKeyPairAndEncryptFile = async (fileArrayBuffer: ArrayBuffer) => {
+    // TODO: 暫時生成 RSA 密鑰對，但 public key 應該要從後端來 (20240822 - Shirley)
+    const keyPair = await generateKeyPair();
+    const publicKey = await exportPublicKey(keyPair.publicKey);
+    // Info: 生成初始向量 (20240822 - Shirley)
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+    const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
+      fileArrayBuffer,
+      await importPublicKey(publicKey),
+      iv
+    );
+
+    return { encryptedContent, encryptedSymmetricKey, publicKey, iv };
+  };
+
+  const encryptFileAndSaveToIndexedDB = async (file: File) => {
+    // Info: 檢查是否有使用者和公司資訊 (20240822 - Shirley)
+    if (!userAuth?.id || !selectedCompany?.id) {
+      return;
+    }
+
+    const fileSize = transformBytesToFileSizeString(file.size);
+
+    // Info: 讀取文件內容為 ArrayBuffer (20240822 - Shirley)
+    const fileArrayBuffer = await file.arrayBuffer();
+    const uuid = uuidv4();
+    const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
+      await generateKeyPairAndEncryptFile(fileArrayBuffer);
+
+    // Info: 將加密後的文件數據存儲到 IndexedDB (20240822 - Shirley)
+    const now = getTimestampNow();
+    const id = uuid;
+    const data: IOCRItem = {
+      name: file.name,
+      size: fileSize,
+      type: file.type,
+      encryptedContent,
+      timestamp: now,
+      uploadIdentifier: uuid,
+      encryptedSymmetricKey,
+      publicKey,
+      companyId: selectedCompany?.id || -1,
+      iv,
+      userId: userAuth?.id || -1,
+    };
+
+    await addItem(id, data);
+  };
+
   // Info: (20240711 - Julian) 處理上傳檔案
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const { files } = event.target;
     if (files && files.length > 0) {
@@ -77,6 +127,8 @@ const JournalUploadArea = () => {
         size: fileSize,
       });
       setIsDragOver(false);
+
+      encryptFileAndSaveToIndexedDB(droppedFile);
     }
   };
 
@@ -85,24 +137,18 @@ const JournalUploadArea = () => {
       const formData = new FormData();
       const uuid = uuidv4();
       formData.append('image', uploadFile.file);
-      // TODO: (20240815 - Shirley) [Beta] in dev 加上 imageSize, imageName, uploadIdentifier
       formData.append('imageSize', uploadFile.size);
       formData.append('imageName', uploadFile.name);
       formData.append('uploadIdentifier', uuid);
 
-      // Info: (20240711 - Julian) 點擊上傳後才升起 flag
-      // setIsShowSuccessModal(true);
-      // addOCRHandler(`${getTimestampNow()}`, uploadFile.name, uploadFile.size, uuid);
       addPendingOCRHandler(uploadFile.name, uploadFile.size, uuid);
-
       uploadInvoice({ params: { companyId: selectedCompany.id }, body: formData });
     }
   }, [uploadFile]);
 
   useEffect(() => {
     if (uploadSuccess && results) {
-      results.forEach((result) => {
-        // const { resultId } = result; // Info: (20240815 - Shirley)
+      results.forEach(async (result) => {
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
         const translatedStatus = t(
           `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
@@ -120,10 +166,7 @@ const JournalUploadArea = () => {
             type: ToastType.SUCCESS,
           });
           setInvoiceIdHandler(result.aichResultId);
-          // setInvoiceIdHandler(resultId);
-          // TODO: (20240815 - Shirley) [Beta] in dev 加上
-          // eslint-disable-next-line no-console
-          console.log('result in JournalUploadArea', result);
+
           if (
             result?.uploadIdentifier &&
             result?.aichResultId &&
@@ -139,23 +182,9 @@ const JournalUploadArea = () => {
               result.uploadIdentifier
             );
             deletePendingOCRHandler(result?.uploadIdentifier);
+            // Info: 刪除 IndexedDB 中的數據 (20240822 - Shirley)
+            await deleteItem(result?.uploadIdentifier);
           }
-          // Info: (20240814 - Shirley)
-          // messageModalDataHandler({
-          //   // title: 'Upload Successful',
-          //   title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
-          //   /* Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的 */
-          //   // content: result.status,
-          //   content: translatedStatus,
-          //   messageType: MessageType.SUCCESS,
-          //   submitBtnStr: t('JOURNAL.DONE'),
-          //   submitBtnFunction: () => {
-          //     setInvoiceIdHandler(resultId);
-          //     messageModalVisibilityHandler();
-          //   },
-          // });
-          // messageModalVisibilityHandler();
-          // setIsShowSuccessModal(false); // Info: (20240528 - Julian) 顯示完後將 flag 降下
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
           messageModalDataHandler({

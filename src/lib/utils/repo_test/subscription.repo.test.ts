@@ -1,3 +1,4 @@
+import { SubscriptionPeriod } from '@/constants/subscription';
 import {
   createSubscription,
   getSubscriptionById,
@@ -38,7 +39,7 @@ describe('Subscription Repository', () => {
   describe('createSubscription', () => {
     it('should create a new subscription', async () => {
       const testStatus = true;
-      const subscription = await createSubscription(testCompanyId, testPlanId, testStatus);
+      const subscription = await createSubscription(testCompanyId, testPlanId, testStatus, SubscriptionPeriod.MONTHLY);
       await deleteSubscriptionForTesting(subscription.id); // Clean up after test
       expect(subscription).toBeDefined();
       expect(subscription.companyId).toBe(testCompanyId);
