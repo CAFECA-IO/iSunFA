@@ -4,7 +4,6 @@ export enum ReportLanguagesKey {
   cn = 'cn',
 }
 
-// TODO: i18n (20240430 - Shirley)
 export const ReportLanguagesMap: Record<
   ReportLanguagesKey,
   { id: ReportLanguagesKey; name: string; icon: string }

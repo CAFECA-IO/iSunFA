@@ -12,13 +12,12 @@ const DashboardPageBody = () => {
   const companyName = selectedCompany?.name ?? 'iSunFA';
 
   const pageHeader = (
-    // TODO: i18n (20240415 - Shirley)
     <div className="my-auto flex-1 text-2xl font-semibold text-tertiaryBlue max-md:max-w-full lg:text-5xl lg:leading-52px">
       {t('DASHBOARD.HELLO_WELCOME_TO')}
       <span className="text-primaryYellow">{companyName}</span>
     </div>
   );
-  // TODO: Loading -> get data from API -> display data or no data (20240603 - Shirley)
+  // TODO: [Beta] (20240603 - Shirley) Loading -> get data from API -> display data or no data
   const displayedPageBody = NO_DATA_FOR_DEMO ? <DashboardWithoutData /> : <DashboardWithData />;
 
   return (
@@ -26,7 +25,7 @@ const DashboardPageBody = () => {
       <div className="mt-6 flex w-full flex-col justify-between gap-5 lg:flex-row">
         <div className="my-auto flex flex-col px-0 max-md:max-w-full">{pageHeader}</div>
         <div className="border-b border-gray-300 lg:hidden"></div>
-        {/* Info: 決定 bookmark component 的寬度，沒有書籤的話就是 min width ，書籤數量超過 min width 的話就是 max width (20240603 - Shirley) */}
+        {/* Info: (20240603 - Shirley) 決定 bookmark component 的寬度，沒有書籤的話就是 min width ，書籤數量超過 min width 的話就是 max width */}
         <div className="my-auto lg:min-w-1/3 lg:max-w-3/5">
           <DashboardBookmark />
         </div>

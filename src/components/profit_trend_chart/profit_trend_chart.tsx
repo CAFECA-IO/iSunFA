@@ -93,7 +93,7 @@ const LineChart = ({ data }: LineChartProps) => {
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // formatter: value => `${value}%`,  // Info: (20240416 - Shirley)
       },
     },
     yaxis: {
@@ -106,7 +106,7 @@ const LineChart = ({ data }: LineChartProps) => {
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // formatter: value => `${value}%`,  // Info: (20240416 - Shirley)
       },
     },
 
@@ -120,9 +120,9 @@ const LineChart = ({ data }: LineChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#FFA502'],
-        // width: 20, // 標記的寬度
-        // height: 12, // 標記的高度
-        // radius: 0, // 標記的半徑（如果是圓形）
+        // width: 20, // 標記的寬度 // Info: (20240706 - Luphia)
+        // height: 12, // 標記的高度 // Info: (20240706 - Luphia)
+        // radius: 0, // 標記的半徑（如果是圓形）// Info: (20240722 - Shirley)
       },
       showForSingleSeries: true,
     },
@@ -157,9 +157,9 @@ const LineChart = ({ data }: LineChartProps) => {
         highlightDataSeries: false,
       },
       x: {
-        show: false, // Info: 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值 (20240416 - Shirley)
+        show: false, // Info: (20240416 - Shirley) 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值
         format: 'dd MMM',
-        // formatter: value => `${value}`,
+        // formatter: value => `${value}`, // Info: (20240416 - Shirley)
       },
       y: {
         formatter: (value) => `${value}%`,

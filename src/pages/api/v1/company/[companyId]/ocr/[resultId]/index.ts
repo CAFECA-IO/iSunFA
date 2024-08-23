@@ -72,14 +72,22 @@ export async function getPayloadFromResponseJSON(
 
 export function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
   // Info: (20240522 - Murky) This function is used to set journalId to the OCR result
-  // eslint-disable-next-line no-param-reassign
-  ocrResult.journalId = journalId;
+  const newOcrResult = {
+    ...ocrResult,
+    journalId,
+  };
+
+  return newOcrResult;
 }
 
 export function formatOCRResultDate(ocrResult: IInvoice) {
   // Info: (20240522 - Murky) This function is used to format the date in OCR result
-  // eslint-disable-next-line no-param-reassign
-  ocrResult.date = timestampInSeconds(ocrResult.date);
+  const date = timestampInSeconds(ocrResult.date);
+  const newOcrResult = {
+    ...ocrResult,
+    date,
+  };
+  return newOcrResult;
 }
 
 export async function handleGetRequest(resultId: string, type: string = 'invoice') {
@@ -101,8 +109,7 @@ export async function handleGetRequest(resultId: string, type: string = 'invoice
           formatOCRResultDate(ocrResult);
 
           if (!isIInvoice(ocrResult)) {
-            // eslint-disable-next-line no-console
-            console.error('OCR From AICH is not an Invoice (wrong type)');
+            // Todo: (20240822 - Anna) feat. Murky - 使用 logger
             ocrResult = null;
           }
         }
@@ -170,10 +177,7 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const error = _error as Error;
-      // Deprecated: (20240522 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

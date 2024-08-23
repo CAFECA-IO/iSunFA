@@ -24,7 +24,7 @@ interface IServerSideProps {
   endTimestamp: string;
 }
 
-// TODO: dummy data to be replaced (20240429 - Shirley)
+// TODO: (20240429 - Shirley) [Beta] dummy data to be replaced
 const ReportLink = {
   [AnalysisReportTypesKey.financial_performance]: ``,
   [AnalysisReportTypesKey.cost_analysis]: ``,
@@ -49,7 +49,7 @@ const ViewAnalysisReportPage = ({
     reportLink: ReportLink[reportType],
   });
 
-  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+  // TODO: (20240429 - Shirley) [Beta] Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp`
   const {
     data: reportAnalysis,
     code: getARCode,
@@ -100,14 +100,13 @@ const ViewAnalysisReportPage = ({
     </>
   );
 
-  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: (20240517 - Shirley) [Beta] replace ALL dummy data after api calling
   return (
     <div>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
         <title>{`${AnalysisReportTypesMap[reportType].name} - iSunFA`}</title>
 
         <meta
@@ -138,7 +137,7 @@ const ViewAnalysisReportPage = ({
 export default ViewAnalysisReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  // Info: variable from URL query (20240429 - Shirley)
+  // Info: (20240429 - Shirley) variable from URL query
   // eslint-disable-next-line @typescript-eslint/naming-convention
   // const { reportType, report_language, start_timestamp, end_timestamp } = query;
 
@@ -148,7 +147,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
   //   };
   // }
 
-  // Info: variable from URL query (20240429 - Shirley)
+  // Info: (20240429 - Shirley) variable from URL query
   const { reportId = '', report_type: reportType = '' } = query;
   // if (!reportId || !reportType) {
   //   return {

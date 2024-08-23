@@ -121,6 +121,7 @@ const ViewFinancialSection = ({
   const { t } = useTranslation('common');
   const router = useRouter();
 
+  // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -132,7 +133,7 @@ const ViewFinancialSection = ({
   const [reportThumbnails, setReportThumbnails] = useState<
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
-  // TODO: download PDF file (20240802 - Shirley)
+  // TODO: [Beta] (20240802 - Shirley) download PDF file
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -169,7 +170,7 @@ const ViewFinancialSection = ({
     }
   }, [reportFinancial]);
 
-  // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
+  // Info: (20240729 - Shirley) iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間
   const handleIframeLoad = () => {
     setTimeout(() => {
       setIsLoading(false);
@@ -203,7 +204,7 @@ const ViewFinancialSection = ({
       }
     }
   };
-  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContract = () => {
   //   navigator.clipboard.writeText(tokenContract);
 
@@ -215,7 +216,8 @@ const ViewFinancialSection = ({
   //     autoClose: 500,
   //   });
   // };
-  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏
   // const copyTokenId = () => {
   //   navigator.clipboard.writeText(tokenId);
 
@@ -227,17 +229,19 @@ const ViewFinancialSection = ({
   //     autoClose: 500,
   //   });
   // };
-  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContractClickHandler = () => {
   //   copyTokenContract();
   // };
-  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏
   // const copyTokenIdClickHandler = () => {
   //   copyTokenId();
   // };
 
   const backClickHandler = () => {
-    // Info: 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面 (20240729 - Shirley)
+    // Info: (20240729 - Shirley) 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面
     router.push(ISUNFA_ROUTE.USERS_MY_REPORTS);
   };
 
@@ -245,20 +249,20 @@ const ViewFinancialSection = ({
     if (reportLink) {
       printPDF();
     }
-    // TODO: get PDF file (20240802 - Shirley)
+    // TODO: (20240802 - Shirley) [Beta] get PDF file
     // if (pdfFile) {
     //   window.open(pdfFile, '_blank');
     // }
   };
 
-  // TODO: get PDF file (20240802 - Shirley)
+  // TODO: (20240802 - Shirley) [Beta] get PDF file
   // const fetchPDF = async () => {
   //   try {
   //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
 
   //     const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
-  //     // TODO: use API service (20240502 - Shirley)
+  //     // TODO: (20240502 - Shirley) use API service
   //     const response = await fetch(apiUrl, {
   //       method: 'GET',
   //     });
@@ -268,7 +272,7 @@ const ViewFinancialSection = ({
 
   //     setPdfFile(pdfUrl);
   //   } catch (error) {
-  //     // TODO: error handling (20240502 - Shirley)
+  //     // TODO: (20240502 - Shirley) error handling
   //     // eslint-disable-next-line no-console
   //     console.error(error);
   //   }
@@ -298,6 +302,7 @@ const ViewFinancialSection = ({
     }
   }, []);
 
+  /* Info: (20240729 - Shirley)
   // useEffect(() => {
   //   if (reportLink) {
   //     fetchPDF();
@@ -310,6 +315,7 @@ const ViewFinancialSection = ({
   //     import.meta.url
   //   ).toString();
   // }, []);
+  */
 
   const displayedReportType = getReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
@@ -317,7 +323,7 @@ const ViewFinancialSection = ({
     <p>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
   );
 
-  // Info:創建一個新的變數來儲存翻譯後的字串 (20240730 - Anna)
+  // Info: (20240730 - Anna) 創建一個新的變數來儲存翻譯後的字串
   const reportTypeString =
     !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
       ? displayedReportType.props.children
@@ -352,7 +358,7 @@ const ViewFinancialSection = ({
 
   const displayedReport = (
     <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
-      {/* Info: Sidebar (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) Sidebar */}
       <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
@@ -377,10 +383,9 @@ const ViewFinancialSection = ({
     </div>
   );
 
-  // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
-      {/* Info: financial title, print button and share button (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) financial title, print button and share button */}
       <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
           onClick={backClickHandler}
@@ -405,6 +410,7 @@ const ViewFinancialSection = ({
             </svg>
           </div>
         </Button>
+        {/* Info: (20240723 - Shirley) */}
         {/* <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
           {displayedReportType}
         </div> */}
@@ -419,7 +425,7 @@ const ViewFinancialSection = ({
           <div className="flex gap-3">
             <Button
               disabled={!reportLink || isLoading || isInvalidReport}
-              // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
+              // disabled={isLoading || pdfFile === null} // TODO: (20240729 - Shirley) PDF file
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -442,7 +448,7 @@ const ViewFinancialSection = ({
               </div>
             </Button>
             <Button
-              // TODO: yet to dev (20240507 - Shirley)
+              // TODO: [Beta] (20240507 - Shirley) yet to dev
               disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -468,14 +474,14 @@ const ViewFinancialSection = ({
         </div>
       </div>
 
-      {/* Info: token contract and token id info (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) token contract and token id info */}
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
             {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
             {/* <div className="text-text-neutral-tertiary">Token Contract </div> */}
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
@@ -511,7 +517,7 @@ const ViewFinancialSection = ({
             {/* <div className="text-text-neutral-tertiary">Token ID </div> */}
 
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenId}
               </Link> */}
@@ -581,7 +587,7 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
+            {/* TODO: [Beta] (20240507 - Shirley) link */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -622,7 +628,7 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
+            {/* TODO: [Beta] (20240507 - Shirley) link */}
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>
@@ -631,7 +637,7 @@ const ViewFinancialSection = ({
       </div>
 
       <div className="pointer-events-auto z-0 flex lg:hidden">
-        {/* Info: prev button (20240529 - Shirley) */}
+        {/* Info: (20240529 - Shirley) prev button */}
         <Button
           variant={'secondaryBorderless'}
           size={'extraSmall'}
@@ -654,7 +660,7 @@ const ViewFinancialSection = ({
           </svg>
         </Button>
 
-        {/* Info: next button (20240529 - Shirley) */}
+        {/* Info: (20240529 - Shirley) next button */}
         <Button
           variant={'secondaryBorderless'}
           size={'extraSmall'}
@@ -678,7 +684,7 @@ const ViewFinancialSection = ({
         </Button>
       </div>
 
-      {/* Info: financial report content (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) financial report content */}
       {displayedReport}
     </div>
   );

@@ -25,7 +25,7 @@ function LandingPage({ locale }: ILandingPageProps) {
 
         <meta property="og:title" content="iSunFA" />
         <meta property="og:description" content={t('META.DESCRIPTION')} />
-        {/* TODO: i18n for image (20240807 - Shirley) */}
+        {/* TODO: (20240807 - Shirley) [Beta] i18n for image */}
         <meta property="og:image" content={`https://isunfa.com/meta/isunfa_preview.png`} />
         <meta property="og:url" content={`https://isunfa.com/${locale}`} />
         <meta property="og:type" content="website" />

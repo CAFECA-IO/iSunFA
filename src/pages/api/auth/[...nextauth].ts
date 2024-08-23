@@ -9,7 +9,7 @@ import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authenti
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 
 /**
-* Info: [Beta](20240813-Tzuhan)
+* Info: (20240813-Tzuhan) [Beta]
 * 1. 檔案名稱與路徑
   * 檔案名稱為 [...nextauth].ts，路徑為 pages/api/auth/[...nextauth].ts。這是 Next.js 中一種特殊的檔案命名方式，用於動態路由。[...] 表示捕獲所有路由段，nextauth 是自定義名稱，表示該檔案處理 next-auth 的所有請求。
 * 2. 檔案的作用
@@ -69,19 +69,19 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
       async signIn({ user, account, profile }) {
-        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // Deprecated: (20240819-Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.log('signIn callback', user, account, profile);
         const { invitation } = (account?.params || {}) as { invitation: string };
 
-        // Deprecate: [Beta](20240819-Tzuhan)dev
+        // Deprecated: (20240819-Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.log('Custom Params:', invitation);
 
         const session = await getSession(req, res);
-        // TODO: [Beta](20240813-Tzuhan) To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
+        // TODO: (20240813-Tzuhan) [Beta] To Jacky, here is the place to check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
         /**
-         * Info: [Beta](20240813-Tzuhan)
+         * Info: (20240813-Tzuhan) [Beta]
          * recommended user model:
            model User {
              id           Int          @id @default(autoincrement())
@@ -131,6 +131,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return url.startsWith(baseUrl) ? url : baseUrl;
       },
     },
-    debug: true,
+    debug: false,
   });
 }

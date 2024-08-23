@@ -2,14 +2,8 @@ import React, { useState, useContext, createContext, useMemo, useCallback, useEf
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import {
-  DUMMY_FILTER_OPTIONS,
-  FilterOptionsModalType,
-  IFilterOptions,
-  RegisterFormModalProps,
-} from '@/interfaces/modals';
+import { DUMMY_FILTER_OPTIONS, FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
-import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
@@ -73,11 +67,6 @@ interface IGlobalContext {
 
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
-
-  isRegisterModalVisible: boolean;
-  registerModalVisibilityHandler: () => void;
-  registerModalData: RegisterFormModalProps;
-  registerModalDataHandler: (data: RegisterFormModalProps) => void;
 
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
@@ -174,10 +163,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
-  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
-  const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    invitation: '',
-  });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
 
@@ -252,14 +237,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const passKeySupportModalVisibilityHandler = () => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
-  };
-
-  const registerModalVisibilityHandler = () => {
-    setIsRegisterModalVisible(!isRegisterModalVisible);
-  };
-
-  const registerModalDataHandler = (data: RegisterFormModalProps) => {
-    setRegisterModalData(data);
   };
 
   const addBookmarkModalVisibilityHandler = () => {
@@ -537,7 +514,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    // TODO: Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // TODO: (20240529 - Shirley) [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented
     // if (reportPendingStatus) {
     //   toastHandler({
     //     type: ToastType.INFO,
@@ -566,10 +543,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       } else {
         agreeWithInfomationConfirmModalVisibilityHandler(false);
         TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
-        if (router.pathname === ISUNFA_ROUTE.LOGIN) {
-          if (selectedCompany) router.push(ISUNFA_ROUTE.DASHBOARD);
-          else router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-        }
       }
     }
   }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
@@ -630,10 +603,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     layoutAssertion,
     isPasskeySupportModalVisible,
     passKeySupportModalVisibilityHandler,
-    isRegisterModalVisible,
-    registerModalVisibilityHandler,
-    registerModalData,
-    registerModalDataHandler,
     isAddBookmarkModalVisible,
     addBookmarkModalVisibilityHandler,
     isMessageModalVisible,
@@ -701,12 +670,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <PasskeySupportModal
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
-      />
-
-      <RegisterFormModal
-        isModalVisible={isRegisterModalVisible}
-        modalVisibilityHandler={registerModalVisibilityHandler}
-        data={registerModalData}
       />
 
       <EditBookmarkModal
@@ -857,7 +820,7 @@ export const useGlobalCtx = () => {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
 
-  // Deprecated: Debug tool [to be removed](20231120 - Shirley)
+  // Deprecated: (20231120 - Shirley) Debug tool [to be removed]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const g: any =
     typeof globalThis === 'object'
@@ -866,7 +829,7 @@ export const useGlobalCtx = () => {
         ? window
         : typeof global === 'object'
           ? global
-          : null; // Info: Causes an error on the next line
+          : null; // Info: (20240409 - Shirley) Causes an error on the next line
 
   g.globalContext = context;
   return context;

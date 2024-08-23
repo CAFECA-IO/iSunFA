@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -15,12 +16,15 @@ import ProjectMilestoneBlock from '@/components/project_milestone_block/project_
 import WorkingTimeRatioBlock from '@/components/working_time_ratio_block/working_time_ratio_block';
 import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/project_monthly_sales_block';
 import { useUserCtx } from '@/contexts/user_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { APIName } from '@/constants/api_connection';
 import { IProject } from '@/interfaces/project';
 import APIHandler from '@/lib/utils/api_handler';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -43,7 +47,12 @@ interface IProjectDashboardPageProps {
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   const { t } = useTranslation('common');
   const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  const [stageHolder, setStageHolder] = useState('-');
+
+  // Info: (20240821 - Julian) 取得專案資料
   const { data: projectData } = APIHandler<IProject>(
     APIName.GET_PROJECT_BY_ID,
     {
@@ -52,8 +61,44 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
     hasCompanyId
   );
 
+  // Info: (20240821 - Julian) 更新專案資料
+  const {
+    trigger: updateProject,
+    data: updateResult,
+    success: updateSuccess,
+    code: updateCode,
+  } = APIHandler<IProject>(APIName.UPDATE_PROJECT_BY_ID);
+
+  useEffect(() => {
+    if (projectData) {
+      setStageHolder(projectData.stage);
+    }
+  }, [projectData]);
+
+  useEffect(() => {
+    if (updateSuccess && updateResult) {
+      // Info: (20240821 - Julian) 顯示 stage 更新成功的訊息
+      toastHandler({
+        id: ToastId.PROJECT_STAGE_UPDATE,
+        type: ToastType.SUCCESS,
+        content: 'update success',
+        closeable: true,
+      });
+    } else if (updateSuccess === false && updateCode) {
+      // Info: (20240821 - Julian) 顯示 stage 更新失敗的訊息
+      toastHandler({
+        id: ToastId.PROJECT_STAGE_UPDATE,
+        type: ToastType.ERROR,
+        content: 'update failed',
+        closeable: true,
+      });
+    }
+  }, [updateResult, updateSuccess, updateCode]);
+
   const projectName = projectData?.name ?? '-';
   const currentStage = projectData?.stage ?? '-';
+  const memberList = projectData?.members ?? [];
+  const imageId = projectData?.imageId ?? '';
 
   const {
     targetRef: stageOptionsRef,
@@ -70,7 +115,18 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
     >
       {stageList.map((stage) => {
         const clickHandler = () => {
-          // ToDo: (20240612 - Julian) update stage api call
+          // Info: (20240821 - Julian) update stage api call
+          updateProject({
+            params: { companyId: hasCompanyId, projectId },
+            body: {
+              name: projectName,
+              stage,
+              memberIdList: memberList,
+              imageId,
+            },
+          });
+          // Info: (20240821 - Julian) update stage holder && close menu
+          setStageHolder(stage);
           setStageOptionsVisible(false);
         };
         return (
@@ -118,7 +174,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {t(stageNameMap[currentStage])}
+                  {t(stageNameMap[stageHolder])}
                   <FaChevronDown />
                   {displayedStageOptions}
                 </div>
@@ -173,8 +229,9 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
-        <title>{`${projectName} ${t('NAV_BAR.DASHBOARD')} - iSunFA`}</title>
+        <title>
+          {projectName} {t('NAV_BAR.DASHBOARD')} - iSunFA
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

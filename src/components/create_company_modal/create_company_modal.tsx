@@ -23,7 +23,7 @@ interface ICreateCompanyModal {
   modalVisibilityHandler: () => void;
 }
 
-// ToDo: (20240514 - Julian) Replace with actual country list
+// ToDo: (20240514 - Julian) [Beta] Replace with actual country list
 const countryList = [
   {
     name: 'Taiwan',
@@ -38,7 +38,7 @@ const countryList = [
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { messageModalDataHandler, messageModalVisibilityHandler, } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
   const {
     targetRef: menuRef,
@@ -96,8 +96,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           messageType: MessageType.WARNING,
           title: t('COMPANY_BASIC_INFO.EXISTED_COMPANY'),
           subMsg: t('COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
-          // content: `If you are the owner of this company,
-          // please complete KYC to get access back. Error code: ${createCompanyCode}`,
+          // Info: (20240805 - Anna) content: `If you are the owner of this company,
+          // Info: (20240805 - Anna) please complete KYC to get access back. Error code: ${createCompanyCode}`,
           content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
           submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {

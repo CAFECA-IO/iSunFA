@@ -48,12 +48,12 @@ const PendingReportItem = ({
 
   const pauseItem = () => {
     togglePausedStatus();
-    // TODO: send paused request (20240514 - Shirley)
+    // TODO: [Beta] (20240514 - Shirley) send paused request
   };
 
   const resumeItem = () => {
     togglePausedStatus();
-    // TODO: send resumed request (20240514 - Shirley)
+    // TODO: [Beta] (20240514 - Shirley) send resumed request
   };
 
   const pauseClickHandler = () => {
@@ -65,21 +65,20 @@ const PendingReportItem = ({
   };
 
   const deleteItem = () => {
-    // Info: 調用 onReportItemDelete 並傳入要刪除的報告 ID (20240515 - Shirley)
+    // Info: (20240515 - Shirley) 調用 onReportItemDelete 並傳入要刪除的報告 ID
     onReportItemDelete(report.id);
   };
 
   const deleteClickHandler = () => {
-    // TODO: show notification modal (20240514 - Shirley)
     messageModalDataHandler({
       title: '',
       subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes\n 
+      content: `It will take 30 - 40 minutes\n
       if you want to apply it again.`,
       submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -159,9 +158,9 @@ const PendingReportItem = ({
   const displayedOperationsColumn =
     remainingTime > 0 ? (
       <div className="flex w-full grid-cols-3 lg:grid">
-        {/* Info: Pause / Resume (20240514 - Shirley) */}
+        {/* Info: (20240514 - Shirley) Pause / Resume */}
         {displayedPauseOrResumeButton}
-        {/* Info: Delete (20240514 - Shirley) */}
+        {/* Info: (20240514 - Shirley) Delete */}
         <Button
           onClick={deleteClickHandler}
           variant={'tertiaryBorderless'}
@@ -182,7 +181,7 @@ const PendingReportItem = ({
             ></path>
           </svg>
         </Button>
-        {/* Info: Loading (20240514 - Shirley) */}
+        {/* Info: (20240514 - Shirley) Loading */}
         <div className="">{displayedSpinner}</div>
       </div>
     ) : null;
@@ -232,10 +231,10 @@ const PendingReportItem = ({
         <CalendarIcon timestamp={createdAt} />
       </td>
       <td className="pl-5 text-start text-base text-text-neutral-primary">
-        {/* Info: desktop (20240528 - Shirley) */}
+        {/* Info: (20240528 - Shirley) desktop */}
         <p className="hidden lg:flex">{name}</p>
 
-        {/* Info: mobile (20240528 - Shirley) */}
+        {/* Info: (20240528 - Shirley) mobile */}
         <div className="flex flex-col space-y-3 lg:hidden">
           <p className="text-ellipsis sm:hidden">{truncateString(name, 16)}</p>
           <p className="hidden text-ellipsis sm:flex">{name}</p>
@@ -264,7 +263,7 @@ const PendingReportItem = ({
           {displayedEstimatedTime}
         </div>
       </td>
-      {/* Info: Desktop Operations (20240514 - Shirley) */}
+      {/* Info: (20240514 - Shirley) Desktop Operations */}
       <td className="hidden min-w-150px px-16px lg:table-cell">
         <div className="flex items-center">{displayedOperationsColumn}</div>
       </td>

@@ -40,12 +40,12 @@
 //   const markAsRead = (id: string) => {
 //     setNotifications(
 //       (prevNotifications) =>
-//         // Info: prettier 排版 (20240606 - Shirley)
+//         // Info: (20240606 - Shirley) prettier 排版
 //         // eslint-disable-next-line implicit-arrow-linebreak
 //         prevNotifications.map((notification) => {
 //           return notification.id === id ? { ...notification, isRead: true } : notification;
 //         })
-//       // Info: prettier 排版 (20240606 - Shirley)
+//       // Info: (20240606 - Shirley) prettier 排版
 //       // eslint-disable-next-line function-paren-newline
 //     );
 //   };
@@ -53,13 +53,13 @@
 //   const markAllAsRead = () => {
 //     setNotifications(
 //       (prevNotifications) =>
-//         // Info: prettier 排版 (20240606 - Shirley)
+//         // Info: (20240606 - Shirley) prettier 排版
 //         // eslint-disable-next-line implicit-arrow-linebreak
 //         prevNotifications.map((notification) => ({
 //           ...notification,
 //           isRead: true,
 //         }))
-//       // Info: prettier 排版 (20240606 - Shirley)
+//       // Info: (20240606 - Shirley) prettier 排版
 //       // eslint-disable-next-line function-paren-newline
 //     );
 //   };
@@ -127,7 +127,7 @@
 //     </div>
 //   );
 
-//   // TODO: ongoing development of mobile menu (20240606 - Shirley)
+//   // TODO: [Beta] (20240606 - Shirley) ongoing development of mobile menu
 //   const displayedMobileMenu = (
 //     <div
 //       className={`transition-all duration-300 ${

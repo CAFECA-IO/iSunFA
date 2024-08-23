@@ -1,13 +1,9 @@
-import { client } from '@passwordless-id/webauthn';
 import useStateRef from 'react-usestateref';
+import eventManager from '@/lib/utils/event_manager';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-// import { toast as toastify } from 'react-toastify';
-// import { createChallenge } from '@/lib/utils/authorization';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { AuthenticationEncoded } from '@passwordless-id/webauthn/dist/esm/types';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
@@ -17,16 +13,10 @@ import { Provider } from '@/constants/provider';
 import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
-
-interface SignUpProps {
-  username?: string;
-  invitation?: string;
-}
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 interface UserContextType {
   credential: string | null;
-  signUp: ({ username, invitation }: SignUpProps) => Promise<void>;
-  signIn: ({ invitation }: { invitation?: string }) => Promise<void>;
   signOut: () => void;
   userAuth: IUser | null;
   username: string | null;
@@ -45,10 +35,6 @@ interface UserContextType {
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
   }>;
-  handleExistingCredential: (
-    credentials: PublicKeyCredential,
-    invitation: string | undefined
-  ) => Promise<void>;
 
   userAgreeResponse: {
     success: boolean;
@@ -62,8 +48,6 @@ interface UserContextType {
 
 export const UserContext = createContext<UserContextType>({
   credential: null,
-  signUp: async () => {},
-  signIn: async () => {},
   signOut: () => {},
   userAuth: null,
   username: null,
@@ -76,12 +60,11 @@ export const UserContext = createContext<UserContextType>({
   successSelectCompany: undefined,
   errorCode: null,
   toggleIsSignInError: () => {},
-  isAuthLoading: true,
+  isAuthLoading: false,
   returnUrl: null,
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
-  handleExistingCredential: async () => {},
 
   userAgreeResponse: null,
   handleUserAgree: async () => {},
@@ -90,6 +73,7 @@ export const UserContext = createContext<UserContextType>({
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
+  const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [signedIn, setSignedIn, signedInRef] = useStateRef(false);
@@ -112,7 +96,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(true);
+  const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -134,11 +118,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     body: { credential: credentialRef.current },
   });
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
-  const { trigger: signInAPI } = APIHandler<IUser>(APIName.SIGN_IN);
-  const { trigger: signUpAPI } = APIHandler<IUser>(APIName.SIGN_UP);
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
-  const { trigger: getUserSessionData } = APIHandler<{ user: IUser; company: ICompany }>(
-    APIName.SESSION_GET
+  const { trigger: getStatusInfoAPI } = APIHandler<{ user: IUser; company: ICompany }>(
+    APIName.STATUS_INFO_GET
   );
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
 
@@ -154,15 +136,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
+    localStorage.removeItem('userId');
+    localStorage.removeItem('expired_at');
   };
 
-  // Info: 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page (20240530 - Shirley)
+  // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const handleNotSignedIn = () => {
     clearState();
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      // if (router.pathname !== ISUNFA_ROUTE.SELECT_COMPANY) {
-      //   setReturnUrl(encodeURIComponent(router.asPath));
-      // }
       router.push(ISUNFA_ROUTE.LOGIN);
     }
   };
@@ -170,69 +151,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const handleSignInRoute = () => {
     if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-    }
-  };
-
-  const handleSignInAPIResponse = (response: {
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }) => {
-    setIsAuthLoading(false);
-    const { data: signInData, success: signInSuccess, code: signInCode } = response;
-    if (signInSuccess) {
-      if (signInData) {
-        setUsername(signInData.name);
-        setUserAuth(signInData);
-        setSignedIn(true);
-        setIsSignInError(false);
-        handleSignInRoute();
-      }
-    }
-    if (signInSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signInCode ?? '');
-    }
-  };
-
-  const handleExistingCredential = async (
-    credentials: PublicKeyCredential,
-    invitation: string | undefined
-  ) => {
-    try {
-      const { id, response } = credentials;
-      if (response instanceof AuthenticatorAssertionResponse) {
-        const { authenticatorData, clientDataJSON, signature, userHandle } = response;
-
-        const authentication: AuthenticationEncoded = {
-          credentialId: id,
-          authenticatorData: btoa(String.fromCharCode(...new Uint8Array(authenticatorData))),
-          clientData: btoa(String.fromCharCode(...new Uint8Array(clientDataJSON))),
-          signature: btoa(String.fromCharCode(...new Uint8Array(signature))),
-          userHandle: userHandle
-            ? btoa(String.fromCharCode(...new Uint8Array(userHandle)))
-            : undefined,
-        };
-
-        let signInResponse: {
-          success: boolean;
-          data: IUser | null;
-          code: string;
-          error: Error | null;
-        };
-        setIsAuthLoading(true);
-        if (invitation) {
-          signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
-        } else {
-          signInResponse = await signInAPI({ body: { authentication } });
-        }
-        handleSignInAPIResponse(signInResponse);
-      } else {
-        throw new Error('Invalid response type: Expected AuthenticatorAssertionResponse');
-      }
-    } catch (error) {
-      throw new Error('handleExistingCredential error thrown in userCtx');
     }
   };
 
@@ -272,128 +190,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  const handleSignUpAPIResponse = (response: {
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }) => {
-    setIsAuthLoading(false);
-    const { data: signUpData, success: signUpSuccess, code: signUpCode } = response;
-    if (signUpSuccess) {
-      if (signUpData) {
-        setUsername(signUpData.name);
-        setUserAuth(signUpData);
-        setSignedIn(true);
-        setIsSignInError(false);
-        handleSignInRoute();
-      }
-    }
-    if (signUpSuccess === false) {
-      setIsSignInError(true);
-      setErrorCode(signUpCode ?? '');
-    }
-  };
-
-  const signUp = async ({ username: usernameForSignUp, invitation }: SignUpProps) => {
-    try {
-      const name = usernameForSignUp || DEFAULT_DISPLAYED_USER_NAME;
-      setIsSignInError(false);
-
-      const { data: newChallenge, success, code } = await createChallengeAPI();
-
-      if (!success || !newChallenge) {
-        setErrorCode(code);
-        return;
-      }
-
-      // Info: (20240730 - Tzuhan) 生成 userHandle
-      const userHandleArray = new Uint8Array(32);
-      window.crypto.getRandomValues(userHandleArray);
-      const userHandle = btoa(String.fromCharCode(...userHandleArray));
-
-      const registration = await client.register(name, newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
-        attestation: true,
-        userHandle, // Info: optional userId less than 64 bytes (20240403 - Shirley)
-        debug: false,
-        discoverable: 'required', // TODO: to fix/limit user to login with the same public-private key pair (20240410 - Shirley)
-      });
-
-      let signUpResponse: {
-        success: boolean;
-        data: IUser | null;
-        code: string;
-        error: Error | null;
-      };
-      setIsAuthLoading(true);
-      if (invitation) {
-        signUpResponse = await signUpAPI({ body: { registration }, query: { invitation } });
-      } else {
-        signUpResponse = await signUpAPI({ body: { registration } });
-      }
-      handleSignUpAPIResponse(signUpResponse);
-    } catch (error) {
-      throw new Error('signUp error thrown in userCtx');
-    }
-  };
-
-  // TODO: refactor the signIn function (20240409 - Shirley)
-  /* TODO: (20240410 - Shirley)
-      拿登入聲明書 / 用戶條款 / challenge
-      先檢查 cookie ，然後檢查是否有 credential 、驗證 credential 有沒有過期或亂寫，
-      拿著 credential 跟 server 去拿 member 資料、付錢資料
-  */
-  const signIn = async ({ invitation }: { invitation?: string }) => {
-    try {
-      setIsSignInError(false);
-
-      const { data: newChallenge, success, code } = await createChallengeAPI();
-
-      if (!success || !newChallenge) {
-        setErrorCode(code);
-        return;
-      }
-      const authentication: AuthenticationEncoded = await client.authenticate([], newChallenge, {
-        authenticatorType: 'both',
-        userVerification: 'required',
-        timeout: 60000, // Info: 60 seconds (20240408 - Shirley)
-        debug: false,
-      });
-
-      let signInResponse: {
-        success: boolean;
-        data: IUser | null;
-        code: string;
-        error: Error | null;
-      };
-      setIsAuthLoading(true);
-      if (invitation) {
-        signInResponse = await signInAPI({ body: { authentication }, query: { invitation } });
-      } else {
-        signInResponse = await signInAPI({ body: { authentication } });
-      }
-      handleSignInAPIResponse(signInResponse);
-    } catch (error) {
-      if (!(error instanceof DOMException)) {
-        setIsSignInError(true);
-
-        throw new Error('signIn error thrown in userCtx');
-      } else {
-        throw new Error(`signIn error thrown in userCtx: ${error.message}`);
-      }
-    }
-  };
-
   const handleReturnUrl = () => {
     if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `handleReturnUrl returnUrl: ${decodeURIComponent(returnUrl ?? '')}, router.pathname: ${router.pathname}, selectedCompanyRef.current:`,
-        selectedCompanyRef.current
-      );
       if (returnUrl) {
         const urlString = decodeURIComponent(returnUrl);
         setReturnUrl(null);
@@ -407,65 +205,112 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // TODO: [Beta](20240819-Tzuhan) handle expiration
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isJwtExpired = (expires: string | undefined) => {
-    if (!expires) return true;
-    const now = new Date();
-    const expirationDate = new Date(expires);
-    return now > expirationDate;
+  const signOut = async () => {
+    clearState();
+    await signOutAPI();
+    await authSignOut({ redirect: false });
+    if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      router.push(ISUNFA_ROUTE.LOGIN);
+    }
+  };
+
+  const isProfileFetchNeeded = () => {
+    const userId = localStorage.getItem('userId');
+    const expiredAt = localStorage.getItem('expired_at');
+    const isUserAuthAvailable = !!userAuthRef.current;
+
+    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // eslint-disable-next-line no-console
+    console.log(
+      'isProfileFetchNeeded userId:',
+      userId,
+      'expiredAt:',
+      expiredAt,
+      'isUserAuthAvailable:',
+      isUserAuthAvailable,
+      'Date.now() < Number(expiredAt)',
+      Date.now() < Number(expiredAt)
+    );
+
+    // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
+    if (!isUserAuthAvailable && userId && expiredAt) {
+      // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
+      if (Date.now() < Number(expiredAt)) {
+        return true;
+      } else {
+        // Deprecate: [Beta](20240826-Tzuhan) dev
+        // eslint-disable-next-line no-console
+        console.log('expiredAt is expired, isNeed signOut');
+        signOut();
+        return false;
+      }
+    }
+
+    // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
+    if (isUserAuthAvailable && (!userId || !expiredAt)) {
+      return true;
+    }
+
+    // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
+    if (!isUserAuthAvailable && (!userId || !expiredAt)) {
+      return true;
+    }
+
+    // Info: (20240822-Tzuhan) 以上情況都不滿足，則不需要重新獲取 profile
+    return false;
   };
 
   // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
-  const checkSession = useCallback(async () => {
+  const getStatusInfo = useCallback(async () => {
+    const isNeed = isProfileFetchNeeded();
+    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // eslint-disable-next-line no-console
+    console.log('isProfileFetchNeeded isNeed:', isNeed);
+    if (!isNeed) return;
     setIsAuthLoading(true);
     const {
-      data: userSessionData,
-      success: getUserSessionSuccess,
-      code: getUserSessionCode,
-    } = await getUserSessionData();
+      data: StatusInfo,
+      success: getStatusInfoSuccess,
+      code: getStatusInfoCode,
+    } = await getStatusInfoAPI();
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
-    if (getUserSessionSuccess) {
-      if (userSessionData) {
+    if (getStatusInfoSuccess) {
+      if (StatusInfo) {
         // eslint-disable-next-line no-console
         console.log(
-          'checkSession userSessionData',
-          userSessionData,
-          `'company' in userSessionData && Object.keys(userSessionData.company).length > 0: ${'company' in userSessionData && userSessionData.company && Object.keys(userSessionData.company).length > 0}`
+          'getStatusInfo StatusInfo',
+          StatusInfo,
+          `'company' in StatusInfo && Object.keys(StatusInfo.company).length > 0: ${'company' in StatusInfo && StatusInfo.company && Object.keys(StatusInfo.company).length > 0}`
         );
-        if (
-          'user' in userSessionData &&
-          userSessionData.user &&
-          Object.keys(userSessionData.user).length > 0
-        ) {
-          setUserAuth(userSessionData.user);
-          setUsername(userSessionData.user.name);
+        if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
+          setUserAuth(StatusInfo.user);
+          setUsername(StatusInfo.user.name);
           setSignedIn(true);
           setIsSignInError(false);
-          if (userSessionData.user.agreementList.includes(Hash.INFO_COLLECTION)) {
+          localStorage.setItem('userId', StatusInfo.user.id.toString());
+          localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
+          if (StatusInfo.user.agreementList.includes(Hash.INFO_COLLECTION)) {
             setIsAgreeInfoCollection(true);
           } else {
             setIsAgreeInfoCollection(false);
           }
-          if (userSessionData.user.agreementList.includes(Hash.TOS_N_PP)) {
+          if (StatusInfo.user.agreementList.includes(Hash.TOS_N_PP)) {
             setIsAgreeTosNPrivacyPolicy(true);
           } else {
             setIsAgreeTosNPrivacyPolicy(false);
           }
           if (
-            'company' in userSessionData &&
-            userSessionData.company &&
-            Object.keys(userSessionData.company).length > 0
+            'company' in StatusInfo &&
+            StatusInfo.company &&
+            Object.keys(StatusInfo.company).length > 0
           ) {
-            setSelectedCompany(userSessionData.company);
+            setSelectedCompany(StatusInfo.company);
             setSuccessSelectCompany(true);
             handleReturnUrl();
           } else {
             setSuccessSelectCompany(undefined);
             setSelectedCompany(null);
-            // eslint-disable-next-line no-console
-            console.log('checkSession: no company');
             if (
               router.pathname.includes('users') &&
               !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
@@ -478,10 +323,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     }
-    if (getUserSessionSuccess === false) {
+    if (getStatusInfoSuccess === false) {
       handleNotSignedIn();
       setIsSignInError(true);
-      setErrorCode(getUserSessionCode ?? '');
+      setErrorCode(getStatusInfoCode ?? '');
     }
     setIsAuthLoading(false);
   }, [router.pathname]);
@@ -521,30 +366,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         { invitation: props.invitation }
       );
 
-      // Deprecate: [Beta](20240819-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.log('authenticateUser authSignIn response:', response);
-
       if (response?.error) {
-        // Deprecate: [Beta](20240819-Tzuhan) dev
-        // eslint-disable-next-line no-console
-        console.error('OAuth 登入失敗:', response?.error);
         throw new Error(response.error);
       }
     } catch (error) {
-      // Deprecate: [Beta](20240816-Tzuhan) dev
-      // eslint-disable-next-line no-console
-      console.error('Authentication failed', error);
-      // TODO: [Beta](20240814-Tzuhan) [Beta](20240813-Tzuhan) handle error
+      // TODO: (20240814-Tzuhan) [Beta] handle error
     }
   };
-
-  const throttledCheckSession = useCallback(
-    throttle(() => {
-      checkSession();
-    }, 100),
-    [checkSession]
-  );
 
   const handleSelectCompanyResponse = async (response: {
     success: boolean;
@@ -581,34 +409,32 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     await handleSelectCompanyResponse(res);
   };
-
-  const signOut = async () => {
-    signOutAPI();
-    authSignOut();
-    clearState();
-    router.push(ISUNFA_ROUTE.LOGIN);
-  };
+  const throttledGetStatusInfo = useCallback(
+    throttle(() => {
+      getStatusInfo();
+    }, 100),
+    [getStatusInfo]
+  );
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === 'visible' && !isRouteChanging.current) {
-      throttledCheckSession();
+      throttledGetStatusInfo();
     }
-  }, [throttledCheckSession]);
+  }, [throttledGetStatusInfo]);
 
   const handleRouteChangeStart = useCallback(() => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
-      throttledCheckSession();
+      throttledGetStatusInfo();
     }
-  }, [throttledCheckSession, router.pathname]);
+  }, [throttledGetStatusInfo, router.pathname]);
 
   const handleRouteChangeComplete = useCallback(() => {
     isRouteChanging.current = false;
   }, []);
 
   useEffect(() => {
-    checkSession();
-
+    getStatusInfo();
     document.addEventListener('visibilitychange', handleVisibilityChange);
     router.events.on('routeChangeStart', handleRouteChangeStart);
     router.events.on('routeChangeComplete', handleRouteChangeComplete);
@@ -618,20 +444,29 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       router.events.off('routeChangeStart', handleRouteChangeStart);
       router.events.off('routeChangeComplete', handleRouteChangeComplete);
     };
-  }, [
-    handleVisibilityChange,
-    handleRouteChangeStart,
-    handleRouteChangeComplete,
-    router.events,
-    checkSession,
-  ]);
+  }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
-  // Info: dependency array 的值改變，才會讓更新後的 value 傳到其他 components (20240522 - Shirley)
+  useEffect(() => {
+    const handleUnauthorizedAccess = () => {
+      // Deprecate: [Beta](20240826-Tzuhan) dev
+      // eslint-disable-next-line no-console
+      console.log('useEffect message on "unauthorized": called signOut');
+      signOut();
+    };
+
+    // Info: (20240822-Tzuhan) 確保只有一個監聽器
+    eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
+    eventManager.on(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
+
+    return () => {
+      eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
+    };
+  }, [signOut]);
+
+  // Info: (20240522 - Shirley) dependency array 的值改變，才會讓更新後的 value 傳到其他 components
   const value = useMemo(
     () => ({
       credential: credentialRef.current,
-      signUp,
-      signIn,
       signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
@@ -647,7 +482,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoading: isAuthLoadingRef.current,
       returnUrl: returnUrlRef.current,
       checkIsRegistered,
-      handleExistingCredential,
       handleUserAgree,
       authenticateUser,
       userAgreeResponse: userAgreeResponseRef.current,

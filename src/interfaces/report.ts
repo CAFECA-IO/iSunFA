@@ -172,14 +172,14 @@ export interface FinancialReport {
 export interface BalanceSheetOtherInfo {
   assetLiabilityRatio: {
     [date: string]: {
-      data: number[]; // Info: [資產,負債,權益] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
-      labels: string[]; // Info: ["資產", "負債", "權益"] (20240730 - Shirley)
+      data: number[]; // Info: (20240730 - Shirley) [資產,負債,權益], 數字是已經*100的數字, 不會有小數點
+      labels: string[]; // Info: (20240730 - Shirley) ["資產", "負債", "權益"]
     };
   };
   assetMixRatio: {
-    // Info: 資產組成，包含數量最大的五種資產跟其他 (20240730 - Shirley)
+    // Info: (20240730 - Shirley) 資產組成，包含數量最大的五種資產跟其他
     [date: string]: {
-      data: number[]; // Info: [資產1, 資產2, 資產3, 資產4, 資產5, 其他] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      data: number[]; // Info: (20240730 - Shirley) [資產1, 資產2, 資產3, 資產4, 資產5, 其他], 數字是已經*100的數字, 不會有小數點
       labels: string[];
     };
   };
@@ -217,7 +217,7 @@ export interface IncomeStatementOtherInfo {
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: {
     beforeIncomeTax: YearlyData;
-    amortizationDepreciation: YearlyData; // Info: 折舊攤銷費用 (20240730 - Shirley)
+    amortizationDepreciation: YearlyData; // Info: (20240730 - Shirley) 折舊攤銷費用
     tax: YearlyData;
     operatingIncomeCashFlow: YearlyData;
     ratio: YearlyData;
@@ -276,15 +276,18 @@ export interface IFinancialReportsProgressStatusResponse extends IAccountResultS
 }
 
 // Info Murky (20240505): type guards can input any type and return a boolean
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isIAnalysisReportRequest(obj: any): obj is IAnalysisReportRequest {
+export function isIAnalysisReportRequest(obj: unknown): obj is IAnalysisReportRequest {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.type === 'string' &&
-    typeof obj.language === 'string' &&
-    obj.start_date instanceof Date &&
-    obj.end_date instanceof Date
+    'type' in obj &&
+    typeof (obj as { type: unknown }).type === 'string' &&
+    'language' in obj &&
+    typeof (obj as { language: unknown }).language === 'string' &&
+    'start_date' in obj &&
+    (obj as { start_date: unknown }).start_date instanceof Date &&
+    'end_date' in obj &&
+    (obj as { end_date: unknown }).end_date instanceof Date
   );
 }
 

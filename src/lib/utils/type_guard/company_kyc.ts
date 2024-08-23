@@ -29,7 +29,7 @@ export function isCompanyKYC(data: CompanyKYC): data is ICompanyKYC {
     typeof data.contactPerson === 'string' &&
     typeof data.contactPhone === 'string' &&
     typeof data.contactEmail === 'string' &&
-    // (typeof data.website === 'string' || data.website === undefined) && Info: this field shouble be optional, but db schema is not nullable (20240719 - Tzuhan)
+    // (typeof data.website === 'string' || data.website === undefined) && Info: (20240719 - Tzuhan) this field should be optional, but db schema is not nullable
     typeof data.website === 'string' &&
     Object.values(RepresentativeIDType).includes(
       data.representativeIdType as RepresentativeIDType
@@ -113,7 +113,7 @@ export function isKYCFormComplete(data: ICompanyKYCForm): {
   if (typeof data.contactEmail !== 'string' || !data.contactEmail) {
     missingFields.push('contactEmail');
   }
-  // Info: this field should be optional, but db schema is not nullable (20240719 - Tzuhan)}
+  // Info: (20240719 - Tzuhan) this field should be optional, but db schema is not nullable}
   if (
     !Object.values(RepresentativeIDType).includes(data.representativeIdType) ||
     !data.representativeIdType

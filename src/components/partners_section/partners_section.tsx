@@ -40,7 +40,7 @@ const PartnersSection = () => {
     <div className="flex w-full flex-col flex-wrap content-center justify-center pt-10 max-md:max-w-full max-md:px-5 md:p-20">
       <div
         ref={animeRef41}
-        // Info: 從左邊移到中間的動畫 (20240319 - Shirley)
+        // Info: (20240319 - Shirley) 從左邊移到中間的動畫
         className={`overflow-x-hidden ${isAnimeRef41Visible ? `translate-x-0` : `md:-translate-x-140%`} mt-10 items-center justify-center px-16 py-2.5 text-center text-h6 font-semibold tracking-tighter text-white duration-1000 max-md:max-w-full max-md:px-5 md:text-3xl`}
       >
         {t('LANDING_PAGE.PARTNER_SECTION_TITLE')}

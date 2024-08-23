@@ -240,7 +240,6 @@ async function createLineItems() {
 }
 
 async function main() {
-  // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
   await createRole();
   await createUser();
   await createCompany();
@@ -298,8 +297,8 @@ main()
     await prisma.$disconnect();
   })
   .catch(async () => {
-    // Info (20240316 - Murky) - Log error and disconnect prisma
-    // console.error(e);
+    // Info (20240316 - Murky) - disconnect prisma
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     await prisma.$disconnect();
     process.exit(1);
   });

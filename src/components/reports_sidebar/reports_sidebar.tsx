@@ -18,13 +18,13 @@ const ReportsSidebar = () => {
 
   return (
     <>
-      {/* Info: ----- desktop version (20240423 - Shirley) ----- */}
+      {/* Info: (20240423 - Shirley) ----- desktop version ----- */}
       <div
         onMouseEnter={sidebarEnterHandler}
         onMouseLeave={sidebarLeaveHandler}
         className={`fixed z-10 hidden h-screen flex-col items-center lg:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
       >
-        {/* Info: Main icon (20240423 - Shirley) */}
+        {/* Info: (20240423 - Shirley) Main icon */}
         <div className="flex flex-col items-center pt-20px">
           <Image
             src={'/icons/report.svg'}
@@ -44,7 +44,7 @@ const ReportsSidebar = () => {
           <button
             type="button"
             onClick={embedCodeModalVisibilityHandler}
-            // ToDo: (20240802 - Julian) Not released yet
+            // ToDo: [Beta] (20240802 - Julian) Not released yet
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
             className={`flex w-full items-center gap-8px disabled:opacity-50 ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
@@ -73,12 +73,12 @@ const ReportsSidebar = () => {
             </p>
           </button>
 
-          {/* Info: Divider (20240423 - Shirley) */}
+          {/* Info: (20240423 - Shirley) Divider */}
           <div
             className={`${isExpanded ? 'h-12px' : 'h-15px'} w-full border-b border-lightGray6 transition-all duration-300 ease-in-out`}
           ></div>
 
-          {/* Info: Menu (20240423 - Shirley) */}
+          {/* Info: (20240423 - Shirley) Menu */}
           <div className="flex w-full flex-col items-start justify-center py-16px">
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
@@ -112,7 +112,7 @@ const ReportsSidebar = () => {
               </p>
             </Link>
 
-            {/* Info: Divider (20240423 - Shirley) */}
+            {/* Info: (20240423 - Shirley) Divider */}
             <div
               className={`${isExpanded ? 'h-12px' : 'h-15px'} w-full border-b border-lightGray6 transition-all duration-300 ease-in-out`}
             ></div>
@@ -168,7 +168,7 @@ const ReportsSidebar = () => {
             > */}
             <button
               type="button"
-              // ToDo: (20240802 - Julian) Not released yet
+              // ToDo: [Beta] (20240802 - Julian) Not released yet
               // eslint-disable-next-line react/jsx-boolean-value
               disabled={true}
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
@@ -201,7 +201,7 @@ const ReportsSidebar = () => {
         </div>
       </div>
 
-      {/* Info: ----- mobile version (20240507 - Shirley) ----- */}
+      {/* Info: (20240507 - Shirley) ----- mobile version ----- */}
       <div className="fixed bottom-0 z-50 grid h-72px w-screen grid-cols-4 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
         <Link
           href={ISUNFA_ROUTE.USERS_MY_REPORTS}
@@ -232,7 +232,7 @@ const ReportsSidebar = () => {
         <button
           type="button"
           onClick={embedCodeModalVisibilityHandler}
-          // ToDo: (20240802 - Julian) Not released yet
+          // ToDo: [Beta] (20240802 - Julian) Not released yet
           // eslint-disable-next-line react/jsx-boolean-value
           disabled={true}
           className="mx-auto p-16px text-secondaryBlue disabled:opacity-50"
@@ -299,7 +299,7 @@ const ReportsSidebar = () => {
         > */}
         <button
           type="button"
-          // ToDo: (20240802 - Julian) Not released yet
+          // ToDo: [Beta] (20240802 - Julian) Not released yet
           // eslint-disable-next-line react/jsx-boolean-value
           disabled={true}
           className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"

@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-// import { IAccountResultStatus } from '@/interfaces/accounting_account';
+// import { IAccountResultStatus } from '@/interfaces/accounting_account'; // Info: (20240815 - Shirley)
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -33,7 +33,7 @@ const JournalUploadArea = () => {
     success: uploadSuccess,
     code: uploadCode,
   } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
-  // IAccountResultStatus[]
+  // IAccountResultStatus[] // Info: (20240815 - Shirley)
 
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
@@ -85,12 +85,10 @@ const JournalUploadArea = () => {
       const formData = new FormData();
       const uuid = uuidv4();
       formData.append('image', uploadFile.file);
-      // TODO: in dev (20240815 - Shirley) 加上 imageSize, imageName, uploadIdentifier
+      // TODO: (20240815 - Shirley) [Beta] in dev 加上 imageSize, imageName, uploadIdentifier
       formData.append('imageSize', uploadFile.size);
       formData.append('imageName', uploadFile.name);
       formData.append('uploadIdentifier', uuid);
-      // eslint-disable-next-line no-console
-      // console.log('formData', formData);
 
       // Info: (20240711 - Julian) 點擊上傳後才升起 flag
       // setIsShowSuccessModal(true);
@@ -104,7 +102,7 @@ const JournalUploadArea = () => {
   useEffect(() => {
     if (uploadSuccess && results) {
       results.forEach((result) => {
-        // const { resultId } = result;
+        // const { resultId } = result; // Info: (20240815 - Shirley)
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
         const translatedStatus = t(
           `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
@@ -123,7 +121,7 @@ const JournalUploadArea = () => {
           });
           setInvoiceIdHandler(result.aichResultId);
           // setInvoiceIdHandler(resultId);
-          // TODO: in dev (20240815 - Shirley) 加上
+          // TODO: (20240815 - Shirley) [Beta] in dev 加上
           // eslint-disable-next-line no-console
           console.log('result in JournalUploadArea', result);
           if (
@@ -142,6 +140,7 @@ const JournalUploadArea = () => {
             );
             deletePendingOCRHandler(result?.uploadIdentifier);
           }
+          // Info: (20240814 - Shirley)
           // messageModalDataHandler({
           //   // title: 'Upload Successful',
           //   title: t('JOURNAL.UPLOAD_SUCCESSFUL'),

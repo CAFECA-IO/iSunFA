@@ -11,11 +11,11 @@ const SettingSidebar = () => {
 
   return (
     <>
-      {/* Info: ----- desktop version (20240423 - Shirley) ----- */}
+      {/* Info: (20240423 - Shirley) ----- desktop version ----- */}
       <div
         className={`fixed z-10 hidden h-screen w-240px flex-col items-center bg-white px-12px pb-40px pt-100px lg:flex`}
       >
-        {/* Info: Main icon (20240423 - Shirley) */}
+        {/* Info: (20240423 - Shirley) Main icon */}
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
           {/* <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>Setting</p> */}
@@ -25,13 +25,13 @@ const SettingSidebar = () => {
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
-          {/* Info: Divider (20240423 - Shirley) */}
+          {/* Info: (20240423 - Shirley) Divider */}
           <div className={`h-15px w-full border-b border-divider-stroke-lv-4`}></div>
 
-          {/* Info: Menu (20240423 - Shirley) */}
+          {/* Info: (20240423 - Shirley) Menu */}
           <div className="flex w-full flex-col items-start justify-center py-16px">
             <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-              {/* TODO: to be developed (20240715 - Shirley) */}
+              {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
               {/* <Link
                 href={ISUNFA_ROUTE.USERS_MY_REPORTS}
                 className={cn(
@@ -48,15 +48,13 @@ const SettingSidebar = () => {
                 fill="none"
                 viewBox="0 0 20 20"
               >
-                <g>
-                  <path
-                    className="stroke-current"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M7.5 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M12.084 6.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM9.167 17.5l2.585-.738c.123-.036.185-.053.243-.08a.831.831 0 00.145-.085c.051-.038.097-.084.188-.175l5.38-5.38a1.473 1.473 0 00-2.083-2.084l-5.38 5.381a1.753 1.753 0 00-.175.188.84.84 0 00-.085.145c-.027.058-.044.12-.08.243L9.167 17.5z"
-                  ></path>
-                </g>
+                <path
+                  className="stroke-current"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M7.5 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M12.084 6.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM9.167 17.5l2.585-.738c.123-.036.185-.053.243-.08a.831.831 0 00.145-.085c.051-.038.097-.084.188-.175l5.38-5.38a1.473 1.473 0 00-2.083-2.084l-5.38 5.381a1.753 1.753 0 00-.175.188.84.84 0 00-.085.145c-.027.058-.044.12-.08.243L9.167 17.5z"
+                ></path>
               </svg>
               <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
                 {/* Personal Setting */}
@@ -65,7 +63,7 @@ const SettingSidebar = () => {
               {/* </Link> */}
             </div>
 
-            {/* Info: Divider (20240423 - Shirley) */}
+            {/* Info: (20240423 - Shirley) Divider */}
             {/* <div className={`h-12px w-full border-b border-lightGray6 `}></div> */}
             <div className="mt-4 flex gap-4 text-sm leading-5 tracking-normal text-divider-text-lv-1">
               <div className="flex gap-2">
@@ -142,7 +140,7 @@ const SettingSidebar = () => {
               </Link>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -178,7 +176,7 @@ const SettingSidebar = () => {
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
                 {/* <Link
               href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
               className={cn(
@@ -195,25 +193,22 @@ const SettingSidebar = () => {
                   fill="none"
                   viewBox="0 0 20 20"
                 >
-                  <g>
-                    <path
-                      className="stroke-current"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M10 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M13.334 15L15 16.667l3.334-3.334m-6.25-7.083a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-                    ></path>
-                  </g>
+                  <path
+                    className="stroke-current"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M10 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M13.334 15L15 16.667l3.334-3.334m-6.25-7.083a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+                  ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {/* Administrator{' '} */}
                   {t('SETTING.ADMINISTRATOR')}{' '}
                 </p>
                 {/* </Link> */}
               </div>
 
               <div className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-disable hover:cursor-default">
-                {/* TODO: to be developed (20240715 - Shirley) */}
+                {/* TODO: [Beta] (20240715 - Shirley) to be developed */}
                 {/* <Link
                 href={ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS}
                 className={cn(
@@ -230,19 +225,16 @@ const SettingSidebar = () => {
                   fill="none"
                   viewBox="0 0 20 20"
                 >
-                  <g>
-                    <path
-                      className="stroke-current"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M3.333 6.5c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093C5.233 2.5 5.933 2.5 7.333 2.5h5.333c1.4 0 2.1 0 2.635.272a2.5 2.5 0 011.093 1.093c.272.535.272 1.235.272 2.635v11l-2.291-1.667L12.29 17.5 10 15.833 7.708 17.5l-2.083-1.667L3.333 17.5v-11z"
-                    ></path>
-                  </g>
+                  <path
+                    className="stroke-current"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M3.333 6.5c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093C5.233 2.5 5.933 2.5 7.333 2.5h5.333c1.4 0 2.1 0 2.635.272a2.5 2.5 0 011.093 1.093c.272.535.272 1.235.272 2.635v11l-2.291-1.667L12.29 17.5 10 15.833 7.708 17.5l-2.083-1.667L3.333 17.5v-11z"
+                  ></path>
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {/* Subscription&Bills{' '} */}
                   {t('SETTING.SUBSCRIPTION_BILLS')}{' '}
                 </p>
                 {/* </Link> */}
@@ -252,8 +244,8 @@ const SettingSidebar = () => {
         </div>
       </div>
 
-      {/* TODO: developing (20240715 - Shirley) */}
-      {/* Info: ----- mobile version (20240507 - Shirley) ----- */}
+      {/* TODO: [Beta] (20240715 - Shirley) developing */}
+      {/* Info: (20240507 - Shirley) ----- mobile version ----- */}
       <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-white px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
         <Link
           href={ISUNFA_ROUTE.COMPANY_INFO}
@@ -297,15 +289,13 @@ const SettingSidebar = () => {
             fill="none"
             viewBox="0 0 20 20"
           >
-            <g>
-              <path
-                className="stroke-current"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M17.5 10h-10m10-5h-10m10 10h-10m-3.333-5A.833.833 0 112.5 10a.833.833 0 011.667 0zm0-5A.833.833 0 112.5 5a.833.833 0 011.667 0zm0 10A.833.833 0 112.5 15a.833.833 0 011.667 0z"
-              ></path>
-            </g>
+            <path
+              className="stroke-current"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M17.5 10h-10m10-5h-10m10 10h-10m-3.333-5A.833.833 0 112.5 10a.833.833 0 011.667 0zm0-5A.833.833 0 112.5 5a.833.833 0 011.667 0zm0 10A.833.833 0 112.5 15a.833.833 0 011.667 0z"
+            ></path>
           </svg>
         </Link>
 
@@ -337,15 +327,13 @@ const SettingSidebar = () => {
             fill="none"
             viewBox="0 0 20 20"
           >
-            <g>
-              <path
-                className="stroke-current"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M10 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M13.334 15L15 16.667l3.334-3.334m-6.25-7.083a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-              ></path>
-            </g>
+            <path
+              className="stroke-current"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M10 12.917H6.25c-1.163 0-1.744 0-2.217.143a3.333 3.333 0 00-2.222 2.222c-.144.473-.144 1.055-.144 2.218M13.334 15L15 16.667l3.334-3.334m-6.25-7.083a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+            ></path>
           </svg>
         </div>
 
@@ -357,15 +345,13 @@ const SettingSidebar = () => {
             fill="none"
             viewBox="0 0 20 20"
           >
-            <g>
-              <path
-                className="stroke-current"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M3.333 6.5c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093C5.233 2.5 5.933 2.5 7.333 2.5h5.333c1.4 0 2.1 0 2.635.272a2.5 2.5 0 011.093 1.093c.272.535.272 1.235.272 2.635v11l-2.291-1.667L12.29 17.5 10 15.833 7.708 17.5l-2.083-1.667L3.333 17.5v-11z"
-              ></path>
-            </g>
+            <path
+              className="stroke-current"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M3.333 6.5c0-1.4 0-2.1.272-2.635a2.5 2.5 0 011.093-1.093C5.233 2.5 5.933 2.5 7.333 2.5h5.333c1.4 0 2.1 0 2.635.272a2.5 2.5 0 011.093 1.093c.272.535.272 1.235.272 2.635v11l-2.291-1.667L12.29 17.5 10 15.833 7.708 17.5l-2.083-1.667L3.333 17.5v-11z"
+            ></path>
           </svg>
         </div>
       </div>

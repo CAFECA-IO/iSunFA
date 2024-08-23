@@ -22,7 +22,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
   const { t } = useTranslation('common');
   const { isAuthLoading } = useUserCtx();
 
-  // ToDo: (20240621 - Julian) Replace with api data
+  // ToDo: (20240621 - Julian) [Beta] Replace with api data
   const projectName = 'BAIFA';
 
   const backClickHandler = () => window.history.back();
@@ -89,8 +89,9 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (20240621 - Julian) i18n */}
-        <title>{`${projectName} ${t('JOURNAL.JOURNAL_LIST_ISUNFA')}`}</title>
+        <title>
+          {projectName} {t('JOURNAL.JOURNAL_LIST_ISUNFA')}
+        </title>
       </Head>
 
       <div className="h-screen font-barlow">

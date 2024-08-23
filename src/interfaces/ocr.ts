@@ -3,11 +3,11 @@ import { ProgressStatus } from '@/constants/account';
 export interface IOCR {
   id: number;
   aichResultId: string;
-  imageName: string; // Info: from frontend (20240815 - Shirley)
+  imageName: string; // Info: (20240815 - Shirley) from frontend
   imageUrl: string;
-  imageSize: string; // Info: from frontend (20240815 - Shirley)
+  imageSize: string; // Info: (20240815 - Shirley) from frontend
   progress: number; // 0 ~ 100 Float
   status: ProgressStatus;
   createdAt: number;
-  uploadIdentifier?: string; // Info: from frontend (20240815 - Shirley)
+  uploadIdentifier?: string; // Info: (20240815 - Shirley) from frontend
 }

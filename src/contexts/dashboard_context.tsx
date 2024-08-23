@@ -151,7 +151,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240424 - Shirley)
+    link: '', // TODO: (20240424 - Shirley) [Beta] link
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -194,7 +194,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240424 - Shirley)
+    link: '', // TODO: (20240424 - Shirley) [Beta] link
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -280,7 +280,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.ACCOUNTING,
     added: false,
     tempSelectedOnSection: false,
@@ -492,7 +492,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -550,7 +550,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -608,7 +608,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -666,7 +666,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -685,12 +685,12 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
       const updatedBookmarkList = { ...prevBookmarkList };
 
-      // Info: 將所有書籤的 added 屬性設為 false (20240603 - Shirley)
+      // Info: (20240603 - Shirley) 將所有書籤的 added 屬性設為 false
       Object.values(updatedBookmarkList).forEach((bookmark: BookmarkItem) => {
         updatedBookmarkList[bookmark.id] = { ...bookmark, added: false };
       });
 
-      // Info: 將參數中的書籤的 added 屬性設為 true (20240603 - Shirley)
+      // Info: (20240603 - Shirley) 將參數中的書籤的 added 屬性設為 true
       bookmarks.forEach((bookmarkName: string) => {
         if (updatedBookmarkList[bookmarkName]) {
           updatedBookmarkList[bookmarkName].added = true;

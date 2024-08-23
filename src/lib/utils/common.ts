@@ -24,7 +24,7 @@ export const numberWithCommas = (x: number | string) => {
   return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 };
 
-// Info: truncate the string to the given length (20240416 - Shirley)
+// Info: (20240416 - Shirley) truncate the string to the given length
 export const truncateString = (str: string, length: number) => {
   const result = str.length > length ? str.slice(0, length) + '...' : str;
   return result;
@@ -124,7 +124,7 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   };
 };
 
-/** Info: 回傳這個月第一天跟今天的 timestamp in seconds (20240419 - Shirley)
+/** Info: (20240419 - Shirley) 回傳這個月第一天跟今天的 timestamp in seconds
  *
  * @returns {startTimeStamp: number, endTimeStamp: number} - The start and present time of the current month in seconds
  */
@@ -133,11 +133,11 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
 
-  // Info: 取得當前月份第一天的 00:00:00 (20240419 - Shirley)
+  // Info: (20240419 - Shirley) 取得當前月份第一天的 00:00:00
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   const startTimeStamp = Math.floor(firstDayOfMonth.getTime() / MILLISECONDS_IN_A_SECOND);
 
-  // Info: 取得今天的 23:59:59 (20240419 - Shirley)
+  // Info: (20240419 - Shirley) 取得今天的 23:59:59
   const endOfToday = new Date(currentYear, currentMonth, today.getDate(), 23, 59, 59);
   const endTimeStamp = Math.floor(endOfToday.getTime() / MILLISECONDS_IN_A_SECOND);
 
@@ -320,8 +320,7 @@ export function eventTypeToVoucherType(eventType: EventType): VoucherType {
 }
 
 // Info Murky (20240505): type guards can input any type and return a boolean
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isStringNumber(value: any): value is string {
+export function isStringNumber(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Number(value));
 }
 
@@ -356,22 +355,22 @@ export function transformBytesToFileSizeString(bytes: number): string {
  * @returns
  */
 export function transformFileSizeStringToBytes(sizeString: string): number {
-    const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
+  const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
 
-    let bytes = 0;
-    if (regex.test(sizeString)) {
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-      const [size, unit] = sizeString.split(' ');
+  let bytes = 0;
+  if (regex.test(sizeString)) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const [size, unit] = sizeString.split(' ');
 
-      const sizeIndex = sizes.indexOf(unit);
-      if (sizeIndex === -1) {
-          throw new Error('Invalid file size unit');
-      }
-
-      bytes = parseFloat(size) * 1024 ** sizeIndex;
+    const sizeIndex = sizes.indexOf(unit);
+    if (sizeIndex === -1) {
+      throw new Error('Invalid file size unit');
     }
 
-    return Math.round(bytes);
+    bytes = parseFloat(size) * 1024 ** sizeIndex;
+  }
+
+  return Math.round(bytes);
 }
 
 // page, limit to offset
@@ -536,8 +535,6 @@ export const loadFileFromLocalStorage = (
 ) => {
   try {
     const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
-    // eslint-disable-next-line no-console
-    console.log('Loaded from localStorage:', data);
 
     let fileObject: {
       id: string | undefined;
@@ -578,8 +575,6 @@ export const loadFileFromLocalStorage = (
 
     return fileObject;
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error loading file from localStorage:', error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 };
@@ -636,7 +631,6 @@ export function throttle<F extends (...args: unknown[]) => unknown>(
   let lastRan: number | null = null;
 
   function returnFunc(this: unknown, ...args: Parameters<F>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const context = this as unknown as F;
     if (lastRan === null) {
       func.apply(context, args);

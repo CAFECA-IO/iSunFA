@@ -73,11 +73,11 @@ const AnalysisReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  // TODO: 這邊要改成申請 report 然後顯示成功 / 失敗的 modal (20240524 - Shirley)
+  // TODO: (20240524 - Shirley) [Beta] 這邊要改成申請 report 然後顯示成功 / 失敗的 modal
   const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}/REPORT_ID?project=${DUMMY_PROJECTS_MAP[selectedProjectName].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   useEffect(() => {
-    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    // Info: (20240509 - Shirley) 每次展開 menu 之前都要清空 searchQuery
     if (isProjectMenuOpen) {
       setSearchQuery('');
     }
@@ -109,7 +109,7 @@ const AnalysisReportSection = () => {
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {/* {selectedProjectName} */}
+            {/* Info: (20240710 - Anna) {selectedProjectName} */}
             {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
           </div>
 
@@ -134,7 +134,7 @@ const AnalysisReportSection = () => {
         </button>
       </div>
 
-      {/* Info: Project Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Project Menu  */}
       <div
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
@@ -200,7 +200,7 @@ const AnalysisReportSection = () => {
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
+                      {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
                         ? t('PROJECT.OVERALL')
@@ -245,7 +245,7 @@ const AnalysisReportSection = () => {
           </div>
         </div>
       </button>
-      {/* Info: Report Type Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Report Type Menu  */}
       <div
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
@@ -260,7 +260,7 @@ const AnalysisReportSection = () => {
               onClick={() => menuOptionClickHandler(id as AnalysisReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
-              {/* {name} */}
+              {/* Info: (20240710 - Anna) {name} */}
               {t(`BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
@@ -305,7 +305,7 @@ const AnalysisReportSection = () => {
           </div>
         </div>
       </button>
-      {/* Info: Language Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Language Menu */}
       <div
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
@@ -398,13 +398,13 @@ const AnalysisReportSection = () => {
     <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-          {/* Info: desktop heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
               {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
             </div>
           </div>
-          {/* Info: mobile heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <div>
@@ -427,7 +427,7 @@ const AnalysisReportSection = () => {
           </div>
         </div>
       </div>
-      {/* Info: options for generation (20240513 - Shirley) */}
+      {/* Info: (20240513 - Shirley) options for generation */}
       <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
@@ -457,8 +457,8 @@ const AnalysisReportSection = () => {
         </div>
         <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
-            {/* Info: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
-            {/* Info: 左橫線 (20240425 - Shirley) */}
+            {/* Info: (20240820 - Julian) 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
+            {/* Info: (20240425 - Shirley) 左橫線 */}
             <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
               <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
             </div>
@@ -492,14 +492,15 @@ const AnalysisReportSection = () => {
               </div>
             </div>
 
-            {/* Info: 右橫線 (20240425 - Shirley) */}
+            {/* Info: (20240425 - Shirley) 右橫線  */}
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
             </div>
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
+              // Info: (20240425 - Shirley) if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below
+              // key={selectedReportType}
               type={DatePickerType.TEXT_PERIOD}
               period={period}
               setFilteredPeriod={setPeriod}

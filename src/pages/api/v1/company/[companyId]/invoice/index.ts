@@ -19,13 +19,11 @@ export interface IPostApiResponseType {
 }
 
 // Info Murky (20240416): Utils
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isCompanyIdValid(companyId: any): companyId is number {
+function isCompanyIdValid(companyId: unknown): companyId is number {
   return typeof companyId === 'number';
 }
 
 // Info Murky (20240416): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatInvoice(invoice: IInvoice) {
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   const now = Date.now(); // Info (20240807 - Jacky): for fake unique invoice number
@@ -50,13 +48,11 @@ function formatInvoice(invoice: IInvoice) {
 }
 
 // Info Murky (20240612): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatOcrId(ocrId: any): number | undefined {
+function formatOcrId(ocrId: unknown): number | undefined {
   if (!ocrId) {
     return undefined;
   }
 
-  // ToDo (20240618 - Murky) Need to use type guard instead
   if (typeof ocrId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -75,12 +71,10 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
+      body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -105,9 +99,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -188,9 +180,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     handleErrorResponse(res, error.message);
   }
 }

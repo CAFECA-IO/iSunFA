@@ -218,7 +218,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -236,7 +236,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -341,7 +341,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -359,7 +359,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -449,7 +449,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -467,7 +467,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -571,7 +571,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -589,7 +589,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"

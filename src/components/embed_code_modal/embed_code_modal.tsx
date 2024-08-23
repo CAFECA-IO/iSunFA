@@ -76,7 +76,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const generateClickHandler = () => {
     setStep(1);
 
-    // TODO: dummy data (20240507 - Shirley)
+    // TODO: (20240507 - Shirley) [Beta] dummy data
     const balanceLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`;
     const comprehensiveIncomeLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`;
     const cashFlowLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`;
@@ -130,7 +130,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   useEffect(() => {
-    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    // Info: (20240509 - Shirley) 每次展開 menu 之前都要清空 searchQuery
     if (isProjectMenuOpen) {
       setSearchQuery('');
     }
@@ -187,7 +187,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         </button>
       </div>
 
-      {/* Info: Project Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Project Menu */}
       <div
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
@@ -304,7 +304,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           </div>
         </div>
       </button>
-      {/* Info: Language Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Language Menu */}
       <div
         className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen

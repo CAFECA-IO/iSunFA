@@ -59,7 +59,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     stroke: {
       show: true,
       width: layoutAssertion === LayoutAssertion.MOBILE ? 5 : 2,
-      colors: ['transparent'], // Info: 讓每一個欄位裡面的 column 有空隙的方式 (20240419 - Shirley)
+      colors: ['transparent'], // Info: (20240419 - Shirley) 讓每一個欄位裡面的 column 有空隙的方式
     },
 
     colors: ['#4BD394B2', '#FB5C5CB2'],
@@ -76,7 +76,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
     yaxis: {
       title: {
-        // text: 'Values (units)',
+        // text: 'Values (units)', // Info: (20240419 - Shirley)
       },
       labels: {
         style: {
@@ -101,6 +101,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       },
       showForSingleSeries: true,
 
+      // Info: (20240419 - Shirley)
       // customLegendItems: [
       //   {
       //     text: 'income',
@@ -433,7 +434,7 @@ const ProjectRoiComparisonChart = () => {
               {displayedDateSection}
             </div>
 
-            {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
+            {/* Info: (20240419 - Shirley) ----- desktop version ----- */}
             <div className="hidden lg:flex">
               <DatePicker
                 disabled={isNoData}
@@ -448,7 +449,7 @@ const ProjectRoiComparisonChart = () => {
             </div>
           </div>
 
-          {/* Info: prev and next button (20240419 - Shirley) */}
+          {/* Info: (20240419 - Shirley) prev and next button */}
           <div className="hidden flex-1 justify-end space-x-2 lg:flex">
             <Button
               disabled={currentPage === 1 || isNoData}
@@ -469,7 +470,7 @@ const ProjectRoiComparisonChart = () => {
             </Button>
           </div>
 
-          {/* Info: ----- mobile version (20240419 - Shirley) ----- */}
+          {/* Info: (20240419 - Shirley) ----- mobile version ----- */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
             <div>
               <DatePicker

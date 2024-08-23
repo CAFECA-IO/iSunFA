@@ -84,9 +84,7 @@ export async function findManyJournalsInPrisma(
       },
     });
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journals;
@@ -186,9 +184,7 @@ export async function listJournal(
 
     return paginatedJournalList;
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -227,9 +223,7 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
 
     journal = await prisma.journal.findUnique(findUniqueArgs);
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -246,9 +240,7 @@ export async function deleteJournalInPrisma(
   try {
     journalExists = await findUniqueJournalInPrisma(journalId, companyId);
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   if (journalExists) {
@@ -333,9 +325,7 @@ export async function deleteJournalInPrisma(
         });
       });
     } catch (error) {
-      // Deprecated: (20240522 - Murk) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(error);
+      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     }
   }
   return journal;

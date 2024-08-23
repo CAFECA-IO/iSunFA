@@ -1299,7 +1299,7 @@ module.exports = {
         '5px': 'var(--stroke-width-lv-5)',
         '6px': 'var(--stroke-width-lv-6)',
       },
-      // Info: 如果設定 `s`, `m`，會造成左上左下沒有圓弧角的問題，要設定 `sm`, `md` 才行 (20240424 - Shirley)
+      // Info: (20240424 - Shirley) 如果設定 `s`, `m`，會造成左上左下沒有圓弧角的問題，要設定 `sm`, `md` 才行
       borderRadius: {
         xxs: 'var(--radius-xxs)',
         xs: 'var(--radius-xs)',

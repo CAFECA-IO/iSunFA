@@ -447,7 +447,10 @@
     "LEAVE_HINT": "您的日记帐还未新增",
     "LEAVE_HINT_CONTENT": "您的日记帐还未新增，您确定要离开吗？",
     "LEAVE": "离开",
-    "FEE_EXCEEDS_TOTAL": "费用不能大于总金额"
+    "FEE_EXCEEDS_TOTAL": "费用不能大于总金额",
+    "DATE_HINT": "请选择日期",
+    "AMOUNT_HINT": "请填入金额",
+    "TIMES_HINT": "请填入次数"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
@@ -625,7 +628,13 @@
   "PROFILE_UPLOAD_MODAL": {
     "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
     "PROFILE_PIC": "使用者照片",
-    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "请上传您的个人资料照片"
+    "COMPANY_IMAGE": "公司图片",
+    "PROJECT_IMAGE": "专案图片",
+    "PLEASE_UPLOAD_YOUR_PROFILE_PICTURE": "请上传您的个人资料照片",
+    "PLEASE_UPLOAD_YOUR_COMPANY_PICTURE": "请上传您的公司图片",
+    "PLEASE_UPLOAD_YOUR_PROJECT_PICTURE": "请上传您的专案图片",
+    "UPLOAD_FAILED": "上传失败",
+    "PLEASE_TRY_LATER": "请稍后再试。错误代码："
   },
   "PROFIT_TREND_CHART": {
     "PROFIT_STATUS_TREND_CHART": "获利状况趋势图",

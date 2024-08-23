@@ -45,22 +45,31 @@ export async function handleGetRequest(
 
 // Info Murky (20240719): Post request code below
 
-// Info Murky (20240416): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatInvoiceFromBody(invoice: any) {
-  // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-  const formattedInvoice = {
-    ...invoice,
-    projectId: invoice.projectId ? invoice.projectId : null,
-    contractId: invoice.contractId ? invoice.contractId : null,
-    project: invoice.project ? invoice.project : null,
-    contract: invoice.contract ? invoice.contract : null,
-  };
-  // Info Murky (20240416): Check if invoices is array and is Invoice type
-  if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice)) {
+function formatInvoiceFromBody(invoice: unknown) {
+  if (typeof invoice !== 'object' || invoice === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
-  return formattedInvoice;
+
+  const formattedInvoice = {
+    ...invoice,
+    projectId: (invoice as { projectId?: unknown }).projectId
+      ? (invoice as { projectId?: unknown }).projectId
+      : null,
+    contractId: (invoice as { contractId?: unknown }).contractId
+      ? (invoice as { contractId?: unknown }).contractId
+      : null,
+    project: (invoice as { project?: unknown }).project
+      ? (invoice as { project?: unknown }).project
+      : null,
+    contract: (invoice as { contract?: unknown }).contract
+      ? (invoice as { contract?: unknown }).contract
+      : null,
+  };
+  // Info Murky (20240416): Check if invoices is array and is Invoice type
+  if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice as IInvoice)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
+  }
+  return formattedInvoice as IInvoice;
 }
 
 export async function uploadInvoiceToAICH(invoice: IInvoice) {
@@ -74,12 +83,10 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
+      body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -104,9 +111,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -124,9 +129,6 @@ export async function handlePutRequest(
   journalId: number;
   resultStatus: IAccountResultStatus;
 }> {
-  // ToDo: (20240719 - Murky) 目前先從journal來決定是要upload哪一個invoice而不是從invoiceId, 需要再調整
-  // const { invoiceId } = req.query;
-  // const invoiceIdNumber = formatInvoiceId(invoiceId);
   const { invoice: invoiceFromBody } = req.body;
   const invoiceToUpdate = formatInvoiceFromBody(invoiceFromBody);
   const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);

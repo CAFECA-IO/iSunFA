@@ -60,8 +60,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [journalTokenId, setJournalTokenId] = useState<string>('');
   const [type, setType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reason, setReason] = useState<string>('');
+  // const [reason, setReason] = useState<string>('');
   const [vendor, setVendor] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -73,6 +72,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [imgSrcHasError, setImgSrcHasError] = useState(false);
 
   const backClickHandler = () => {
     window.location.href = ISUNFA_ROUTE.JOURNAL_LIST;
@@ -104,7 +104,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       if (invoice) {
         setType(invoice.eventType);
         setDateTimestamp(invoice.date);
-        // setReason(invoice.reason); ToDo: (20240503 - Julian) interface lacks reason
+        // setReason(invoice.reason); ToDo: [Beta] (20240503 - Julian) interface lacks reason
         setVendor(invoice.vendorOrSupplier);
         setDescription(invoice.description);
         setTotalPrice(invoice.payment.price);
@@ -158,7 +158,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     });
 
   // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
-  const invoicePreviewSrc = journalDetail?.imageUrl ?? '';
+  const invoicePreviewSrc = imgSrcHasError
+    ? '/elements/default_certificate.svg'
+    : journalDetail?.imageUrl ?? '';
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);
@@ -232,7 +234,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       </div>
     ) : null;
 
-  // const displayType = <p className="text-lightRed">{type}</p>;
+  // const displayType = <p className="text-lightRed">{type}</p>; // Info: (20240731 - Anna)
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   const typeString = type && typeof type === 'string' ? type : '';
@@ -551,7 +553,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
                 height={300}
                 alt="certificate"
                 onError={(e) => {
-                  e.currentTarget.src = '/elements/default_certificate.svg';
+                  if (e && !imgSrcHasError) {
+                    setImgSrcHasError(true);
+                  }
                 }}
               />
             </button>
@@ -572,7 +576,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
-            {/*             <div className="flex items-center justify-between gap-x-10px">
+            {/* <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.REASON')}</p>
               {displayReason}
             </div> */}

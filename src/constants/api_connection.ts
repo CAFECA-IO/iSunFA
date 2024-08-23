@@ -54,12 +54,12 @@ export enum APIName {
   VOUCHER_UPDATE = 'VOUCHER_UPDATE',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
-  // JOURNAL_UPDATE = 'JOURNAL_UPDATE',
+  // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
   REPORT_GENERATE = 'REPORT_GENERATE',
-  SESSION_GET = 'SESSION_GET',
+  STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
@@ -79,6 +79,7 @@ export enum APIName {
   PROJECT_LIST = 'PROJECT_LIST',
   CREATE_PROJECT = 'CREATE_PROJECT',
   GET_PROJECT_BY_ID = 'GET_PROJECT_BY_ID',
+  UPDATE_PROJECT_BY_ID = 'UPDATE_PROJECT_BY_ID',
 }
 
 export enum APIPath {
@@ -116,12 +117,12 @@ export enum APIPath {
   VOUCHER_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
-  // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`,
+  // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`, // Info: (20240720 - Tzuhan)
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/journal/:journalId`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
-  SESSION_GET = `${apiPrefix}/session`,
+  STATUS_INFO_GET = `${apiPrefix}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
@@ -141,6 +142,7 @@ export enum APIPath {
   PROJECT_LIST = `${apiPrefix}/company/:companyId/project`,
   CREATE_PROJECT = `${apiPrefix}/company/:companyId/project`,
   GET_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
+  UPDATE_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
 }
 const createConfig = ({
   name,
@@ -321,6 +323,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ASSET_MANAGEMENT_UPDATE,
   }),
+  // Info: (20240720 - Tzuhan)
   // JOURNAL_UPDATE: createConfig({
   //   name: APIName.JOURNAL_UPDATE,
   //   method: HttpMethod.PUT,
@@ -361,10 +364,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.OCR_LIST,
   }),
-  [APIName.SESSION_GET]: createConfig({
-    name: APIName.SESSION_GET,
+  [APIName.STATUS_INFO_GET]: createConfig({
+    name: APIName.STATUS_INFO_GET,
     method: HttpMethod.GET,
-    path: APIPath.SESSION_GET,
+    path: APIPath.STATUS_INFO_GET,
   }),
   [APIName.ACCOUNT_LIST]: createConfig({
     name: APIName.ACCOUNT_LIST,
@@ -460,5 +463,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_PROJECT_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.GET_PROJECT_BY_ID,
+  }),
+  [APIName.UPDATE_PROJECT_BY_ID]: createConfig({
+    name: APIName.UPDATE_PROJECT_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_PROJECT_BY_ID,
   }),
 };

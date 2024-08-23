@@ -121,7 +121,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
@@ -143,7 +143,7 @@ const NavBar = () => {
       </Link>
       <button
         type="button"
-        // TODO: temp disabled (20240517 - Shirley)
+        // TODO: (20240517 - Shirley) [Beta] temp disabled
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
@@ -153,7 +153,7 @@ const NavBar = () => {
       </button>
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
@@ -176,7 +176,7 @@ const NavBar = () => {
     </div>
   );
 
-  // Info: mobile (20240607 - Shirley)
+  // Info: (20240607 - Shirley) mobile
   const displayedBurgerMenu = (
     <div
       ref={burgerMenuRef}
@@ -240,7 +240,7 @@ const NavBar = () => {
 
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -268,7 +268,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Contract button */}
       <button
         type="button"
-        // TODO: temp disabled (20240517 - Shirley)
+        // TODO: (20240517 - Shirley) [Beta] temp disabled
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -279,7 +279,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Salary button */}
       <button
         type="button"
-        // ToDo: (20240802 - Julian) Not released
+        // ToDo: (20240802 - Julian) [Beta] Not released
         // eslint-disable-next-line react/jsx-boolean-value
         disabled={true}
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
@@ -328,10 +328,10 @@ const NavBar = () => {
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
             {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
           </div>
-          {/* Info: edit name button (20240809 - Shirley) */}
+          {/* Info: (20240809 - Shirley) edit name button */}
           <button
             type="button"
-            // TODO: temp disabled (20240517 - Shirley)
+            // TODO: (20240517 - Shirley) [Beta] temp disabled
             // eslint-disable-next-line react/jsx-boolean-value
             disabled={true}
             className="hidden shrink-0 flex-col justify-center rounded-xs px-2 text-button-surface-strong-secondary disabled:text-button-text-disable"
@@ -389,7 +389,7 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           disabled={!selectedCompany} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-          // Info: disabled for now (20240809 - Shirley)
+          // Info: (20240809 - Shirley) disabled for now
           className="mt-3 hidden w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
           <div className="my-auto flex items-center justify-center">
@@ -479,7 +479,6 @@ const NavBar = () => {
         onClick={companyChangeClickHandler}
         className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
       >
-        {/* ToDo: (20240516 - Julian) icon */}
         <Image
           alt={`${selectedCompany?.name}_icon`}
           src={selectedCompany.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
@@ -487,7 +486,7 @@ const NavBar = () => {
           height={16}
           className="rounded-full"
         />
-        {/* ToDo: (20240521 - Julian) company name abbreviation */}
+        {/* ToDo: (20240521 - Julian) [Beta] company name abbreviation */}
         <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
         <GoArrowSwitch size={14} />
       </button>
@@ -502,7 +501,7 @@ const NavBar = () => {
         onClick={avatarClickHandler}
         className="h-40px w-40px overflow-hidden rounded-full"
       >
-        {/* Info: avatar svg (20240408 - Shirley) */}
+        {/* Info: (20240408 - Shirley) avatar svg */}
         <Image
           alt="avatar"
           src={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
@@ -570,7 +569,7 @@ const NavBar = () => {
             </div>
           </div>
 
-          {/* TODO: links on mobile is hidden for the sake of no design spec (20240408 - Shirley) */}
+          {/* TODO: [Beta] (20240408 - Shirley) links on mobile is hidden for the sake of no design spec */}
           <div className="my-auto hidden flex-1 gap-5 max-md:flex-wrap lg:ml-10 lg:flex">
             <Link
               href={ISUNFA_ROUTE.DASHBOARD}
@@ -627,14 +626,14 @@ const NavBar = () => {
             </Link>
           </div>
         </div>
-        {/* Info: desktop (20240408 - Shirley) */}
+        {/* Info: (20240408 - Shirley) desktop */}
         <div className="relative hidden space-x-8 text-button-text-secondary lg:flex">
-          {/* Info: globe (i18n) (20240605 - Shirley) */}
+          {/* Info: (20240605 - Shirley) globe (i18n) */}
           <I18n />
-          {/* Info: notification (20240606 - Shirley) */}
+          {/* Info: (20240606 - Shirley) notification */}
           {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
           {/* <Notification /> */}
-          {/* Info: app menu (20240606 - Shirley) */}
+          {/* Info: (20240606 - Shirley) app menu */}
           <div ref={appMenuRef}>
             <button
               type="button"
@@ -647,7 +646,7 @@ const NavBar = () => {
           </div>
         </div>
 
-        {/* Info: hide the login button for now (20240802 - Shirley) */}
+        {/* Info: (20240802 - Shirley) hide the login button for now */}
         <div
           className={`hidden flex-col items-start justify-center ${signedIn ? 'lg:flex' : 'hidden'}`}
         >
@@ -657,7 +656,7 @@ const NavBar = () => {
         {/* Info: (20240521 - Julian) Company change button */}
         {displayedCompanyChangeBtn}
 
-        {/* Info: hide the login button for now (20240802 - Shirley) */}
+        {/* Info: (20240802 - Shirley) hide the login button for now */}
         {displayedAvatar}
       </div>
       {displayedBurgerMenu}
