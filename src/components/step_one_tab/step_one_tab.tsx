@@ -8,7 +8,9 @@ import { useUserCtx } from '@/contexts/user_context';
 import { IOCR } from '@/interfaces/ocr';
 import { ToastType } from '@/interfaces/toastify';
 import { ProgressStatus } from '@/constants/account';
-import UploadedFileItem from '@/components/uploaded_file_item/uploaded_file_item';
+import UploadedFileItem, {
+  PendingUploadedFileItem,
+} from '@/components/uploaded_file_item/uploaded_file_item';
 // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
 // import Pagination from '@/components/pagination/pagination';
 import JournalUploadArea from '@/components/journal_upload_area/journal_upload_area';
@@ -174,13 +176,10 @@ const StepOneTab = () => {
   ));
 
   const displayedPendingFileList = pendingOCRList.map((data) => (
-    <UploadedFileItem
-      key={data.id}
-      itemData={data}
-      pauseHandler={fileItemPauseHandler}
-      deleteHandler={fileItemDeleteHandler}
-      clickHandler={handleOCRClick}
-      isPending={data.status === ProgressStatus.WAITING_FOR_UPLOAD}
+    <PendingUploadedFileItem
+      key={data.uploadIdentifier}
+      imageName={data.name}
+      imageSize={data.size}
     />
   ));
 

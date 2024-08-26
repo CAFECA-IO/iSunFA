@@ -92,3 +92,4 @@ export const NON_EXISTING_COMPANY_ID = -1;
 export const DOMAIN = 'https://isunfa.com';
 export const NON_EXISTING_REPORT_ID = -1;
 export const BUFFER_AMOUNT = 0.01; // Info: (20240806 - Shirley) 小於0.01來避免浮點數精度問題
+export const IV_LENGTH = 12;
