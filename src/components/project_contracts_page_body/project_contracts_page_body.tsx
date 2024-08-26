@@ -81,7 +81,7 @@ const ProjectContractsPageBody = () => {
     }
   }, [periodFromFilterModal, sortFromFilterModal, statusFromFilterModal]);
 
-  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: [Beta] (20240620 - Julian) Replace with actual data
+  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: (20240620 - Julian) [Beta] Replace with actual data
 
   const {
     targetRef: statusRef,
@@ -197,10 +197,7 @@ const ProjectContractsPageBody = () => {
             onClick={sortClickHandler}
             className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
-            <p className="text-text-neutral-primary">
-              {/* {sorting} */}
-              {t(sorting)}
-            </p>
+            <p className="text-text-neutral-primary">{t(sorting)}</p>
             <FaChevronDown size={16} />
             {/* Info: (20240618 - Julian) Status dropdown */}
             {sortDropdown}

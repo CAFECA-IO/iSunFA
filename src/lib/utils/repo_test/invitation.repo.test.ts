@@ -58,7 +58,7 @@ describe('Invitation Repository', () => {
       expect(invitation.code).toBe(newInvitation.code);
       expect(invitation.email).toBe(newInvitation.email);
       expect(invitation.phone).toBe(newInvitation.phone);
-      // Assuming there's a cleanup function to delete the created invitation
+      // Info: (20240704 - Jacky) Assuming there's a cleanup function to delete the created invitation
       await deleteInvitationForTesting(invitation.id);
     });
   });

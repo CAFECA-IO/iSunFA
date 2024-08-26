@@ -10,6 +10,8 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 
+const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
+
 // Info: (20240424 - Liz) Define table data interface
 interface ITableData {
   [key: string]: string;
@@ -127,8 +129,6 @@ const initialData: ITableData[] = [
   },
 ];
 
-const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
-
 const AuditReport = () => {
   const { t } = useTranslation('common');
   const [data, setData] = React.useState<ITableData[]>(initialData);
@@ -226,14 +226,15 @@ const AuditReport = () => {
     </div>
   ));
 
-  // Info: (20240424 - Liz) desktop ver
+  // Info: (20240424 - Liz) Desktop ver
   const desktopVer = (
     <div className="hidden flex-col px-80px py-120px lg:flex">
-      {/* Title */}
+      {/*  Info: (20240424 - Liz) ===== Title ===== */}
       <section className="mb-14 text-center text-h1 font-bold leading-h1 text-navy-blue-25">
         {t('AUDIT_REPORT.AUDIT_REPORT')}
       </section>
-      {/* Conditional Filters */}
+
+      {/*  Info: (20240424 - Liz) ===== Conditional Filters ===== */}
       <section id="conditional-filters" className="mb-10 flex items-center gap-24px px-4px">
         {/* Date Picker */}
         <div>
@@ -244,6 +245,7 @@ const AuditReport = () => {
             btnClassName="w-360px items-center text-left"
           />
         </div>
+
         {/* Search */}
         <div className="flex grow items-center justify-between rounded-sm border border-lightGray3 bg-input-surface-input-background">
           <div className="grow">
@@ -258,7 +260,8 @@ const AuditReport = () => {
           </div>
         </div>
       </section>
-      {/* Audit Report List */}
+
+      {/*  Info: (20240424 - Liz) ===== Audit Report List ===== */}
       <section id="audit-report-list" className="flex flex-col gap-5">
         {/* Filter Display List */}
         <div className="flex items-center gap-5 px-4px">
@@ -280,6 +283,7 @@ const AuditReport = () => {
             </label>
           </form>
         </div>
+
         {/* Table */}
         <div className="">
           <table className="w-full border-separate border-spacing-x-1 text-center">
@@ -333,6 +337,7 @@ const AuditReport = () => {
             </tbody>
           </table>
         </div>
+
         {/* Checkbox : no-daily-reports */}
         <div className="self-end px-4px">
           <form className="">
@@ -351,6 +356,7 @@ const AuditReport = () => {
             </label>
           </form>
         </div>
+
         {/* Pagination */}
         <div className="flex flex-col items-center">
           <div className="flex gap-10px">
@@ -399,11 +405,12 @@ const AuditReport = () => {
   // Info: (20240424 - Liz) Mobile ver
   const mobileVer = (
     <div className="flex flex-col px-5 lg:hidden">
-      {/* Title */}
+      {/* Info: (20240424 - Liz) ===== Title ===== */}
       <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9 text-navy-blue-25">
         {t('AUDIT_REPORT.AUDIT_REPORT')}
       </section>
-      {/* Conditional Filters */}
+
+      {/* Info: (20240424 - Liz) ===== Conditional Filters ===== */}
       <section className="flex items-end gap-1">
         {/* Search */}
         <div className="flex grow flex-col gap-2">
@@ -452,7 +459,8 @@ const AuditReport = () => {
           </svg>
         </div>
       </section>
-      {/* Region & Switch daily reports */}
+
+      {/* Info: (20240424 - Liz) ===== Region & Switch daily reports ===== */}
       <section className="flex justify-between pt-5">
         <div className="flex cursor-pointer items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
           <div className="text-sm font-medium text-navy-blue-25">{t('AUDIT_REPORT.REGION')}</div>
@@ -483,7 +491,8 @@ const AuditReport = () => {
           <ToggleButton checked={checked} onChange={() => setChecked(!checked)} />
         </div>
       </section>
-      {/* Divider */}
+
+      {/* Info: (20240424 - Liz) ===== Divider ===== */}
       <div className="flex items-center gap-16px pt-6">
         <div className="flex items-center gap-8px">
           <div>
@@ -525,9 +534,11 @@ const AuditReport = () => {
           </svg>
         </div>
       </div>
-      {/* Audit Report List */}
+
+      {/* Info: (20240424 - Liz) ===== Audit Report List ===== */}
       <section className="flex flex-col gap-8px pt-15px">{displayCards}</section>
-      {/* Pagination */}
+
+      {/* Info: (20240424 - Liz) ===== Pagination ===== */}
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
           <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
@@ -621,12 +632,14 @@ const AuditReport = () => {
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>{t('AUDIT_REPORT.ISUNFA_AUDIT_REPORT')}</title>
       </Head>
-      {/* Navbar */}
+
+      {/* Info: (20240424 - Liz) Navbar */}
       <nav className="">
         <LandingNavBar />
       </nav>
 
       <main className="w-screen overflow-hidden">
+        {/*  Info: (20240424 - Liz) disable this page manually */}
         {isAuditReportDisabled ? (
           <div className="min-h-screen bg-navy-blue-600 font-barlow">
             <div className="mx-auto w-fit pt-300px">

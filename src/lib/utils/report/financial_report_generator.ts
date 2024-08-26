@@ -1,3 +1,4 @@
+import ReportGenerator from '@/lib/utils/report/report_generator';
 import { buildAccountForest } from '@/lib/utils/account/common';
 import { easyFindManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
@@ -12,22 +13,15 @@ import { AccountType } from '@/constants/account';
 import {
   BalanceSheetOtherInfo,
   CashFlowStatementOtherInfo,
+  IFinancialReportInDB,
   IncomeStatementOtherInfo,
 } from '@/interfaces/report';
 import { formatNumberSeparateByComma, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
 
-export default abstract class FinancialReportGenerator {
-  protected companyId: number;
-
-  protected startDateInSecond: number;
-
-  protected endDateInSecond: number;
-
+export default abstract class FinancialReportGenerator extends ReportGenerator {
   protected lastPeriodStartDateInSecond: number;
 
   protected lastPeriodEndDateInSecond: number;
-
-  protected reportSheetType: ReportSheetType;
 
   protected curPeriodContent: IAccountForSheetDisplay[] = [];
 
@@ -39,10 +33,7 @@ export default abstract class FinancialReportGenerator {
     endDateInSecond: number,
     reportSheetType: ReportSheetType
   ) {
-    this.companyId = companyId;
-    this.startDateInSecond = startDateInSecond;
-    this.endDateInSecond = endDateInSecond;
-    this.reportSheetType = reportSheetType;
+    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
     const { lastPeriodStartDateInSecond, lastPeriodEndDateInSecond } =
       FinancialReportGenerator.getLastPeriodStartAndEndDate(
         reportSheetType,
@@ -91,7 +82,7 @@ export default abstract class FinancialReportGenerator {
     creditCodes: Set<string>
   ): boolean {
     if (!either) {
-      return true; // If no either pattern is specified, return true
+      return true; // Info: (20240721 - Gibbs) If no either pattern is specified, return true
     }
     return (
       this.matchPattern(either.debit, debitCodes) || this.matchPattern(either.credit, creditCodes)
@@ -99,26 +90,6 @@ export default abstract class FinancialReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
-    // const forUser = undefined;
-    // const page = 1;
-    // const limit = Number.MAX_SAFE_INTEGER;
-    // const liquidity = undefined;
-    // const isDeleted = false;
-    // const accounts = await findManyAccountsInPrisma({
-    //   companyId: this.companyId,
-    //   includeDefaultAccount: undefined,
-    //   liquidity,
-    //   type: accountType,
-    //   reportType: undefined,
-    //   equityType: undefined,
-    //   forUser,
-    //   isDeleted,
-    //   page,
-    //   limit,
-    //   sortBy: 'code',
-    //   sortOrder: 'asc',
-    // });
-
     const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
     const forest = buildAccountForest(accounts);
 
@@ -232,8 +203,7 @@ export default abstract class FinancialReportGenerator {
     ...contents: IAccountReadyForFrontend[][]
   ): BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
 
-  public abstract generateReport(): Promise<{
-    content: IAccountReadyForFrontend[];
-    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+  public abstract override generateReport(): Promise<{
+    content: IFinancialReportInDB;
   }>;
 }

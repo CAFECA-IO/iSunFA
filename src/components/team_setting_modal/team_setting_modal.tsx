@@ -13,7 +13,7 @@ interface ITeamSettingModal {
   modalVisibilityHandler: () => void;
 }
 
-// ToDo: [Beta] (20240822 - Julian) i18n
+// ToDo: (20240822 - Julian) [Beta] i18n
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
   const { selectedCompany, selectCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();

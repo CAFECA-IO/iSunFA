@@ -34,7 +34,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     },
     hasCompanyId
   );
-  // Todo: (20240822 - Anna) feat. Murky - 使用 logger('reportFinancial in reportId', reportFinancial)
+  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('reportFinancial in reportId', reportFinancial)
 
   // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();
@@ -264,7 +264,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="w-8% border border-black px-1 py-0">② 101</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.outputTax ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.outputTax !== undefined &&
               reportFinancial?.content.taxCalculation.outputTax !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.outputTax)
@@ -278,7 +277,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">1</td>
             <td className="w-8% border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.sales ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.sales !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.triplicateAndElectronic.sales !== null
@@ -289,7 +287,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">2</td>
             <td className="w-8% border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax !== undefined &&
               reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.triplicateAndElectronic.tax)
@@ -300,7 +297,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               colSpan={2}
             >
               3
-              {/* {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.zeroTax ?? 'N/A'} */}{' '}
               {reportFinancial?.content.sales.breakdown.triplicateAndElectronic.zeroTax !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.triplicateAndElectronic.zeroTax !== null
@@ -318,7 +314,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">⑨+⑩ 107</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.deductibleInputTax ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.deductibleInputTax !== undefined &&
               reportFinancial?.content.taxCalculation.deductibleInputTax !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.deductibleInputTax)
@@ -332,7 +327,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">5</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.sales ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.sales !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.sales !== null
@@ -343,7 +337,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">6</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax !== undefined &&
               reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.tax)
@@ -351,7 +344,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">7</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.zeroTax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.cashRegisterTriplicate.zeroTax !== null
@@ -367,7 +359,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">108</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.previousPeriodOffset ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.previousPeriodOffset !== undefined &&
               reportFinancial?.content.taxCalculation.previousPeriodOffset !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.previousPeriodOffset)
@@ -381,7 +372,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">9</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.sales ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.sales !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.sales !== null
@@ -392,7 +382,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">10</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.tax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.tax !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.tax !== null
@@ -403,7 +392,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="justify-between border border-black px-1 py-0" colSpan={2}>
               11{' '}
-              {/* {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.zeroTax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.duplicateAndCashRegister.zeroTax !== null
@@ -421,7 +409,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">110</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.subtotal ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.subtotal !== undefined &&
               reportFinancial?.content.taxCalculation.subtotal !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.subtotal)
@@ -435,7 +422,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">13</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.invoiceExempt.sales ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.invoiceExempt.sales !== undefined &&
               reportFinancial?.content.sales.breakdown.invoiceExempt.sales !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.invoiceExempt.sales)
@@ -443,7 +429,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">14</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.invoiceExempt.tax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.invoiceExempt.tax !== undefined &&
               reportFinancial?.content.sales.breakdown.invoiceExempt.tax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.invoiceExempt.tax)
@@ -451,7 +436,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">15</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax !== undefined &&
               reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.invoiceExempt.zeroTax)
@@ -465,7 +449,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">111</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.currentPeriodTaxPayable ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.currentPeriodTaxPayable !== undefined &&
               reportFinancial?.content.taxCalculation.currentPeriodTaxPayable !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.currentPeriodTaxPayable)
@@ -479,7 +462,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">17</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales !== undefined &&
               reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.returnsAndAllowances.sales)
@@ -487,7 +469,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">18</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax !== undefined &&
               reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.returnsAndAllowances.tax)
@@ -495,7 +476,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">19</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.returnsAndAllowances.zeroTax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.returnsAndAllowances.zeroTax !==
                 undefined &&
               reportFinancial?.content.sales.breakdown.returnsAndAllowances.zeroTax !== null
@@ -512,7 +492,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">112</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.currentPeriodFilingOffset ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.currentPeriodFilingOffset !== undefined &&
               reportFinancial?.content.taxCalculation.currentPeriodFilingOffset !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.currentPeriodFilingOffset)
@@ -526,7 +505,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">21①</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.total.sales ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.total.sales !== undefined &&
               reportFinancial?.content.sales.breakdown.total.sales !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.total.sales)
@@ -534,7 +512,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">22②</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.total.tax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.total.tax !== undefined &&
               reportFinancial?.content.sales.breakdown.total.tax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.total.tax)
@@ -542,7 +519,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">23③</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.sales.breakdown.total.zeroTax ?? 'N/A'} */}
               {reportFinancial?.content.sales.breakdown.total.zeroTax !== undefined &&
               reportFinancial?.content.sales.breakdown.total.zeroTax !== null
                 ? formatNumber(reportFinancial?.content.sales.breakdown.total.zeroTax)
@@ -555,7 +531,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">③×5%+⑩ 113</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.refundCeiling ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.refundCeiling !== undefined &&
               reportFinancial?.content.taxCalculation.refundCeiling !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.refundCeiling)
@@ -574,7 +549,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={5} rowSpan={2}>
               <div className="flex items-center">
-                {/* {reportFinancial?.content.sales.totalTaxableAmount ?? 'N/A'} */}
                 {reportFinancial?.content.sales.totalTaxableAmount !== undefined &&
                 reportFinancial?.content.sales.totalTaxableAmount !== null
                   ? formatNumber(reportFinancial?.content.sales.totalTaxableAmount)
@@ -592,7 +566,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                     {t('TAX_REPORT.OF_FIXED_ASSETS')}
                   </span>
                 </div>
-                ㉗{/* {reportFinancial?.content.sales.includeFixedAsset ?? 'N/A'} */}
+                ㉗
                 {reportFinancial?.content.sales.includeFixedAsset !== undefined &&
                 reportFinancial?.content.sales.includeFixedAsset !== null
                   ? formatNumber(reportFinancial?.content.sales.includeFixedAsset)
@@ -622,7 +596,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">114</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.currentPeriodRefundableTax ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.currentPeriodRefundableTax !== undefined &&
               reportFinancial?.content.taxCalculation.currentPeriodRefundableTax !== null
                 ? formatNumber(reportFinancial?.content.taxCalculation.currentPeriodRefundableTax)
@@ -638,7 +611,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0">115</td>
             <td className="border border-black px-1 py-0 text-right">
-              {/* {reportFinancial?.content.taxCalculation.currentPeriodAccumulatedOffset ?? 'N/A'} */}
               {reportFinancial?.content.taxCalculation.currentPeriodAccumulatedOffset !==
                 undefined &&
               reportFinancial?.content.taxCalculation.currentPeriodAccumulatedOffset !== null
@@ -756,7 +728,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               <div className="flex justify-between">
                 <p>82</p>
                 <p>
-                  {/* {reportFinancial?.content.bondedAreaSalesToTaxArea ?? 'N/A'} */}
                   {reportFinancial?.content.bondedAreaSalesToTaxArea !== undefined &&
                   reportFinancial?.content.bondedAreaSalesToTaxArea !== null
                     ? formatNumber(reportFinancial?.content.bondedAreaSalesToTaxArea)
@@ -787,8 +758,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">31</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* Info: (20240816 - Anna) */}
-              {/* {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !==
                 undefined &&
               reportFinancial?.content.purchases.breakdown.uniformInvoice.fixedAssets.tax !== null
@@ -1188,7 +1157,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">44</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.total.generalPurchases.amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.total.generalPurchases.amount !==
                 undefined &&
               reportFinancial?.content.purchases.breakdown.total.generalPurchases.amount !== null
@@ -1199,7 +1167,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">45⑨</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.total.generalPurchases.tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.total.generalPurchases.tax !==
                 undefined &&
               reportFinancial?.content.purchases.breakdown.total.generalPurchases.tax !== null
@@ -1216,7 +1183,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">46</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.total.fixedAssets.amount ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.total.fixedAssets.amount !==
                 undefined &&
               reportFinancial?.content.purchases.breakdown.total.fixedAssets.amount !== null
@@ -1227,7 +1193,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">47⑩</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
-              {/* {reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax ?? 'N/A'} */}
               {reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax !== undefined &&
               reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax !== null
                 ? formatNumber(reportFinancial?.content.purchases.breakdown.total.fixedAssets.tax)
@@ -1250,7 +1215,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">48</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
-              {/* {reportFinancial?.content.purchases.totalWithNonDeductible.generalPurchases ?? 'N/A'} */}
               {reportFinancial?.content.purchases.totalWithNonDeductible.generalPurchases !==
                 undefined &&
               reportFinancial?.content.purchases.totalWithNonDeductible.generalPurchases !== null
@@ -1289,7 +1253,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center">49</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
-              {/* {reportFinancial?.content.purchases.totalWithNonDeductible.fixedAssets ?? 'N/A'} */}
               {reportFinancial?.content.purchases.totalWithNonDeductible.fixedAssets !==
                 undefined &&
               reportFinancial?.content.purchases.totalWithNonDeductible.fixedAssets !== null
@@ -1308,7 +1271,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">73</td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
-              {/* {reportFinancial?.content.imports.taxExemptGoods ?? 'N/A'} */}
               {reportFinancial?.content.imports.taxExemptGoods !== undefined &&
               reportFinancial?.content.imports.taxExemptGoods !== null
                 ? formatNumber(reportFinancial?.content.imports.taxExemptGoods)
@@ -1332,7 +1294,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">74</td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
-              {/* {reportFinancial?.content.imports.foreignServices ?? 'N/A'} */}
               {reportFinancial?.content.imports.foreignServices !== undefined &&
               reportFinancial?.content.imports.foreignServices !== null
                 ? formatNumber(reportFinancial?.content.imports.foreignServices)

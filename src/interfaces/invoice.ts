@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 // Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
 export interface IInvoice {
   journalId: number | null;
-  date: number; // timestamp
+  date: number; // Info: (20240522 - Murky) timestamp
   eventType: EventType;
   paymentReason: string;
   description: string;
@@ -30,8 +30,8 @@ export type IInvoiceIncludePaymentJournal = Prisma.InvoiceGetPayload<{
 }>;
 
 export interface IInvoiceBeta extends IInvoice {
-  number: string; // origin invoice number
-  type: string; // Info: (20240808 Murky)  營業稅格式代號
+  number: string; // Info: (20240807 - Jacky) origin invoice number
+  type: string; // Info: (20240808 - Murky)  營業稅格式代號
   vendorTaxId: string;
   payment: IPaymentBeta;
   deductible: boolean;

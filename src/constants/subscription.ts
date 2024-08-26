@@ -3,7 +3,7 @@ export enum SubscriptionPeriod {
   YEARLY = 365,
 }
 
-enum SubscriptionPlan {
+export enum SubscriptionPlan {
   TRIAL = 'trial',
   PRO = 'pro',
   ENTERPRISE = 'enterprise',

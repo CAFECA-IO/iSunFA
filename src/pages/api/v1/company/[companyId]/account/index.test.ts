@@ -1,6 +1,7 @@
 it('should pass', () => {
   expect(true).toBe(true);
 });
+// Info: (20240723 - Murky)
 // import { NextApiRequest, NextApiResponse } from 'next';
 // import * as module from '@/pages/api/v1/company/[companyId]/account/index';
 // import prisma from '@/client';

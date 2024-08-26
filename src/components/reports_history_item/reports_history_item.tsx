@@ -64,8 +64,8 @@ const ReportsHistoryItem = ({
           >
             {name}
           </Link>
-          {/* 錯的http://localhost:3000/users/reports/financials/view?report_type=balance */}
-          {/* 對的http://localhost:3000/users/reports/financials/view/10000008?report_type=cash-flow */}
+          {/* Info: (20240722 - Anna) 錯的http://localhost:3000/users/reports/financials/view?report_type=balance */}
+          {/*  Info: (20240722 - Anna) 對的http://localhost:3000/users/reports/financials/view/10000008?report_type=cash-flow */}
           <div className="flex flex-col space-y-2 lg:hidden">
             <Link
               className="sm:hidden"

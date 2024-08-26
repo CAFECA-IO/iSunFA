@@ -30,7 +30,7 @@ describe('User Repository', () => {
     });
 
     it('should return null if the user is not found', async () => {
-      const userId = -1; // Assuming -1 is an invalid ID
+      const userId = -1; // Info: (20240704 - Jacky) Assuming -1 is an invalid ID
       const user = await getUserById(userId);
       expect(user).toBeNull();
     });
@@ -46,7 +46,7 @@ describe('User Repository', () => {
         imageUrl: 'test_image_url_new',
       };
       const user = await createUser(newUser);
-      await deleteUserByIdForTesting(user.id); // Clean up after test
+      await deleteUserByIdForTesting(user.id); // Info: (20240723 - Murky) Clean up after test
       expect(user).toBeDefined();
       expect(user.name).toBe(newUser.name);
       expect(user.email).toBe(newUser.email);

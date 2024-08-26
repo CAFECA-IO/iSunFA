@@ -12,7 +12,7 @@ import {
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
 import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
-import { BalanceSheetOtherInfo } from '@/interfaces/report';
+import { BalanceSheetOtherInfo, IFinancialReportInDB } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
@@ -43,9 +43,8 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     );
   }
 
-  /// //////////////////////////////////////////////////
   // Info: (20240729 - Murky) this special function is to temporally  close account from income statement to retain earning, but this won't effect income statement
-  /// //////////////////////////////////////////////////
+
   private async closeAccountFromIncomeStatement(
     curPeriod: boolean
   ): Promise<ILineItemIncludeAccount[]> {
@@ -185,7 +184,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const maxPercentage = Math.max(assetPercentage, liabilityPercentage, equityPercentage);
 
-    // 判斷哪一項是最大的，並將surplus加上去
+    // Info: (20240731 - Murky) 判斷哪一項是最大的，並將surplus加上去
     if (total > 0 && surplus !== 0) {
       if (maxPercentage === assetPercentage) {
         assetPercentage += surplus;
@@ -313,7 +312,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.OPERATING_COST.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const salesTotal =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    // DSO = (Account Receivable / Sales) * 365
+    // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
     const curDso =
       salesTotal.curPeriodAmount !== 0
@@ -395,19 +394,20 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     return otherInfo;
   }
 
-  public override async generateReport() {
-    // const currentDateInMillisecond = timestampInMilliSeconds(this.endDateInSecond);
-    // const currentDate = new Date(currentDateInMillisecond);
-    // const lastPeriodDateInMillisecond = timestampInMilliSeconds(this.lastPeriodEndDateInSecond);
-    // const lastPeriodDate = new Date(lastPeriodDateInMillisecond);
+  public override async generateReport(): Promise<{
+    content: IFinancialReportInDB;
+  }> {
     const balanceSheetContent = await this.generateIAccountReadyForFrontendArray();
-
     const incomeStatementContent =
       await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(balanceSheetContent, incomeStatementContent);
-    return {
+    const financialReportInDB = {
       content: balanceSheetContent,
       otherInfo,
+    };
+
+    return {
+      content: financialReportInDB,
     };
   }
 }

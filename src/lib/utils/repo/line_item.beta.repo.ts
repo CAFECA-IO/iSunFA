@@ -121,7 +121,7 @@ export async function listLineItems({
   try {
     lineItems = await prisma.lineItem.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const hasNextPage = lineItems.length > pageSize;
@@ -132,8 +132,8 @@ export async function listLineItems({
   }
 
   const sort: {
-    sortBy: string; // 排序欄位的鍵
-    sortOrder: string; // 排序欄位的值
+    sortBy: string; // Info: (20240812 - Murky) 排序欄位的鍵
+    sortOrder: string; // Info: (20240812 - Murky) 排序欄位的值
   }[] = [{ sortBy, sortOrder }];
 
   const paginatedLineItemList = {
@@ -149,7 +149,7 @@ export async function listLineItems({
   return paginatedLineItemList;
 }
 
-/**
+/** Info: (20240812 - Murky)
  * Create line item record by ILineItem and connect to voucher by voucherId
  * @param {number} voucherId voucher id that line item will be connected to (type: number)
  * @param {ILineItem} lineItem line item data that will be created (type: ILineItem)
@@ -199,13 +199,13 @@ export async function createLineItem({
   try {
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return result;
 }
 
-/**
+/** Info: (20240812 - Murky)
  * Update line item record (identify by lineItemId) by ILineItem and connect to voucher by voucherId
  * @param {number} lineItemId line item id that will be updated (type: number)
  * @param {number} voucherId voucher id that line item will be connected to (type: number)
@@ -262,7 +262,7 @@ export async function updateLineItem({
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return result;
@@ -294,7 +294,7 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return result;

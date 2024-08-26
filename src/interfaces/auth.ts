@@ -33,7 +33,7 @@ export type AuthFunctionsParams = {
   [K in AuthFunctionsKeys]: Parameters<AuthFunctions[K]>[0];
 };
 
-// 提取所有检查函数的参数类型
+// Info: (20240710 - Jacky) 提取所有檢查函數的參數類型
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
   k: infer I
 ) => void

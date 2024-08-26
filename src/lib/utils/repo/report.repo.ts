@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { ReportSheetType, ReportStatusType, ReportType } from '@/constants/report';
-// import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+// import { IAccountReadyForFrontend } from '@/interfaces/accounting_account'; // Info: (20240729 - Murky)
 import { Prisma, Report } from '@prisma/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -26,7 +26,7 @@ export async function findFirstReportByFromTo(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report;
@@ -48,7 +48,7 @@ export async function findUniqueReportById(reportId: number) {
     });
   } catch (error) {
     report = null;
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report;
@@ -75,7 +75,7 @@ export async function getReportIdByFromTo(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report?.id;
@@ -112,7 +112,7 @@ export async function createReport(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report;
@@ -137,7 +137,7 @@ export async function findManyReports(
     companyId,
     status,
     AND: [
-      // { from: { gte: startDateInSecond } },
+      // { from: { gte: startDateInSecond } }, // Info: (20240719 - Jacky)
       { to: { lte: endDateInSecond } },
       { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       {
@@ -164,7 +164,7 @@ export async function findManyReports(
   try {
     reports = await prisma.report.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const filteredReports = reports.filter((report) => {

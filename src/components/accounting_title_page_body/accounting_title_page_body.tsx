@@ -128,7 +128,6 @@ const AccountingTitlePageBody = () => {
             className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
           >
             {/* Info: (20240804 - Anna) 替換為翻譯後的文字 */}
-            {/* {asset} */}
             {t(`SETTING.${asset.toUpperCase().replace(/ /g, '_')}`)}
           </li>
         ))}
@@ -195,7 +194,6 @@ const AccountingTitlePageBody = () => {
       <div className="mt-40px flex flex-col items-center gap-x-20px gap-y-8px lg:mt-0 lg:flex-row">
         {/* Info: (20240717 - Julian) Assets */}
         <div className="flex w-full flex-col gap-8px lg:w-200px">
-          {/* <p className="font-semibold text-input-text-primary">Assets</p> */}
           <p className="font-semibold text-input-text-primary">{t('SETTING.ASSETS')}</p>
           <div
             onClick={assetDropmenuToggleHandler}

@@ -14,6 +14,7 @@ import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 
 interface UserContextType {
   credential: string | null;
@@ -138,6 +139,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
+    clearAllItems(); // Info: 清空 IndexedDB 中的數據 (20240822 - Shirley)
   };
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
@@ -219,7 +221,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const expiredAt = localStorage.getItem('expired_at');
     const isUserAuthAvailable = !!userAuthRef.current;
 
-    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // Deprecated: (20240826-Tzuhan) [Beta] dev
     // eslint-disable-next-line no-console
     console.log(
       'isProfileFetchNeeded userId:',
@@ -238,7 +240,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (Date.now() < Number(expiredAt)) {
         return true;
       } else {
-        // Deprecate: [Beta](20240826-Tzuhan) dev
+        // Deprecated: (20240826-Tzuhan) [Beta] dev
         // eslint-disable-next-line no-console
         console.log('expiredAt is expired, isNeed signOut');
         signOut();
@@ -260,10 +262,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
-  // Info: 在用戶一進到網站後就去驗證是否登入 (20240409 - Shirley)
+  // Info: (20240409 - Shirley) 在用戶一進到網站後就去驗證是否登入
   const getStatusInfo = useCallback(async () => {
     const isNeed = isProfileFetchNeeded();
-    // Deprecate: [Beta](20240826-Tzuhan) dev
+    // Deprecated: (20240826-Tzuhan) [Beta] dev
     // eslint-disable-next-line no-console
     console.log('isProfileFetchNeeded isNeed:', isNeed);
     if (!isNeed) return;
@@ -399,7 +401,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
+        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
 
@@ -409,6 +411,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     await handleSelectCompanyResponse(res);
   };
+
   const throttledGetStatusInfo = useCallback(
     throttle(() => {
       getStatusInfo();
@@ -448,7 +451,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const handleUnauthorizedAccess = () => {
-      // Deprecate: [Beta](20240826-Tzuhan) dev
+      // Deprecated: (20240826-Tzuhan) [Beta] dev
       // eslint-disable-next-line no-console
       console.log('useEffect message on "unauthorized": called signOut');
       signOut();

@@ -104,7 +104,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       if (invoice) {
         setType(invoice.eventType);
         setDateTimestamp(invoice.date);
-        // setReason(invoice.reason); ToDo: [Beta] (20240503 - Julian) interface lacks reason
+        // setReason(invoice.reason); ToDo: (20240503 - Julian) [Beta] interface lacks reason
         setVendor(invoice.vendorOrSupplier);
         setDescription(invoice.description);
         setTotalPrice(invoice.payment.price);
@@ -160,7 +160,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
   const invoicePreviewSrc = imgSrcHasError
     ? '/elements/default_certificate.svg'
-    : journalDetail?.imageUrl ?? '';
+    : (journalDetail?.imageUrl ?? '');
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);
@@ -567,7 +567,6 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
-              {/* {displayType} */}
               <p className="text-lightRed">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
@@ -604,7 +603,6 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             <div className="flex items-center justify-between gap-x-10px">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
               {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
-              {/* {displayPeriod} */}
               {translatedPeriod && (
                 <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
               )}
@@ -612,8 +610,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             {/* Info: (20240503 - Julian) Payment Status */}
             <div className="flex items-center justify-between gap-x-10px">
               <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
-              {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
-              {/* {displayStatus} */}
+              {/* Info: (20240731 - Anna) 把displayStatus(付款狀態)替換成翻譯過的 */}
               {translatedStatus && (
                 <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
               )}

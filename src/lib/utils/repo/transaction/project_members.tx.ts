@@ -8,7 +8,7 @@ export async function updateProjectMembers(
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   await prisma.$transaction(async (tx) => {
-    // 更新不在 memberIdList 中的现有 employee 项目的 endDate
+    // Info: (20240619 - Jacky) 更新不在 memberIdList 中的現有 employee 項目的 endDate
     await tx.employeeProject.updateMany({
       where: {
         employeeId: {
@@ -22,7 +22,7 @@ export async function updateProjectMembers(
       },
     });
 
-    // 查询所有在 memberIdList 中且没有 endDate 的记录
+    // Info: (20240619 - Jacky) 查詢所有在 memberIdList 中且沒有 endDate 的記錄
     const existingRecords = await tx.employeeProject.findMany({
       where: {
         employeeId: {
@@ -34,7 +34,7 @@ export async function updateProjectMembers(
 
     const existingMemberIdList = existingRecords.map((record) => record.employeeId);
 
-    // 为 memberIdList 中的新成员创建记录
+    // Info: (20240619 - Jacky) 為 memberIdList 中的新成員建立記錄
     const newMembers = memberIdList.filter((memberId) => !existingMemberIdList.includes(memberId));
 
     if (newMembers.length > 0) {

@@ -17,7 +17,7 @@ enum Department {
   BACKEND = 'Backend',
 }
 
-// ToDo: [Beta] (20240715 - Julian) i18n
+// ToDo: (20240715 - Julian) [Beta] i18n
 const SalaryRecordForm = () => {
   const { t } = useTranslation('common');
   const { salaryBookConfirmModalVisibilityHandler } = useGlobalCtx();
@@ -68,7 +68,7 @@ const SalaryRecordForm = () => {
 
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // ToDo: [Beta] (20240716 - Julian) Submit
+    // ToDo: (20240716 - Julian) [Beta] Submit
 
     salaryBookConfirmModalVisibilityHandler();
   };
@@ -192,7 +192,7 @@ const SalaryRecordForm = () => {
             >
               <p className="flex-1 text-text-brand-secondary-lv3">{selectedDepartment}</p>
               <FaChevronDown />
-              {/* ToDo: [Beta] (20240715 - Julian) Dropdown */}
+              {/* ToDo: (20240715 - Julian) [Beta] Dropdown */}
             </div>
 
             {departmentMenu}
@@ -292,7 +292,7 @@ const SalaryRecordForm = () => {
       <div className="mt-40px flex flex-col gap-y-40px">
         {/* Info: (20240716 - Julian) Toggle */}
         <div className="flex flex-col gap-y-8px">
-          <div className="flex items-center gap-x-16px text-switch-text-active">
+          <div className="text-switch-text-active flex items-center gap-x-16px">
             <p>Record Working hours</p>
             <Toggle
               id="toggle-record-working-hours"

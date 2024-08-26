@@ -40,7 +40,8 @@ const ProjectPageBody = () => {
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = 10; // ToDo: [Beta] (2024606 - Julian) Get total page from API
+  const totalPages = 10;
+  // ToDo: (20240606 - Julian) [Beta] Get total page from API
 
   const { trigger: getProjectList, data: projectList } = APIHandler<IProject[]>(
     APIName.PROJECT_LIST
@@ -77,7 +78,7 @@ const ProjectPageBody = () => {
     if (currentStageIndex < stageList.length - 1) {
       setCurrentStage(stageList[currentStageIndex + 1]);
     } else {
-      // Info: (2024607 - Julian) 如果是最後一個 Stage，則跳到第一個 Stage
+      // Info: (20240607 - Julian) 如果是最後一個 Stage，則跳到第一個 Stage
       setCurrentStage(stageList[0]);
     }
   };

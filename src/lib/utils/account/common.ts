@@ -84,7 +84,7 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     children: updatedChildren,
   };
 
-  // updatedAccount.amount = newAmount;
+  // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   updatedAccount.children = updatedAccount.children.filter(

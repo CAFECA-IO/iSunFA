@@ -79,7 +79,7 @@ const TransferCompanyModal = ({
 
   const saveClickHandler = async () => {
     if (inputRef.current) {
-      // TODO: [Beta] (20240717 - Shirley) send API request
+      // TODO: (20240717 - Shirley) [Beta] send API request
       if (inputRef.current.value === '') {
         modalVisibilityHandler();
         return;
@@ -88,7 +88,7 @@ const TransferCompanyModal = ({
       const newOwnerId = inputRef.current.value;
       modalVisibilityHandler();
 
-      // TODO: [Beta] (20240717 - Shirley) validate the userId
+      // TODO: (20240717 - Shirley) [Beta] validate the userId
       messageModalDataHandler({
         messageType: MessageType.WARNING,
         title: 'Transfer company',
@@ -99,7 +99,7 @@ const TransferCompanyModal = ({
             </p>
             <p className="text-text-neutral-primary">{inputRef.current.value}</p>
           </div>
-        ), // TODO: [Beta] (20240717 - Shirley) message color
+        ), // TODO: (20240717 - Shirley) [Beta] message color
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`,
         backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
         submitBtnStr: t('JOURNAL.TRANSFER'),

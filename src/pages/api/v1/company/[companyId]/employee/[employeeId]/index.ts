@@ -66,7 +66,7 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
   try {
     await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 }
 
@@ -92,7 +92,7 @@ async function updateEmployee(
     );
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   const employee = await getEmployeeById(employeeIdNumber);
   const projects = await getProjectsByEmployeeId(employeeIdNumber);

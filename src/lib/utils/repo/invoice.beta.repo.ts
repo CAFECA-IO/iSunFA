@@ -49,10 +49,10 @@ export async function findUniqueInvoiceById(
     });
 
     if (!invoice) {
-      // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return invoice;
 }
@@ -122,7 +122,7 @@ export async function createInvoice(
   try {
     invoiceBeCreated = await prisma.invoice.create(invoiceCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return invoiceBeCreated;
@@ -202,7 +202,7 @@ export async function updateInvoice(
   try {
     invoiceBeUpdated = await prisma.invoice.update(invoiceUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return invoiceBeUpdated;
@@ -300,19 +300,19 @@ export async function listInvoice({
   try {
     invoices = await prisma.invoice.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const hasNextPage = invoices.length > pageSize;
   const hasPreviousPage = page > 1;
 
   if (invoices.length > pageSize) {
-    invoices.pop(); // 移除多余的记录
+    invoices.pop(); // Info: (202040808 - Jacky) 移除多餘的記錄
   }
 
   const sort: {
-    sortBy: string; // 排序欄位的鍵
-    sortOrder: string; // 排序欄位的值
+    sortBy: string; // Info: (202040808 - Jacky) 排序欄位的鍵
+    sortOrder: string; // Info: (202040808 - Jacky) 排序欄位的值
   }[] = [{ sortBy, sortOrder }];
 
   const paginatedInvoiceList = {

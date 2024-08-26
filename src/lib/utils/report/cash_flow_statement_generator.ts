@@ -15,11 +15,7 @@ import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/invest
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
-import {
-  BalanceSheetOtherInfo,
-  CashFlowStatementOtherInfo,
-  IncomeStatementOtherInfo,
-} from '@/interfaces/report';
+import { CashFlowStatementOtherInfo, IFinancialReportInDB } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { timestampInMilliSeconds } from '@/lib/utils/common';
 import { absoluteNetIncome, noAdjustNetIncome } from '@/lib/utils/account/common';
@@ -644,7 +640,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       EMPTY_I_ACCOUNT_READY_FRONTEND;
     const saleFVOCI =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_FVOCI.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    // const saleFVPL = accountMap.get('B00200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const saleAmortizedFA =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_AMORTIZED_FINANCIAL_ASSET.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -654,7 +649,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const receiveStockDividend =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_RECEIVE_STOCK_DIVIDEND.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
-    // const equityDividend = accountMap.get('xxxx') || EMPTY_I_ACCOUNT_READY_FRONTEND; <= 沒有這個項目
     const totalInvestCashFlow =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -719,7 +713,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_INTANGIBLE_ASSET.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
 
-    // Info: get本來就是負的
+    // Info: (20240730 - Anna) get本來就是負的
     const curFreeCash =
       operatingCashFlow.curPeriodAmount +
       getPPE.curPeriodAmount -
@@ -795,13 +789,14 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   public override async generateReport(): Promise<{
-    content: IAccountReadyForFrontend[];
-    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+    content: IFinancialReportInDB;
   }> {
     const cashFlowAccounts = await this.generateIAccountReadyForFrontendArray();
     const incomeStatementAccount =
       await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(cashFlowAccounts, incomeStatementAccount);
-    return { content: cashFlowAccounts, otherInfo };
+    const financialReportInDB = { content: cashFlowAccounts, otherInfo };
+
+    return { content: financialReportInDB };
   }
 }
