@@ -1,6 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
-import { useUserCtx } from '@/contexts/user_context';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
@@ -9,7 +8,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
 import { clearAllItems, deleteItem, getAllItems, initDB } from '@/lib/utils/indexed_db/ocr';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
-import useStateRef from 'react-usestateref';
 
 interface IAccountingProvider {
   children: React.ReactNode;
@@ -129,7 +127,7 @@ interface IAccountingContext {
   pendingOCRList: IOCRItem[];
   pendingOCRListFromBrowser: IOCRItem[];
   excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
-  // updatePendingOCRParams: (userId: number, companyId: number) => void;
+  updatePendingOCRParams: (userId: number, companyId: number) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -181,14 +179,12 @@ const initialAccountingContext: IAccountingContext = {
   pendingOCRList: [],
   pendingOCRListFromBrowser: [],
   excludeUploadIdentifier: () => [],
-  // updatePendingOCRParams: () => {},
+  updatePendingOCRParams: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
-  const { userAuth, selectedCompany } = useUserCtx();
-
   const {
     trigger: getAccountList,
     data: accountTitleList,
@@ -240,13 +236,13 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [pendingOCRList, setPendingOCRList] = useState<IOCRItem[]>([]);
   const [isDBReady, setIsDBReady] = useState(false);
-  // const [pendingOCRListParams, setPendingOCRListParams, pendingOCRListParamsRef] = useStateRef<
-  //   | {
-  //       userId: number;
-  //       companyId: number;
-  //     }
-  //   | undefined
-  // >(undefined);
+  const [pendingOCRListParams, setPendingOCRListParams] = useState<
+    | {
+        userId: number;
+        companyId: number;
+      }
+    | undefined
+  >(undefined);
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
 
   const getAccountListHandler = (
@@ -413,10 +409,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     const pendingOCRs: IOCRItem[] = [];
 
     allItems.forEach((item) => {
-      // if (pendingOCRListParamsRef.current?.userId && pendingOCRListParamsRef.current?.companyId) {
-      // }
-      if (userAuth?.id && selectedCompany?.id && item.data.userId && item.data.companyId) {
-        if (item.data.companyId !== selectedCompany?.id || item.data.userId !== userAuth?.id) {
+      if (pendingOCRListParams?.userId && pendingOCRListParams?.companyId) {
+        if (
+          item.data.companyId !== pendingOCRListParams?.companyId ||
+          item.data.userId !== pendingOCRListParams?.userId
+        ) {
           clearAllItems();
           return;
         }
@@ -424,18 +421,15 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         addPendingOCRHandler(item.data);
       }
     });
-
     setPendingOCRListFromBrowser(pendingOCRs);
-    // eslint-disable-next-line no-console
-    console.log('allItems in initPendingOCRList', allItems, 'pendingOCRs', pendingOCRs);
   };
 
-  // const updatePendingOCRParams = (userId: number, companyId: number) => {
-  //   setPendingOCRListParams({
-  //     userId,
-  //     companyId,
-  //   });
-  // };
+  const updatePendingOCRParams = (userId: number, companyId: number) => {
+    setPendingOCRListParams({
+      userId,
+      companyId,
+    });
+  };
 
   const initializeDB = async () => {
     try {
@@ -451,10 +445,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, []);
 
   useEffect(() => {
-    if (isDBReady) {
+    if (isDBReady && pendingOCRListParams?.userId && pendingOCRListParams?.companyId) {
       initPendingOCRList();
     }
-  }, [isDBReady, userAuth, selectedCompany]);
+  }, [pendingOCRListParams]);
 
   useEffect(() => {
     if (accountSuccess && accountTitleList) {
@@ -777,7 +771,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       pendingOCRList,
       pendingOCRListFromBrowser,
       excludeUploadIdentifier,
-      // updatePendingOCRParams,
+      updatePendingOCRParams,
     }),
     [
       OCRList,

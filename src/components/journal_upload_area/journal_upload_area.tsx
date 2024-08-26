@@ -31,6 +31,7 @@ const JournalUploadArea = () => {
     addPendingOCRHandler,
     deletePendingOCRHandler,
     pendingOCRListFromBrowser,
+    updatePendingOCRParams,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
@@ -69,12 +70,7 @@ const JournalUploadArea = () => {
     if (!userAuth?.id || !selectedCompany?.id) {
       return;
     }
-    const newItem = {
-      ...fileItem,
-      uploadIdentifier: '123',
-    };
     await addItem(fileItem.uploadIdentifier, fileItem);
-    await addItem('123', newItem);
   };
 
   const processFile = async (file: File) => {
@@ -149,9 +145,6 @@ const JournalUploadArea = () => {
     formData.append('publicKey', JSON.stringify(item.publicKey));
     formData.append('iv', Array.from(item.iv).join(','));
 
-    // eslint-disable-next-line no-console
-    console.log('formData in upload', formData);
-
     if (isNewPendingOCR) {
       addPendingOCRHandler(item);
     }
@@ -159,49 +152,24 @@ const JournalUploadArea = () => {
     uploadInvoice({ params: { companyId }, body: formData });
   };
 
-  // useEffect(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('pendingOCRList in JournalUploadArea in VERY FIRST TIME', pendingOCRList);
-  //   setPendingFileList(pendingOCRList);
-  // }, []);
+  useEffect(() => {
+    if (userAuth?.id && selectedCompany?.id) {
+      updatePendingOCRParams(userAuth?.id, selectedCompany?.id);
+    }
+  }, [userAuth, selectedCompany]);
 
   useEffect(() => {
-    if (!selectedCompany?.id) return;
+    if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
+
     pendingOCRListFromBrowser.forEach((item) => {
-      upload(item, selectedCompany?.id || -1, false);
+      upload(item, selectedCompany.id, false);
     });
-  }, [pendingOCRListFromBrowser, selectedCompany]);
+  }, [pendingOCRListFromBrowser]);
 
   useEffect(() => {
     if (uploadFile && selectedCompany) {
-      const formData = new FormData();
-
-      const item: FileInfo = {
-        name: uploadFile.name,
-        size: uploadFile.size,
-        type: uploadFile.type,
-        encryptedContent: uploadFile.encryptedContent,
-        uploadIdentifier: uploadFile.uploadIdentifier,
-        iv: uploadFile.iv,
-        timestamp: uploadFile.timestamp,
-        encryptedSymmetricKey: uploadFile.encryptedSymmetricKey,
-        publicKey: uploadFile.publicKey,
-        companyId: selectedCompany.id,
-        userId: userAuth?.id || -1,
-        file: uploadFile.file,
-      };
-
-      formData.append('image', item.file);
-      formData.append('imageSize', item.size);
-      formData.append('imageName', item.name);
-      formData.append('uploadIdentifier', item.uploadIdentifier);
-      formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
-      formData.append('publicKey', JSON.stringify(item.publicKey));
-      formData.append('iv', Array.from(item.iv).join(','));
-
-      addPendingOCRHandler(item);
-      // addPendingOCRHandler(uploadFile.name, uploadFile.size, uuid);
-      uploadInvoice({ params: { companyId: selectedCompany.id }, body: formData });
+      upload(uploadFile, selectedCompany?.id || -1, true);
+      setUploadFile(null);
     }
   }, [uploadFile]);
 
