@@ -7,8 +7,9 @@ import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
-import { deleteItem, getAllItems, initDB } from '@/lib/utils/indexed_db/ocr';
+import { clearAllItems, deleteItem, getAllItems, initDB } from '@/lib/utils/indexed_db/ocr';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
+import useStateRef from 'react-usestateref';
 
 interface IAccountingProvider {
   children: React.ReactNode;
@@ -126,6 +127,9 @@ interface IAccountingContext {
 
   deleteOwnAccountTitle: (companyId: number, id: number) => void;
   pendingOCRList: IOCRItem[];
+  pendingOCRListFromBrowser: IOCRItem[];
+  excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
+  // updatePendingOCRParams: (userId: number, companyId: number) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -175,6 +179,9 @@ const initialAccountingContext: IAccountingContext = {
 
   deleteOwnAccountTitle: () => {},
   pendingOCRList: [],
+  pendingOCRListFromBrowser: [],
+  excludeUploadIdentifier: () => [],
+  // updatePendingOCRParams: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -200,12 +207,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     data: deleteResult,
     success: deleteSuccess,
   } = APIHandler<IAccount>(APIName.DELETE_ACCOUNT_BY_ID);
-  const {
-    trigger: uploadInvoice,
-    data: uploadResults,
-    success: uploadSuccess,
-    code: uploadCode,
-  } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
 
   const [OCRListParams, setOCRListParams] = useState<
     { companyId: number; update: boolean } | undefined
@@ -239,6 +240,14 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [pendingOCRList, setPendingOCRList] = useState<IOCRItem[]>([]);
   const [isDBReady, setIsDBReady] = useState(false);
+  // const [pendingOCRListParams, setPendingOCRListParams, pendingOCRListParamsRef] = useStateRef<
+  //   | {
+  //       userId: number;
+  //       companyId: number;
+  //     }
+  //   | undefined
+  // >(undefined);
+  const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
 
   const getAccountListHandler = (
     companyId: number,
@@ -371,17 +380,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   );
 
   const addPendingOCRHandler = (item: IOCRItem) => {
-    // const ocr: IOCR = {
-    //   id: getTimestampNow(),
-    //   aichResultId: getTimestampNow().toString(),
-    //   imageName,
-    //   imageUrl: '',
-    //   progress: 0,
-    //   status: ProgressStatus.WAITING_FOR_UPLOAD,
-    //   imageSize,
-    //   createdAt: 0,
-    //   uploadIdentifier,
-    // };
     setPendingOCRList((prev) => {
       const rs = mergePendingOCRList([item], prev);
       return rs;
@@ -389,69 +387,55 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   };
 
   const deletePendingOCRHandler = (uploadIdentifier: string) => {
+    // Info: 刪除 IndexedDB 中的數據 (20240822 - Shirley)
+    deleteItem(uploadIdentifier);
     setPendingOCRList((prev) => {
       const rs = prev.filter((ocr) => ocr.uploadIdentifier !== uploadIdentifier);
       return rs;
     });
   };
 
+  // Info: (20240826 - Shirley) uploadIdentifier in ocrList need to be excluded from pendingOCRList
+  const excludeUploadIdentifier = useCallback((OCRs: IOCR[], pendingOCRs: IOCRItem[]) => {
+    const uploadIdentifierSet = new Set(OCRs.map((ocr) => ocr.uploadIdentifier));
+    const filteredPendingOCRList = pendingOCRs.filter((ocr) => {
+      const isUploaded = uploadIdentifierSet.has(ocr.uploadIdentifier);
+      if (isUploaded) {
+        deletePendingOCRHandler(ocr.uploadIdentifier);
+      }
+      return !isUploaded;
+    });
+    return filteredPendingOCRList;
+  }, []);
+
   const initPendingOCRList = async () => {
     const allItems = await getAllItems();
-    // const organizedItems = allItems.reduce((acc: Record<string, IOCRItem>, item) => {
-    //   acc[item.data.uploadIdentifier] = item.data;
-    //   return acc;
-    // }, {});
-    // const pendingOCRs = Object.values(organizedItems);
-    // pendingOCRs.forEach((item) => {
-    //   addPendingOCRHandler(item);
-    // });
+    const pendingOCRs: IOCRItem[] = [];
 
     allItems.forEach((item) => {
-      // eslint-disable-next-line no-console
-      console.log(
-        'item in initPendingOCRList',
-        item,
-        'userAuth',
-        userAuth,
-        'selectedCompany',
-        selectedCompany
-      );
-      if (userAuth?.id && item.data.companyId) {
-        if (item.data.companyId !== selectedCompany?.id) return;
-        if (item.data.userId !== userAuth?.id) return;
-
+      // if (pendingOCRListParamsRef.current?.userId && pendingOCRListParamsRef.current?.companyId) {
+      // }
+      if (userAuth?.id && selectedCompany?.id && item.data.userId && item.data.companyId) {
+        if (item.data.companyId !== selectedCompany?.id || item.data.userId !== userAuth?.id) {
+          clearAllItems();
+          return;
+        }
+        pendingOCRs.push(item.data);
         addPendingOCRHandler(item.data);
-        const formData = new FormData();
-        const encryptedFile = new File([item.data.encryptedContent], item.data.name, {
-          type: item.data.type,
-        });
-        formData.append('image', encryptedFile);
-        formData.append('imageSize', item.data.size);
-        formData.append('imageName', item.data.name);
-        formData.append('uploadIdentifier', item.data.uploadIdentifier);
-        formData.append('encryptedSymmetricKey', item.data.encryptedSymmetricKey);
-        formData.append('publicKey', JSON.stringify(item.data.publicKey));
-        formData.append('iv', Array.from(item.data.iv).join(','));
-        // eslint-disable-next-line no-console
-        console.log('formData in initPendingOCRList', formData);
-        uploadInvoice({ params: { companyId: item.data.companyId }, body: formData });
       }
     });
-    // eslint-disable-next-line no-console
-    console.log('allItems in initPendingOCRList', allItems);
 
-    // const pendingOCRs = allItems.map((item) => {
-    //   return {
-    //     id: item.id,
-    //     imageName: item.data.name,
-    //     imageSize: item.data.size,
-    //     uploadIdentifier: item.data.uploadIdentifier,
-    //   };
-    // });
-    // pendingOCRs.forEach((ocr) => {
-    //   addPendingOCRHandler(ocr);
-    // });
+    setPendingOCRListFromBrowser(pendingOCRs);
+    // eslint-disable-next-line no-console
+    console.log('allItems in initPendingOCRList', allItems, 'pendingOCRs', pendingOCRs);
   };
+
+  // const updatePendingOCRParams = (userId: number, companyId: number) => {
+  //   setPendingOCRListParams({
+  //     userId,
+  //     companyId,
+  //   });
+  // };
 
   const initializeDB = async () => {
     try {
@@ -479,71 +463,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [accountSuccess, accountTitleList]);
 
   useEffect(() => {
-    if (uploadSuccess && uploadResults) {
-      uploadResults.forEach(async (result) => {
-        // eslint-disable-next-line no-console
-        console.log('result in AccountingContext', result, 'uploadCode', uploadCode);
-        /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
-        // const translatedStatus = t(
-        //   `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
-        // );
-        if (
-          result.status === ProgressStatus.ALREADY_UPLOAD ||
-          result.status === ProgressStatus.SUCCESS ||
-          result.status === ProgressStatus.PAUSED ||
-          result.status === ProgressStatus.IN_PROGRESS
-        ) {
-          // toastHandler({
-          //   id: `uploadInvoice-${result.status}`,
-          //   content: translatedStatus,
-          //   closeable: true,
-          //   type: ToastType.SUCCESS,
-          // });
-          // setInvoiceIdHandler(result.aichResultId);
-          if (
-            result?.uploadIdentifier &&
-            result?.aichResultId &&
-            result?.imageName &&
-            result?.imageUrl &&
-            result?.imageSize
-          ) {
-            addOCRHandler(
-              result.aichResultId,
-              result.imageName,
-              result.imageUrl,
-              result.imageSize,
-              result.uploadIdentifier
-            );
-            deletePendingOCRHandler(result?.uploadIdentifier);
-            // Info: 刪除 IndexedDB 中的數據 (20240822 - Shirley)
-            await deleteItem(result?.uploadIdentifier);
-          }
-        } else {
-          // // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
-          // messageModalDataHandler({
-          //   title: 'Upload Invoice Failed',
-          //   content: `Upload invoice failed(${uploadCode}): ${result.status}`,
-          //   messageType: MessageType.ERROR,
-          //   submitBtnStr: t('COMMON.CLOSE'),
-          //   submitBtnFunction: () => messageModalVisibilityHandler(),
-          // });
-          // messageModalVisibilityHandler();
-        }
-      });
-    }
-    if (uploadSuccess === false) {
-      // messageModalDataHandler({
-      //   title: 'Upload Invoice Failed',
-      //   content: `Upload invoice failed(${uploadCode})`,
-      //   messageType: MessageType.ERROR,
-      //   submitBtnStr: t('COMMON.CLOSE'),
-      //   submitBtnFunction: () => messageModalVisibilityHandler(),
-      // });
-      // messageModalVisibilityHandler();
-    }
-  }, [uploadSuccess, uploadResults]);
-
-  useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
     if (OCRListParams && OCRListParams.update) {
       interval = setInterval(() => {
@@ -561,6 +480,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       }
       if (listSuccess && unprocessOCRs) {
         setOCRList((prevList) => mergeOCRLists(unprocessOCRs, prevList));
+        setPendingOCRList((prevList) => excludeUploadIdentifier(unprocessOCRs, prevList));
       }
       if (listSuccess === false) {
         setOCRListParams((prev) => (prev ? { ...prev, update: false } : prev));
@@ -855,6 +775,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       inputDescriptionHandler,
 
       pendingOCRList,
+      pendingOCRListFromBrowser,
+      excludeUploadIdentifier,
+      // updatePendingOCRParams,
     }),
     [
       OCRList,
@@ -880,6 +803,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       selectJournalHandler,
       inputDescription,
       pendingOCRList,
+      pendingOCRListFromBrowser,
     ]
   );
 
