@@ -14,8 +14,9 @@ import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/com
 import { encryptFile, exportPublicKey, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
 import { addItem, deleteItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
+import { IV_LENGTH } from '@/constants/config';
 
-interface FileInfo {
+interface FileInfo extends IOCRItem {
   file: File;
   name: string;
   size: string;
@@ -42,12 +43,12 @@ const JournalUploadArea = () => {
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
-  const generateKeyPairAndEncryptFile = async (fileArrayBuffer: ArrayBuffer) => {
+  const getPublicKeyAndEncryptFile = async (fileArrayBuffer: ArrayBuffer) => {
     // TODO: 暫時生成 RSA 密鑰對，但 public key 應該要從後端來 (20240822 - Shirley)
     const keyPair = await generateKeyPair();
     const publicKey = await exportPublicKey(keyPair.publicKey);
     // Info: 生成初始向量 (20240822 - Shirley)
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
 
     const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
       fileArrayBuffer,
@@ -58,38 +59,69 @@ const JournalUploadArea = () => {
     return { encryptedContent, encryptedSymmetricKey, publicKey, iv };
   };
 
-  const encryptFileAndSaveToIndexedDB = async (file: File) => {
+  const encryptFileAndSaveToIndexedDB = async (fileItem: IOCRItem) => {
     // Info: 檢查是否有使用者和公司資訊 (20240822 - Shirley)
     if (!userAuth?.id || !selectedCompany?.id) {
       return;
     }
 
-    const fileSize = transformBytesToFileSizeString(file.size);
+    // const fileSize = transformBytesToFileSizeString(fileItem.file.size);
 
     // Info: 讀取文件內容為 ArrayBuffer (20240822 - Shirley)
+    // const fileArrayBuffer = await file.arrayBuffer();
+    // const uuid = uuidv4();
+    // const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
+    //   await getPublicKeyAndEncryptFile(fileArrayBuffer);
+
+    // Info: 將加密後的文件數據存儲到 IndexedDB (20240822 - Shirley)
+    // const now = getTimestampNow();
+    // const id = uuid;
+    // const data: IOCRItem = {
+    //   name: file.name,
+    //   size: fileSize,
+    //   type: file.type,
+    //   encryptedContent,
+    //   timestamp: now,
+    //   uploadIdentifier: uuid,
+    //   encryptedSymmetricKey,
+    //   publicKey,
+    //   companyId: selectedCompany?.id || -1,
+    //   iv,
+    //   userId: userAuth?.id || -1,
+    // };
+
+    await addItem(fileItem.uploadIdentifier, fileItem);
+  };
+
+  const processFile = async (file: File) => {
+    const fileSize = transformBytesToFileSizeString(file.size);
     const fileArrayBuffer = await file.arrayBuffer();
     const uuid = uuidv4();
     const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
-      await generateKeyPairAndEncryptFile(fileArrayBuffer);
-
-    // Info: 將加密後的文件數據存儲到 IndexedDB (20240822 - Shirley)
+      await getPublicKeyAndEncryptFile(fileArrayBuffer);
     const now = getTimestampNow();
-    const id = uuid;
-    const data: IOCRItem = {
+    const encryptedFile = new File([encryptedContent], file.name, {
+      type: file.type,
+    });
+    const newItem: IOCRItem = {
       name: file.name,
       size: fileSize,
       type: file.type,
       encryptedContent,
-      timestamp: now,
       uploadIdentifier: uuid,
+      iv,
+      timestamp: now,
       encryptedSymmetricKey,
       publicKey,
       companyId: selectedCompany?.id || -1,
-      iv,
       userId: userAuth?.id || -1,
     };
-
-    await addItem(id, data);
+    const newFile: FileInfo = {
+      ...newItem,
+      file: encryptedFile,
+    };
+    setUploadFile(newFile);
+    encryptFileAndSaveToIndexedDB(newItem);
   };
 
   // Info: (20240711 - Julian) 處理上傳檔案
@@ -98,12 +130,28 @@ const JournalUploadArea = () => {
     const { files } = event.target;
     if (files && files.length > 0) {
       const file = files[0];
-      const fileSize = transformBytesToFileSizeString(file.size);
-      setUploadFile({
-        file,
-        name: file.name,
-        size: fileSize,
-      });
+      await processFile(file);
+
+      // const fileSize = transformBytesToFileSizeString(file.size);
+      // const fileArrayBuffer = await file.arrayBuffer();
+      // const uuid = uuidv4();
+      // const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
+      //   await getPublicKeyAndEncryptFile(fileArrayBuffer);
+      // const now = getTimestampNow();
+      // setUploadFile({
+      //   file,
+      //   name: file.name,
+      //   size: fileSize,
+      //   type: file.type,
+      //   encryptedContent,
+      //   uploadIdentifier: uuid,
+      //   iv,
+      //   timestamp: now,
+      //   encryptedSymmetricKey,
+      //   publicKey,
+      //   companyId: selectedCompany?.id || -1,
+      //   userId: userAuth?.id || -1,
+      // });
     }
   };
   // Info: (20240711 - Julian) 處理拖曳上傳檔案
@@ -116,32 +164,69 @@ const JournalUploadArea = () => {
     setIsDragOver(false);
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
-      const fileSize = transformBytesToFileSizeString(droppedFile.size);
-      setUploadFile({
-        file: droppedFile,
-        name: droppedFile.name,
-        size: fileSize,
-      });
+      // const fileSize = transformBytesToFileSizeString(droppedFile.size);
+      // const fileArrayBuffer = await droppedFile.arrayBuffer();
+      // const uuid = uuidv4();
+      // const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
+      //   await getPublicKeyAndEncryptFile(fileArrayBuffer);
+      // const now = getTimestampNow();
+      // setUploadFile({
+      //   file: droppedFile,
+      //   name: droppedFile.name,
+      //   size: fileSize,
+      //   type: droppedFile.type,
+      //   encryptedContent,
+      //   uploadIdentifier: uuid,
+      //   iv,
+      //   timestamp: now,
+      //   encryptedSymmetricKey,
+      //   publicKey,
+      //   companyId: selectedCompany?.id || -1,
+      //   userId: userAuth?.id || -1,
+      // });
+      await processFile(droppedFile);
       setIsDragOver(false);
 
-      encryptFileAndSaveToIndexedDB(droppedFile);
+      // encryptFileAndSaveToIndexedDB(droppedFile);
     }
   };
 
   useEffect(() => {
     if (uploadFile && selectedCompany) {
       const formData = new FormData();
-      const uuid = uuidv4();
-      formData.append('image', uploadFile.file);
-      formData.append('imageSize', uploadFile.size);
-      formData.append('imageName', uploadFile.name);
-      formData.append('uploadIdentifier', uuid);
+      // const encryptedFile = new File([uploadFile.encryptedContent], uploadFile.name, {
+      //   type: uploadFile.type,
+      // });
 
-      addPendingOCRHandler(uploadFile.name, uploadFile.size, uuid);
+      const item: FileInfo = {
+        name: uploadFile.name,
+        size: uploadFile.size,
+        type: uploadFile.type,
+        encryptedContent: uploadFile.encryptedContent,
+        uploadIdentifier: uploadFile.uploadIdentifier,
+        iv: uploadFile.iv,
+        timestamp: uploadFile.timestamp,
+        encryptedSymmetricKey: uploadFile.encryptedSymmetricKey,
+        publicKey: uploadFile.publicKey,
+        companyId: selectedCompany.id,
+        userId: userAuth?.id || -1,
+        file: uploadFile.file,
+      };
+
+      formData.append('image', item.file);
+      formData.append('imageSize', item.size);
+      formData.append('imageName', item.name);
+      formData.append('uploadIdentifier', item.uploadIdentifier);
+      formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
+      formData.append('publicKey', JSON.stringify(item.publicKey));
+      formData.append('iv', Array.from(item.iv).join(','));
+
+      addPendingOCRHandler(item);
+      // addPendingOCRHandler(uploadFile.name, uploadFile.size, uuid);
       uploadInvoice({ params: { companyId: selectedCompany.id }, body: formData });
     }
   }, [uploadFile]);
@@ -183,6 +268,9 @@ const JournalUploadArea = () => {
             deletePendingOCRHandler(result?.uploadIdentifier);
             // Info: 刪除 IndexedDB 中的數據 (20240822 - Shirley)
             await deleteItem(result?.uploadIdentifier);
+
+            // eslint-disable-next-line no-console
+            console.log('result in JournalUploadArea', result);
           }
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息

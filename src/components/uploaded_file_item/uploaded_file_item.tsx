@@ -12,15 +12,58 @@ interface IUploadedFileItemProps {
   pauseHandler: (id: number) => void;
   deleteHandler: (aichResultId: string) => void;
   clickHandler: (unprocessedJournal: IOCR) => void;
-  isPending?: boolean;
 }
+
+interface IPendingUploadedFileItemProps {
+  imageName: string;
+  imageSize: string;
+}
+
+export const PendingUploadedFileItem = ({
+  imageName,
+  imageSize,
+}: IPendingUploadedFileItemProps) => {
+  const truncatedFileName =
+    imageName.length > 20 ? `${imageName.slice(0, 5)}...${imageName.slice(-4)}` : imageName;
+
+  return (
+    <div
+      className={`relative inline-flex w-90vw flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 hover:cursor-pointer hover:border-slider-surface-bar disabled:hover:border-file-uploading-stroke-outline md:w-full`}
+    >
+      <div className="relative inline-flex w-full items-center gap-20px">
+        <Skeleton width={56} height={56} /> {/* Info: (20240814 - Shirley) 掃描動畫 */}
+        <Skeleton width={64} height={64} /> {/* Info: (20240814 - Shirley) 文件縮略圖 */}
+        <div className="flex shrink grow flex-col items-start">
+          <h3
+            className={`text-base font-semibold leading-normal tracking-tight text-file-uploading-text-primary`}
+          >
+            {truncatedFileName}
+          </h3>
+          <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
+            {imageSize}
+          </p>
+        </div>
+        <div className="absolute right-0 z-10 flex items-center gap-10px">
+          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 狀態圖標 */}
+          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 刪除按鈕 */}
+        </div>
+      </div>
+      <div className="inline-flex w-full items-center gap-16px">
+        <Skeleton width={150} height={20} /> {/* Info: (20240814 - Shirley) AI 識別文字 */}
+        <div className="relative h-5px flex-1 rounded-full">
+          <Skeleton width={100} height={5} /> {/* Info: (20240814 - Shirley) 進度條 */}
+        </div>
+        <Skeleton width={40} height={16} /> {/* Info: (20240814 - Shirley) 進度百分比 */}
+      </div>
+    </div>
+  );
+};
 
 const UploadedFileItem = ({
   itemData,
   pauseHandler,
   deleteHandler,
   clickHandler,
-  isPending = false,
 }: IUploadedFileItemProps) => {
   const { t } = useTranslation('common');
   const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
@@ -72,37 +115,7 @@ const UploadedFileItem = ({
 
   const displayedProgress = progress === 100 ? t('PROJECT.COMPLETED') : `${progress}%`;
 
-  const displayedFileItem = isPending ? (
-    <div
-      className={`relative inline-flex w-90vw flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 hover:cursor-pointer hover:border-slider-surface-bar disabled:hover:border-file-uploading-stroke-outline md:w-full`}
-    >
-      <div className="relative inline-flex w-full items-center gap-20px">
-        <Skeleton width={56} height={56} /> {/* Info: (20240814 - Shirley) 掃描動畫 */}
-        <Skeleton width={64} height={64} /> {/* Info: (20240814 - Shirley) 文件縮略圖 */}
-        <div className="flex shrink grow flex-col items-start">
-          <h3
-            className={`text-base font-semibold leading-normal tracking-tight text-file-uploading-text-primary`}
-          >
-            {truncatedFileName}
-          </h3>
-          <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
-            {imageSize}
-          </p>
-        </div>
-        <div className="absolute right-0 z-10 flex items-center gap-10px">
-          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 狀態圖標 */}
-          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 刪除按鈕 */}
-        </div>
-      </div>
-      <div className="inline-flex w-full items-center gap-16px">
-        <Skeleton width={150} height={20} /> {/* Info: (20240814 - Shirley) AI 識別文字 */}
-        <div className="relative h-5px flex-1 rounded-full">
-          <Skeleton width={100} height={5} /> {/* Info: (20240814 - Shirley) 進度條 */}
-        </div>
-        <Skeleton width={40} height={16} /> {/* Info: (20240814 - Shirley) 進度百分比 */}
-      </div>
-    </div>
-  ) : (
+  const displayedFileItem = (
     <div
       // Info: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
       onClick={itemClickHandler}
