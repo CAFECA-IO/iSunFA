@@ -30,7 +30,7 @@ const stageNameMap: StageNameMap = {
 };
 
 const ProjectPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('project');
 
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();

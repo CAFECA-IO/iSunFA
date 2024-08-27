@@ -126,7 +126,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('PROJECT.CONTRACT_LIST')}
+              {t('project:PROJECT.CONTRACT_LIST')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Accounting Journal */}
@@ -154,7 +154,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('PROJECT.ACCOUNTING_JOURNAL')}
+              {t('project:PROJECT.ACCOUNTING_JOURNAL')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Analysis Reports */}
@@ -202,7 +202,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('PROJECT.PROJECT_SETTING')}
+              {t('project:PROJECT.PROJECT_SETTING')}
             </p>
           </Link>
         </div>

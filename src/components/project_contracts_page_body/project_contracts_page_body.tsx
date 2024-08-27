@@ -177,7 +177,7 @@ const ProjectContractsPageBody = () => {
       <div className="hidden w-full items-end gap-x-24px gap-y-40px md:flex">
         {/* Info: (20240618 - Julian) Status filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('PROJECT.STATUS')}</p>
+          <p className="font-semibold text-input-text-primary">{t('project:PROJECT.STATUS')}</p>
           <div
             ref={statusRef}
             onClick={statusClickHandler}

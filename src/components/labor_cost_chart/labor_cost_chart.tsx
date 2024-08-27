@@ -288,7 +288,7 @@ const LaborCostChart = () => {
     <div className="flex w-full flex-col items-center justify-between gap-5 font-barlow lg:flex-row lg:items-start lg:gap-0">
       <div className="mt-3 lg:mt-10">
         <p className="font-semibold text-text-brand-secondary-lv1">
-          {t('LABOR_COST_CHART.ONBOARDING_PROJECTS')}
+          {t('salary:LABOR_COST_CHART.ONBOARDING_PROJECTS')}
         </p>
       </div>
       <div className="lg:mr-10">
@@ -302,7 +302,7 @@ const LaborCostChart = () => {
         >
           <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
           <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
-            {t('PROJECT.NO_DATA')}
+            {t('project:PROJECT.NO_DATA')}
           </text>
         </svg>
       </div>
@@ -311,7 +311,7 @@ const LaborCostChart = () => {
     <div className="relative">
       {' '}
       <div className="absolute left-1/2 top-5 w-150px -translate-x-1/2 text-center font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
-        {t('LABOR_COST_CHART.ONBOARDING_PROJECTS')}
+        {t('salary:LABOR_COST_CHART.ONBOARDING_PROJECTS')}
       </div>
       <div className="ml-0 flex pt-16 max-md:ml-0 md:pt-0 lg:pt-5">
         <PieChart data={data} />
@@ -361,13 +361,13 @@ const LaborCostChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>{t('LABOR_COST_CHART.LABOR_COST')}</p>
+              <p>{t('salary:LABOR_COST_CHART.LABOR_COST')}</p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

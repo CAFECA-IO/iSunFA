@@ -89,7 +89,7 @@ const ProfileUploadModal = ({
       messageType: MessageType.ERROR,
       title: t('PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
       content: `${t('PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
-      submitBtnStr: t('PROJECT.OK'),
+      submitBtnStr: t('project:PROJECT.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();

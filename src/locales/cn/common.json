@@ -303,15 +303,6 @@
     "REPORT_TYPE": "报告类型",
     "ATTENTION": "注意：产生报告大约需要 30 到 40 分钟。完成后，它将存储在“我的报告”中。感谢您的耐心等待。"
   },
-  "SALARY": {
-    "SALARY": "薪资",
-    "EMPLOYEES_LIST": "员工名单",
-    "SALARY_LIST": "薪资簿",
-    "ADD_NEW_EMPLOYEE": "新增员工",
-    "ONE_CLICK_REMOVAL": "一键删除",
-    "EMPTY": "无资料",
-    "SALARY_ISUNFA": "薪资 - iSunFA"
-  },
   "COMMON": {
     "OF": "之",
     "ISUNFA_TRIAL_VERSION": "iSunFA 试用版",
@@ -332,50 +323,6 @@
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意信息收集声明",
     "AGREE_WITH_TOS_N_PP": "同意服务条款和隐私政策",
     "ALPHA_TEST_REMINDER": "Alpha 版本的资料只用于测试"
-  },
-  "PROJECT": {
-    "CHOOSE_TEAM_MEMBERS": "选择团队成员",
-    "DEVELOPMENT_DEPARTMENT": "开发部",
-    "ADD_NEW_PROJECT": "新增项目",
-    "EDIT_PROJECT_INFORMATION": "编辑项目资讯",
-    "PROJECT_NAME": "专案名称",
-    "STAGE": "阶段",
-    "TEAM_MEMBERS": "团队成员",
-    "ADD": "新增",
-    "SEARCH_PROJECT": "搜寻项目",
-    "INCOME": "收入",
-    "EXPENSE": "费用",
-    "PROFIT": "利润",
-    "STATUS": "状态",
-    "DAYS": "天",
-    "MILESTONE": "里程碑",
-    "MONTHLY_SALES": "每月销售额",
-    "REMAINING": "剩余的",
-    "COMPLETED": "已完成",
-    "PROJECT_STAGE_CHART": "专案阶段图",
-    "TOOLTIP_MESSAGE": "当游标位于图形使用者介面中的图示、图像、超连结或其他元素上时出现的讯息。",
-    "NO_DATA": "没有数据",
-    "INCOME_VS_EXPENSE": "收入与支出",
-    "INCOME_VS_EXPENSE_COMPARISON_GRAPH": "收入与支出比较图",
-    "CONTRACT_LIST": "合约清单",
-    "ACCOUNTING_JOURNAL": "日记帐",
-    "PROJECT_SETTING": "项目设定",
-    "THAN_LAST_YEAR": "比去年",
-    "PROJECT_VALUE": "专案价值",
-    "TOTAL_REVENUE": "总收入",
-    "IN_30_DAYS": "30天内",
-    "TOTAL_EXPENSES": "总费用",
-    "NET_PROFIT": "净利",
-    "ADD_PROJECT": "新增项目",
-    "PROJECT_WISE": "专案方面",
-    "FINANCIAL_OVERVIEW": "财务概览",
-    "INCOME_VS_EXPENDITURE": "收入与支出",
-    "PROJECT_REPORT": "项目报告",
-    "PROJECT_LIST_ISUNFA": "项目清单 - iSunFA",
-    "NAME_YOUR_PROJECT": "为您的项目命名",
-    "ENTER_NEW_PROJECT_NAME": "输入新项目名称",
-    "OVERALL": "全部",
-    "OK": "好"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
@@ -404,11 +351,6 @@
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "选择要新增或删除的书签",
     "SAVE": "保存",
     "PLEASE_SELECT_BOOKMARKS": "请选择书签"
-  },
-  "LABOR_COST_CHART": {
-    "ONBOARDING_PROJECTS": "入职项目",
-    "LABOR_COST": "劳动成本",
-    "WORKING_TIME_RATIO": "工作时间比例"
   },
   "LOADING_MODAL": {
     "LOADING": "正在加载中，请稍等..."
@@ -448,10 +390,6 @@
     "UPLOAD_FAILED": "上传失败",
     "PLEASE_TRY_LATER": "请稍后再试。错误代码："
   },
-  "PROFIT_TREND_CHART": {
-    "PROFIT_STATUS_TREND_CHART": "获利状况趋势图",
-    "WEEK": "星期"
-  },
   "WEEKDAY_TITLE_JSON": {
     "SUN": "日",
     "MON": "一",
@@ -460,15 +398,6 @@
     "THU": "四",
     "FRI": "五",
     "SAT": "六"
-  },
-  "STAGE_NAME_MAP": {
-    "ALL": "全部",
-    "DESIGNING": "设计中",
-    "DEVELOPING": "开发中",
-    "BETA_TESTING": "测试中",
-    "SELLING": "销售中",
-    "SOLD": "已销售",
-    "ARCHIVED": "已归档"
   },
   "ROLE": {
     "SUPER_ADMIN": "最终管理员",
@@ -499,46 +428,6 @@
     "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
     "BROWSE": "浏览",
     "MAXIMUM_SIZE": "最大档案大小：50MB"
-  },
-  "SETTING": {
-    "PERSONAL_SETTING": "个人设置",
-    "COMPANY_SETTING": "公司设置",
-    "BASIC_INFO": "基本信息",
-    "ACCOUNTING_TITLE": "会计科目",
-    "TRADING_PARTNER_LIST": "交易伙伴名单",
-    "ADMINISTRATOR": "管理人",
-    "SUBSCRIPTION_BILLS": "订阅及账单",
-    "ACCOUNTING_TITLE_MANAGEMENT": "会计科目管理",
-    "ASSETS": "资产",
-    "LIABILITY": "负债",
-    "EQUITY": "权益",
-    "ALL": "全部",
-    "ASSET": "资产",
-    "INCOME": "收入",
-    "EXPENSE": "费用",
-    "CURRENT": "流动",
-    "NON_CURRENT": "非流动",
-    "ENTER_NAME": "输入科目名称",
-    "FAVORITE_ACCOUNTING_TITLE": "最喜欢的会计科目",
-    "MY_NEW_ACCOUNTING_TITLE": "我的新会计科目",
-    "NAME": "科目名称",
-    "CODE_NAME": "科目编号和名称",
-    "CODE": "科目编号",
-    "ACTION": "操作",
-    "ADD_NEW_ACCOUNTING_TITLE": "新增会计科目",
-    "ACCOUNTING_TYPE": "科目类型",
-    "LIQUIDITY": "流动/非流动",
-    "CURRENT_ASSET": "流动资产",
-    "ADD_NEW_SUB": "新增子科目",
-    "FAVORITE": "我的最爱",
-    "EDIT": "编辑",
-    "REMOVE": "移除",
-    "SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT": "子科目创建成功:{{name}} ",
-    "FAILED_TO_CREATE_NEW_SUB_ACCOUNT": "创建子科目失败，请稍后重试。",
-    "EDIT_MY_NEW_ACCOUNTING_TITLE": "编辑会计科目",
-    "CURRENT_LIQUIDITY": "流动/非流动",
-    "REMOVE_ACCOUNTING_TITLE": "删除会计科目",
-    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？"
   },
   "META": {
     "TITLE": "iSunFA",

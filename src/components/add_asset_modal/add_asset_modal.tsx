@@ -317,7 +317,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               variant="tertiary"
               disabled={isAddButtonDisabled}
             >
-              <p>{t('PROJECT.ADD')}</p> <FaPlus />
+              <p>{t('project:PROJECT.ADD')}</p> <FaPlus />
             </Button>
           </div>
         </form>

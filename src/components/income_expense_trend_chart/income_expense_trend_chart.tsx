@@ -374,15 +374,15 @@ const IncomeExpenseTrendChart = () => {
                 ></path>
               </svg>
               <p>
-                {t('PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
-                {t('PROJECT.INCOME_VS_EXPENDITURE')})
+                {t('project:PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
+                {t('project:PROJECT.INCOME_VS_EXPENDITURE')})
               </p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

@@ -22,7 +22,7 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 // Info: (2024709 - Anna) 定義傳票類型到翻譯鍵值的映射
 const eventTypeMap: { [key in EventType]: string } = {
   [EventType.PAYMENT]: 'journal:JOURNAL.PAYMENT',
-  [EventType.INCOME]: 'PROJECT.INCOME',
+  [EventType.INCOME]: 'project:PROJECT.INCOME',
   [EventType.TRANSFER]: 'journal:JOURNAL.TRANSFER',
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];

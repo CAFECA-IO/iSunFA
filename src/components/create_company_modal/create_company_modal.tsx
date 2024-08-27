@@ -36,7 +36,7 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();

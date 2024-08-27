@@ -1,0 +1,16 @@
+{
+  "SALARY": {
+    "SALARY": "Salary",
+    "EMPLOYEES_LIST": "Employees List",
+    "SALARY_LIST": "Salary List",
+    "ADD_NEW_EMPLOYEE": "Add New Employee",
+    "ONE_CLICK_REMOVAL": "One-Click Removal",
+    "EMPTY": "Empty",
+    "SALARY_ISUNFA": "Salary - iSunFA"
+  },
+  "LABOR_COST_CHART": {
+    "ONBOARDING_PROJECTS": "Onboarding Projects",
+    "LABOR_COST": "Labor cost",
+    "WORKING_TIME_RATIO": "Working Time Ratio"
+  }
+}

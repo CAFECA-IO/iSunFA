@@ -80,7 +80,7 @@ const AddAccountTitleModal = ({
         id: `createSubAccount-${createCode}`,
         type: ToastType.SUCCESS,
         // Info: (20240805 - Anna) content: `Successfully created new sub account: ${result.name}`,
-        content: t('SETTING.SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT', { name: result.name }),
+        content: t('setting:SETTING.SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT', { name: result.name }),
         closeable: true,
       });
     } else if (createSuccess === false) {
@@ -88,7 +88,7 @@ const AddAccountTitleModal = ({
         id: `createSubAccount-${createCode}`,
         type: ToastType.ERROR,
         // Info: (20240805 - Anna) content: 'Failed to create new sub account, please try again later.',
-        content: t('SETTING.FAILED_TO_CREATE_NEW_SUB_ACCOUNT'),
+        content: t('setting:SETTING.FAILED_TO_CREATE_NEW_SUB_ACCOUNT'),
         closeable: true,
       });
     }
@@ -140,7 +140,9 @@ const AddAccountTitleModal = ({
       id="input-accounting-type"
       type="text"
       // Info: (20240805 - Anna) value={accountingType}
-      value={t(`SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
+      value={t(
+        `setting:SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+      )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -153,7 +155,9 @@ const AddAccountTitleModal = ({
       id="input-liquidity"
       type="text"
       // Info: (20240805 - Anna) value={liquidityText}
-      value={t(`SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
+      value={t(
+        `setting:SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+      )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -178,7 +182,7 @@ const AddAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          <h1>{t('SETTING.ADD_NEW_ACCOUNTING_TITLE')}</h1>
+          <h1>{t('setting:SETTING.ADD_NEW_ACCOUNTING_TITLE')}</h1>
           <button
             type="button"
             onClick={modalVisibilityHandler}
@@ -195,14 +199,14 @@ const AddAccountTitleModal = ({
               Accounting Type
             </p> */}
             <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              {t('SETTING.ACCOUNTING_TYPE')}
+              {t('setting:SETTING.ACCOUNTING_TYPE')}
             </p>
             {displayType}
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
             <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              {t('SETTING.LIQUIDITY')}
+              {t('setting:SETTING.LIQUIDITY')}
             </p>
             {displayLiquidity}
           </div>
@@ -212,14 +216,14 @@ const AddAccountTitleModal = ({
               Current Asset
             </p> */}
             <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              {t('SETTING.CURRENT_ASSET')}
+              {t('setting:SETTING.CURRENT_ASSET')}
             </p>
             {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
             <p className="text-sm font-semibold text-input-text-primary lg:text-base">
-              {t('SETTING.NAME')}
+              {t('setting:SETTING.NAME')}
             </p>
             <input
               id="input-name"
@@ -227,7 +231,7 @@ const AddAccountTitleModal = ({
               value={nameValue}
               onChange={handleNameChange}
               // Info: (20240805 - Anna) placeholder="Enter name"
-              placeholder={t('SETTING.ENTER_NAME')}
+              placeholder={t('setting:SETTING.ENTER_NAME')}
               required
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
@@ -245,7 +249,7 @@ const AddAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={addNewSubAccount}
           >
-            <p>{t('PROJECT.ADD')}</p> <FaPlus />
+            <p>{t('project:PROJECT.ADD')}</p> <FaPlus />
           </Button>
         </div>
       </div>

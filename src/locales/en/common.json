@@ -303,15 +303,6 @@
     "REPORT_TYPE": "Report Type",
     "ATTENTION": "Attention: The report will take approximately 30 to 40 minutes to generate. Once completed, it will be stored in \"My Reports.\" Please check back later. Thank you for your patience."
   },
-  "SALARY": {
-    "SALARY": "Salary",
-    "EMPLOYEES_LIST": "Employees List",
-    "SALARY_LIST": "Salary List",
-    "ADD_NEW_EMPLOYEE": "Add New Employee",
-    "ONE_CLICK_REMOVAL": "One-Click Removal",
-    "EMPTY": "Empty",
-    "SALARY_ISUNFA": "Salary - iSunFA"
-  },
   "COMMON": {
     "OF": "of",
     "ISUNFA_TRIAL_VERSION": "iSunFA Trial Version",
@@ -332,50 +323,6 @@
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "Agree with the Information Collection Statement",
     "AGREE_WITH_TOS_N_PP": "Agree with Terms of Service & Privacy Policy",
     "ALPHA_TEST_REMINDER": "The data used in the Alpha version is for testing purposes only."
-  },
-  "PROJECT": {
-    "CHOOSE_TEAM_MEMBERS": "Choose Team Members",
-    "DEVELOPMENT_DEPARTMENT": "Development department",
-    "ADD_NEW_PROJECT": "Add New Project",
-    "EDIT_PROJECT_INFORMATION": "Edit Project Information",
-    "PROJECT_NAME": "Project Name",
-    "STAGE": "Stage",
-    "TEAM_MEMBERS": "Team Members",
-    "ADD": "Add",
-    "SEARCH_PROJECT": "Search Project",
-    "INCOME": "Income",
-    "EXPENSE": "Expense",
-    "PROFIT": "Profit",
-    "STATUS": "Status",
-    "DAYS": "Days",
-    "MILESTONE": "Milestone",
-    "MONTHLY_SALES": "Monthly Sales",
-    "REMAINING": "Remaining",
-    "COMPLETED": "Completed",
-    "PROJECT_STAGE_CHART": "Project Stage Chart",
-    "TOOLTIP_MESSAGE": "A message which appears when a cursor is positioned over an icon, image, hyperlink, or other element in a graphical user interface.",
-    "NO_DATA": "No Data",
-    "INCOME_VS_EXPENSE": "Income vs. Expense",
-    "INCOME_VS_EXPENSE_COMPARISON_GRAPH": "Income vs. Expense Comparison Graph",
-    "CONTRACT_LIST": "Contract List",
-    "ACCOUNTING_JOURNAL": "Accounting Journal",
-    "PROJECT_SETTING": "Project Setting",
-    "THAN_LAST_YEAR": "than last year",
-    "PROJECT_VALUE": "Project Value",
-    "TOTAL_REVENUE": "Total Revenue",
-    "IN_30_DAYS": "In 30 Days",
-    "TOTAL_EXPENSES": "Total Expenses",
-    "NET_PROFIT": "Net Profit",
-    "ADD_PROJECT": "Add Project",
-    "PROJECT_WISE": "Project-wise",
-    "FINANCIAL_OVERVIEW": "Financial Overview",
-    "INCOME_VS_EXPENDITURE": "Income vs. Expenditure",
-    "PROJECT_REPORT": "Project Report",
-    "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
-    "NAME_YOUR_PROJECT": "Name your project",
-    "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
-    "OVERALL": "Overall",
-    "OK": "OK"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
@@ -404,11 +351,6 @@
     "SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE": "Select a bookmark to add or remove.",
     "SAVE": "Save",
     "PLEASE_SELECT_BOOKMARKS": "Please select bookmarks"
-  },
-  "LABOR_COST_CHART": {
-    "ONBOARDING_PROJECTS": "Onboarding Projects",
-    "LABOR_COST": "Labor cost",
-    "WORKING_TIME_RATIO": "Working Time Ratio"
   },
   "LOADING_MODAL": {
     "LOADING": "It is loading, please wait..."
@@ -448,10 +390,6 @@
     "UPLOAD_FAILED": "Upload failed",
     "PLEASE_TRY_LATER": "Please try again later. Error code:"
   },
-  "PROFIT_TREND_CHART": {
-    "PROFIT_STATUS_TREND_CHART": "Profit Status Trend Chart",
-    "WEEK": "Week"
-  },
   "WEEKDAY_TITLE_JSON": {
     "SUN": "S",
     "MON": "M",
@@ -460,15 +398,6 @@
     "THU": "T",
     "FRI": "F",
     "SAT": "S"
-  },
-  "STAGE_NAME_MAP": {
-    "ALL": "All",
-    "DESIGNING": "Designing",
-    "DEVELOPING": "Developing",
-    "BETA_TESTING": "Beta Testing",
-    "SELLING": "Selling",
-    "SOLD": "Sold",
-    "ARCHIVED": "Archived"
   },
   "ROLE": {
     "SUPER_ADMIN": "Super Admin",
@@ -499,46 +428,6 @@
     "DROP_YOUR_FILES_HERE_OR": "Drop your files here or ",
     "BROWSE": "Browse",
     "MAXIMUM_SIZE": "Maximum size: 50MB"
-  },
-  "SETTING": {
-    "PERSONAL_SETTING": "Personal Setting",
-    "COMPANY_SETTING": "Company Setting",
-    "BASIC_INFO": "Basic Info",
-    "ACCOUNTING_TITLE": "Accounting Title",
-    "TRADING_PARTNER_LIST": "Trading Partner List",
-    "ADMINISTRATOR": "Administrator",
-    "SUBSCRIPTION_BILLS": "Subscription&Bills",
-    "ACCOUNTING_TITLE_MANAGEMENT": "Accounting Title Management",
-    "ASSETS": "Assets",
-    "LIABILITY": "Liability",
-    "EQUITY": "Equity",
-    "ALL": "All",
-    "ASSET": "Asset",
-    "INCOME": "Income",
-    "EXPENSE": "Expense",
-    "CURRENT": "Current",
-    "NON_CURRENT": "Non-Current",
-    "ENTER_NAME": "Enter name",
-    "FAVORITE_ACCOUNTING_TITLE": "Favorite Accounting Title",
-    "MY_NEW_ACCOUNTING_TITLE": "My new accounting title",
-    "NAME": "Name",
-    "CODE_NAME": "Code & Name",
-    "CODE": "Code",
-    "ACTION": "Action",
-    "ADD_NEW_ACCOUNTING_TITLE": "Add New Accounting Title",
-    "ACCOUNTING_TYPE": "Accounting Type",
-    "LIQUIDITY": "Liquidity",
-    "CURRENT_ASSET": "Current Asset",
-    "ADD_NEW_SUB": "Add New Sub",
-    "FAVORITE": "Favorite",
-    "EDIT": "Edit",
-    "REMOVE": "Remove",
-    "SUCCESSFULLY_CREATED_NEW_SUB_ACCOUNT": "Successfully created new sub account:{{name}} ",
-    "FAILED_TO_CREATE_NEW_SUB_ACCOUNT": "Failed to create new sub account, please try again later.",
-    "EDIT_MY_NEW_ACCOUNTING_TITLE": "Edit My New Accounting Title",
-    "CURRENT_LIQUIDITY": "Current Liquidity",
-    "REMOVE_ACCOUNTING_TITLE": "Remove Accounting Title",
-    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "Are you sure you want to remove this accounting title?"
   },
   "META": {
     "TITLE": "iSunFA",

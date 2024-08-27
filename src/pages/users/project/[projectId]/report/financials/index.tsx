@@ -23,7 +23,7 @@ const ProjectFinancialsReportsPage = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t('PROJECT.PROJECT_REPORT')} {reportId} - iSunFA
+          {t('project:PROJECT.PROJECT_REPORT')} {reportId} - iSunFA
         </title>
       </Head>
 

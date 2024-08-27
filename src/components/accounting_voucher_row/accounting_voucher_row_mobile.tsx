@@ -172,7 +172,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px uppercase text-dropdown-text-head">
-          {t('SETTING.ASSETS')}
+          {t('setting:SETTING.ASSETS')}
         </div>
         <div
           ref={accountingRef}

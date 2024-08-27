@@ -22,7 +22,7 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';
 
 const CompanyInfoPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
 
   const router = useRouter();
   const { isAuthLoading, selectedCompany, selectCompany } = useUserCtx();

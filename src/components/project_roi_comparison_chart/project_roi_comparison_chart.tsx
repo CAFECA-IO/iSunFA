@@ -410,10 +410,10 @@ const ProjectRoiComparisonChart = () => {
                 ></path>
               </svg>
               <p className="text-base lg:text-sm xl:text-base">
-                {t('PROJECT.PROJECT_WISE')} <br className="lg:hidden" />
-                <span className="lg:hidden">{t('PROJECT.INCOME_VS_EXPENSE')}</span>
+                {t('project:PROJECT.PROJECT_WISE')} <br className="lg:hidden" />
+                <span className="lg:hidden">{t('project:PROJECT.INCOME_VS_EXPENSE')}</span>
                 <span className="hidden lg:inline">
-                  {t('PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
+                  {t('project:PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
                 </span>
               </p>
             </div>
@@ -421,7 +421,7 @@ const ProjectRoiComparisonChart = () => {
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

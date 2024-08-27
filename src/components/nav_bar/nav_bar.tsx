@@ -163,7 +163,7 @@ const NavBar = () => {
           className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
         > */}
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
-        <p>{t('SALARY.SALARY')}</p>
+        <p>{t('salary:SALARY.SALARY')}</p>
         {/* </Link> */}
       </button>
       <Link
@@ -289,7 +289,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px"
         > */}
         <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
-        <p>{t('SALARY.SALARY')}</p>
+        <p>{t('salary:SALARY.SALARY')}</p>
         {/* </Link> */}
       </button>
       {/* Info: (20240416 - Julian) Report button */}

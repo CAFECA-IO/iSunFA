@@ -45,7 +45,7 @@ interface AccountTitleMap {
 }
 
 export const accountTitleMap: AccountTitleMap = {
-  Income: 'PROJECT.INCOME',
+  Income: 'project:PROJECT.INCOME',
   Payment: 'journal:JOURNAL.PAYMENT',
   Transfer: 'journal:JOURNAL.TRANSFER',
 };

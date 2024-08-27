@@ -223,7 +223,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {DUMMY_PROJECTS_MAP[selectedProjectName].name === 'Overall'
-              ? t('PROJECT.OVERALL')
+              ? t('project:PROJECT.OVERALL')
               : DUMMY_PROJECTS_MAP[selectedProjectName].name}
           </div>
 
@@ -328,7 +328,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                       {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('PROJECT.OVERALL')
+                        ? t('project:PROJECT.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>

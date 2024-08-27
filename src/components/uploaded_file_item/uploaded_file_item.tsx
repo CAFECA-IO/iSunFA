@@ -113,7 +113,7 @@ const UploadedFileItem = ({
     </button>
   );
 
-  const displayedProgress = progress === 100 ? t('PROJECT.COMPLETED') : `${progress}%`;
+  const displayedProgress = progress === 100 ? t('project:PROJECT.COMPLETED') : `${progress}%`;
 
   const displayedFileItem = (
     <div

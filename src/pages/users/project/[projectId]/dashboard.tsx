@@ -33,19 +33,19 @@ interface StageNameMap {
 }
 
 const stageNameMap: StageNameMap = {
-  Designing: 'STAGE_NAME_MAP.DESIGNING',
-  Developing: 'STAGE_NAME_MAP.DEVELOPING',
-  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
-  Selling: 'STAGE_NAME_MAP.SELLING',
-  Sold: 'STAGE_NAME_MAP.SOLD',
-  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+  Designing: 'project:STAGE_NAME_MAP.DESIGNING',
+  Developing: 'project:STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'project:STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'project:STAGE_NAME_MAP.SELLING',
+  Sold: 'project:STAGE_NAME_MAP.SOLD',
+  Archived: 'project:STAGE_NAME_MAP.ARCHIVED',
 };
 interface IProjectDashboardPageProps {
   projectId: string;
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -169,7 +169,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
               </div>
               {/* Info: (20240612 - Julian) stage selection (desktop) */}
               <div className="hidden flex-col items-start gap-y-8px md:flex">
-                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+                <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
@@ -184,7 +184,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             <hr className="my-24px border border-divider-stroke-lv-4" />
             {/* Info: (20240612 - Julian) stage selection (mobile) */}
             <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
-              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+              <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}

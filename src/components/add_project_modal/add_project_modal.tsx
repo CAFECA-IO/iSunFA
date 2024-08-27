@@ -23,22 +23,22 @@ interface StageNameMap {
 }
 
 const stageNameMap: StageNameMap = {
-  Designing: 'STAGE_NAME_MAP.DESIGNING',
-  Developing: 'STAGE_NAME_MAP.DEVELOPING',
-  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
-  Selling: 'STAGE_NAME_MAP.SELLING',
-  Sold: 'STAGE_NAME_MAP.SOLD',
-  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+  Designing: 'project:STAGE_NAME_MAP.DESIGNING',
+  Developing: 'project:STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'project:STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'project:STAGE_NAME_MAP.SELLING',
+  Sold: 'project:STAGE_NAME_MAP.SOLD',
+  Archived: 'project:STAGE_NAME_MAP.ARCHIVED',
 };
 
 // Info: (2024704 - Anna) 反向映射，用於從翻譯值回到原始名稱，讓篩選時可以比對
 // const stageNameMapReverse: { [key: string]: ProjectStage } = {
-//   'STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
-//   'STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
-//   'STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
-//   'STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
-//   'STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
-//   'STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
+//   'project:STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
+//   'project:STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
+//   'project:STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
+//   'project:STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
+//   'project:STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
+//   'project:STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
 // };
 
 interface IAddProjectModalProps {
@@ -52,7 +52,7 @@ const AddProjectModal = ({
   modalVisibilityHandler,
   defaultStage,
 }: IAddProjectModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
@@ -138,7 +138,7 @@ const AddProjectModal = ({
         content: 'Create project failed, please try again later.',
         subMsg: `Error code: ${code}`,
         submitBtnFunction: messageModalVisibilityHandler,
-        submitBtnStr: t('PROJECT.OK'),
+        submitBtnStr: t('project:PROJECT.OK'),
       });
     }
   }, [createSuccess, data]);
@@ -189,7 +189,7 @@ const AddProjectModal = ({
       })
     ) : (
       <p className="text-left text-input-text-input-placeholder">
-        {t('PROJECT.CHOOSE_TEAM_MEMBERS')}
+        {t('project:PROJECT.CHOOSE_TEAM_MEMBERS')}
       </p>
     );
 
@@ -245,7 +245,7 @@ const AddProjectModal = ({
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-          {t('PROJECT.DEVELOPMENT_DEPARTMENT')}
+          {t('project:PROJECT.DEVELOPMENT_DEPARTMENT')}
         </div>
         {/* Info: (20240611 - Julian) member list */}
         <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
@@ -262,10 +262,10 @@ const AddProjectModal = ({
         <div className="flex flex-col items-start gap-2px whitespace-nowrap border-b px-20px pb-20px">
           {/* Info: (20240611 - Julian) desktop title */}
           <h1 className="text-xl font-bold text-card-text-primary">
-            {t('PROJECT.ADD_NEW_PROJECT')}
+            {t('project:PROJECT.ADD_NEW_PROJECT')}
           </h1>
           <p className="text-xs text-card-text-secondary">
-            {t('PROJECT.EDIT_PROJECT_INFORMATION')}
+            {t('project:PROJECT.EDIT_PROJECT_INFORMATION')}
           </p>
         </div>
         {/* Info: (20240611 - Julian) close button */}
@@ -287,10 +287,10 @@ const AddProjectModal = ({
             <div className="flex w-full flex-col items-start justify-between gap-y-20px md:flex-row">
               {/* Info: (20240611 - Julian) project name */}
               <div className="flex w-full flex-col items-start gap-y-8px md:w-250px">
-                <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
+                <p className="font-semibold">{t('project:PROJECT.PROJECT_NAME')}</p>
                 <input
                   type="text"
-                  placeholder={t('PROJECT.NAME_YOUR_PROJECT')}
+                  placeholder={t('project:PROJECT.NAME_YOUR_PROJECT')}
                   value={inputName}
                   onChange={nameChangeHandler}
                   required
@@ -299,7 +299,7 @@ const AddProjectModal = ({
               </div>
               {/* Info: (20240611 - Julian) stage selection */}
               <div className="flex w-full flex-col items-start gap-y-8px md:w-200px">
-                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+                <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
@@ -315,7 +315,7 @@ const AddProjectModal = ({
             {/* Info: (20240611 - Julian) member selection */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <div className="flex w-full items-end justify-between">
-                <p className="font-semibold">{t('PROJECT.TEAM_MEMBERS')}</p>
+                <p className="font-semibold">{t('project:PROJECT.TEAM_MEMBERS')}</p>
                 {/* Info: (20240611 - Julian) amount of selected members */}
                 <p className="text-sm text-input-text-secondary">{membersAmount}</p>
               </div>
@@ -347,7 +347,7 @@ const AddProjectModal = ({
               variant="tertiary"
               disabled={!isConfirmValid}
             >
-              <p>{t('PROJECT.ADD')}</p> <FaPlus />
+              <p>{t('project:PROJECT.ADD')}</p> <FaPlus />
             </Button>
           </div>
         </form>
