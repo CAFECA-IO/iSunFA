@@ -72,9 +72,9 @@ const MessageModal = ({
     messageType === MessageType.WARNING
       ? 'text-primaryYellow6'
       : messageType === MessageType.SUCCESS
-        ? 'text-lightGreen'
+        ? 'text-surface-state-success'
         : messageType === MessageType.ERROR
-          ? 'text-lightRed'
+          ? 'text-surface-state-error'
           : 'text-navyBlue2';
 
   const isBackBtn = backBtnStr ? (

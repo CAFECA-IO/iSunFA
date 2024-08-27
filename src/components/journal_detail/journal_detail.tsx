@@ -234,7 +234,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       </div>
     ) : null;
 
-  // const displayType = <p className="text-lightRed">{type}</p>; // Info: (20240731 - Anna)
+  // const displayType = <p className="text-surface-state-error">{type}</p>; // Info: (20240731 - Anna)
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   const typeString = type && typeof type === 'string' ? type : '';
@@ -567,7 +567,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
-              <p className="text-lightRed">{translatedType}</p>
+              <p className="text-surface-state-error">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">

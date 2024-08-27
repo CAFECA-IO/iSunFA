@@ -679,30 +679,9 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        darkPurple: '#24274A',
-        darkPurple2: '#2C315B',
-        darkPurple3: '#1F2243',
-        darkPurple4: '#3F497A',
-
-        lightWhite: '#FCFCFF',
-
-        lightGreen: '#2D7E58',
-
-        lightBlue: '#31D3F5',
-
-        lightRed: '#C84949',
-
-        lightOrange: '#F7931A',
-        darkOrange: '#FFA600',
-
         lilac: '#ABA7BD',
-        lilac2: '#6857d733',
         violet: '#6857D7',
-        violet2: '#9747FF',
 
-        bluePurple: '#627EEA',
-        primaryBlue: '#11FFF5',
-        'primaryBlue-500': 'rgba(17, 255, 245, 0.5)',
         hoverWhite: '#F0F0F0',
 
         primaryYellow: '#FFA502',

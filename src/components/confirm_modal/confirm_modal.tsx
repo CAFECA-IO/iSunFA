@@ -369,7 +369,7 @@ const ConfirmModal = ({
   }, [totalCredit, totalDebit, accountingVoucher, totalPrice]);
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
-  // const displayType = <p className="text-lightRed">{eventType}</p>;
+  // const displayType = <p className="text-surface-state-error">{eventType}</p>;
   const typeString = eventType && typeof eventType === 'string' ? eventType : '';
   const translatedType = typeString
     ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
@@ -657,7 +657,7 @@ const ConfirmModal = ({
             <div className="flex items-center justify-between">
               <p>{t('JOURNAL.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
-              <p className="text-lightRed">{translatedType}</p>
+              <p className="text-surface-state-error">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
