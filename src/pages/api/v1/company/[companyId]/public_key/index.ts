@@ -6,7 +6,33 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import logger from '@/lib/utils/logger';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { exportPublicKey, getPublicKeyByCompany } from '@/lib/utils/crypto';
+import {
+  exportPublicKey,
+  getPublicKeyByCompany,
+  encrypt,
+  decrypt,
+  getPrivateKeyByCompany,
+} from '@/lib/utils/crypto';
+
+async function verifyKeyPair(publicKey: CryptoKey, privateKey: CryptoKey) {
+  try {
+    const message = 'test message';
+
+    // 使用公钥加密消息
+    const encryptedMessage = await encrypt(message, publicKey);
+
+    // 使用私钥解密消息
+    const decryptedMessage = await decrypt(encryptedMessage, privateKey);
+
+    // 验证解密后的消息是否与原始消息匹配
+    return decryptedMessage === message;
+  } catch (error) {
+    /* eslint-disable no-console */
+    console.error('Verification failed:', error);
+    /* eslint-enable no-console */
+    return false;
+  }
+}
 
 async function handleGetRequest(companyId: number): Promise<{
   payload: JsonWebKey | null;
@@ -16,6 +42,16 @@ async function handleGetRequest(companyId: number): Promise<{
   let payload: JsonWebKey | null = null;
   try {
     const publicCryptoKey = await getPublicKeyByCompany(companyId);
+    const privateKey = await getPrivateKeyByCompany(companyId);
+    if (!publicCryptoKey || !privateKey) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+    /* eslint-disable no-console */
+    const isSame = await verifyKeyPair(publicCryptoKey, privateKey);
+    console.log('isSame', isSame);
+    console.log('publicCryptoKey', publicCryptoKey);
+    console.log('privateKey', privateKey);
+    /* eslint-enable no-console */
     if (publicCryptoKey) {
       payload = await exportPublicKey(publicCryptoKey);
     } else {

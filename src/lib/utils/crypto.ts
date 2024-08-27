@@ -8,7 +8,6 @@ import {
 } from '@/constants/crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
-import logger from '@/lib/utils/logger';
 
 /* Info: (20240822 - Shirley)
 - 實作混合加密 (hybrid encryption)，用對稱加密密鑰將檔案加密，用非對稱加密的 public key 加密對稱密鑰，用非對稱加密的 private key 解密對稱密鑰
@@ -269,12 +268,8 @@ export async function getPublicKeyByCompany(companyId: number): Promise<CryptoKe
 
   let publicKey: CryptoKey | null = null;
 
-  try {
-    const publicKeyJSON = await fs.readFile(publicKeyPath, 'utf-8');
-    publicKey = await importPublicKey(JSON.parse(publicKeyJSON));
-  } catch (error) {
-    logger.error(`Failed to import public key for company ${companyId}`);
-  }
+  const publicKeyJSON = await fs.readFile(publicKeyPath, 'utf-8');
+  publicKey = await importPublicKey(JSON.parse(publicKeyJSON));
 
   return publicKey;
 }
@@ -294,11 +289,7 @@ export async function getPrivateKeyByCompany(companyId: number): Promise<CryptoK
   const privateKeyAssembled = assemblePrivateKey(separatedPrivateKeys, metadata);
 
   let privateKey: CryptoKey | null = null;
-  try {
-    privateKey = await importPrivateKey(privateKeyAssembled);
-  } catch (error) {
-    logger.error(`Failed to import private key for company ${companyId}`);
-  }
+  privateKey = await importPrivateKey(privateKeyAssembled);
 
   return privateKey;
 }
