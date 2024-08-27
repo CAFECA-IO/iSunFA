@@ -180,7 +180,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     <div
       id={`accounting-menu-${id}`}
       onClick={accountingMenuHandler}
-      className={`group relative flex h-46px w-9/10 cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-46px w-9/10 cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <div className="line-clamp-2 w-9/10">{t(accountTitle)}</div>
       <PiBookOpen size={20} />
@@ -219,7 +219,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       type="text"
       value={particulars ?? ''}
       onChange={changeParticularHandler}
-      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
+      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none`}
     />
   );
 
@@ -233,7 +233,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       onBlur={handleDebitBlur}
       disabled={voucherRowType === VoucherRowType.CREDIT} // Info: (20240430 - Julian) 如果是借方，則不能輸入 credit
       onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
-      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
     />
   );
 
@@ -247,7 +247,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       onBlur={handleCreditBlur}
       disabled={voucherRowType === VoucherRowType.DEBIT} // Info: (20240430 - Julian) 如果是貸方，則不能輸入 debit
       onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
-      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
     />
   );
 

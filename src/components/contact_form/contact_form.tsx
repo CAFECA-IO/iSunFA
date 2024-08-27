@@ -168,13 +168,15 @@ function ContactForm() {
           <div className="flex flex-col items-center">
             <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
             <p className="text-sm">{t('CONTACT_US.ERROR')}</p>
-            <button
+            <Button
+              id="retry-btn"
               type="button"
+              variant="tertiary"
               onClick={retryHandler}
-              className="mt-6 rounded-lg bg-violet px-10 py-3 text-white hover:bg-hoverWhite hover:text-black"
+              className="mt-6 px-10 py-3"
             >
               {t('CONTACT_US.TRY_AGAIN')}
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>
@@ -194,7 +196,7 @@ function ContactForm() {
         <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">
           {t('CONTACT_US.TITLE')}
         </h1>
-        <p className="mt-2 text-base font-medium leading-6 tracking-normal text-white">
+        <p className="mt-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
           {t('CONTACT_US.DESCRIPTION')}
         </p>
       </div>
@@ -202,7 +204,7 @@ function ContactForm() {
         <div className="flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley  */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
+          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
             {t('CONTACT_US.NAME')}
             <span className="text-red-400">*</span>
           </label>
@@ -218,7 +220,7 @@ function ContactForm() {
         <div className="mt-4 flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
+          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
             {t('CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
           </label>
           <input
@@ -236,7 +238,7 @@ function ContactForm() {
         <div className="mt-4 flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
+          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
             {t('CONTACT_US.PHONE')}
           </label>
           <input
@@ -250,7 +252,7 @@ function ContactForm() {
         <div className="mt-4 flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-white">
+          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
             {t('CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>
           </label>
           <textarea
@@ -266,7 +268,7 @@ function ContactForm() {
         </div>
         <div className="mt-4 flex w-full justify-end">
           <Button className="space-x-3">
-            <span className="text-base font-semibold leading-6 tracking-normal text-secondaryBlue group-hover:text-white">
+            <span className="text-base font-semibold leading-6 tracking-normal text-secondaryBlue group-hover:text-navy-blue-25">
               {t('CONTACT_US.SUBMIT')}
             </span>
             <span>
@@ -281,7 +283,7 @@ function ContactForm() {
                   fillRule="evenodd"
                   clipRule="evenodd"
                   d="M15.6697 5.74737L9.92047 11.4966L11.6702 15.9961L15.6697 5.74737ZM8.50626 10.0824L14.2555 4.33315L4.00682 8.33265L8.50626 10.0824ZM17.1618 1.06932C17.3191 1.02365 17.6692 0.930018 18.0506 1.05745C18.473 1.19853 18.8044 1.52994 18.9454 1.95225C19.0729 2.33371 18.9792 2.68383 18.9336 2.84106C18.8831 3.01491 18.8031 3.21974 18.7266 3.41565L18.7143 3.44714L13.2223 17.5203L13.2095 17.5531C13.1241 17.7722 13.0376 17.9939 12.9521 18.1669C12.88 18.3126 12.7021 18.663 12.3224 18.8602C11.9125 19.0732 11.4244 19.0729 11.0147 18.8594C10.6353 18.6617 10.4578 18.3112 10.3859 18.1654C10.3005 17.9923 10.2143 17.7705 10.1291 17.5513L10.1164 17.5184L7.97943 12.0235L2.48446 9.88653C2.47352 9.88228 2.46258 9.87802 2.45162 9.87376C2.23241 9.78856 2.01064 9.70236 1.83753 9.61702C1.69169 9.54512 1.34116 9.36765 1.14345 8.98818C0.929994 8.57848 0.929707 8.09044 1.14268 7.68049C1.33994 7.30079 1.69027 7.1229 1.83603 7.05083C2.00903 6.96529 2.2307 6.87883 2.4498 6.79337C2.46075 6.7891 2.4717 6.78483 2.48263 6.78056L16.5558 1.28861L16.5873 1.27629C16.7832 1.19979 16.988 1.11981 17.1618 1.06932Z"
-                  className="fill-current text-secondaryBlue group-hover:text-white"
+                  className="fill-current text-secondaryBlue group-hover:text-navy-blue-25"
                 />
               </svg>
             </span>

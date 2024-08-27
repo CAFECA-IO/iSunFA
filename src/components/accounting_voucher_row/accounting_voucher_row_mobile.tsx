@@ -151,7 +151,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
     <div
       id={`accounting-menu-${id}`}
       onClick={accountingMenuOpenHandler}
-      className={`group relative flex h-46px w-full cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-46px w-full cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
     >
       <div className="line-clamp-2 w-9/10">{t(accountTitle)}</div>
       <PiBookOpen />
@@ -199,7 +199,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           type="text"
           value={particulars ?? ''}
           onChange={changeParticularMobileHandler}
-          className={`h-46px rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
+          className={`h-46px rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none`}
         />
       </div>
       {/* Info: (20240508 - Julian) amount */}
@@ -213,7 +213,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
-          className={`h-46px w-full rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+          className={`h-46px w-full rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
         />
       </div>
       {/* Info: (20240510 - Julian) Buttons */}

@@ -129,9 +129,9 @@ const CompanyInvitationModal = ({
         <div className="flex w-full flex-col justify-center gap-8px px-20px py-10px">
           {/* Info: (20240515 - Julian) Invitation Code */}
           <div
-            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-lightRed border-lightRed text-lightRed'}`}
+            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-surface-state-error-dark border-surface-state-error-dark text-text-state-error'}`}
           >
-            <p className={isCodeValid ? 'text-lightGray4' : 'text-lightRed'}>
+            <p className={isCodeValid ? 'text-lightGray4' : 'text-input-text-error'}>
               {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
             </p>
             <input
@@ -144,7 +144,9 @@ const CompanyInvitationModal = ({
               className="w-full flex-1 px-12px py-10px outline-none placeholder:text-lightGray4"
             />
           </div>
-          <p className={`text-right text-lightRed ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}>
+          <p
+            className={`text-right text-surface-state-error ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}
+          >
             {t('COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
           </p>
         </div>

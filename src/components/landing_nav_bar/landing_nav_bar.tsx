@@ -97,7 +97,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li>
           <Link
             href={ISUNFA_ROUTE.ABOUT}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             <svg
               width="20"
@@ -121,7 +121,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li>
           <Link
             href={ISUNFA_ROUTE.FEATURES}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             {' '}
             <svg
@@ -146,7 +146,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li>
           {/* <Link
             href={ISUNFA_ROUTE.REPORTS}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -190,7 +190,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           ) : (
             <Link
               href={ISUNFA_ROUTE.REPORTS}
-              className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+              className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -215,7 +215,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li>
           <Link
             href={ISUNFA_ROUTE.CONTACT_US}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             {' '}
             <svg
@@ -406,7 +406,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li className="w-full px-6 py-4">
           <Link
             href={ISUNFA_ROUTE.ABOUT}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             <svg
               width="20"
@@ -437,7 +437,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li className="w-full px-6 py-4">
           <Link
             href={ISUNFA_ROUTE.FEATURES}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             {' '}
             <svg
@@ -469,7 +469,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         <li className="w-full px-6 py-4">
           {/* <Link
             href={ISUNFA_ROUTE.REPORTS}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -513,7 +513,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           ) : (
             <Link
               href={ISUNFA_ROUTE.REPORTS}
-              className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+              className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -539,7 +539,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           {/* Info: (20240321 - Shirley) contact us section */}
           <Link
             href={ISUNFA_ROUTE.CONTACT_US}
-            className="flex items-center space-x-2 text-lightWhite hover:text-primaryYellow"
+            className="flex items-center space-x-2 text-navy-blue-25 hover:text-primaryYellow"
           >
             {' '}
             <svg

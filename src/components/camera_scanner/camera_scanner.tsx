@@ -284,7 +284,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         id="crop-button"
         type="button"
         disabled
-        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-white hover:bg-primaryYellow disabled:bg-lightGray5"
+        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-button-text-invert hover:bg-primaryYellow disabled:bg-lightGray5"
       >
         <FiCrop size={16} />
       </button>
@@ -293,7 +293,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         id="rotate-button"
         type="button"
         disabled
-        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-white hover:bg-primaryYellow disabled:bg-lightGray5"
+        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-button-text-invert hover:bg-primaryYellow disabled:bg-lightGray5"
       >
         <FiRotateCw size={16} />
       </button>
@@ -405,7 +405,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   const isDisplayScanner =
     selectedCompany && isModalVisible ? (
       <div className="fixed inset-0 left-0 top-0 z-70 flex h-full w-full items-center justify-center bg-black/50">
-        <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-white py-16px text-navyBlue2">
+        <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-surface-neutral-surface-lv2 py-16px text-navyBlue2">
           {/* Info: (20240506 - Julian) title */}
           <div className="flex flex-col items-center">
             <h1 className="text-xl font-bold">{titleStr}</h1>
