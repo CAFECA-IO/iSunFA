@@ -421,7 +421,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     2. 確認儲存於 IndexedDB 的 pendingOCRList 資料格式正確，不同就清空 IndexedDB 中的數據
     3. 確認 pendingOCRList 的 userId 和 userAuth.id 相同，不同就清空 IndexedDB 中的數據
     4. 確認 pendingOCRList 的數據是否過期，過期就透過 `updateAndDeleteOldItems` 刪掉 IndexedDB 的數據，而 useState 透過 filter 刪選，避免非同步執行會有遺漏
-    5. 將 pendingOCRList 的 companyId 和 selectedCompany.id 相同的數據存為 `pendingOCRListFromBrowser` 給 JournalUploadArea 上傳檔案、 `pendingOCRs` 給 StepOneTab 顯示 skeleton
+    5. 將 pendingOCRList 的 companyId 和 selectedCompany.id 相同的數據存為 `pendingOCRListFromBrowser` 給一開始的 JournalUploadArea 上傳檔案、 `pendingOCRs` 給 StepOneTab 顯示 skeleton
    */
   const initPendingOCRList = async () => {
     if (!userAuth?.id || !selectedCompany?.id) return;
