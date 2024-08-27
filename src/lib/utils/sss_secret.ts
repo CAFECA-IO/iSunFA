@@ -471,6 +471,22 @@ export default class SSSSecret {
     return SSSSecret.bin2hex(result);
   }
 
+  public base64Share(
+    base64Secret: string,
+    numShares: number,
+    threshold: number,
+    padLength: number = 0,
+    withoutPrefix: boolean = false
+  ) {
+    const secret = SSSSecret.base64ToHex(base64Secret);
+    return this.share(secret, numShares, threshold, padLength, withoutPrefix);
+  }
+
+  public base64Combine(base64Shares: string[]) {
+    const combinedInHex = this.combine(base64Shares);
+    return SSSSecret.hexToBase64Url(combinedInHex);
+  }
+
   public getConfig() {
     const config = {
       bits: this.bits,

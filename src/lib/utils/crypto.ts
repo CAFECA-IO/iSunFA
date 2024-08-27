@@ -1,3 +1,15 @@
+import SSSSecret from '@/lib/utils/sss_secret';
+import {
+  CRYPTO_KEY_TOTAL_AMOUNT,
+  CRYPTO_KEY_PASS_THRESHOLD,
+  CRYPTO_PUBLIC_FOLDER_PATH,
+  CRYPTO_PRIVATE_FOLDER_PATH,
+  CRYPTO_PRIVATE_METADATA_FOLDER_PATH,
+} from '@/constants/crypto';
+import { promises as fs } from 'fs';
+import path from 'path';
+import logger from './logger';
+
 /* Info: (20240822 - Shirley)
 - 實作混合加密 (hybrid encryption)，用對稱加密密鑰將檔案加密，用非對稱加密的 public key 加密對稱密鑰，用非對稱加密的 private key 解密對稱密鑰
     1. 使用 AES 演算法產生 `symmetricKey`
@@ -20,6 +32,8 @@ enum CryptoOperationMode {
   ENCRYPT = 'encrypt',
   DECRYPT = 'decrypt',
 }
+
+const sssSecret = new SSSSecret();
 
 /*
   Info: [0x01, 0x00, 0x01]，對應到十進制的 65537 (20240822 - Shirley)
@@ -164,3 +178,110 @@ export const decryptFile = async (
 
   return decryptedContent;
 };
+
+export function separatePrivateKey(privateKey: JsonWebKey) {
+  const { d, p, q, dp, dq, qi, ...metadata } = privateKey;
+
+  const separateField = (field: string | undefined) =>
+    field
+      ? sssSecret.base64Share(field, CRYPTO_KEY_TOTAL_AMOUNT, CRYPTO_KEY_PASS_THRESHOLD)
+      : Array(CRYPTO_KEY_TOTAL_AMOUNT).fill(null);
+
+  const dSeparated = separateField(d);
+  const pSeparated = separateField(p);
+  const qSeparated = separateField(q);
+  const dpSeparated = separateField(dp);
+  const dqSeparated = separateField(dq);
+  const qiSeparated = separateField(qi);
+
+  const separatedPrivateKeys = Array.from({ length: CRYPTO_KEY_TOTAL_AMOUNT }, (_, i) => ({
+    d: dSeparated[i] || null,
+    p: pSeparated[i] || null,
+    q: qSeparated[i] || null,
+    dp: dpSeparated[i] || null,
+    dq: dqSeparated[i] || null,
+    qi: qiSeparated[i] || null,
+  }));
+
+  return {
+    metadata,
+    separatedPrivateKeys,
+  };
+}
+
+export function assemblePrivateKey(
+  separatedPrivateKey: {
+    d: string | null;
+    p: string | null;
+    q: string | null;
+    dp: string | null;
+    dq: string | null;
+    qi: string | null;
+  }[],
+  metadata: Partial<JsonWebKey>
+): JsonWebKey {
+  const combineField = (shares: (string | null)[]) => {
+    const validShares = shares.filter((share) => share !== null) as string[];
+    return validShares.length >= CRYPTO_KEY_PASS_THRESHOLD
+      ? sssSecret.base64Combine(validShares)
+      : undefined;
+  };
+
+  const d = combineField(separatedPrivateKey.map((item) => item.d));
+  const p = combineField(separatedPrivateKey.map((item) => item.p));
+  const q = combineField(separatedPrivateKey.map((item) => item.q));
+  const dp = combineField(separatedPrivateKey.map((item) => item.dp));
+  const dq = combineField(separatedPrivateKey.map((item) => item.dq));
+  const qi = combineField(separatedPrivateKey.map((item) => item.qi));
+
+  return {
+    ...metadata,
+    d,
+    p,
+    q,
+    dp,
+    dq,
+    qi,
+  };
+}
+
+export async function storeKeyByCompany(companyId: string, keyPair: CryptoKeyPair) {
+  const publicKey = await exportPublicKey(keyPair.publicKey);
+  const privateKey = await exportPrivateKey(keyPair.privateKey);
+
+  const { metadata, separatedPrivateKeys } = separatePrivateKey(privateKey);
+
+  const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
+  const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
+  fs.writeFile(publicKeyPath, JSON.stringify(publicKey));
+  fs.writeFile(privateMetaPath, JSON.stringify(metadata));
+
+  separatedPrivateKeys.forEach((separatedPrivateKey, index) => {
+    const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${index + 1}`, `${companyId}.json`);
+    fs.writeFile(privatePath, JSON.stringify(separatePrivateKey));
+  });
+}
+
+export async function getPrivateKeyByCompany(companyId: string): Promise<CryptoKey | null> {
+  const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
+  const metadata = JSON.parse(await fs.readFile(privateMetaPath, 'utf-8'));
+
+  const separatedPrivateKeyJSONs = await Promise.all(
+    Array.from({ length: CRYPTO_KEY_TOTAL_AMOUNT }, (_, i) => {
+      const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${i + 1}`, `${companyId}.json`);
+      return fs.readFile(privatePath, 'utf-8');
+    })
+  );
+
+  const separatedPrivateKeys = separatedPrivateKeyJSONs.map((json) => JSON.parse(json));
+  const privateKeyAssembled = assemblePrivateKey(separatedPrivateKeys, metadata);
+
+  let privateKey: CryptoKey | null = null;
+  try {
+    privateKey = await importPrivateKey(privateKeyAssembled);
+  } catch (error) {
+    logger.error(`Failed to import private key for company ${companyId}`);
+  }
+
+  return privateKey;
+}
