@@ -61,21 +61,21 @@ const MessageModal = ({
 
   const borderColor =
     messageType === MessageType.WARNING
-      ? 'border-warningYellow'
+      ? 'border-alert-surface-surface-warning'
       : messageType === MessageType.SUCCESS
-        ? 'border-successGreen3'
+        ? 'border-alert-surface-surface-success'
         : messageType === MessageType.ERROR
-          ? 'border-errorRed3'
-          : 'border-navyBlue';
+          ? 'border-alert-surface-surface-error'
+          : 'border-alert-surface-surface-info';
 
   const titleColor =
     messageType === MessageType.WARNING
-      ? 'text-primaryYellow6'
+      ? 'text-text-state-warning'
       : messageType === MessageType.SUCCESS
-        ? 'text-lightGreen'
+        ? 'text-text-state-success'
         : messageType === MessageType.ERROR
-          ? 'text-lightRed'
-          : 'text-navyBlue2';
+          ? 'text-text-state-error'
+          : 'text-alert-text-title-info';
 
   const isBackBtn = backBtnStr ? (
     <Button

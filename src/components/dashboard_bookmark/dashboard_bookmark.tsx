@@ -103,7 +103,7 @@ const DashboardBookmark = () => {
           <Button
             key={key}
             type="button"
-            className={`flex justify-center gap-2 rounded-full border border-transparent bg-tertiaryBlue px-3 py-3 text-white hover:bg-tertiaryBlue2 lg:px-8 lg:py-2`}
+            className={`flex justify-center gap-2 rounded-full border border-transparent bg-button-surface-strong-secondary px-3 py-3 text-white hover:bg-button-surface-strong-secondary-hover lg:px-8 lg:py-2`}
           >
             <div className="my-auto flex items-center justify-center">
               {bookmarkList[key].iconOnSection}

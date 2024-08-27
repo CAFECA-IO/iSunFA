@@ -156,7 +156,7 @@ export async function clearAllItems(): Promise<void> {
   });
 }
 
-export async function updateAndDeleteOldItems(maxAgeInMinutes: number): Promise<void> {
+export async function updateAndDeleteOldItems(maxAgeInSeconds: number): Promise<void> {
   const gotDB = await getDB();
   return new Promise((resolve, reject) => {
     const transaction = gotDB.transaction([STORE_NAME], 'readwrite');
@@ -169,7 +169,7 @@ export async function updateAndDeleteOldItems(maxAgeInMinutes: number): Promise<
         const item = cursor.value;
         const now = getTimestampNow();
         const itemAge = now - item.data.timestamp;
-        const maxAgeInTimestamp = maxAgeInMinutes * 60;
+        const maxAgeInTimestamp = maxAgeInSeconds;
 
         if (itemAge > maxAgeInTimestamp) {
           cursor.delete();

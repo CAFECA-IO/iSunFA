@@ -179,7 +179,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayJournalType =
     type === 'Payment' ? (
-      <div className="flex w-full items-center justify-center gap-5px rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
+      <div className="flex w-full items-center justify-center gap-5px rounded-full bg-badge-surface-soft-error px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -197,7 +197,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <p>{t('JOURNAL.PAYMENT')}</p>
       </div>
     ) : type === 'Receiving' ? (
-      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
+      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-badge-surface-soft-success px-10px py-6px text-sm font-medium text-badge-text-success-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -234,7 +234,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       </div>
     ) : null;
 
-  // const displayType = <p className="text-lightRed">{type}</p>; // Info: (20240731 - Anna)
+  // const displayType = <p className="text-surface-state-error">{type}</p>; // Info: (20240731 - Anna)
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   const typeString = type && typeof type === 'string' ? type : '';
@@ -290,7 +290,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const displayProject =
     project !== 'None' ? (
       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-white">
           {projectCode}
         </div>
         <p>{project}</p>
@@ -567,7 +567,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             <div className="flex items-center justify-between gap-x-10px">
               <p>{t('JOURNAL.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
-              <p className="text-lightRed">{translatedType}</p>
+              <p className="text-surface-state-error">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">

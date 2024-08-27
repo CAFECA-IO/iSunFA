@@ -450,7 +450,8 @@
     "FEE_EXCEEDS_TOTAL": "费用不能大于总金额",
     "DATE_HINT": "请选择日期",
     "AMOUNT_HINT": "请填入金额",
-    "TIMES_HINT": "请填入次数"
+    "TIMES_HINT": "请填入次数",
+    "INCONSISTENT_COMPANY_ID": "公司 ID 不一致"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "选择团队成员",
