@@ -14,6 +14,7 @@ import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
 
 async function checkInput(code: string, name: string, regional: string): Promise<boolean> {
   return !!code && !!name && !!regional;
@@ -86,6 +87,12 @@ async function handlePostRequest(
           const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = newCompanyRoleList;
+
+          // Info: (20240827 - Murky) Generate Company Key , only new company will generate key
+          const companyId = createdCompanyRoleList.company.id;
+
+          const companyKeyPair = await generateKeyPair();
+          await storeKeyByCompany(companyId, companyKeyPair);
         }
       }
     }
