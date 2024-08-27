@@ -8,7 +8,7 @@ import {
 } from '@/constants/crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
-import logger from './logger';
+import logger from '@/lib/utils/logger';
 
 /* Info: (20240822 - Shirley)
 - 實作混合加密 (hybrid encryption)，用對稱加密密鑰將檔案加密，用非對稱加密的 public key 加密對稱密鑰，用非對稱加密的 private key 解密對稱密鑰
@@ -182,10 +182,12 @@ export const decryptFile = async (
 export function separatePrivateKey(privateKey: JsonWebKey) {
   const { d, p, q, dp, dq, qi, ...metadata } = privateKey;
 
-  const separateField = (field: string | undefined) =>
-    field
+  const separateField = (field: string | undefined) => {
+    const newField = field
       ? sssSecret.base64Share(field, CRYPTO_KEY_TOTAL_AMOUNT, CRYPTO_KEY_PASS_THRESHOLD)
       : Array(CRYPTO_KEY_TOTAL_AMOUNT).fill(null);
+    return newField;
+  };
 
   const dSeparated = separateField(d);
   const pSeparated = separateField(p);
@@ -245,7 +247,7 @@ export function assemblePrivateKey(
   };
 }
 
-export async function storeKeyByCompany(companyId: string, keyPair: CryptoKeyPair) {
+export async function storeKeyByCompany(companyId: number, keyPair: CryptoKeyPair) {
   const publicKey = await exportPublicKey(keyPair.publicKey);
   const privateKey = await exportPrivateKey(keyPair.privateKey);
 
@@ -258,8 +260,23 @@ export async function storeKeyByCompany(companyId: string, keyPair: CryptoKeyPai
 
   separatedPrivateKeys.forEach((separatedPrivateKey, index) => {
     const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${index + 1}`, `${companyId}.json`);
-    fs.writeFile(privatePath, JSON.stringify(separatePrivateKey));
+    fs.writeFile(privatePath, JSON.stringify(separatedPrivateKey));
   });
+}
+
+export async function getPublicKeyByCompany(companyId: string): Promise<CryptoKey | null> {
+  const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
+
+  let publicKey: CryptoKey | null = null;
+
+  try {
+    const publicKeyJSON = await fs.readFile(publicKeyPath, 'utf-8');
+    publicKey = await importPublicKey(JSON.parse(publicKeyJSON));
+  } catch (error) {
+    logger.error(`Failed to import public key for company ${companyId}`);
+  }
+
+  return publicKey;
 }
 
 export async function getPrivateKeyByCompany(companyId: string): Promise<CryptoKey | null> {

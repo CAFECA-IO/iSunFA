@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.8.0+39",
+  "version": "0.8.0+41",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -108,5 +108,9 @@
   },
   "prisma": {
     "seed": "ts-node  -r tsconfig-paths/register --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "browser": {
+    "fs": false,
+    "child_process": false
   }
 }
