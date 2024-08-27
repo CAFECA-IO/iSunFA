@@ -679,31 +679,7 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        darkPurple: '#24274A',
-        darkPurple2: '#2C315B',
-        darkPurple3: '#1F2243',
-        darkPurple4: '#3F497A',
-
-        lightWhite: '#FCFCFF',
-
-        lightGreen: '#2D7E58',
-
-        lightBlue: '#31D3F5',
-
-        lightRed: '#C84949',
-
-        lightOrange: '#F7931A',
-        darkOrange: '#FFA600',
-
         lilac: '#ABA7BD',
-        lilac2: '#6857d733',
-        violet: '#6857D7',
-        violet2: '#9747FF',
-
-        bluePurple: '#627EEA',
-        primaryBlue: '#11FFF5',
-        'primaryBlue-500': 'rgba(17, 255, 245, 0.5)',
-        hoverWhite: '#F0F0F0',
 
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
@@ -714,7 +690,6 @@ module.exports = {
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
-        tertiaryBlue2: '#002462B2',
 
         lightGray: '#CED1D7',
         lightGray2: '#828998',
@@ -730,19 +705,6 @@ module.exports = {
         navyBlue2: '#27354E',
         darkBlue: '#1570EF',
         darkBlue2: '#314362',
-
-        errorRed: '#963737',
-        errorRed2: '#FED7D7',
-        errorRed3: '#FB5C5C',
-
-        successGreen: '#1E543B',
-        successGreen2: '#D3F4E5',
-        successGreen3: '#4BD394',
-
-        warningYellow: '#FFCF24',
-
-        indigo: '#8098F9',
-        darkBlue3: '#0024620D',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.svg')",
@@ -753,10 +715,6 @@ module.exports = {
         purpleLinear2:
           'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
-        101: 'url("/elements/101.png")',
-
-        bubbleAbove: 'url("/elements/bubble_above.svg")',
-        bubbleBelow: 'url("/elements/bubble_below.svg")',
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
 
         web: 'url("/elements/web.svg")',

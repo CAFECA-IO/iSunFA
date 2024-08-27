@@ -146,7 +146,7 @@ const JournalItem = ({
   };
 
   const debitItem = lineItems
-    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -154,7 +154,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
     : defaultItem;
   const credit = {
     account: creditItem.account,
@@ -164,7 +164,7 @@ const JournalItem = ({
   const displayedType =
     // Info: (20240517 - Julian) 費用
     eventType === EventType.PAYMENT ? (
-      <div className="flex w-fit items-center gap-5px rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
+      <div className="flex w-fit items-center gap-5px rounded-full bg-badge-surface-soft-error px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -183,7 +183,7 @@ const JournalItem = ({
       </div>
     ) : // Info: (20240517 - Julian) 收入
     eventType === EventType.INCOME ? (
-      <div className="flex w-fit items-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
+      <div className="flex w-fit items-center gap-5px rounded-full bg-badge-surface-soft-success px-10px py-6px text-sm font-medium text-badge-text-success-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -224,8 +224,8 @@ const JournalItem = ({
   const displayedAmount = (
     <div className="flex flex-col gap-8px py-8px text-left font-medium">
       <div className="flex items-center gap-6px">
-        <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-successGreen2 px-6px py-2px text-successGreen">
-          <div className="h-6px w-6px rounded border-3px border-successGreen"></div>
+        <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-success px-6px py-2px text-badge-text-success-solid">
+          <div className="h-6px w-6px rounded border-3px border-badge-text-success-solid"></div>
           <p>{t('JOURNAL.DEBIT')}</p>
         </div>
         <p className="w-200px whitespace-nowrap text-lightGray4">
@@ -236,8 +236,8 @@ const JournalItem = ({
         </p>
       </div>
       <div className="flex items-center gap-6px">
-        <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-errorRed2 px-6px py-2px text-errorRed">
-          <div className="h-6px w-6px rounded border-3px border-errorRed"></div>
+        <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-error px-6px py-2px text-badge-text-error-solid">
+          <div className="h-6px w-6px rounded border-3px border-badge-text-error-solid"></div>
           <p>{t('JOURNAL.CREDIT')}</p>
         </div>
         <p className="w-200px whitespace-nowrap text-lightGray4">
@@ -288,7 +288,7 @@ const JournalItem = ({
         {/* Info: (20240808 - Anna) Alpha版先隱藏(會計事件配對專案名稱) */}
         {/* <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
           ToDo: (20240517 - Julian) [Beta] Replace with project icon
-          <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+          <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-white">
             BF
           </div>
           <p>{projectName}</p>
@@ -331,7 +331,7 @@ export const JournalItemMobile = ({
   const displayedTypeMobile =
     // Info: (20240517 - Julian) 費用
     eventType === EventType.PAYMENT ? (
-      <div className="flex w-fit items-center rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
+      <div className="flex w-fit items-center rounded-full bg-badge-surface-soft-error px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -349,7 +349,7 @@ export const JournalItemMobile = ({
       </div>
     ) : // Info: (20240517 - Julian) 收入
     eventType === EventType.INCOME ? (
-      <div className="flex w-fit items-center rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
+      <div className="flex w-fit items-center rounded-full bg-badge-surface-soft-success px-10px py-6px text-sm font-medium text-badge-text-success-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
