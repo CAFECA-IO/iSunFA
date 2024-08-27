@@ -197,7 +197,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('CONTRACT.COMPANY_NAME')}
+              {t('journal:CONTRACT.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
@@ -212,7 +212,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Business Registration Number */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
+              {t('journal:CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
             </p>
             <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-darkBlue2 shadow">
               {/* Info: (20240514 - Julian) country selection */}

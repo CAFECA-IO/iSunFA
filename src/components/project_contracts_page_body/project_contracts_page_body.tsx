@@ -218,7 +218,7 @@ const ProjectContractsPageBody = () => {
             type="text"
             onChange={searchHandler}
             className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-            placeholder={t('CONTRACT.SEARCH_CONTRACT')}
+            placeholder={t('journal:CONTRACT.SEARCH_CONTRACT')}
           />
           <FiSearch size={20} />
         </div>
@@ -244,7 +244,7 @@ const ProjectContractsPageBody = () => {
               type="text"
               onChange={searchHandler}
               className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-              placeholder={t('CONTRACT.SEARCH_CONTRACT')}
+              placeholder={t('journal:CONTRACT.SEARCH_CONTRACT')}
             />
             <FiSearch size={20} />
           </div>

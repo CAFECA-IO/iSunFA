@@ -9,7 +9,7 @@ const SalaryStepper = () => {
       {/* Info: (20240715 - Julian) Step 1 */}
       <div className={`z-10 flex w-80px flex-col items-center gap-2px text-stepper-text-active`}>
         <Image src={'/icons/form_active.svg'} width={30} height={30} alt="step_1_fill_up_form" />
-        <p>{t('JOURNAL.FILL_UP_FORM')}</p>
+        <p>{t('journal:JOURNAL.FILL_UP_FORM')}</p>
       </div>
 
       {/* Info: (20240715 - Julian) Connecting Line */}
@@ -18,7 +18,7 @@ const SalaryStepper = () => {
       {/* Info: (20240715 - Julian) Step 2 */}
       <div className="z-10 flex w-80px flex-col items-center gap-2px text-lightGray4">
         <Image src="/icons/confirm.svg" width={30} height={30} alt="step_3_confirm" />
-        <p>{t('JOURNAL.CONFIRM')}</p>
+        <p>{t('journal:JOURNAL.CONFIRM')}</p>
       </div>
     </div>
   );

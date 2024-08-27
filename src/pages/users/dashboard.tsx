@@ -57,7 +57,16 @@ const DashboardPage = () => {
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

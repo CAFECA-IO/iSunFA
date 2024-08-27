@@ -46,8 +46,8 @@ interface AccountTitleMap {
 
 export const accountTitleMap: AccountTitleMap = {
   Income: 'PROJECT.INCOME',
-  Payment: 'JOURNAL.PAYMENT',
-  Transfer: 'JOURNAL.TRANSFER',
+  Payment: 'journal:JOURNAL.PAYMENT',
+  Transfer: 'journal:JOURNAL.TRANSFER',
 };
 
 interface IAccountingContext {
@@ -485,7 +485,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const generateAccountTitle = (account: IAccount | null) => {
     if (account) return account.code + ' - ' + account.name;
-    return `JOURNAL.ACCOUNT_TITLE`;
+    return `journal:JOURNAL.ACCOUNT_TITLE`;
   };
 
   const deleteOwnAccountTitle = (companyId: number, id: number) => {

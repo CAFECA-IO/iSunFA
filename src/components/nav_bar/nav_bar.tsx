@@ -149,7 +149,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
-        <p>{t('JOURNAL.CONTRACT')}</p>
+        <p>{t('journal:JOURNAL.CONTRACT')}</p>
       </button>
       <button
         type="button"
@@ -274,7 +274,7 @@ const NavBar = () => {
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
-        <p>{t('JOURNAL.CONTRACT')}</p>
+        <p>{t('journal:JOURNAL.CONTRACT')}</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
       <button

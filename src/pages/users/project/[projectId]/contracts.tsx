@@ -59,7 +59,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                 </button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                  {projectName} - {t('JOURNAL.CONTRACTS')}
+                  {projectName} - {t('journal:JOURNAL.CONTRACTS')}
                 </h1>
               </div>
               {/* Info: (20240618 - Julian) Add new contract button (desktop) */}
@@ -70,7 +70,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                 className="hidden items-center gap-4px px-4 py-8px md:flex"
               >
                 <FiPlusCircle size={24} />
-                {t('JOURNAL.ADD_NEW_CONTRACT')}
+                {t('journal:JOURNAL.ADD_NEW_CONTRACT')}
               </Button>
               {/* Info: (20240619 - Julian) Add new contract button (mobile) */}
               <Button
@@ -97,7 +97,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('JOURNAL.PROJECT_CONTRACT_ISUNFA')}</title>
+        <title>{t('journal:JOURNAL.PROJECT_CONTRACT_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -121,7 +121,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

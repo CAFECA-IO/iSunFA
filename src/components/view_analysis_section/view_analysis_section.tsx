@@ -125,7 +125,7 @@ const ViewAnalysisSection = ({
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_CONTRACT')} </div>
+            <div className="text-text-neutral-tertiary">{t('journal:JOURNAL.TOKEN_CONTRACT')} </div>
             <div className="flex items-center space-x-3">
               {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
@@ -153,7 +153,7 @@ const ViewAnalysisSection = ({
             </div>
           </div>
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_ID')}</div>
+            <div className="text-text-neutral-tertiary">{t('journal:JOURNAL.TOKEN_ID')}</div>
 
             <div className="flex items-center space-x-3">
               {/* TODO: (20240507 - Shirley) [Beta] link */}
@@ -188,7 +188,7 @@ const ViewAnalysisSection = ({
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                {t('JOURNAL.TOKEN_CONTRACT')}
+                {t('journal:JOURNAL.TOKEN_CONTRACT')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
@@ -221,7 +221,7 @@ const ViewAnalysisSection = ({
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
               <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                {t('JOURNAL.Token ID')}
+                {t('journal:JOURNAL.Token ID')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">

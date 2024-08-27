@@ -255,7 +255,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

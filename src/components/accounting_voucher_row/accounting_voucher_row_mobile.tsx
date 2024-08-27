@@ -41,7 +41,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
   const debitAmount = debit ?? 0;
   const creditAmount = credit ?? 0;
 
-  const amountTitle = isDebit ? 'JOURNAL.DEBIT' : 'JOURNAL.CREDIT';
+  const amountTitle = isDebit ? 'journal:JOURNAL.DEBIT' : 'journal:JOURNAL.CREDIT';
   const amountValue = isDebit ? debitAmount : creditAmount;
   const elementId = isDebit ? 'input-debit-mobile' : 'input-credit-mobile';
   const voucherRowType = isDebit ? VoucherRowType.DEBIT : VoucherRowType.CREDIT;
@@ -188,12 +188,12 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
     <div className="flex flex-col gap-y-16px rounded-sm p-20px">
       {/* Info: (20240508 - Julian) Accounting */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
+        <p className="text-navyBlue2">{t('journal:JOURNAL.ACCOUNTING')}</p>
         {displayAccounting}
       </div>
       {/* Info: (20240508 - Julian) Particulars */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">{t('JOURNAL.PARTICULARS')}</p>
+        <p className="text-navyBlue2">{t('journal:JOURNAL.PARTICULARS')}</p>
         <input
           id={`input-particulars-mobile-${id}`}
           type="text"

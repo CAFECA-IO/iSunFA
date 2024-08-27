@@ -65,7 +65,16 @@ const SelectCompanyPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

@@ -178,7 +178,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         const { resultId } = result;
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
         const translatedStatus = t(
-          `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
+          `journal:PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
         );
         if (
           result.status === ProgressStatus.ALREADY_UPLOAD ||
@@ -187,12 +187,12 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           result.status === ProgressStatus.IN_PROGRESS
         ) {
           messageModalDataHandler({
-            title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
+            title: t('journal:JOURNAL.UPLOAD_SUCCESSFUL'),
             // Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的
             // content: result.status,
             content: translatedStatus,
             messageType: MessageType.SUCCESS,
-            submitBtnStr: t('JOURNAL.DONE'),
+            submitBtnStr: t('journal:JOURNAL.DONE'),
             submitBtnFunction: () => {
               setInvoiceIdHandler(resultId);
               messageModalVisibilityHandler();
@@ -328,7 +328,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         className="flex items-center gap-x-4px px-16px py-8px"
         onClick={handleUploadImage}
       >
-        {t('JOURNAL.UPLOAD')}
+        {t('journal:JOURNAL.UPLOAD')}
         <svg
           width="16"
           height="16"
@@ -396,7 +396,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         className="flex items-center gap-x-4px px-16px py-8px"
         onClick={nextHandler}
       >
-        {t('JOURNAL.NEXT')}
+        {t('journal:JOURNAL.NEXT')}
         <GrLinkNext />
       </Button>
     </div>

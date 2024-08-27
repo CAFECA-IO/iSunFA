@@ -42,7 +42,7 @@ const AccountingPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('JOURNAL.ACCOUNTING')} - iSunFA</title>
+        <title>{t('journal:JOURNAL.ACCOUNTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">

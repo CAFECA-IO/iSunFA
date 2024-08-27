@@ -409,7 +409,9 @@ const IncomeExpenseTrendChart = () => {
               >
                 <p>
                   <span className="lg:hidden">{t('COMMON.M')}</span>
-                  <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.MONTH')}</span>{' '}
+                  <span className="hidden lg:inline">
+                    {t('journal:ADD_ASSET_MODAL.MONTH')}
+                  </span>{' '}
                 </p>
               </Button>
             </div>
@@ -428,7 +430,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 <p>
                   <span className="lg:hidden">{t('COMMON.Y')}</span>
-                  <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.YEAR')}</span>{' '}
+                  <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.YEAR')}</span>{' '}
                 </p>
               </Button>
             </div>

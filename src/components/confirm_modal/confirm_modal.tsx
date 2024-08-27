@@ -61,7 +61,7 @@ const ConfirmModal = ({
   //   if (account) {
   //     const title = generateAccountTitle(account);
   //     // 如果標題是 'Account Title'，則進行多語系翻譯
-  //     return title === 'Account Title' ? t('JOURNAL.ACCOUNT_TITLE') : title;
+  //     return title === 'Account Title' ? t('journal:JOURNAL.ACCOUNT_TITLE') : title;
   //   }
   //   // 如果 account 是 null 或 undefined，返回預設值或其他處理方式
   //   return '';
@@ -161,7 +161,7 @@ const ConfirmModal = ({
       title: 'Replace Input',
       subMsg: 'Are you sure you want to use Ai information?',
       content: 'The text you entered will be replaced.',
-      submitBtnStr: t('JOURNAL.CONFIRM'),
+      submitBtnStr: t('journal:JOURNAL.CONFIRM'),
       // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
       backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
@@ -219,7 +219,7 @@ const ConfirmModal = ({
         type: ToastType.SUCCESS,
         content: (
           <div className="flex items-center justify-between">
-            <p>{t('CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
+            <p>{t('journal:CONFIRM_MODAL.UPLOADED_SUCCESSFULLY')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
@@ -236,8 +236,8 @@ const ConfirmModal = ({
     }
     if (res.success === false) {
       messageModalDataHandler({
-        title: t('CONFIRM_MODAL.UPLOAD_FAILED'),
-        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        title: t('journal:CONFIRM_MODAL.UPLOAD_FAILED'),
+        subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
         content: t('COMMON.ERROR_CODE', { code: res.code }),
         messageType: MessageType.ERROR,
         submitBtnStr: t('COMMON.CLOSE'),
@@ -372,7 +372,7 @@ const ConfirmModal = ({
   // const displayType = <p className="text-lightRed">{eventType}</p>;
   const typeString = eventType && typeof eventType === 'string' ? eventType : '';
   const translatedType = typeString
-    ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
+    ? t(`journal:JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
     : '';
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
@@ -383,7 +383,7 @@ const ConfirmModal = ({
       <p>{reason}</p>
       <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
         <LuTag size={14} />
-        {t('CONFIRM_MODAL.PRINTER')}
+        {t('journal:CONFIRM_MODAL.PRINTER')}
       </div>
     </div>
   );
@@ -395,12 +395,14 @@ const ConfirmModal = ({
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
+        <span className="font-semibold text-navyBlue2">{totalPrice}</span>{' '}
+        {t('journal:JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span> {t('JOURNAL.TAX')}
+        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span>{' '}
+        {t('journal:JOURNAL.TAX')}
         <span className="font-semibold text-navyBlue2">{fee}</span>
-        {t('JOURNAL.TWD_FEE')})
+        {t('journal:JOURNAL.TWD_FEE')})
       </p>
     </div>
   );
@@ -411,12 +413,16 @@ const ConfirmModal = ({
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
   // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
   const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
-  const translatedPeriod = t(`JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`);
+  const translatedPeriod = t(
+    `journal:JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`
+  );
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
   // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
   const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
-  const translatedStatus = t(`JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`);
+  const translatedStatus = t(
+    `journal:JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`
+  );
 
   const displayProject =
     project !== 'None' ? (
@@ -427,7 +433,7 @@ const ConfirmModal = ({
         <p>{project}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+      <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.NONE')}</p>
     );
 
   // Info: (20240731 - Anna) 把合約None加上多語系
@@ -438,7 +444,7 @@ const ConfirmModal = ({
         <p className="font-semibold text-darkBlue">{contract}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+      <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.NONE')}</p>
     );
 
   const displayedHint =
@@ -446,20 +452,20 @@ const ConfirmModal = ({
       isAILoading) ||
     AIResultSuccess === undefined ? (
       <p className="text-slider-surface-bar">
-        {t('CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
+        {t('journal:CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
         <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
         <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
         <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
       </p>
     ) : hasAIResult ? (
-      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+      <p className="text-successGreen">{t('journal:CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
     ) : AIResultSuccess === false && AIResultCode ? (
       <p className="text-text-neutral-secondary">
-        {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+        {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
       </p>
     ) : (
       <p className="text-slider-surface-bar">
-        {t('CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+        {t('journal:CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
       </p>
     );
 
@@ -536,7 +542,7 @@ const ConfirmModal = ({
         <hr className="flex-1 border-lightGray3" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-          <p>{t('JOURNAL.ACCOUNTING_VOUCHER')}</p>
+          <p>{t('journal:JOURNAL.ACCOUNTING_VOUCHER')}</p>
         </div>
         <hr className="flex-1 border-lightGray3" />
       </div>
@@ -546,10 +552,10 @@ const ConfirmModal = ({
           {/* Info: (20240429 - Julian) Header */}
           <thead>
             <tr>
-              <th>{t('JOURNAL.ACCOUNTING')}</th>
-              <th>{t('JOURNAL.PARTICULARS')}</th>
-              <th>{t('JOURNAL.DEBIT')}</th>
-              <th>{t('JOURNAL.CREDIT')}</th>
+              <th>{t('journal:JOURNAL.ACCOUNTING')}</th>
+              <th>{t('journal:JOURNAL.PARTICULARS')}</th>
+              <th>{t('journal:JOURNAL.DEBIT')}</th>
+              <th>{t('journal:JOURNAL.CREDIT')}</th>
             </tr>
           </thead>
           {/* Info: (20240429 - Julian) Body */}
@@ -568,7 +574,7 @@ const ConfirmModal = ({
       )}
       <p className={isEveryRowHasAccount ? 'text-text-state-success' : 'text-text-state-error'}>
         {/* Info: (20240731 - Anna) Each row includes an accounting account. */}
-        {t('JOURNAL.EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT')}
+        {t('journal:JOURNAL.EACH_ROW_INCLUDES_AN_ACCOUNTING_ACCOUNT')}
       </p>
     </div>
   );
@@ -582,7 +588,7 @@ const ConfirmModal = ({
       )}
       <p className={isNoEmptyRow ? 'text-text-state-success' : 'text-text-state-error'}>
         {/* Info: (20240731 - Anna) Each row includes a debit or credit. */}
-        {t('JOURNAL.EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT')}
+        {t('journal:JOURNAL.EACH_ROW_INCLUDES_A_DEBIT_OR_CREDIT')}
       </p>
     </div>
   );
@@ -596,7 +602,7 @@ const ConfirmModal = ({
       )}
       <p className={isBalance ? 'text-text-state-success' : 'text-text-state-error'}>
         {/* Info: (20240731 - Anna) Debits and credits balance out. */}
-        {t('JOURNAL.DEBITS_AND_CREDITS_BALANCE_OUT')}
+        {t('journal:JOURNAL.DEBITS_AND_CREDITS_BALANCE_OUT')}
       </p>
     </div>
   );
@@ -609,7 +615,7 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isTotalDebitBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
-        {t('JOURNAL.DEBIT_AMOUNT_BALANCED')}
+        {t('journal:JOURNAL.DEBIT_AMOUNT_BALANCED')}
       </p>
     </div>
   );
@@ -622,7 +628,7 @@ const ConfirmModal = ({
         <Image src="/icons/verify_false.svg" width={16} height={16} alt="error_icon" />
       )}
       <p className={isTotalCreditBalanced ? 'text-text-state-success' : 'text-text-state-error'}>
-        {t('JOURNAL.CREDIT_AMOUNT_BALANCED')}
+        {t('journal:JOURNAL.CREDIT_AMOUNT_BALANCED')}
       </p>
     </div>
   );
@@ -635,10 +641,10 @@ const ConfirmModal = ({
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
           {/* Info: (20240429 - Julian) desktop title */}
           <h1 className="hidden whitespace-nowrap text-xl md:block">
-            {t('CONFIRM_MODAL.PLEASE_MAKE_SURE')}
+            {t('journal:CONFIRM_MODAL.PLEASE_MAKE_SURE')}
           </h1>
           {/* Info: (20240429 - Julian) mobile title */}
-          <h1 className="block text-xl md:hidden">{t('JOURNAL.CONFIRM')}</h1>
+          <h1 className="block text-xl md:hidden">{t('journal:JOURNAL.CONFIRM')}</h1>
         </div>
         {/* Info: (20240429 - Julian) close button */}
         <button
@@ -655,7 +661,7 @@ const ConfirmModal = ({
           <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
             {/* Info: (20240429 - Julian) Type */}
             <div className="flex items-center justify-between">
-              <p>{t('JOURNAL.TYPE')}</p>
+              <p>{t('journal:JOURNAL.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
               <p className="text-lightRed">{translatedType}</p>
             </div>
@@ -666,32 +672,32 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240429 - Julian) Reason */}
             <div className="flex items-center justify-between">
-              <p>{t('JOURNAL.REASON')}</p>
+              <p>{t('journal:JOURNAL.REASON')}</p>
               {displayReason}
             </div>
             {/* Info: (20240429 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between">
-              <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
+              <p>{t('journal:JOURNAL.VENDOR_SUPPLIER')}</p>
               {displayVendor}
             </div>
             {/* Info: (20240429 - Julian) Description */}
             <div className="flex items-center justify-between">
-              <p>{t('JOURNAL.DESCRIPTION')}</p>
+              <p>{t('journal:JOURNAL.DESCRIPTION')}</p>
               {displayDescription}
             </div>
             {/* Info: (20240429 - Julian) Total Price */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">{t('JOURNAL.TOTAL_PRICE')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.TOTAL_PRICE')}</p>
               {displayTotalPrice}
             </div>
             {/* Info: (20240429 - Julian) Payment Method */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_METHOD')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_METHOD')}</p>
               {displayMethod}
             </div>
             {/* Info: (20240429 - Julian) Payment Period */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_PERIOD')}</p>
               {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
               {translatedPeriod && (
                 <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
@@ -699,7 +705,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240429 - Julian) Payment Status */}
             <div className="flex items-center justify-between">
-              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_STATUS')}</p>
               {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
               {translatedStatus && (
                 <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
@@ -713,7 +719,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240429 - Julian) Contract */}
             <div className="flex items-center justify-between">
-              <p>{t('JOURNAL.CONTRACT')}</p>
+              <p>{t('journal:JOURNAL.CONTRACT')}</p>
               {displayContract}
             </div>
           </div>
@@ -767,14 +773,14 @@ const ConfirmModal = ({
           <div className="my-24px flex flex-wrap justify-between gap-y-4px">
             <p className="text-sm font-semibold text-navyBlue2">
               {/* Info: (tzuhan - 20230513) eslint recommendation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint  */}
-              {t('CONFIRM_MODAL.ATTENTION')}
+              {t('journal:CONFIRM_MODAL.ATTENTION')}
             </p>
             <label
               htmlFor="addToBook"
               className="ml-auto flex items-center gap-8px text-sm text-navyBlue2"
             >
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
-              <p>{t('CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
+              <p>{t('journal:CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
           </div>
 
@@ -818,7 +824,7 @@ const ConfirmModal = ({
             onClick={confirmHandler}
             className="disabled:bg-lightGray6"
           >
-            {t('JOURNAL.CONFIRM')}
+            {t('journal:JOURNAL.CONFIRM')}
           </Button>
         </div>
       </div>

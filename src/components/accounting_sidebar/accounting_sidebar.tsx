@@ -49,7 +49,7 @@ const AccountingSidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            {t('JOURNAL.ACCOUNTING')}
+            {t('journal:JOURNAL.ACCOUNTING')}
           </p>
 
           {displayedCompanyName}
@@ -65,7 +65,7 @@ const AccountingSidebar = () => {
             <p
               className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-white transition-all duration-300 ease-in-out`}
             >
-              {t('JOURNAL.ADD_NEW_JOURNAL')}
+              {t('journal:JOURNAL.ADD_NEW_JOURNAL')}
             </p>
           </Link>
 
@@ -82,7 +82,7 @@ const AccountingSidebar = () => {
             <p
               className={`${isExpanded ? 'ml-8px w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
             >
-              {t('JOURNAL.JOURNAL')}
+              {t('journal:JOURNAL.JOURNAL')}
             </p>
           </Link>
         </div>

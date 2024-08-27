@@ -40,12 +40,12 @@ const JournalListPage = () => {
           {/* Info: (20240417 - Julian) Title */}
           <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
             <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-              {companyName} {t('JOURNAL.JOURNAL_LIST')}
+              {companyName} {t('journal:JOURNAL.JOURNAL_LIST')}
             </h1>
             <Link href={ISUNFA_ROUTE.ACCOUNTING}>
               <Button type="button" variant="tertiary" className="text-sm md:text-base">
                 <FiPlusCircle size={24} />
-                <p>{t('JOURNAL.ADD_NEW_JOURNAL')}</p>
+                <p>{t('journal:JOURNAL.ADD_NEW_JOURNAL')}</p>
               </Button>
             </Link>
           </div>
@@ -65,7 +65,7 @@ const JournalListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('JOURNAL.JOURNAL_LIST_ISUNFA')}</title>
+        <title>{t('journal:JOURNAL.JOURNAL_LIST_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">

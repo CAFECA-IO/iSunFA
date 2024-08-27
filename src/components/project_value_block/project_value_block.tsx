@@ -52,7 +52,7 @@ const ProjectValueBlock = () => {
         <p className="text-2xl font-bold text-text-neutral-primary">
           {totalValue}
           <span className="ml-8px text-base font-medium text-text-neutral-secondary">
-            {t('JOURNAL.TWD')}
+            {t('journal:JOURNAL.TWD')}
           </span>
         </p>
         {/* Info: (20240612 - Julian) APY */}
@@ -69,7 +69,7 @@ const ProjectValueBlock = () => {
           </div>
           <div className="mx-auto flex items-end gap-x-8px">
             <p className="text-5xl">{totalRevenue}</p>
-            <p>{t('JOURNAL.TWD')}</p>
+            <p>{t('journal:JOURNAL.TWD')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-x-8px">
@@ -89,7 +89,7 @@ const ProjectValueBlock = () => {
           </div>
           <div className="mx-auto flex items-end gap-x-8px">
             <p className="text-5xl">{totalExpenses}</p>
-            <p>{t('JOURNAL.TWD')}</p>
+            <p>{t('journal:JOURNAL.TWD')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-x-8px">
@@ -109,7 +109,7 @@ const ProjectValueBlock = () => {
           </div>
           <div className="mx-auto flex items-end gap-x-8px">
             <p className="text-5xl">{netProfit}</p>
-            <p>{t('JOURNAL.TWD')}</p>
+            <p>{t('journal:JOURNAL.TWD')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-x-8px">

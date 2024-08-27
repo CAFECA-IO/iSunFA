@@ -2,15 +2,15 @@ import { EventType } from '@/constants/account';
 import { SortOrder } from '@/constants/sort';
 
 export enum JOURNAL_EVENT {
-  UPLOADED = 'JOURNAL.UPLOADED',
-  UPCOMING = 'JOURNAL.UPCOMING',
+  UPLOADED = 'journal:JOURNAL.UPLOADED',
+  UPCOMING = 'journal:JOURNAL.UPCOMING',
 }
 
 export enum JOURNAL_TYPE {
-  ALL = 'JOURNAL_TYPES.ALL',
-  PAYMENT = 'JOURNAL_TYPES.PAYMENT',
-  RECEIVING = 'JOURNAL_TYPES.RECEIVING',
-  TRANSFER = 'JOURNAL_TYPES.TRANSFER',
+  ALL = 'journal:JOURNAL_TYPES.ALL',
+  PAYMENT = 'journal:JOURNAL_TYPES.PAYMENT',
+  RECEIVING = 'journal:JOURNAL_TYPES.RECEIVING',
+  TRANSFER = 'journal:JOURNAL_TYPES.TRANSFER',
 }
 
 export const toEventType = (type: JOURNAL_TYPE): EventType | undefined => {

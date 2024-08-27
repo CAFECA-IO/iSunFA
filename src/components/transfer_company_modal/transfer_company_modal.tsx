@@ -102,7 +102,7 @@ const TransferCompanyModal = ({
         ), // TODO: (20240717 - Shirley) [Beta] message color
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`,
         backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
-        submitBtnStr: t('JOURNAL.TRANSFER'),
+        submitBtnStr: t('journal:JOURNAL.TRANSFER'),
         submitBtnFunction: () => handleSubmit(newOwnerId),
       });
 
