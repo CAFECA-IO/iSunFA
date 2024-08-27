@@ -168,13 +168,15 @@ function ContactForm() {
           <div className="flex flex-col items-center">
             <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
             <p className="text-sm">{t('CONTACT_US.ERROR')}</p>
-            <button
+            <Button
+              id="retry-btn"
               type="button"
+              variant="tertiary"
               onClick={retryHandler}
-              className="mt-6 rounded-lg bg-violet px-10 py-3 text-white hover:bg-hoverWhite hover:text-black"
+              className="mt-6 px-10 py-3"
             >
               {t('CONTACT_US.TRY_AGAIN')}
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>

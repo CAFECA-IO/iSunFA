@@ -146,7 +146,7 @@ const JournalItem = ({
   };
 
   const debitItem = lineItems
-    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -154,7 +154,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
     : defaultItem;
   const credit = {
     account: creditItem.account,
@@ -288,7 +288,7 @@ const JournalItem = ({
         {/* Info: (20240808 - Anna) Alpha版先隱藏(會計事件配對專案名稱) */}
         {/* <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
           ToDo: (20240517 - Julian) [Beta] Replace with project icon
-          <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+          <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-white">
             BF
           </div>
           <p>{projectName}</p>

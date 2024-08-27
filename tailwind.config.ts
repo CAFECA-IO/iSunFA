@@ -680,9 +680,6 @@ module.exports = {
         'tree-text-primary': 'var(--tree-text-primary)',
 
         lilac: '#ABA7BD',
-        violet: '#6857D7',
-
-        hoverWhite: '#F0F0F0',
 
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
@@ -720,7 +717,6 @@ module.exports = {
 
         warningYellow: '#FFCF24',
 
-        indigo: '#8098F9',
         darkBlue3: '#0024620D',
       },
       backgroundImage: {
@@ -732,10 +728,6 @@ module.exports = {
         purpleLinear2:
           'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
-        101: 'url("/elements/101.png")',
-
-        bubbleAbove: 'url("/elements/bubble_above.svg")',
-        bubbleBelow: 'url("/elements/bubble_below.svg")',
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
 
         web: 'url("/elements/web.svg")',
