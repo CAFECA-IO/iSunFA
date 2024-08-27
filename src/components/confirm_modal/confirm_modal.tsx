@@ -452,7 +452,7 @@ const ConfirmModal = ({
         <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
       </p>
     ) : hasAIResult ? (
-      <p className="text-successGreen">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+      <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
     ) : AIResultSuccess === false && AIResultCode ? (
       <p className="text-text-neutral-secondary">
         {t('CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}

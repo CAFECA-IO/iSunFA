@@ -179,7 +179,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayJournalType =
     type === 'Payment' ? (
-      <div className="flex w-full items-center justify-center gap-5px rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
+      <div className="flex w-full items-center justify-center gap-5px rounded-full bg-badge-surface-soft-error px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -197,7 +197,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <p>{t('JOURNAL.PAYMENT')}</p>
       </div>
     ) : type === 'Receiving' ? (
-      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
+      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-badge-surface-soft-success px-10px py-6px text-sm font-medium text-badge-text-success-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"

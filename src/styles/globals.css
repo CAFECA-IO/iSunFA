@@ -332,10 +332,10 @@
     --accordion-text-title: var(--text-neutral-primary);
     --accordion-text-title-active: var(--text-brand-primary-lv1);
     --alert-surface-background: var(--surface-neutral-surface-lv2);
-    --alert-surface-surface-error: var(--surface-state-error);
-    --alert-surface-surface-info: var(--surface-brand-secondary);
-    --alert-surface-surface-success: var(--surface-state-success);
-    --alert-surface-surface-warning: var(--surface-state-warning);
+    --alert-surface-error: var(--surface-state-error);
+    --alert-surface-info: var(--surface-brand-secondary);
+    --alert-surface-success: var(--surface-state-success);
+    --alert-surface-warning: var(--surface-state-warning);
     --alert-text-paragraph: var(--text-neutral-secondary);
     --alert-text-title-error: var(--text-state-error);
     --alert-text-title-info: var(--text-neutral-primary);

@@ -690,7 +690,6 @@ module.exports = {
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
-        tertiaryBlue2: '#002462B2',
 
         lightGray: '#CED1D7',
         lightGray2: '#828998',
@@ -706,18 +705,6 @@ module.exports = {
         navyBlue2: '#27354E',
         darkBlue: '#1570EF',
         darkBlue2: '#314362',
-
-        errorRed: '#963737',
-        errorRed2: '#FED7D7',
-        errorRed3: '#FB5C5C',
-
-        successGreen: '#1E543B',
-        successGreen2: '#D3F4E5',
-        successGreen3: '#4BD394',
-
-        warningYellow: '#FFCF24',
-
-        darkBlue3: '#0024620D',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.svg')",
