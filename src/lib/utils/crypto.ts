@@ -264,7 +264,7 @@ export async function storeKeyByCompany(companyId: number, keyPair: CryptoKeyPai
   });
 }
 
-export async function getPublicKeyByCompany(companyId: string): Promise<CryptoKey | null> {
+export async function getPublicKeyByCompany(companyId: number): Promise<CryptoKey | null> {
   const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
 
   let publicKey: CryptoKey | null = null;
@@ -279,7 +279,7 @@ export async function getPublicKeyByCompany(companyId: string): Promise<CryptoKe
   return publicKey;
 }
 
-export async function getPrivateKeyByCompany(companyId: string): Promise<CryptoKey | null> {
+export async function getPrivateKeyByCompany(companyId: number): Promise<CryptoKey | null> {
   const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
   const metadata = JSON.parse(await fs.readFile(privateMetaPath, 'utf-8'));
 
