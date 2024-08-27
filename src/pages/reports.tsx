@@ -484,7 +484,7 @@ const AuditReport = () => {
         {/* Switch daily reports  */}
         <div className="flex items-center gap-16px">
           <div
-            className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-inactive'}`}
+            className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-disable'}`}
           >
             {t('AUDIT_REPORT.SHOW_DAILY_REPORTS')}
           </div>
