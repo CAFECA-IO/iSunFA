@@ -136,6 +136,8 @@ module.exports = {
     'react/jsx-wrap-multilines': 'off',
     'no-nested-ternary': 'off',
     'react/require-default-props': 'off',
+    "no-eval": "error",
+    "no-new-func": "error"
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

@@ -5,7 +5,22 @@
 const cloneDeep = require('lodash/cloneDeep');
 const { i18n } = require('./next-i18next.config');
 
+// const cspHeader = `
+//   default-src 'self';
+//   script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.googletagmanager.com;
+//   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+//   img-src 'self' blob: data: https://isunfa.com https://*.googleusercontent.com https://storage.googleapis.com www.googletagmanager.com;
+//   font-src 'self' https://fonts.gstatic.com;
+//   object-src 'none';
+//   base-uri 'self';
+//   form-action 'self';
+//   frame-ancestors 'none';
+//   upgrade-insecure-requests;
+//   connect-src www.googletagmanager.com;
+// `;
+
 const nextConfig = {
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -21,6 +36,15 @@ const nextConfig = {
           },
         ],
       },
+      // {
+      //   source: '/(.*)',
+      //   headers: [
+      //     {
+      //       key: 'Content-Security-Policy',
+      //       value: cspHeader.replace(/\n/g, ' ').trim(),
+      //     },
+      //   ],
+      // },
     ];
   },
   reactStrictMode: true,
