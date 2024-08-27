@@ -78,12 +78,12 @@ const ContactInfoForm = ({
       {/* Info: (20240718 - Liz) ===== Key Contact Person ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.KEY_CONTACT_PERSON')}
+          {t('kyc:KYC.KEY_CONTACT_PERSON')}
         </h6>
         <input
           id="keyContactPerson"
           type="text"
-          placeholder={t('KYC.EXAMPLE')}
+          placeholder={t('kyc:KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyContactPersonInputHandler}
@@ -93,7 +93,9 @@ const ContactInfoForm = ({
 
       {/* Info: (20240718 - Liz) ===== Area Code & Contact Number ===== */}
       <div className="flex flex-col gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.CONTACT_NUMBER')}</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">
+          {t('kyc:KYC.CONTACT_NUMBER')}
+        </h6>
 
         <div className="relative flex rounded-sm bg-white">
           {/* Info: (20240718 - Liz) ----- Area Code */}
@@ -143,7 +145,7 @@ const ContactInfoForm = ({
           <input
             id="contactNumber"
             type="text"
-            placeholder={t('KYC.EXAMPLE')}
+            placeholder={t('kyc:KYC.EXAMPLE')}
             required
             className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={contactNumberInputHandler}
@@ -154,7 +156,9 @@ const ContactInfoForm = ({
 
       {/* Info: (20240718 - Liz) ===== Email Address ===== */}
       <div className="flex flex-col gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.EMAIL_ADDRESS')}</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">
+          {t('kyc:KYC.EMAIL_ADDRESS')}
+        </h6>
         <div className="flex rounded-sm bg-white">
           <div className="flex items-center rounded-l-sm border border-lightGray3 px-12px">
             <svg
@@ -181,7 +185,7 @@ const ContactInfoForm = ({
           <input
             id="emailAddress"
             type="text"
-            placeholder={t('KYC.EXAMPLE')}
+            placeholder={t('kyc:KYC.EXAMPLE')}
             required
             className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={emailAddressInputHandler}
@@ -193,7 +197,7 @@ const ContactInfoForm = ({
       {/* Info: (20240718 - Liz) ===== Company Website (Optional) ===== */}
       <div className="flex flex-col gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.COMPANY_WEBSITE_OPTIONAL')}
+          {t('kyc:KYC.COMPANY_WEBSITE_OPTIONAL')}
         </h6>
         <div className="flex rounded-sm bg-white">
           <p className="flex items-center rounded-l-sm border border-r border-lightGray3 px-12px text-input-text-input-placeholder">
@@ -202,7 +206,7 @@ const ContactInfoForm = ({
           <input
             id="emailAddress"
             type="text"
-            placeholder={t('KYC.EXAMPLE')}
+            placeholder={t('kyc:KYC.EXAMPLE')}
             required
             className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={companyWebsiteInputHandler}

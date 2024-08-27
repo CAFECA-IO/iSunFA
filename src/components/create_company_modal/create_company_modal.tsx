@@ -94,12 +94,12 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
         messageModalDataHandler({
           messageType: MessageType.WARNING,
-          title: t('COMPANY_BASIC_INFO.EXISTED_COMPANY'),
-          subMsg: t('COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
+          title: t('kyc:COMPANY_BASIC_INFO.EXISTED_COMPANY'),
+          subMsg: t('kyc:COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
           // Info: (20240805 - Anna) content: `If you are the owner of this company,
           // Info: (20240805 - Anna) please complete KYC to get access back. Error code: ${createCompanyCode}`,
-          content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
-          submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
+          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
+          submitBtnStr: t('kyc:COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
             // Info: (20240807 - Anna) 隱藏 create company modal
             modalVisibilityHandler();
@@ -182,7 +182,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         {/* Info: (20240514 - Julian) Title */}
         <div className="flex justify-center px-20px">
           <h2 className="text-xl font-bold leading-8 text-navyBlue2">
-            {t('SELECT_COMPANY.CREATE_MY_COMPANY')}
+            {t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}
           </h2>
           <button
             type="button"
@@ -202,7 +202,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
             <input
               id="companyNameInput"
               type="text"
-              placeholder={t('SELECT_COMPANY.ENTER_COMPANY_NAME')}
+              placeholder={t('kyc:SELECT_COMPANY.ENTER_COMPANY_NAME')}
               value={nameValue}
               onChange={changeNameHandler}
               required
@@ -236,7 +236,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
               <input
                 id="registrationNumberInput"
                 type="text"
-                placeholder={t('SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
+                placeholder={t('kyc:SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
                 value={registrationNumberValue}
                 onChange={changeRegistrationNumberHandler}
                 required

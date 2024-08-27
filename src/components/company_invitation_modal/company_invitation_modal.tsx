@@ -55,10 +55,10 @@ const CompanyInvitationModal = ({
           type: ToastType.SUCCESS,
           content: (
             <p>
-              {t('COMPANY_INVITATION_MODAL.CONGRATULATIONS_YOU')}&apos;
-              {t('COMPANY_INVITATION_MODAL.VE_SUCCESSFULLY_JOINED_THE')}{' '}
+              {t('kyc:COMPANY_INVITATION_MODAL.CONGRATULATIONS_YOU')}&apos;
+              {t('kyc:COMPANY_INVITATION_MODAL.VE_SUCCESSFULLY_JOINED_THE')}{' '}
               <span className="font-semibold">{companyName}</span>
-              {t('COMPANY_INVITATION_MODAL.TEAM')}
+              {t('kyc:COMPANY_INVITATION_MODAL.TEAM')}
             </p>
           ),
           closeable: true,
@@ -112,10 +112,10 @@ const CompanyInvitationModal = ({
         <div className="flex justify-center px-20px">
           <div className="flex flex-col items-center">
             <h2 className="text-xl font-bold leading-8 text-navyBlue2">
-              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION CODE')}
             </h2>
             <p className="text-xs font-normal leading-tight tracking-tight text-lightGray5">
-              {t('COMPANY_INVITATION_MODAL.ENTER_YOUR_COMPANY_INVITATION_CODE')}
+              {t('kyc:COMPANY_INVITATION_MODAL.ENTER_YOUR_COMPANY_INVITATION_CODE')}
             </p>
           </div>
           <button
@@ -132,12 +132,12 @@ const CompanyInvitationModal = ({
             className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-lightRed border-lightRed text-lightRed'}`}
           >
             <p className={isCodeValid ? 'text-lightGray4' : 'text-lightRed'}>
-              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION CODE')}
             </p>
             <input
               id="invitationCodeInput"
               type="text"
-              placeholder={t('COMPANY_INVITATION_MODAL.ENTER_CODE')}
+              placeholder={t('kyc:COMPANY_INVITATION_MODAL.ENTER_CODE')}
               value={codeInput}
               onChange={changeCodeHandler}
               required
@@ -145,7 +145,7 @@ const CompanyInvitationModal = ({
             />
           </div>
           <p className={`text-right text-lightRed ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}>
-            {t('COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
+            {t('kyc:COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
           </p>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">

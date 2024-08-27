@@ -47,7 +47,7 @@ const SelectCompanyPageBody = () => {
   >([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedCompanyName = selectedCompany?.name ?? t('SELECT_COMPANY.SELECT_AN_COMPANY');
+  const selectedCompanyName = selectedCompany?.name ?? t('kyc:SELECT_COMPANY.SELECT_AN_COMPANY');
 
   const menuOpenHandler = () => {
     listCompany({
@@ -167,7 +167,7 @@ const SelectCompanyPageBody = () => {
           className="hidden w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
-          <p>{t('SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
+          <p>{t('kyc:SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
         </button>
       </div>
     </div>
@@ -179,11 +179,11 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) title & description */}
         <div className="flex flex-col items-center justify-center self-stretch">
           <div className="text-48px font-bold text-tertiaryBlue max-lg:text-4xl">
-            {t('SELECT_COMPANY.WELCOME_BACK')}
+            {t('kyc:SELECT_COMPANY.WELCOME_BACK')}
             <span className="text-amber-400">{userName}</span>!
           </div>
           <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
-            {t('SELECT_COMPANY.YOUR_COMPANY')}
+            {t('kyc:SELECT_COMPANY.YOUR_COMPANY')}
           </div>
         </div>
         {/* Info: (20240513 - Julian) company selection */}
@@ -224,7 +224,7 @@ const SelectCompanyPageBody = () => {
           {/* Info: (20240513 - Julian) company selection */}
           <div className="relative inline-flex w-full flex-col items-start justify-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-slate-700">
-              {t('SELECT_COMPANY.MY_COMPANY_LIST')}
+              {t('kyc:SELECT_COMPANY.MY_COMPANY_LIST')}
             </p>
             <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-slate-300 bg-white shadow">
               <button
@@ -288,7 +288,7 @@ const SelectCompanyPageBody = () => {
                   fill="#FCFDFF"
                 />
               </svg>
-              <p>{t('SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
+              <p>{t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
               <FaArrowRight />
             </Button>
             <Button
@@ -296,7 +296,7 @@ const SelectCompanyPageBody = () => {
               variant={'tertiaryOutline'}
               className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
             >
-              <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
+              <p>{t('kyc:SELECT_COMPANY.TRY_IT_OUT')}</p>
               <FaArrowRight />
             </Button>
           </div>
