@@ -292,7 +292,7 @@ const SalaryRecordForm = () => {
       <div className="mt-40px flex flex-col gap-y-40px">
         {/* Info: (20240716 - Julian) Toggle */}
         <div className="flex flex-col gap-y-8px">
-          <div className="text-switch-text-active flex items-center gap-x-16px">
+          <div className="text-switch-text-primary flex items-center gap-x-16px">
             <p>Record Working hours</p>
             <Toggle
               id="toggle-record-working-hours"
