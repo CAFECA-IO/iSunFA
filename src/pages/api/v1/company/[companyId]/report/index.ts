@@ -354,6 +354,10 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   let payload: number | null = null;
   const session = await getSession(req, res);
   const { userId, companyId } = session;
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    return { statusMessage, payload };
+  }
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;

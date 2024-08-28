@@ -21,13 +21,17 @@ async function handleGetRequest(
 
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuth(userId, companyId);
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const folderList = await getFolderList(companyId);
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    payload = folderList;
+    const isAuth = await checkAuth(userId, companyId);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const folderList = await getFolderList(companyId);
+      statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+      payload = folderList;
+    }
   }
   return { statusMessage, payload };
 }

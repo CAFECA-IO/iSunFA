@@ -106,73 +106,142 @@ async function updateEmployee(
   return employeeData;
 }
 
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IEmployeeData | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IEmployeeData | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId || !companyId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
+      userId,
+      companyId,
+    });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const { employeeId } = req.query;
+      const employeeIdNumber = Number(employeeId);
+      if (employeeIdNumber) {
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        const employeeData = await getEmployee(employeeIdNumber);
+        payload = employeeData;
+      }
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+async function handleDeleteRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  const payload: null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId || !companyId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
+      userId,
+      companyId,
+    });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const { employeeId } = req.query;
+      const employeeIdNumber = Number(employeeId);
+      if (employeeIdNumber) {
+        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+        await deleteEmployee(employeeIdNumber);
+      }
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IEmployeeData | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IEmployeeData | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId || !companyId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
+      userId,
+      companyId,
+    });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const { employeeId } = req.query;
+      const employeeIdNumber = Number(employeeId);
+      const { salary, bonus, insurancePayment, salaryPayMode, payFrequency, projectIdsNames } =
+        req.body;
+      const employeeData = await updateEmployee(
+        employeeIdNumber,
+        salary,
+        bonus,
+        insurancePayment,
+        salaryPayMode,
+        payFrequency,
+        projectIdsNames
+      );
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+      payload = employeeData;
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IEmployeeData | null } | { statusMessage: string; payload: null }>;
+} = {
+  GET: handleGetRequest,
+  DELETE: handleDeleteRequest,
+  PUT: handlePutRequest,
+};
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IEmployeeData>>
+  res: NextApiResponse<IResponseData<IEmployeeData | null>>
 ) {
-  let shouldContinue: boolean = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload = {} as IEmployeeData;
+  let payload: IEmployeeData | null = null;
 
   try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    const { employeeId } = req.query;
-    const employeeIdNumber = Number(employeeId);
-    if (req.method !== 'GET' && req.method !== 'DELETE' && req.method !== 'PUT') {
-      shouldContinue = false;
-    }
-    if (shouldContinue) {
-      shouldContinue = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    }
-    switch (req.method) {
-      case 'GET': {
-        if (shouldContinue) {
-          if (employeeIdNumber) {
-            statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-            const employeeData = await getEmployee(employeeIdNumber);
-            payload = employeeData;
-          }
-        }
-        break;
-      }
-      case 'DELETE': {
-        if (shouldContinue) {
-          if (employeeIdNumber) {
-            statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-            await deleteEmployee(employeeIdNumber);
-          }
-        }
-        break;
-      }
-      case 'PUT': {
-        if (shouldContinue) {
-          const { salary, bonus, insurancePayment, salaryPayMode, payFrequency, projectIdsNames } =
-            req.body;
-          const employeeData = await updateEmployee(
-            employeeIdNumber,
-            salary,
-            bonus,
-            insurancePayment,
-            salaryPayMode,
-            payFrequency,
-            projectIdsNames
-          );
-          statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-          payload = employeeData;
-        }
-        break;
-      }
-      default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-        payload = {} as IEmployeeData;
-        break;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = {} as IEmployeeData;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IEmployeeData | null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-  const { httpCode, result } = formatApiResponse<IEmployeeData>(statusMessage, payload);
-  res.status(httpCode).json(result);
 }

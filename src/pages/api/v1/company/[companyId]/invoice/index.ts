@@ -162,6 +162,9 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
+    if (!userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    }
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (!isAuth) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);

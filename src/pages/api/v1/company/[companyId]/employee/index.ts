@@ -5,14 +5,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, isParamNumeric, isParamString } from '@/lib/utils/common';
 import { listEmployees, createEmployee } from '@/lib/utils/repo/employee.repo';
 import { getSession } from '@/lib/utils/session';
-import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-
-async function checkAuth(userId: number, companyId: number): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
-  return !!admin;
-}
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -69,7 +65,10 @@ async function handleGetRequest(
   const formattedSearchQueryFromQuery = formatSearchQueryFromQuery(searchQuery);
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuth(userId, companyId);
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
+    userId,
+    companyId,
+  });
   if (!isAuth) {
     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
@@ -98,7 +97,10 @@ async function handlePostRequest(
   } else {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await checkAuth(userId, companyId);
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
+      userId,
+      companyId,
+    });
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {

@@ -9,62 +9,47 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import {
   exportPublicKey,
   getPublicKeyByCompany,
-  encrypt,
-  decrypt,
-  getPrivateKeyByCompany,
 } from '@/lib/utils/crypto';
 
-async function verifyKeyPair(publicKey: CryptoKey, privateKey: CryptoKey) {
-  try {
-    const message = 'test message';
-
-    // 使用公钥加密消息
-    const encryptedMessage = await encrypt(message, publicKey);
-
-    // 使用私钥解密消息
-    const decryptedMessage = await decrypt(encryptedMessage, privateKey);
-
-    // 验证解密后的消息是否与原始消息匹配
-    return decryptedMessage === message;
-  } catch (error) {
-    /* eslint-disable no-console */
-    console.error('Verification failed:', error);
-    /* eslint-enable no-console */
-    return false;
-  }
-}
-
-async function handleGetRequest(companyId: number): Promise<{
-  payload: JsonWebKey | null;
-  statusMessage: string;
-}> {
-  const statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<JsonWebKey | null>>) {
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   let payload: JsonWebKey | null = null;
-  try {
-    const publicCryptoKey = await getPublicKeyByCompany(companyId);
-    const privateKey = await getPrivateKeyByCompany(companyId);
-    if (!publicCryptoKey || !privateKey) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-    }
-    /* eslint-disable no-console */
-    const isSame = await verifyKeyPair(publicCryptoKey, privateKey);
-    console.log('isSame', isSame);
-    console.log('publicCryptoKey', publicCryptoKey);
-    console.log('privateKey', privateKey);
-    /* eslint-enable no-console */
-    if (publicCryptoKey) {
-      payload = await exportPublicKey(publicCryptoKey);
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      try {
+        const publicCryptoKey = await getPublicKeyByCompany(companyId);
+        if (publicCryptoKey) {
+          payload = await exportPublicKey(publicCryptoKey);
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        } else {
+          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        }
+      } catch (error) {
+        logger.error(error);
+      }
     }
-  } catch (error) {
-    logger.error(error);
   }
-  return {
-    payload,
-    statusMessage,
-  };
+
+  return { statusMessage, payload };
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse<IResponseData<JsonWebKey | null>>
+  ) => Promise<{ statusMessage: string; payload: JsonWebKey | null }>;
+} = {
+  GET: handleGetRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -72,29 +57,20 @@ export default async function handler(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: JsonWebKey | null = null;
-  const session = await getSession(req, res);
-  const { userId, companyId } = session;
 
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (isAuth) {
-    try {
-      switch (req.method) {
-        case 'GET': {
-          const result = await handleGetRequest(companyId);
-          payload = result.payload;
-          statusMessage = result.statusMessage;
-          break;
-        }
-        default:
-          statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-          break;
-      }
-    } catch (_error) {
-      const error = _error as Error;
-      statusMessage = error.message;
-      logger.error(error);
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    logger.error(error);
+  } finally {
+    const { httpCode, result } = formatApiResponse<JsonWebKey | null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-  const { httpCode, result } = formatApiResponse<JsonWebKey | null>(statusMessage, payload);
-  res.status(httpCode).json(result);
 }
