@@ -31,7 +31,6 @@ const JournalUploadArea = () => {
     addPendingOCRHandler,
     deletePendingOCRHandler,
     pendingOCRListFromBrowser,
-    updatePendingOCRParams,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
 
@@ -65,7 +64,7 @@ const JournalUploadArea = () => {
     return { encryptedContent, encryptedSymmetricKey, publicKey, iv };
   };
 
-  const encryptFileAndSaveToIndexedDB = async (fileItem: IOCRItem) => {
+  const storeToIndexedDB = async (fileItem: IOCRItem) => {
     // Info: 檢查是否有使用者和公司資訊 (20240822 - Shirley)
     if (!userAuth?.id || !selectedCompany?.id) {
       return;
@@ -101,7 +100,7 @@ const JournalUploadArea = () => {
       file: encryptedFile,
     };
     setUploadFile(newFile);
-    encryptFileAndSaveToIndexedDB(newItem);
+    storeToIndexedDB(newItem);
   };
 
   // Info: (20240711 - Julian) 處理上傳檔案
@@ -133,6 +132,18 @@ const JournalUploadArea = () => {
   };
 
   const upload = async (item: IOCRItem, companyId: number, isNewPendingOCR: boolean) => {
+    if (item.companyId !== companyId) {
+      toastHandler({
+        id: `uploadInvoice-${item.uploadIdentifier}`,
+        content: t('JOURNAL.INCONSISTENT_COMPANY_ID'),
+        closeable: true,
+        type: ToastType.ERROR,
+      });
+      if (!isNewPendingOCR) {
+        deletePendingOCRHandler(item.uploadIdentifier);
+      }
+      return;
+    }
     const formData = new FormData();
     const encryptedFile = new File([item.encryptedContent], item.name, {
       type: item.type,
@@ -151,12 +162,6 @@ const JournalUploadArea = () => {
 
     uploadInvoice({ params: { companyId }, body: formData });
   };
-
-  useEffect(() => {
-    if (userAuth?.id && selectedCompany?.id) {
-      updatePendingOCRParams(userAuth?.id, selectedCompany?.id);
-    }
-  }, [userAuth, selectedCompany]);
 
   useEffect(() => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;

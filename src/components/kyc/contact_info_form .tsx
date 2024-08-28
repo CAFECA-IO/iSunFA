@@ -204,7 +204,7 @@ const ContactInfoForm = ({
             http://
           </p>
           <input
-            id="emailAddress"
+            id="website"
             type="text"
             placeholder={t('kyc:KYC.EXAMPLE')}
             required

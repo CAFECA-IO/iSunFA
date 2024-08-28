@@ -76,9 +76,6 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
-    // TODO: (20240814 - Shirley) [Beta] in dev
-    // eslint-disable-next-line no-console
-    console.log('OCRList in StepOneTab:', OCRList);
 
     return () => {};
   }, [OCRList, OCRListStatus]);
@@ -93,9 +90,6 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
-  // TODO: (20240816 - Shirley) [Beta] in dev
-  // eslint-disable-next-line no-console
-  console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));

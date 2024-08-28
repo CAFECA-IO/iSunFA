@@ -1,12 +1,21 @@
 import { ProgressStatus } from '@/constants/account';
 import { APIName } from '@/constants/api_connection';
+import { EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS } from '@/constants/config';
+import { useUserCtx } from '@/contexts/user_context';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
-import { clearAllItems, deleteItem, getAllItems, initDB } from '@/lib/utils/indexed_db/ocr';
+import {
+  clearAllItems,
+  deleteItem,
+  getAllItems,
+  initDB,
+  updateAndDeleteOldItems,
+} from '@/lib/utils/indexed_db/ocr';
+import { isValidEncryptedDataForOCR } from '@/lib/utils/type_guard/ocr';
 import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 interface IAccountingProvider {
@@ -127,7 +136,6 @@ interface IAccountingContext {
   pendingOCRList: IOCRItem[];
   pendingOCRListFromBrowser: IOCRItem[];
   excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
-  updatePendingOCRParams: (userId: number, companyId: number) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -179,12 +187,12 @@ const initialAccountingContext: IAccountingContext = {
   pendingOCRList: [],
   pendingOCRListFromBrowser: [],
   excludeUploadIdentifier: () => [],
-  updatePendingOCRParams: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
+  const { userAuth, selectedCompany, signedIn } = useUserCtx();
   const {
     trigger: getAccountList,
     data: accountTitleList,
@@ -236,13 +244,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [pendingOCRList, setPendingOCRList] = useState<IOCRItem[]>([]);
   const [isDBReady, setIsDBReady] = useState(false);
-  const [pendingOCRListParams, setPendingOCRListParams] = useState<
-    | {
-        userId: number;
-        companyId: number;
-      }
-    | undefined
-  >(undefined);
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
 
   const getAccountListHandler = (
@@ -340,9 +341,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const mergePendingOCRList = useCallback((upcomingList: IOCRItem[], currentList: IOCRItem[]) => {
     const apiSet = new Set(upcomingList.map((ocr) => ocr.uploadIdentifier));
     const mergedList = [
-      ...upcomingList,
       ...currentList.filter((localOCR) => !apiSet.has(localOCR.uploadIdentifier)),
+      ...upcomingList,
     ];
+    // Info: (20240827 - Shirley) 按創建時間排序，最舊的在前面
+    mergedList.sort((a, b) => a.timestamp - b.timestamp);
     return mergedList;
   }, []);
 
@@ -391,6 +394,15 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     });
   };
 
+  const clearPendingOCRList = () => {
+    setPendingOCRList([]);
+    setPendingOCRListFromBrowser([]);
+  };
+
+  const clearOCRList = () => {
+    setOCRList([]);
+  };
+
   // Info: (20240826 - Shirley) uploadIdentifier in ocrList need to be excluded from pendingOCRList
   const excludeUploadIdentifier = useCallback((OCRs: IOCR[], pendingOCRs: IOCRItem[]) => {
     const uploadIdentifierSet = new Set(OCRs.map((ocr) => ocr.uploadIdentifier));
@@ -404,31 +416,36 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     return filteredPendingOCRList;
   }, []);
 
+  /* Info: (20240827 - Shirley)
+    1. 確認 user context 的 userId 和 companyId 有值
+    2. 確認儲存於 IndexedDB 的 pendingOCRList 資料格式正確，不同就清空 IndexedDB 中的數據
+    3. 確認 pendingOCRList 的 userId 和 userAuth.id 相同，不同就清空 IndexedDB 中的數據
+    4. 確認 pendingOCRList 的數據是否過期，過期就透過 `updateAndDeleteOldItems` 刪掉 IndexedDB 的數據，而 useState 透過 filter 刪選，避免非同步執行會有遺漏
+    5. 將 pendingOCRList 的 companyId 和 selectedCompany.id 相同的數據存為 `pendingOCRListFromBrowser` 給一開始的 JournalUploadArea 上傳檔案、 `pendingOCRs` 給 StepOneTab 顯示 skeleton
+   */
   const initPendingOCRList = async () => {
+    if (!userAuth?.id || !selectedCompany?.id) return;
     const allItems = await getAllItems();
-    const pendingOCRs: IOCRItem[] = [];
+    const now = getTimestampNow();
 
-    allItems.forEach((item) => {
-      if (pendingOCRListParams?.userId && pendingOCRListParams?.companyId) {
-        if (
-          item.data.companyId !== pendingOCRListParams?.companyId ||
-          item.data.userId !== pendingOCRListParams?.userId
-        ) {
-          clearAllItems();
-          return;
-        }
-        pendingOCRs.push(item.data);
-        addPendingOCRHandler(item.data);
-      }
-    });
+    const validItems = allItems.filter(
+      (item) => isValidEncryptedDataForOCR(item.data) && item.data.userId === userAuth.id
+    );
+
+    if (validItems.length !== allItems.length) {
+      clearAllItems();
+    }
+
+    const pendingOCRs = validItems
+      .filter(
+        (item) =>
+          item.data.companyId === selectedCompany.id &&
+          now - item.data.timestamp < EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS
+      )
+      .map((item) => item.data);
+
     setPendingOCRListFromBrowser(pendingOCRs);
-  };
-
-  const updatePendingOCRParams = (userId: number, companyId: number) => {
-    setPendingOCRListParams({
-      userId,
-      companyId,
-    });
+    pendingOCRs.forEach(addPendingOCRHandler);
   };
 
   const initializeDB = async () => {
@@ -440,15 +457,28 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   };
 
+  const clearState = () => {
+    setPendingOCRList([]);
+    setPendingOCRListFromBrowser([]);
+  };
+
   useEffect(() => {
     initializeDB();
   }, []);
 
+  // Info: (20240827 - Shirley) 在初始化 pending ocr 之前，先清理 state 和 IndexedDB 的數據
   useEffect(() => {
-    if (isDBReady && pendingOCRListParams?.userId && pendingOCRListParams?.companyId) {
+    if (isDBReady && userAuth?.id && selectedCompany?.id) {
+      clearPendingOCRList();
+      clearOCRList();
+      updateAndDeleteOldItems(EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS);
       initPendingOCRList();
     }
-  }, [pendingOCRListParams]);
+  }, [isDBReady, userAuth, selectedCompany]);
+
+  useEffect(() => {
+    clearState();
+  }, [signedIn, selectedCompany]);
 
   useEffect(() => {
     if (accountSuccess && accountTitleList) {
@@ -771,7 +801,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       pendingOCRList,
       pendingOCRListFromBrowser,
       excludeUploadIdentifier,
-      updatePendingOCRParams,
     }),
     [
       OCRList,

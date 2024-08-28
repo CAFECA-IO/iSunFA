@@ -28,7 +28,7 @@ const ReportsHistoryItem = ({
 
   const displayedProject = project ? (
     <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-      <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+      <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-white">
         {project?.code}
       </div>
       <p>{project?.name}</p>

@@ -16,7 +16,7 @@ const Skeleton = ({ width, height, rounded, className }: ISkeletonProps) => {
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-darkBlue3',
+        'relative overflow-hidden bg-surface-brand-secondary-5',
         rounded ? 'rounded-full' : 'rounded-lg'
       )}
       style={{ width: `${width}px`, height: `${height}px` }}

@@ -369,7 +369,7 @@ const ConfirmModal = ({
   }, [totalCredit, totalDebit, accountingVoucher, totalPrice]);
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
-  // const displayType = <p className="text-lightRed">{eventType}</p>;
+  // const displayType = <p className="text-surface-state-error">{eventType}</p>;
   const typeString = eventType && typeof eventType === 'string' ? eventType : '';
   const translatedType = typeString
     ? t(`journal:JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
@@ -427,7 +427,7 @@ const ConfirmModal = ({
   const displayProject =
     project !== 'None' ? (
       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-white">
           {projectCode}
         </div>
         <p>{project}</p>
@@ -458,7 +458,7 @@ const ConfirmModal = ({
         <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
       </p>
     ) : hasAIResult ? (
-      <p className="text-successGreen">{t('journal:CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+      <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
     ) : AIResultSuccess === false && AIResultCode ? (
       <p className="text-text-neutral-secondary">
         {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
@@ -663,7 +663,7 @@ const ConfirmModal = ({
             <div className="flex items-center justify-between">
               <p>{t('journal:JOURNAL.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
-              <p className="text-lightRed">{translatedType}</p>
+              <p className="text-surface-state-error">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
