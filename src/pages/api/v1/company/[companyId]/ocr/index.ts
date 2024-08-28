@@ -258,7 +258,6 @@ export async function fetchStatus(aichResultId: string) {
   return status;
 }
 
-// Deprecated: (20240809 - Murky) This function is not used
 export function calculateProgress(createdAt: number, status: ProgressStatus, ocrResultId: string) {
   const currentTime = new Date();
   const diffTime = currentTime.getTime() - timestampInMilliSeconds(createdAt);
@@ -283,7 +282,6 @@ export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
     ocrData.map(async (ocr) => {
       const status = await fetchStatus(ocr.aichResultId);
       const progress = calculateProgress(ocr.createdAt, status, ocr.aichResultId);
-      // const progress = calculateProgress(ocr.imageUrl);
       const imageSize = transformBytesToFileSizeString(ocr.imageSize);
       const createdAt = timestampInSeconds(ocr.createdAt);
       const unprocessedOCR: IOCR = {
@@ -360,8 +358,6 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     const { files, fields } = await getImageFileAndFormFromFormData(req);
     const imageFieldsArray = extractDataFromFields(fields);
     const aichResults = await postImageToAICH(files, imageFieldsArray);
-    // Deprecated: (20240611 - Murky) This function is not used
-    // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger

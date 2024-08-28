@@ -365,9 +365,6 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     reportSheetType,
     startDateInSecond,
     endDateInSecond,
-    // Deprecated: (20240729 - Murky) Move to financial report
-    // lastPeriodStartDateInSecond,
-    // lastPeriodEndDateInSecond,
     formattedReportType,
   } = formatPostRequestQuery(req);
   let thisPeriodReportId = -1;

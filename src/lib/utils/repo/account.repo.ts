@@ -6,6 +6,7 @@ import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
+import logger from '@/lib/utils/logger';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -248,9 +249,7 @@ export async function fuzzySearchAccountByName(name: string) {
     `;
     [account] = accounts;
   } catch (error) {
-    // Deprecated:（ 20240619 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    logger.error(error);
   }
 
   return account;

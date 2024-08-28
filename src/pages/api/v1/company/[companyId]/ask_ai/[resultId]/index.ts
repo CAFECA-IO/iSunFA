@@ -13,6 +13,7 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import logger from '@/lib/utils/logger';
 
 type ApiResponseType = IVoucherDataForSavingToDB | IContract | null;
 // Info: （ 20240522 - Murky）目前只可以使用Voucher Return
@@ -155,9 +156,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecated: （ 20240522 - Murky）Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      logger.error(error);
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

@@ -17,8 +17,6 @@ export interface IVoucherMetaData {
   payment: IPayment;
 }
 
-// Deprecated: (20240524 - Murky) To Emily, To Julian IVoucher only contains lineItems
-// I use IVoucherDataForSavingToDB
 export interface IVoucher {
   voucherIndex: string;
   invoiceIndex: string; // 改在這裡

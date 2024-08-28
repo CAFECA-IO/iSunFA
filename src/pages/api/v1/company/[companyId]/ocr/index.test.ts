@@ -401,7 +401,6 @@ describe('POST OCR', () => {
         files: mockFiles,
       });
 
-      // Deprecated: (20240605 - Murky) - This is not necessary
       jest
         .spyOn(common, 'formatApiResponse')
         .mockReturnValue({ httpCode: 201, result: mockReturn });

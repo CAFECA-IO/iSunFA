@@ -178,7 +178,6 @@ export function mappingAccountToSheetDisplay(
   return sheetDisplay;
 }
 
-// Deprecated: (20240702 - Murky) Accounting logic need to be refactor, Income sum up should be done when update account tree
 export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]): IAccountNode[] {
   const operatingRevenues = accounts.find((account) => account.code === '4000')?.amount || 0;
   const operatingCosts = accounts.find((account) => account.code === '5000')?.amount || 0;

@@ -6,6 +6,7 @@ import { useDashboardCtx } from '@/contexts/dashboard_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
+import logger from '@/lib/utils/logger';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;
@@ -63,7 +64,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
-    console.log('selectedBookmark', selectedBookmarkRef.current);
+    logger.debug('selectedBookmark', selectedBookmarkRef.current);
     setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
         return prevSelected.filter((item) => item !== name);

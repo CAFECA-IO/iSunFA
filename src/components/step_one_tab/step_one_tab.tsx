@@ -19,6 +19,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import logger from '@/lib/utils/logger';
 
 // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
 // 原本代碼是：
@@ -75,8 +76,7 @@ const StepOneTab = () => {
       setFileList(OCRList);
     }
     // TODO: (20240814 - Shirley) [Beta] in dev
-    // eslint-disable-next-line no-console
-    console.log('OCRList in StepOneTab:', OCRList);
+    logger.debug('OCRList in StepOneTab:', OCRList);
 
     return () => {};
   }, [OCRList, OCRListStatus]);
@@ -92,8 +92,7 @@ const StepOneTab = () => {
     }
   };
   // TODO: (20240816 - Shirley) [Beta] in dev
-  // eslint-disable-next-line no-console
-  console.log('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
+  logger.debug('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));
