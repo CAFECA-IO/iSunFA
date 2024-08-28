@@ -74,9 +74,9 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex max-h-450px w-90vw max-w-600px flex-col rounded-sm bg-white p-20px md:max-h-90vh">
+      <div className="relative flex max-h-450px w-90vw max-w-600px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
         {/* Info: (20240503 - Julian) title */}
-        <div className="flex items-center gap-6px font-bold text-navyBlue2">
+        <div className="flex items-center gap-6px font-bold text-card-text-primary">
           <Image src="/icons/assets.svg" width={20} height={20} alt="assets_icon" />
           {/* Info: (20240503 - Julian) desktop title */}
           <h1 className="block whitespace-nowrap text-xl">
@@ -87,14 +87,14 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
+          className="absolute right-12px top-12px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
         {/* Info: (20240503 - Julian) content */}
         <form
           onSubmit={addAssetSubmitHandler}
-          className="flex w-full flex-col gap-y-40px overflow-y-auto overflow-x-hidden text-sm text-navyBlue2"
+          className="flex w-full flex-col gap-y-40px overflow-y-auto overflow-x-hidden text-sm text-input-text-primary"
         >
           {/* Info: (20240503 - Julian) input fields */}
           <div className="grid grid-cols-1 items-center gap-x-16px gap-y-50px pt-40px text-center md:grid-cols-2">
@@ -107,7 +107,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 value={inputName}
                 onChange={nameChangeHandler}
                 required
-                className="h-46px w-full rounded-sm border border-lightGray3 px-12px outline-none placeholder:text-lightGray3"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
               />
             </div>
             {/* Info: (20240503 - Julian) description */}
@@ -119,7 +119,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 value={inputDescription}
                 onChange={descriptionChangeHandler}
                 required
-                className="h-46px w-full rounded-sm border border-lightGray3 px-12px outline-none placeholder:text-lightGray3"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
               />
             </div>
             {/* Info: (20240503 - Julian) purchase date */}
@@ -134,7 +134,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             {/* Info: (20240503 - Julian) purchase price */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.PURCHASE_PRICE')}</p>
-              <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
+              <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <NumericInput
                   id="input-purchase-price"
                   name="input-purchase-price"
@@ -144,7 +144,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />
-                <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
                     src="/currencies/twd.svg"
                     width={16}
@@ -159,7 +159,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             {/* Info: (20240508 - Julian) amount */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.AMOUNT')}</p>
-              <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
+              <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <button type="button" className="p-12px" onClick={minusAmountHandler}>
                   <FiMinus size={20} />
                 </button>
@@ -180,7 +180,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             {/* Info: (20240508 - Julian) total */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.TOTAL')}</p>
-              <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
+              <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <NumericInput
                   id="input-total"
                   name="input-total"
@@ -190,7 +190,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   required
                   className="flex-1 bg-transparent px-10px outline-none"
                 />
-                <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
                     src="/currencies/twd.svg"
                     width={16}
@@ -241,12 +241,12 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
           <div className="flex flex-col gap-40px">
             {/* Info: (20240508 - Julian) depreciation divider */}
             <div className="flex items-center gap-4">
-              <hr className="flex-1 border-lightGray3" />
-              <div className="flex items-center gap-2 text-sm">
+              <hr className="flex-1 border-divider-stroke-lv-1" />
+              <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
                 <PiWrenchFill size={16} />
                 <p>{t('ADD_ASSET_MODAL.DEPRECIATION')}</p>
               </div>
-              <hr className="flex-1 border-lightGray3" />
+              <hr className="flex-1 border-divider-stroke-lv-1" />
             </div>
             {/* Info: (20240508 - Julian) depreciation method */}
             <div className="flex flex-col gap-y-8px">
@@ -256,15 +256,11 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 name="depreciationMethod"
                 value={inputDepreciationMethod}
                 onChange={selectedDepreciationMethod}
-                className="h-46px w-full rounded-sm border border-lightGray3 px-12px outline-none"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none"
               >
-                <option value="straightLine" className="bg-white">
-                  {t('ADD_ASSET_MODAL.STRAIGHT_LINE')}
-                </option>
-                <option value="doubleDeclining className='bg-white'">
-                  {t('ADD_ASSET_MODAL.DOUBLE_DECLINING')}
-                </option>
-                <option value="unitsOfProduction" className="bg-white">
+                <option value="straightLine">{t('ADD_ASSET_MODAL.STRAIGHT_LINE')}</option>
+                <option value="doubleDeclining">{t('ADD_ASSET_MODAL.DOUBLE_DECLINING')}</option>
+                <option value="unitsOfProduction">
                   {t('ADD_ASSET_MODAL.UNITS_OF_PRODUCTION')}
                 </option>
               </select>
@@ -272,7 +268,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             {/* Info: (20240508 - Julian) estimated useful life */}
             <div className="flex flex-col gap-y-8px">
               <p className="font-semibold">{t('ADD_ASSET_MODAL.ESTIMATED_USEFUL_LIFE')}</p>
-              <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 overflow-hidden rounded-sm border border-lightGray3 bg-white">
+              <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <NumericInput
                   id="input-useful-life"
                   name="input-useful-life"
@@ -288,15 +284,9 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   onChange={selectedUsefulLifeUnit}
                   className="h-full p-12px outline-none"
                 >
-                  <option value="year" className="bg-white">
-                    {t('ADD_ASSET_MODAL.YEAR')}
-                  </option>
-                  <option value="month" className="bg-white">
-                    {t('ADD_ASSET_MODAL.MONTH')}
-                  </option>
-                  <option value="day" className="bg-white">
-                    {t('ADD_ASSET_MODAL.DAY')}
-                  </option>
+                  <option value="year">{t('ADD_ASSET_MODAL.YEAR')}</option>
+                  <option value="month">{t('ADD_ASSET_MODAL.MONTH')}</option>
+                  <option value="day">{t('ADD_ASSET_MODAL.DAY')}</option>
                 </select>
               </div>
             </div>

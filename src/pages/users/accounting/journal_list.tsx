@@ -34,12 +34,12 @@ const JournalListPage = () => {
     </div>
   ) : (
     // {/* Info: (20240419 - Julian) Overview */}
-    <div className="flex h-full w-full bg-gray-100">
+    <div className="flex h-full w-full bg-surface-neutral-main-background">
       <div className="mt-100px flex-1 md:ml-80px">
         <div className="flex min-h-screen w-full flex-col px-16px py-32px font-barlow md:px-40px">
           {/* Info: (20240417 - Julian) Title */}
           <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
-            <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
+            <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
               {companyName} {t('JOURNAL.JOURNAL_LIST')}
             </h1>
             <Link href={ISUNFA_ROUTE.ACCOUNTING}>
