@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
@@ -11,7 +11,7 @@ import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
-import { encryptFile, exportPublicKey, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
+import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
 import { addItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IV_LENGTH } from '@/constants/config';
@@ -41,32 +41,50 @@ const JournalUploadArea = () => {
     code: uploadCode,
   } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
 
+  const { data: publicKeyData, success: fetchPublicKeySuccess } = APIHandler<JsonWebKey>(
+    APIName.PUBLIC_KEY_GET,
+    { params: { companyId: selectedCompany?.id } },
+    true
+  );
+
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
-  // Info: (20240711 - Julian) 決定是否顯示 modal 的 flag
-  // const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
-  const getPublicKeyAndEncryptFile = async (fileArrayBuffer: ArrayBuffer) => {
-    // TODO: 暫時生成 RSA 密鑰對，但 public key 應該要從後端來 (20240822 - Shirley)
-    const keyPair = await generateKeyPair();
-    const publicKey = await exportPublicKey(keyPair.publicKey);
-    // Info: 生成初始向量 (20240822 - Shirley)
-    const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const getPublicKeyAndEncryptFile = useCallback(
+    async (
+      fileArrayBuffer: ArrayBuffer
+    ): Promise<{
+      encryptedContent: ArrayBuffer;
+      encryptedSymmetricKey: string;
+      publicKey: JsonWebKey;
+      iv: Uint8Array;
+    } | null> => {
+      // FIXME: || fetchPublicKeySuccess === false
+      if (!selectedCompany?.id || !publicKeyData) {
+        return null;
+      }
 
-    const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
-      fileArrayBuffer,
-      await importPublicKey(publicKey),
-      iv
-    );
+      // Info: 生成初始向量 (20240822 - Shirley)
+      const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
 
-    return { encryptedContent, encryptedSymmetricKey, publicKey, iv };
-  };
+      const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
+        fileArrayBuffer,
+        await importPublicKey(publicKeyData),
+        iv
+      );
+
+      return { encryptedContent, encryptedSymmetricKey, publicKey: publicKeyData, iv };
+    },
+    [publicKeyData, fetchPublicKeySuccess]
+  );
 
   const storeToIndexedDB = async (fileItem: IOCRItem) => {
     // Info: 檢查是否有使用者和公司資訊 (20240822 - Shirley)
     if (!userAuth?.id || !selectedCompany?.id) {
+      return;
+    } else if (fileItem.companyId !== selectedCompany.id || fileItem.userId !== userAuth.id) {
       return;
     }
     await addItem(fileItem.uploadIdentifier, fileItem);
@@ -76,8 +94,11 @@ const JournalUploadArea = () => {
     const fileSize = transformBytesToFileSizeString(file.size);
     const fileArrayBuffer = await file.arrayBuffer();
     const uuid = uuidv4();
-    const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
-      await getPublicKeyAndEncryptFile(fileArrayBuffer);
+    const encryptedRelatedData = await getPublicKeyAndEncryptFile(fileArrayBuffer);
+    if (!encryptedRelatedData) {
+      return;
+    }
+    const { encryptedContent, encryptedSymmetricKey, publicKey, iv } = encryptedRelatedData;
     const now = getTimestampNow();
     const encryptedFile = new File([encryptedContent], file.name, {
       type: file.type,
