@@ -92,7 +92,7 @@ async function handlePutRequest(
             phone,
             imageId
           );
-          const user = await formatUser(updatedUser);
+          const user = formatUser(updatedUser);
           statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
           payload = user;
         }

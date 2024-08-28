@@ -9,8 +9,10 @@ import { formatIInvoice } from '@/lib/utils/formatter/invoice.formatter';
 import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { AICH_URI } from '@/constants/config';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-export function formatInvoiceId(invoiceId: string | string[] | undefined): number {
+function formatInvoiceId(invoiceId: string | string[] | undefined): number {
   let invoiceIdInNumber = -1;
   if (isParamNumeric(invoiceId)) {
     invoiceIdInNumber = Number(invoiceId);
@@ -18,32 +20,11 @@ export function formatInvoiceId(invoiceId: string | string[] | undefined): numbe
   return invoiceIdInNumber;
 }
 
-// Info Murky (20240719): Get request code below
-export function formatGetQuery(req: NextApiRequest) {
+function formatGetQuery(req: NextApiRequest) {
   const { invoiceId } = req.query;
   const invoiceIdNumber = formatInvoiceId(invoiceId);
   return invoiceIdNumber;
 }
-
-export async function handleGetRequest(
-  companyId: number,
-  req: NextApiRequest
-): Promise<IInvoice | null> {
-  let invoice: IInvoice | null = null;
-  const invoiceIdNumber = formatGetQuery(req);
-
-  if (invoiceIdNumber > 0) {
-    const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceIdNumber, companyId);
-
-    if (invoiceFromDB) {
-      invoice = formatIInvoice(invoiceFromDB);
-    }
-  }
-  return invoice;
-}
-// Info Murky (20240719): Get request code above
-
-// Info Murky (20240719): Post request code below
 
 function formatInvoiceFromBody(invoice: unknown) {
   if (typeof invoice !== 'object' || invoice === null) {
@@ -65,14 +46,14 @@ function formatInvoiceFromBody(invoice: unknown) {
       ? (invoice as { contract?: unknown }).contract
       : null,
   };
-  // Info Murky (20240416): Check if invoices is array and is Invoice type
+
   if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice as IInvoice)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
   return formattedInvoice as IInvoice;
 }
 
-export async function uploadInvoiceToAICH(invoice: IInvoice) {
+async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
 
   try {
@@ -86,7 +67,6 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -97,7 +77,7 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-export async function getPayloadFromResponseJSON(
+async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
@@ -111,7 +91,6 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -122,63 +101,104 @@ export async function getPayloadFromResponseJSON(
   return json.payload as IAccountResultStatus;
 }
 
-export async function handlePutRequest(
-  companyId: number,
-  req: NextApiRequest
-): Promise<{
-  journalId: number;
-  resultStatus: IAccountResultStatus;
-}> {
-  const { invoice: invoiceFromBody } = req.body;
-  const invoiceToUpdate = formatInvoiceFromBody(invoiceFromBody);
-  const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IInvoice | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IInvoice | null = null;
 
-  const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-  const journalIdBeUpdated = await handlePrismaUpdateLogic(
-    invoiceToUpdate,
-    resultStatus.resultId,
-    companyId
-  );
-  return { journalId: journalIdBeUpdated, resultStatus };
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const invoiceIdNumber = formatGetQuery(req);
+      if (invoiceIdNumber > 0) {
+        const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceIdNumber, companyId);
+        if (invoiceFromDB) {
+          statusMessage = STATUS_MESSAGE.SUCCESS;
+          payload = formatIInvoice(invoiceFromDB);
+        } else {
+          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        }
+      }
+    }
+  }
+
+  return { statusMessage, payload };
 }
-// Info Murky (20240719): Post request code above
 
-type ApiReturnTypes =
-  | IInvoice
-  | null
-  | {
-      journalId: number;
-      resultStatus: IAccountResultStatus;
-    };
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<{ journalId: number; resultStatus: IAccountResultStatus } | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: { journalId: number; resultStatus: IAccountResultStatus } | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const { invoice: invoiceFromBody } = req.body;
+      const invoiceToUpdate = formatInvoiceFromBody(invoiceFromBody);
+      const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);
+
+      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+      const journalIdBeUpdated = await handlePrismaUpdateLogic(
+        invoiceToUpdate,
+        resultStatus.resultId,
+        companyId
+      );
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+      payload = { journalId: journalIdBeUpdated, resultStatus };
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null }>;
+} = {
+  GET: handleGetRequest,
+  PUT: handlePutRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ApiReturnTypes>>
+  res: NextApiResponse<IResponseData<IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ApiReturnTypes = null;
+  let payload: IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null = null;
 
   try {
-    const session = await getSession(req, res);
-    const { companyId } = session;
-    switch (req.method) {
-      case 'GET':
-        payload = await handleGetRequest(companyId, req);
-        statusMessage = STATUS_MESSAGE.SUCCESS;
-        break;
-      case 'PUT':
-        payload = await handlePutRequest(companyId, req);
-
-        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-        break;
-      default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-        break;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-  const { httpCode, result } = formatApiResponse<ApiReturnTypes>(statusMessage, payload);
-  res.status(httpCode).json(result);
 }

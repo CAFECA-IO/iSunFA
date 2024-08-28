@@ -60,14 +60,18 @@ async function handleGetRequest(
 
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuth(userId, companyId);
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const salaryIdNum = Number(req.query.salaryId);
-    const salaryRecord = await getSalaryRecordById(salaryIdNum, companyId);
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    payload = salaryRecord;
+    const isAuth = await checkAuth(userId, companyId);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const salaryIdNum = Number(req.query.salaryId);
+      const salaryRecord = await getSalaryRecordById(salaryIdNum, companyId);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      payload = salaryRecord;
+    }
   }
   return { statusMessage, payload };
 }
@@ -123,27 +127,31 @@ async function handlePutRequest(
   } else {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await checkAuth(userId, companyId);
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    if (!userId) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     } else {
-      const salaryIdNum = Number(req.query.salaryId);
-      const updatedSalaryRecord = await updateSalaryRecordById(
-        salaryIdNum,
-        companyId,
-        startDate,
-        endDate,
-        department,
-        name,
-        salary,
-        bonus,
-        insurancePayment,
-        description,
-        workingHours,
-        projects
-      );
-      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-      payload = updatedSalaryRecord;
+      const isAuth = await checkAuth(userId, companyId);
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      } else {
+        const salaryIdNum = Number(req.query.salaryId);
+        const updatedSalaryRecord = await updateSalaryRecordById(
+          salaryIdNum,
+          companyId,
+          startDate,
+          endDate,
+          department,
+          name,
+          salary,
+          bonus,
+          insurancePayment,
+          description,
+          workingHours,
+          projects
+        );
+        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+        payload = updatedSalaryRecord;
+      }
     }
   }
   return { statusMessage, payload };

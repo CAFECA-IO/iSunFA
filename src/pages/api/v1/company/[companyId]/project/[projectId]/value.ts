@@ -5,7 +5,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse, convertStringToNumber } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getProjectValue } from '@/lib/utils/repo/value.repo';
-import { getProjectById } from '@/lib/utils/repo/project.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
@@ -17,61 +16,69 @@ async function checkInput(projectId: string) {
   return isValid;
 }
 
-async function checkAuth(userId: number, companyId: number, projectId: number) {
-  let isValid = true;
-  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAdmin) {
-    isValid = false;
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IValue | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IValue | null = null;
+
+  const { projectId } = req.query;
+  const isValidInput = await checkInput(projectId as string);
+  if (!isValidInput) {
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
   } else {
-    const project = await getProjectById(projectId);
-    if (!project || project.companyId !== companyId) {
-      isValid = false;
+    const session = await getSession(req, res);
+    const { userId, companyId } = session;
+    const projectIdNum = convertStringToNumber(projectId);
+    const isAuth = await checkAuthorization(
+      [AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch],
+      { userId, companyId, projectId: projectIdNum }
+    );
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      try {
+        const projectValue: IValue | null = await getProjectValue(projectIdNum);
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        payload = projectValue;
+      } catch (error) {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      }
     }
   }
-  return isValid;
+
+  return { statusMessage, payload };
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse<IResponseData<IValue | null>>
+  ) => Promise<{ statusMessage: string; payload: IValue | null }>;
+} = {
+  GET: handleGetRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IValue | null>>
 ) {
-  let shouldContinue = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IValue | null = null;
 
   try {
-    if (req.method === 'GET') {
-      const { projectId } = req.query;
-      shouldContinue = await checkInput(projectId as string);
-      if (!shouldContinue) {
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-      } else {
-        const session = await getSession(req, res);
-        const { userId, companyId } = session;
-        const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-        if (!isAuth) {
-          throw new Error(STATUS_MESSAGE.FORBIDDEN);
-        }
-        const projectIdNum = convertStringToNumber(projectId);
-
-        shouldContinue = await checkAuth(session.userId, companyId, projectIdNum);
-        if (!shouldContinue) {
-          statusMessage = STATUS_MESSAGE.FORBIDDEN;
-        } else {
-          const projectValue: IValue | null = await getProjectValue(projectIdNum);
-          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          payload = projectValue;
-        }
-      }
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IValue | null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-
-  const { httpCode, result } = formatApiResponse<IValue | null>(statusMessage, payload);
-  res.status(httpCode).json(result);
 }

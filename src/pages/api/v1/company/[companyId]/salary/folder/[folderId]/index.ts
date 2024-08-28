@@ -31,13 +31,17 @@ async function handlePutRequest(
   } else {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
-    const isAuth = await checkAuth(userId, companyId);
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    if (!userId) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     } else {
-      const updatedFolder = await updateFolderName(companyId, folderId, name);
-      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-      payload = updatedFolder;
+      const isAuth = await checkAuth(userId, companyId);
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      } else {
+        const updatedFolder = await updateFolderName(companyId, folderId, name);
+        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+        payload = updatedFolder;
+      }
     }
   }
   return { statusMessage, payload };
@@ -53,13 +57,17 @@ async function handleGetRequest(
   const folderId = Number(req.query.folderId);
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuth(userId, companyId);
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const folderContent = await getFolderContent(companyId, folderId);
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    payload = folderContent;
+    const isAuth = await checkAuth(userId, companyId);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const folderContent = await getFolderContent(companyId, folderId);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      payload = folderContent;
+    }
   }
   return { statusMessage, payload };
 }

@@ -30,7 +30,7 @@ import {
   isIncomeStatementOtherInfo,
 } from '@/lib/utils/type_guard/report';
 
-export function formatGetRequestQueryParams(req: NextApiRequest) {
+function formatGetRequestQueryParams(req: NextApiRequest) {
   const { reportId } = req.query;
   let reportIdNumber = null;
   if (isParamNumeric(reportId)) {
@@ -41,15 +41,7 @@ export function formatGetRequestQueryParams(req: NextApiRequest) {
   };
 }
 
-export function getReportTypeFromReport(report: IReport | null) {
-  let reportType = ReportSheetType.BALANCE_SHEET;
-  if (report) {
-    reportType = report.reportType;
-  }
-  return reportType;
-}
-
-export async function getPeriodReport(reportId: number) {
+async function getPeriodReport(reportId: number) {
   const curPeriodReportFromDB = await findUniqueReportById(reportId);
   let curPeriodReport: IReport | null = null;
   let company: Company | null = null;
@@ -64,7 +56,7 @@ export async function getPeriodReport(reportId: number) {
   };
 }
 
-export function getMappingByReportType(reportType: ReportSheetType): {
+function getMappingByReportType(reportType: ReportSheetType): {
   code: string;
   name: string;
   indent: number;
@@ -86,7 +78,7 @@ export function getMappingByReportType(reportType: ReportSheetType): {
   return mapping;
 }
 
-export function transformDetailsIntoGeneral(
+function transformDetailsIntoGeneral(
   reportType: ReportSheetType,
   accounts: IAccountReadyForFrontend[]
 ): IAccountReadyForFrontend[] {
@@ -119,7 +111,7 @@ export function transformDetailsIntoGeneral(
   return general;
 }
 
-export function addBalanceSheetInfo(report: IReport): BalanceSheetOtherInfo | null {
+function addBalanceSheetInfo(report: IReport): BalanceSheetOtherInfo | null {
   let otherInfo = null;
 
   if (isBalanceSheetOtherInfo(report.otherInfo)) {
@@ -129,7 +121,7 @@ export function addBalanceSheetInfo(report: IReport): BalanceSheetOtherInfo | nu
   return otherInfo;
 }
 
-export function addIncomeStatementInfo(report: IReport): IncomeStatementOtherInfo | null {
+function addIncomeStatementInfo(report: IReport): IncomeStatementOtherInfo | null {
   let otherInfo = null;
 
   if (isIncomeStatementOtherInfo(report.otherInfo)) {
@@ -139,7 +131,7 @@ export function addIncomeStatementInfo(report: IReport): IncomeStatementOtherInf
   return otherInfo;
 }
 
-export function addCashFlowStatementInfo(report: IReport): CashFlowStatementOtherInfo | null {
+function addCashFlowStatementInfo(report: IReport): CashFlowStatementOtherInfo | null {
   let otherInfo = null;
 
   if (isCashFlowStatementOtherInfo(report.otherInfo)) {
@@ -149,7 +141,7 @@ export function addCashFlowStatementInfo(report: IReport): CashFlowStatementOthe
   return otherInfo;
 }
 
-export function getAdditionalInfo(
+function getAdditionalInfo(
   report: IReport
 ): BalanceSheetOtherInfo | IncomeStatementOtherInfo | CashFlowStatementOtherInfo | null {
   const { reportType } = report;
@@ -172,7 +164,7 @@ export function getAdditionalInfo(
   return otherInfo;
 }
 
-export function formatPayloadFromIReport(report: IReport, company: Company): FinancialReport {
+function formatPayloadFromIReport(report: IReport, company: Company): FinancialReport {
   const { reportType } = report;
   const details = report.content;
 
@@ -206,57 +198,60 @@ export function formatPayloadFromIReport(report: IReport, company: Company): Fin
   };
 }
 
-export async function handleGETRequest(
-  companyId: number,
-  req: NextApiRequest
-): Promise<FinancialReport | null | IReport> {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<{ statusMessage: string; payload: FinancialReport | null | IReport }> {
   const { reportIdNumber } = formatGetRequestQueryParams(req);
 
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
 
-  if (reportIdNumber !== null) {
-    const { curPeriodReport, company } = await getPeriodReport(reportIdNumber);
-    if (curPeriodReport && company && curPeriodReport.reportType !== ReportSheetType.REPORT_401) {
-      payload = formatPayloadFromIReport(curPeriodReport, company);
-    } else {
-      payload = curPeriodReport;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  if (isAuth) {
+    if (reportIdNumber !== null) {
+      const { curPeriodReport, company } = await getPeriodReport(reportIdNumber);
+      if (curPeriodReport && company && curPeriodReport.reportType !== ReportSheetType.REPORT_401) {
+        payload = formatPayloadFromIReport(curPeriodReport, company);
+      } else {
+        payload = curPeriodReport;
+      }
     }
   }
 
-  return payload;
+  statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  return { statusMessage, payload };
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: FinancialReport | null | IReport }>;
+} = {
+  GET: handleGetRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<FinancialReport | IReport | null>>
+  res: NextApiResponse<IResponseData<FinancialReport | null | IReport>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: FinancialReport | IReport | null = null;
+  let payload: FinancialReport | null | IReport = null;
   try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
-
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    if (isAuth) {
-      switch (req.method) {
-        case 'GET': {
-          payload = await handleGETRequest(companyId, req);
-
-          statusMessage = STATUS_MESSAGE.SUCCESS;
-          break;
-        }
-        default: {
-          break;
-        }
-      }
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<FinancialReport | IReport | null>(
+  const { httpCode, result } = formatApiResponse<FinancialReport | null | IReport>(
     statusMessage,
     payload
   );
