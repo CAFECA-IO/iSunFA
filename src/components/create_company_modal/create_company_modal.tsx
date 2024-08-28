@@ -86,10 +86,9 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   useEffect(() => {
     if (createCompanySuccess && companyAndRole) {
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
+      resetValues();
       selectCompany(companyAndRole.company);
       modalVisibilityHandler();
-      resetValues();
-      router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
         messageModalDataHandler({
@@ -181,13 +180,13 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       >
         {/* Info: (20240514 - Julian) Title */}
         <div className="flex justify-center px-20px">
-          <h2 className="text-xl font-bold leading-8 text-navyBlue2">
+          <h2 className="text-xl font-bold leading-8 text-card-text-primary">
             {t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}
           </h2>
           <button
             type="button"
             onClick={cancelBtnClickHandler}
-            className="absolute right-3 top-3 flex items-center justify-center text-darkBlue2"
+            className="absolute right-3 top-3 flex items-center justify-center text-icon-surface-single-color-primary"
           >
             <RxCross2 size={20} />
           </button>
@@ -196,8 +195,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         <div className="flex w-full flex-col justify-center gap-y-16px border-b border-t p-40px">
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
-            <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('journal:CONTRACT.COMPANY_NAME')}
+            <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
+              {t('kyc:CONTRACT.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
@@ -206,15 +205,15 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
               value={nameValue}
               onChange={changeNameHandler}
               required
-              className="w-full rounded-sm border px-12px py-10px text-darkBlue2 shadow outline-none placeholder:text-lightGray4"
+              className="w-full rounded-sm border px-12px py-10px text-input-text-input-filled shadow outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
           {/* Info: (20240514 - Julian) Business Registration Number */}
           <div className="inline-flex w-full flex-col items-start gap-2">
-            <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
+            <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
               {t('journal:CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
             </p>
-            <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-darkBlue2 shadow">
+            <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-input-text-input-filled shadow">
               {/* Info: (20240514 - Julian) country selection */}
               <button
                 type="button"
@@ -230,7 +229,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
                 />
                 <FaChevronDown
                   size={16}
-                  className={`text-darkBlue2 ${isMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+                  className={`${isMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
                 />
               </button>
               <input
@@ -240,11 +239,11 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
                 value={registrationNumberValue}
                 onChange={changeRegistrationNumberHandler}
                 required
-                className="w-full p-10px outline-none placeholder:text-lightGray4"
+                className="w-full p-10px outline-none placeholder:text-input-text-input-placeholder"
               />
               <div
                 ref={menuRef}
-                className={`absolute left-4px top-46px flex w-44px flex-col items-center rounded-xs bg-white shadow-dropmenu ${isMenuOpen ? 'max-h-100px overflow-y-auto' : 'max-h-0 overflow-y-hidden'} transition-all duration-300 ease-in-out`}
+                className={`absolute left-4px top-46px flex w-44px flex-col items-center rounded-xs bg-dropdown-surface-menu-background-primary shadow-dropmenu ${isMenuOpen ? 'max-h-100px overflow-y-auto' : 'max-h-0 overflow-y-hidden'} transition-all duration-300 ease-in-out`}
               >
                 {displayCountryMenu}
               </div>
@@ -252,14 +251,10 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           </div>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
-          <button
-            type="button"
-            onClick={cancelBtnClickHandler}
-            className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
-          >
+          <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
             {t('REPORTS_HISTORY_LIST.CANCEL')}
-          </button>
-          <Button type="submit" variant={'tertiary'}>
+          </Button>
+          <Button type="submit" variant="tertiary">
             {t('CONTACT_US.SUBMIT')}
           </Button>
         </div>

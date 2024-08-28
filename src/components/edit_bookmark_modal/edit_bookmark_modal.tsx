@@ -1,9 +1,9 @@
-/* eslint-disable */
 import useStateRef from 'react-usestateref';
 import React, { useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
 
@@ -56,14 +56,16 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
 
   useEffect(() => {
     const addedBookmark = Object.entries(bookmarkList)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([key, value]) => value.added)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .map(([key, value]) => key);
 
     setSelectedBookmark(addedBookmark);
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
-    console.log('selectedBookmark', selectedBookmarkRef.current);
+    // console.log('selectedBookmark', selectedBookmarkRef.current);
     setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
         return prevSelected.filter((item) => item !== name);
@@ -86,12 +88,13 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   const displayedBookmarkMenu = (
     <div ref={menuRef} className="relative flex w-full flex-col justify-center">
       <button
-        className={`flex items-center justify-between gap-0 rounded-sm border bg-white px-5 py-2.5 shadow-sm ${
+        type="button"
+        className={`flex items-center justify-between gap-0 rounded-sm border px-5 py-2.5 shadow-sm ${
           isMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={menuClickHandler}
       >
-        <div className="flex-1 text-start text-base font-normal leading-6 tracking-normal text-tertiaryBlue">
+        <div className="flex-1 text-start text-base font-normal leading-6 tracking-normal text-input-text-input-filled">
           {dropdownMenu}
         </div>
         <div className="flex items-center justify-center text-base lg:text-xl">
@@ -117,9 +120,9 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
       </button>
       {/* Info: (20240425 - Shirley) Bookmark Menu */}
       <div
-        className={`grid-cols-0 absolute left-0 top-[3.5rem] z-20 grid max-h-[250px] w-full overflow-hidden overflow-y-auto rounded-sm border bg-white pb-2 transition-all duration-300 ease-in-out lg:max-h-[250px] ${
+        className={`absolute left-0 top-60px z-20 grid max-h-250px w-full overflow-hidden overflow-y-auto rounded-sm border bg-dropdown-surface-menu-background-primary pb-2 transition-all duration-300 ease-in-out ${
           isMenuOpen
-            ? 'grid-rows-1 border-gray-300 shadow-xl'
+            ? 'grid-rows-1 border-dropdown-stroke-menu shadow-xl'
             : 'pointer-events-none grid-rows-0 overflow-y-hidden border-transparent bg-transparent text-transparent'
         } transition-all duration-300 ease-in-out`}
       >
@@ -133,7 +136,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                     disabled={value.link === ''}
                     onClick={() => menuOptionClickHandler(bookmarkList[key].id)}
                     type="button"
-                    className={`mb-1.5 flex items-center gap-3 rounded-sm px-1.5 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white sm:px-2 ${
+                    className={`mb-1.5 flex items-center gap-3 rounded-sm px-1.5 py-2 text-dropdown-text-primary hover:cursor-pointer disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 sm:px-2 ${
                       !isMenuOpen
                         ? 'hidden'
                         : selectedBookmark.includes(key)
@@ -163,20 +166,13 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                           fill="none"
                           viewBox="0 0 20 20"
                         >
-                          <g clipPath="url(#clip0_3542_64023)">
-                            <path
-                              stroke="#314362"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.5"
-                              d="M6.25 10l2.5 2.5 5-5m4.583 2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
-                            ></path>
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_3542_64023">
-                              <path fill="#fff" d="M0 0H20V20H0z"></path>
-                            </clipPath>
-                          </defs>
+                          <path
+                            stroke="#314362"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.5"
+                            d="M6.25 10l2.5 2.5 5-5m4.583 2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
+                          ></path>
                         </svg>
                       ) : selectedBookmarkRef.current.includes(key) ? (
                         <svg
@@ -186,20 +182,13 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                           fill="none"
                           viewBox="0 0 20 20"
                         >
-                          <g clipPath="url(#clip0_3542_38603)">
-                            <path
-                              className="stroke-current"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.5"
-                              d="M12.5 7.5l-5 5m0-5l5 5m5.833-2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
-                            ></path>
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_3542_38603">
-                              <path fill="#fff" d="M0 0H20V20H0z"></path>
-                            </clipPath>
-                          </defs>
+                          <path
+                            className="stroke-current"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.5"
+                            d="M12.5 7.5l-5 5m0-5l5 5m5.833-2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
+                          ></path>
                         </svg>
                       ) : (
                         <svg
@@ -209,20 +198,13 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                           fill="none"
                           viewBox="0 0 20 20"
                         >
-                          <g clipPath="url(#clip0_3542_71722)">
-                            <path
-                              className="stroke-current"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.5"
-                              d="M10 6.667v6.666M6.667 10h6.666m5 0a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
-                            ></path>
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_3542_71722">
-                              <path fill="#fff" d="M0 0H20V20H0z"></path>
-                            </clipPath>
-                          </defs>
+                          <path
+                            className="stroke-current"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.5"
+                            d="M10 6.667v6.666M6.667 10h6.666m5 0a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
+                          ></path>
                         </svg>
                       )}
                     </div>
@@ -232,7 +214,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
             </div>
 
             <div className="mt-3 flex flex-col justify-center p-1">
-              <div className="h-36 shrink-0 rounded-rounded bg-gray-300" />
+              <div className="h-36 shrink-0 rounded-rounded" />
             </div>
           </div>
         </div>
@@ -241,21 +223,25 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   );
 
   const isDisplayedAddBookmarkModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative mx-0 flex w-350px flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
-        <div className="flex gap-2.5 bg-white px-2 py-4">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
+      <div className="relative mx-0 flex w-350px flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:w-400px sm:px-3">
+        <div className="flex gap-2.5 px-2 py-4">
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
-              <div className="justify-center self-center text-xl font-bold leading-8 text-navyBlue2">
+              <div className="justify-center self-center text-xl font-bold leading-8 text-card-text-primary">
                 {t('EDIT_BOOKMARK_MODAL.EDIT_MY_FAVORITES')}{' '}
               </div>
-              <div className="text-xs leading-5 tracking-normal text-lightGray5">
-                {t('EDIT_BOOKMARK_MODAL.SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE')}{' '}
+              <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
+                {t('EDIT_BOOKMARK_MODAL.SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE')}
               </div>
             </div>
           </div>
           <div className="absolute right-3 top-3">
-            <button onClick={cancelBtnClickHandler} className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={cancelBtnClickHandler}
+              className="flex items-center justify-center"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="30"
@@ -271,22 +257,19 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                 ></path>
               </svg>
             </button>
-          </div>{' '}
+          </div>
         </div>
-        <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
+        <div className="flex w-full flex-col justify-center px-5 py-2.5">
           <div className="flex flex-col justify-center">{displayedBookmarkMenu}</div>
         </div>
-        <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal">
+        <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal">
           <div className="flex gap-3">
-            <button
-              onClick={cancelBtnClickHandler}
-              className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
-            >
+            <Button onClick={cancelBtnClickHandler} variant="tertiaryBorderless">
               {t('REPORTS_HISTORY_LIST.CANCEL')}
-            </button>{' '}
+            </Button>
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
               {t('EDIT_BOOKMARK_MODAL.SAVE')}
-            </Button>{' '}
+            </Button>
           </div>
         </div>
       </div>

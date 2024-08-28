@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
@@ -10,8 +10,8 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
-import { encryptFile, exportPublicKey, generateKeyPair, importPublicKey } from '@/lib/utils/crypto';
+import { cn, getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
+import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
 import { addItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IV_LENGTH } from '@/constants/config';
@@ -41,32 +41,56 @@ const JournalUploadArea = () => {
     code: uploadCode,
   } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
 
+  const {
+    trigger: fetchPublicKey,
+    data: publicKeyData,
+    success: fetchPublicKeySuccess,
+  } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
+
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
-  // Info: (20240711 - Julian) 決定是否顯示 modal 的 flag
-  // const [isShowSuccessModal, setIsShowSuccessModal] = useState<boolean>(false);
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const [isUploadDisabled, setIsUploadDisabled] = useState<boolean>(true);
 
-  const getPublicKeyAndEncryptFile = async (fileArrayBuffer: ArrayBuffer) => {
-    // TODO: 暫時生成 RSA 密鑰對，但 public key 應該要從後端來 (20240822 - Shirley)
-    const keyPair = await generateKeyPair();
-    const publicKey = await exportPublicKey(keyPair.publicKey);
-    // Info: 生成初始向量 (20240822 - Shirley)
-    const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const getPublicKeyAndEncryptFile = useCallback(
+    async (
+      fileArrayBuffer: ArrayBuffer
+    ): Promise<{
+      encryptedContent: ArrayBuffer;
+      encryptedSymmetricKey: string;
+      publicKey: JsonWebKey;
+      iv: Uint8Array;
+    } | null> => {
+      if (!selectedCompany?.id || !publicKeyData || fetchPublicKeySuccess === false) {
+        toastHandler({
+          id: 'uploadFile',
+          content: t('JOURNAL.FAILED_TO_UPLOAD_FILE'),
+          closeable: true,
+          type: ToastType.ERROR,
+        });
+        return null;
+      }
 
-    const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
-      fileArrayBuffer,
-      await importPublicKey(publicKey),
-      iv
-    );
+      // Info: 生成初始向量 (20240822 - Shirley)
+      const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
 
-    return { encryptedContent, encryptedSymmetricKey, publicKey, iv };
-  };
+      const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
+        fileArrayBuffer,
+        await importPublicKey(publicKeyData),
+        iv
+      );
+
+      return { encryptedContent, encryptedSymmetricKey, publicKey: publicKeyData, iv };
+    },
+    [publicKeyData, fetchPublicKeySuccess]
+  );
 
   const storeToIndexedDB = async (fileItem: IOCRItem) => {
     // Info: 檢查是否有使用者和公司資訊 (20240822 - Shirley)
     if (!userAuth?.id || !selectedCompany?.id) {
+      return;
+    } else if (fileItem.companyId !== selectedCompany.id || fileItem.userId !== userAuth.id) {
       return;
     }
     await addItem(fileItem.uploadIdentifier, fileItem);
@@ -76,8 +100,11 @@ const JournalUploadArea = () => {
     const fileSize = transformBytesToFileSizeString(file.size);
     const fileArrayBuffer = await file.arrayBuffer();
     const uuid = uuidv4();
-    const { encryptedContent, encryptedSymmetricKey, publicKey, iv } =
-      await getPublicKeyAndEncryptFile(fileArrayBuffer);
+    const encryptedRelatedData = await getPublicKeyAndEncryptFile(fileArrayBuffer);
+    if (!encryptedRelatedData) {
+      return;
+    }
+    const { encryptedContent, encryptedSymmetricKey, publicKey, iv } = encryptedRelatedData;
     const now = getTimestampNow();
     const encryptedFile = new File([encryptedContent], file.name, {
       type: file.type,
@@ -105,6 +132,9 @@ const JournalUploadArea = () => {
 
   // Info: (20240711 - Julian) 處理上傳檔案
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     const { files } = event.target;
     if (files && files.length > 0) {
@@ -114,15 +144,24 @@ const JournalUploadArea = () => {
   };
   // Info: (20240711 - Julian) 處理拖曳上傳檔案
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     setIsDragOver(true);
   };
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     setIsDragOver(false);
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
@@ -162,6 +201,26 @@ const JournalUploadArea = () => {
 
     uploadInvoice({ params: { companyId }, body: formData });
   };
+
+  useEffect(() => {
+    if (selectedCompany?.id) {
+      fetchPublicKey({ params: { companyId: selectedCompany.id } });
+    }
+  }, [selectedCompany?.id]);
+
+  useEffect(() => {
+    if (fetchPublicKeySuccess === false) {
+      setIsUploadDisabled(true);
+      toastHandler({
+        id: 'fetchPublicKey',
+        content: t('JOURNAL.FAILED_TO_FETCH_PUBLIC_KEY'),
+        closeable: true,
+        type: ToastType.ERROR,
+      });
+    } else if (fetchPublicKeySuccess === true) {
+      setIsUploadDisabled(false);
+    }
+  }, [fetchPublicKeySuccess]);
 
   useEffect(() => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
@@ -248,16 +307,22 @@ const JournalUploadArea = () => {
     >
       <label
         htmlFor="journal-upload-area"
-        className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
-          isDragOver
-            ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
-            : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
-        } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
+        className={cn(
+          'flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px',
+          isUploadDisabled
+            ? 'cursor-not-allowed border-drag-n-drop-stroke-disable bg-drag-n-drop-surface-disable'
+            : [
+                'hover:cursor-pointer hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover',
+                isDragOver
+                  ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
+                  : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary',
+              ]
+        )}
       >
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
           {t('journal:JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-          <span className="text-darkBlue">{t('journal:JOURNAL.BROWSE')}</span>
+          <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
         </p>
         <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
 
@@ -268,6 +333,7 @@ const JournalUploadArea = () => {
           type="file"
           className="hidden"
           onChange={handleFileChange}
+          disabled={isUploadDisabled}
         />
       </label>
     </div>

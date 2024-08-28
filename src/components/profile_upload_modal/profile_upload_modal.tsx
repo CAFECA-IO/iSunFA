@@ -184,11 +184,11 @@ const ProfileUploadModal = ({
         onChange={(event) => printImage(event)}
       />
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-      <p className="mt-20px font-semibold text-navyBlue2">
+      <p className="mt-20px font-semibold text-drag-n-drop-text-primary">
         {t('PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-        <span className="text-darkBlue">{t('journal:JOURNAL.BROWSE')}</span>
+        <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
       </p>
-      <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
+      <p className="text-center text-drag-n-drop-text-note">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
     </label>
   );
 
@@ -240,7 +240,7 @@ const ProfileUploadModal = ({
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
+          className="absolute right-12px top-12px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>

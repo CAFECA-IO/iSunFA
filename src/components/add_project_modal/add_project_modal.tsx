@@ -233,14 +233,14 @@ const AddProjectModal = ({
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="companySearchBar"
             type="text"
             placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>
