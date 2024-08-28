@@ -564,7 +564,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
                   <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
                   <Link
                     href={ISUNFA_ROUTE.SELECT_COMPANY}
-                    className="text-base font-semibold text-darkBlue"
+                    className="text-base font-semibold text-link-text-primary"
                   >
                     {t('COMMON.END_OF_TRIAL')}
                   </Link>

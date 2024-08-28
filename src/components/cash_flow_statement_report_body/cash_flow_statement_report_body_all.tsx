@@ -110,7 +110,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-lightGray9 bg-surface-brand-secondary p-10px">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
         <p className="m-0 text-xs text-white">{page}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
@@ -574,7 +574,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 height={24}
               />
               <p className="my-auto items-center text-center text-xs font-semibold">A和B比例關係</p>
-              <div className="absolute bottom-0 left-0 h-px w-full bg-darkBlue2"></div>
+              <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <div className="mb-16 flex">
               <div className="mt-18px w-3/5">
@@ -729,7 +729,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               <p className="my-auto items-end text-xs font-semibold text-lightGray5">
                 {curYear}年度投資活動項目佔比
               </p>
-              <div className="absolute bottom-0 left-0 h-px w-full bg-darkBlue2"></div>
+              <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <BarChart data={curBarChartData} labels={curBarChartLabels} />
           </div>
@@ -745,7 +745,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               <p className="my-auto items-end text-xs font-semibold text-lightGray5">
                 {preYear}年度投資活動項目佔比
               </p>
-              <div className="absolute bottom-0 left-0 h-px w-full bg-darkBlue2"></div>
+              <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <BarChart data={preBarChartData} labels={preBarChartLabels} />
           </div>
