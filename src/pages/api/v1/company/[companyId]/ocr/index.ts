@@ -30,6 +30,7 @@ import { FileFolder } from '@/constants/file';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
+import logger from '@/lib/utils/logger';
 
 // Info: (20240424 - Murky) 要使用formidable要先關掉bodyParser
 export const config = {
@@ -57,19 +58,24 @@ export function createImageFormData(imageBlob: Blob, imageName: string) {
 export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   const formData = createImageFormData(imageBlob, imageName);
 
-  let response: Response;
-  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_INVOICE);
+  let response: Response | undefined;
+  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_OCR);
   try {
     response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
+    logger.error(error, 'Ocr uploadImageToAICH error, happen when POST AICH API');
   }
 
-  if (!response.ok) {
+  if (!response || !response.ok) {
+    logger.info(
+      {
+        aich_response: response,
+      },
+      'Ocr uploadImageToAICH response is not ok'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -80,6 +86,12 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
+    logger.info(
+      {
+        responseJSON,
+      },
+      'Ocr getPayloadFromResponseJSON responseJSON is null'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -90,11 +102,20 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    logger.error(
+      error,
+      'Ocr getPayloadFromResponseJSON error, happen when parse responseJSON from AICH API'
+    );
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
   if (!json || !json.payload) {
+    logger.info(
+      {
+        aich_response: json,
+      },
+      'Ocr getPayloadFromResponseJSON response is not json, or json do not have payload'
+    );
     throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   }
 
@@ -176,12 +197,19 @@ export async function postImageToAICH(
           };
         } catch (error) {
           // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+          logger.error(error, 'Ocr postImageToAICH error, happen when POST Image to AICH API');
         }
         return result;
       })
     );
   } else {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    logger.info(
+      {
+        files,
+      },
+      'Ocr postImageToAICH files.image is null or files.image.length is 0'
+    );
   }
 
   return resultJson;
@@ -230,6 +258,7 @@ export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
     fields = parsedForm.fields;
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    logger.error(error, 'Ocr getImageFileAndFormFromFormData error, happen when parse form data');
   }
   return {
     files,
@@ -241,7 +270,7 @@ export async function fetchStatus(aichResultId: string) {
 
   if (aichResultId.length > 0) {
     try {
-      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT_ID, aichResultId);
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
       const result = await fetch(fetchUrl);
 
       if (!result.ok) {
@@ -251,6 +280,7 @@ export async function fetchStatus(aichResultId: string) {
       status = (await result.json()).payload;
     } catch (error) {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      logger.error(error, 'Ocr fetchStatus error, happen when fetch AICH API');
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
   }
@@ -326,6 +356,7 @@ export async function createOcrFromAichResults(
     );
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    logger.error(error, 'Ocr createOcrFromAichResults error, happen when create Ocr in Prisma');
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -355,7 +386,7 @@ export async function createOcrFromAichResults(
 
 export async function handlePostRequest(companyId: number, req: NextApiRequest) {
   let resultJson: IOCR[] = [];
-
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
     const { files, fields } = await getImageFileAndFormFromFormData(req);
     const imageFieldsArray = extractDataFromFields(fields);
@@ -363,11 +394,16 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     // Deprecated: (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
+    statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    logger.error(error, 'Ocr handlePostRequest error, happen when POST Image to AICH API');
   }
 
-  return resultJson;
+  return {
+    resultJson,
+    statusMessage,
+  };
 }
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
@@ -380,6 +416,10 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    logger.error(
+      error,
+      'Ocr handleGetRequest error, happen when findManyOCRByCompanyIdWithoutUsedInPrisma'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -410,17 +450,36 @@ export default async function handler(
           break;
         }
         case 'POST': {
-          payload = await handlePostRequest(companyId, req);
-          statusMessage = STATUS_MESSAGE.CREATED;
+          const result = await handlePostRequest(companyId, req);
+
+          payload = result.resultJson;
+          statusMessage = result.statusMessage;
           break;
         }
         default: {
+          logger.info(
+            {
+              method: req.method,
+            },
+            'Ocr handler method is not allowed'
+          );
           throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
         }
       }
     } catch (_error) {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      logger.error(_error, 'Ocr handler error');
     }
+  } else {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    logger.info(
+      {
+        userId,
+        companyId,
+        isAuth,
+      },
+      'Ocr handler is not authorized'
+    );
   }
 
   const { httpCode, result } = formatApiResponse<ApiReturnType>(statusMessage, payload);
