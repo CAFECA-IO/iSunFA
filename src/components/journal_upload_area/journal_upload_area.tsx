@@ -10,7 +10,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
-import { getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
+import { cn, getTimestampNow, transformBytesToFileSizeString } from '@/lib/utils/common';
 import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
 import { addItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
@@ -51,6 +51,7 @@ const JournalUploadArea = () => {
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
   // Info: (20240711 - Julian) 拖曳的樣式
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const [isUploadDisabled, setIsUploadDisabled] = useState<boolean>(true);
 
   const getPublicKeyAndEncryptFile = useCallback(
     async (
@@ -61,8 +62,13 @@ const JournalUploadArea = () => {
       publicKey: JsonWebKey;
       iv: Uint8Array;
     } | null> => {
-      // FIXME: || fetchPublicKeySuccess === false
-      if (!selectedCompany?.id || !publicKeyData) {
+      if (!selectedCompany?.id || !publicKeyData || fetchPublicKeySuccess === false) {
+        toastHandler({
+          id: 'uploadFile',
+          content: t('JOURNAL.FAILED_TO_UPLOAD_FILE'),
+          closeable: true,
+          type: ToastType.ERROR,
+        });
         return null;
       }
 
@@ -126,6 +132,9 @@ const JournalUploadArea = () => {
 
   // Info: (20240711 - Julian) 處理上傳檔案
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     const { files } = event.target;
     if (files && files.length > 0) {
@@ -135,15 +144,24 @@ const JournalUploadArea = () => {
   };
   // Info: (20240711 - Julian) 處理拖曳上傳檔案
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     setIsDragOver(true);
   };
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     setIsDragOver(false);
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    if (isUploadDisabled) {
+      return;
+    }
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
@@ -189,6 +207,20 @@ const JournalUploadArea = () => {
       fetchPublicKey({ params: { companyId: selectedCompany.id } });
     }
   }, [selectedCompany?.id]);
+
+  useEffect(() => {
+    if (fetchPublicKeySuccess === false) {
+      setIsUploadDisabled(true);
+      toastHandler({
+        id: 'fetchPublicKey',
+        content: t('JOURNAL.FAILED_TO_FETCH_PUBLIC_KEY'),
+        closeable: true,
+        type: ToastType.ERROR,
+      });
+    } else if (fetchPublicKeySuccess === true) {
+      setIsUploadDisabled(false);
+    }
+  }, [fetchPublicKeySuccess]);
 
   useEffect(() => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
@@ -275,11 +307,22 @@ const JournalUploadArea = () => {
     >
       <label
         htmlFor="journal-upload-area"
-        className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
-          isDragOver
-            ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
-            : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
-        } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
+        className={cn(
+          'flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px',
+          isUploadDisabled
+            ? 'cursor-not-allowed border-drag-n-drop-stroke-disable bg-drag-n-drop-surface-disable'
+            : [
+                'hover:cursor-pointer hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover',
+                isDragOver
+                  ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
+                  : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary',
+              ]
+        )}
+        // className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
+        //   isDragOver
+        //     ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
+        //     : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
+        // } ${isUploadDisabled ? 'cursor-not-allowed border-button-stroke-disable bg-button-surface-soft-disable' : 'hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover'} items-center justify-center p-24px md:p-48px`}
       >
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
@@ -295,6 +338,7 @@ const JournalUploadArea = () => {
           type="file"
           className="hidden"
           onChange={handleFileChange}
+          disabled={isUploadDisabled}
         />
       </label>
     </div>
