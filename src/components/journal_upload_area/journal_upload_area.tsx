@@ -318,11 +318,6 @@ const JournalUploadArea = () => {
                   : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary',
               ]
         )}
-        // className={`flex h-full w-full flex-col rounded-lg border border-dashed hover:cursor-pointer ${
-        //   isDragOver
-        //     ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
-        //     : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
-        // } ${isUploadDisabled ? 'cursor-not-allowed border-button-stroke-disable bg-button-surface-soft-disable' : 'hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover'} items-center justify-center p-24px md:p-48px`}
       >
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
