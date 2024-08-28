@@ -442,7 +442,9 @@
     "DATE_HINT": "請選擇日期",
     "AMOUNT_HINT": "請填入金額",
     "TIMES_HINT": "請填入次數",
-    "INCONSISTENT_COMPANY_ID": "公司 ID 不一致"
+    "INCONSISTENT_COMPANY_ID": "公司 ID 不一致",
+    "FAILED_TO_FETCH_PUBLIC_KEY": "獲取公鑰失敗",
+    "FAILED_TO_UPLOAD_FILE": "上傳文件失敗"
   },
   "PROJECT": {
     "CHOOSE_TEAM_MEMBERS": "選擇團隊成員",

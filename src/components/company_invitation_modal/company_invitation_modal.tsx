@@ -11,8 +11,6 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAdmin } from '@/interfaces/admin';
 import { ICompany } from '@/interfaces/company';
-import { useRouter } from 'next/router';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 
 interface ICompanyInvitationModal {
@@ -30,7 +28,6 @@ const CompanyInvitationModal = ({
   const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
-  const router = useRouter();
 
   const {
     data: adminData,
@@ -63,7 +60,6 @@ const CompanyInvitationModal = ({
           ),
           closeable: true,
         });
-        router.push(ISUNFA_ROUTE.DASHBOARD);
       }
     } else if (success === false) {
       // Info: (20240516 - Julian) Error handling
