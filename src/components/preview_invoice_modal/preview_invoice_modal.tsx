@@ -35,7 +35,7 @@ const PreviewInvoiceModal = ({
       title: 'Download Selected Voucher',
       content: 'Are you sure you want to download the selected items?',
       messageType: MessageType.INFO,
-      submitBtnStr: t('JOURNAL.DOWNLOAD'),
+      submitBtnStr: t('journal:JOURNAL.DOWNLOAD'),
       // ToDo: (20240508 - Julian) [Beta] 下載功能
       submitBtnFunction: () => {
         modalVisibilityHandler();
@@ -59,7 +59,9 @@ const PreviewInvoiceModal = ({
         <div className="flex h-full w-full flex-col items-center divide-y divide-lightGray6">
           {/* Info: (20240508 - Julian) Title */}
           <div className="flex flex-col items-center pb-16px">
-            <h1 className="text-xl font-bold text-navyBlue2">{t('JOURNAL.PREVIEW_INVOICE')}</h1>
+            <h1 className="text-xl font-bold text-navyBlue2">
+              {t('journal:JOURNAL.PREVIEW_INVOICE')}
+            </h1>
             <p className="text-xs text-lightGray5">{timestampToString(date).date}</p>
           </div>
           {/* Info: (20240508 - Julian) Function Buttons */}

@@ -56,7 +56,7 @@ const SettingSidebar = () => {
                 ></path>
               </svg>
               <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                {t('SETTING.PERSONAL_SETTING')}
+                {t('setting:SETTING.PERSONAL_SETTING')}
               </p>
               {/* </Link> */}
             </div>
@@ -66,7 +66,7 @@ const SettingSidebar = () => {
             <div className="mt-4 flex gap-4 text-sm leading-5 tracking-normal text-divider-text-lv-1">
               <div className="flex gap-2">
                 <Image src="/icons/real_home.svg" width={20} height={20} alt="setting_icon" />
-                <div>{t('SETTING.COMPANY_SETTING')}</div>
+                <div>{t('setting:SETTING.COMPANY_SETTING')}</div>
               </div>
               <div className="my-auto h-px w-80px flex-1 shrink-0 bg-divider-stroke-lv-4" />
             </div>
@@ -97,7 +97,7 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('SETTING.BASIC_INFO')}{' '}
+                  {t('setting:SETTING.BASIC_INFO')}{' '}
                 </p>
               </Link>
 
@@ -129,7 +129,7 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('SETTING.ACCOUNTING_TITLE')}{' '}
+                  {t('setting:SETTING.ACCOUNTING_TITLE')}{' '}
                 </p>
               </Link>
 
@@ -162,7 +162,7 @@ const SettingSidebar = () => {
                   </g>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('SETTING.TRADING_PARTNER_LIST')}{' '}
+                  {t('setting:SETTING.TRADING_PARTNER_LIST')}{' '}
                 </p>
                 {/* </Link> */}
               </div>
@@ -194,7 +194,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('SETTING.ADMINISTRATOR')}{' '}
+                  {t('setting:SETTING.ADMINISTRATOR')}{' '}
                 </p>
                 {/* </Link> */}
               </div>
@@ -226,7 +226,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('SETTING.SUBSCRIPTION_BILLS')}{' '}
+                  {t('setting:SETTING.SUBSCRIPTION_BILLS')}{' '}
                 </p>
                 {/* </Link> */}
               </div>

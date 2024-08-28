@@ -28,7 +28,7 @@ const ProjectMainPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('PROJECT.PROJECT_LIST_ISUNFA')}</title>
+        <title>{t('project:PROJECT.PROJECT_LIST_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -44,7 +44,16 @@ const ProjectMainPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

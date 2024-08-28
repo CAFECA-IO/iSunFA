@@ -146,7 +146,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('PROJECT.NO_DATA')}
+          {t('project:PROJECT.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -167,7 +167,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('PROJECT.NO_DATA')}
+          {t('project:PROJECT.NO_DATA')}
         </text>
       </svg>
     </div>

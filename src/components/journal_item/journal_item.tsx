@@ -54,8 +54,8 @@ const Operations = ({
       router.push(ISUNFA_ROUTE.ACCOUNTING);
     } else {
       messageModalDataHandler({
-        title: t('JOURNAL.FAILED_TO_FETCH_DATA'),
-        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        title: t('journal:JOURNAL.FAILED_TO_FETCH_DATA'),
+        subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
         content: `Error code: ${code}`,
         messageType: MessageType.ERROR,
         submitBtnStr: t('COMMON.CLOSE'),
@@ -179,7 +179,7 @@ const JournalItem = ({
             fill="#C84949"
           />
         </svg>
-        <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT')}</p>
+        <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT')}</p>
       </div>
     ) : // Info: (20240517 - Julian) 收入
     eventType === EventType.INCOME ? (
@@ -198,7 +198,7 @@ const JournalItem = ({
             fill="#3CA876"
           />
         </svg>
-        <p className="whitespace-nowrap">{t('JOURNAL.RECEIVING')}</p>
+        <p className="whitespace-nowrap">{t('journal:JOURNAL.RECEIVING')}</p>
       </div>
     ) : // Info: (20240517 - Julian) 轉帳
     eventType === EventType.TRANSFER ? (
@@ -217,7 +217,7 @@ const JournalItem = ({
             fill="#002462"
           />
         </svg>
-        <p className="whitespace-nowrap">{t('JOURNAL.TRANSFER')}</p>
+        <p className="whitespace-nowrap">{t('journal:JOURNAL.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -232,7 +232,7 @@ const JournalItem = ({
           {truncateString(debit.account, 10)}
         </p>
         <p className="whitespace-nowrap text-navyBlue2">
-          {debit.amount} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
+          {debit.amount} <span className="text-lightGray4">{t('journal:JOURNAL.TWD')}</span>
         </p>
       </div>
       <div className="flex items-center gap-6px">
@@ -244,7 +244,7 @@ const JournalItem = ({
           {truncateString(credit.account, 10)}
         </p>
         <p className="whitespace-nowrap text-navyBlue2">
-          {credit.amount} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
+          {credit.amount} <span className="text-lightGray4">{t('journal:JOURNAL.TWD')}</span>
         </p>
       </div>
     </div>
@@ -415,7 +415,8 @@ export const JournalItemMobile = ({
             <p className="flex-1 whitespace-nowrap">{truncateString(description ?? '', 10)}</p>
             {/* Info: (20240517 - Julian) 金額 */}
             <p>
-              {numberWithCommas(price)} <span className="text-lightGray4">{t('JOURNAL.TWD')}</span>
+              {numberWithCommas(price)}{' '}
+              <span className="text-lightGray4">{t('journal:JOURNAL.TWD')}</span>
             </p>
           </div>
         </div>

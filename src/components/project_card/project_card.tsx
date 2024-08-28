@@ -66,16 +66,16 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
       {/* Info: (2024606 - Julian) Content */}
       <div className="flex flex-col gap-y-14px text-sm">
         <div className="flex items-center gap-x-16px">
-          <p className="w-52px text-text-neutral-tertiary">{t('PROJECT.INCOME')}</p>
+          <p className="w-52px text-text-neutral-tertiary">{t('project:PROJECT.INCOME')}</p>
           <p className="font-semibold text-text-neutral-primary">{numberWithCommas(income)}</p>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-x-16px">
-            <p className="w-52px text-text-neutral-tertiary">{t('PROJECT.EXPENSE')}</p>
+            <p className="w-52px text-text-neutral-tertiary">{t('project:PROJECT.EXPENSE')}</p>
             <p className="font-semibold text-text-neutral-primary">{numberWithCommas(expense)}</p>
           </div>
           <div className="flex items-center gap-x-16px">
-            <p className="text-text-neutral-tertiary">{t('PROJECT.PROFIT')}</p>
+            <p className="text-text-neutral-tertiary">{t('project:PROJECT.PROFIT')}</p>
             <p className="font-semibold text-text-neutral-primary">{numberWithCommas(profit)}</p>
           </div>
         </div>
@@ -84,7 +84,7 @@ const ProjectCard = ({ project }: IProjectCardProps) => {
       <div
         className={`absolute -right-4 rounded-xs ${stageColor} ${stage === ProjectStage.ARCHIVED ? 'text-lightGray4' : 'text-badge-text-invert'} py-4px pl-12px pr-28px text-xs`}
       >
-        {t(`STAGE_NAME_MAP.${stage.toUpperCase().replace(/ /g, '_')}`)}
+        {t(`project:STAGE_NAME_MAP.${stage.toUpperCase().replace(/ /g, '_')}`)}
       </div>
     </Link>
   );

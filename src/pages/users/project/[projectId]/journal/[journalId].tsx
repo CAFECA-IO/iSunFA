@@ -19,7 +19,7 @@ const ProjectJournalDetailPage = ({ projectId, journalId }: IProjectJournalPageP
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('JOURNAL.PROJECT_ADD_JOURNAL_ISUNFA')}</title>
+        <title>{t('journal:JOURNAL.PROJECT_ADD_JOURNAL_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -58,7 +58,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
     props: {
       projectId: params.projectId,
       journalId: params.journalId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

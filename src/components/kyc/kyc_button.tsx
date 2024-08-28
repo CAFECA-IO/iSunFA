@@ -8,7 +8,7 @@ const KYCButton = ({ onClick }: { onClick: () => void }) => {
       className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-32px py-14px text-lg font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover"
       onClick={onClick}
     >
-      <p>{t('KYC.START_KYC')}</p>
+      <p>{t('kyc:KYC.START_KYC')}</p>
       <div>
         <svg
           xmlns="http://www.w3.org/2000/svg"

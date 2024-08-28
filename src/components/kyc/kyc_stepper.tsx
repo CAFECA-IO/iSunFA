@@ -63,7 +63,7 @@ const KYCStepper = ({ currentStep }: { currentStep: number }) => {
             </defs>
           </svg>
         )}
-        <p>{t('KYC.BASIC_INFO')}</p>
+        <p>{t('kyc:KYC.BASIC_INFO')}</p>
       </div>
 
       <div
@@ -101,7 +101,7 @@ const KYCStepper = ({ currentStep }: { currentStep: number }) => {
             </clipPath>
           </defs>
         </svg>
-        <p>{t('KYC.REGISTRATION_INFO')}</p>
+        <p>{t('kyc:KYC.REGISTRATION_INFO')}</p>
       </div>
 
       <div
@@ -139,7 +139,7 @@ const KYCStepper = ({ currentStep }: { currentStep: number }) => {
             </clipPath>
           </defs>
         </svg>
-        <p>{t('KYC.CONTACT_INFO')}</p>
+        <p>{t('kyc:KYC.CONTACT_INFO')}</p>
       </div>
 
       <div
@@ -177,7 +177,7 @@ const KYCStepper = ({ currentStep }: { currentStep: number }) => {
             </clipPath>
           </defs>
         </svg>
-        <p>{t('KYC.UPLOAD_DOCUMENT')}</p>
+        <p>{t('kyc:KYC.UPLOAD_DOCUMENT')}</p>
       </div>
     </div>
   );

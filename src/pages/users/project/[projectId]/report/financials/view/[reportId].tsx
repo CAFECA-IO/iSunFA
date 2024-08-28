@@ -22,7 +22,7 @@ const ProjectFinancialsReportDetailPage = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t('PROJECT.PROJECT_REPORT')} {reportId} - iSunFA
+          {t('project:PROJECT.PROJECT_REPORT')} {reportId} - iSunFA
         </title>
       </Head>
 
@@ -61,7 +61,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
     props: {
       projectId: params.projectId,
       reportId: params.reportId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

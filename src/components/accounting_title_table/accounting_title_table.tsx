@@ -52,11 +52,11 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   const handleRemove = () => {
     if (!selectedCompany?.id) return;
     messageModalDataHandler({
-      title: t('SETTING.REMOVE_ACCOUNTING_TITLE'),
-      content: t('SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
+      title: t('setting:SETTING.REMOVE_ACCOUNTING_TITLE'),
+      content: t('setting:SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: name,
       messageType: MessageType.WARNING,
-      submitBtnStr: t('SETTING.REMOVE'),
+      submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany.id, id),
       backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
     });
@@ -75,7 +75,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <FaRegSquarePlus className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.ADD_NEW_SUB')}
+            {t('setting:SETTING.ADD_NEW_SUB')}
           </p>
         </button>
       </div>
@@ -90,7 +90,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <FiEdit className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.EDIT')}
+            {t('setting:SETTING.EDIT')}
           </p>
         </button>
         {/* Info: (20240717 - Julian) Remove button */}
@@ -101,7 +101,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <RiDeleteBinLine className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.REMOVE')}
+            {t('setting:SETTING.REMOVE')}
           </p>
         </button>
       </div>
@@ -177,14 +177,14 @@ const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTi
       <div className="table-header-group bg-stroke-brand-secondary-moderate text-lg text-text-neutral-invert">
         {/* Info: (20240717 - Julian) Desktop Table Header Row */}
         <div className="hidden lg:table-row">
-          <div className="table-cell w-1/10 py-12px">{t('SETTING.CODE')}</div>
-          <div className="table-cell w-6/10 py-12px">{t('SETTING.NAME')}</div>
+          <div className="table-cell w-1/10 py-12px">{t('setting:SETTING.CODE')}</div>
+          <div className="table-cell w-6/10 py-12px">{t('setting:SETTING.NAME')}</div>
           <div className="table-cell w-3/10 py-12px">{t('REPORTS_HISTORY_LIST.OPERATIONS')}</div>
         </div>
         {/* Info: (20240717 - Julian) Mobile Table Header Row */}
         <div className="table-row lg:hidden">
-          <div className="table-cell py-12px">{t('SETTING.CODE_NAME')}</div>
-          <div className="table-cell py-12px">{t('SETTING.ACTION')}</div>
+          <div className="table-cell py-12px">{t('setting:SETTING.CODE_NAME')}</div>
+          <div className="table-cell py-12px">{t('setting:SETTING.ACTION')}</div>
         </div>
       </div>
       {/* Info: (20240717 - Julian) Table Body */}

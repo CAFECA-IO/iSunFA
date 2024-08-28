@@ -47,7 +47,7 @@ const SelectCompanyPageBody = () => {
   >([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedCompanyName = selectedCompany?.name ?? t('SELECT_COMPANY.SELECT_AN_COMPANY');
+  const selectedCompanyName = selectedCompany?.name ?? t('kyc:SELECT_COMPANY.SELECT_AN_COMPANY');
 
   const menuOpenHandler = () => {
     listCompany({
@@ -167,7 +167,7 @@ const SelectCompanyPageBody = () => {
           className="hidden w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-dropdown-text-secondary"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
-          <p>{t('SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
+          <p>{t('kyc:SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
         </button>
       </div>
     </div>
@@ -289,7 +289,7 @@ const SelectCompanyPageBody = () => {
                   fill="#FCFDFF"
                 />
               </svg>
-              <p>{t('SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
+              <p>{t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
               <FaArrowRight />
             </Button>
             <Button
@@ -297,7 +297,7 @@ const SelectCompanyPageBody = () => {
               variant={'tertiaryOutline'}
               className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal"
             >
-              <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
+              <p>{t('kyc:SELECT_COMPANY.TRY_IT_OUT')}</p>
               <FaArrowRight />
             </Button>
           </div>

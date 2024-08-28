@@ -45,7 +45,7 @@ const JournalListPage = () => {
             <Link href={ISUNFA_ROUTE.ACCOUNTING}>
               <Button type="button" variant="tertiary" className="text-sm md:text-base">
                 <FiPlusCircle size={24} />
-                <p>{t('JOURNAL.ADD_NEW_JOURNAL')}</p>
+                <p>{t('journal:JOURNAL.ADD_NEW_JOURNAL')}</p>
               </Button>
             </Link>
           </div>
@@ -65,7 +65,7 @@ const JournalListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('JOURNAL.JOURNAL_LIST_ISUNFA')}</title>
+        <title>{t('journal:JOURNAL.JOURNAL_LIST_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -85,7 +85,16 @@ const JournalListPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

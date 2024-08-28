@@ -26,7 +26,7 @@ const DocumentUploadForm = ({
       <div className="grid w-full max-w-3xl grid-flow-row grid-cols-1 gap-6 md:grid-cols-2">
         <div className="flex w-full flex-col items-center">
           <h3 className="mb-2 text-center text-base font-medium text-gray-700">
-            {t('KYC.BUSINESS_REGISTRATION_CERTIFICATE')}
+            {t('kyc:KYC.BUSINESS_REGISTRATION_CERTIFICATE')}
           </h3>
           <UploadArea
             loacalStorageFilesKey={KYCFiles}
@@ -36,7 +36,7 @@ const DocumentUploadForm = ({
         </div>
         <div className="flex w-full flex-col items-center">
           <h3 className="mb-2 text-center text-base font-medium text-gray-700">
-            {t('KYC.TAX_STATUS_CERTIFICATE')}
+            {t('kyc:KYC.TAX_STATUS_CERTIFICATE')}
           </h3>
           <UploadArea
             loacalStorageFilesKey={KYCFiles}
@@ -46,8 +46,8 @@ const DocumentUploadForm = ({
         </div>
         <div className="flex w-full flex-col items-center md:col-span-2 md:w-full-available">
           <h3 className="mb-2 text-center text-base font-medium text-gray-700">
-            {t('KYC.REPRESENTATIVE_ID_CERTIFICATE', {
-              type: t(`KYC.${data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}`),
+            {t('kyc:KYC.REPRESENTATIVE_ID_CERTIFICATE', {
+              type: t(`kyc:KYC.${data[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]}`),
             })}
           </h3>
           <UploadArea

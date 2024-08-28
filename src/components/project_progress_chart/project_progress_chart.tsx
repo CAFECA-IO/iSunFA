@@ -276,7 +276,7 @@ const ProjectProgressChart = () => {
     <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
       <ColumnChart data={data} />
       <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-        <p className="text-xl font-bold text-text-neutral-mute">{t('PROJECT.NO_DATA')}</p>
+        <p className="text-xl font-bold text-text-neutral-mute">{t('project:PROJECT.NO_DATA')}</p>
       </div>
     </div>
   ) : (
@@ -311,13 +311,13 @@ const ProjectProgressChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>{t('PROJECT.PROJECT_STAGE_CHART')}</p>
+              <p>{t('project:PROJECT.PROJECT_STAGE_CHART')}</p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

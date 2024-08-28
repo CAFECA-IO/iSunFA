@@ -30,7 +30,7 @@ const SalarySidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            {t('SALARY.SALARY')}
+            {t('salary:SALARY.SALARY')}
           </p>
         </div>
 
@@ -65,7 +65,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.EMPLOYEES_LIST')}
+                {t('salary:SALARY.EMPLOYEES_LIST')}
               </p>
             </Link>
 
@@ -99,7 +99,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.SALARY_LIST')}
+                {t('salary:SALARY.SALARY_LIST')}
               </p>
             </button>
             {/* </Link> */}

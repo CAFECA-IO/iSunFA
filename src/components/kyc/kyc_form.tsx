@@ -99,10 +99,10 @@ const KYCForm = () => {
       if (success) {
         messageModalDataHandler({
           messageType: MessageType.SUCCESS,
-          title: t('KYC.SUBMIT_SUCCESS'),
-          content: t('KYC.SUBMIT_SUCCESS_MESSAGE'),
+          title: t('kyc:KYC.SUBMIT_SUCCESS'),
+          content: t('kyc:KYC.SUBMIT_SUCCESS_MESSAGE'),
           backBtnStr: t('COMMON.CANCEL'),
-          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnStr: t('kyc:KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             goCompanyInfo();
@@ -112,11 +112,11 @@ const KYCForm = () => {
       } else if (success === false) {
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: t('KYC.SUBMIT_FAILED'),
-          content: t('KYC.CONTACT_SERVICE_TEAM'),
-          subMsg: t('KYC.SUBMIT_FAILED_MESSAGE', code),
+          title: t('kyc:KYC.SUBMIT_FAILED'),
+          content: t('kyc:KYC.CONTACT_SERVICE_TEAM'),
+          subMsg: t('kyc:KYC.SUBMIT_FAILED_MESSAGE', code),
           backBtnStr: t('COMMON.CANCEL'),
-          submitBtnStr: t('KYC.CONFIRM'),
+          submitBtnStr: t('kyc:KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             goCompanyInfo();
@@ -126,10 +126,10 @@ const KYCForm = () => {
     } else {
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: t('KYC.INCOMPLETE_FORM'),
-        subMsg: t('KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
-        content: t('KYC.CONTACT_SERVICE_TEAM'),
-        submitBtnStr: t('KYC.CONFIRM'),
+        title: t('kyc:KYC.INCOMPLETE_FORM'),
+        subMsg: t('kyc:KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
+        content: t('kyc:KYC.CONTACT_SERVICE_TEAM'),
+        submitBtnStr: t('kyc:KYC.CONFIRM'),
         backBtnStr: t('COMMON.CANCEL'),
         submitBtnFunction: () => {
           messageModalVisibilityHandler();
@@ -192,7 +192,7 @@ const KYCForm = () => {
                 onClick={handleNextButtonClick}
                 disabled={!isBasicInfoFormComplete}
               >
-                {t('KYC.NEXT')}
+                {t('kyc:KYC.NEXT')}
               </button>
             </div>
           </>
@@ -209,7 +209,7 @@ const KYCForm = () => {
                 className="rounded px-4 py-2 text-secondaryBlue"
                 onClick={handleBackButtonClick}
               >
-                {t('KYC.BACK')}
+                {t('kyc:KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -217,7 +217,7 @@ const KYCForm = () => {
                 onClick={handleNextButtonClick}
                 disabled={!isRegistrationInfoFormComplete}
               >
-                {t('KYC.NEXT')}
+                {t('kyc:KYC.NEXT')}
               </button>
             </div>
           </>
@@ -231,7 +231,7 @@ const KYCForm = () => {
                 className="rounded px-4 py-2 text-secondaryBlue"
                 onClick={handleBackButtonClick}
               >
-                {t('KYC.BACK')}
+                {t('kyc:KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -239,7 +239,7 @@ const KYCForm = () => {
                 onClick={handleNextButtonClick}
                 disabled={!isContactInfoFormComplete()}
               >
-                {t('KYC.NEXT')}
+                {t('kyc:KYC.NEXT')}
               </button>
             </div>
           </>
@@ -257,7 +257,7 @@ const KYCForm = () => {
                 className="rounded px-4 py-2 text-secondaryBlue"
                 onClick={handleBackButtonClick}
               >
-                {t('KYC.BACK')}
+                {t('kyc:KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -265,7 +265,7 @@ const KYCForm = () => {
                 className={`rounded px-4 py-2 ${isDocumentUploadFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
                 disabled={!isDocumentUploadFormComplete}
               >
-                {t('KYC.SUBMIT')}
+                {t('kyc:KYC.SUBMIT')}
               </button>
             </div>
           </>
