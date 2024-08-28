@@ -679,8 +679,6 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        lilac: '#ABA7BD',
-
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
         primaryYellow3: '#FFD892',
