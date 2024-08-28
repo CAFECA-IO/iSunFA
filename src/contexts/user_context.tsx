@@ -208,12 +208,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    clearState();
     await signOutAPI();
     await authSignOut({ redirect: false });
-    if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      router.push(ISUNFA_ROUTE.LOGIN);
-    }
+    handleNotSignedIn();
   };
 
   const isProfileFetchNeeded = () => {
