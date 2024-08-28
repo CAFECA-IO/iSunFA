@@ -1,5 +1,6 @@
 import { LOG_FOLDER } from '@/constants/file';
 import pino, { Logger } from 'pino';
+import pretty from 'pino-pretty';
 import { createStream } from 'rotating-file-stream';
 
 const level: pino.Level = process.env.NODE_ENV === 'production' ? 'info' : 'trace';
@@ -33,9 +34,15 @@ const logStream = createStream(
   }
 );
 
+// Info: (20240828 - Murky) Console log 中會print出pretty的格式
+const prettyStream = pretty({
+  colorize: true,
+});
+
 // Info: (20240823 - Gibbs) 使用 pino-multi-stream 來處理多個輸出
 const streams = [
   { level, stream: logStream }, // Info: (20240823 - Gibbs) 將日誌輸出到 rotating-file-stream
+  { level, stream: prettyStream }, // Info: (20240823 - Murky) 將日誌輸出到 console
 ];
 
 const logger: Logger = pino({ level }, pino.multistream(streams));

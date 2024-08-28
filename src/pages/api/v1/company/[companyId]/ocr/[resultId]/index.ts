@@ -32,7 +32,7 @@ export async function fetchOCRResult(resultId: string) {
   let response: Response;
 
   try {
-    const fetchURL = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT, resultId);
+    const fetchURL = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT, resultId);
     response = await fetch(fetchURL);
   } catch (error) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
