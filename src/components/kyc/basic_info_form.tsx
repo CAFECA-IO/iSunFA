@@ -15,11 +15,11 @@ const countryFlagMap: Record<CountryOptions, string> = {
 
 // Info: (20240719 - Liz) 翻譯對應的 country 選項
 const countryTranslationMap: { [key in CountryOptions]: string } = {
-  [CountryOptions.DEFAULT]: 'KYC.COUNTRY_DEFAULT',
-  [CountryOptions.TAIWAN]: 'KYC.COUNTRY_TAIWAN',
-  [CountryOptions.UNITED_STATES]: 'KYC.COUNTRY_UNITED_STATES',
-  [CountryOptions.CHINA]: 'KYC.COUNTRY_CHINA',
-  [CountryOptions.HONG_KONG]: 'KYC.COUNTRY_HONG_KONG',
+  [CountryOptions.DEFAULT]: 'kyc:KYC.COUNTRY_DEFAULT',
+  [CountryOptions.TAIWAN]: 'kyc:KYC.COUNTRY_TAIWAN',
+  [CountryOptions.UNITED_STATES]: 'kyc:KYC.COUNTRY_UNITED_STATES',
+  [CountryOptions.CHINA]: 'kyc:KYC.COUNTRY_CHINA',
+  [CountryOptions.HONG_KONG]: 'kyc:KYC.COUNTRY_HONG_KONG',
 };
 
 const BasicInfoForm = ({
@@ -88,12 +88,12 @@ const BasicInfoForm = ({
       {/* Legal Company Name */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.LEGAL_COMPANY_NAME')}
+          {t('kyc:KYC.LEGAL_COMPANY_NAME')}
         </h6>
         <input
           id="legal-company-name"
           type="text"
-          placeholder={t('KYC.EXAMPLE')}
+          placeholder={t('kyc:KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={legalCompanyNameInputHandler}
@@ -106,7 +106,7 @@ const BasicInfoForm = ({
         {/*  Country & City  */}
         <div className="flex flex-1 flex-col gap-8px">
           <h6 className="text-sm font-semibold text-input-text-primary">
-            {t('KYC.COMPANY_ADDRESS')}
+            {t('kyc:KYC.COMPANY_ADDRESS')}
           </h6>
 
           <div className="relative flex rounded-sm bg-white">
@@ -157,7 +157,7 @@ const BasicInfoForm = ({
             <input
               id="city"
               type="text"
-              placeholder={t('KYC.CITY')}
+              placeholder={t('kyc:KYC.CITY')}
               required
               className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
               onChange={cityInputHandler}
@@ -168,11 +168,11 @@ const BasicInfoForm = ({
 
         {/* Zip Code */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.ZIP_CODE')}</h6>
+          <h6 className="text-sm font-semibold text-input-text-primary">{t('kyc:KYC.ZIP_CODE')}</h6>
           <input
             id="zip-code"
             type="text"
-            placeholder={t('KYC.ZIP_CODE')}
+            placeholder={t('kyc:KYC.ZIP_CODE')}
             required
             className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={zipCodeInputHandler}
@@ -186,7 +186,7 @@ const BasicInfoForm = ({
         <input
           id="street"
           type="text"
-          placeholder={t('KYC.STREET_ADDRESS')}
+          placeholder={t('kyc:KYC.STREET_ADDRESS')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={addressInputHandler}
@@ -197,12 +197,12 @@ const BasicInfoForm = ({
       {/* ===== Key Company Representative's Name ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.KEY_COMPANY_REPRESENTATIVE_S_NAME')}
+          {t('kyc:KYC.KEY_COMPANY_REPRESENTATIVE_S_NAME')}
         </h6>
         <input
           id="key-company-representatives-name"
           type="text"
-          placeholder={t('KYC.EXAMPLE')}
+          placeholder={t('kyc:KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyCompanyRepresentativesInputHandler}

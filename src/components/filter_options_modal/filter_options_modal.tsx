@@ -234,7 +234,7 @@ const FilterOptionsModal = ({
     // Info: (20240620 - Julian)
     filterType === FilterOptionsModalType.contract ? (
       <div className="flex flex-col items-start gap-8px">
-        <p className="font-semibold text-input-text-primary">{t('PROJECT.STATUS')}</p>
+        <p className="font-semibold text-input-text-primary">{t('project:PROJECT.STATUS')}</p>
         {displayedStatusMenu}
       </div>
     ) : (

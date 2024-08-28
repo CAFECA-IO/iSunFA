@@ -42,7 +42,7 @@ const AccountingPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('JOURNAL.ACCOUNTING')} - iSunFA</title>
+        <title>{t('journal:JOURNAL.ACCOUNTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -58,7 +58,16 @@ const AccountingPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

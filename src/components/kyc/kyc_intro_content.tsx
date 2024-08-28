@@ -17,13 +17,13 @@ const KYCIntroContent = ({ isMobile, onStart }: { isMobile: boolean; onStart: ()
       </div>
       <div>
         <p className="mb-20px text-sm font-medium text-text-neutral-secondary">
-          {t('KYC.IN_THIS_VERIFICATION_PROCESS_YOU_WILL_NEED_TO')}...
+          {t('kyc:KYC.IN_THIS_VERIFICATION_PROCESS_YOU_WILL_NEED_TO')}...
         </p>
         <ul className="list-inside list-disc pl-10px text-base font-semibold">
-          <li>{t('KYC.ENTER_COMPANY_INFORMATION')}</li>
-          <li>{t('KYC.UPLOAD_BUSINESS_REGISTRATION_CERTIFICATE')}</li>
-          <li>{t('KYC.UPLOAD_TAX_STATUS_CERTIFICATION_ISSUED_WITHIN_6_MONTHS')}</li>
-          <li>{t('KYC.UPLOAD_PHOTO_OF_KEY_COMPANY_REPRESENTATIVE_S_ID')}</li>
+          <li>{t('kyc:KYC.ENTER_COMPANY_INFORMATION')}</li>
+          <li>{t('kyc:KYC.UPLOAD_BUSINESS_REGISTRATION_CERTIFICATE')}</li>
+          <li>{t('kyc:KYC.UPLOAD_TAX_STATUS_CERTIFICATION_ISSUED_WITHIN_6_MONTHS')}</li>
+          <li>{t('kyc:KYC.UPLOAD_PHOTO_OF_KEY_COMPANY_REPRESENTATIVE_S_ID')}</li>
         </ul>
       </div>
       <div>

@@ -16,11 +16,11 @@ const ProjectProgressBlock = () => {
       <div className="flex items-center gap-24px">
         <div className="flex items-center gap-10px">
           <div className="block h-8px w-8px rounded-full bg-surface-brand-primary"></div>
-          <p>{t('PROJECT.COMPLETED')}</p>
+          <p>{t('project:PROJECT.COMPLETED')}</p>
         </div>
         <div className="flex items-center gap-10px">
           <div className="block h-8px w-8px rounded-full bg-surface-neutral-depth"></div>
-          <p>{t('PROJECT.REMAINING')}</p>
+          <p>{t('project:PROJECT.REMAINING')}</p>
         </div>
       </div>
       <div className="mx-auto flex-1">

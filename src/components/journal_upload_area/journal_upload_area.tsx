@@ -183,7 +183,7 @@ const JournalUploadArea = () => {
       results.forEach(async (result) => {
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
         const translatedStatus = t(
-          `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
+          `journal:PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
         );
         if (
           result.status === ProgressStatus.ALREADY_UPLOAD ||
@@ -256,10 +256,10 @@ const JournalUploadArea = () => {
       >
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
-          {t('JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-          <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
+          {t('journal:JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
+          <span className="text-darkBlue">{t('journal:JOURNAL.BROWSE')}</span>
         </p>
-        <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
+        <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
 
         <input
           id="journal-upload-area"

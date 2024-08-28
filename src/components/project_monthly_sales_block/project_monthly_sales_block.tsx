@@ -154,7 +154,7 @@ const ProjectMonthlySalesBlock = () => {
       {/* Info: (20240614 - Julian) Title */}
       <div className="flex gap-8px font-medium text-text-neutral-secondary">
         <Image src="/icons/shopping.svg" width={24} height={24} alt="shopping_icon" />
-        <p>{translate('PROJECT.MONTHLY_SALES')}</p>
+        <p>{translate('project:PROJECT.MONTHLY_SALES')}</p>
       </div>
       {/* Info: (20240614 - Julian) Chart */}
       <Chart options={options} series={series} type="bar" height={400} />

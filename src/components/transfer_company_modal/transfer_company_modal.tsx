@@ -41,7 +41,7 @@ const TransferCompanyModal = ({
             messageType: MessageType.SUCCESS,
             title: 'Transfer Owner',
             content: 'Transfer owner successfully',
-            submitBtnStr: t('PROJECT.OK'),
+            submitBtnStr: t('project:PROJECT.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               // Info: (20240729 - Liz) reload this page to get the latest data and hide the UI
@@ -53,7 +53,7 @@ const TransferCompanyModal = ({
             messageType: MessageType.ERROR,
             title: 'Transfer Owner',
             content: 'Transfer owner failed',
-            submitBtnStr: t('PROJECT.OK'),
+            submitBtnStr: t('project:PROJECT.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               messageModalVisibilityHandler();
@@ -67,7 +67,7 @@ const TransferCompanyModal = ({
           messageType: MessageType.ERROR,
           title: 'Transfer Owner',
           content: 'Transfer owner failed',
-          submitBtnStr: t('PROJECT.OK'),
+          submitBtnStr: t('project:PROJECT.OK'),
           hideCloseBtn: true,
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -102,7 +102,7 @@ const TransferCompanyModal = ({
         ), // TODO: (20240717 - Shirley) [Beta] message color
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`,
         backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
-        submitBtnStr: t('JOURNAL.TRANSFER'),
+        submitBtnStr: t('journal:JOURNAL.TRANSFER'),
         submitBtnFunction: () => handleSubmit(newOwnerId),
       });
 

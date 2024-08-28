@@ -51,7 +51,16 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
     props: {
       invitation: invitation as string,
       action: action as string,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

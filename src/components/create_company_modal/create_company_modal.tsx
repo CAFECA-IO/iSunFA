@@ -36,7 +36,7 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
@@ -93,12 +93,12 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
         messageModalDataHandler({
           messageType: MessageType.WARNING,
-          title: t('COMPANY_BASIC_INFO.EXISTED_COMPANY'),
-          subMsg: t('COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
+          title: t('kyc:COMPANY_BASIC_INFO.EXISTED_COMPANY'),
+          subMsg: t('kyc:COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
           // Info: (20240805 - Anna) content: `If you are the owner of this company,
           // Info: (20240805 - Anna) please complete KYC to get access back. Error code: ${createCompanyCode}`,
-          content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
-          submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
+          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
+          submitBtnStr: t('kyc:COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
             // Info: (20240807 - Anna) 隱藏 create company modal
             modalVisibilityHandler();
@@ -181,7 +181,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         {/* Info: (20240514 - Julian) Title */}
         <div className="flex justify-center px-20px">
           <h2 className="text-xl font-bold leading-8 text-navyBlue2">
-            {t('SELECT_COMPANY.CREATE_MY_COMPANY')}
+            {t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}
           </h2>
           <button
             type="button"
@@ -196,12 +196,12 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('CONTRACT.COMPANY_NAME')}
+              {t('journal:CONTRACT.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
               type="text"
-              placeholder={t('SELECT_COMPANY.ENTER_COMPANY_NAME')}
+              placeholder={t('kyc:SELECT_COMPANY.ENTER_COMPANY_NAME')}
               value={nameValue}
               onChange={changeNameHandler}
               required
@@ -211,7 +211,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Business Registration Number */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
+              {t('journal:CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
             </p>
             <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-darkBlue2 shadow">
               {/* Info: (20240514 - Julian) country selection */}
@@ -235,7 +235,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
               <input
                 id="registrationNumberInput"
                 type="text"
-                placeholder={t('SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
+                placeholder={t('kyc:SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
                 value={registrationNumberValue}
                 onChange={changeRegistrationNumberHandler}
                 required
