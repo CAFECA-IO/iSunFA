@@ -186,7 +186,7 @@ export async function postImageToAICH(
           const fetchResult = uploadImageToAICH(imageBlob, imageName);
 
           const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-          const imageUrl = transformOCRImageIDToURL('invoice', 0, imageNameInLocal);
+          const imageUrl = transformOCRImageIDToURL(FileFolder.INVOICE, 0, imageNameInLocal);
           result = {
             resultStatus,
             imageUrl,
