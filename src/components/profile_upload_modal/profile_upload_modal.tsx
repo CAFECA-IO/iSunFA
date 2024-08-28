@@ -89,7 +89,7 @@ const ProfileUploadModal = ({
       messageType: MessageType.ERROR,
       title: t('PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
       content: `${t('PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
-      submitBtnStr: t('PROJECT.OK'),
+      submitBtnStr: t('project:PROJECT.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();
@@ -186,9 +186,9 @@ const ProfileUploadModal = ({
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
       <p className="mt-20px font-semibold text-navyBlue2">
         {t('PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-        <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
+        <span className="text-darkBlue">{t('journal:JOURNAL.BROWSE')}</span>
       </p>
-      <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
+      <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
     </label>
   );
 

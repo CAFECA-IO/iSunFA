@@ -19,7 +19,6 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import logger from '@/lib/utils/logger';
 
 // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
 // 原本代碼是：
@@ -67,7 +66,9 @@ const StepOneTab = () => {
         id: `listUnprocessedOCR-${OCRListStatus.listCode}`,
         // Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯
         // content: `Failed to list unprocessed OCRs: ${OCRListStatus.listCode}`,
-        content: t('JOURNAL.FAILED_TO_LIST_UNPROCESSED_OCRS', { code: OCRListStatus.listCode }),
+        content: t('journal:JOURNAL.FAILED_TO_LIST_UNPROCESSED_OCRS', {
+          code: OCRListStatus.listCode,
+        }),
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -75,8 +76,6 @@ const StepOneTab = () => {
     if (OCRListStatus.listSuccess) {
       setFileList(OCRList);
     }
-    // TODO: (20240814 - Shirley) [Beta] in dev
-    logger.debug('OCRList in StepOneTab:', OCRList);
 
     return () => {};
   }, [OCRList, OCRListStatus]);
@@ -91,8 +90,6 @@ const StepOneTab = () => {
       selectOCRHandler(unprocessOCR);
     }
   };
-  // TODO: (20240816 - Shirley) [Beta] in dev
-  logger.debug('in StepOneTab, fileList', fileList, 'pendingOCRList', pendingOCRList);
 
   useEffect(() => {
     setTotalPages(Math.ceil(fileList.length / 5));
@@ -124,7 +121,7 @@ const StepOneTab = () => {
         id: `deleteUnprocessedOCR-${code}`,
         /* Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯 */
         // content: `Failed to delete unprocessed OCR: ${code}, `,
-        content: t('JOURNAL.FAILED_TO_DELETE_UNPROCESSED_OCR', { code }),
+        content: t('journal:JOURNAL.FAILED_TO_DELETE_UNPROCESSED_OCR', { code }),
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -134,7 +131,7 @@ const StepOneTab = () => {
         id: `deleteUnprocessedOCR-${code}`,
         // Info: (20240805 - Anna) 將上傳憑證的吐司通知翻譯
         // content: `Successfully deleted unprocessed OCR: ${code}`,
-        content: t('JOURNAL.SUCCESSFULLY_DELETED_UNPROCESSED_OCR', { code }),
+        content: t('journal:JOURNAL.SUCCESSFULLY_DELETED_UNPROCESSED_OCR', { code }),
         type: ToastType.SUCCESS,
         closeable: true,
       });
@@ -149,12 +146,12 @@ const StepOneTab = () => {
         id: 'qrCodeScanClickHandler',
         content: (
           <div className="flex items-center justify-between">
-            <p>{t('JOURNAL.PLEASE_SELECT_A_COMPANY_FIRST')}</p>
+            <p>{t('journal:JOURNAL.PLEASE_SELECT_A_COMPANY_FIRST')}</p>
             <Link
               href={ISUNFA_ROUTE.SELECT_COMPANY}
               className="font-semibold text-link-text-warning hover:opacity-70"
             >
-              {t('JOURNAL.GO_TO_SELECT')}
+              {t('journal:JOURNAL.GO_TO_SELECT')}
             </Link>
           </div>
         ),
@@ -194,7 +191,7 @@ const StepOneTab = () => {
               height={16}
               alt="upload_file_icon"
             />
-            <p>{t('JOURNAL.UPLOADED_FILE')}</p>
+            <p>{t('journal:JOURNAL.UPLOADED_FILE')}</p>
           </div>
           <hr className="flex-1 border-lightGray4" />
         </div>
@@ -225,7 +222,7 @@ const StepOneTab = () => {
       {uploadedFileSection}
       {/* Info: (20240808 - Anna) Alpha版先隱藏(事件描述) */}
       {/* Info: (20240422 - Julian) label */}
-      {/* <p className="text-sm font-semibold text-navyBlue2">{t('JOURNAL.DESCRIPTION_OF_EVENTS')}</p> */}
+      {/* <p className="text-sm font-semibold text-navyBlue2">{t('journal:JOURNAL.DESCRIPTION_OF_EVENTS')}</p> */}
       {/* Info: (20240422 - Julian) input */}
       {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
         <input
@@ -244,13 +241,13 @@ const StepOneTab = () => {
         </button>
       </div> */}
       {/* Info: (20240422 - Julian) tip */}
-      {/* <p className="text-sm text-lightGray5">{t('JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
+      {/* <p className="text-sm text-lightGray5">{t('journal:JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
       {/* Info: (20240422 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-lightGray4 md:hidden" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/upload.svg" width={16} height={16} alt="bill_icon" />
-          <p>{t('JOURNAL.UPLOAD_CERTIFICATE')}</p>
+          <p>{t('journal:JOURNAL.UPLOAD_CERTIFICATE')}</p>
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>
@@ -274,11 +271,11 @@ const StepOneTab = () => {
             <div className="mt-20px flex items-center gap-10px">
               <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
               <p className="font-semibold text-navyBlue2">
-                {t('JOURNAL.USE_YOUR_PHONE_AS')}{' '}
-                <span className="text-primaryYellow">{t('JOURNAL.SCANNER')}</span>
+                {t('journal:JOURNAL.USE_YOUR_PHONE_AS')}{' '}
+                <span className="text-primaryYellow">{t('journal:JOURNAL.SCANNER')}</span>
               </p>
             </div>
-            <p className="text-center text-lightGray4">{t('JOURNAL.SCAN_THE_QRCODE')}</p>
+            <p className="text-center text-lightGray4">{t('journal:JOURNAL.SCAN_THE_QRCODE')}</p>
           </button>
         </div>
       </div>

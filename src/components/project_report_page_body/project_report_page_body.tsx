@@ -267,7 +267,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.TYPE')}</p>
           {displayedPendingTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -323,7 +323,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.TYPE')}</p>
           {displayedHistoryTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}

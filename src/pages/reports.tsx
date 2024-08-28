@@ -360,7 +360,7 @@ const AuditReport = () => {
         {/* Pagination */}
         <div className="flex flex-col items-center">
           <div className="flex gap-10px">
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/first_page_icon.svg"
                 width={20}
@@ -368,7 +368,7 @@ const AuditReport = () => {
                 alt="first_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/previous_page_icon.svg"
                 width={20}
@@ -379,7 +379,7 @@ const AuditReport = () => {
             <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
               1
             </div>
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/next_page_icon.svg"
                 width={20}
@@ -387,7 +387,7 @@ const AuditReport = () => {
                 alt="next_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/last_page_icon.svg"
                 width={20}
@@ -484,7 +484,7 @@ const AuditReport = () => {
         {/* Switch daily reports  */}
         <div className="flex items-center gap-16px">
           <div
-            className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-inactive'}`}
+            className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-disable'}`}
           >
             {t('AUDIT_REPORT.SHOW_DAILY_REPORTS')}
           </div>
@@ -541,7 +541,7 @@ const AuditReport = () => {
       {/* Info: (20240424 - Liz) ===== Pagination ===== */}
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -563,7 +563,7 @@ const AuditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -582,7 +582,7 @@ const AuditReport = () => {
           <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
             1
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -598,7 +598,7 @@ const AuditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -661,7 +661,16 @@ const AuditReport = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

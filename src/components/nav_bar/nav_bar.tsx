@@ -149,7 +149,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
-        <p>{t('JOURNAL.CONTRACT')}</p>
+        <p>{t('journal:JOURNAL.CONTRACT')}</p>
       </button>
       <button
         type="button"
@@ -163,7 +163,7 @@ const NavBar = () => {
           className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
         > */}
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
-        <p>{t('SALARY.SALARY')}</p>
+        <p>{t('salary:SALARY.SALARY')}</p>
         {/* </Link> */}
       </button>
       <Link
@@ -274,7 +274,7 @@ const NavBar = () => {
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
-        <p>{t('JOURNAL.CONTRACT')}</p>
+        <p>{t('journal:JOURNAL.CONTRACT')}</p>
       </button>
       {/* Info: (20240416 - Julian) Salary button */}
       <button
@@ -289,7 +289,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px"
         > */}
         <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
-        <p>{t('SALARY.SALARY')}</p>
+        <p>{t('salary:SALARY.SALARY')}</p>
         {/* </Link> */}
       </button>
       {/* Info: (20240416 - Julian) Report button */}
@@ -326,7 +326,7 @@ const NavBar = () => {
         </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
+            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
           </div>
           {/* Info: (20240809 - Shirley) edit name button */}
           <button

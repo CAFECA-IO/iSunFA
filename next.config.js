@@ -4,7 +4,26 @@
 const cloneDeep = require('lodash/cloneDeep');
 const { i18n } = require('./next-i18next.config');
 
+/**
+ * echo -n "window['dataLayer'] = window['dataLayer'] || []; function gtag(){window['dataLayer'].push(arguments);} gtag('js', new Date()); gtag('config', 'G-ZNVVW7JP0N');" | openssl dgst -sha256 -binary | openssl base64
+ */
+
+// const cspHeader = `
+//   default-src 'self';
+//   script-src 'self' 'sha256-AWYvreN84Mjp/63ULk+PPMBA9Sgj2Z4oZJASFhXoUJw=' https://www.googletagmanager.com;
+//   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+//   img-src 'self' blob: data: https://isunfa.com https://*.googleusercontent.com https://storage.googleapis.com  www.googletagmanager.com;
+//   font-src 'self' https://fonts.gstatic.com;
+//   object-src 'none';
+//   base-uri 'self';
+//   form-action 'self';
+//   frame-ancestors 'none';
+//   upgrade-insecure-requests;
+//   connect-src 'self' www.googletagmanager.com http://localhost:3000;
+//   `;
+
 const nextConfig = {
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -20,6 +39,15 @@ const nextConfig = {
           },
         ],
       },
+      // {
+      //   source: '/(.*)',
+      //   headers: [
+      //     {
+      //       key: 'Content-Security-Policy',
+      //       value: cspHeader.replace(/\n/g, ' ').trim(),
+      //     },
+      //   ],
+      // },
     ];
   },
   reactStrictMode: true,

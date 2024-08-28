@@ -35,7 +35,7 @@ const KYCIntro = () => {
           <h1
             className={`font-semibold text-text-neutral-secondary ${isMobile ? 'text-base' : 'text-36px'}`}
           >
-            {t('KYC.COMPANY_VERIFICATION')}
+            {t('kyc:KYC.COMPANY_VERIFICATION')}
           </h1>
         </div>
         {/* line */}

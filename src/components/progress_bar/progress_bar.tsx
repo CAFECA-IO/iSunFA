@@ -17,7 +17,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
     // Info: (20240509 - Julian) 如果有找到 style element，則更新 style element 的內容
     if (styleElement) {
       // Info: (20240509 - Julian) 將進度條的背景色設定為線性漸層，並根據進度比例設定顏色
-      styleElement.innerHTML = `
+      styleElement.textContent = `
         .sliderProgress::-webkit-slider-runnable-track {
           background: linear-gradient(90deg, #FFA502 ${progressRate}%, #cdd1d9 ${progressRate}%);
         }
@@ -26,7 +26,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
       // Info: (20240509 - Julian) 如果沒有找到 style element，則建立一個新的 style element
       const newStyleElement = document.createElement('style');
       newStyleElement.id = 'sliderStyle';
-      newStyleElement.innerHTML = `
+      newStyleElement.textContent = `
         .sliderProgress::-webkit-slider-runnable-track {
           background: linear-gradient(90deg, #FFA502 ${progressRate}%, #cdd1d9 ${progressRate}%);
         }

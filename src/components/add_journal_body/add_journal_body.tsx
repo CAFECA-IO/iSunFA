@@ -38,9 +38,9 @@ const AddJournalBody = () => {
   };
 
   const leaveMessageModal: IMessageModal = {
-    title: t('JOURNAL.LEAVE_HINT'),
-    content: t('JOURNAL.LEAVE_HINT_CONTENT'), // Info: (20240809 - Emily) 'Are you sure you want to leave the form?',
-    submitBtnStr: t('JOURNAL.LEAVE'),
+    title: t('journal:JOURNAL.LEAVE_HINT'),
+    content: t('journal:JOURNAL.LEAVE_HINT_CONTENT'), // Info: (20240809 - Emily) 'Are you sure you want to leave the form?',
+    submitBtnStr: t('journal:JOURNAL.LEAVE'),
     submitBtnFunction: () => backClickHandler(),
     backBtnStr: t('COMMON.CANCEL'),
     messageType: MessageType.WARNING,
@@ -119,7 +119,7 @@ const AddJournalBody = () => {
         onClick={skipClickHandler}
         className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
       >
-        <p>{t('JOURNAL.SKIP')}</p>
+        <p>{t('journal:JOURNAL.SKIP')}</p>
         <FaArrowRight />
       </button>
     </div>
@@ -133,12 +133,12 @@ const AddJournalBody = () => {
         onClick={skipClickHandler}
         className="flex flex-1 items-center justify-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
       >
-        <p>{t('JOURNAL.SKIP')}</p>
+        <p>{t('journal:JOURNAL.SKIP')}</p>
         <FaArrowRight />
       </button>
       {/* Info: (20240422 - Julian) Next button */}
       <Button disabled className="flex-1 px-16px py-8px">
-        {t('JOURNAL.NEXT')}
+        {t('journal:JOURNAL.NEXT')}
       </Button>
     </div>
   ) : null;
@@ -151,7 +151,7 @@ const AddJournalBody = () => {
           <div className="flex h-45px items-center gap-24px">
             {displayBackButton}
             <h1 className="text-base font-semibold text-lightGray5 md:text-4xl">
-              {t('JOURNAL.ADD_NEW_JOURNAL')}
+              {t('journal:JOURNAL.ADD_NEW_JOURNAL')}
             </h1>
           </div>
 

@@ -420,7 +420,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.SUCCESS:
         toastify.success(content, {
           icon: <Image src="/icons/success.svg" alt="success" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-successGreen3`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-success`,
           toastId,
           position,
           autoClose,
@@ -434,7 +434,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.ERROR:
         toastify.error(content, {
           icon: <Image src="/icons/error.svg" alt="error" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-errorRed3`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-error`,
           toastId,
           position,
           autoClose,
@@ -448,7 +448,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.WARNING:
         toastify.warning(content, {
           icon: <Image src="/icons/warning.svg" alt="warning" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-warningYellow`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-warning`,
           toastId,
           position,
           autoClose,
@@ -462,7 +462,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.INFO:
         toastify.info(content, {
           icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-navyBlue2`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-info`,
           toastId,
           position,
           autoClose,

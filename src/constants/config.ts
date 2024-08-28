@@ -93,3 +93,4 @@ export const DOMAIN = 'https://isunfa.com';
 export const NON_EXISTING_REPORT_ID = -1;
 export const BUFFER_AMOUNT = 0.01; // Info: (20240806 - Shirley) 小於0.01來避免浮點數精度問題
 export const IV_LENGTH = 12;
+export const EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS = 259200; // Info: (20240827 - Shirley) 3 days

@@ -115,7 +115,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
           {displayContractPeriod}
           {/* Info: (20240619 - Julian) Signatory */}
           <div className="flex items-center gap-x-8px text-sm">
-            <p className="text-text-neutral-tertiary">{t('CONTRACT.SIGNATORY')}</p>
+            <p className="text-text-neutral-tertiary">{t('journal:CONTRACT.SIGNATORY')}</p>
             <p className="font-semibold text-text-neutral-primary">{signatory}</p>
           </div>
         </div>
@@ -161,7 +161,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
         </div>
         {/* Info: (20240620 - Julian) Duration */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-xs text-text-neutral-tertiary">{t('CONTRACT.DURATION')}</p>
+          <p className="text-xs text-text-neutral-tertiary">{t('journal:CONTRACT.DURATION')}</p>
           <p className="text-xs text-text-neutral-tertiary">
             {contractStartStr} {t('DATE_PICKER.TO')}{' '}
             <span className={`${durationColor}`}>{contractEndStr}</span>

@@ -26,7 +26,7 @@ const KYCIntroPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('KYC.KYC')}</title>
+        <title>{t('kyc:KYC.KYC')}</title>
       </Head>
 
       <div className="min-h-screen bg-surface-neutral-main-background font-barlow">
@@ -39,7 +39,16 @@ const KYCIntroPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

@@ -108,7 +108,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Number of Days */}
         <div key={`${item.id}-num-days`} className="ml-auto flex items-center gap-8px">
           <p>{numDays}</p>
-          <p className="text-text-neutral-secondary">{t('PROJECT.DAYS')}</p>
+          <p className="text-text-neutral-secondary">{t('project:PROJECT.DAYS')}</p>
         </div>
       </>
     );
@@ -151,7 +151,7 @@ const ProjectMilestoneBlock = () => {
       <div className="flex flex-1 flex-col items-center gap-y-16px md:items-stretch">
         <div className="flex items-center gap-8px text-text-neutral-secondary">
           <Image src="/icons/milestone.svg" alt="Milestone Block" width={24} height={24} />
-          <p>{t('PROJECT.MILESTONE')}</p>
+          <p>{t('project:PROJECT.MILESTONE')}</p>
         </div>
         <div className="hidden grid-cols-3 gap-16px border-t border-divider-stroke-lv-4 p-10px md:grid">
           {displayMilestoneDesktop}

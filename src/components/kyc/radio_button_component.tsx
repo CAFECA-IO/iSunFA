@@ -57,14 +57,14 @@ const RadioButtonComponent = ({
 }) => {
   const { t } = useTranslation('common');
   const radioOptions: RadioOption[] = [
-    { label: t('KYC.PASSPORT'), value: RepresentativeIDType.PASSPORT },
-    { label: t('KYC.ID_CARD'), value: RepresentativeIDType.ID_CARD },
-    { label: t('KYC.DRIVER_LICENSE'), value: RepresentativeIDType.DRIVER_LICENSE },
+    { label: t('kyc:KYC.PASSPORT'), value: RepresentativeIDType.PASSPORT },
+    { label: t('kyc:KYC.ID_CARD'), value: RepresentativeIDType.ID_CARD },
+    { label: t('kyc:KYC.DRIVER_LICENSE'), value: RepresentativeIDType.DRIVER_LICENSE },
   ];
   return (
     <div className="rounded-lg">
       <h2 className="mb-4 text-center text-lg font-medium text-gray-900">
-        {t('KYC.SELECT_REPRESENTATIVE_ID_TYPE')}
+        {t('kyc:KYC.SELECT_REPRESENTATIVE_ID_TYPE')}
       </h2>
       <RadioButtonGroup
         options={radioOptions}

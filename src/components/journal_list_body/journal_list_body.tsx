@@ -145,7 +145,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
+          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
         },
       });
 
@@ -181,7 +181,7 @@ const JournalListBody = () => {
         type: ToastType.SUCCESS,
         content: (
           <div className="flex items-center justify-between">
-            <p>{t('JOURNAL.DELETED_SUCCESSFULLY')}</p>
+            <p>{t('journal:JOURNAL.DELETED_SUCCESSFULLY')}</p>
           </div>
         ),
         closeable: true,
@@ -189,8 +189,8 @@ const JournalListBody = () => {
       await getJournalList({});
     } else {
       messageModalDataHandler({
-        title: t('JOURNAL.FAILED_TO_DELETE'),
-        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
+        title: t('journal:JOURNAL.FAILED_TO_DELETE'),
+        subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
         content: `Error code: ${deleteCode}`,
         messageType: MessageType.ERROR,
         submitBtnStr: t('COMMON.CLOSE'),
@@ -338,7 +338,7 @@ const JournalListBody = () => {
       <div className="my-5 flex items-center gap-4">
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/bill.svg" width={16} height={16} alt="bill_icon" />
-          <p>{t('JOURNAL.JOURNAL_LIST')}</p>
+          <p>{t('journal:JOURNAL.JOURNAL_LIST')}</p>
         </div>
         <hr className="flex-1 border-lightGray4" />
       </div>
@@ -351,7 +351,7 @@ const JournalListBody = () => {
               getToggledState={invoiceListToggleHandler}
               toggleStateFromParent={invoiceListToggle}
             />
-            <p>{t('JOURNAL.INVOICE_LIST')}</p>
+            <p>{t('journal:JOURNAL.INVOICE_LIST')}</p>
           </div> */}
         {/* Info: (20240731 - Tzuhan) Toolbar */}
         <div className="flex items-center">
@@ -441,7 +441,8 @@ const JournalListBody = () => {
         <p
           className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPLOADED ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
-          {t('JOURNAL.UPLOADED')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
+          {t('journal:JOURNAL.UPLOADED')}{' '}
+          <span className="hidden md:block">{t('journal:JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
           {pagenatedJournalListItems
@@ -461,7 +462,8 @@ const JournalListBody = () => {
         <p
           className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPCOMING ? 'text-tabs-text-default' : 'disabled:text-button-text-disable'}`}
         >
-          {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
+          {t('journal:JOURNAL.UPCOMING')}{' '}
+          <span className="hidden md:block">{t('journal:JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
           {pagenatedJournalListItems
@@ -480,7 +482,7 @@ const JournalListBody = () => {
       <div className="my-10px flex items-center gap-24px text-sm md:items-end">
         {/* Info: (20240417 - Julian) Type */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.TYPE')}</p>
           {displayedTypeDropMenu}
         </div>
 

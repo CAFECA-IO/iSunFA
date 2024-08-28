@@ -178,7 +178,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         const { resultId } = result;
         /* Info: (20240805 - Anna) 將狀態的翻譯key值存到變數 */
         const translatedStatus = t(
-          `PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
+          `journal:PROGRESS_STATUS.${result.status.toUpperCase().replace(/_/g, '_')}`
         );
         if (
           result.status === ProgressStatus.ALREADY_UPLOAD ||
@@ -187,12 +187,12 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           result.status === ProgressStatus.IN_PROGRESS
         ) {
           messageModalDataHandler({
-            title: t('JOURNAL.UPLOAD_SUCCESSFUL'),
+            title: t('journal:JOURNAL.UPLOAD_SUCCESSFUL'),
             // Info: (20240805 - Anna) 將上傳狀態替換為翻譯過的
             // content: result.status,
             content: translatedStatus,
             messageType: MessageType.SUCCESS,
-            submitBtnStr: t('JOURNAL.DONE'),
+            submitBtnStr: t('journal:JOURNAL.DONE'),
             submitBtnFunction: () => {
               setInvoiceIdHandler(resultId);
               messageModalVisibilityHandler();
@@ -284,7 +284,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         id="crop-button"
         type="button"
         disabled
-        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-white hover:bg-primaryYellow disabled:bg-lightGray5"
+        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-button-text-invert hover:bg-primaryYellow disabled:bg-lightGray5"
       >
         <FiCrop size={16} />
       </button>
@@ -293,7 +293,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         id="rotate-button"
         type="button"
         disabled
-        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-white hover:bg-primaryYellow disabled:bg-lightGray5"
+        className="flex h-36px w-36px items-center justify-center rounded-full border bg-secondaryBlue text-button-text-invert hover:bg-primaryYellow disabled:bg-lightGray5"
       >
         <FiRotateCw size={16} />
       </button>
@@ -328,7 +328,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         className="flex items-center gap-x-4px px-16px py-8px"
         onClick={handleUploadImage}
       >
-        {t('JOURNAL.UPLOAD')}
+        {t('journal:JOURNAL.UPLOAD')}
         <svg
           width="16"
           height="16"
@@ -396,7 +396,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         className="flex items-center gap-x-4px px-16px py-8px"
         onClick={nextHandler}
       >
-        {t('JOURNAL.NEXT')}
+        {t('journal:JOURNAL.NEXT')}
         <GrLinkNext />
       </Button>
     </div>
@@ -405,7 +405,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
   const isDisplayScanner =
     selectedCompany && isModalVisible ? (
       <div className="fixed inset-0 left-0 top-0 z-70 flex h-full w-full items-center justify-center bg-black/50">
-        <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-white py-16px text-navyBlue2">
+        <div className="relative flex h-fit w-320px flex-col items-center gap-y-16px rounded-sm bg-surface-neutral-surface-lv2 py-16px text-navyBlue2">
           {/* Info: (20240506 - Julian) title */}
           <div className="flex flex-col items-center">
             <h1 className="text-xl font-bold">{titleStr}</h1>
