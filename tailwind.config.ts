@@ -707,7 +707,7 @@ module.exports = {
         darkBlue2: '#314362',
       },
       backgroundImage: {
-        login_bg: "url('/images/login_bg.svg')",
+        login_bg: "url('/images/login_bg.png')",
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
         contact_bg: 'url("/elements/contact_bg.svg")',
 
