@@ -13,50 +13,52 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 
 // Info: (20240717 - Liz) 翻譯對應的 country 選項
 const countryTranslationMap: { [key in CountryOptions]: string } = {
-  [CountryOptions.DEFAULT]: 'KYC.COUNTRY_DEFAULT',
-  [CountryOptions.TAIWAN]: 'KYC.COUNTRY_TAIWAN',
-  [CountryOptions.UNITED_STATES]: 'KYC.COUNTRY_UNITED_STATES',
-  [CountryOptions.CHINA]: 'KYC.COUNTRY_CHINA',
-  [CountryOptions.HONG_KONG]: 'KYC.COUNTRY_HONG_KONG',
+  [CountryOptions.DEFAULT]: 'kyc:KYC.COUNTRY_DEFAULT',
+  [CountryOptions.TAIWAN]: 'kyc:KYC.COUNTRY_TAIWAN',
+  [CountryOptions.UNITED_STATES]: 'kyc:KYC.COUNTRY_UNITED_STATES',
+  [CountryOptions.CHINA]: 'kyc:KYC.COUNTRY_CHINA',
+  [CountryOptions.HONG_KONG]: 'kyc:KYC.COUNTRY_HONG_KONG',
 };
 
 // Info: (20240717 - Liz) 翻譯對應的 legal structure 選項
 const legalStructureTranslationMap: { [key in LegalStructureOptions]: string } = {
-  [LegalStructureOptions.DEFAULT]: 'KYC.LEGAL_STRUCTURE_DEFAULT',
-  [LegalStructureOptions.SOLE_PROPRIETORSHIP]: 'KYC.LEGAL_STRUCTURE_SOLE_PROPRIETORSHIP',
-  [LegalStructureOptions.PARTNERSHIP]: 'KYC.LEGAL_STRUCTURE_PARTNERSHIP',
-  [LegalStructureOptions.CORPORATION]: 'KYC.LEGAL_STRUCTURE_CORPORATION',
+  [LegalStructureOptions.DEFAULT]: 'kyc:KYC.LEGAL_STRUCTURE_DEFAULT',
+  [LegalStructureOptions.SOLE_PROPRIETORSHIP]: 'kyc:KYC.LEGAL_STRUCTURE_SOLE_PROPRIETORSHIP',
+  [LegalStructureOptions.PARTNERSHIP]: 'kyc:KYC.LEGAL_STRUCTURE_PARTNERSHIP',
+  [LegalStructureOptions.CORPORATION]: 'kyc:KYC.LEGAL_STRUCTURE_CORPORATION',
   [LegalStructureOptions.LIMITED_LIABILITY_COMPANY]:
-    'KYC.LEGAL_STRUCTURE_LIMITED_LIABILITY_COMPANY',
+    'kyc:KYC.LEGAL_STRUCTURE_LIMITED_LIABILITY_COMPANY',
 };
 
 // Info: (20240717 - Liz) 翻譯對應的 industry 選項
 const industryTranslationMap: { [key in IndustryOptions]: string } = {
-  [IndustryOptions.DEFAULT]: 'KYC.INDUSTRY_DEFAULT',
-  [IndustryOptions.ACCOMMODATION_AND_FOOD_SERVICES]: 'KYC.INDUSTRY_ACCOMMODATION_AND_FOOD_SERVICES',
+  [IndustryOptions.DEFAULT]: 'kyc:KYC.INDUSTRY_DEFAULT',
+  [IndustryOptions.ACCOMMODATION_AND_FOOD_SERVICES]:
+    'kyc:KYC.INDUSTRY_ACCOMMODATION_AND_FOOD_SERVICES',
   [IndustryOptions.ADMINISTRATIVE_AND_SUPPORT_SERVICES]:
-    'KYC.INDUSTRY_ADMINISTRATIVE_AND_SUPPORT_SERVICES',
-  [IndustryOptions.ARTS_AND_RECREATION_SERVICES]: 'KYC.INDUSTRY_ARTS_AND_RECREATION_SERVICES',
-  [IndustryOptions.BASIC_METAL_PRODUCTION]: 'KYC.INDUSTRY_BASIC_METAL_PRODUCTION',
-  [IndustryOptions.BUSINESS_FRANCHISES]: 'KYC.INDUSTRY_BUSINESS_FRANCHISES',
-  [IndustryOptions.CHEMICAL_SUBSTANCE]: 'KYC.INDUSTRY_CHEMICAL_SUBSTANCE',
-  [IndustryOptions.COMMERCE]: 'KYC.INDUSTRY_COMMERCE',
-  [IndustryOptions.COMPUTER_AND_ELECTRONIC_PRODUCT]: 'KYC.INDUSTRY_COMPUTER_AND_ELECTRONIC_PRODUCT',
-  [IndustryOptions.CONSTRUCTION]: 'KYC.INDUSTRY_CONSTRUCTION',
-  [IndustryOptions.EDUCATION]: 'KYC.INDUSTRY_EDUCATION',
-  [IndustryOptions.FINANCE_AND_INSURANCE]: 'KYC.INDUSTRY_FINANCE_AND_INSURANCE',
-  [IndustryOptions.FINANCIAL_SERVICES]: 'KYC.INDUSTRY_FINANCIAL_SERVICES',
-  [IndustryOptions.FOOD_INDUSTRY]: 'KYC.INDUSTRY_FOOD_INDUSTRY',
+    'kyc:KYC.INDUSTRY_ADMINISTRATIVE_AND_SUPPORT_SERVICES',
+  [IndustryOptions.ARTS_AND_RECREATION_SERVICES]: 'kyc:KYC.INDUSTRY_ARTS_AND_RECREATION_SERVICES',
+  [IndustryOptions.BASIC_METAL_PRODUCTION]: 'kyc:KYC.INDUSTRY_BASIC_METAL_PRODUCTION',
+  [IndustryOptions.BUSINESS_FRANCHISES]: 'kyc:KYC.INDUSTRY_BUSINESS_FRANCHISES',
+  [IndustryOptions.CHEMICAL_SUBSTANCE]: 'kyc:KYC.INDUSTRY_CHEMICAL_SUBSTANCE',
+  [IndustryOptions.COMMERCE]: 'kyc:KYC.INDUSTRY_COMMERCE',
+  [IndustryOptions.COMPUTER_AND_ELECTRONIC_PRODUCT]:
+    'kyc:KYC.INDUSTRY_COMPUTER_AND_ELECTRONIC_PRODUCT',
+  [IndustryOptions.CONSTRUCTION]: 'kyc:KYC.INDUSTRY_CONSTRUCTION',
+  [IndustryOptions.EDUCATION]: 'kyc:KYC.INDUSTRY_EDUCATION',
+  [IndustryOptions.FINANCE_AND_INSURANCE]: 'kyc:KYC.INDUSTRY_FINANCE_AND_INSURANCE',
+  [IndustryOptions.FINANCIAL_SERVICES]: 'kyc:KYC.INDUSTRY_FINANCIAL_SERVICES',
+  [IndustryOptions.FOOD_INDUSTRY]: 'kyc:KYC.INDUSTRY_FOOD_INDUSTRY',
   [IndustryOptions.HEALTHCARE_AND_SOCIAL_ASSISTANCE]:
-    'KYC.INDUSTRY_HEALTHCARE_AND_SOCIAL_ASSISTANCE',
-  [IndustryOptions.INFORMATION]: 'KYC.INDUSTRY_INFORMATION',
-  [IndustryOptions.MINING]: 'KYC.INDUSTRY_MINING',
-  [IndustryOptions.OTHER_SERVICE_ACTIVITIES]: 'KYC.INDUSTRY_OTHER_SERVICE_ACTIVITIES',
-  [IndustryOptions.PERSONAL_SERVICES]: 'KYC.INDUSTRY_PERSONAL_SERVICES',
-  [IndustryOptions.REAL_ESTATE_ACTIVITIES]: 'KYC.INDUSTRY_REAL_ESTATE_ACTIVITIES',
-  [IndustryOptions.RETAIL]: 'KYC.INDUSTRY_RETAIL',
-  [IndustryOptions.THEMATIC_REPORTS]: 'KYC.INDUSTRY_THEMATIC_REPORTS',
-  [IndustryOptions.TRANSPORT_INDUSTRY]: 'KYC.INDUSTRY_TRANSPORT_INDUSTRY',
+    'kyc:KYC.INDUSTRY_HEALTHCARE_AND_SOCIAL_ASSISTANCE',
+  [IndustryOptions.INFORMATION]: 'kyc:KYC.INDUSTRY_INFORMATION',
+  [IndustryOptions.MINING]: 'kyc:KYC.INDUSTRY_MINING',
+  [IndustryOptions.OTHER_SERVICE_ACTIVITIES]: 'kyc:KYC.INDUSTRY_OTHER_SERVICE_ACTIVITIES',
+  [IndustryOptions.PERSONAL_SERVICES]: 'kyc:KYC.INDUSTRY_PERSONAL_SERVICES',
+  [IndustryOptions.REAL_ESTATE_ACTIVITIES]: 'kyc:KYC.INDUSTRY_REAL_ESTATE_ACTIVITIES',
+  [IndustryOptions.RETAIL]: 'kyc:KYC.INDUSTRY_RETAIL',
+  [IndustryOptions.THEMATIC_REPORTS]: 'kyc:KYC.INDUSTRY_THEMATIC_REPORTS',
+  [IndustryOptions.TRANSPORT_INDUSTRY]: 'kyc:KYC.INDUSTRY_TRANSPORT_INDUSTRY',
 };
 
 const RegistrationInfoForm = ({
@@ -160,7 +162,7 @@ const RegistrationInfoForm = ({
       {/* ===== Country ===== */}
       <div className="flex flex-col items-start gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.WHICH_COUNTRY_IS_YOUR_COMPANY_REGISTERED_IN')} ?
+          {t('kyc:KYC.WHICH_COUNTRY_IS_YOUR_COMPANY_REGISTERED_IN')} ?
         </h6>
 
         <div
@@ -191,7 +193,7 @@ const RegistrationInfoForm = ({
       {/* ===== Legal Structure ===== */}
       <div className="flex flex-col items-start gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.LEGAL_STRUCTURE')}
+          {t('kyc:KYC.LEGAL_STRUCTURE')}
         </h6>
 
         <div
@@ -222,12 +224,12 @@ const RegistrationInfoForm = ({
       {/* ===== Business Registration Number ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.BUSINESS_REGISTRATION_NUMBER')}{' '}
+          {t('kyc:KYC.BUSINESS_REGISTRATION_NUMBER')}{' '}
         </h6>
         <input
           id="business-registration-number"
           type="text"
-          placeholder={t('KYC.EXAMPLE')}
+          placeholder={t('kyc:KYC.EXAMPLE')}
           required
           className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={businessRegistrationNumberInputHandler}
@@ -238,7 +240,7 @@ const RegistrationInfoForm = ({
       {/* ===== Registration Date ===== */}
       <div className="flex flex-col items-start gap-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.REGISTRATION_DATE')}
+          {t('kyc:KYC.REGISTRATION_DATE')}
         </h6>
 
         <div className="w-full">
@@ -254,7 +256,7 @@ const RegistrationInfoForm = ({
 
       {/* ===== Industry ===== */}
       <div className="flex flex-col items-start gap-8px">
-        <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.INDUSTRY')}</h6>
+        <h6 className="text-sm font-semibold text-input-text-primary">{t('kyc:KYC.INDUSTRY')}</h6>
 
         <div
           id="industry-menu"

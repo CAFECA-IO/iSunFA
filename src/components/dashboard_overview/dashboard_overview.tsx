@@ -34,19 +34,19 @@ const DashboardOverview = () => {
   const displayedProfitChangeRate =
     dashboardOverview.emptyProfitChange ||
     (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)
-      ? t('PROJECT.NO_DATA')
+      ? t('project:PROJECT.NO_DATA')
       : `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange.toFixed(0)}`;
 
   const displayedTopProjectRoi =
     dashboardOverview.emptyTopProjectRoi ||
     (!dashboardOverview.topProjectRoi && dashboardOverview.topProjectRoi !== 0)
-      ? t('PROJECT.NO_DATA')
+      ? t('project:PROJECT.NO_DATA')
       : `${dashboardOverview.topProjectRoi > 0 ? `+${dashboardOverview.topProjectRoi.toFixed(0)}` : dashboardOverview.topProjectRoi.toFixed(0)}`;
 
   const displayedPreLaunchProjects =
     dashboardOverview.emptyPreLaunchProject ||
     (!dashboardOverview.preLaunchProject && dashboardOverview.preLaunchProject !== 0)
-      ? t('PROJECT.NO_DATA')
+      ? t('project:PROJECT.NO_DATA')
       : dashboardOverview.preLaunchProject;
 
   React.useEffect(() => {

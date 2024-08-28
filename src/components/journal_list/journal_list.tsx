@@ -91,7 +91,7 @@ const JournalList = ({
 
   return success === false && code ? (
     <>
-      <p>{t('JOURNAL.FAILED_TO_FETCH_DATA')}</p>
+      <p>{t('journal:JOURNAL.FAILED_TO_FETCH_DATA')}</p>
       <p>{code}</p>
     </>
   ) : isLoading === true ? (
@@ -123,16 +123,20 @@ const JournalList = ({
                 />
               </th> */}
               <th className="whitespace-nowrap text-center">{t('DATE_PICKER.DATE')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.TYPE')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.PARTICULARS')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.FROM_TO')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.AMOUNT')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.TYPE')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.PARTICULARS')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.FROM_TO')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.AMOUNT')}</th>
               <th className="whitespace-nowrap px-16px">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.VOUCHER_NO')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.VOUCHER_NO')}
+                </th>
               )}
               {event === JOURNAL_EVENT.UPCOMING && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.OPERATIONS')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.OPERATIONS')}
+                </th>
               )}
             </tr>
           </thead>
@@ -158,12 +162,16 @@ const JournalList = ({
                 />
               </th> */}
               <th className="whitespace-nowrap text-center">{t('DATE_PICKER.DATE')}</th>
-              <th className="whitespace-nowrap text-center">{t('JOURNAL.INFO')}</th>
+              <th className="whitespace-nowrap text-center">{t('journal:JOURNAL.INFO')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.VOUCHER_NO')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.VOUCHER_NO')}
+                </th>
               )}
               {event === JOURNAL_EVENT.UPCOMING && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.OPERATIONS')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.OPERATIONS')}
+                </th>
               )}
             </tr>
           </thead>

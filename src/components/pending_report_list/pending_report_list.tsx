@@ -277,7 +277,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
             {displayedCheckbox}
             <th className="text-center">{t('PENDING_REPORT_LIST.DATE')}</th>
             <th className="px-16px">{t('PENDING_REPORT_LIST.REPORT_NAME')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('JOURNAL.TYPE')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('journal:JOURNAL.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">{t('PENDING_REPORT_LIST.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">
               {t('PENDING_REPORT_LIST.REMAINING_TIME')}

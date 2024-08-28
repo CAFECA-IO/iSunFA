@@ -90,7 +90,7 @@ const UploadArea = ({
       body: formData,
     });
     if (success === false) {
-      handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.FILE_UPLOAD_ERROR', { code }));
+      handleError(t('kyc:KYC.UPLOAD_FILE_FAILED'), t('kyc:KYC.FILE_UPLOAD_ERROR', { code }));
       onChange(type, undefined);
       setStatus(ProgressStatus.SYSTEM_ERROR);
     }
@@ -106,8 +106,8 @@ const UploadArea = ({
     async (file: File) => {
       if (file.size > MAX_SIZE_IN_BYTES) {
         handleError(
-          t('KYC.UPLOAD_FILE_FAILED'),
-          t('KYC.FILE_SIZE_EXCEEDS_LIMIT', { size: `${MAX_FILE_SIZE_IN_MB}MB` })
+          t('kyc:KYC.UPLOAD_FILE_FAILED'),
+          t('kyc:KYC.FILE_SIZE_EXCEEDS_LIMIT', { size: `${MAX_FILE_SIZE_IN_MB}MB` })
         );
         return;
       }
@@ -144,7 +144,7 @@ const UploadArea = ({
         }
 
         reader.onerror = () => {
-          handleError(t('KYC.READ_FILE_FAILED'), t('KYC.FILE_READ_ERROR'));
+          handleError(t('kyc:KYC.READ_FILE_FAILED'), t('kyc:KYC.FILE_READ_ERROR'));
           onChange(type, undefined);
         };
       };
@@ -163,7 +163,7 @@ const UploadArea = ({
       if (validTypes.includes(file.type)) {
         saveFileToLocalStorage(file);
       } else {
-        handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.ONLY_PDF_JPEG_PNG_SUPPORTED'));
+        handleError(t('kyc:KYC.UPLOAD_FILE_FAILED'), t('kyc:KYC.ONLY_PDF_JPEG_PNG_SUPPORTED'));
       }
     }
   };
@@ -218,7 +218,10 @@ const UploadArea = ({
       });
       success = result.success && result.data?.existed === false;
       if (!success) {
-        handleError(t('KYC.DELETE_FILE_FAILED'), t('KYC.FILE_DELETE_ERROR', { code: result.code }));
+        handleError(
+          t('kyc:KYC.DELETE_FILE_FAILED'),
+          t('kyc:KYC.FILE_DELETE_ERROR', { code: result.code })
+        );
       }
     }
     if (success) {
@@ -249,7 +252,7 @@ const UploadArea = ({
         handleFileUpload(file);
       }
     } catch (error) {
-      handleError(t('KYC.READ_FILE_FAILED'), t('KYC.FILE_READ_ERROR'));
+      handleError(t('kyc:KYC.READ_FILE_FAILED'), t('kyc:KYC.FILE_READ_ERROR'));
     }
   }, []);
 

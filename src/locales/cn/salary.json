@@ -1,0 +1,16 @@
+{
+  "SALARY": {
+    "SALARY": "薪资",
+    "EMPLOYEES_LIST": "员工名单",
+    "SALARY_LIST": "薪资簿",
+    "ADD_NEW_EMPLOYEE": "新增员工",
+    "ONE_CLICK_REMOVAL": "一键删除",
+    "EMPTY": "无资料",
+    "SALARY_ISUNFA": "薪资 - iSunFA"
+  },
+  "LABOR_COST_CHART": {
+    "ONBOARDING_PROJECTS": "入职项目",
+    "LABOR_COST": "劳动成本",
+    "WORKING_TIME_RATIO": "工作时间比例"
+  }
+}

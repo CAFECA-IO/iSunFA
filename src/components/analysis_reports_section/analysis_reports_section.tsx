@@ -110,7 +110,7 @@ const AnalysisReportSection = () => {
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {/* Info: (20240710 - Anna) {selectedProjectName} */}
-            {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
+            {selectedProjectName === 'Overall' ? t('project:PROJECT.OVERALL') : selectedProjectName}
           </div>
 
           <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -203,7 +203,7 @@ const AnalysisReportSection = () => {
                       {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('PROJECT.OVERALL')
+                        ? t('project:PROJECT.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>

@@ -162,7 +162,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
+            {selectedProjectName === 'Overall' ? t('project:PROJECT.OVERALL') : selectedProjectName}
           </div>
 
           <div className="my-auto flex flex-col justify-center px-0 py-0">
@@ -254,7 +254,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                     <div className="text-base font-medium leading-6 tracking-normal">
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('PROJECT.OVERALL')
+                        ? t('project:PROJECT.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -428,7 +428,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               <Image src={'/icons/rocket.svg'} width={20} height={20} alt="rocket_icon" />
               <p className="text-input-text-primary">
                 {t(
-                  `PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
+                  `project:PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
                 )}
               </p>
             </div>

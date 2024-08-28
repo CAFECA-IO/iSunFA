@@ -49,7 +49,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
                 </button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                  {projectName} - {t('JOURNAL.JOURNAL_LIST')}
+                  {projectName} - {t('journal:JOURNAL.JOURNAL_LIST')}
                 </h1>
               </div>
               {/* Info: (20240621 - Julian) Add new contract button (desktop) */}
@@ -61,7 +61,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
                   className="hidden items-center gap-4px px-4 py-8px md:flex"
                 >
                   <FiPlusCircle size={24} />
-                  {t('JOURNAL.ADD_NEW_JOURNAL')}
+                  {t('journal:JOURNAL.ADD_NEW_JOURNAL')}
                 </Button>
               </Link>
               {/* Info: (20240621 - Julian) Add new contract button (mobile) */}
@@ -90,7 +90,7 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {projectName} {t('JOURNAL.JOURNAL_LIST_ISUNFA')}
+          {projectName} {t('journal:JOURNAL.JOURNAL_LIST_ISUNFA')}
         </title>
       </Head>
 
@@ -115,7 +115,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

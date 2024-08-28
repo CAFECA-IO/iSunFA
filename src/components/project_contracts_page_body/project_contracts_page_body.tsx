@@ -177,7 +177,7 @@ const ProjectContractsPageBody = () => {
       <div className="hidden w-full items-end gap-x-24px gap-y-40px md:flex">
         {/* Info: (20240618 - Julian) Status filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('PROJECT.STATUS')}</p>
+          <p className="font-semibold text-input-text-primary">{t('project:PROJECT.STATUS')}</p>
           <div
             ref={statusRef}
             onClick={statusClickHandler}
@@ -218,7 +218,7 @@ const ProjectContractsPageBody = () => {
             type="text"
             onChange={searchHandler}
             className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-            placeholder={t('CONTRACT.SEARCH_CONTRACT')}
+            placeholder={t('journal:CONTRACT.SEARCH_CONTRACT')}
           />
           <FiSearch size={20} />
         </div>
@@ -244,7 +244,7 @@ const ProjectContractsPageBody = () => {
               type="text"
               onChange={searchHandler}
               className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-              placeholder={t('CONTRACT.SEARCH_CONTRACT')}
+              placeholder={t('journal:CONTRACT.SEARCH_CONTRACT')}
             />
             <FiSearch size={20} />
           </div>

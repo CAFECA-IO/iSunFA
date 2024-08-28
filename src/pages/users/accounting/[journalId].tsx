@@ -41,7 +41,7 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t('JOURNAL.JOURNAL')} {journalId} - iSunFA
+          {t('journal:JOURNAL.JOURNAL')} {journalId} - iSunFA
         </title>
       </Head>
 
@@ -66,7 +66,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       journalId: params.journalId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

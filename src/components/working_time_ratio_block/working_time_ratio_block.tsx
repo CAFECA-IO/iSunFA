@@ -67,7 +67,9 @@ const WorkingTimeRatioBlock = () => {
           height={24}
           alt="working_time_ratio_icon"
         />
-        <p className="text-text-neutral-secondary">{t('LABOR_COST_CHART.WORKING_TIME_RATIO')}</p>
+        <p className="text-text-neutral-secondary">
+          {t('salary:LABOR_COST_CHART.WORKING_TIME_RATIO')}
+        </p>
       </div>
       <div className="flex w-full flex-col items-center gap-y-8px border-t py-8px">
         {displayEmployeeList}

@@ -30,7 +30,7 @@ const stageNameMap: StageNameMap = {
 };
 
 const ProjectPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['project', 'common']);
 
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
@@ -234,7 +234,7 @@ const ProjectPageBody = () => {
         {/* Info: (2024606 - Julian) Title */}
         <div className="flex items-center justify-between">
           <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:REPORTS_HISTORY_LIST.PROJECT')}
           </h1>
           <Button
             type="button"
