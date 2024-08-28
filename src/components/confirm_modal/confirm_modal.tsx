@@ -427,18 +427,17 @@ const ConfirmModal = ({
         <p>{project}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+      <p className="font-semibold text-text-neutral-primary">{t('JOURNAL.NONE')}</p>
     );
 
   // Info: (20240731 - Anna) 把合約None加上多語系
-  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
   const displayContract =
     contract !== 'None' ? (
       <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <p className="font-semibold text-darkBlue">{contract}</p>
+        <p className="font-semibold text-link-text-primary">{contract}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+      <p className="font-semibold text-text-neutral-primary">{t('JOURNAL.NONE')}</p>
     );
 
   const displayedHint =

@@ -194,7 +194,7 @@ const DatePicker = ({
   loading,
   btnClassName,
   calenderClassName,
-  buttonStyleAfterDateSelected = 'border-button-stroke-primary-hover text-input-text-input-filled',
+  buttonStyleAfterDateSelected = 'border-input-stroke-input text-input-text-input-filled',
   onClose,
   alignCalendar,
   datePickerClassName,

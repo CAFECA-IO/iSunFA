@@ -701,8 +701,6 @@ module.exports = {
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
-        darkBlue: '#1570EF',
-        darkBlue2: '#314362',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.svg')",
