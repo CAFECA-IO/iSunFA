@@ -41,11 +41,11 @@ const JournalUploadArea = () => {
     code: uploadCode,
   } = APIHandler<IOCR[]>(APIName.OCR_UPLOAD);
 
-  const { data: publicKeyData, success: fetchPublicKeySuccess } = APIHandler<JsonWebKey>(
-    APIName.PUBLIC_KEY_GET,
-    { params: { companyId: selectedCompany?.id } },
-    true
-  );
+  const {
+    trigger: fetchPublicKey,
+    data: publicKeyData,
+    success: fetchPublicKeySuccess,
+  } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
 
   // Info: (20240711 - Julian) 上傳的檔案
   const [uploadFile, setUploadFile] = useState<FileInfo | null>(null);
@@ -183,6 +183,12 @@ const JournalUploadArea = () => {
 
     uploadInvoice({ params: { companyId }, body: formData });
   };
+
+  useEffect(() => {
+    if (selectedCompany?.id) {
+      fetchPublicKey({ params: { companyId: selectedCompany.id } });
+    }
+  }, [selectedCompany?.id]);
 
   useEffect(() => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
