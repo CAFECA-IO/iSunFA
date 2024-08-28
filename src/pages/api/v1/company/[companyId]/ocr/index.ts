@@ -386,7 +386,7 @@ export async function createOcrFromAichResults(
 
 export async function handlePostRequest(companyId: number, req: NextApiRequest) {
   let resultJson: IOCR[] = [];
-
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
     const { files, fields } = await getImageFileAndFormFromFormData(req);
     const imageFieldsArray = extractDataFromFields(fields);
@@ -394,12 +394,16 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     // Deprecated: (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
+    statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     logger.error(error, 'Ocr handlePostRequest error, happen when POST Image to AICH API');
   }
 
-  return resultJson;
+  return {
+    resultJson,
+    statusMessage,
+  };
 }
 
 export async function handleGetRequest(companyId: number, req: NextApiRequest) {
@@ -446,8 +450,10 @@ export default async function handler(
           break;
         }
         case 'POST': {
-          payload = await handlePostRequest(companyId, req);
-          statusMessage = STATUS_MESSAGE.CREATED;
+          const result = await handlePostRequest(companyId, req);
+
+          payload = result.resultJson;
+          statusMessage = result.statusMessage;
           break;
         }
         default: {

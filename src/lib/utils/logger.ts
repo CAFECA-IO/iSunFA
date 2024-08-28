@@ -41,7 +41,7 @@ const prettyStream = pretty({
 
 // Info: (20240823 - Gibbs) 使用 pino-multi-stream 來處理多個輸出
 const streams = [
-  { level, stream: logStream }, // Info: (20240823 - Gibbs) 將日誌輸出到 rotating-file-stream
+  { level, stream: logStream, sync: false }, // Info: (20240823 - Gibbs) 將日誌輸出到 rotating-file-stream
   { level, stream: prettyStream }, // Info: (20240823 - Murky) 將日誌輸出到 console
 ];
 
