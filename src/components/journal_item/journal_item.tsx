@@ -296,10 +296,10 @@ const JournalItem = ({
       </td>
       {/* Info: (20240418 - Julian) 單據編號 */}
       {event === JOURNAL_EVENT.UPLOADED && (
-        <td className="px-16px text-right font-medium text-darkBlue">{voucherNo}</td>
+        <td className="px-16px text-right font-medium text-link-text-primary">{voucherNo}</td>
       )}
       {event === JOURNAL_EVENT.UPCOMING && (
-        <td className="px-16px text-right font-medium text-darkBlue"></td>
+        <td className="px-16px text-right font-medium text-link-text-primary"></td>
       )}
       {/* Info: (20240418 - Julian) Link */}
       <Link

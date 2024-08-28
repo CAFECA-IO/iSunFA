@@ -322,7 +322,7 @@ const JournalUploadArea = () => {
         <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
         <p className="mt-20px font-semibold text-navyBlue2">
           {t('journal:JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-          <span className="text-darkBlue">{t('journal:JOURNAL.BROWSE')}</span>
+          <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
         </p>
         <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
 

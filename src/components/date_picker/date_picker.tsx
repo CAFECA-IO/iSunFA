@@ -68,11 +68,11 @@ const PopulateDates = ({
 
   // Info: (2020417 - Shirley) 用於日期選取的樣式
   const beforeStyle =
-    'before:absolute before:-z-10 before:w-[40px] before:md:w-[42px] before:h-[40px] before:md:h-[42px] before:rounded-full before:bg-primaryYellow';
+    'before:absolute before:-z-10 before:w-40px before:md:w-42px before:h-40px before:md:h-42px before:rounded-full before:bg-date-picker-surface-date-selected';
 
   // Info: (20240417 - Shirley) 顯示星期標題
   const weekNameList = WEEK_LIST.map((week) => (
-    <p className="mx-auto h-35px w-35px text-primaryYellow" key={week}>
+    <p className="mx-auto h-35px w-35px text-date-picker-text-week" key={week}>
       {t(week)}
     </p>
   ));
@@ -99,20 +99,20 @@ const PopulateDates = ({
       date?.getTime() >= selectTimeOne &&
       date?.getTime() <= selectTimeTwoReset &&
       selectTimeOne !== selectTimeTwoReset
-        ? 'bg-primaryYellow/30'
+        ? 'bg-date-picker-surface-date-period'
         : '';
 
     // Info: (20240417 - Shirley) DateOne 和 DateTwo 的樣式
     const isSelectedDateStyle = date?.getTime()
       ? !selectTimeTwoReset && date.getTime() === selectTimeOne
-        ? 'rounded-full bg-white text-primaryYellow'
+        ? 'rounded-full'
         : selectTimeOne && selectTimeTwoReset
-          ? date.getTime() === selectTimeOne && date.getTime() === selectTimeTwoReset
-            ? `rounded-full text-secondaryBlue bg-primaryYellow`
-            : date.getTime() === selectTimeOne
-              ? `rounded-l-full text-secondaryBlue before:md:left-[1px] before:left-0 before:-top-3px ${beforeStyle}`
-              : date.getTime() === selectTimeTwoReset
-                ? `rounded-r-full text-secondaryBlue before:md:right-[1px] before:right-0 before:-top-3px ${beforeStyle}`
+          ? date.getTime() === selectTimeOne && date.getTime() === selectTimeTwoReset // Info: (20240828 - Julian) 選擇的日期是同一天
+            ? `rounded-full text-date-picker-text-selected ${beforeStyle}`
+            : date.getTime() === selectTimeOne // Info: (20240828 - Julian) DateOne 的樣式
+              ? `rounded-l-full text-date-picker-text-selected ${beforeStyle}`
+              : date.getTime() === selectTimeTwoReset // Info: (20240828 - Julian) DateTwo 的樣式
+                ? `rounded-r-full text-date-picker-text-selected ${beforeStyle}`
                 : ''
           : ''
       : '';
@@ -166,7 +166,7 @@ const PopulateDates = ({
         key={el?.date}
         type="button"
         disabled={el?.disable}
-        className={`relative z-10 h-35px whitespace-nowrap px-1 text-base md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle} transition-all duration-150 ease-in-out disabled:text-lilac`}
+        className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle}`}
         onClick={dateClickHandler}
       >
         {el?.date ?? ' '}
@@ -194,7 +194,7 @@ const DatePicker = ({
   loading,
   btnClassName,
   calenderClassName,
-  buttonStyleAfterDateSelected = 'border-secondaryBlue text-secondaryBlue',
+  buttonStyleAfterDateSelected = 'border-input-stroke-input text-input-text-input-filled',
   onClose,
   alignCalendar,
   datePickerClassName,
@@ -390,13 +390,13 @@ const DatePicker = ({
         onClick={openCalenderHandler}
         className={cn(
           // Info: (20240426 - Liz) ===== default style =====
-          'flex w-full items-center space-x-3 rounded-sm border border-lightGray3 bg-white p-3 text-input-text-input-placeholder hover:cursor-pointer',
+          'flex w-full items-center space-x-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-3 text-input-text-input-placeholder hover:cursor-pointer',
           // Info: (20240426 - Liz) ===== props control style =====
           btnClassName,
           // Info: (20240426 - Liz) ===== variables control style =====
           {
             [buttonStyleAfterDateSelected]: isDateSelected,
-            'border-primaryYellow text-primaryYellow': componentVisible,
+            'border-input-stroke-selected text-input-surface-input-selected': componentVisible,
             'cursor-not-allowed border-button-stroke-disable text-button-text-disable': disabled,
           }
         )}
@@ -408,20 +408,13 @@ const DatePicker = ({
           fill="none"
           viewBox="0 0 16 16"
         >
-          <g clipPath="url(#clip0_653_75494)">
-            <path
-              className="fill-current"
-              fillRule="evenodd"
-              d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-          <defs>
-            <clipPath id="clip0_653_75494">
-              <path fill="#fff" d="M0 0H16V16H0z"></path>
-            </clipPath>
-          </defs>
-        </svg>{' '}
+          <path
+            className="fill-current"
+            fillRule="evenodd"
+            d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
+            clipRule="evenodd"
+          ></path>
+        </svg>
       </Button>
     ) : type === DatePickerType.TEXT_PERIOD || type === DatePickerType.TEXT_DATE ? (
       <Button
@@ -430,23 +423,20 @@ const DatePicker = ({
         variant={'tertiaryOutline'}
         onClick={openCalenderHandler}
         className={cn(
-          'group flex w-full items-center rounded-sm border border-lightGray3 bg-white px-3 py-3 hover:cursor-pointer',
+          'group flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background p-3 text-input-text-input-placeholder hover:cursor-pointer group-hover:text-button-text-primary-hover',
           btnClassName,
           {
-            'border-primaryYellow text-primaryYellow': componentVisible,
-            'text-secondaryBlue': isDateSelected,
+            'border-button-stroke-primary-hover': componentVisible,
+            [buttonStyleAfterDateSelected]: isDateSelected,
             'cursor-not-allowed border-button-stroke-disable text-button-text-disable': disabled,
           }
         )}
       >
         <p
-          className={cn(
-            'flex-1 whitespace-nowrap text-start text-sm text-input-text-input-placeholder group-hover:text-primaryYellow',
-            {
-              'text-primaryYellow': componentVisible,
-              [buttonStyleAfterDateSelected]: isDateSelected,
-            }
-          )}
+          className={cn('flex-1 whitespace-nowrap text-start text-sm', {
+            'border-button-stroke-primary-hover': componentVisible,
+            [buttonStyleAfterDateSelected]: isDateSelected,
+          })}
         >
           {displayedPeriod}
         </p>
@@ -457,19 +447,12 @@ const DatePicker = ({
           fill="none"
           viewBox="0 0 16 16"
         >
-          <g clipPath="url(#clip0_653_75494)">
-            <path
-              className="fill-current"
-              fillRule="evenodd"
-              d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
-              clipRule="evenodd"
-            ></path>
-          </g>
-          <defs>
-            <clipPath id="clip0_653_75494">
-              <path fill="#fff" d="M0 0H16V16H0z"></path>
-            </clipPath>
-          </defs>
+          <path
+            className="fill-current"
+            fillRule="evenodd"
+            d="M5.336.584a.75.75 0 01.75.75v.584h3.833v-.584a.75.75 0 011.5 0v.586c.284.002.536.01.758.028.38.03.736.098 1.074.27a2.75 2.75 0 011.202 1.201c.171.338.238.694.27 1.074.03.364.03.81.03 1.344v5.661c0 .534 0 .98-.03 1.344-.032.38-.099.737-.27 1.074a2.75 2.75 0 01-1.202 1.202c-.338.172-.694.239-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.031-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.074-.03-.364-.03-.81-.03-1.344v-5.66c0-.535 0-.98.03-1.345.031-.38.098-.736.27-1.074a2.75 2.75 0 011.202-1.202c.337-.171.694-.238 1.074-.27.221-.018.474-.025.758-.027v-.586a.75.75 0 01.75-.75zm-.75 2.836a9.144 9.144 0 00-.636.023c-.287.023-.425.065-.515.111a1.25 1.25 0 00-.547.546c-.046.09-.088.228-.111.515-.024.296-.025.68-.025 1.253v.05h10.5v-.05c0-.573 0-.957-.025-1.253-.023-.287-.065-.424-.111-.515a1.25 1.25 0 00-.546-.546c-.09-.046-.228-.088-.515-.111a9.141 9.141 0 00-.636-.023V4a.75.75 0 01-1.5 0v-.583H6.086V4a.75.75 0 01-1.5 0V3.42zm8.666 3.998h-10.5v4.05c0 .572 0 .956.025 1.252.023.287.065.425.111.515.12.236.312.427.547.546.09.047.228.089.515.112.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.112a1.25 1.25 0 00.546-.546c.046-.09.088-.228.111-.515.025-.296.025-.68.025-1.252v-4.05z"
+            clipRule="evenodd"
+          ></path>
         </svg>
       </Button>
     ) : null;
@@ -484,7 +467,7 @@ const DatePicker = ({
         {/* Info: (20240417 - Shirley) Calender part */}
         <div
           className={cn(
-            'invisible absolute top-16 z-20 grid w-[300px] grid-rows-0 items-center space-y-4 rounded-md bg-white p-5 text-black opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
+            'invisible absolute top-16 z-20 grid w-300px grid-rows-0 items-center space-y-4 rounded-md bg-date-picker-surface-calendar-background p-5 text-date-picker-text-default opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
               'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,
@@ -495,38 +478,30 @@ const DatePicker = ({
           )}
         >
           {/* Info: (20240417 - Shirley) Today button */}
-          <button
+          <Button
             type="button"
+            variant={'tertiaryOutline'}
             onClick={todayClickHandler}
-            className="w-full rounded border border-secondaryBlue p-1 text-sm text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
+            className="w-full p-1 text-sm"
           >
             {t('DATE_PICKER.TODAY')}
-          </button>
+          </Button>
 
           <div className="flex w-full items-center justify-between">
             {/* Info: (20240417 - Shirley) Previous button  */}
-            <button
-              type="button"
-              onClick={goToPrevMonth}
-              className="rounded border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
-            >
+            <Button type="button" onClick={goToPrevMonth} variant="tertiaryOutline" className="p-2">
               <AiOutlineLeft size={12} />
-            </button>
+            </Button>
             {/* Info: (20240417 - Shirley) Month and Year */}
-            <div className="flex space-x-4">
-              {' '}
-              <p className="text-secondaryBlue">{displayedYear}</p>
-              <p className="text-secondaryBlue">{displayedMonth}</p>
+            <div className="flex space-x-4 text-date-picker-text-default">
+              <p>{displayedYear}</p>
+              <p>{displayedMonth}</p>
             </div>
 
             {/* Info: (20240417 - Shirley) Next button */}
-            <button
-              type="button"
-              onClick={goToNextMonth}
-              className="rounded border border-secondaryBlue p-2 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow"
-            >
+            <Button type="button" onClick={goToNextMonth} variant="tertiaryOutline" className="p-2">
               <AiOutlineRight size={12} />
-            </button>
+            </Button>
           </div>
           <PopulateDates
             daysInMonth={daysInMonth(selectedYear, selectedMonth)}

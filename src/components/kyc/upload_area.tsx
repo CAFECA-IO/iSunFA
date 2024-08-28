@@ -346,9 +346,9 @@ const UploadArea = ({
           <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
           <p className="mt-20px font-semibold text-navyBlue2">
             {t('UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
-            <span className="text-darkBlue">{t('UPLOAD_AREA.BROWSE')}</span>
+            <span className="text-link-text-primary">{t('UPLOAD_AREA.BROWSE')}</span>
           </p>
-          <p className="text-center text-lightGray4">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
+          <p className="text-center text-drag-n-drop-text-note">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
 
           <input
             id={type}

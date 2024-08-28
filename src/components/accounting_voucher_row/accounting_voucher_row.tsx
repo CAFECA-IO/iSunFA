@@ -189,14 +189,14 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch bg-dropdown-surface-menu-background-primary p-8px ${isAccountingMenuOpen ? 'h-250px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
       >
         {/* Info: (20240806 - Julian) search */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="search-accounting"
             type="text"
             placeholder={t('AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>

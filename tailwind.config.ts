@@ -679,8 +679,6 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        lilac: '#ABA7BD',
-
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
         primaryYellow3: '#FFD892',
@@ -697,14 +695,11 @@ module.exports = {
         lightGray4: '#7F8A9D',
         lightGray5: '#58667F',
         lightGray6: '#CDD1D9',
-        lightGray7: '#F4F5F7',
+
         lightGray8: '#DEE2E6',
-        lightGray9: '#E0E0E0',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
-        darkBlue: '#1570EF',
-        darkBlue2: '#314362',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",

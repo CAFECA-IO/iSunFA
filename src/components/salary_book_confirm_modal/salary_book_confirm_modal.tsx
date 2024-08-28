@@ -48,7 +48,7 @@ const SalaryBookConfirmModal = ({
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-20px top-20px text-lightGray5"
+          className="absolute right-20px top-20px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
