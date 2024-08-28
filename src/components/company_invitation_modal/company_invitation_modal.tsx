@@ -121,7 +121,7 @@ const CompanyInvitationModal = ({
           <button
             type="button"
             onClick={cancelBtnClickHandler}
-            className="absolute right-3 top-3 flex items-center justify-center text-darkBlue2"
+            className="absolute right-3 top-3 flex items-center justify-center text-icon-surface-single-color-primary"
           >
             <RxCross2 size={20} />
           </button>
@@ -129,7 +129,7 @@ const CompanyInvitationModal = ({
         <div className="flex w-full flex-col justify-center gap-8px px-20px py-10px">
           {/* Info: (20240515 - Julian) Invitation Code */}
           <div
-            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-surface-state-error-dark border-surface-state-error-dark text-text-state-error'}`}
+            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-input-stroke-input border-input-stroke-input text-input-text-input-filled' : 'divide-surface-state-error-dark border-surface-state-error-dark text-text-state-error'}`}
           >
             <p className={isCodeValid ? 'text-lightGray4' : 'text-input-text-error'}>
               {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
