@@ -61,7 +61,8 @@ export type IAPIName =
   | 'PROJECT_LIST'
   | 'CREATE_PROJECT'
   | 'GET_PROJECT_BY_ID'
-  | 'UPDATE_PROJECT_BY_ID';
+  | 'UPDATE_PROJECT_BY_ID'
+  | 'PUBLIC_KEY_GET';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
