@@ -175,16 +175,19 @@ const AnalysisReportSection = () => {
 
           <div className="mt-2 max-h-52 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
-              .filter((project) =>
-                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+              .filter((project) => {
+                return DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase());
+              })
               .map((project) => (
                 <li
                   key={project}
-                  onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                  onClick={
+                    () =>
+                      // eslint-disable-next-line implicit-arrow-linebreak
+                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                    // eslint-disable-next-line react/jsx-curly-newline
                   }
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >

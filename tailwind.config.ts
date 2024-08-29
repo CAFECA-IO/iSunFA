@@ -682,8 +682,6 @@ module.exports = {
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
         primaryYellow3: '#FFD892',
-        primaryYellow4: '#FFA600',
-        primaryYellow5: '#CC8401',
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
@@ -694,8 +692,6 @@ module.exports = {
         lightGray4: '#7F8A9D',
 
         lightGray6: '#CDD1D9',
-
-        lightGray8: '#DEE2E6',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',

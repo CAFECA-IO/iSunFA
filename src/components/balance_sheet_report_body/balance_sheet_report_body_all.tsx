@@ -194,9 +194,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     preValue: number | undefined
   ) => (
     <tr>
-      <td className="border border-lightGray8 p-10px text-sm">{label}</td>
-      <td className="border border-lightGray8 p-10px text-end text-sm">{curValue}</td>
-      <td className="border border-lightGray8 p-10px text-end text-sm">{preValue}</td>
+      <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{label}</td>
+      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+        {curValue}
+      </td>
+      <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+        {preValue}
+      </td>
     </tr>
   );
 
@@ -205,7 +209,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -215,18 +222,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -240,7 +247,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -250,18 +260,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -275,7 +285,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -284,18 +297,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -309,7 +322,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -319,18 +335,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -344,7 +360,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -354,18 +373,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -379,7 +398,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -389,18 +411,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -414,7 +436,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -424,18 +449,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -449,7 +474,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -459,18 +487,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -484,7 +512,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -494,18 +525,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
@@ -519,7 +550,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       if (!item.code) {
         return (
           <tr key={item.code}>
-            <td colSpan={6} className="border border-lightGray8 p-10px text-sm font-bold">
+            <td
+              colSpan={6}
+              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+            >
               {item.name}
             </td>
           </tr>
@@ -529,18 +563,18 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       return (
         // Info: (20240723 - Shirley) it's ok to use index in the static data
         <tr key={item.code}>
-          <td className="border border-lightGray8 p-10px text-sm">{item.code}</td>
-          <td className="border border-lightGray8 p-10px text-sm">{item.name}</td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.curPeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.curPeriodPercentage}
           </td>
-          <td className="border border-lightGray8 p-10px text-end text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
-          <td className="border border-lightGray8 p-10px text-center text-sm">
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
             {item.prePeriodPercentage}
           </td>
         </tr>
