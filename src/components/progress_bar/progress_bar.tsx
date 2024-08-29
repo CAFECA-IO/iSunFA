@@ -49,7 +49,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
 
   return (
     <div className="flex w-full flex-col items-start gap-8px">
-      <p className="text-sm font-semibold text-navyBlue2">{t('COMMON.PROGRESS')}</p>
+      <p className="text-sm font-semibold text-input-text-primary">{t('COMMON.PROGRESS')}</p>
       <div className="flex w-full flex-col gap-x-20px gap-y-10px md:flex-row">
         {/* Info: (20240502 - Julian) Progress Bar */}
         <input
@@ -65,7 +65,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
         />
         {/* Info: (20240502 - Julian) Progress Rate Input */}
         <div
-          className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
+          className={`flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-all duration-300 ease-in-out`}
         >
           <NumericInput
             id="input-progress-rate"
@@ -77,7 +77,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
             max={100}
             className="flex-1 bg-transparent px-10px outline-none"
           />
-          <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+          <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
             <p>%</p>
           </div>
         </div>

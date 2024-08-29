@@ -469,9 +469,7 @@ const NewJournalForm = () => {
     } else if (createSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        // title: 'Create Invoice Failed',
         title: `${t('journal:JOURNAL.CREATE_INVOICE_FAILED')}`,
-        // content: `Create Invoice failed: ${createCode}`,
         content: `${t('journal:JOURNAL.CREATE_INVOICE_FAILED')}:${createCode}`,
         submitBtnStr: t('COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,

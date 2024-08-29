@@ -196,7 +196,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
-              {t('kyc:CONTRACT.COMPANY_NAME')}
+              {t('journal:CONTRACT.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
