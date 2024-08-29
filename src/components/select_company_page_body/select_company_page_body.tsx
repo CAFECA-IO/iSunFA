@@ -179,11 +179,11 @@ const SelectCompanyPageBody = () => {
         {/* Info: (20240513 - Julian) title & description */}
         <div className="flex flex-col items-center justify-center self-stretch">
           <div className="text-48px font-bold text-text-brand-secondary-lv2 max-lg:text-4xl">
-            {t('SELECT_COMPANY.WELCOME_BACK')}
+            {t('kyc:SELECT_COMPANY.WELCOME_BACK')}
             <span className="text-text-brand-primary-lv3">{userName}</span>!
           </div>
           <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv2">
-            {t('SELECT_COMPANY.YOUR_COMPANY')}
+            {t('kyc:SELECT_COMPANY.YOUR_COMPANY')}
           </div>
         </div>
         {/* Info: (20240513 - Julian) company selection */}
@@ -224,7 +224,7 @@ const SelectCompanyPageBody = () => {
           {/* Info: (20240513 - Julian) company selection */}
           <div className="relative inline-flex w-full flex-col items-start justify-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-input-text-primary">
-              {t('SELECT_COMPANY.MY_COMPANY_LIST')}
+              {t('kyc:SELECT_COMPANY.MY_COMPANY_LIST')}
             </p>
             <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow">
               <button
