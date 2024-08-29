@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import version from '@/lib/version';
+import { UserContext } from '@/contexts/user_context';
 
 const languages = [
   { label: 'EN', code: 'en' },
@@ -26,6 +27,7 @@ const isLinkDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是
 
 function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
   const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { signedIn } = useContext(UserContext);
 
   const router = useRouter();
   const { asPath } = router;
@@ -297,7 +299,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </li>
         </div>
         <li>
-          <Link href={ISUNFA_ROUTE.LOGIN}>
+          <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
             <Button className="flex space-x-3">
               <p
                 className={cn(
@@ -568,7 +570,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         </li>
 
         <li className="w-full px-6 py-4">
-          <Link href={ISUNFA_ROUTE.LOGIN}>
+          <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
             <Button className="flex space-x-3">
               <p
                 className={cn(
