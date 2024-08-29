@@ -27,7 +27,16 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 
 const KYCForm = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -101,7 +110,7 @@ const KYCForm = () => {
           messageType: MessageType.SUCCESS,
           title: t('kyc:KYC.SUBMIT_SUCCESS'),
           content: t('kyc:KYC.SUBMIT_SUCCESS_MESSAGE'),
-          backBtnStr: t('COMMON.CANCEL'),
+          backBtnStr: t('common:COMMON.CANCEL'),
           submitBtnStr: t('kyc:KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -115,7 +124,7 @@ const KYCForm = () => {
           title: t('kyc:KYC.SUBMIT_FAILED'),
           content: t('kyc:KYC.CONTACT_SERVICE_TEAM'),
           subMsg: t('kyc:KYC.SUBMIT_FAILED_MESSAGE', code),
-          backBtnStr: t('COMMON.CANCEL'),
+          backBtnStr: t('common:COMMON.CANCEL'),
           submitBtnStr: t('kyc:KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -130,7 +139,7 @@ const KYCForm = () => {
         subMsg: t('kyc:KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
         content: t('kyc:KYC.CONTACT_SERVICE_TEAM'),
         submitBtnStr: t('kyc:KYC.CONFIRM'),
-        backBtnStr: t('COMMON.CANCEL'),
+        backBtnStr: t('common:COMMON.CANCEL'),
         submitBtnFunction: () => {
           messageModalVisibilityHandler();
           goCompanyInfo();

@@ -11,7 +11,16 @@ interface IProjectStageBlockProps {
 }
 
 const ProjectStageBlock = ({ stage, projects }: IProjectStageBlockProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { addProjectModalVisibilityHandler, addProjectModalDataHandler } = useGlobalCtx();
 
   const addClickHandler = () => {

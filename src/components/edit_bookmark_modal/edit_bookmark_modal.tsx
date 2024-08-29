@@ -18,22 +18,31 @@ interface BookmarkNameMap {
 }
 
 const bookmarkNameMap: BookmarkNameMap = {
-  'Add New Contract': 'BOOKMARK_LIST.ADD_NEW_CONTRACT',
-  'Add New Employees': 'BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
-  'Add New Payroll': 'BOOKMARK_LIST.ADD_NEW_PAYROLL',
-  'Add New Journal': 'BOOKMARK_LIST.ADD_NEW_JOURNAL',
-  'Camera Scanner': 'BOOKMARK_LIST.CAMERA_SCANNER',
-  'Balance Sheet': 'BOOKMARK_LIST.BALANCE_SHEET',
-  'Income Statement': 'BOOKMARK_LIST.INCOME_STATEMENT',
-  'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
-  'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
-  'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
-  'HR Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
-  'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
+  'Add New Contract': 'common:BOOKMARK_LIST.ADD_NEW_CONTRACT',
+  'Add New Employees': 'common:BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
+  'Add New Payroll': 'common:BOOKMARK_LIST.ADD_NEW_PAYROLL',
+  'Add New Journal': 'common:BOOKMARK_LIST.ADD_NEW_JOURNAL',
+  'Camera Scanner': 'common:BOOKMARK_LIST.CAMERA_SCANNER',
+  'Balance Sheet': 'common:BOOKMARK_LIST.BALANCE_SHEET',
+  'Income Statement': 'common:BOOKMARK_LIST.INCOME_STATEMENT',
+  'Cash Flow Statement': 'common:BOOKMARK_LIST.CASH_FLOW_STATEMENT',
+  'Financial Performance': 'common:BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
+  'Cost Analysis': 'common:BOOKMARK_LIST.COST_ANALYSIS',
+  'HR Utilization': 'common:BOOKMARK_LIST.HR_UTILIZATION',
+  'Forecast Report': 'common:BOOKMARK_LIST.FORECAST_REPORT',
 };
 
 const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
@@ -51,8 +60,8 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
 
   const dropdownMenu =
     selectedBookmark.length > 0
-      ? `${selectedBookmark.length} ${t('DASHBOARD.SELECTED')}`
-      : t('EDIT_BOOKMARK_MODAL.PLEASE_SELECT_BOOKMARKS');
+      ? `${selectedBookmark.length} ${t('common:DASHBOARD.SELECTED')}`
+      : t('common:EDIT_BOOKMARK_MODAL.PLEASE_SELECT_BOOKMARKS');
 
   useEffect(() => {
     const addedBookmark = Object.entries(bookmarkList)
@@ -154,7 +163,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
                     <div
                       className={`${bookmarkList[key].added ? 'flex' : 'hidden'} my-auto h-fit items-center justify-end rounded-xs bg-badge-surface-soft-primary px-2 py-0.1rem text-center text-xs text-badge-text-primary-solid`}
                     >
-                      {t('EDIT_BOOKMARK_MODAL.LISTED')}{' '}
+                      {t('common:EDIT_BOOKMARK_MODAL.LISTED')}{' '}
                     </div>
 
                     <div className="flex flex-1 items-center justify-end">
@@ -229,10 +238,10 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
           <div className="flex flex-1 flex-col justify-center text-center">
             <div className="flex flex-col justify-center">
               <div className="justify-center self-center text-xl font-bold leading-8 text-card-text-primary">
-                {t('EDIT_BOOKMARK_MODAL.EDIT_MY_FAVORITES')}{' '}
+                {t('common:EDIT_BOOKMARK_MODAL.EDIT_MY_FAVORITES')}{' '}
               </div>
               <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
-                {t('EDIT_BOOKMARK_MODAL.SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE')}
+                {t('common:EDIT_BOOKMARK_MODAL.SELECT_A_BOOKMARK_TO_ADD_OR_REMOVE')}
               </div>
             </div>
           </div>
@@ -265,10 +274,10 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
         <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal">
           <div className="flex gap-3">
             <Button onClick={cancelBtnClickHandler} variant="tertiaryBorderless">
-              {t('REPORTS_HISTORY_LIST.CANCEL')}
+              {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
             </Button>
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
-              {t('EDIT_BOOKMARK_MODAL.SAVE')}
+              {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
             </Button>
           </div>
         </div>

@@ -27,7 +27,16 @@ const Pagination = ({
   pagePrefix = 'page',
   paginationHandler,
 }: IPaginationProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [targetPage, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
   const router = useRouter();
@@ -166,7 +175,7 @@ const Pagination = ({
         {displayPageInput}
         {/* Info: (20240419 - Julian) 顯示總頁數 */}
         <p>
-          {t('COMMON.OF')} {totalPages}
+          {t('common:COMMON.OF')} {totalPages}
         </p>
       </li>
       {/* Info: (20240419 - Julian) 下一頁 */}

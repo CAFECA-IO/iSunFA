@@ -12,7 +12,16 @@ interface IProjectDetailPageProps {
 }
 
 const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -58,7 +67,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-secondaryBlue transition-all duration-300 ease-in-out`}
           >
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
           </p>
 
           {displayedCompanyName}
@@ -96,7 +105,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('NAV_BAR.DASHBOARD')}
+              {t('common:NAV_BAR.DASHBOARD')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Contract List */}
@@ -184,7 +193,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+              {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Divider */}

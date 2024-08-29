@@ -155,19 +155,19 @@ function ContactForm() {
               height={100}
               alt="loading_animation"
             />
-            <p className="text-sm">{t('CONTACT_US.SENDING')}</p>
+            <p className="text-sm">{t('common:CONTACT_US.SENDING')}</p>
           </div>
         ) : animation === FormAnimation.SUCCESS ? (
           /* Info: (20230731 - Shirley) Success animation */
           <div className="flex flex-col items-center space-y-10">
             <Image src="/animations/success.gif" width={150} height={150} alt="loading_animation" />
-            <p className="text-sm">{t('CONTACT_US.SUCCESS')}</p>
+            <p className="text-sm">{t('common:CONTACT_US.SUCCESS')}</p>
           </div>
         ) : animation === FormAnimation.ERROR ? (
           /* Info: (20230731 - Shirley) Error animation */
           <div className="flex flex-col items-center">
             <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
-            <p className="text-sm">{t('CONTACT_US.ERROR')}</p>
+            <p className="text-sm">{t('common:CONTACT_US.ERROR')}</p>
             <Button
               id="retry-btn"
               type="button"
@@ -175,7 +175,7 @@ function ContactForm() {
               onClick={retryHandler}
               className="mt-6 px-10 py-3"
             >
-              {t('CONTACT_US.TRY_AGAIN')}
+              {t('common:CONTACT_US.TRY_AGAIN')}
             </Button>
           </div>
         ) : null}
@@ -194,10 +194,10 @@ function ContactForm() {
         {/* Info: (tzuhan - 20240513) remove arbitrary value? @Shirley  */}
         {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
         <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">
-          {t('CONTACT_US.TITLE')}
+          {t('common:CONTACT_US.TITLE')}
         </h1>
         <p className="mt-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-          {t('CONTACT_US.DESCRIPTION')}
+          {t('common:CONTACT_US.DESCRIPTION')}
         </p>
       </div>
       <div className="mt-12">
@@ -205,7 +205,7 @@ function ContactForm() {
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley  */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-            {t('CONTACT_US.NAME')}
+            {t('common:CONTACT_US.NAME')}
             <span className="text-red-400">*</span>
           </label>
           <input
@@ -221,7 +221,7 @@ function ContactForm() {
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-            {t('CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
+            {t('common:CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
           </label>
           <input
             id="Email"
@@ -232,14 +232,14 @@ function ContactForm() {
             required
           />
           {!emailValid && (
-            <p className="mt-1 text-xs text-red-500"> {t('CONTACT_US.EMAIL_VERIFY')}</p>
+            <p className="mt-1 text-xs text-red-500"> {t('common:CONTACT_US.EMAIL_VERIFY')}</p>
           )}
         </div>
         <div className="mt-4 flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-            {t('CONTACT_US.PHONE')}
+            {t('common:CONTACT_US.PHONE')}
           </label>
           <input
             id="Phone"
@@ -253,7 +253,7 @@ function ContactForm() {
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-            {t('CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>
+            {t('common:CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>
           </label>
           <textarea
             id="Message"
@@ -262,14 +262,14 @@ function ContactForm() {
             rows={3}
             value={inputMessage}
             className="min-h-120px rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400"
-            placeholder={t('CONTACT_US.MESSAGE_PLACEHOLDER')}
+            placeholder={t('common:CONTACT_US.MESSAGE_PLACEHOLDER')}
             required
           ></textarea>
         </div>
         <div className="mt-4 flex w-full justify-end">
           <Button type="submit" className="space-x-3" variant="default">
             <span className="text-base font-semibold leading-6 tracking-normal">
-              {t('CONTACT_US.SUBMIT')}
+              {t('common:CONTACT_US.SUBMIT')}
             </span>
             <span>
               <svg

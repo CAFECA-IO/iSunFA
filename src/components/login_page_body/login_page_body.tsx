@@ -54,7 +54,16 @@ const Loader = React.memo(() => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { toastHandler } = useGlobalCtx();
   const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
 
@@ -64,7 +73,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
         toastHandler({
           id: `user-agree-error`,
           type: ToastType.ERROR,
-          content: `${t('COMMON.ERROR')}: ${userAgreeResponse.code}`,
+          content: `${t('common:COMMON.ERROR')}: ${userAgreeResponse.code}`,
           closeable: true,
         });
       }

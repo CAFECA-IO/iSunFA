@@ -26,7 +26,16 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
   infoModalVisibilityHandler,
   tosModalVisibilityHandler,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { handleUserAgree, signOut } = useUserCtx();
 
   const onAgree = async () => {
@@ -70,7 +79,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
             variant="tertiaryOutline"
             className="mr-2 px-4 py-2 text-sm lg:text-lg"
           >
-            {t('COMMON.CANCEL')}
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             type="button"
