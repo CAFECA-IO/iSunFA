@@ -47,7 +47,6 @@ const AuthButton = React.memo(
       >
         <Image src={logo} alt={provider} width={16} height={16} className="h-6 w-6" />
         <span className={`font-semibold ${textColor}`}>
-          {/* Log In with {provider.replace(provider[0], provider[0].toUpperCase())} */}
           {t('common:LOGIN_PAGE_BODY.LOGIN_WITH_PROVIDER', {
             provider: provider.replace(provider[0], provider[0].toUpperCase()),
           })}
