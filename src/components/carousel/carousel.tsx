@@ -77,13 +77,13 @@ export default function Carousel({
         <div className="absolute inset-0 z-10 flex items-center justify-between p-0">
           <button
             onClick={prev}
-            className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
+            className="rounded-full px-3 py-1 text-icon-surface-solid-white shadow hover:cursor-pointer"
           >
             <Image src="/elements/arrow_left.svg" alt="arrow_left" width={24} height={24} />
           </button>
           <button
             onClick={next}
-            className="rounded-full px-3 py-1 text-white shadow hover:cursor-pointer"
+            className="rounded-full px-3 py-1 text-icon-surface-solid-white shadow hover:cursor-pointer"
           >
             <Image src="/elements/arrow_right.svg" alt="arrow_left" width={24} height={24} />
           </button>
@@ -95,7 +95,7 @@ export default function Carousel({
             {children.map((_, i) => (
               <div
                 key={i}
-                className={`h-1 w-3 rounded-full transition-all ${curr === i ? 'bg-primaryYellow' : 'bg-tertiaryBlue'} `}
+                className={`h-1 w-3 rounded-full transition-all ${curr === i ? 'bg-carousel-surface-active' : 'bg-navy-blue-400'} `}
               />
             ))}
           </div>

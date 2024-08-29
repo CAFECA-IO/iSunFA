@@ -196,16 +196,14 @@ const ProfitTrendChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
-      <div>
-        <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">{t('project:PROFIT_TREND_CHART.PROFIT_STATUS_TREND_CHART')}</div>
+    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-surface-neutral-surface-lv2 px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+      <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
+        <div className="flex-1">{t('project:PROFIT_TREND_CHART.PROFIT_STATUS_TREND_CHART')}</div>
 
-          <div className="justify-end">
-            <Tooltip>
-              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
-            </Tooltip>
-          </div>
+        <div className="justify-end">
+          <Tooltip>
+            <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
+          </Tooltip>
         </div>
       </div>
 
