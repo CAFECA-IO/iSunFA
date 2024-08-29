@@ -1,7 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
-import { promises as fs } from 'fs';
-
 import { IResponseData } from '@/interfaces/response_data';
 import {
   formatApiResponse,
@@ -12,8 +10,6 @@ import {
   transformFileSizeStringToBytes,
   transformOCRImageIDToURL,
 } from '@/lib/utils/common';
-import { parseForm } from '@/lib/utils/parse_image_form';
-
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import {
@@ -26,26 +22,47 @@ import { ProgressStatus } from '@/constants/account';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { FileFolder } from '@/constants/file';
+import { FileFolder, getFileFolder } from '@/constants/file';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 import logger from '@/lib/utils/logger';
+import { bufferToBlob, findFileByName, readFile } from '@/lib/utils/parse_image_form';
 
-// Info: (20240424 - Murky) 要使用formidable要先關掉bodyParser
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export async function readImageFromFilePath(
+  fileName: string,
+  fileMimeTypes: string
+): Promise<Blob> {
+  const fileFolder = getFileFolder(FileFolder.INVOICE);
+  const filePath = await findFileByName(fileFolder, fileName);
 
-export async function readImageFromFilePath(image: formidable.File): Promise<Blob> {
-  const imageContent = await fs.readFile(image.filepath);
-  return new Blob([imageContent], { type: image.mimetype || undefined });
+  if (!filePath) {
+    logger.info(
+      {
+        fileName,
+      },
+      'Ocr readImageFromFilePath filePath is null'
+    );
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const fileBuffer = await readFile(filePath);
+
+  if (!fileBuffer) {
+    logger.info(
+      {
+        fileName,
+      },
+      'Ocr readImageFromFilePath fileBuffer is null'
+    );
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+  const fileBlob = bufferToBlob(fileBuffer, fileMimeTypes);
+  return fileBlob;
 }
 
-export function getImageName(image: formidable.File) {
-  return image.filepath.split('/').pop() || 'unknown';
+export function getImageName(filePath: string) {
+  return filePath.split('/').pop() || 'unknown';
 }
 
 export function createImageFormData(imageBlob: Blob, imageName: string) {
@@ -71,6 +88,12 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
 
   if (!response || !response.ok) {
     logger.info(
+      {
+        aich_response: response,
+      },
+      'Ocr uploadImageToAICH response is not ok'
+    );
+    logger.error(
       {
         aich_response: response,
       },
@@ -125,7 +148,9 @@ export async function getPayloadFromResponseJSON(
 // Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
 export async function postImageToAICH(
-  files: formidable.Files,
+  filePaths: string[],
+  fileSizes: number[],
+  fileMimeTypes: string[],
   imageFields: {
     imageSize: number;
     imageName: string;
@@ -149,10 +174,10 @@ export async function postImageToAICH(
     type: string;
     uploadIdentifier: string;
   }[] = [];
-  if (files && files.image && files.image.length) {
+  if (filePaths && filePaths.length > 0) {
     // Info: (20240504 - Murky) 圖片會先被存在本地端，然後才讀取路徑後轉傳給 AICH
     resultJson = await Promise.all(
-      files.image.map(async (image, index) => {
+      filePaths.map(async (filePath, index) => {
         const imageFieldsLength = imageFields.length;
         const isIndexValid = index < imageFieldsLength;
 
@@ -177,11 +202,11 @@ export async function postImageToAICH(
           uploadIdentifier: '',
         };
         try {
-          const imageBlob = await readImageFromFilePath(image);
+          const imageBlob = await readImageFromFilePath(filePath, fileMimeTypes[index]);
 
-          const imageNameInLocal = getImageName(image);
+          const imageNameInLocal = getImageName(filePath);
           const imageName = isIndexValid ? imageFields[index].imageName : imageNameInLocal;
-          const imageSize = isIndexValid ? imageFields[index].imageSize : image.size;
+          const imageSize = isIndexValid ? imageFields[index].imageSize : fileSizes[index];
 
           const fetchResult = uploadImageToAICH(imageBlob, imageName);
 
@@ -206,7 +231,7 @@ export async function postImageToAICH(
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     logger.info(
       {
-        files,
+        filePaths,
       },
       'Ocr postImageToAICH files.image is null or files.image.length is 0'
     );
@@ -247,24 +272,56 @@ export function extractDataFromFields(fields: formidable.Fields) {
   return imageFieldsArray;
 }
 
-export async function getImageFileAndFormFromFormData(req: NextApiRequest) {
-  let files: formidable.Files = {};
-  let fields: formidable.Fields = {};
+function formatFormBody(req: NextApiRequest) {
+  const { body } = req;
 
-  try {
-    const parsedForm = await parseForm(req, FileFolder.INVOICE);
+  logger.info(body, 'ocr body');
+  let imageName: string;
+  let imageSizeNum: number; // Info: (20240829 - Murky) it's like 32 MB
+  let uploadIdentifier: string;
+  let encryptedSymmetricKey: string;
+  let publicKey: JsonWebKey;
+  let iv: string[];
+  let imageType: string;
 
-    files = parsedForm.files;
-    fields = parsedForm.fields;
-  } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    logger.error(error, 'Ocr getImageFileAndFormFromFormData error, happen when parse form data');
+  if (
+    body.imageName &&
+    body.imageSize &&
+    body.uploadIdentifier &&
+    body.encryptedSymmetricKey &&
+    body.publicKey &&
+    body.iv
+  ) {
+    imageName = body.imageName;
+    const imageSize = body.imageSize as string;
+
+    imageSizeNum = transformFileSizeStringToBytes(imageSize);
+
+    uploadIdentifier = body.uploadIdentifier;
+    encryptedSymmetricKey = body.encryptedSymmetricKey;
+    // publicKey = JSON.parse(body.publicKey) as JsonWebKey;
+
+    publicKey = {} as JsonWebKey;
+    iv = (body.iv as string).split(',');
+    imageType = body.imageType as string;
+  } else {
+    /* eslint-disable no-console */
+    console.error('Ocr formatFormBody error, body does not have all required fields');
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+    /* eslint-enable no-console */
   }
+
   return {
-    files,
-    fields,
+    imageName,
+    imageSize: imageSizeNum,
+    uploadIdentifier,
+    encryptedSymmetricKey,
+    publicKey,
+    iv,
+    imageType,
   };
 }
+
 export async function fetchStatus(aichResultId: string) {
   let status: ProgressStatus = ProgressStatus.SYSTEM_ERROR;
 
@@ -274,6 +331,12 @@ export async function fetchStatus(aichResultId: string) {
       const result = await fetch(fetchUrl);
 
       if (!result.ok) {
+        logger.info(
+          {
+            aich_response: result,
+          },
+          'Ocr fetchStatus response is not ok'
+        );
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
       }
 
@@ -388,15 +451,21 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
   let resultJson: IOCR[] = [];
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
-    const { files, fields } = await getImageFileAndFormFromFormData(req);
-    const imageFieldsArray = extractDataFromFields(fields);
-    const aichResults = await postImageToAICH(files, imageFieldsArray);
+    // Deprecated: (20240829 - Murky) This function is not used
+    // const { filePaths, fileSizes, fileMimeTypes, fields } = await getImageFileAndFormFromFormData(req);
+    const { imageName, imageSize, uploadIdentifier, imageType } = formatFormBody(req);
+    // const imageFieldsArray = extractDataFromFields(fields);
+    const aichResults = await postImageToAICH(
+      [imageName],
+      [imageSize],
+      [imageType],
+      [{ imageSize, imageName, uploadIdentifier }]
+    );
     // Deprecated: (20240611 - Murky) This function is not used
     // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     logger.error(error, 'Ocr handlePostRequest error, happen when POST Image to AICH API');
   }
 
