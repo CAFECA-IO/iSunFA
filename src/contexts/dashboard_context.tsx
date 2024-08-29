@@ -677,8 +677,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
 export const DashboardContext = createContext<DashboardContextType>(initialDashboardContext);
 
 export const DashboardProvider = ({ children }: IDashboardProvider) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [bookmarkList, setBookmarkList, bookmarkListRef] =
+  const [, /* bookmarkList */ setBookmarkList, bookmarkListRef] =
     useStateRef<Record<string, BookmarkItem>>(BookmarkAvailableList);
 
   const addSelectedBookmarks = (bookmarks: string[]) => {

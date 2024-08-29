@@ -259,8 +259,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
 
       {/* Info: (20240425 - Shirley) Project Menu */}
       <div
-        // eslint-disable-next-line tailwindcss/no-arbitrary-value, tailwindcss/no-unnecessary-arbitrary-value
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -382,8 +381,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       </button>
       {/* Info: (20240425 - Shirley) ===== Report Type Menu ===== */}
       <div
-        // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -444,8 +442,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        // eslint-disable-next-line tailwindcss/no-unnecessary-arbitrary-value, tailwindcss/no-arbitrary-value
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'

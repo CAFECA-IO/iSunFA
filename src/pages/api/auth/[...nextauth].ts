@@ -63,15 +63,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     },
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-      async signIn({ user, account, profile }) {
-        // Deprecated: (20240819-Tzuhan) [Beta] dev
-        // eslint-disable-next-line no-console
-        console.log('signIn callback', user, account, profile);
-        const { invitation } = (account?.params || {}) as { invitation: string };
-
-        // Deprecated: (20240819-Tzuhan) [Beta] dev
-        // eslint-disable-next-line no-console
-        console.log('Custom Params:', invitation);
+      async signIn({ user, account }) {
+        // Info: (20240829-Anna) 邀請碼後續會使用，目前先註解
+        // const { invitation } = (account?.params || {}) as { invitation: string };
 
         const session = await getSession(req, res);
         const getUser = await getUserByCredential(account?.providerAccountId || user.id);

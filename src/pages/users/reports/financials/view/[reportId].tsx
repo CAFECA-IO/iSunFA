@@ -41,8 +41,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: (20240723 - Shirley) [Beta] refactor and delete it
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportData, setReportData] = React.useState<IReportOld>({
+  const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },

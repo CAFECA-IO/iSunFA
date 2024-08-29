@@ -177,8 +177,7 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`, // Info: (20240417 - Shirley)
       },
       y: {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        formatter: (value, { series, seriesIndex, dataPointIndex }) => {
+        formatter: (value, { seriesIndex, dataPointIndex }) => {
           const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
           const formattedAbsoluteValue = absoluteValue.toLocaleString(); // Info: (20240521 - Shirley) 使用 toLocaleString() 方法加上千分位逗號
 

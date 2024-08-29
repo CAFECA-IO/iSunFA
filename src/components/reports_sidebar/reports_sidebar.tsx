@@ -54,8 +54,7 @@ const ReportsSidebar = () => {
             type="button"
             onClick={embedCodeModalVisibilityHandler}
             // ToDo: (20240802 - Julian) [Beta] Not released yet
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
+            disabled
             className={`flex w-full items-center gap-8px disabled:opacity-50 ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
           >
             <svg
@@ -179,8 +178,7 @@ const ReportsSidebar = () => {
             <button
               type="button"
               // ToDo: (20240802 - Julian) [Beta] Not released yet
-              // eslint-disable-next-line react/jsx-boolean-value
-              disabled={true}
+              disabled
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
@@ -243,8 +241,7 @@ const ReportsSidebar = () => {
           type="button"
           onClick={embedCodeModalVisibilityHandler}
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-secondaryBlue disabled:opacity-50"
         >
           <svg
@@ -311,8 +308,7 @@ const ReportsSidebar = () => {
         <button
           type="button"
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg
