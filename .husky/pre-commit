@@ -1,3 +1,4 @@
+# Info: (20240829 - Jacky) - Make sure NVM is loaded before running the tests
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # 加载 nvm
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 npm run test && npx lint-staged && npm run update-version
