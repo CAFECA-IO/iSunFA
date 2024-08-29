@@ -94,7 +94,7 @@ const CompanyInvitationModal = ({
 
     // Info: (20240515 - Julian) Check if the code is valid
     if (codeRegex.test(codeInput)) {
-      addCompany({ params: { userId: userAuth?.id }, body: { invitation: codeInput } });
+      addCompany({ params: { userId: userAuth?.id }, body: { invitationCode: codeInput } });
     }
   };
 
