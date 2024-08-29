@@ -241,7 +241,7 @@ const StepOneTab = () => {
         </button>
       </div> */}
       {/* Info: (20240422 - Julian) tip */}
-      {/* <p className="text-sm text-lightGray5">{t('journal:JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
+      {/* <p className="text-sm text-input-text-secondary">{t('journal:JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
       {/* Info: (20240422 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-lightGray4 md:hidden" />

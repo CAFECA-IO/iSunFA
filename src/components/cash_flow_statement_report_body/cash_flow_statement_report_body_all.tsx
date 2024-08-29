@@ -726,7 +726,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-end text-xs font-semibold text-lightGray5">
+              <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
                 {curYear}年度投資活動項目佔比
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
@@ -742,7 +742,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-end text-xs font-semibold text-lightGray5">
+              <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
                 {preYear}年度投資活動項目佔比
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
