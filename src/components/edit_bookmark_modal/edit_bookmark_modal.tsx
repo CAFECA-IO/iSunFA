@@ -65,10 +65,8 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
 
   useEffect(() => {
     const addedBookmark = Object.entries(bookmarkList)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([key, value]) => value.added)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(([key, value]) => key);
+      .filter(([, value]) => value.added)
+      .map(([key]) => key);
 
     setSelectedBookmark(addedBookmark);
   }, [isAddBookmarkModalVisible]);

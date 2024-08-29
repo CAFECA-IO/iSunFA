@@ -282,6 +282,7 @@
     "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "该用户名将应用于您的设备。",
     "REGISTER": "注册",
     "LOG_IN": "登录",
+    "LOGIN_WITH_PROVIDER": "用{{provider}}登录",
     "USERNAME": "用户名"
   },
   "PASSKEY_SUPPORT_MODAL": {

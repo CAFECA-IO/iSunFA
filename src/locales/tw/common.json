@@ -282,6 +282,7 @@
     "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "該用戶名將應用於您的裝置。",
     "REGISTER": "註冊",
     "LOG_IN": "登入",
+    "LOGIN_WITH_PROVIDER": "用{{provider}}登入",
     "USERNAME": "使用者名稱"
   },
   "PASSKEY_SUPPORT_MODAL": {

@@ -282,6 +282,7 @@
     "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "This username will be applied to your device.",
     "REGISTER": "Register",
     "LOG_IN": "Log In",
+    "LOGIN_WITH_PROVIDER": "Log In with {{provider}}",
     "USERNAME": "Username"
   },
   "PASSKEY_SUPPORT_MODAL": {

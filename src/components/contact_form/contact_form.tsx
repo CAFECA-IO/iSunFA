@@ -119,16 +119,6 @@ function ContactForm() {
     }
   };
 
-  // Info: (20240513 - tzuhan) Remove unused function @Shirley
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const autoResize = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto'; // Info: (20240318 - Shirley) Reset height so the scrollHeight measurement is accurate
-      textarea.style.height = textarea.scrollHeight + 'px';
-    }
-  };
-
   const messageChangeHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
     // autoResize();   // Info: (20240321 - Shirley) Automatically resize the textarea to fit initial content (if any)
