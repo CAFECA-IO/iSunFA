@@ -8,7 +8,16 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const ReportsSidebar = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
   const { embedCodeModalVisibilityHandler } = useGlobalCtx();
 
@@ -36,7 +45,7 @@ const ReportsSidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-text-neutral-primary transition-all duration-300 ease-in-out`}
           >
-            {t('REPORTS_SIDEBAR.REPORT')}
+            {t('report_401:REPORTS_SIDEBAR.REPORT')}
           </p>
         </div>
 
@@ -67,7 +76,7 @@ const ReportsSidebar = () => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-button-text-invert transition-all duration-300 ease-in-out`}
             >
-              {t('REPORTS_SIDEBAR.GET_EMBED_CODE')}
+              {t('report_401:REPORTS_SIDEBAR.GET_EMBED_CODE')}
             </p>
           </button>
 
@@ -105,7 +114,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('REPORTS_SIDEBAR.MY_REPORTS')}
+                {t('report_401:REPORTS_SIDEBAR.MY_REPORTS')}
               </p>
             </Link>
 
@@ -143,7 +152,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
+                {t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
               </p>
             </Link>
 
@@ -184,7 +193,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+                {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
               </p>
             </button>
             {/* </Link> */}

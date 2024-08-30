@@ -1,7 +1,16 @@
 import { useTranslation } from 'next-i18next';
 
 const KYCStepper = ({ currentStep }: { currentStep: number }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   const doneStepStyle = 'text-navyBlue2';
   const currentStepStyle = 'text-stepper-text-active';

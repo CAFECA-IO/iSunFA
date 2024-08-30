@@ -7,7 +7,16 @@ import { useTranslation } from 'next-i18next';
 import SalaryPageBody from '@/components/salary/salary_page_body';
 
 const SalaryHomePage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
 
   return (

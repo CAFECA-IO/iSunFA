@@ -11,7 +11,16 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useGlobalCtx } from '@/contexts/global_context';
 
 const AddJournalBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const {
@@ -42,7 +51,7 @@ const AddJournalBody = () => {
     content: t('journal:JOURNAL.LEAVE_HINT_CONTENT'), // Info: (20240809 - Emily) 'Are you sure you want to leave the form?',
     submitBtnStr: t('journal:JOURNAL.LEAVE'),
     submitBtnFunction: () => backClickHandler(),
-    backBtnStr: t('COMMON.CANCEL'),
+    backBtnStr: t('common:COMMON.CANCEL'),
     messageType: MessageType.WARNING,
   };
 

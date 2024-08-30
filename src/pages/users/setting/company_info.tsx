@@ -11,7 +11,16 @@ import CompanyInfoPageBody from '@/components/company_info_page_body/company_inf
 import SettingSidebar from '@/components/setting_sidebar/setting_sidebar';
 
 const CompanyInfoPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (

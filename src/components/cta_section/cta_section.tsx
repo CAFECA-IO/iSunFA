@@ -1,17 +1,19 @@
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '@/interfaces/locale';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Image from 'next/image';
+import { UserContext } from '@/contexts/user_context';
 
 const CTASection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
+  const { signedIn } = useContext(UserContext);
 
   useEffect(() => {
     const waitForCTA = setTimeout(() => {
@@ -32,22 +34,22 @@ const CTASection = () => {
           <div className="flex flex-col md:space-y-5">
             {' '}
             <h1 className="text-h4 font-bold tracking-wider text-primaryYellow md:text-6xl lg:text-7xl">
-              {t('LANDING_PAGE.MAIN_TITLE')}
+              {t('common:LANDING_PAGE.MAIN_TITLE')}
             </h1>
             <h1 className="text-h6 font-bold tracking-widest text-navy-blue-25 md:text-2xl lg:text-6xl">
-              {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
+              {t('common:LANDING_PAGE.MAIN_SUBTITLE_1')}
             </h1>
           </div>
           <ol className="mt-8 max-w-md list-disc space-y-2 text-base tracking-widest text-navy-blue-25 md:max-w-xl lg:mt-10 lg:max-w-2xl lg:text-base">
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
           </ol>
         </div>
 
-        <Link href={ISUNFA_ROUTE.LOGIN} className="z-5 flex w-full justify-center px-5 md:w-auto">
+        <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN} className="z-5 flex w-full justify-center px-5 md:w-auto">
           <Button className="flex w-full space-x-3 lg:w-fit">
             <p
               className={cn(
@@ -56,7 +58,7 @@ const CTASection = () => {
                 'group-hover:text-white'
               )}
             >
-              {t('NAV_BAR.TRY_NOW')}
+              {t('common:NAV_BAR.TRY_NOW')}
             </p>
 
             <svg

@@ -186,7 +186,16 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const ProfitTrendChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 

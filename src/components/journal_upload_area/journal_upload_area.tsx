@@ -15,6 +15,8 @@ import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
 import { addItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IV_LENGTH } from '@/constants/config';
+import { UploadType } from '@/constants/file';
+import { IFile } from '@/interfaces/file';
 
 interface FileInfo extends IOCRItem {
   file: File;
@@ -23,7 +25,16 @@ interface FileInfo extends IOCRItem {
 }
 
 const JournalUploadArea = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { userAuth, selectedCompany } = useUserCtx();
   const {
     setInvoiceIdHandler,
@@ -33,6 +44,8 @@ const JournalUploadArea = () => {
     pendingOCRListFromBrowser,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+
+  const { trigger: uploadInvoiceImgToLocal } = APIHandler<IFile>(APIName.FILE_UPLOAD);
 
   const {
     trigger: uploadInvoice,
@@ -65,7 +78,7 @@ const JournalUploadArea = () => {
       if (!selectedCompany?.id || !publicKeyData || fetchPublicKeySuccess === false) {
         toastHandler({
           id: 'uploadFile',
-          content: t('JOURNAL.FAILED_TO_UPLOAD_FILE'),
+          content: t('journal:JOURNAL.FAILED_TO_UPLOAD_FILE'),
           closeable: true,
           type: ToastType.ERROR,
         });
@@ -170,11 +183,41 @@ const JournalUploadArea = () => {
     }
   };
 
-  const upload = async (item: IOCRItem, companyId: number, isNewPendingOCR: boolean) => {
+  const uploadToFileApi = async (item: IOCRItem) => {
+    const formData = new FormData();
+    const encryptedFile = new File([item.encryptedContent], item.name, {
+      type: item.type,
+    });
+
+    formData.append('file', encryptedFile);
+
+    // Info: (20240829 - Murky) 下面的部份目前file upload的api沒有用到
+    formData.append('imageSize', item.size);
+    formData.append('imageName', item.name);
+    formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
+    formData.append('publicKey', JSON.stringify(item.publicKey));
+    formData.append('iv', Array.from(item.iv).join(','));
+
+    const { data } = await uploadInvoiceImgToLocal({
+      query: {
+        type: UploadType.INVOICE,
+        targetId: '0',
+      },
+      body: formData,
+    });
+
+    return data;
+  };
+  const upload = async (
+    item: IOCRItem,
+    companyId: number,
+    isNewPendingOCR: boolean,
+    fileName?: string
+  ) => {
     if (item.companyId !== companyId) {
       toastHandler({
         id: `uploadInvoice-${item.uploadIdentifier}`,
-        content: t('JOURNAL.INCONSISTENT_COMPANY_ID'),
+        content: t('journal:JOURNAL.INCONSISTENT_COMPANY_ID'),
         closeable: true,
         type: ToastType.ERROR,
       });
@@ -183,23 +226,25 @@ const JournalUploadArea = () => {
       }
       return;
     }
-    const formData = new FormData();
-    const encryptedFile = new File([item.encryptedContent], item.name, {
-      type: item.type,
-    });
-    formData.append('image', encryptedFile);
-    formData.append('imageSize', item.size);
-    formData.append('imageName', item.name);
-    formData.append('uploadIdentifier', item.uploadIdentifier);
-    formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
-    formData.append('publicKey', JSON.stringify(item.publicKey));
-    formData.append('iv', Array.from(item.iv).join(','));
 
     if (isNewPendingOCR) {
       addPendingOCRHandler(item);
     }
 
-    uploadInvoice({ params: { companyId }, body: formData });
+    uploadInvoice({
+      params: {
+        companyId,
+      },
+      body: {
+        imageName: fileName || item.name,
+        imageSize: item.size,
+        uploadIdentifier: item.uploadIdentifier,
+        encryptedSymmetricKey: item.encryptedSymmetricKey,
+        publicKey: item.publicKey,
+        imageType: item.type,
+        iv: Array.from(item.iv).join(','),
+      },
+    });
   };
 
   useEffect(() => {
@@ -213,7 +258,7 @@ const JournalUploadArea = () => {
       setIsUploadDisabled(true);
       toastHandler({
         id: 'fetchPublicKey',
-        content: t('JOURNAL.FAILED_TO_FETCH_PUBLIC_KEY'),
+        content: t('journal:JOURNAL.FAILED_TO_FETCH_PUBLIC_KEY'),
         closeable: true,
         type: ToastType.ERROR,
       });
@@ -225,14 +270,20 @@ const JournalUploadArea = () => {
   useEffect(() => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
 
-    pendingOCRListFromBrowser.forEach((item) => {
-      upload(item, selectedCompany.id, false);
+    pendingOCRListFromBrowser.forEach(async (item) => {
+      const file = await uploadToFileApi(item);
+      await upload(item, selectedCompany.id, false, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
 
   useEffect(() => {
     if (uploadFile && selectedCompany) {
-      upload(uploadFile, selectedCompany?.id || -1, true);
+      const uploadFileToOcr = async () => {
+        // Info: (20240829 - Murky) To Shirely 更改這邊
+        const file = await uploadToFileApi(uploadFile);
+        await upload(uploadFile, selectedCompany?.id || -1, true, file?.id);
+      };
+      uploadFileToOcr();
       setUploadFile(null);
     }
   }, [uploadFile]);
@@ -279,7 +330,7 @@ const JournalUploadArea = () => {
             title: 'Upload Invoice Failed',
             content: `Upload invoice failed(${uploadCode}): ${result.status}`,
             messageType: MessageType.ERROR,
-            submitBtnStr: t('COMMON.CLOSE'),
+            submitBtnStr: t('common:COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
           });
           messageModalVisibilityHandler();
@@ -291,7 +342,7 @@ const JournalUploadArea = () => {
         title: 'Upload Invoice Failed',
         content: `Upload invoice failed(${uploadCode})`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();

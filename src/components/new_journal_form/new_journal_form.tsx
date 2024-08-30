@@ -77,7 +77,16 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 };
 
 const NewJournalForm = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const disabledAddNewAsset = true;
@@ -260,7 +269,7 @@ const NewJournalForm = () => {
         messageType: MessageType.ERROR,
         title: 'Get OCR result Failed',
         content: `Get OCR result failed: ${getCode}`,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -435,7 +444,7 @@ const NewJournalForm = () => {
         messageType: MessageType.ERROR,
         title: 'Update Invoice Failed',
         content: `Update Invoice failed: ${updateCode}`,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -471,7 +480,7 @@ const NewJournalForm = () => {
         messageType: MessageType.ERROR,
         title: `${t('journal:JOURNAL.CREATE_INVOICE_FAILED')}`,
         content: `${t('journal:JOURNAL.CREATE_INVOICE_FAILED')}:${createCode}`,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -719,7 +728,7 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Date */}
           <div className="relative flex w-full flex-col items-start gap-8px md:w-240px">
             <div id="date-picker" className="absolute -top-20"></div>
-            <p className="text-sm font-semibold text-navyBlue2">{t('DATE_PICKER.DATE')}</p>
+            <p className="text-sm font-semibold text-navyBlue2">{t('common:DATE_PICKER.DATE')}</p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
@@ -1049,7 +1058,7 @@ const NewJournalForm = () => {
           {/* Info: (20240424 - Julian) Payment Period */}
           <div className="flex w-full flex-col items-start gap-8px md:w-fit">
             <p className="text-sm font-semibold text-navyBlue2">
-              {t('REPORTS_HISTORY_LIST.PERIOD')}
+              {t('report_401:REPORTS_HISTORY_LIST.PERIOD')}
             </p>
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-baseline">
@@ -1243,7 +1252,7 @@ const NewJournalForm = () => {
   //       <hr className="block flex-1 border-lightGray3 md:hidden" />
   //       <div className="flex items-center gap-2 text-sm">
   //         <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
-  //         <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //         <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
   //       </div>
   //       <hr className="flex-1 border-lightGray3" />
   //     </div> */}
@@ -1259,7 +1268,7 @@ const NewJournalForm = () => {
   //           className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
   //         >
   //           <div className="p-12px text-sm text-lightGray4">
-  //             <p style={{ whiteSpace: 'nowrap' }}>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //             <p style={{ whiteSpace: 'nowrap' }}>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
   //           </div>
   //           <div className="flex w-full items-center p-10px">
   //             <p className="flex-1">{projectName}</p>

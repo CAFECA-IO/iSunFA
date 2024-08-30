@@ -7,7 +7,16 @@ interface IAccountingStepperProps {
 }
 
 const AccountingStepper = ({ step }: IAccountingStepperProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const isStepTwo = step === AccountingStep.STEP_TWO;
 
   // Info: (20240423 - Julian) Step 1 icon

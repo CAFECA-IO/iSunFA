@@ -45,7 +45,16 @@ interface IProjectDashboardPageProps {
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -230,7 +239,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {projectName} {t('NAV_BAR.DASHBOARD')} - iSunFA
+          {projectName} {t('common:NAV_BAR.DASHBOARD')} - iSunFA
         </title>
       </Head>
 

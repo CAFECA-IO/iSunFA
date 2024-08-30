@@ -16,7 +16,16 @@ const ViewAnalysisSection = ({
   tokenId,
   reportLink,
 }: IViewAnalysisSectionProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
     window.alert(`Token contract ${tokenContract} copied to clipboard!`);
@@ -67,7 +76,7 @@ const ViewAnalysisSection = ({
           </div>
         </Button>
         <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
-          {t(`BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`common:BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">

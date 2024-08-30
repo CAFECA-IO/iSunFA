@@ -36,7 +36,16 @@ const Operations = ({
   onDelete: (companyId: number, journalId: number) => Promise<void>;
 }) => {
   const router = useRouter();
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { selectJournalHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
@@ -58,7 +67,7 @@ const Operations = ({
         subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
         content: `Error code: ${code}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -122,7 +131,16 @@ const JournalItem = ({
   journal,
   onDelete,
 }: IJournalItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const {
     id: journalId,
     date: createdTimestamp,
@@ -222,7 +240,7 @@ const JournalItem = ({
       <div className="flex items-center gap-6px">
         <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-success px-6px py-2px text-badge-text-success-solid">
           <div className="h-6px w-6px rounded border-3px border-badge-text-success-solid"></div>
-          <p>{t('JOURNAL.DEBIT')}</p>
+          <p>{t('journal:JOURNAL.DEBIT')}</p>
         </div>
         <p className="w-200px whitespace-nowrap text-text-neutral-tertiary">
           {truncateString(debit.account, 10)}
@@ -235,7 +253,7 @@ const JournalItem = ({
       <div className="flex items-center gap-6px">
         <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-error px-6px py-2px text-badge-text-error-solid">
           <div className="h-6px w-6px rounded border-3px border-badge-text-error-solid"></div>
-          <p>{t('JOURNAL.CREDIT')}</p>
+          <p>{t('journal:JOURNAL.CREDIT')}</p>
         </div>
         <p className="w-200px whitespace-nowrap text-text-neutral-tertiary">
           {truncateString(credit.account, 10)}
@@ -320,7 +338,16 @@ export const JournalItemMobile = ({
   journal,
   onDelete,
 }: IJournalItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { id, date, type: eventType, particulars: description, voucherNo } = journal;
   const price = 0; // ToDo: (20240528 - Julian) [Beta] Interface lacks price
 

@@ -19,7 +19,16 @@ interface IProjectJournalListPageProps {
 }
 
 const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
 
   // ToDo: (20240621 - Julian) [Beta] Replace with api data

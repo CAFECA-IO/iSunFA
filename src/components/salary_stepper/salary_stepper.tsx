@@ -2,7 +2,16 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 
 const SalaryStepper = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   return (
     <div className="relative flex items-center gap-120px text-xs md:text-sm">

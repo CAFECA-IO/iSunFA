@@ -1,4 +1,6 @@
-import { IOCRItem } from '@/interfaces/ocr';
+import { IOCRItem, IOCR } from '@/interfaces/ocr';
+import { ProgressStatus } from '@/constants/account';
+import { isEnumValue } from './common';
 
 export const isValidEncryptedDataForOCR = (ocr: IOCRItem): boolean => {
   const requiredFields: (keyof IOCRItem)[] = [
@@ -55,3 +57,22 @@ export const isValidEncryptedDataForOCR = (ocr: IOCRItem): boolean => {
 
   return true;
 };
+
+export function isIOCR(ocr: unknown): ocr is IOCR {
+  return (
+    typeof ocr === 'object' &&
+    typeof (ocr as IOCR).id === 'number' &&
+    typeof (ocr as IOCR).aichResultId === 'string' &&
+    typeof (ocr as IOCR).imageName === 'string' &&
+    typeof (ocr as IOCR).imageUrl === 'string' &&
+    typeof (ocr as IOCR).imageSize === 'string' &&
+    typeof (ocr as IOCR).progress === 'number' &&
+    typeof (ocr as IOCR).status === 'string' &&
+    isEnumValue(ProgressStatus, (ocr as IOCR).status) &&
+    typeof (ocr as IOCR).createdAt === 'number'
+  );
+}
+
+export function isIOCRArray(ocrArray: unknown): ocrArray is IOCR[] {
+  return Array.isArray(ocrArray) && ocrArray.every((ocr) => isIOCR(ocr));
+}

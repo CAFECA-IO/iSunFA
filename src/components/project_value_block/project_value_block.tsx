@@ -3,7 +3,16 @@ import { BsGraphUpArrow, BsGraphDownArrow } from 'react-icons/bs';
 import { useTranslation } from 'next-i18next';
 
 const ProjectValueBlock = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   // ToDo: (20240612 - Julian) [Beta] replace with actual data
   const totalValue = 187000;
   const apy = 1.5;

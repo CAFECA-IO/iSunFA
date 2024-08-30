@@ -9,7 +9,16 @@ interface IReportsHistoryListProps {
 }
 
 const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reportItems, setReportItems] = useState<IReport[]>(reports);
@@ -105,7 +114,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
         variant={'secondaryBorderless'}
       >
         {isCheckboxVisible ? (
-          <p>{t('REPORTS_HISTORY_LIST.CANCEL')}</p>
+          <p>{t('report_401:REPORTS_HISTORY_LIST.CANCEL')}</p>
         ) : (
           <>
             {/* Info: (20240808 - Anna) Alpha版先隱藏 */}
@@ -124,7 +133,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
               ></path>
             </svg> */}
             {/* Info: (20240808 - Anna) Alpha版先隱藏 */}
-            {/* <p>{t('PENDING_REPORT_LIST.SELECT')}</p> */}
+            {/* <p>{t('report_401:PENDING_REPORT_LIST.SELECT')}</p> */}
           </>
         )}
       </Button>
@@ -151,13 +160,21 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
           <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
-            <th className="text-center">{t('REPORTS_HISTORY_LIST.DATE')}</th>
-            <th className="px-16px">{t('REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
+            <th className="text-center">{t('report_401:REPORTS_HISTORY_LIST.DATE')}</th>
+            <th className="px-16px">{t('report_401:REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
             <th className="hidden px-16px lg:table-cell">{t('journal:JOURNAL.TYPE')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PERIOD')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.BLOCKCHAIN')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.OPERATIONS')}</th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:REPORTS_HISTORY_LIST.PERIOD')}
+            </th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:REPORTS_HISTORY_LIST.BLOCKCHAIN')}
+            </th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+            </th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:REPORTS_HISTORY_LIST.OPERATIONS')}
+            </th>
           </tr>
         </thead>
 
