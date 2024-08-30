@@ -90,7 +90,9 @@
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
     "LEAVE_NOW": "Leave now",
-    "BACK": "Back"
+    "BACK": "Back",
+    "CREATE_COMPANY_FAILED": "Create Company Failed",
+    "PLEASE_TRY_AGAIN_LATER": "Please try again later"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "Congratulations! You",

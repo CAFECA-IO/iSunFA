@@ -131,9 +131,10 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: 'Create Company Failed',
-          subMsg: 'Please try again later',
-          content: `Error code: ${createCompanyCode}`,
+          title: t('kyc:KYC.CREATE_COMPANY_FAILED'),
+          subMsg: t('kyc:KYC.PLEASE_TRY_AGAIN_LATER'),
+          // Info: (20240830 - Anna) content: `Error code: ${createCompanyCode}`,因為錯誤代碼不需要顯示給用戶看，所以改為空字串
+          content: '',
           submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });

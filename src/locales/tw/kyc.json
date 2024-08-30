@@ -90,7 +90,9 @@
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果離開，可能會失去目前您已完成的進度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "確定要離開此頁面嗎",
     "LEAVE_NOW": "現在離開",
-    "BACK": "上一步"
+    "BACK": "上一步",
+    "CREATE_COMPANY_FAILED": "創建公司失敗",
+    "PLEASE_TRY_AGAIN_LATER": "請稍後再試"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",
