@@ -5,8 +5,9 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
-import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
-import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
+// Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
+// import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
+// import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
 
 /**
 * Info: (20240813-Tzuhan) [Beta]
@@ -67,14 +68,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     callbacks: {
       async signIn({ user, account }) {
         try {
-          // Info: (20240829-Anna) 邀請碼後續會使用，目前先註解
+          // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
+          // let Dbuser;
           // const { invitation } = (account?.params || {}) as { invitation: string };
-
           const session = await getSession(req, res);
           const getUser = await getUserByCredential(account?.providerAccountId || user.id);
 
           if (!getUser) {
-            // Info: (20240813-Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
+            // Info: (20240813 - Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
             if (account && user) {
               const imageUrl = user.image ?? (await generateIcon(user.name ?? ''));
               const createdUser = await createUserByAuth({
@@ -86,14 +87,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
                 authData: account,
                 imageUrl,
               });
-              Dbuser = createdUser;
+              // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
+              // Dbuser = createdUser;
 
               await setSession(session, createdUser.user.id);
             }
           } else {
-            Dbuser = getUser;
+            // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
+            // Dbuser = getUser;
             await setSession(session, getUser.user.id);
           }
+          /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
           if (invitationCode) {
             const getInvitation = await getInvitationByCode(invitationCode);
             if (getInvitation) {
@@ -107,6 +111,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
               }
             }
           }
+          */
         } catch (_error) {
           // ToDo: (20240829 - Jacky) Add error handling with logger
           // const error = _error as Error;
