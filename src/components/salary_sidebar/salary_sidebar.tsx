@@ -144,7 +144,7 @@ const SalarySidebar = () => {
           // ToDo: (20240802 - Julian) [Beta] Not released yet
           // eslint-disable-next-line react/jsx-boolean-value
           disabled={true}
-          className="fmx-auto p-16px text-tabs-text-default disabled:opacity-50"
+          className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
