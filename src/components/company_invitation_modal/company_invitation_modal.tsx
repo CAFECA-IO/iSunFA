@@ -111,15 +111,15 @@ const CompanyInvitationModal = ({
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <form
         onSubmit={submitBtnClickHandler}
-        className="relative mx-auto flex w-350px flex-col items-center gap-y-24px rounded-lg bg-white py-16px shadow-lg shadow-black/80"
+        className="relative mx-auto flex w-350px flex-col items-center gap-y-24px rounded-lg bg-card-surface-primary py-16px shadow-lg shadow-black/80"
       >
         {/* Info: (20240515 - Julian) Title */}
         <div className="flex justify-center px-20px">
           <div className="flex flex-col items-center">
-            <h2 className="text-xl font-bold leading-8 text-navyBlue2">
-              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION CODE')}
+            <h2 className="text-xl font-bold leading-8 text-card-text-primary">
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION_CODE')}
             </h2>
-            <p className="text-xs font-normal leading-tight tracking-tight text-lightGray5">
+            <p className="text-xs font-normal leading-tight tracking-tight text-card-text-secondary">
               {t('kyc:COMPANY_INVITATION_MODAL.ENTER_YOUR_COMPANY_INVITATION_CODE')}
             </p>
           </div>
@@ -136,8 +136,12 @@ const CompanyInvitationModal = ({
           <div
             className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-input-stroke-input border-input-stroke-input text-input-text-input-filled' : 'divide-surface-state-error-dark border-surface-state-error-dark text-text-state-error'}`}
           >
-            <p className={isCodeValid ? 'text-lightGray4' : 'text-input-text-error'}>
-              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION CODE')}
+            <p
+              className={
+                isCodeValid ? 'text-input-text-input-placeholder' : 'text-input-text-error'
+              }
+            >
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION_CODE')}
             </p>
             <input
               id="invitationCodeInput"
@@ -146,23 +150,19 @@ const CompanyInvitationModal = ({
               value={codeInput}
               onChange={changeCodeHandler}
               required
-              className="w-full flex-1 px-12px py-10px outline-none placeholder:text-lightGray4"
+              className="w-full flex-1 px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
           <p
-            className={`text-right text-surface-state-error ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}
+            className={`text-right text-input-text-error ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}
           >
             {t('kyc:COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
           </p>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
-          <button
-            type="button"
-            onClick={cancelBtnClickHandler}
-            className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
-          >
+          <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
             {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
-          </button>
+          </Button>
           <Button type="submit" variant={'tertiary'}>
             {t('common:CONTACT_US.SUBMIT')}
           </Button>

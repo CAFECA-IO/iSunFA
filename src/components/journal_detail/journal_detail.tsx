@@ -258,7 +258,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   // const displayReason = (
   //   <div className="flex flex-col items-center gap-x-12px md:flex-row">
   //     <p>{reason}</p>
-  //     <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+  //     <div className="flex items-center gap-4px rounded-xs border border-badge-stroke-primary px-4px text-sm text-badge-text-primary">
   //       <LuTag size={14} />
   //       Printer
   //     </div>

@@ -112,7 +112,7 @@ const NumberAnimation = ({ targetNumber, interval }: NumberAnimationProps) => {
     }
   }, []);
 
-  return <div ref={numberRef} className="text-h2 font-bold leading-h2 text-primaryYellow" />;
+  return <div ref={numberRef} className="text-h2 font-bold leading-h2 text-orange-400" />;
 };
 
 export default NumberAnimation;
