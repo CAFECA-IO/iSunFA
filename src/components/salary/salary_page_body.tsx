@@ -8,7 +8,16 @@ interface ISalaryPageBodyProps {
 }
 
 const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   return (
     <div>
@@ -152,7 +161,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 <div className="grow">
                   <input
                     type="text"
-                    placeholder={t('AUDIT_REPORT.SEARCH')}
+                    placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
                     className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
                   />
                 </div>
@@ -310,7 +319,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 <div className="grow">
                   <input
                     type="text"
-                    placeholder={t('AUDIT_REPORT.SEARCH')}
+                    placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
                     className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
                   />
                 </div>

@@ -19,7 +19,16 @@ interface IAccountingVoucherRowMobile {
 }
 
 const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVoucherRowMobile) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const isDebit = type === 'Debit';
 
   const { id, account, particulars, debit, credit } = accountingVoucher;
@@ -164,7 +173,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           <input
             id="search-accounting"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"

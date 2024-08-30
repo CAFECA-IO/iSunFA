@@ -171,7 +171,16 @@ const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
@@ -239,7 +248,7 @@ const ProjectProgressChart = () => {
       setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

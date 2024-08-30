@@ -5,7 +5,16 @@ import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const LeaveButton = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
@@ -21,7 +30,7 @@ const LeaveButton = () => {
       subMsg: `${t('kyc:KYC.ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE')} ?`,
       submitBtnStr: t('kyc:KYC.LEAVE_NOW'),
       submitBtnFunction: handleBack,
-      backBtnStr: t('COMMON.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };

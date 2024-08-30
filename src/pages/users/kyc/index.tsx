@@ -9,7 +9,16 @@ import { useTranslation } from 'next-i18next';
 import KYCIntro from '@/components/kyc/kyc_intro';
 
 const KYCIntroPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (

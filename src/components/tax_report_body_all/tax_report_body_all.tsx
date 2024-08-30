@@ -13,7 +13,11 @@ interface ITaxReportBodyAllProps {
 }
 
 const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
-  const { t } = useTranslation(['report_401', 'common']);
+  const { t } = useTranslation([
+    'common',
+    'journal',
+    'report_401'
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 
@@ -541,7 +545,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="border border-black px-1 py-0" colSpan={2} rowSpan={2}>
               {/* 銷售額總計 */}
-              {t('TAX_REPORT.TOTAL_SALES_AMOUNT')}
+              {t('report_401:TAX_REPORT.TOTAL_SALES_AMOUNT')}
               <br />
               ①+③
             </td>
@@ -555,16 +559,16 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                   ? formatNumber(reportFinancial?.content.sales.totalTaxableAmount)
                   : 'N/A'}
                 {/* 元 */}
-                {t('TAX_REPORT.NTD')}(
+                {t('report_401:TAX_REPORT.NTD')}(
                 <div>
                   <span>
                     {/* 內含銷售 */}
-                    {t('TAX_REPORT.INCLUDING_SALES')}
+                    {t('report_401:TAX_REPORT.INCLUDING_SALES')}
                   </span>
                   <br />
                   <span>
                     {/* 固定資產 */}
-                    {t('TAX_REPORT.OF_FIXED_ASSETS')}
+                    {t('report_401:TAX_REPORT.OF_FIXED_ASSETS')}
                   </span>
                 </div>
                 ㉗
@@ -573,21 +577,21 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                   ? formatNumber(reportFinancial?.content.sales.includeFixedAsset)
                   : 'N/A'}
                 {/* 元 */}
-                {t('TAX_REPORT.NTD')})
+                {t('report_401:TAX_REPORT.NTD')})
               </div>
             </td>
             <td className="border border-black px-1 py-0">14</td>
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* 本期(月)應退稅額 */}
-              {t('TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
-              {t('TAX_REPORT.IF')}
+              {t('report_401:TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
+              {t('report_401:TAX_REPORT.IF')}
               <div>
                 <span>12&gt;13</span>
                 <br />
                 <span>13&gt;12</span>
               </div>
               {/* 則為 */}
-              {t('TAX_REPORT.THEN')}
+              {t('report_401:TAX_REPORT.THEN')}
               <div>
                 <span>13</span>
                 <br />
@@ -607,7 +611,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             <td className="border border-black px-1 py-0">15</td>
             <td className="border border-black px-1 py-0">
               {/* 本期(月)累積留抵稅額 */}
-              {t('TAX_REPORT.ACCUMULATED_OFFSET_AGAINST')}
+              {t('report_401:TAX_REPORT.ACCUMULATED_OFFSET_AGAINST')}
               (12-14)
             </td>
             <td className="border border-black px-1 py-0">115</td>
@@ -624,33 +628,33 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="border border-black px-1 py-0 text-center" rowSpan={16}>
               {/* 進項 */}
-              {t('TAX_REPORT.INPUT')}
+              {t('report_401:TAX_REPORT.INPUT')}
             </td>
             <td className="border-b border-l border-t border-black px-1 py-0" rowSpan={2}>
               {/* 項目 */}
-              {t('TAX_REPORT.ITEMS')}
+              {t('report_401:TAX_REPORT.ITEMS')}
             </td>
             <td className="border-b border-r border-t border-black px-1 py-0" rowSpan={2}>
               {/* 區分 */}
-              {t('TAX_REPORT.DISTINGUISHMENT')}
+              {t('report_401:TAX_REPORT.DISTINGUISHMENT')}
             </td>
             <td
               className="border-b border-r border-t border-black px-1 py-0 text-center"
               colSpan={6}
             >
               {/* 得扣抵進項稅額 */}
-              {t('TAX_REPORT.DEDUCTIBLE_INPUT_TAX')}
+              {t('report_401:TAX_REPORT.DEDUCTIBLE_INPUT_TAX')}
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={3}>
               {/* 本期(月)應退稅額處理方式 */}
-              {t('TAX_REPORT.WAY_TO_RECEIVE_REFUND')}
+              {t('report_401:TAX_REPORT.WAY_TO_RECEIVE_REFUND')}
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               <div className="flex flex-nowrap items-center gap-1">
                 <input type="checkbox" className="h-2 w-2" />
                 <p className="text-nowrap">
                   {/* 利用存款帳戶劃撥 */}
-                  {t('TAX_REPORT.REMITTANCE_TRANSFER')}
+                  {t('report_401:TAX_REPORT.REMITTANCE_TRANSFER')}
                 </p>
               </div>
             </td>
@@ -658,18 +662,18 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="border border-black px-1 py-0 text-center" colSpan={3}>
               {/* 金額 */}
-              {t('TAX_REPORT.AMOUNT')}
+              {t('report_401:TAX_REPORT.AMOUNT')}
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={3}>
               {/* 稅額 */}
-              {t('TAX_REPORT.TAX')}
+              {t('report_401:TAX_REPORT.TAX')}
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               <div className="flex flex-nowrap items-center gap-1">
                 <input type="checkbox" className="h-2 w-2" />
                 <p className="text-nowrap">
                   {/* 領取退稅支票 */}
-                  {t('TAX_REPORT.TAX_REFUND_CHECK')}
+                  {t('report_401:TAX_REPORT.TAX_REFUND_CHECK')}
                 </p>
               </div>
             </td>
@@ -680,16 +684,16 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                 <div className="flex w-full justify-between">
                   <span>
                     {/* 統一發票扣抵聯 */}
-                    {t('TAX_REPORT.DEDUCTION_COPY_OF_UNIFORM_INVOICE')}
+                    {t('report_401:TAX_REPORT.DEDUCTION_COPY_OF_UNIFORM_INVOICE')}
                     <br />({/* 包括一般稅額計算之電子計算機發票扣抵聯 */})
-                    {t('TAX_REPORT.INCLUDING_COMPUTER_UNIFORM_INVOICE')}
+                    {t('report_401:TAX_REPORT.INCLUDING_COMPUTER_UNIFORM_INVOICE')}
                   </span>
                 </div>
               </div>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">28</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -720,10 +724,10 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={3}>
               {/* 保稅區營業人按進口報關程序銷售貨物至我國 */}
-              {t('TAX_REPORT.SOLD_BY_A_BONDED_ZONE')}
+              {t('report_401:TAX_REPORT.SOLD_BY_A_BONDED_ZONE')}
               <br />
               {/* 境內課稅區之免開立統一發票銷售額 */}
-              {t('TAX_REPORT.TO_A_TAXABLE_ZONE')}
+              {t('report_401:TAX_REPORT.TO_A_TAXABLE_ZONE')}
             </td>
             <td className="border border-black px-1 py-0 text-center" rowSpan={2} colSpan={2}>
               <div className="flex justify-between">
@@ -734,7 +738,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                     ? formatNumber(reportFinancial?.content.bondedAreaSalesToTaxArea)
                     : 'N/A'}
                   {/* 元 */}
-                  {t('TAX_REPORT.NTD')}
+                  {t('report_401:TAX_REPORT.NTD')}
                 </p>
               </div>
             </td>
@@ -742,7 +746,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">30</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -771,14 +775,14 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* 三聯式收銀機發票扣抵聯 */}
-              {t('TAX_REPORT.DEDUCTION_COPY_OF_CASH_REGISTER_UNIFORM_INVOICE')}
+              {t('report_401:TAX_REPORT.DEDUCTION_COPY_OF_CASH_REGISTER_UNIFORM_INVOICE')}
               <br />
               {/* 及一般稅額計算之電子發票 */}
-              {t('TAX_REPORT.ELECTRONIC_INVOICE')}
+              {t('report_401:TAX_REPORT.ELECTRONIC_INVOICE')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">32</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -806,17 +810,17 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={3}>
               {/* 申報單位蓋章處(統一發票專用章) */}
-              {t('TAX_REPORT.UNIQUE_UNIFORM_INVOICE_CHOP')}
+              {t('report_401:TAX_REPORT.UNIQUE_UNIFORM_INVOICE_CHOP')}
             </td>
             <td className="border border-black px-1 py-0 text-center" colSpan={2}>
               {/* 核收機關及人員蓋章處 */}
-              {t('TAX_REPORT.STAMP_OF_TAX_AUTHORITY')}
+              {t('report_401:TAX_REPORT.STAMP_OF_TAX_AUTHORITY')}
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">34</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -846,90 +850,90 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               <p>
                 <span>
                   {/* 附 1.統一發票明細表 */}
-                  {t('TAX_REPORT.ATTACHMENT_LIST_OF_UNIFORM_INVOICE')}
+                  {t('report_401:TAX_REPORT.ATTACHMENT_LIST_OF_UNIFORM_INVOICE')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 2.進項憑證 */}
-                  {t('TAX_REPORT.INPUT_DOCUMENTS')}
+                  {t('report_401:TAX_REPORT.INPUT_DOCUMENTS')}
                 </span>
                 <span>
                   {/* 冊 */}
-                  {t('TAX_REPORT.VOLUMES')}
+                  {t('report_401:TAX_REPORT.VOLUMES')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 3.海關代徵營業稅繳納證 */}
-                  {t('TAX_REPORT.CERTIFICATE_BY_CUSTOMS')}
+                  {t('report_401:TAX_REPORT.CERTIFICATE_BY_CUSTOMS')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 4.退回(出)及折讓證明單、海關退還溢繳營業稅申報單 */}
-                  {t('TAX_REPORT.CERTIFICATE_OF_RETURN_AND_ALLOWANCE')}
+                  {t('report_401:TAX_REPORT.CERTIFICATE_OF_RETURN_AND_ALLOWANCE')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 5.營業稅繳款書申報聯 */}
-                  {t('TAX_REPORT.BUSINESS_TAX_PAYMENT_NOTICE')}
+                  {t('report_401:TAX_REPORT.BUSINESS_TAX_PAYMENT_NOTICE')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 6.零稅率銷售額清單 */}
-                  {t('TAX_REPORT.LIST_OF_ZERO_TAX_RATE_SALES_AMOUNT')}
+                  {t('report_401:TAX_REPORT.LIST_OF_ZERO_TAX_RATE_SALES_AMOUNT')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 7.營業稅一次性移轉訂價調整聲明書 */}
-                  {t('TAX_REPORT.ONE_TIME_TRANSFER_PRICING_ADJUSTMENT_STATEMENT')}
+                  {t('report_401:TAX_REPORT.ONE_TIME_TRANSFER_PRICING_ADJUSTMENT_STATEMENT')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 <span>
                   {/* 8.營業稅聲明事項表 */}
-                  {t('TAX_REPORT.BUSINESS_TAX_DECLARATION_STATEMENT_FORM')}
+                  {t('report_401:TAX_REPORT.BUSINESS_TAX_DECLARATION_STATEMENT_FORM')}
                 </span>
                 <span>
                   {/* 份 */}
-                  {t('TAX_REPORT.COPIES')}
+                  {t('report_401:TAX_REPORT.COPIES')}
                 </span>
               </p>
               <p>
                 {/* 申報日期： */}
-                {t('TAX_REPORT.FILING_DATE')}
+                {t('report_401:TAX_REPORT.FILING_DATE')}
                 {createdTaiwanDate ?? 'N/A'}
               </p>
             </td>
@@ -940,7 +944,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             >
               <p>
                 {/* 核收日期： */}
-                {t('TAX_REPORT.RECEIVED_DATE')}
+                {t('report_401:TAX_REPORT.RECEIVED_DATE')}
                 {updatedTaiwanDate ?? 'N/A'}
               </p>
             </td>
@@ -948,13 +952,13 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* 載有稅額之其他憑證 */}
-              {t('TAX_REPORT.OTHER_VOUCHERS')}
+              {t('report_401:TAX_REPORT.OTHER_VOUCHERS')}
               <br />({/* 包括二聯式收銀機發票 */}
-              {t('TAX_REPORT.INCLUDING_CASH_REGISTER')})
+              {t('report_401:TAX_REPORT.INCLUDING_CASH_REGISTER')})
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">36</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -984,7 +988,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">38</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1014,11 +1018,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* 海關代徵營業稅繳納證扣抵聯 */}
-              {t('TAX_REPORT.CERTIFICATE_OF_PAYMENT_BY_CUSTOMS')}
+              {t('report_401:TAX_REPORT.CERTIFICATE_OF_PAYMENT_BY_CUSTOMS')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">78</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1048,7 +1052,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">80</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1077,14 +1081,14 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* 減 :退出、折讓及海關退還 */}
-              {t('TAX_REPORT.DEDUCTION_COPY_OF_CERTIFICATE_OF_PAYMENT')}
+              {t('report_401:TAX_REPORT.DEDUCTION_COPY_OF_CERTIFICATE_OF_PAYMENT')}
               <br />
               {/* 溢繳稅款 */}
-              {t('TAX_REPORT.FOR_BUSINESS_TAX_COLLECTED_BY_CUSTOMS')}
+              {t('report_401:TAX_REPORT.FOR_BUSINESS_TAX_COLLECTED_BY_CUSTOMS')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">40</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1116,7 +1120,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">42</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1150,11 +1154,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-start" rowSpan={2}>
               {/* 合計 */}
-              {t('TAX_REPORT.TOTAL')}
+              {t('report_401:TAX_REPORT.TOTAL')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">44</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1180,7 +1184,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">46</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={2}>
@@ -1207,12 +1211,12 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             >
               <p>
                 {/* 進項總金額 (包括不得扣抵憑證及普通收據) */}
-                {t('TAX_REPORT.TOTAL_INPUT_AMOUNT')}
+                {t('report_401:TAX_REPORT.TOTAL_INPUT_AMOUNT')}
               </p>
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 進貨及費用 */}
-              {t('TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
+              {t('report_401:TAX_REPORT.PURCHASE_AND_EXPENDITURES')}
             </td>
             <td className="border border-black px-1 py-0 text-center">48</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
@@ -1224,15 +1228,15 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                   )
                 : 'N/A'}
               {/* 元 */}
-              {t('TAX_REPORT.NTD')}
+              {t('report_401:TAX_REPORT.NTD')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* 申辦情形 */}
-              {t('TAX_REPORT.FILING_STATUS')}
+              {t('report_401:TAX_REPORT.FILING_STATUS')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* 姓名 */}
-              {t('TAX_REPORT.NAME')}
+              {t('report_401:TAX_REPORT.NAME')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* 身分證統一編號 */}
@@ -1240,17 +1244,17 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* 電話 */}
-              {t('TAX_REPORT.TELEPHONE_NUMBER')}
+              {t('report_401:TAX_REPORT.TELEPHONE_NUMBER')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center" rowSpan={2}>
               {/* 登錄文(字)號 */}
-              {t('TAX_REPORT.LOGIN_NUMBER')}
+              {t('report_401:TAX_REPORT.LOGIN_NUMBER')}
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 固定資產 */}
-              {t('TAX_REPORT.FIXED_ASSETS')}
+              {t('report_401:TAX_REPORT.FIXED_ASSETS')}
             </td>
             <td className="border border-black px-1 py-0 text-center">49</td>
             <td className="border border-black px-1 py-0 text-right" colSpan={5}>
@@ -1262,13 +1266,13 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                   )
                 : 'N/A'}
               {/* 元 */}
-              {t('TAX_REPORT.NTD')}
+              {t('report_401:TAX_REPORT.NTD')}
             </td>
           </tr>
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center" colSpan={2}>
               {/* 進口免稅貨物 */}
-              {t('TAX_REPORT.IMPORTATION_OF_TAX_EXEMPTED_GOODS')}
+              {t('report_401:TAX_REPORT.IMPORTATION_OF_TAX_EXEMPTED_GOODS')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">73</td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
@@ -1277,11 +1281,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                 ? formatNumber(reportFinancial?.content.imports.taxExemptGoods)
                 : 'N/A'}
               {/* 元 */}
-              {t('TAX_REPORT.NTD')}
+              {t('report_401:TAX_REPORT.NTD')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 自行申報 */}
-              {t('TAX_REPORT.SELF_FILING')}
+              {t('report_401:TAX_REPORT.SELF_FILING')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
             <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
@@ -1291,7 +1295,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center" colSpan={2}>
               {/* 購買國外勞務 */}
-              {t('TAX_REPORT.PURCHASE_OF_FOREIGN_SERVICES')}
+              {t('report_401:TAX_REPORT.PURCHASE_OF_FOREIGN_SERVICES')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">74</td>
             <td className="text-nowrap border border-black px-1 py-0 text-end" colSpan={6}>
@@ -1300,11 +1304,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
                 ? formatNumber(reportFinancial?.content.imports.foreignServices)
                 : 'N/A'}
               {/* 元 */}
-              {t('TAX_REPORT.NTD')}
+              {t('report_401:TAX_REPORT.NTD')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 委任申報 */}
-              {t('TAX_REPORT.FILING_BY_AGENT')}
+              {t('report_401:TAX_REPORT.FILING_BY_AGENT')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
             <td className="text-nowrap border border-black px-1 py-0 text-center"></td>
@@ -1314,30 +1318,30 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
           <tr>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* 說明 */}
-              {t('TAX_REPORT.REMARKS')}
+              {t('report_401:TAX_REPORT.REMARKS')}
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-start" colSpan={13}>
               <p>
                 {/* 一、 本申報書適用專營應稅及零稅率之營業人填報。 */}
-                {t('TAX_REPORT.REMARKS_1')}
+                {t('report_401:TAX_REPORT.REMARKS_1')}
               </p>
               <p>
                 {/* 二、
                 如營業人申報當期(月)之銷售額包括有免稅、特種稅額計算銷售額者，請改用(403)申報書申報。 */}
-                {t('TAX_REPORT.REMARKS_2')}
+                {t('report_401:TAX_REPORT.REMARKS_2')}
               </p>
               <p>
                 {/* 三、
                 營業人如有依財政部108年11月15日台財稅字第10804629000號令規定進行一次性移轉訂價調整申報營業稅，除跨境受控交易為進口貨物外，請另填報「營業稅一次性移轉訂價調整聲明書」並檢附相關證明文件，併 */}
-                {t('TAX_REPORT.REMARKS_3')}
+                {t('report_401:TAX_REPORT.REMARKS_3')}
                 <br />
                 {/* 同會計年度最後一期營業稅申報。 */}
-                {t('TAX_REPORT.REMARKS_3_1')}
+                {t('report_401:TAX_REPORT.REMARKS_3_1')}
               </p>
               <p>
                 {/* 四、
                 納稅者如有依納稅者權利保護法第7條第8項但書規定，為重要事項陳述者，請另填報「營業稅聲明事項表」並檢附相關證明文件。 */}
-                {t('TAX_REPORT.REMARKS_4')}
+                {t('report_401:TAX_REPORT.REMARKS_4')}
               </p>
             </td>
           </tr>
@@ -1346,7 +1350,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
       <div className="my-auto flex justify-end py-2">
         <p className="text-8px font-bold">
           {/* 紙張尺度(297 ×210)公厘 ods檔案格式 */}
-          {t('TAX_REPORT.PAPER_SIZE')}
+          {t('report_401:TAX_REPORT.PAPER_SIZE')}
         </p>
       </div>
     </div>

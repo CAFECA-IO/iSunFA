@@ -5,18 +5,18 @@ export const NO_DATA_FOR_DEMO = false;
 export const LAYOUT_BREAKPOINT = 1024;
 
 export const MONTH_LIST = [
-  'DATE_PICKER.JAN',
-  'DATE_PICKER.FEB',
-  'DATE_PICKER.MAR',
-  'DATE_PICKER.APR',
-  'DATE_PICKER.MAY',
-  'DATE_PICKER.JUN',
-  'DATE_PICKER.JUL',
-  'DATE_PICKER.AUG',
-  'DATE_PICKER.SEP',
-  'DATE_PICKER.OCT',
-  'DATE_PICKER.NOV',
-  'DATE_PICKER.DEC',
+  'common:DATE_PICKER.JAN',
+  'common:DATE_PICKER.FEB',
+  'common:DATE_PICKER.MAR',
+  'common:DATE_PICKER.APR',
+  'common:DATE_PICKER.MAY',
+  'common:DATE_PICKER.JUN',
+  'common:DATE_PICKER.JUL',
+  'common:DATE_PICKER.AUG',
+  'common:DATE_PICKER.SEP',
+  'common:DATE_PICKER.OCT',
+  'common:DATE_PICKER.NOV',
+  'common:DATE_PICKER.DEC',
 ];
 
 export const MONTH_FULL_LIST_SHORT = [
@@ -35,28 +35,28 @@ export const MONTH_FULL_LIST_SHORT = [
 ];
 
 export const MONTH_ABR_LIST = [
-  'DATE_PICKER.JAN_ABR',
-  'DATE_PICKER.FEB_ABR',
-  'DATE_PICKER.MAR_ABR',
-  'DATE_PICKER.APR_ABR',
-  'DATE_PICKER.MAY_ABR',
-  'DATE_PICKER.JUN_ABR',
-  'DATE_PICKER.JUL_ABR',
-  'DATE_PICKER.AUG_ABR',
-  'DATE_PICKER.SEP_ABR',
-  'DATE_PICKER.OCT_ABR',
-  'DATE_PICKER.NOV_ABR',
-  'DATE_PICKER.DEC_ABR',
+  'common:DATE_PICKER.JAN_ABR',
+  'common:DATE_PICKER.FEB_ABR',
+  'common:DATE_PICKER.MAR_ABR',
+  'common:DATE_PICKER.APR_ABR',
+  'common:DATE_PICKER.MAY_ABR',
+  'common:DATE_PICKER.JUN_ABR',
+  'common:DATE_PICKER.JUL_ABR',
+  'common:DATE_PICKER.AUG_ABR',
+  'common:DATE_PICKER.SEP_ABR',
+  'common:DATE_PICKER.OCT_ABR',
+  'common:DATE_PICKER.NOV_ABR',
+  'common:DATE_PICKER.DEC_ABR',
 ];
 
 export const WEEK_LIST = [
-  'DATE_PICKER.SUN',
-  'DATE_PICKER.MON',
-  'DATE_PICKER.TUE',
-  'DATE_PICKER.WED',
-  'DATE_PICKER.THU',
-  'DATE_PICKER.FRI',
-  'DATE_PICKER.SAT',
+  'common:DATE_PICKER.SUN',
+  'common:DATE_PICKER.MON',
+  'common:DATE_PICKER.TUE',
+  'common:DATE_PICKER.WED',
+  'common:DATE_PICKER.THU',
+  'common:DATE_PICKER.FRI',
+  'common:DATE_PICKER.SAT',
 ];
 
 export const default30DayPeriodInSec = {
@@ -77,8 +77,8 @@ export const radioButtonStyle =
 export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;
 
 export enum SortOptions {
-  newest = 'COMMON.NEWEST',
-  oldest = 'COMMON.OLDEST',
+  newest = 'common:COMMON.NEWEST',
+  oldest = 'common:COMMON.OLDEST',
 }
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';

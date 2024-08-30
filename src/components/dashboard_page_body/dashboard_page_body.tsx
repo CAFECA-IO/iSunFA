@@ -7,13 +7,22 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 
 const DashboardPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { selectedCompany } = useUserCtx();
   const companyName = selectedCompany?.name ?? 'iSunFA';
 
   const pageHeader = (
     <div className="my-auto flex-1 text-2xl font-semibold text-tertiaryBlue max-md:max-w-full lg:text-5xl lg:leading-52px">
-      {t('DASHBOARD.HELLO_WELCOME_TO')}
+      {t('common:DASHBOARD.HELLO_WELCOME_TO')}
       <span className="text-primaryYellow">{companyName}</span>
     </div>
   );

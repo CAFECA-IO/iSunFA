@@ -27,7 +27,16 @@ interface IFinancialReportSectionProps {
 const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
   // Info: (20240807 - Anna) 初始化 useRouter
   const router = useRouter();
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -149,9 +158,9 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       if (generatedSuccess) {
         messageModalDataHandler({
           title: '',
-          subtitle: t('MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
-          content: t('MY_REPORTS_SECTION.TAKE_MINUTES'),
-          submitBtnStr: t('COMMON.CLOSE'),
+          subtitle: t('report_401:MY_REPORTS_SECTION.WE_RECEIVED_YOUR_APPLICATION'),
+          content: t('report_401:MY_REPORTS_SECTION.TAKE_MINUTES'),
+          submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             // Info: (20240807 - Anna) 在成功生成報告後，將導航函數作為submitBtnFunction傳入⭢執行導航
@@ -165,9 +174,9 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       } else {
         messageModalDataHandler({
           title: '',
-          subtitle: t('DASHBOARD.FAILED'),
-          content: t('DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
-          submitBtnStr: t('DASHBOARD.TRY_AGAIN'),
+          subtitle: t('common:DASHBOARD.FAILED'),
+          content: t('common:DASHBOARD.WE_CAN_T_GENERATE_THE_REPORT'),
+          submitBtnStr: t('common:DASHBOARD.TRY_AGAIN'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
           },
@@ -207,7 +216,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -261,7 +270,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
             <input
               type="text"
-              placeholder={t('AUDIT_REPORT.SEARCH')}
+              placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -350,7 +359,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {t(`PLUGIN.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`common:PLUGIN.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center px-0 py-0">
           <div className="flex items-center justify-center">
@@ -388,7 +397,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {/* Info: (20240710 - Anna) {name} */}
-              {t(`PLUGIN.${name.toUpperCase().replace(/ /g, '_')}`)}
+              {t(`common:PLUGIN.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>
@@ -471,7 +480,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       ) : (
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">
-            {t('EMBED_CODE_MODAL.GENERATE')}
+            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </div>
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -503,7 +512,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           {/* Info: (20240513 - Shirley)  desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
-              {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
+              {t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
             </div>
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
@@ -518,7 +527,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                   className="aspect-square shrink-0"
                 />
               </div>
-              <div className="mt-1.5">{t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
+              <div className="mt-1.5">{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
             </div>
           </div>
 
@@ -534,7 +543,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('REPORTS_HISTORY_LIST.PROJECT')}
+              {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
             </div>
 
             {displayedProjectMenu}
@@ -543,7 +552,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
+              {t('report_401:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
             </div>
             {displayedReportTypeMenu}
           </div>
@@ -551,7 +560,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
@@ -594,7 +603,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                 </div>
               </div>
               <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
-                {t('PENDING_REPORT_LIST.PERIOD')}
+                {t('report_401:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
 
@@ -614,7 +623,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           </div>
         </div>
         <div className="my-10 flex flex-col justify-center">
-          <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
+          <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}{' '}
       </div>

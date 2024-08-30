@@ -210,7 +210,16 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { toastHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -260,7 +269,7 @@ const IncomeExpenseTrendChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `income_expense_trend-${getCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -326,7 +335,7 @@ const IncomeExpenseTrendChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('MY_REPORTS_SECTION.EMPTY')}
+          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
         </div>
       </section>
     </div>
@@ -408,7 +417,7 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
                 <p>
-                  <span className="lg:hidden">{t('COMMON.M')}</span>
+                  <span className="lg:hidden">{t('common:COMMON.M')}</span>
                   <span className="hidden lg:inline">
                     {t('journal:ADD_ASSET_MODAL.MONTH')}
                   </span>{' '}
@@ -429,7 +438,7 @@ const IncomeExpenseTrendChart = () => {
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
                 <p>
-                  <span className="lg:hidden">{t('COMMON.Y')}</span>
+                  <span className="lg:hidden">{t('common:COMMON.Y')}</span>
                   <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.YEAR')}</span>{' '}
                 </p>
               </Button>
