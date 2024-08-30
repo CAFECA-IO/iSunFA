@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import logger from '@/lib/utils/logger';
+// import logger from '@/lib/utils/logger';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import {
   exportPublicKey,
@@ -58,7 +58,7 @@ async function handleGetRequest(companyId: number): Promise<{
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
   } catch (error) {
-    logger.error(error);
+    // logger.error(error);
   }
   return {
     payload,
@@ -92,7 +92,7 @@ export default async function handler(
     } catch (_error) {
       const error = _error as Error;
       statusMessage = error.message;
-      logger.error(error);
+      // logger.error(error);
     }
   }
   const { httpCode, result } = formatApiResponse<JsonWebKey | null>(statusMessage, payload);

@@ -6,7 +6,6 @@ import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
-import logger from '@/lib/utils/logger';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -249,7 +248,7 @@ export async function fuzzySearchAccountByName(name: string) {
     `;
     [account] = accounts;
   } catch (error) {
-    logger.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return account;

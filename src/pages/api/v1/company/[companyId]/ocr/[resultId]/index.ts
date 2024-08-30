@@ -18,7 +18,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
-import logger from '@/lib/utils/logger';
+// import logger from '@/lib/utils/logger';
 
 // Info: (20240522 - Murky) This OCR now can only be used on Invoice
 
@@ -36,17 +36,17 @@ export async function fetchOCRResult(resultId: string) {
     const fetchURL = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT, resultId);
     response = await fetch(fetchURL);
   } catch (error) {
-    logger.error(error, '[ocr/:resultId]: fetchOCRResult failed from get OCR from AICH');
+    // logger.error(error, '[ocr/:resultId]: fetchOCRResult failed from get OCR from AICH');
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
-    logger.error(
-      {
-        aich_response: response,
-      },
-      '[ocr/:resultId]: fetchOCRResult failed from get OCR from AICH, response not ok'
-    );
+    // logger.error(
+    //   {
+    //     aich_response: response,
+    //   },
+    //   '[ocr/:resultId]: fetchOCRResult failed from get OCR from AICH, response not ok'
+    // );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 

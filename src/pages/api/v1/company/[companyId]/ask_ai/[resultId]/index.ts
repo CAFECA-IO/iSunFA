@@ -13,7 +13,7 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import logger from '@/lib/utils/logger';
+import { loggerError } from '@/lib/utils/logger_back';
 
 type ApiResponseType = IVoucherDataForSavingToDB | IContract | null;
 // Info: （ 20240522 - Murky）目前只可以使用Voucher Return
@@ -156,7 +156,12 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      logger.error(error);
+      const logError = await loggerError(
+        userId,
+        'get_ask_ai_resultId',
+        'get_ask_ai_resultId failed'
+      );
+      logError.error(error);
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

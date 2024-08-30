@@ -5,7 +5,6 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
-import logger from '@/lib/utils/logger';
 
 /**
 * Info: (20240813-Tzuhan) [Beta]
@@ -66,11 +65,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     callbacks: {
       async signIn({ user, account, profile }) {
         // Deprecated: (20240819-Tzuhan) [Beta] dev
-        logger.debug('signIn callback', user, account, profile);
+        // eslint-disable-next-line no-console
+        console.log('signIn callback', user, account, profile);
         const { invitation } = (account?.params || {}) as { invitation: string };
 
         // Deprecated: (20240819-Tzuhan) [Beta] dev
-        logger.debug('Custom Params:', invitation);
+        // eslint-disable-next-line no-console
+        console.log('Custom Params:', invitation);
 
         const session = await getSession(req, res);
         const getUser = await getUserByCredential(account?.providerAccountId || user.id);

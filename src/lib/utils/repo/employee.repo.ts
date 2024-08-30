@@ -6,6 +6,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { getInsuranceInfo } from '@/lib/utils/insurance';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function listEmployees(
   companyId: number,
@@ -229,6 +230,8 @@ export async function getEmployeeById(employeeIdNumber: number) {
       },
     },
   });
+  const logError = await loggerError(employeeIdNumber, 'getEmployeeById', 'Employee not found');
+  logError.error(logError);
   return employee;
 }
 

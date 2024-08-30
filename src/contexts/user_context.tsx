@@ -15,7 +15,6 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
-import logger from '@/lib/utils/logger';
 
 interface UserContextType {
   credential: string | null;
@@ -223,16 +222,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const isUserAuthAvailable = !!userAuthRef.current;
 
     // Deprecated: (20240826-Tzuhan) [Beta] dev
-    logger.debug(
-      'isProfileFetchNeeded userId:',
-      userId,
-      'expiredAt:',
-      expiredAt,
-      'isUserAuthAvailable:',
-      isUserAuthAvailable,
-      'Date.now() < Number(expiredAt)',
-      Date.now() < Number(expiredAt)
-    );
+    // logger.debug(
+    //   'isProfileFetchNeeded userId:',
+    //   userId,
+    //   'expiredAt:',
+    //   expiredAt,
+    //   'isUserAuthAvailable:',
+    //   isUserAuthAvailable,
+    //   'Date.now() < Number(expiredAt)',
+    //   Date.now() < Number(expiredAt)
+    // );
 
     // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
     if (!isUserAuthAvailable && userId && expiredAt) {
@@ -241,7 +240,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return true;
       } else {
         // Deprecated: (20240826-Tzuhan) [Beta] dev
-        logger.debug('expiredAt is expired, isNeed signOut');
+        // logger.debug('expiredAt is expired, isNeed signOut');
         signOut();
         return false;
       }
@@ -265,7 +264,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const getStatusInfo = useCallback(async () => {
     const isNeed = isProfileFetchNeeded();
     // Deprecated: (20240826-Tzuhan) [Beta] dev
-    logger.debug('isProfileFetchNeeded isNeed:', isNeed);
+    // eslint-disable-next-line no-console
+    console.log('isProfileFetchNeeded isNeed:', isNeed);
     if (!isNeed) return;
     setIsAuthLoading(true);
     const {
@@ -277,11 +277,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
     if (getStatusInfoSuccess) {
       if (StatusInfo) {
-        logger.debug(
-          'getStatusInfo StatusInfo',
-          StatusInfo,
-          `'company' in StatusInfo && Object.keys(StatusInfo.company).length > 0: ${'company' in StatusInfo && StatusInfo.company && Object.keys(StatusInfo.company).length > 0}`
-        );
+        // logger.debug(
+        //   'getStatusInfo StatusInfo',
+        //   StatusInfo,
+        //   `'company' in StatusInfo && Object.keys(StatusInfo.company).length > 0: ${'company' in StatusInfo && StatusInfo.company && Object.keys(StatusInfo.company).length > 0}`
+        // );
         if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
           setUserAuth(StatusInfo.user);
           setUsername(StatusInfo.user.name);
@@ -449,7 +449,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const handleUnauthorizedAccess = () => {
       // Deprecated: (20240826-Tzuhan) [Beta] dev
-      logger.debug('useEffect message on "unauthorized": called signOut');
+      // logger.debug('useEffect message on "unauthorized": called signOut');
       signOut();
     };
 
