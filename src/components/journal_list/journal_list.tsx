@@ -100,7 +100,7 @@ const JournalList = ({
     </div>
   ) : journals.length < 1 ? (
     // Info: (20240419 - Julian) No data
-    <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
+    <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
       <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
       <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
     </div>
@@ -108,10 +108,10 @@ const JournalList = ({
     <>
       {/* Info: (20240517 - Julian) Desktop */}
       <div className="hidden lg:block">
-        <table className="my-20px w-full border border-lightGray6">
+        <table className="my-20px w-full border border-stroke-neutral-quaternary">
           {/* Info: (20240418 - Julian) Header */}
           <thead>
-            <tr className="bg-white text-left text-sm text-lightGray4">
+            <tr className="border border-stroke-neutral-quaternary text-left text-sm text-text-neutral-tertiary">
               {/* Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊) */}
               {/* Info: (20240419 - Julian) 全選 */}
               {/* <th className="flex justify-center py-8px">
@@ -147,10 +147,10 @@ const JournalList = ({
       </div>
       {/* Info: (20240517 - Julian) Mobile */}
       <div className="block lg:hidden">
-        <table className="my-20px w-full border border-lightGray6">
+        <table className="my-20px w-full border border-stroke-neutral-quaternary">
           {/* Info: (20240418 - Julian) Header */}
           <thead>
-            <tr className="bg-white text-left text-sm text-lightGray4">
+            <tr className="border border-stroke-neutral-quaternary text-left text-sm text-text-neutral-tertiary">
               {/* Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊) */}
               {/* Info: (20240419 - Julian) 全選 */}
               {/* <th className="flex justify-center py-8px md:w-50px">
