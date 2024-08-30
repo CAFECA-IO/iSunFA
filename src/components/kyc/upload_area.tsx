@@ -104,9 +104,10 @@ const UploadArea = ({
       setStatus(ProgressStatus.SYSTEM_ERROR);
     }
     if (success && data) {
-      onChange(type, data.id);
-      setUploadedFileId(data.id);
-      updateFileIdInLocalStorage(type, data.id);
+      // Info: (20240830 - Murky) To Emily and Jacky To Emily and Jacky, File update down below
+      onChange(type, data.name);
+      setUploadedFileId(data.name);
+      updateFileIdInLocalStorage(type, data.name);
       setStatus(ProgressStatus.SUCCESS);
     }
   };

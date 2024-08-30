@@ -34,9 +34,9 @@ export function isCompanyKYC(data: CompanyKYC): data is ICompanyKYC {
     Object.values(RepresentativeIDType).includes(
       data.representativeIdType as RepresentativeIDType
     ) &&
-    typeof data.registrationCertificateId === 'string' &&
-    typeof data.taxCertificateId === 'string' &&
-    typeof data.representativeIdCardId === 'string' &&
+    typeof data.registrationCertificateFileId === 'number' &&
+    typeof data.taxCertificateFileId === 'number' &&
+    typeof data.representativeIdCardFileId === 'number' &&
     typeof data.createdAt === 'number' &&
     typeof data.updatedAt === 'number' &&
     (typeof data.deletedAt === 'number' || data.deletedAt === null)

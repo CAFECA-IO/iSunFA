@@ -30,7 +30,7 @@ export async function createUserByAuth({
   method,
   provider,
   authData,
-  imageUrl,
+  imageId,
   fullName,
   email,
   phone,
@@ -40,7 +40,7 @@ export async function createUserByAuth({
   method: string;
   provider: string;
   authData: object;
-  imageUrl: string;
+  imageId: number;
   fullName?: string;
   email?: string;
   phone?: string;
@@ -56,7 +56,11 @@ export async function createUserByAuth({
           fullName,
           email,
           phone,
-          imageId: imageUrl,
+          imageFile: {
+            connect: {
+              id: imageId,
+            },
+          },
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
         },

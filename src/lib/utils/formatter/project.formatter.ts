@@ -1,10 +1,11 @@
 import { IProject } from '@/interfaces/project';
-import { Project } from '@prisma/client';
+import { Project, File } from '@prisma/client';
 
 export async function formatProjectList(
   listedProject: (Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
+    imageFile: File;
     _count: { contracts: number };
   })[]
 ) {
@@ -22,7 +23,7 @@ export async function formatProjectList(
       });
       return {
         ...rest,
-        imageId: rest.imageId ?? '',
+        imageId: rest.imageFile.name ?? '',
         members: employeeList,
         income: value ? value.totalExpense : 0,
         expense: value ? value.totalRevenue : 0,
@@ -40,6 +41,7 @@ export function formatProject(
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
+    imageFile: File;
   }
 ) {
   let project: IProject = {} as IProject;
@@ -60,7 +62,7 @@ export function formatProject(
       expense: value ? value.totalRevenue : 0,
       profit: value ? value.netProfit : 0,
       contractAmount: _count.contracts,
-      imageId: rest.imageId ?? '',
+      imageId: rest.imageFile.name ?? '',
     };
   }
   return project;
