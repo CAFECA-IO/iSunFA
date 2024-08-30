@@ -92,7 +92,13 @@
     "LEAVE_NOW": "现在离开",
     "BACK": "上一步",
     "CREATE_COMPANY_FAILED": "创建公司失败",
-    "PLEASE_TRY_AGAIN_LATER": "请稍后再试"
+    "PLEASE_TRY_AGAIN_LATER": "请稍后再试",
+    "DELETE_COMPANY_CHECK": "您确定要删除该公司吗？ 请注意，您无法撤销此操作。",
+    "TRANSFER_COMPANY": "转移公司管理权",
+    "TRANSFER_THE_ADMINISTRATION_TO": "您确定要将管理权转移至",
+    "TRANSFER_COMPANY_TO": "公司管理权转移至...",
+    "TRANSFER": "管理权转移",
+    "USER_ID": "使用者帐号"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",
@@ -129,7 +135,7 @@
     "DELETE": "删除",
     "EXISTED_COMPANY": "已经存在的公司",
     "COMPANY_ALREADY_REGISTERED": "该公司已注册",
-    "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。错误代码:{{code}}"
+    "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",

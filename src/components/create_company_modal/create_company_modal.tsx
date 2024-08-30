@@ -104,9 +104,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           messageType: MessageType.WARNING,
           title: t('kyc:COMPANY_BASIC_INFO.EXISTED_COMPANY'),
           subMsg: t('kyc:COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
-          // Info: (20240805 - Anna) content: `If you are the owner of this company,
-          // Info: (20240805 - Anna) please complete KYC to get access back. Error code: ${createCompanyCode}`,
-          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
+          // Info: (20240830 - Anna) 因為用戶不需要知道錯誤代碼，所以把{ code: createCompanyCode }移除
+          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC'),
           submitBtnStr: t('kyc:COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
             // Info: (20240807 - Anna) 隱藏 create company modal

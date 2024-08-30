@@ -46,7 +46,6 @@ const MyReportsSection = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // TODO: (20240528 - Shirley) [Beta] 區分 pending 跟 history 兩種 filter options
   // TODO: (20240528 - Shirley) [Beta] filterOptionsGotFromModal for API queries in mobile devices
-  // eslint-disable-next-line no-unused-vars
   const {
     toastHandler,
     filterOptionsModalVisibilityHandler,
@@ -427,13 +426,12 @@ const MyReportsSection = () => {
         </div>
         <Button
           disabled={isPendingDataLoading}
-          onClick={
-            () =>
+          onClick={() => {
+            return (
               !isPendingDataLoading &&
               filterOptionsModalVisibilityHandler(FilterOptionsModalType.pending)
-            // Info: (20240809 - Shirley) conflict with prettier
-            // eslint-disable-next-line react/jsx-curly-newline
-          }
+            );
+          }}
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >
@@ -665,13 +663,12 @@ const MyReportsSection = () => {
         </div>
         <Button
           disabled={isHistoryDataLoading}
-          onClick={
-            () =>
+          onClick={() => {
+            return (
               !isHistoryDataLoading &&
               filterOptionsModalVisibilityHandler(FilterOptionsModalType.history)
-            // Info: (20240809 - Shirley) conflict with prettier
-            // eslint-disable-next-line react/jsx-curly-newline
-          }
+            );
+          }}
           className="px-3 py-3"
           variant={'secondaryOutline'}
         >

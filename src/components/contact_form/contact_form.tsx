@@ -228,9 +228,10 @@ function ContactForm() {
           )}
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
+          <label
+            htmlFor="Phone"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
             {t('common:CONTACT_US.PHONE')}
           </label>
           <input
@@ -243,8 +244,10 @@ function ContactForm() {
         </div>
         <div className="mt-4 flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
+          <label
+            htmlFor="Message"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
             {t('common:CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>
           </label>
           <textarea

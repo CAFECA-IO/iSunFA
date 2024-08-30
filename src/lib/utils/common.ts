@@ -611,8 +611,10 @@ export function getEnumValue<T extends object>(enumObj: T, value: string): T[key
 }
 
 // Info: (20240808 - Shirley) 節流函數
-// eslint-disable-next-line function-paren-newline
-export function throttle<F extends (...args: unknown[]) => unknown>(
+// Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請Prettier不要格式化
+// prettier-ignore
+export function throttle<F extends (
+...args: unknown[]) => unknown>(
   func: F,
   limit: number
 ): (...args: Parameters<F>) => void {

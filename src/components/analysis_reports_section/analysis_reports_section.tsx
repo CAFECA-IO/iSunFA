@@ -192,11 +192,8 @@ const AnalysisReportSection = () => {
               .map((project) => (
                 <li
                   key={project}
-                  onClick={
-                    () =>
-                      // eslint-disable-next-line implicit-arrow-linebreak
-                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                    // eslint-disable-next-line react/jsx-curly-newline
+                  onClick={() =>
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
                   }
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
