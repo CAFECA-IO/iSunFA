@@ -88,10 +88,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
-  const [, setIsAgreeInfoCollection, isAgreeInfoCollectionRef] =
-    useStateRef(false);
-  const [, setIsAgreeTosNPrivacyPolicy, isAgreeTosNPrivacyPolicyRef] =
-    useStateRef(false);
+  const [, setIsAgreeInfoCollection, isAgreeInfoCollectionRef] = useStateRef(false);
+  const [, setIsAgreeTosNPrivacyPolicy, isAgreeTosNPrivacyPolicyRef] = useStateRef(false);
   const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
     success: boolean;
     data: null;

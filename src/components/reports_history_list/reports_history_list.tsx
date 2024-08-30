@@ -20,7 +20,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
     'terms',
   ]);
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
-  const [reportItems/* setReportItems */] = useState<IReport[]>(reports);
+  const [reportItems] = useState<IReport[]>(reports);
 
   const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
 
@@ -145,7 +145,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
         checked={allChecked}
         onChange={allCheckboxClickHandler}
         type="checkbox"
-        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
       />
     </th>
   ) : null;
@@ -153,10 +153,10 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
   return (
     <div className="">
       {displayedStatusButtons}
-      <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
+      <table className="my-20px w-full shrink-0 border border-stroke-neutral-quaternary font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
         <thead>
-          <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
+          <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
             <th className="text-center">{t('report_401:REPORTS_HISTORY_LIST.DATE')}</th>

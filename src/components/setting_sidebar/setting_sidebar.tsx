@@ -71,7 +71,7 @@ const SettingSidebar = () => {
             </div>
 
             {/* Info: (20240423 - Shirley) Divider */}
-            {/* <div className={`h-12px w-full border-b border-lightGray6 `}></div>  // Info: (20240715 - Shirley) */}
+            {/* <div className={`h-12px w-full border-b border-divider-stroke-lv-4 `}></div>  // Info: (20240715 - Shirley) */}
             <div className="mt-4 flex gap-4 text-sm leading-5 tracking-normal text-divider-text-lv-1">
               <div className="flex gap-2">
                 <Image src="/icons/real_home.svg" width={20} height={20} alt="setting_icon" />
