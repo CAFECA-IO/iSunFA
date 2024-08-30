@@ -13,7 +13,16 @@ const DocumentUploadForm = ({
   onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
   onSelect: (value: RepresentativeIDType) => void;
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   return (
     <div className="flex flex-col items-center bg-gray-100 md:w-650px">

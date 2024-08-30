@@ -32,7 +32,16 @@ import { APIName } from '@/constants/api_connection';
 //   handelClick: () => void;
 // }) =>
 const StepOneTab = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -227,7 +236,7 @@ const StepOneTab = () => {
       {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
         <input
           className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-lightGray4"
-          placeholder={t('COMMON.ENTER_A_DESCRIPTION')}
+          placeholder={t('common:COMMON.ENTER_A_DESCRIPTION')}
           value={inputDescription}
           onChange={handleInputChange}
         />
@@ -236,7 +245,7 @@ const StepOneTab = () => {
           className="flex items-center gap-10px p-20px text-tertiaryBlue hover:text-primaryYellow"
           onClick={handelClick}
         >
-          <p className="hidden md:block">{t('CONTACT_US.SUBMIT')}</p>
+          <p className="hidden md:block">{t('common:CONTACT_US.SUBMIT')}</p>
           <FiSend />
         </button>
       </div> */}
@@ -255,7 +264,7 @@ const StepOneTab = () => {
         {/* Info: (20240422 - Julian) Upload area */}
         <JournalUploadArea />
 
-        <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
+        <h3 className="text-xl font-bold text-lightGray4">{t('common:COMMON.OR')}</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
         <div className="h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1">

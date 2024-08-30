@@ -38,7 +38,16 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmData,
 }: IConfirmModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const {
     AIStatus,
@@ -164,7 +173,7 @@ const ConfirmModal = ({
       submitBtnStr: t('journal:JOURNAL.CONFIRM'),
       // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
       backBtnFunction: () => {
         getAIStatusHandler(undefined, false);
         messageModalVisibilityHandler();
@@ -224,7 +233,7 @@ const ConfirmModal = ({
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
+              {t('report_401:AUDIT_REPORT.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -238,9 +247,9 @@ const ConfirmModal = ({
       messageModalDataHandler({
         title: t('journal:CONFIRM_MODAL.UPLOAD_FAILED'),
         subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
-        content: t('COMMON.ERROR_CODE', { code: res.code }),
+        content: t('common:COMMON.ERROR_CODE', { code: res.code }),
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -309,7 +318,7 @@ const ConfirmModal = ({
         subMsg: 'Please try again later',
         content: `Error code: ${getJournalCode}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -458,7 +467,9 @@ const ConfirmModal = ({
         <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
       </p>
     ) : hasAIResult ? (
-      <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+      <p className="text-badge-text-success-solid">
+        {t('journal:CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}
+      </p>
     ) : AIResultSuccess === false && AIResultCode ? (
       <p className="text-text-neutral-secondary">
         {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
@@ -669,7 +680,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
-              <p>{t('DATE_PICKER.DATE')}</p>
+              <p>{t('common:DATE_PICKER.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
@@ -716,7 +727,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">
-              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240429 - Julian) Contract */}
@@ -806,7 +817,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <Button id="cancel-btn" type="button" onClick={closeHandler} variant="tertiaryBorderless">
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button
             id="confirm-btn"

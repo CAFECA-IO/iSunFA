@@ -18,14 +18,14 @@ import { getUserById } from './repo/user.repo';
 const getTranslatedRoleName = (roleName: RoleName): string => {
   const t = i18next.t.bind(i18next);
   const roleTranslations: Record<RoleName, string> = {
-    [RoleName.SUPER_ADMIN]: t('ROLE.SUPER_ADMIN'),
-    [RoleName.ADMIN]: t('ROLE.ADMIN'),
-    [RoleName.OWNER]: t('ROLE.OWNER'),
-    [RoleName.ACCOUNTANT]: t('ROLE.ACCOUNTANT'),
-    [RoleName.BOOKKEEPER]: t('ROLE.BOOKKEEPER'),
-    [RoleName.FINANCE]: t('ROLE.FINANCE'),
-    [RoleName.VIEWER]: t('ROLE.VIEWER'),
-    [RoleName.TEST]: t('ROLE.TEST'),
+    [RoleName.SUPER_ADMIN]: t('common:ROLE.SUPER_ADMIN'),
+    [RoleName.ADMIN]: t('common:ROLE.ADMIN'),
+    [RoleName.OWNER]: t('common:ROLE.OWNER'),
+    [RoleName.ACCOUNTANT]: t('common:ROLE.ACCOUNTANT'),
+    [RoleName.BOOKKEEPER]: t('common:ROLE.BOOKKEEPER'),
+    [RoleName.FINANCE]: t('common:ROLE.FINANCE'),
+    [RoleName.VIEWER]: t('common:ROLE.VIEWER'),
+    [RoleName.TEST]: t('common:ROLE.TEST'),
   };
 
   return roleTranslations[roleName] || roleName;

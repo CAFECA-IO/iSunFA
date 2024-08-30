@@ -16,7 +16,16 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const JournalListPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
 
@@ -40,7 +49,7 @@ const JournalListPage = () => {
           {/* Info: (20240417 - Julian) Title */}
           <div className="flex flex-col items-center justify-between gap-10px md:flex-row">
             <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-              {companyName} {t('JOURNAL.JOURNAL_LIST')}
+              {companyName} {t('journal:JOURNAL.JOURNAL_LIST')}
             </h1>
             <Link href={ISUNFA_ROUTE.ACCOUNTING}>
               <Button type="button" variant="tertiary" className="text-sm md:text-base">

@@ -11,20 +11,29 @@ interface ILandingPageProps {
 }
 
 function LandingPage({ locale }: ILandingPageProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('META.TITLE')}</title>
-        <meta name="description" content={t('META.DESCRIPTION')} />
+        <title>{t('common:META.TITLE')}</title>
+        <meta name="description" content={t('common:META.DESCRIPTION')} />
         <meta name="author" content="CAFECA" />
-        <meta name="keywords" content={t('META.KEYWORDS')} />
+        <meta name="keywords" content={t('common:META.KEYWORDS')} />
 
         <meta property="og:title" content="iSunFA" />
-        <meta property="og:description" content={t('META.DESCRIPTION')} />
+        <meta property="og:description" content={t('common:META.DESCRIPTION')} />
         {/* TODO: (20240807 - Shirley) [Beta] i18n for image */}
         <meta property="og:image" content={`https://isunfa.com/meta/isunfa_preview.png`} />
         <meta property="og:url" content={`https://isunfa.com/${locale}`} />

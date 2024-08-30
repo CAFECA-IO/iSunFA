@@ -35,7 +35,16 @@ interface IJournalDetailProps {
 }
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
@@ -579,7 +588,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('DATE_PICKER.DATE')}</p>
+              <p>{t('common:DATE_PICKER.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
@@ -625,7 +634,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             </div>
             {/* Info: (20240503 - Julian) Project */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240503 - Julian) Contract */}

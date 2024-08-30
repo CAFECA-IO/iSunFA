@@ -145,7 +145,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
               clipRule="evenodd"
             ></path>
           </svg>
-          <p> {t('NAV_BAR.LANGUAGE')}</p>
+          <p> {t('common:NAV_BAR.LANGUAGE')}</p>
         </div>
 
         <svg

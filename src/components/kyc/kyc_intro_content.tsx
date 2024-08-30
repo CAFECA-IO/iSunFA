@@ -3,7 +3,16 @@ import KYCButton from '@/components/kyc/kyc_button';
 import { useTranslation } from 'next-i18next';
 
 const KYCIntroContent = ({ isMobile, onStart }: { isMobile: boolean; onStart: () => void }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   return (
     <section className="mx-auto flex w-fit flex-col items-center gap-40px">

@@ -23,7 +23,16 @@ interface FileInfo extends IOCRItem {
 }
 
 const JournalUploadArea = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { userAuth, selectedCompany } = useUserCtx();
   const {
     setInvoiceIdHandler,
@@ -65,7 +74,7 @@ const JournalUploadArea = () => {
       if (!selectedCompany?.id || !publicKeyData || fetchPublicKeySuccess === false) {
         toastHandler({
           id: 'uploadFile',
-          content: t('JOURNAL.FAILED_TO_UPLOAD_FILE'),
+          content: t('journal:JOURNAL.FAILED_TO_UPLOAD_FILE'),
           closeable: true,
           type: ToastType.ERROR,
         });
@@ -174,7 +183,7 @@ const JournalUploadArea = () => {
     if (item.companyId !== companyId) {
       toastHandler({
         id: `uploadInvoice-${item.uploadIdentifier}`,
-        content: t('JOURNAL.INCONSISTENT_COMPANY_ID'),
+        content: t('journal:JOURNAL.INCONSISTENT_COMPANY_ID'),
         closeable: true,
         type: ToastType.ERROR,
       });
@@ -213,7 +222,7 @@ const JournalUploadArea = () => {
       setIsUploadDisabled(true);
       toastHandler({
         id: 'fetchPublicKey',
-        content: t('JOURNAL.FAILED_TO_FETCH_PUBLIC_KEY'),
+        content: t('journal:JOURNAL.FAILED_TO_FETCH_PUBLIC_KEY'),
         closeable: true,
         type: ToastType.ERROR,
       });
@@ -279,7 +288,7 @@ const JournalUploadArea = () => {
             title: 'Upload Invoice Failed',
             content: `Upload invoice failed(${uploadCode}): ${result.status}`,
             messageType: MessageType.ERROR,
-            submitBtnStr: t('COMMON.CLOSE'),
+            submitBtnStr: t('common:COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
           });
           messageModalVisibilityHandler();
@@ -291,7 +300,7 @@ const JournalUploadArea = () => {
         title: 'Upload Invoice Failed',
         content: `Upload invoice failed(${uploadCode})`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();

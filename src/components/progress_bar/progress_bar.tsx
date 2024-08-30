@@ -8,7 +8,16 @@ interface IProgressBarProps {
 }
 
 const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   useEffect(() => {
     // Info: (20240509 - Julian) 找到 sliderProgress 的 style element
@@ -49,7 +58,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
 
   return (
     <div className="flex w-full flex-col items-start gap-8px">
-      <p className="text-sm font-semibold text-navyBlue2">{t('COMMON.PROGRESS')}</p>
+      <p className="text-sm font-semibold text-navyBlue2">{t('common:COMMON.PROGRESS')}</p>
       <div className="flex w-full flex-col gap-x-20px gap-y-10px md:flex-row">
         {/* Info: (20240502 - Julian) Progress Bar */}
         <input

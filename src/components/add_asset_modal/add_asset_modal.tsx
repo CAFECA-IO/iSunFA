@@ -16,7 +16,16 @@ interface IAddAssetModalProps {
 }
 
 const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [inputName, setInputName] = useState('');
   const [inputDescription, setInputDescription] = useState('');
   const [inputPurchasePrice, setInputPurchasePrice] = useState(0);
@@ -133,7 +142,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240503 - Julian) purchase price */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">{t('ADD_ASSET_MODAL.PURCHASE_PRICE')}</p>
+              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.PURCHASE_PRICE')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <NumericInput
                   id="input-purchase-price"
@@ -158,7 +167,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240508 - Julian) amount */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">{t('ADD_ASSET_MODAL.AMOUNT')}</p>
+              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.AMOUNT')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <button type="button" className="p-12px" onClick={minusAmountHandler}>
                   <FiMinus size={20} />
@@ -179,7 +188,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
             </div>
             {/* Info: (20240508 - Julian) total */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">{t('ADD_ASSET_MODAL.TOTAL')}</p>
+              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.TOTAL')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <NumericInput
                   id="input-total"
@@ -258,16 +267,18 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 onChange={selectedDepreciationMethod}
                 className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none"
               >
-                <option value="straightLine">{t('ADD_ASSET_MODAL.STRAIGHT_LINE')}</option>
-                <option value="doubleDeclining">{t('ADD_ASSET_MODAL.DOUBLE_DECLINING')}</option>
+                <option value="straightLine">{t('journal:ADD_ASSET_MODAL.STRAIGHT_LINE')}</option>
+                <option value="doubleDeclining">
+                  {t('journal:ADD_ASSET_MODAL.DOUBLE_DECLINING')}
+                </option>
                 <option value="unitsOfProduction">
-                  {t('ADD_ASSET_MODAL.UNITS_OF_PRODUCTION')}
+                  {t('journal:ADD_ASSET_MODAL.UNITS_OF_PRODUCTION')}
                 </option>
               </select>
             </div>
             {/* Info: (20240508 - Julian) estimated useful life */}
             <div className="flex flex-col gap-y-8px">
-              <p className="font-semibold">{t('ADD_ASSET_MODAL.ESTIMATED_USEFUL_LIFE')}</p>
+              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.ESTIMATED_USEFUL_LIFE')}</p>
               <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background">
                 <NumericInput
                   id="input-useful-life"
@@ -284,9 +295,9 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   onChange={selectedUsefulLifeUnit}
                   className="h-full p-12px outline-none"
                 >
-                  <option value="year">{t('ADD_ASSET_MODAL.YEAR')}</option>
-                  <option value="month">{t('ADD_ASSET_MODAL.MONTH')}</option>
-                  <option value="day">{t('ADD_ASSET_MODAL.DAY')}</option>
+                  <option value="year">{t('journal:ADD_ASSET_MODAL.YEAR')}</option>
+                  <option value="month">{t('journal:ADD_ASSET_MODAL.MONTH')}</option>
+                  <option value="day">{t('journal:ADD_ASSET_MODAL.DAY')}</option>
                 </select>
               </div>
             </div>
@@ -299,7 +310,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               onClick={modalVisibilityHandler}
               variant={null}
             >
-              {t('REPORTS_HISTORY_LIST.CANCEL')}
+              {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
             </Button>
             <Button
               className="px-16px py-8px"

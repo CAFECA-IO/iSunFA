@@ -20,7 +20,16 @@ const ReportsHistoryItem = ({
   isCheckboxVisible,
   onCheckChange = () => {},
 }: IReportsHistoryItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { id, createdAt, name, from, to, project, reportType, blockChainExplorerLink } = report;
 
   const startDate = timestampToString(from);
@@ -92,16 +101,20 @@ const ReportsHistoryItem = ({
       <td className="hidden px-16px text-left font-medium lg:table-cell">
         <span className="text-sm text-text-neutral-primary">
           {t(
-            `PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+            `common:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
           )}
         </span>
       </td>
       {/* Info: (20240528 - Shirley) period */}
       <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
+          <span className="text-text-neutral-tertiary">
+            {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
+          </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.TO')}</span>
+          <span className="text-text-neutral-tertiary">
+            {t('report_401:REPORTS_HISTORY_ITEM.TO')}
+          </span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>

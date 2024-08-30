@@ -195,7 +195,16 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const LaborCostChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { layoutAssertion } = useGlobalCtx();
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
@@ -260,7 +269,7 @@ const LaborCostChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `labor-cost-chart-${getCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
