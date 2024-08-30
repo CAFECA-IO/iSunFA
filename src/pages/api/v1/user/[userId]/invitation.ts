@@ -4,13 +4,10 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatApiResponse } from '@/lib/utils/common';
-import { useInvitation } from '@/lib/utils/invitation';
+import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
+import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
-
-async function checkInput(invitation: string): Promise<boolean> {
-  return !!invitation;
-}
 
 export async function handlePutRequest(
   req: NextApiRequest,
@@ -24,23 +21,28 @@ export async function handlePutRequest(
     const { userId } = session;
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-      return { statusMessage, payload };
-    }
-
-    const { invitation } = req.body;
-    const isValid = await checkInput(invitation);
-    if (!isValid) {
-      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     } else {
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
-      if (!isAuth) {
-        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      const { invitationCode } = req.body;
+      // ToDo: (20240829 - Jacky) Add type guard for invitationCode
+      const getInvitation = await getInvitationByCode(invitationCode);
+      if (!getInvitation) {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       } else {
-        const admin = await useInvitation(invitation, userId);
-        statusMessage = admin
-          ? STATUS_MESSAGE.CREATED_INVITATION
-          : STATUS_MESSAGE.INVITATION_HAS_USED;
-        payload = admin;
+        const isValid = await isInvitationValid(getInvitation);
+        if (!isValid) {
+          statusMessage = STATUS_MESSAGE.BAD_REQUEST;
+        } else {
+          const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+          if (!isAuth) {
+            statusMessage = STATUS_MESSAGE.FORBIDDEN;
+          } else {
+            const admin = await useInvitation(getInvitation, userId);
+            statusMessage = admin
+              ? STATUS_MESSAGE.CREATED_INVITATION
+              : STATUS_MESSAGE.INVITATION_CONFLICT;
+            payload = admin;
+          }
+        }
       }
     }
   } catch (error) {

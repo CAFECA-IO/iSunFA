@@ -3,13 +3,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { RoleName } from '@/constants/role_name';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
-import { timestampInSeconds } from '@/lib/utils/common';
 import {
   getAdminByCompanyIdAndUserId,
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import { Invitation } from '@prisma/client';
 import i18next from 'i18next';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
 import { FREE_COMPANY_ID } from '@/constants/config';
@@ -127,14 +125,6 @@ export async function checkProjectCompanyMatch(params: { projectId: number; comp
   return match;
 }
 
-export async function checkInvitation(params: { invitation: Invitation }): Promise<boolean> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  const isAuth =
-    params.invitation && !params.invitation.hasUsed && params.invitation.expiredAt >= nowTimestamp;
-  return isAuth;
-}
-
 // Info: (20240729 - Jacky) 檢查函數的映射表
 export const authFunctions: AuthFunctions = {
   user: checkUser,
@@ -143,7 +133,6 @@ export const authFunctions: AuthFunctions = {
   superAdmin: checkUserCompanySuperAdmin,
   CompanyAdminMatch: checkCompanyAdminMatch,
   projectCompanyMatch: checkProjectCompanyMatch,
-  invitation: checkInvitation,
 };
 
 export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
