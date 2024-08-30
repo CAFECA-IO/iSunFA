@@ -19,7 +19,16 @@ const ProjectContractList = ({
   setCurrentPage,
   totalPages,
 }: IProjectContractListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const displayedContractList =
     contracts.length > 0 ? (
       <div className="flex w-full flex-col gap-20px">
@@ -37,7 +46,7 @@ const ProjectContractList = ({
     ) : (
       <div className="flex h-400px w-full flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
         <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-        <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
+        <p>{t('report_401:MY_REPORTS_SECTION.EMPTY')}</p>
       </div>
     );
 

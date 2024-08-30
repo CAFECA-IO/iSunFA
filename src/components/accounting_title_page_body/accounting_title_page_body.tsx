@@ -34,7 +34,16 @@ enum EquityOptions {
 const ITEM_PER_PAGE = 10;
 
 const AccountingTitlePageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler, accountList } = useAccountingCtx();
 
@@ -247,7 +256,7 @@ const AccountingTitlePageBody = () => {
           type="text"
           value={searchValue}
           onChange={searchValueHandler}
-          placeholder={t('AUDIT_REPORT.SEARCH')}
+          placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
           className="flex-1 bg-transparent text-input-text-input-filled outline-none"
         />
         <FiSearch size={20} />

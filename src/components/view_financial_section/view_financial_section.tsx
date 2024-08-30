@@ -118,7 +118,16 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
 
   // Info: (20240807 - Anna)
@@ -273,7 +282,6 @@ const ViewFinancialSection = ({
   //     setPdfFile(pdfUrl);
   //   } catch (error) {
   //     // TODO: (20240502 - Shirley) error handling
-  //     // eslint-disable-next-line no-console
   //     console.error(error);
   //   }
   // };
@@ -328,7 +336,9 @@ const ViewFinancialSection = ({
     !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
       ? displayedReportType.props.children
       : '';
-  const translatedReportType = t(`PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`);
+  const translatedReportType = t(
+    `common:PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`
+  );
 
   const renderedThumbnail = (
     thumbnail: { number: number; active: boolean; alt: string; src: string },
@@ -363,7 +373,7 @@ const ViewFinancialSection = ({
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading ? (
-              <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+              <p>{t('report_401:MY_REPORTS_SECTION.LOADING')}</p>
             ) : isInvalidReport ? null : (
               reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
             )}

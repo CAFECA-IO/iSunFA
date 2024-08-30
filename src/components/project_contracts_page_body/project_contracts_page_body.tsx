@@ -16,7 +16,16 @@ import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
 
 const ProjectContractsPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { filterOptionsModalVisibilityHandler, filterOptionsForContract } = useGlobalCtx();
 
   const statusList = Object.values(ContractStatus);
@@ -191,7 +200,7 @@ const ProjectContractsPageBody = () => {
         </div>
         {/* Info: (20240618 - Julian) Sort filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           <div
             ref={sortRef}
             onClick={sortClickHandler}

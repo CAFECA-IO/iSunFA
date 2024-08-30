@@ -9,7 +9,16 @@ import { IProfitInsight } from '@/interfaces/project_insight';
 import { useTranslation } from 'next-i18next';
 
 const DashboardOverview = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [dashboardOverview, setDashboardOverview] = React.useState<IProfitInsight>(
     {} as IProfitInsight
   );
@@ -62,7 +71,7 @@ const DashboardOverview = () => {
     } else if (getSuccess === false) {
       toastHandler({
         id: `profit_insight-${getCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -92,7 +101,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('DASHBOARD.PROFIT_CHANGE')}
+              {t('common:DASHBOARD.PROFIT_CHANGE')}
             </div>
           </div>
           <div
@@ -145,7 +154,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('DASHBOARD.TOP_PROJECT_ROI')}
+              {t('common:DASHBOARD.TOP_PROJECT_ROI')}
             </div>
           </div>
           <div
@@ -198,7 +207,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('DASHBOARD.PRE_LAUNCH_PROJECTS')}
+              {t('common:DASHBOARD.PRE_LAUNCH_PROJECTS')}
             </div>
           </div>
           <div

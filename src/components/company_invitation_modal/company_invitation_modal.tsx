@@ -24,7 +24,16 @@ const CompanyInvitationModal = ({
   modalVisibilityHandler,
   toastHandler,
 }: ICompanyInvitationModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
@@ -68,7 +77,7 @@ const CompanyInvitationModal = ({
         title: 'Invitation Code Expiry',
         subMsg: 'Oops! This verification code has expired.',
         content: 'Please verify again or contact the company administrator.',
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -94,7 +103,7 @@ const CompanyInvitationModal = ({
 
     // Info: (20240515 - Julian) Check if the code is valid
     if (codeRegex.test(codeInput)) {
-      addCompany({ params: { userId: userAuth?.id }, body: { invitation: codeInput } });
+      addCompany({ params: { userId: userAuth?.id }, body: { invitationCode: codeInput } });
     }
   };
 
@@ -128,7 +137,7 @@ const CompanyInvitationModal = ({
             className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-input-stroke-input border-input-stroke-input text-input-text-input-filled' : 'divide-surface-state-error-dark border-surface-state-error-dark text-text-state-error'}`}
           >
             <p className={isCodeValid ? 'text-lightGray4' : 'text-input-text-error'}>
-              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION CODE')}
             </p>
             <input
               id="invitationCodeInput"
@@ -143,7 +152,7 @@ const CompanyInvitationModal = ({
           <p
             className={`text-right text-surface-state-error ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}
           >
-            {t('COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
+            {t('kyc:COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
           </p>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
@@ -152,10 +161,10 @@ const CompanyInvitationModal = ({
             onClick={cancelBtnClickHandler}
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button type="submit" variant={'tertiary'}>
-            {t('CONTACT_US.SUBMIT')}
+            {t('common:CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

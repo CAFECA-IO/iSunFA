@@ -36,7 +36,16 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
-  const { t } = useTranslation(['common', 'kyc']);
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
@@ -105,7 +114,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
             messageModalVisibilityHandler();
             router.push(ISUNFA_ROUTE.KYC);
           },
-          backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+          backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
         });
         messageModalVisibilityHandler();
       } else if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE]) {
@@ -114,7 +123,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           title: 'Verified Company',
           subMsg: 'This company has already been registered and verified.',
           content: `Please check the information again, or contact with us. Error code: ${createCompanyCode}`,
-          submitBtnStr: t('COMMON.CLOSE'),
+          submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
@@ -125,7 +134,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           title: 'Create Company Failed',
           subMsg: 'Please try again later',
           content: `Error code: ${createCompanyCode}`,
-          submitBtnStr: t('COMMON.CLOSE'),
+          submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
@@ -196,7 +205,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
-              {t('kyc:CONTRACT.COMPANY_NAME')}
+              {t('journal:CONTRACT.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
@@ -252,10 +261,10 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
           <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button type="submit" variant="tertiary">
-            {t('CONTACT_US.SUBMIT')}
+            {t('common:CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

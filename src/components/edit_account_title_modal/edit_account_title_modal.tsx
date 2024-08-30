@@ -27,7 +27,16 @@ const EditAccountTitleModal = ({
   modalVisibilityHandler,
   modalData,
 }: IEditAccountTitleModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
@@ -144,7 +153,7 @@ const EditAccountTitleModal = ({
         deleteOwnAccountTitle(selectedCompany?.id, accountId);
         modalVisibilityHandler();
       },
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -258,7 +267,7 @@ const EditAccountTitleModal = ({
         {/* Info: (20240717 - Julian) Buttons */}
         <div className="flex items-center justify-end gap-12px px-20px py-16px text-sm">
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button
             id="save-accounting-title-button"
@@ -267,7 +276,7 @@ const EditAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={handleSave}
           >
-            {t('EDIT_BOOKMARK_MODAL.SAVE')}
+            {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
           </Button>
         </div>
       </div>

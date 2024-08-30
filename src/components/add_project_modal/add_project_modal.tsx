@@ -52,7 +52,7 @@ const AddProjectModal = ({
   modalVisibilityHandler,
   defaultStage,
 }: IAddProjectModalProps) => {
-  const { t } = useTranslation(['common', 'project']);
+  const { t } = useTranslation(['common', 'project', 'journal', 'kyc', 'report_401', 'salary', 'setting', 'terms']);
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
@@ -237,7 +237,7 @@ const AddProjectModal = ({
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -339,7 +339,7 @@ const AddProjectModal = ({
               onClick={modalVisibilityHandler}
               variant={null}
             >
-              {t('REPORTS_HISTORY_LIST.CANCEL')}
+              {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
             </Button>
             <Button
               className="px-16px py-8px"
