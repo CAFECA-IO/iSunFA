@@ -784,7 +784,7 @@ const ConfirmModal = ({
               htmlFor="addToBook"
               className="ml-auto flex items-center gap-8px text-sm text-checkbox-text-primary"
             >
-              <input id="addToBook" className={checkboxStyle} type="checkbox" />
+              <input id="addToBook" className={checkboxStyle} type="checkbox" checked />
               <p>{t('journal:CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
             </label>
           </div>
