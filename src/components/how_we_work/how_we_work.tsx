@@ -70,24 +70,24 @@ const HowWeWork = () => {
       isVisible: isAnimeRef21Visible,
       imageUrl: '/elements/how_we_work_1.png',
       alt: 'how we work - privacy',
-      title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_1',
-      content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1',
+      title: 'common:LANDING_PAGE.PRIVACY_BLOCK_TITLE_1',
+      content: 'common:LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1',
     },
     {
       ref: animeRef22,
       isVisible: isAnimeRef22Visible,
       imageUrl: '/elements/how_we_work_2.png',
       alt: 'how we work - privacy',
-      title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_2',
-      content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2',
+      title: 'common:LANDING_PAGE.PRIVACY_BLOCK_TITLE_2',
+      content: 'common:LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2',
     },
     {
       ref: animeRef23,
       isVisible: isAnimeRef23Visible,
       imageUrl: '/elements/how_we_work_3.png',
       alt: 'how we work - privacy',
-      title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_3',
-      content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3',
+      title: 'common:LANDING_PAGE.PRIVACY_BLOCK_TITLE_3',
+      content: 'common:LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3',
     },
   ];
 
@@ -128,7 +128,7 @@ const HowWeWork = () => {
   return (
     <div className="container mx-auto flex h-fit w-full flex-col pb-20 pt-40 md:pt-56 lg:pb-20 lg:pt-0">
       <h1 className="z-10 flex w-full justify-center pt-28 text-h4 font-bold tracking-wider text-white md:text-h1">
-        {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
+        {t('common:LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
       </h1>
 
       <div className="flex">

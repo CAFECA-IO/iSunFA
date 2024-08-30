@@ -24,7 +24,16 @@ interface IAccountingTitleRowProps {
 }
 
 const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const {
     addAccountTitleModalVisibilityHandler,
     addAccountTitleDataHandler,
@@ -58,7 +67,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
       messageType: MessageType.WARNING,
       submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany.id, id),
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -166,7 +175,16 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
 };
 
 const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTitleTableProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const accountingTableBody = accountingTitleData.map((account) => (
     <AccountingRow key={account.id} rowData={account} actionType={actionType} />
   ));
@@ -179,7 +197,9 @@ const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTi
         <div className="hidden lg:table-row">
           <div className="table-cell w-1/10 py-12px">{t('setting:SETTING.CODE')}</div>
           <div className="table-cell w-6/10 py-12px">{t('setting:SETTING.NAME')}</div>
-          <div className="table-cell w-3/10 py-12px">{t('REPORTS_HISTORY_LIST.OPERATIONS')}</div>
+          <div className="table-cell w-3/10 py-12px">
+            {t('report_401:REPORTS_HISTORY_LIST.OPERATIONS')}
+          </div>
         </div>
         {/* Info: (20240717 - Julian) Mobile Table Header Row */}
         <div className="table-row lg:hidden">

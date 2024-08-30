@@ -20,7 +20,16 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
   // ('reportType on FinancialsReportsPage',reportType,
   //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey])
 
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -43,7 +52,7 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
+        <title>{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

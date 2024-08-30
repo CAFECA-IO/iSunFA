@@ -100,5 +100,93 @@
     "PAPER_SIZE": "Paper size (297 × 210 mm), ODS file format",
     "CEILING_OF_REFUND": "Ceiling of refund",
     "TOTAL_INPUT_AMOUNT": "Total input amount(including non-deductible documents)"
+  },
+  "AUDIT_REPORT": {
+    "AUDIT_REPORT": "Audit Report",
+    "SHOW_DESIGNATED_REGIONAL_COMPANIES": "Show Designated Regional Companies",
+    "US": "US",
+    "HK": "HK",
+    "TW": "TW",
+    "CODE": "Code",
+    "REGIONAL": "Regional",
+    "COMPANY": "Company",
+    "INFORMATION_YEAR": "Information Year",
+    "DETAILED_INFORMATION": "Detailed Information",
+    "CREDIT_RATING": "Credit rating",
+    "DATE_OF_UPLOAD": "Date of Upload",
+    "LINK": "LINK",
+    "REGION": "Region",
+    "SHOW_DAILY_REPORTS": "Show daily reports",
+    "CARD_LIST": "Card List",
+    "ISUNFA_AUDIT_REPORT": "iSunFA - Audit Report",
+    "COMPANY_CODE_OR ABBREVIATION": "Company Code or Abbreviation",
+    "OF_100": "of 100",
+    "SEARCH": "Search",
+    "DON_T_SHOW_DAILY_REPORTS": "Don't show daily reports",
+    "YOUR_REPORT_IS_DONE": "Your report is done",
+    "GO_CHECK_IT": "Go check it !"
+  },
+  "REPORTS_SIDEBAR": {
+    "REPORT": "Report",
+    "GET_EMBED_CODE": "Get Embed Code",
+    "FINANCIAL_REPORTS": "Financial Reports",
+    "FINANCIAL_REPORT": "Financial Report - iSunFA",
+    "ANALYSIS_REPORTS": "Analysis Reports",
+    "ANALYSIS_REPORT": "Analysis Report",
+    "MY_REPORTS": "My Reports"
+  },
+  "MY_REPORTS_SECTION": {
+    "LOADING": "Loading...",
+    "SORT_BY": "Sort by",
+    "EMPTY": "Empty",
+    "MY_REPORTS": "My Reports",
+    "PENDING": "Pending",
+    "REPORTS_HISTORY": "Reports History",
+    "GENERATE_REPORT": "Generate Report",
+    "WE_RECEIVED_YOUR_APPLICATION": "We received your application",
+    "TAKE_MINUTES": "It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later."
+  },
+  "REPORTS_HISTORY_ITEM": {
+    "FROM": "From",
+    "TO": "to"
+  },
+  "REPORTS_HISTORY_LIST": {
+    "CANCEL": "Cancel",
+    "DATE": "Date",
+    "REPORT_NAME": "Report Name",
+    "PERIOD": "Period",
+    "BLOCKCHAIN": "Blockchain",
+    "PROJECT": "Project",
+    "OPERATIONS": "Operations"
+  },
+  "PENDING_REPORT_LIST": {
+    "DATE": "Date",
+    "REPORT_NAME": "Report Name",
+    "PERIOD": "Period",
+    "REMAINING_TIME": "Remaining Time",
+    "OPERATIONS": "Operations",
+    "CANCEL": "Cancel",
+    "SELECT": "Select"
+  },
+  "PENDING_REPORT_ITEM": {
+    "ESTIMATED": "Estimated",
+    "DAYS": "D",
+    "HOURS": "H",
+    "MINUTES": "M",
+    "SECONDS": "S",
+    "YES_DELETE_IT": "Yes, Delete it"
+  },
+  "EMBED_CODE_MODAL": {
+    "EMBED_CODE": "Embed Code",
+    "WHAT_TYPE_OF_REPORT": "What type of Report do you want to display on your web?",
+    "REPORT_LANGUAGE": "Report Language",
+    "COPY": "Copy",
+    "THE_LATEST_REPORT": "To show the Latest Report on your website",
+    "GENERATE": "Generate",
+    "CODE_COPIED_TO_CLIPBOARD": "Code copied to clipboard"
+  },
+  "ANALYSIS_REPORTS_SECTION": {
+    "REPORT_TYPE": "Report Type",
+    "ATTENTION": "Attention: The report will take approximately 30 to 40 minutes to generate. Once completed, it will be stored in \"My Reports.\" Please check back later. Thank you for your patience."
   }
 }

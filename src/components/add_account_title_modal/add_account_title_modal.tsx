@@ -26,7 +26,16 @@ const AddAccountTitleModal = ({
   modalVisibilityHandler,
   modalData,
 }: IAddAccountTitleModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
   const { getAccountListHandler } = useAccountingCtx();
@@ -240,7 +249,7 @@ const AddAccountTitleModal = ({
         {/* Info: (20240717 - Julian) Buttons */}
         <div className="flex items-center justify-end gap-12px px-20px py-16px text-sm">
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button
             id="add-accounting-title-button"

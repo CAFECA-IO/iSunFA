@@ -152,7 +152,16 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
   const { pathname } = router;
 
@@ -497,12 +506,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         closeable: true,
         content: (
           <div className="flex items-center space-x-5">
-            <p>{t('AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
+            <p>{t('report_401:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
+              {t('report_401:AUDIT_REPORT.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -561,12 +570,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
               closeable: false,
               content: (
                 <div className="flex items-center justify-between">
-                  <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
+                  <p className="text-sm">{t('common:COMMON.ISUNFA_TRIAL_VERSION')}</p>
                   <Link
                     href={ISUNFA_ROUTE.SELECT_COMPANY}
                     className="text-base font-semibold text-link-text-primary"
                   >
-                    {t('COMMON.END_OF_TRIAL')}
+                    {t('common:COMMON.END_OF_TRIAL')}
                   </Link>
                 </div>
               ),
@@ -586,7 +595,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           autoClose: false,
           content: (
             <div className="flex items-center justify-between">
-              <p className="font-barlow text-sm">{t('COMMON.ALPHA_TEST_REMINDER')}</p>
+              <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
             </div>
           ),
         });
@@ -790,9 +799,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id="agree-with-information"
         isModalVisible={isAgreeWithInfomationConfirmModalVisible}
         modalData={{
-          title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'info_collection_statement',
-          buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
+          buttonText: t('common:COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
         }}
         infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
         tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
@@ -802,9 +811,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id="tos-n-privacy-policy"
         isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
         modalData={{
-          title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'term_n_privacy',
-          buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
+          buttonText: t('common:COMMON.AGREE_WITH_TOS_N_PP'),
         }}
         infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
         tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
