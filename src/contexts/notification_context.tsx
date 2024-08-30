@@ -16,11 +16,9 @@ const NotificationContext = createContext<INotificationContext | undefined>(unde
 
 // TODO: (20240429 - Shirley) [Beta] notification context
 export const NotificationProvider = ({ children }: INotificationProvider) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportPendingStatus, setReportPendingStatus, reportPendingStatusRef] =
+  const [, /* reportPendingStatus */ setReportPendingStatus, reportPendingStatusRef] =
     useStateRef<boolean>(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportGeneratedStatus, setReportGeneratedStatus, reportGeneratedStatusRef] =
+  const [, /* reportGeneratedStatus */ setReportGeneratedStatus, reportGeneratedStatusRef] =
     useStateRef<boolean>(false);
 
   const reportPendingStatusHandler = (status: boolean) => {

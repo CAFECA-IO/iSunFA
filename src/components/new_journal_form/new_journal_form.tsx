@@ -122,8 +122,7 @@ const NewJournalForm = () => {
   }>(APIName.INVOICE_UPDATE);
 
   // Info: (20240425 - Julian) check if form has changed
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [formHasChanged, setFormHasChanged] = useState<boolean>(false);
+  const [, /* formHasChanged */ setFormHasChanged] = useState<boolean>(false);
 
   // Info: (20240425 - Julian) Basic Info states
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);

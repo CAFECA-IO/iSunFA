@@ -64,7 +64,6 @@ const Loader = React.memo(() => {
   );
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation([
     'common',
