@@ -19,6 +19,7 @@ import { useTranslation } from 'next-i18next';
 import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/constants/report';
 // Info: (20240807 - Anna) 用來處理路由的 hook
 import { useRouter } from 'next/router';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IFinancialReportSectionProps {
   reportType?: FinancialReportTypesKey;
@@ -132,7 +133,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   };
   // Info: (20240807 - Anna) 定義導航到 "my_reports" 頁面的函數
   const navigateToMyReports = () => {
-    router.push('/users/reports/my_reports');
+    router.push(ISUNFA_ROUTE.USERS_MY_REPORTS);
   };
   useEffect(() => {
     setDatePickerType(() => {
@@ -207,7 +208,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   const displayedProjectMenu = (
     <div ref={projectMenuRef} className="relative flex w-full">
       <div
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-2 ${
           isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
       >
@@ -227,7 +228,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
 
         <button
           type="button"
-          className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
+          className={`flex w-full items-center justify-between bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
@@ -236,7 +237,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               : DUMMY_PROJECTS_MAP[selectedProjectName].name}
           </div>
 
-          <div className="my-auto flex flex-col justify-center px-0 py-0">
+          <div className="my-auto flex flex-col justify-center">
             <div className="flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -259,14 +260,14 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
 
       {/* Info: (20240425 - Shirley) Project Menu */}
       <div
-        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
               placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
@@ -276,8 +277,8 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
+              width="20"
+              height="20"
               fill="none"
               viewBox="0 0 16 16"
             >
@@ -298,14 +299,11 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
 
           <div className="mt-2 max-h-14rem w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
-              .filter(
-                (project) =>
-                  // eslint-disable-next-line implicit-arrow-linebreak
-                  DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase())
-                // eslint-disable-next-line function-paren-newline
-              )
+              .filter((project) => {
+                return DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase());
+              })
               // TODO: (20240726 - Shirley) [Beta] 串上 API 之後把 filter 拿掉
               .filter((project) => {
                 return project.includes('Overall');
@@ -352,7 +350,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     <div ref={typeMenuRef} className="relative flex w-full">
       <button
         type="button"
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
           isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={typeMenuClickHandler}
@@ -360,7 +358,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
           {t(`common:PLUGIN.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
+        <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -381,7 +379,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       </button>
       {/* Info: (20240425 - Shirley) ===== Report Type Menu ===== */}
       <div
-        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -407,7 +405,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
         type="button"
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
+        className={`flex w-full items-center justify-between space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
@@ -421,7 +419,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
           {selectedLanguage?.name}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
+        <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -442,7 +440,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -453,7 +451,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
@@ -470,7 +468,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         generatedLoading || !period.endTimeStamp || !selectedLanguage.id || !selectedReportType
       }
       onClick={generateReportHandler}
-      className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+      className="mt-20 flex items-center justify-center py-2 max-md:mt-10 max-md:max-w-full max-md:px-5"
     >
       {generatedLoading ? (
         <LoadingSVG />
@@ -503,35 +501,25 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     </Button>
   );
   return (
-    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
-      <div className="flex gap-0 max-md:flex-wrap">
+    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background">
+      <div className="flex max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: (20240513 - Shirley)  desktop heading */}
-          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
+          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
               {t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
             </div>
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
-            <div className="mx-4 flex space-x-2">
-              <div>
-                <Image
-                  src={'/icons/report.svg'}
-                  width={30}
-                  height={30}
-                  alt="report_icon"
-                  className="aspect-square shrink-0"
-                />
-              </div>
-              <div className="mt-1.5">{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</div>
+            <div className="mx-4 flex items-center space-x-2 font-semibold text-text-neutral-secondary">
+              <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
+              <p>{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}</p>
             </div>
           </div>
 
           <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
-            <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-            </div>
+            <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-4 max-md:max-w-full" />
           </div>
         </div>
       </div>
@@ -546,7 +534,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             {displayedProjectMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col justify-center max-md:max-w-full">
+        <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               {t('report_401:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
@@ -554,7 +542,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             {displayedReportTypeMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
+        <div className="flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
@@ -562,18 +550,17 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             {displayedLanguageMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
+        <div className="flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
             {/* Info: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
             {/* Info: (20240425 - Shirley) 左橫線 */}
             <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1" />
             </div>
 
             <div className="flex gap-2">
               <div className="my-auto flex flex-col justify-center">
                 <div className="flex items-center justify-center">
-                  {' '}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -581,25 +568,18 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                     fill="none"
                     viewBox="0 0 16 16"
                   >
-                    <g fillRule="evenodd" clipPath="url(#clip0_904_69620)" clipRule="evenodd">
-                      <path
-                        fill="#FFA502"
-                        d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
-                      ></path>
-                      <path
-                        fill="#002462"
-                        d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
-                      ></path>
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_904_69620">
-                        <path fill="#fff" d="M0 0H16V16H0z"></path>
-                      </clipPath>
-                    </defs>
+                    <path
+                      fill="#FFA502"
+                      d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
+                    ></path>
+                    <path
+                      fill="#002462"
+                      d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
+                    ></path>
                   </svg>
                 </div>
               </div>
-              <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
+              <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
                 {t('report_401:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
@@ -619,10 +599,10 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             />
           </div>
         </div>
-        <div className="my-10 flex flex-col justify-center">
+        <div className="my-10 flex flex-col justify-center text-text-neutral-primary">
           <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
-        {displayedButtonOrLink}{' '}
+        {displayedButtonOrLink}
       </div>
     </div>
   );

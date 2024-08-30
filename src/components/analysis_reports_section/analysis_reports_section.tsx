@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -95,7 +94,7 @@ const AnalysisReportSection = () => {
   const displayedProjectMenu = (
     <div ref={projectMenuRef} className="relative flex w-full">
       <div
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-2 ${
           isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
       >
@@ -114,7 +113,8 @@ const AnalysisReportSection = () => {
         </div>
 
         <button
-          className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
+          type="button"
+          className={`flex w-full items-center justify-between bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
@@ -122,7 +122,7 @@ const AnalysisReportSection = () => {
             {selectedProjectName === 'Overall' ? t('project:PROJECT.OVERALL') : selectedProjectName}
           </div>
 
-          <div className="my-auto flex flex-col justify-center px-0 py-0">
+          <div className="my-auto flex flex-col justify-center">
             <div className="flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -145,14 +145,14 @@ const AnalysisReportSection = () => {
 
       {/* Info: (20240425 - Shirley) Project Menu  */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
               placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
@@ -184,16 +184,19 @@ const AnalysisReportSection = () => {
 
           <div className="mt-2 max-h-52 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
-              .filter((project) =>
-                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+              .filter((project) => {
+                return DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase());
+              })
               .map((project) => (
                 <li
                   key={project}
-                  onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                  onClick={
+                    () =>
+                      // eslint-disable-next-line implicit-arrow-linebreak
+                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
+                    // eslint-disable-next-line react/jsx-curly-newline
                   }
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
@@ -227,7 +230,8 @@ const AnalysisReportSection = () => {
   const displayedReportTypeMenu = (
     <div ref={typeMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
+        type="button"
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
           isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={typeMenuClickHandler}
@@ -235,7 +239,7 @@ const AnalysisReportSection = () => {
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
           {t(`common:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
+        <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -256,7 +260,7 @@ const AnalysisReportSection = () => {
       </button>
       {/* Info: (20240425 - Shirley) Report Type Menu  */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -281,7 +285,8 @@ const AnalysisReportSection = () => {
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
+        type="button"
+        className={`flex w-full items-center justify-between space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
@@ -295,7 +300,7 @@ const AnalysisReportSection = () => {
         <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
           {selectedLanguage?.name}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
+        <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -316,7 +321,7 @@ const AnalysisReportSection = () => {
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -327,7 +332,7 @@ const AnalysisReportSection = () => {
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
@@ -341,8 +346,8 @@ const AnalysisReportSection = () => {
   const displayedButtonOrLink =
     !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
       <Button
-        disabled={true}
-        className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        disabled
+        className="mt-20 flex items-center justify-center py-2 max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <Link href={targetedReportViewLink}>
           <div className="flex gap-1">
@@ -357,15 +362,13 @@ const AnalysisReportSection = () => {
                 fill="none"
                 viewBox="0 0 17 16"
               >
-                <g>
-                  <path
-                    className="fill-current"
-                    fill="none"
-                    fillRule="evenodd"
-                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
             </div>
           </div>
@@ -374,7 +377,7 @@ const AnalysisReportSection = () => {
     ) : (
       <Link
         href={targetedReportViewLink}
-        className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        className="mt-20 flex items-center justify-center rounded-sm bg-button-surface-strong-primary py-2 text-button-text-primary-solid disabled:text-button-text-disable max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">
@@ -388,15 +391,13 @@ const AnalysisReportSection = () => {
               fill="none"
               viewBox="0 0 17 16"
             >
-              <g>
-                <path
-                  className="fill-current"
-                  fill="none"
-                  fillRule="evenodd"
-                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </g>
+              <path
+                className="fill-current"
+                fill="none"
+                fillRule="evenodd"
+                d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              ></path>
             </svg>
           </div>
         </div>
@@ -404,11 +405,11 @@ const AnalysisReportSection = () => {
     );
 
   return (
-    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
-      <div className="flex gap-0 max-md:flex-wrap">
+    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background">
+      <div className="flex max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: (20240513 - Shirley) desktop heading */}
-          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
+          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
               {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
             </div>
@@ -416,23 +417,13 @@ const AnalysisReportSection = () => {
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
-              <div>
-                <Image
-                  src={'/icons/report.svg'}
-                  width={30}
-                  height={30}
-                  alt="report_icon"
-                  className="aspect-square shrink-0"
-                />
-              </div>
+              <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
               <div className="mt-1.5">{t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}</div>
             </div>
           </div>
 
           <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
-            <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-            </div>
+            <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-4 max-md:max-w-full" />
           </div>
         </div>
       </div>
@@ -456,7 +447,7 @@ const AnalysisReportSection = () => {
             {displayedReportTypeMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
+        <div className="flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
               {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
@@ -464,18 +455,17 @@ const AnalysisReportSection = () => {
             {displayedLanguageMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
+        <div className="flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
             {/* Info: (20240820 - Julian) 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
             {/* Info: (20240425 - Shirley) 左橫線 */}
             <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1" />
             </div>
 
             <div className="flex gap-2">
               <div className="my-auto flex flex-col justify-center">
                 <div className="flex items-center justify-center">
-                  {' '}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -496,7 +486,7 @@ const AnalysisReportSection = () => {
                   </svg>
                 </div>
               </div>
-              <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
+              <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
                 {t('report_401:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
@@ -518,7 +508,7 @@ const AnalysisReportSection = () => {
           </div>
         </div>
 
-        <div className="my-10 flex flex-col justify-center">
+        <div className="my-10 flex flex-col justify-center text-text-neutral-primary">
           <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}

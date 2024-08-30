@@ -346,8 +346,8 @@ const ConfirmModal = ({
           resultId: askAIId,
         },
       });
-      setIsAILoading(false);
     }
+    setIsAILoading(false);
     return () => getAIStatusHandler(undefined, false);
   }, [hasCompanyId, AIStatus]);
 
@@ -421,14 +421,12 @@ const ConfirmModal = ({
     <p className="text-right font-semibold text-text-neutral-primary">{t(paymentMethod)}</p>
   );
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
-  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
   const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
   const translatedPeriod = t(
     `journal:JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`
   );
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
-  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
   const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
   const translatedStatus = t(
     `journal:JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`
@@ -456,29 +454,29 @@ const ConfirmModal = ({
       <p className="font-semibold text-text-neutral-primary">{t('journal:JOURNAL.NONE')}</p>
     );
 
-  const displayedHint =
-    ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
-      isAILoading) ||
-    AIResultSuccess === undefined ? (
-      <p className="text-slider-surface-bar">
-        {t('journal:CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
-        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
-      </p>
-    ) : hasAIResult ? (
-      <p className="text-badge-text-success-solid">
-        {t('journal:CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}
-      </p>
-    ) : AIResultSuccess === false && AIResultCode ? (
-      <p className="text-text-neutral-secondary">
-        {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
-      </p>
-    ) : (
-      <p className="text-slider-surface-bar">
-        {t('journal:CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
-      </p>
-    );
+  const displayedHint = hasAIResult ? (
+    // Info: (20240829 - Julian) AI 解析成功
+    <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+  ) : (AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
+    isAILoading ? (
+    // Info: (20240829 - Julian) AI 載入中
+    <p className="text-slider-surface-bar">
+      {t('journal:CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
+      <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+      <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+      <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+    </p>
+  ) : !AIResultSuccess && AIResultCode ? (
+    // Info: (20240829 - Julian) AI 解析失敗
+    <p className="text-text-neutral-secondary">
+      {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+    </p>
+  ) : (
+    // Info: (20240829 - Julian) AI 無解析結果
+    <p className="text-slider-surface-bar">
+      {t('journal:CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+    </p>
+  );
 
   const accountingVoucherRow = accountingVoucher.map((voucher) => (
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />

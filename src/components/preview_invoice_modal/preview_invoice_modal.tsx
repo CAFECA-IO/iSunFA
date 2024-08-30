@@ -56,40 +56,38 @@ const PreviewInvoiceModal = ({
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div
-        className={`relative flex h-700px w-90vw flex-col gap-16px rounded-xs bg-white py-16px md:w-700px`}
+        className={`relative flex h-700px w-90vw flex-col gap-16px rounded-xs bg-card-surface-primary py-16px md:w-700px`}
       >
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
+          className="absolute right-12px top-12px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
-        <div className="flex h-full w-full flex-col items-center divide-y divide-lightGray6">
+        <div className="flex h-full w-full flex-col items-center divide-y divide-stroke-neutral-quaternary">
           {/* Info: (20240508 - Julian) Title */}
           <div className="flex flex-col items-center pb-16px">
-            <h1 className="text-xl font-bold text-navyBlue2">
+            <h1 className="text-xl font-bold text-card-text-primary">
               {t('journal:JOURNAL.PREVIEW_INVOICE')}
             </h1>
-            <p className="text-xs text-lightGray5">{timestampToString(date).date}</p>
+            <p className="text-xs text-card-text-secondary">{timestampToString(date).date}</p>
           </div>
           {/* Info: (20240508 - Julian) Function Buttons */}
           <div className="flex w-full items-center justify-end gap-16px p-16px">
             {/* Info: (20240508 - Julian) Download Button */}
-            <button
+            <Button
               type="button"
               onClick={downloadClickHandler}
-              className="rounded-xs bg-navyBlue2 p-12px text-white hover:bg-primaryYellow disabled:bg-lightGray5"
+              variant="tertiary"
+              className="h-44px w-44px p-0"
             >
               <MdOutlineFileDownload size={20} />
-            </button>
+            </Button>
             {/* ToDo: (20240508 - Julian) [Beta] Share Button */}
-            <button
-              type="button"
-              className="rounded-xs bg-navyBlue2 p-12px text-white hover:bg-primaryYellow disabled:bg-lightGray5"
-            >
+            <Button type="button" variant="tertiary" className="h-44px w-44px p-0">
               <PiShareFat size={20} />
-            </button>
+            </Button>
           </div>
           {/* Info: (20240508 - Julian) Invoice Preview */}
           <div className="h-full w-full flex-1 overflow-x-auto p-16px">
@@ -112,7 +110,7 @@ const PreviewInvoiceModal = ({
           </div>
           {/* Info: (20240508 - Julian) Close Button */}
           <div className="flex w-full justify-end px-16px pt-16px">
-            <Button type="button" onClick={closeClickHandler} className="bg-navyBlue2 text-white">
+            <Button type="button" onClick={closeClickHandler} variant="tertiary">
               {t('common:COMMON.CLOSE')}
             </Button>
           </div>

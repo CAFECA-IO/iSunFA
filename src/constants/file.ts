@@ -11,7 +11,16 @@ export enum UploadType {
   COMPANY = 'company',
   USER = 'user',
   PROJECT = 'project',
+  INVOICE = 'invoice',
 }
+
+export const UPLOAD_TYPE_TO_FOLDER_MAP = {
+  [UploadType.KYC]: FileFolder.KYC,
+  [UploadType.COMPANY]: FileFolder.TMP,
+  [UploadType.USER]: FileFolder.TMP,
+  [UploadType.PROJECT]: FileFolder.TMP,
+  [UploadType.INVOICE]: FileFolder.INVOICE,
+};
 
 export enum UploadDocumentType {
   BUSINESS_REGISTRATION_CERTIFICATE = 'business_registration_certificate',

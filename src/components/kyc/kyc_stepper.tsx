@@ -13,7 +13,7 @@ const KYCStepper = ({ currentStep }: { currentStep: number }) => {
   ]);
 
   const doneStepStyle = 'text-navyBlue2';
-  const currentStepStyle = 'text-primaryYellow5';
+  const currentStepStyle = 'text-stepper-text-active';
   const futureStepStyle = 'text-lightGray4';
 
   return (
