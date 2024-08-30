@@ -650,7 +650,7 @@ const NavBar = () => {
         <div
           className={`hidden flex-col items-start justify-center ${signedIn ? 'lg:flex' : 'hidden'}`}
         >
-          <div className="h-40px w-px shrink-0 bg-lightGray6" />
+          <div className="h-40px w-px shrink-0 bg-divider-stroke-lv-4" />
         </div>
 
         {/* Info: (20240521 - Julian) Company change button */}

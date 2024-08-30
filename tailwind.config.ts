@@ -690,8 +690,6 @@ module.exports = {
 
         lightGray3: '#C1C9D5',
 
-        lightGray6: '#CDD1D9',
-
         navyBlue: '#002462',
         navyBlue2: '#27354E',
       },

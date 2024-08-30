@@ -51,7 +51,7 @@ const JournalListPage = () => {
           </div>
 
           {/* Info: (20240417 - Julian) Divider */}
-          <hr className="my-20px w-full border-lightGray6" />
+          <hr className="my-20px w-full border-divider-stroke-lv-4" />
 
           <JournalListBody />
         </div>
