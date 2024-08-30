@@ -55,8 +55,9 @@ function ContactForm() {
     setShowAnim(true);
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
-    // eslint-disable-next-line no-promise-executor-return
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
     // Info: (20230731 - Shirley) 清空表單
     setInputName('');
     setInputPhone('');
@@ -74,8 +75,9 @@ function ContactForm() {
     };
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
-    // eslint-disable-next-line no-promise-executor-return
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
 
     email({ header: { 'Content-Type': 'application/json; charset=UTF-8' }, body: emailData });
   };
@@ -135,7 +137,6 @@ function ContactForm() {
           showAnim ? 'flex' : 'hidden'
         } h-full w-full items-center justify-center`}
       >
-        {/* eslint-disable no-nested-ternary */}
         {animation === FormAnimation.LOADING ? (
           /* Info:(20230731 - Shirley) Loading animation */
           <div className="flex flex-col items-center space-y-10">
@@ -182,7 +183,6 @@ function ContactForm() {
     >
       <div className="flex flex-col">
         {/* Info: (tzuhan - 20240513) remove arbitrary value? @Shirley  */}
-        {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
         <h1 className="justify-center text-5xl font-semibold leading-52px tracking-tighter text-amber-400">
           {t('common:CONTACT_US.TITLE')}
         </h1>
@@ -192,9 +192,10 @@ function ContactForm() {
       </div>
       <div className="mt-12">
         <div className="flex flex-col pb-4">
-          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley  */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
+          <label
+            htmlFor="Name"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
             {t('common:CONTACT_US.NAME')}
             <span className="text-red-400">*</span>
           </label>
@@ -208,9 +209,10 @@ function ContactForm() {
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
+          <label
+            htmlFor="Email"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
             {t('common:CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
           </label>
           <input

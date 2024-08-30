@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -169,6 +168,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <button
           className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
+          type="button"
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {selectedProjectName === 'Overall' ? t('project:PROJECT.OVERALL') : selectedProjectName}
@@ -197,7 +197,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
       {/* Info: (20240425 - Shirley) Project Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -239,8 +239,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               .filter((project) =>
                 DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase()))
               .map((project) => (
                 <li
                   key={project}
@@ -282,6 +281,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
+        type="button"
       >
         <Image
           width={20}
@@ -313,7 +313,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -406,6 +406,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <div className="flex gap-3">
           <button
             onClick={cancelClickHandler}
+            type="button"
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >
             {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}

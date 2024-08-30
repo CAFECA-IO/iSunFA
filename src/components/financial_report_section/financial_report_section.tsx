@@ -300,12 +300,11 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             {Object.keys(DUMMY_PROJECTS_MAP)
               .filter(
                 (project) =>
-                  // eslint-disable-next-line implicit-arrow-linebreak
                   DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                     .toLowerCase()
                     .includes(searchQuery.toLowerCase())
-                // eslint-disable-next-line function-paren-newline
               )
+
               // TODO: (20240726 - Shirley) [Beta] 串上 API 之後把 filter 拿掉
               .filter((project) => {
                 return project.includes('Overall');
@@ -314,10 +313,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                 <li
                   key={project}
                   onClick={
-                    () =>
-                      // eslint-disable-next-line implicit-arrow-linebreak
-                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                    // eslint-disable-next-line react/jsx-curly-newline
+                    () => { projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP); }
                   }
                   className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >

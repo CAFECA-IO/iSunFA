@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -116,6 +115,7 @@ const AnalysisReportSection = () => {
         <button
           className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
+          type="button"
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {/* Info: (20240710 - Anna) {selectedProjectName} */}
@@ -145,7 +145,7 @@ const AnalysisReportSection = () => {
 
       {/* Info: (20240425 - Shirley) Project Menu  */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -187,14 +187,12 @@ const AnalysisReportSection = () => {
               .filter((project) =>
                 DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase()))
               .map((project) => (
                 <li
                   key={project}
                   onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                  }
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)}
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">
@@ -231,6 +229,7 @@ const AnalysisReportSection = () => {
           isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={typeMenuClickHandler}
+        type="button"
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
           {t(`common:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
@@ -256,7 +255,7 @@ const AnalysisReportSection = () => {
       </button>
       {/* Info: (20240425 - Shirley) Report Type Menu  */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -285,6 +284,7 @@ const AnalysisReportSection = () => {
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
+        type="button"
       >
         <Image
           width={20}
@@ -316,7 +316,7 @@ const AnalysisReportSection = () => {
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -341,7 +341,7 @@ const AnalysisReportSection = () => {
   const displayedButtonOrLink =
     !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
       <Button
-        disabled={true}
+        disabled
         className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <Link href={targetedReportViewLink}>

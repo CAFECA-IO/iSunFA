@@ -181,8 +181,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   });
 
   const isDisplayedCreateCompanyModal = isModalVisible ? (
-    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <form
         onSubmit={confirmClickHandler}
         className="relative mx-auto flex w-90vw flex-col items-center gap-y-16px rounded-lg bg-white py-16px shadow-lg shadow-black/80 sm:w-500px"
