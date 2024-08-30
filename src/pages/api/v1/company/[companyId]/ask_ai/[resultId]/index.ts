@@ -154,10 +154,6 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const error = _error as Error;
-      // Deprecated: （ 20240522 - Murky）Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

@@ -53,13 +53,11 @@ const StepOneTab = () => {
     pendingOCRList,
   } = useAccountingCtx();
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentFilePage, setCurrentFilePage] = useState<number>(1);
+  // const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IOCR[]>(OCRList);
   // const [pendingFileList, setPendingFileList] = useState<IOCR[]>(pendingOCRList);
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [, /* totalPages */ setTotalPages] = useState<number>(1);
   const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE);
 
   useEffect(() => {
@@ -272,8 +270,7 @@ const StepOneTab = () => {
             type="button"
             onClick={qrCodeScanClickHandler}
             // ToDo: (20240802 - Julian) [Beta] Not released yet
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
+            disabled
             className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable disabled:text-drag-n-drop-text-disable md:p-48px"
           >
             <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />

@@ -122,8 +122,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
@@ -144,8 +143,7 @@ const NavBar = () => {
       <button
         type="button"
         // TODO: (20240517 - Shirley) [Beta] temp disabled
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
@@ -154,8 +152,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
@@ -241,8 +238,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
@@ -269,8 +265,7 @@ const NavBar = () => {
       <button
         type="button"
         // TODO: (20240517 - Shirley) [Beta] temp disabled
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
@@ -280,8 +275,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
@@ -332,8 +326,7 @@ const NavBar = () => {
           <button
             type="button"
             // TODO: (20240517 - Shirley) [Beta] temp disabled
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
+            disabled
             className="hidden shrink-0 flex-col justify-center rounded-xs px-2 text-button-surface-strong-secondary disabled:text-button-text-disable"
           >
             <div className="flex items-center justify-center">

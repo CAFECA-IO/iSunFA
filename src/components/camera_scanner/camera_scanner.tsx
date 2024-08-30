@@ -150,8 +150,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       photo.toBlob(resolve, 'image/png');
     });
     // Info: (20240508 - Emily) Create a new file from the blob (optional but helpful for naming)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
+    const file = new File([blob as Blob], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
     setIsShowSuccessModal(true); // Info: (20240528 - Julian) 點擊上傳後才升起 flag

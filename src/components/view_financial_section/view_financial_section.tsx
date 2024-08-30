@@ -143,8 +143,7 @@ const ViewFinancialSection = ({
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
   // TODO: (20240802 - Shirley) [Beta] download PDF file
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pdfFile, setPdfFile] = useState<null | string>(null);
+  // const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 

@@ -183,7 +183,7 @@ function ContactForm() {
       <div className="flex flex-col">
         {/* Info: (tzuhan - 20240513) remove arbitrary value? @Shirley  */}
         {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
-        <h1 className="justify-center text-5xl font-semibold leading-[51.92px] tracking-tighter text-amber-400">
+        <h1 className="justify-center text-5xl font-semibold leading-52px tracking-tighter text-amber-400">
           {t('common:CONTACT_US.TITLE')}
         </h1>
         <p className="mt-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
