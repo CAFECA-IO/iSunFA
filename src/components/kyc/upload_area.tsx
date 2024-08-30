@@ -289,7 +289,7 @@ const UploadArea = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-full`}
+      className={`h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-full`}
     >
       {uploadedFile ? (
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px">
@@ -353,7 +353,7 @@ const UploadArea = ({
           } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
         >
           <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-          <p className="mt-20px font-semibold text-navyBlue2">
+          <p className="mt-20px font-semibold text-drag-n-drop-text-primary">
             {t('common:UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
             <span className="text-link-text-primary">{t('common:UPLOAD_AREA.BROWSE')}</span>
           </p>
