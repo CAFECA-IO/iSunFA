@@ -746,7 +746,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
       />
-      {/* Todo: (20240829 - Anna) 問這23個modal可以放在入口嗎？ */}
+      {/* Todo: (20240829 - Anna) 修改循環引用問題 */}
       <EditBookmarkModal
         isModalVisible={isAddBookmarkModalVisible}
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}

@@ -37,6 +37,7 @@
     "EDIT_MY_NEW_ACCOUNTING_TITLE": "Edit My New Accounting Title",
     "CURRENT_LIQUIDITY": "Current Liquidity",
     "REMOVE_ACCOUNTING_TITLE": "Remove Accounting Title",
-    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "Are you sure you want to remove this accounting title?"
+    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "Are you sure you want to remove this accounting title?",
+    "SUCCESSFULLY_UPDATED_ACCOUNT": "Successfully updated account: "
   }
 }
