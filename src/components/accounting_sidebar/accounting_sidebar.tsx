@@ -8,7 +8,16 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 
 const AccountingSidebar = () => {
-  const { t } = useTranslation(['common', 'project', 'journal', 'kyc', 'report_401', 'salary', 'setting', 'terms']);
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);

@@ -19,7 +19,10 @@ async function getFilePath(companyId: number, fileId: string): Promise<string | 
   return filePath;
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IFile | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IFile | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
@@ -55,7 +58,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IFile | null>>) {
+async function handleDeleteRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IFile | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 

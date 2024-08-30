@@ -33,16 +33,17 @@ function isValidQuery(query: unknown): query is {
     return false;
   }
 
-  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } = query as {
-    page?: string;
-    pageSize?: string;
-    eventType?: EventType;
-    sortBy?: SortBy;
-    sortOrder?: SortOrder;
-    startDate?: string;
-    endDate?: string;
-    searchQuery?: string;
-  };
+  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
+    query as {
+      page?: string;
+      pageSize?: string;
+      eventType?: EventType;
+      sortBy?: SortBy;
+      sortOrder?: SortOrder;
+      startDate?: string;
+      endDate?: string;
+      searchQuery?: string;
+    };
 
   return (
     (page === undefined || Number.isInteger(Number(page))) &&
@@ -65,8 +66,10 @@ function formatQuery(query: unknown) {
 
   const startDateNumber = startDate ? convertStringToNumber(startDate) : undefined;
   const endDateNumber = endDate ? convertStringToNumber(endDate) : undefined;
-  const startDateInSecond = startDateNumber !== undefined ? timestampInSeconds(startDateNumber) : undefined;
-  const endDateInSecond = endDateNumber !== undefined ? timestampInSeconds(endDateNumber) : undefined;
+  const startDateInSecond =
+    startDateNumber !== undefined ? timestampInSeconds(startDateNumber) : undefined;
+  const endDateInSecond =
+    endDateNumber !== undefined ? timestampInSeconds(endDateNumber) : undefined;
 
   return {
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
@@ -80,7 +83,10 @@ function formatQuery(query: unknown) {
   };
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: { [key: string]: IPaginatedData<IJournalListItem[]> } | null = null;
 
@@ -96,7 +102,8 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
     } else if (!isCompanyIdValid(companyId)) {
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     } else {
-      const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } = formatQuery(req.query);
+      const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
+        formatQuery(req.query);
       try {
         const uploadedPaginatedJournalList = await listJournal(
           companyId,
@@ -151,8 +158,13 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
-    res: NextApiResponse<IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>>
-  ) => Promise<{ statusMessage: string; payload: { [key: string]: IPaginatedData<IJournalListItem[]> } | null }>;
+    res: NextApiResponse<
+      IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>
+    >
+  ) => Promise<{
+    statusMessage: string;
+    payload: { [key: string]: IPaginatedData<IJournalListItem[]> } | null;
+  }>;
 } = {
   GET: handleGetRequest,
 };
@@ -175,7 +187,9 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<{
+      [key: string]: IPaginatedData<IJournalListItem[]>;
+    } | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

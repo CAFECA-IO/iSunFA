@@ -27,7 +27,11 @@ function generateCode(): string {
   return invitationCode;
 }
 
-async function sendMail(emails: string[], invitations: IInvitation[], companyName: string): Promise<void> {
+async function sendMail(
+  emails: string[],
+  invitations: IInvitation[],
+  companyName: string
+): Promise<void> {
   const errors: string[] = [];
   const sendMailPromises: Promise<boolean>[] = [];
   for (let i = 0; i < emails.length; i += 1) {
@@ -53,7 +57,12 @@ async function sendMail(emails: string[], invitations: IInvitation[], companyNam
   await Promise.all(sendMailPromises);
 }
 
-async function processInvitations(roleIdNum: number, companyId: number, userId: number, emails: string[]): Promise<IInvitation[]> {
+async function processInvitations(
+  roleIdNum: number,
+  companyId: number,
+  userId: number,
+  emails: string[]
+): Promise<IInvitation[]> {
   const InvitationPromises: Promise<Invitation>[] = [];
   for (let i = 0; i < emails.length; i += 1) {
     const code = generateCode();

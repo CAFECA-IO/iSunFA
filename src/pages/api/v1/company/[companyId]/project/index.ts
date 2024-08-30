@@ -10,7 +10,10 @@ import { getSession } from '@/lib/utils/session';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IProject[] | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProject[] | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IProject[] | null = null;
 
@@ -38,7 +41,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
   return { statusMessage, payload };
 }
 
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IProject | null>>) {
+async function handlePostRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProject | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IProject | null = null;
 
@@ -58,7 +64,13 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse<IResp
       } else {
         try {
           const projectIcon = await generateIcon(name);
-          const createdProject = await createProject(companyId, name, stage, memberIdList, projectIcon);
+          const createdProject = await createProject(
+            companyId,
+            name,
+            stage,
+            memberIdList,
+            projectIcon
+          );
           const project = formatProject(createdProject);
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = project;
@@ -100,7 +112,10 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<IProject | IProject[] | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IProject | IProject[] | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

@@ -31,7 +31,7 @@ export class BalanceSheetAccountRetriever extends AbstractAccountRetriever {
       sortBy,
       sortOrder,
       searchKey,
-      isDeleted
+      isDeleted,
     });
   }
 }

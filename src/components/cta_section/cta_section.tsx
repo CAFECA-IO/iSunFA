@@ -49,7 +49,10 @@ const CTASection = () => {
           </ol>
         </div>
 
-        <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN} className="z-5 flex w-full justify-center px-5 md:w-auto">
+        <Link
+          href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}
+          className="z-5 flex w-full justify-center px-5 md:w-auto"
+        >
           <Button className="flex w-full space-x-3 lg:w-fit">
             <p
               className={cn(

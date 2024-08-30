@@ -9,9 +9,9 @@
     "start": "next start",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "jest",
-    "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json)\"",
-    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json)\"",
-    "validate": "npm run test && npm run check-format && npm run lint",
+    "check-format": "prettier --ignore-path .gitignore --list-different \"**/*.+(js|jsx|ts|tsx|json|css)\"",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json|css)\"",
+    "validate": "prettier --ignore-path .gitignore --write \"**/*.+(js|jsx|ts|tsx|json|css)\" && next lint && eslint --fix --ext .js,.jsx,.ts,.tsx . && npm run test",
     "production": "next start -p 80",
     "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add package.json",
     "prepare": "husky"
@@ -100,7 +100,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run test && lint-staged && npm run update-version"
+      "pre-commit": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx . && npm run test && lint-staged && npm run update-version"
     }
   },
   "engines": {

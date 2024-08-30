@@ -1,37 +1,37 @@
 [
-    {
-        "id":1001,
-        "name": "Super Admin",
-        "permissions": [],
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1002,
-        "name": "Admin",
-        "permissions": [],
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1003,
-        "name": "Owner",
-        "permissions": [],
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1004,
-        "name": "Viewer",
-        "permissions": [],
-        "createdAt": 1,
-        "updatedAt": 1
-    },
-    {
-        "id": 1000,
-        "name": "Test",
-        "permissions": [],
-        "createdAt": 1,
-        "updatedAt": 1
-    }
+  {
+    "id": 1001,
+    "name": "Super Admin",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1002,
+    "name": "Admin",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1003,
+    "name": "Owner",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1004,
+    "name": "Viewer",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1000,
+    "name": "Test",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  }
 ]
