@@ -5,6 +5,8 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
+import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
+import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
 
 /**
 * Info: (20240813-Tzuhan) [Beta]
@@ -63,31 +65,59 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     },
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-      async signIn({ user, account }) {
-        // Info: (20240829-Anna) 邀請碼後續會使用，目前先註解
-        // const { invitation } = (account?.params || {}) as { invitation: string };
+      async signIn({ user, account, profile }) {
+        try {
+          let Dbuser = null;
+          // let statusMessage = '';
+          // Deprecated: (20240819-Tzuhan) [Beta] dev
+          // eslint-disable-next-line no-console
+          console.log('signIn callback', user, account, profile);
+          const { invitationCode } = (account?.params || {}) as { invitationCode: string };
 
-        const session = await getSession(req, res);
-        const getUser = await getUserByCredential(account?.providerAccountId || user.id);
+          // Deprecated: (20240819-Tzuhan) [Beta] dev
+          // eslint-disable-next-line no-console
+          console.log('Custom Params:', invitationCode);
 
-        if (!getUser) {
-          // Info: (20240813-Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
-          if (account && user) {
-            const imageUrl = user.image ?? (await generateIcon(user.name ?? ''));
-            const createdUser = await createUserByAuth({
-              name: user.name || '',
-              email: user.email || '',
-              provider: account.provider,
-              credentialId: account.providerAccountId,
-              method: account.type,
-              authData: account,
-              imageUrl,
-            });
+          const session = await getSession(req, res);
+          const getUser = await getUserByCredential(account?.providerAccountId || user.id);
 
-            await setSession(session, createdUser.user.id);
+          if (!getUser) {
+            // Info: (20240813-Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
+            if (account && user) {
+              const imageUrl = user.image ?? (await generateIcon(user.name ?? ''));
+              const createdUser = await createUserByAuth({
+                name: user.name || '',
+                email: user.email || '',
+                provider: account.provider,
+                credentialId: account.providerAccountId,
+                method: account.type,
+                authData: account,
+                imageUrl,
+              });
+              Dbuser = createdUser;
+
+              await setSession(session, createdUser.user.id);
+            }
+          } else {
+            Dbuser = getUser;
+            await setSession(session, getUser.user.id);
           }
-        } else {
-          await setSession(session, getUser.user.id);
+          if (invitationCode) {
+            const getInvitation = await getInvitationByCode(invitationCode);
+            if (getInvitation) {
+              const isValid = await isInvitationValid(getInvitation);
+              if (isValid) {
+                await useInvitation(getInvitation, Dbuser?.id ?? 0);
+                // ToDo: (20240829 - Jacky) Add error handling with logger
+                // statusMessage = admin
+                //   ? STATUS_MESSAGE.CREATED_INVITATION
+                //   : STATUS_MESSAGE.INVITATION_CONFLICT;
+              }
+            }
+          }
+        } catch (_error) {
+          // ToDo: (20240829 - Jacky) Add error handling with logger
+          // const error = _error as Error;
         }
         return true;
       },

@@ -1,17 +1,19 @@
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '@/interfaces/locale';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Image from 'next/image';
+import { UserContext } from '@/contexts/user_context';
 
 const CTASection = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
+  const { signedIn } = useContext(UserContext);
 
   useEffect(() => {
     const waitForCTA = setTimeout(() => {
@@ -47,7 +49,10 @@ const CTASection = () => {
           </ol>
         </div>
 
-        <Link href={ISUNFA_ROUTE.LOGIN} className="z-5 flex w-full justify-center px-5 md:w-auto">
+        <Link
+          href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}
+          className="z-5 flex w-full justify-center px-5 md:w-auto"
+        >
           <Button className="flex w-full space-x-3 lg:w-fit">
             <p
               className={cn(

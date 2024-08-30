@@ -1,12 +1,9 @@
-import { Invitation } from '@prisma/client';
-
 export enum AuthFunctionsKeys {
   user = 'user',
   admin = 'admin',
   owner = 'owner',
   superAdmin = 'superAdmin',
   CompanyAdminMatch = 'CompanyAdminMatch',
-  invitation = 'invitation',
   projectCompanyMatch = 'projectCompanyMatch',
 }
 
@@ -22,7 +19,6 @@ export interface AuthFunctions {
     companyId: number;
     adminId: number;
   }) => Promise<boolean>;
-  [AuthFunctionsKeys.invitation]: (params: { invitation: Invitation }) => Promise<boolean>;
   [AuthFunctionsKeys.projectCompanyMatch]: (params: {
     projectId: number;
     companyId: number;

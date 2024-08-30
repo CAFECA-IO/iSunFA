@@ -15,6 +15,8 @@ import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
 import { addItem } from '@/lib/utils/indexed_db/ocr';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IV_LENGTH } from '@/constants/config';
+import { UploadType } from '@/constants/file';
+import { IFile } from '@/interfaces/file';
 
 interface FileInfo extends IOCRItem {
   file: File;
@@ -42,6 +44,8 @@ const JournalUploadArea = () => {
     pendingOCRListFromBrowser,
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+
+  const { trigger: uploadInvoiceImgToLocal } = APIHandler<IFile>(APIName.FILE_UPLOAD);
 
   const {
     trigger: uploadInvoice,
@@ -179,7 +183,37 @@ const JournalUploadArea = () => {
     }
   };
 
-  const upload = async (item: IOCRItem, companyId: number, isNewPendingOCR: boolean) => {
+  const uploadToFileApi = async (item: IOCRItem) => {
+    const formData = new FormData();
+    const encryptedFile = new File([item.encryptedContent], item.name, {
+      type: item.type,
+    });
+
+    formData.append('file', encryptedFile);
+
+    // Info: (20240829 - Murky) 下面的部份目前file upload的api沒有用到
+    formData.append('imageSize', item.size);
+    formData.append('imageName', item.name);
+    formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
+    formData.append('publicKey', JSON.stringify(item.publicKey));
+    formData.append('iv', Array.from(item.iv).join(','));
+
+    const { data } = await uploadInvoiceImgToLocal({
+      query: {
+        type: UploadType.INVOICE,
+        targetId: '0',
+      },
+      body: formData,
+    });
+
+    return data;
+  };
+  const upload = async (
+    item: IOCRItem,
+    companyId: number,
+    isNewPendingOCR: boolean,
+    fileName?: string
+  ) => {
     if (item.companyId !== companyId) {
       toastHandler({
         id: `uploadInvoice-${item.uploadIdentifier}`,
@@ -192,23 +226,25 @@ const JournalUploadArea = () => {
       }
       return;
     }
-    const formData = new FormData();
-    const encryptedFile = new File([item.encryptedContent], item.name, {
-      type: item.type,
-    });
-    formData.append('image', encryptedFile);
-    formData.append('imageSize', item.size);
-    formData.append('imageName', item.name);
-    formData.append('uploadIdentifier', item.uploadIdentifier);
-    formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
-    formData.append('publicKey', JSON.stringify(item.publicKey));
-    formData.append('iv', Array.from(item.iv).join(','));
 
     if (isNewPendingOCR) {
       addPendingOCRHandler(item);
     }
 
-    uploadInvoice({ params: { companyId }, body: formData });
+    uploadInvoice({
+      params: {
+        companyId,
+      },
+      body: {
+        imageName: fileName || item.name,
+        imageSize: item.size,
+        uploadIdentifier: item.uploadIdentifier,
+        encryptedSymmetricKey: item.encryptedSymmetricKey,
+        publicKey: item.publicKey,
+        imageType: item.type,
+        iv: Array.from(item.iv).join(','),
+      },
+    });
   };
 
   useEffect(() => {
@@ -234,14 +270,20 @@ const JournalUploadArea = () => {
   useEffect(() => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
 
-    pendingOCRListFromBrowser.forEach((item) => {
-      upload(item, selectedCompany.id, false);
+    pendingOCRListFromBrowser.forEach(async (item) => {
+      const file = await uploadToFileApi(item);
+      await upload(item, selectedCompany.id, false, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
 
   useEffect(() => {
     if (uploadFile && selectedCompany) {
-      upload(uploadFile, selectedCompany?.id || -1, true);
+      const uploadFileToOcr = async () => {
+        // Info: (20240829 - Murky) To Shirely 更改這邊
+        const file = await uploadToFileApi(uploadFile);
+        await upload(uploadFile, selectedCompany?.id || -1, true, file?.id);
+      };
+      uploadFileToOcr();
       setUploadFile(null);
     }
   }, [uploadFile]);
