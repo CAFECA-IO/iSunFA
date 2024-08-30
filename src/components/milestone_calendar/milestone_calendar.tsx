@@ -3,6 +3,7 @@ import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { timestampToString } from '@/lib/utils/common';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/button/button';
 
 type ISingleDate = {
   date: number | null;
@@ -132,26 +133,28 @@ const MilestoneCalendar = ({
       {/* Info: (20240613 - Julian) Header */}
       <div className="flex w-full items-center justify-between">
         {/* Info: (20240613 - Julian) Previous Button */}
-        <button
+        <Button
           type="button"
           onClick={previousMonthHandler}
-          className="flex h-40px w-40px items-center justify-center rounded border border-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray3 disabled:text-lightGray3"
+          variant="secondaryOutline"
+          className="h-40px w-40px p-0"
         >
           <AiOutlineLeft size={16} />
-        </button>
+        </Button>
         {/* Info: (20240613 - Julian) Month */}
         <div className="flex gap-12px">
           <p className="text-date-picker-text-default">{displayDateStr.year}</p>
           <p className="text-date-picker-text-default">{displayDateStr.monthShortName}</p>
         </div>
         {/* Info: (20240613 - Julian) Next Button */}
-        <button
+        <Button
           type="button"
           onClick={nextMonthHandler}
-          className="flex h-40px w-40px items-center justify-center rounded border border-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray3 disabled:text-lightGray3"
+          variant="secondaryOutline"
+          className="h-40px w-40px p-0"
         >
           <AiOutlineRight size={16} />
-        </button>
+        </Button>
       </div>
       {/* Info: (20240613 - Julian) Weekdays */}
       <div className="grid w-full grid-cols-7">

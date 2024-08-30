@@ -111,7 +111,7 @@ const RegistrationInfoForm = ({
       <li
         key={country}
         onClick={selectionClickHandler}
-        className={`w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow ${country === CountryOptions.DEFAULT ? 'hidden' : ''}`}
+        className={`w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover ${country === CountryOptions.DEFAULT ? 'hidden' : ''}`}
       >
         <p>{t(countryTranslationMap[country])}</p>
       </li>
@@ -128,7 +128,7 @@ const RegistrationInfoForm = ({
         <li
           key={legalStructure}
           onClick={selectionClickHandler}
-          className={`w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow ${legalStructure === LegalStructureOptions.DEFAULT ? 'hidden' : ''}`}
+          className={`w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover ${legalStructure === LegalStructureOptions.DEFAULT ? 'hidden' : ''}`}
         >
           <p>{t(legalStructureTranslationMap[legalStructure])}</p>
         </li>
@@ -145,7 +145,7 @@ const RegistrationInfoForm = ({
       <li
         key={industry}
         onClick={selectionClickHandler}
-        className={`w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow ${industry === IndustryOptions.DEFAULT ? 'hidden' : ''}`}
+        className={`w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover ${industry === IndustryOptions.DEFAULT ? 'hidden' : ''}`}
       >
         <p>{t(industryTranslationMap[industry])}</p>
       </li>
@@ -168,21 +168,21 @@ const RegistrationInfoForm = ({
         <div
           id="country-menu"
           onClick={countryMenuOpenHandler}
-          className={`group relative flex w-full cursor-pointer ${isCountryMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+          className={`group relative flex w-full cursor-pointer ${isCountryMenuOpen ? 'border-input-stroke-input-hover hover:text-input-text-highlight' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-selected p-10px hover:border-input-stroke-input-hover hover:text-input-text-highlight`}
         >
           <p
-            className={`${data[RegistrationInfoKeys.COUNTRY] === CountryOptions.DEFAULT ? 'text-input-text-input-placeholder' : ''}`}
+            className={`${data[RegistrationInfoKeys.COUNTRY] === CountryOptions.DEFAULT ? 'text-input-text-input-placeholder group-hover:text-input-text-highlight' : ''}`}
           >
             {t(countryTranslationMap[data[RegistrationInfoKeys.COUNTRY]])}
           </p>
           <FaChevronDown />
           {/* Info: Dropmenu */}
           <div
-            className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isCountryMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+            className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isCountryMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
           >
             <ul
               ref={countryMenuRef}
-              className="z-10 flex w-full flex-col items-start bg-white p-8px"
+              className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
             >
               {countryDropmenu}
             </ul>
@@ -199,21 +199,21 @@ const RegistrationInfoForm = ({
         <div
           id="legal-structure-menu"
           onClick={legalStructureMenuOpenHandler}
-          className={`group relative flex w-full cursor-pointer ${isLegalStructureMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+          className={`group relative flex w-full cursor-pointer ${isLegalStructureMenuOpen ? 'border-input-stroke-input-hover hover:text-input-text-highlight' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-selected p-10px hover:border-input-stroke-input-hover hover:text-input-text-highlight`}
         >
           <p
-            className={`${data[RegistrationInfoKeys.LEGAL_STRUCTURE] === LegalStructureOptions.DEFAULT ? 'text-input-text-input-placeholder' : ''}`}
+            className={`${data[RegistrationInfoKeys.LEGAL_STRUCTURE] === LegalStructureOptions.DEFAULT ? 'text-input-text-input-placeholder group-hover:text-input-text-highlight' : ''}`}
           >
             {t(legalStructureTranslationMap[data[RegistrationInfoKeys.LEGAL_STRUCTURE]])}
           </p>
           <FaChevronDown />
           {/* Info: Dropmenu */}
           <div
-            className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isLegalStructureMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+            className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isLegalStructureMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
           >
             <ul
               ref={legalStructureMenuRef}
-              className="z-10 flex w-full flex-col items-start bg-white p-8px"
+              className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
             >
               {legalStructureDropmenu}
             </ul>
@@ -224,14 +224,14 @@ const RegistrationInfoForm = ({
       {/* ===== Business Registration Number ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('kyc:KYC.BUSINESS_REGISTRATION_NUMBER')}{' '}
+          {t('kyc:KYC.BUSINESS_REGISTRATION_NUMBER')}
         </h6>
         <input
           id="business-registration-number"
           type="text"
           placeholder={t('kyc:KYC.EXAMPLE')}
           required
-          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          className="w-full cursor-pointer rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
           onChange={businessRegistrationNumberInputHandler}
           value={data[RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]}
         />
@@ -261,21 +261,21 @@ const RegistrationInfoForm = ({
         <div
           id="industry-menu"
           onClick={industryMenuOpenHandler}
-          className={`group relative flex w-full cursor-pointer ${isIndustryMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+          className={`group relative flex w-full cursor-pointer ${isIndustryMenuOpen ? 'border-input-stroke-input-hover hover:text-input-text-highlight' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-selected p-10px hover:border-input-stroke-input-hover hover:text-input-text-highlight`}
         >
           <p
-            className={`${data[RegistrationInfoKeys.INDUSTRY] === IndustryOptions.DEFAULT ? 'text-input-text-input-placeholder' : ''}`}
+            className={`${data[RegistrationInfoKeys.INDUSTRY] === IndustryOptions.DEFAULT ? 'text-input-text-input-placeholder group-hover:text-input-text-highlight' : ''}`}
           >
             {t(industryTranslationMap[data[RegistrationInfoKeys.INDUSTRY]])}
           </p>
           <FaChevronDown />
           {/* Info: Dropmenu */}
           <div
-            className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isIndustryMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+            className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isIndustryMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
           >
             <ul
               ref={industryMenuRef}
-              className="z-10 flex max-h-150px w-full flex-col items-start overflow-y-auto bg-white p-8px"
+              className="z-10 flex max-h-150px w-full flex-col items-start overflow-y-auto bg-dropdown-surface-menu-background-primary p-8px"
             >
               {industryDropmenu}
             </ul>

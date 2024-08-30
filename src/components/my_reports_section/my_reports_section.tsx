@@ -298,16 +298,16 @@ const MyReportsSection = () => {
       ref={pendingSortMenuRef}
       onClick={isPendingDataLoading ? undefined : togglePendingSortMenu}
       className={cn(
-        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-dropdown-text-head hover:border-input-stroke-input-hover hover:text-input-text-highlight',
         {
           'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
             isPendingDataLoading,
-          'border-primaryYellow text-primaryYellow': isPendingSortMenuOpen,
+          'border-input-stroke-input-hover hover:text-input-text-highlight': isPendingSortMenuOpen,
         }
       )}
     >
       <p
-        className={`whitespace-nowrap ${isPendingDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isPendingSortMenuOpen ? 'text-primaryYellow' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isPendingDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:hover:text-input-text-highlight'} ${isPendingSortMenuOpen ? 'text-input-text-highlight' : isPendingSortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredPendingSort)}
       </p>
@@ -324,19 +324,19 @@ const MyReportsSection = () => {
           d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
           clipRule="evenodd"
         ></path>
-      </svg>{' '}
+      </svg>
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isPendingSortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isPendingSortMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
-        <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
+        <ul className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
           {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
                 pendingSortClickHandler(sorting);
               }}
-              className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+              className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
             >
               {t(sorting)}
             </li>
@@ -359,7 +359,7 @@ const MyReportsSection = () => {
         }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
-        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
+        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
         onClick={() => !isPendingDataLoading && getPendingReports({ searchPendingQuery })}
@@ -378,7 +378,7 @@ const MyReportsSection = () => {
             d="M9.17 3.252a5.917 5.917 0 104.109 10.173.754.754 0 01.147-.147A5.917 5.917 0 009.169 3.252zm5.747 10.604a7.417 7.417 0 10-1.06 1.06l3.115 3.116a.75.75 0 001.06-1.06l-3.115-3.116z"
             clipRule="evenodd"
           ></path>
-        </svg>{' '}
+        </svg>
       </div>
     </div>
   );
@@ -388,7 +388,7 @@ const MyReportsSection = () => {
       {/* Info: (20240527 - Shirley) desktop */}
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
-          <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+          <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
             {t('MY_REPORTS_SECTION.SORT_BY')}
           </div>
           {/* Info: (20240513 - Shirley) sort menu */}
@@ -403,7 +403,7 @@ const MyReportsSection = () => {
           setFilteredPeriod={setPendingPeriod}
           btnClassName="w-250px"
           datePickerClassName="lg:w-auto"
-        />{' '}
+        />
         {/* Info: (20240513 - Shirley) Search bar */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedPendingSearchBar}
@@ -453,7 +453,6 @@ const MyReportsSection = () => {
     </div>
   ) : pendingData.length !== 0 ? (
     <div className="flex flex-col max-md:max-w-full">
-      {' '}
       <PendingReportList reports={pendingData} />
       <div className="mt-4 flex justify-center">
         <Pagination
@@ -468,7 +467,6 @@ const MyReportsSection = () => {
   ) : (
     // Info: (20240513 - Shirley) empty icon section
     <div className="mt-20 flex w-full items-center justify-center">
-      {' '}
       <section className="flex flex-col items-center">
         <div>
           <svg
@@ -536,16 +534,16 @@ const MyReportsSection = () => {
       ref={historySortMenuRef}
       onClick={isHistoryDataLoading ? undefined : toggleHistorySortMenu}
       className={cn(
-        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-dropdown-text-head hover:border-input-stroke-input-hover hover:text-input-text-highlight',
         {
           'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
             isHistoryDataLoading,
-          'border-primaryYellow text-primaryYellow': isHistorySortMenuOpen,
+          'border-input-stroke-input-hover hover:text-input-text-highlight': isHistorySortMenuOpen,
         }
       )}
     >
       <p
-        className={`whitespace-nowrap ${isHistoryDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isHistorySortMenuOpen ? 'text-primaryYellow' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isHistoryDataLoading ? 'group-hover:text-button-text-disable' : 'group-hover:hover:text-input-text-highlight'} ${isHistorySortMenuOpen ? 'text-input-text-highlight' : isHistorySortSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredHistorySort)}
       </p>
@@ -562,19 +560,19 @@ const MyReportsSection = () => {
           d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
           clipRule="evenodd"
         ></path>
-      </svg>{' '}
+      </svg>
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
-        <ul className="z-10 flex w-full flex-col items-start bg-white p-8px">
+        <ul className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
           {Object.values(SortOptions).map((sorting: SortOptions) => (
             <li
               key={sorting}
               onClick={() => {
                 historySortClickHandler(sorting);
               }}
-              className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+              className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
             >
               {t(sorting)}
             </li>
@@ -597,7 +595,7 @@ const MyReportsSection = () => {
         }}
         type="text"
         placeholder={t('AUDIT_REPORT.SEARCH')}
-        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
+        className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
         onClick={() => !isHistoryDataLoading && getGeneratedReports({ searchHistoryQuery })}
@@ -616,7 +614,7 @@ const MyReportsSection = () => {
             d="M9.17 3.252a5.917 5.917 0 104.109 10.173.754.754 0 01.147-.147A5.917 5.917 0 009.169 3.252zm5.747 10.604a7.417 7.417 0 10-1.06 1.06l3.115 3.116a.75.75 0 001.06-1.06l-3.115-3.116z"
             clipRule="evenodd"
           ></path>
-        </svg>{' '}
+        </svg>
       </div>
     </div>
   );
@@ -626,7 +624,7 @@ const MyReportsSection = () => {
       {/* Info: (20240527 - Shirley) desktop */}
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
-          <div className="text-sm font-semibold leading-5 tracking-normal text-slate-700">
+          <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
             {t('MY_REPORTS_SECTION.SORT_BY')}
           </div>
           {/* Info: (20240513 - Shirley) sort menu */}
@@ -641,7 +639,7 @@ const MyReportsSection = () => {
           setFilteredPeriod={setHistoryPeriod}
           btnClassName="w-250px"
           datePickerClassName="lg:w-auto"
-        />{' '}
+        />
         {/* Info: (20240513 - Shirley) Search bar */}
         <div className="flex flex-1 flex-wrap justify-between gap-5 whitespace-nowrap">
           {displayedHistorySearchBar}
@@ -705,7 +703,6 @@ const MyReportsSection = () => {
     </div>
   ) : (
     <div className="mt-20 flex w-full items-center justify-center">
-      {' '}
       <section className="flex flex-col items-center">
         <div>
           <svg
@@ -773,32 +770,26 @@ const MyReportsSection = () => {
       <div className="flex gap-0 max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: (20240513 - Shirley) desktop heading */}
-          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
-            <div className="w-full justify-center px-10 md:px-16 lg:px-28">
-              {t('MY_REPORTS_SECTION.MY_REPORTS')}
-            </div>
+          <div className="hidden w-full flex-col justify-center px-10 text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex md:px-16 lg:px-28">
+            {t('MY_REPORTS_SECTION.MY_REPORTS')}
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
-          <div className="flex w-600px max-w-full flex-1 md:hidden">
-            <div className="mx-4 flex space-x-2">
-              <div>
-                <Image
-                  src={'/icons/report.svg'}
-                  width={30}
-                  height={30}
-                  alt="report_icon"
-                  className="aspect-square shrink-0"
-                />
-              </div>
-              <div className="mt-1.5">{t('MY_REPORTS_SECTION.MY_REPORTS')}</div>
+          <div className="mx-4 flex w-600px max-w-full flex-1 items-center space-x-2 md:hidden">
+            <Image
+              src={'/icons/report.svg'}
+              width={30}
+              height={30}
+              alt="report_icon"
+              className="aspect-square shrink-0"
+            />
+            <div className="mt-1.5 text-text-neutral-secondary">
+              {t('MY_REPORTS_SECTION.MY_REPORTS')}
             </div>
           </div>
 
           {/* Info: (20240528 - Shirley) Divider beneath Heading */}
           <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-16 lg:pl-28">
-            <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-            </div>
+            <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-4 bg-divider-stroke-lv-4 max-md:max-w-full" />
           </div>
         </div>
       </div>
@@ -808,7 +799,7 @@ const MyReportsSection = () => {
         {displayedPendingFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">
+          <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -832,7 +823,7 @@ const MyReportsSection = () => {
             <div>{t('MY_REPORTS_SECTION.PENDING')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
           </div>
         </div>
         {displayedPendingDataSection}
@@ -843,7 +834,7 @@ const MyReportsSection = () => {
         {displayedHistoryFilterOptionsSection}
 
         <div className="mt-4 flex gap-4 py-2.5 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-slate-800">
+          <div className="flex items-center gap-2 text-center text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"
@@ -863,7 +854,7 @@ const MyReportsSection = () => {
             <div>{t('MY_REPORTS_SECTION.REPORTS_HISTORY')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
-            <div className="mr-0 h-px shrink-0 border border-solid border-slate-800 bg-slate-800 max-md:max-w-full" />
+            <div className="mr-0 h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
           </div>
         </div>
         {displayedHistoryDataSection}

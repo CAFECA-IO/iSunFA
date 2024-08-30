@@ -224,7 +224,7 @@ const StepOneTab = () => {
       {/* Info: (20240422 - Julian) label */}
       {/* <p className="text-sm font-semibold text-navyBlue2">{t('journal:JOURNAL.DESCRIPTION_OF_EVENTS')}</p> */}
       {/* Info: (20240422 - Julian) input */}
-      {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
+      {/* <div className="flex items-center divide-x divide-input-stroke-input rounded border border-input-stroke-input bg-white">
         <input
           className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-input-text-input-placeholder"
           placeholder={t('COMMON.ENTER_A_DESCRIPTION')}

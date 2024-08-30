@@ -670,7 +670,7 @@ const NewJournalForm = () => {
   //       <li
   //         key={project.name}
   //         onClick={selectionClickHandler}
-  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //         className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
   //       >
   //         {t(project.name)}
   //       </li>
@@ -692,7 +692,7 @@ const NewJournalForm = () => {
   //       <li
   //         key={contract.name}
   //         onClick={selectionClickHandler}
-  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //         className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
   //       >
   //         {t(contract.name)}
   //       </li>
@@ -1257,7 +1257,7 @@ const NewJournalForm = () => {
   //             <FaChevronDown />
   //             {/* Info: (20240424 - Julian) Dropmenu */}
   //             <div
-  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
   //             >
   //               <ul
   //                 ref={projectRef}
@@ -1283,7 +1283,7 @@ const NewJournalForm = () => {
   //             <FaChevronDown />
   //             {/* Info: (20240424 - Julian) Dropmenu */}
   //             <div
-  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
   //             >
   //               <ul
   //                 ref={contractRef}

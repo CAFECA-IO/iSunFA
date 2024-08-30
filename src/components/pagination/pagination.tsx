@@ -11,6 +11,7 @@ import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import useStateRef from 'react-usestateref';
+import { Button } from '@/components/button/button';
 
 export interface IPaginationProps {
   currentPage: number;
@@ -98,47 +99,51 @@ const Pagination = ({
   const lastPageHandler = () => changePage(totalPages);
 
   const displayFirstButton = (
-    <button
+    <Button
       type="button"
       onClick={firstPageHandler}
       disabled={isFirstPage}
-      className="flex h-40px w-40px items-center justify-center rounded border border-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray3 disabled:text-lightGray3"
+      variant="secondaryOutline"
+      className="h-40px w-40px p-0"
     >
       <RxTrackPrevious size={16} />
-    </button>
+    </Button>
   );
 
   const displayPreviousButton = (
-    <button
+    <Button
       type="button"
       onClick={previousPageHandler}
       disabled={isFirstPage}
-      className="flex h-40px w-40px items-center justify-center rounded border border-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray3 disabled:text-lightGray3"
+      variant="secondaryOutline"
+      className="h-40px w-40px p-0"
     >
       <AiOutlineLeft size={16} />
-    </button>
+    </Button>
   );
 
   const displayLastButton = (
-    <button
+    <Button
       type="button"
       onClick={lastPageHandler}
       disabled={isLastPage}
-      className="flex h-40px w-40px items-center justify-center rounded border border-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray3 disabled:text-lightGray3"
+      variant="secondaryOutline"
+      className="h-40px w-40px p-0"
     >
       <RxTrackNext size={16} />
-    </button>
+    </Button>
   );
 
   const displayNextButton = (
-    <button
+    <Button
       type="button"
       onClick={nextPageHandler}
       disabled={isLastPage}
-      className="flex h-40px w-40px items-center justify-center rounded border border-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray3 disabled:text-lightGray3"
+      variant="secondaryOutline"
+      className="h-40px w-40px p-0"
     >
       <AiOutlineRight size={16} />
-    </button>
+    </Button>
   );
 
   const displayPageInput = (
@@ -151,12 +156,12 @@ const Pagination = ({
       value={targetPageRef.current}
       onChange={pageChangeHandler}
       onKeyDown={handleKeyDown}
-      className="h-40px w-40px rounded border border-secondaryBlue bg-transparent text-center text-sm font-semibold outline-none placeholder:text-lightGray3 disabled:border-lightGray3"
+      className="h-40px w-40px rounded border border-button-stroke-secondary bg-transparent text-center text-sm font-semibold outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
     />
   );
 
   return (
-    <ul className="flex items-start gap-10px text-secondaryBlue">
+    <ul className="flex items-start gap-10px text-input-text-input-hover">
       {/* Info: (20240419 - Julian) 最前一頁 */}
       <li>{displayFirstButton}</li>
       {/* Info: (20240419 - Julian) 上一頁 */}

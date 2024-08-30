@@ -216,7 +216,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <p>{t('journal:JOURNAL.RECEIVING')}</p>
       </div>
     ) : type === 'Transfer' ? (
-      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-lightGray3 px-10px py-6px text-sm font-medium text-navyBlue">
+      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-badge-surface-soft-secondary px-10px py-6px text-sm font-medium text-badge-text-secondary-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
