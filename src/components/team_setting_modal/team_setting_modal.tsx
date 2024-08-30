@@ -69,13 +69,9 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
 
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-white px-0 pb-5 pt-2 shadow-lg shadow-black/80 sm:px-3 lg:w-500px">
-        <div className="flex gap-2.5 bg-white py-4 pl-10 pr-5">
-          <div className="flex w-full flex-1 flex-col justify-center text-center">
-            <div className="px-0">
-              <div className="text-xl font-bold text-card-text-primary">Settings</div>
-            </div>
-          </div>
+      <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-surface-neutral-surface-lv2 pb-5 pt-2 shadow-lg shadow-black/80 lg:w-500px">
+        <div className="py-4">
+          <div className="text-xl font-bold text-card-text-primary">Settings</div>
           <div className="absolute right-3 top-3">
             <Button
               variant={'secondaryBorderless'}
@@ -104,30 +100,28 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
                 ></path>
               </svg>
             </Button>
-          </div>{' '}
+          </div>
         </div>
 
-        <div className="w-full border-t pb-4"></div>
+        <div className="w-full border-t border-stroke-neutral-quaternary pb-4"></div>
 
-        <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
-          <div className="flex flex-col justify-start gap-2">
-            <div className="text-divider-text-lv-1">
-              <p>Company Name</p>
-            </div>
-            <div className="flex gap-0 rounded-sm border border-solid border-lightGray3 bg-white shadow-sm">
+        <div className="flex w-full flex-col justify-center px-8 py-2.5">
+          <div className="flex flex-col justify-start gap-2 text-divider-text-lv-1">
+            <p>Company Name</p>
+            <div className="flex rounded-sm border border-solid border-input-stroke-input bg-input-surface-input-background shadow-sm">
               <div className="flex flex-1">
                 <input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   type="text"
-                  className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
+                  className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base placeholder:text-input-text-input-placeholder focus:outline-none"
                   placeholder={selectedCompany?.name ?? 'your company name'}
                 />
               </div>
             </div>
           </div>
         </div>
-        <div className="flex w-full items-end justify-end bg-white px-5 py-4 text-sm font-medium">
+        <div className="flex w-full items-end justify-end px-8 py-4 text-sm font-medium">
           <div className="flex w-full gap-3">
             <Button
               variant={'secondaryOutline'}
@@ -154,7 +148,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
       </div>
     </div>
   ) : null;
-  return <div> {isDisplayedRegisterModal}</div>;
+  return <div>{isDisplayedRegisterModal}</div>;
 };
 
 export default TeamSettingModal;

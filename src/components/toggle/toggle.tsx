@@ -33,13 +33,13 @@ const Toggle = ({
   };
 
   const toggleBackgroundStyle = lockedToOpen
-    ? 'bg-lightGray'
+    ? 'bg-switch-surface-base'
     : toggle
-      ? 'bg-primaryYellow'
-      : 'bg-lightGray6';
+      ? 'bg-switch-surface-active'
+      : 'bg-switch-surface-base';
 
   const toggleSwitchStyle = lockedToOpen
-    ? 'transform translate-x-full bg-lightGray shadow-lg shadow-black/80'
+    ? 'transform translate-x-full shadow-lg shadow-black/80'
     : toggle
       ? 'transform translate-x-full'
       : '';
@@ -51,7 +51,7 @@ const Toggle = ({
       className={`${toggleBackgroundStyle} inline-flex h-26px w-46px cursor-pointer items-center rounded-full p-3px duration-300 ease-in-out`}
     >
       <div
-        className={`${toggleSwitchStyle} h-20px w-20px rounded-full bg-white shadow-md duration-300 ease-in-out`}
+        className={`${toggleSwitchStyle} h-20px w-20px rounded-full bg-switch-surface-controller shadow-md duration-300 ease-in-out`}
       ></div>
     </div>
   );

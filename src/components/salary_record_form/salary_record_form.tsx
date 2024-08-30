@@ -162,7 +162,7 @@ const SalaryRecordForm = () => {
       </div>
     </div>
   ) : (
-    <div className="my-20px flex items-center gap-x-8px">
+    <div className="my-20px flex items-center gap-x-8px text-base text-text-brand-secondary-lv2">
       <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
       <p> Working hours for the period : {workingHours} pts</p>
     </div>
@@ -172,11 +172,11 @@ const SalaryRecordForm = () => {
     <form className="mt-40px flex flex-col" onSubmit={submitHandler}>
       {/* Info: (20240715 - Julian) Divider */}
       <div className="flex items-center gap-4 font-medium">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/record.svg" width={16} height={16} alt="record_icon" />
           <p>Create new payroll records</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       {/* Info: (20240715 - Julian) Main Form */}
       <div className="mt-40px flex flex-col gap-y-24px md:gap-y-40px">
@@ -252,7 +252,7 @@ const SalaryRecordForm = () => {
         {/* Info: (20240715 - Julian) Third Column */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">Insurance Payments</p>
-          <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
+          <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
             <NumericInput
               id="input-insurance-payments"
               value={insurancePayments}
@@ -261,7 +261,7 @@ const SalaryRecordForm = () => {
               required
               className="flex-1 bg-transparent px-10px outline-none"
             />
-            <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+            <div className="flex items-center gap-4px p-12px text-sm text-icon-surface-single-color-primary">
               <svg
                 width="21"
                 height="20"
@@ -293,11 +293,11 @@ const SalaryRecordForm = () => {
       </div>
       {/* Info: (20240715 - Julian) Divider */}
       <div className="mt-20px flex items-center gap-4 font-medium">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/work.svg" width={16} height={16} alt="work_icon" />
           <p>Working hours</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       {/* Info: (20240716 - Julian) Working Hours */}
       <div className="mt-40px flex flex-col gap-y-40px">

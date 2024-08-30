@@ -35,7 +35,7 @@ const SalaryBookConfirmModal = ({
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 py-16px font-barlow">
         {/* Info: (20240716 - Julian) title */}
-        <div className="flex items-center gap-6px px-20px font-bold text-navyBlue2">
+        <div className="flex items-center gap-6px px-20px font-bold text-card-text-primary">
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
           {/* Info: (20240716 - Julian) desktop title */}
           <h1 className="hidden whitespace-nowrap text-xl md:block">

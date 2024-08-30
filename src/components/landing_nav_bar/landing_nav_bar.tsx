@@ -264,7 +264,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 />
               </svg>
               <ul
-                className={`fle w-60px flex-col items-center justify-center space-y-0 pb-3 pt-4 text-center ${dropdownOpen ? 'flex' : 'hidden'}`}
+                className={`w-60px flex-col items-center justify-center space-y-0 pb-3 pt-4 text-center ${dropdownOpen ? 'flex' : 'hidden'}`}
               >
                 {languages.map((lang: { label: string; code: string }) => (
                   <li

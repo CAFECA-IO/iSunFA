@@ -271,12 +271,12 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('common:SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedPendingSortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('journal:JOURNAL.TYPE')}</p>
           {displayedPendingTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -295,7 +295,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
             placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={20} />
         </div>
@@ -309,7 +309,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
             <Image src={'/icons/hour_glass.svg'} alt="pending_icon" width={16} height={16} />
             <p>{t('report_401:MY_REPORTS_SECTION.PENDING')}</p>
           </div>
-          <hr className="flex-1 border-lightGray4" />
+          <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
 
         <PendingReportList reports={pendingData} />
@@ -327,12 +327,12 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('common:SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedHistorySortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('journal:JOURNAL.TYPE')}</p>
           {displayedHistoryTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -351,7 +351,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
             placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={20} />
         </div>
@@ -365,7 +365,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
             <Image src={'/icons/file.svg'} alt="history_icon" width={16} height={16} />
             <p>{t('report_401:MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
           </div>
-          <hr className="flex-1 border-lightGray4" />
+          <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
 
         <ReportsHistoryList reports={historyData} />
