@@ -27,8 +27,6 @@ import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 // eslint-disable-next-line import/no-cycle
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
@@ -37,8 +35,6 @@ import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 // eslint-disable-next-line import/no-cycle
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
@@ -152,7 +148,16 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
   const { pathname } = router;
 
@@ -497,12 +502,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         closeable: true,
         content: (
           <div className="flex items-center space-x-5">
-            <p>{t('AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
+            <p>{t('report_401:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
+              {t('report_401:AUDIT_REPORT.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -561,12 +566,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
               closeable: false,
               content: (
                 <div className="flex items-center justify-between">
-                  <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
+                  <p className="text-sm">{t('common:COMMON.ISUNFA_TRIAL_VERSION')}</p>
                   <Link
                     href={ISUNFA_ROUTE.SELECT_COMPANY}
-                    className="text-base font-semibold text-darkBlue"
+                    className="text-base font-semibold text-link-text-primary"
                   >
-                    {t('COMMON.END_OF_TRIAL')}
+                    {t('common:COMMON.END_OF_TRIAL')}
                   </Link>
                 </div>
               ),
@@ -586,7 +591,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
           autoClose: false,
           content: (
             <div className="flex items-center justify-between">
-              <p className="font-barlow text-sm">{t('COMMON.ALPHA_TEST_REMINDER')}</p>
+              <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
             </div>
           ),
         });
@@ -790,9 +795,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id="agree-with-information"
         isModalVisible={isAgreeWithInfomationConfirmModalVisible}
         modalData={{
-          title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'info_collection_statement',
-          buttonText: t('COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
+          buttonText: t('common:COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
         }}
         infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
         tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
@@ -802,9 +807,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         id="tos-n-privacy-policy"
         isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
         modalData={{
-          title: t('COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
           content: 'term_n_privacy',
-          buttonText: t('COMMON.AGREE_WITH_TOS_N_PP'),
+          buttonText: t('common:COMMON.AGREE_WITH_TOS_N_PP'),
         }}
         infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
         tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
@@ -819,18 +824,5 @@ export const useGlobalCtx = () => {
   if (!context) {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
-
-  // Deprecated: (20231120 - Shirley) Debug tool [to be removed]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g: any =
-    typeof globalThis === 'object'
-      ? globalThis
-      : typeof window === 'object'
-        ? window
-        : typeof global === 'object'
-          ? global
-          : null; // Info: (20240409 - Shirley) Causes an error on the next line
-
-  g.globalContext = context;
   return context;
 };

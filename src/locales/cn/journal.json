@@ -116,7 +116,10 @@
     "FEE_EXCEEDS_TOTAL": "费用不能大于总金额",
     "DATE_HINT": "请选择日期",
     "AMOUNT_HINT": "请填入金额",
-    "TIMES_HINT": "请填入次数"
+    "TIMES_HINT": "请填入次数",
+    "INCONSISTENT_COMPANY_ID": "公司 ID 不一致",
+    "FAILED_TO_FETCH_PUBLIC_KEY": "获取公钥失败",
+    "FAILED_TO_UPLOAD_FILE": "上传文件失败"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",

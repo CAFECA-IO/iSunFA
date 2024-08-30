@@ -31,7 +31,7 @@ export class AssetAccountRetriever extends AbstractAccountRetriever {
       sortBy,
       sortOrder,
       searchKey,
-      isDeleted
+      isDeleted,
     });
   }
 }

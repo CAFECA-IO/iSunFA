@@ -18,7 +18,7 @@ function LandingI18n() {
     { label: '简体中文', value: 'cn' },
   ];
 
-  const subMenu = internationalizationList.map((item, index) => {
+  const subMenu = internationalizationList.map((item) => {
     const clickHandler = () => {
       setComponentVisible(false);
       setCurrentLanguage(item.label);
@@ -26,8 +26,8 @@ function LandingI18n() {
 
     return (
       // Info: (20240115 - Shirley) it's okay to use index as key in this case
-      // eslint-disable-next-line react/no-array-index-key
-      <li key={index} className="py-2 hover:cursor-pointer hover:bg-purpleLinear">
+      // Info: (20240829 - Anna) use value instead
+      <li key={item.value} className="py-2 hover:cursor-pointer hover:bg-purpleLinear">
         <Link
           locale={item.value}
           scroll={false}

@@ -90,37 +90,40 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   const oenMerchantId = process.env.PAYMENT_ID ?? '';
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    // Info: (20240823 - Murky) 用卡號透過 3D 驗證取得 token
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      // Info: (20240823 - Murky) 用卡號透過 3D 驗證取得 token
 
-    const query = formatGetQuery(req);
+      const query = formatGetQuery(req);
 
-    // Info: (20240823 - Murky) Customer ID 是一個自定義欄位可以在第三方與後端之間做傳遞
-    const customId = JSON.stringify(query);
+      // Info: (20240823 - Murky) Customer ID 是一個自定義欄位可以在第三方與後端之間做傳遞
+      const customId = JSON.stringify(query);
 
-    const response = await fetch(OEN_BASE_ENDPOINT.CHECKOUT_TOKEN, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${oenToken}`,
-      },
-      body: JSON.stringify({
-        merchantId: oenMerchantId,
-        customId,
-        successUrl: `https://www.google.com`,
-        failureUrl: `https://www.bing.com`,
-      }),
-    });
+      const response = await fetch(OEN_BASE_ENDPOINT.CHECKOUT_TOKEN, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${oenToken}`,
+        },
+        body: JSON.stringify({
+          merchantId: oenMerchantId,
+          customId,
+          successUrl: `https://www.google.com`,
+          failureUrl: `https://www.bing.com`,
+        }),
+      });
 
-    const responseJson = await response.json();
-    const redirectUrl = OEN_MERCHANT_ENDPOINT.GET_TOKEN(oenMerchantId, responseJson.data.id);
-    payload = redirectUrl;
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      const responseJson = await response.json();
+      const redirectUrl = OEN_MERCHANT_ENDPOINT.GET_TOKEN(oenMerchantId, responseJson.data.id);
+      payload = redirectUrl;
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    }
   }
-
   return { statusMessage, payload };
 }
 

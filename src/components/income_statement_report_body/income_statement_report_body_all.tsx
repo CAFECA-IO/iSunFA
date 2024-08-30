@@ -51,7 +51,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
 
   const renderedFooter = (page: number) => {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between border-t-2 border-solid border-lightGray9 bg-surface-brand-secondary p-10px">
+      <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
         <p className="text-xs text-white">{page}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           <Image width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
@@ -166,23 +166,25 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.general &&
               reportFinancial.general.slice(0, 10).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
                   <td
-                    className="border border-lightGray8 p-10px text-xs"
+                    className="border border-stroke-brand-secondary-soft p-10px text-xs"
                     style={{ width: '200px' }}
                   >
                     {value.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -260,20 +262,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.general &&
               reportFinancial.general.slice(10, 24).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="min-w-177px border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="min-w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
                     {value.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -349,30 +353,42 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.general &&
               reportFinancial.general.slice(24, 33).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs">{value.name}</td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.name}
+                  </td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
               ))}
 
             <tr>
-              <td className="border border-lightGray8 p-10px text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-end text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-center text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-end text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-center text-xs">&nbsp;</td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                &nbsp;
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                &nbsp;
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                &nbsp;
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                &nbsp;
+              </td>
             </tr>
           </tbody>
           <tbody>
@@ -380,22 +396,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.general &&
               reportFinancial.general.slice(34, 36).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     {value.code}
                   </td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs font-semibold">
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     {value.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
                     &nbsp;
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
                     &nbsp;
                   </td>
                 </tr>
@@ -480,18 +496,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.details &&
               reportFinancial.details.slice(0, 15).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs">{value.name}</td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.name}
+                  </td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -567,18 +587,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.details &&
               reportFinancial.details.slice(15, 28).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs">{value.name}</td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.name}
+                  </td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -654,18 +678,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.details &&
               reportFinancial.details.slice(28, 39).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs">{value.name}</td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.name}
+                  </td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -743,20 +771,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.details &&
               reportFinancial.details.slice(39, 49).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="w-177px min-w-177px border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="w-177px min-w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
                     {value.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -832,18 +862,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.details &&
               reportFinancial.details.slice(49, 58).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs">{value.name}</td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.code}
+                  </td>
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                    {value.name}
+                  </td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.curPeriodPercentage}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
                     {value.prePeriodPercentage}
                   </td>
                 </tr>
@@ -854,22 +888,22 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               reportFinancial.details &&
               reportFinancial.details.slice(58, 62).map((value) => (
                 <tr key={value.code} className="h-40px">
-                  <td className="border border-lightGray8 p-10px text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     {value.code}
                   </td>
-                  <td className="w-177px border border-lightGray8 p-10px text-xs font-semibold">
+                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
                     {value.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
                     {value.curPeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
                     &nbsp;
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
                     {value.prePeriodAmount}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-center text-xs font-semibold">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
                     &nbsp;
                   </td>
                 </tr>
@@ -949,16 +983,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.revenue && (
                 <tr key={otherInfo.revenueAndExpenseRatio.revenue.code}>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.code}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.revenue.prePeriodAmountString}
                   </td>
                 </tr>
@@ -966,10 +1000,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
           <tbody>
             <tr>
-              <td className="border border-lightGray8 p-10px text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-end text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-end text-xs">&nbsp;</td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                &nbsp;
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                &nbsp;
+              </td>
             </tr>
           </tbody>
           <tbody>
@@ -977,16 +1015,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.totalCost && (
                 <tr key={otherInfo.revenueAndExpenseRatio.totalCost.code}>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.code}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.curPeriodAmountString}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.totalCost.prePeriodAmountString}
                   </td>
                 </tr>
@@ -997,16 +1035,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.salesExpense && (
                 <tr key={otherInfo.revenueAndExpenseRatio.salesExpense.code}>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.code}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.salesExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -1017,16 +1055,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               otherInfo.revenueAndExpenseRatio &&
               otherInfo.revenueAndExpenseRatio.administrativeExpense && (
                 <tr key={otherInfo.revenueAndExpenseRatio.administrativeExpense.code}>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.code}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {otherInfo.revenueAndExpenseRatio.administrativeExpense.prePeriodAmountString}
                   </td>
                 </tr>
@@ -1034,14 +1072,16 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </tbody>
           <tbody>
             <tr className="font-semibold">
-              <td className="border border-lightGray8 p-10px text-end text-xs">&nbsp;</td>
-              <td className="border border-lightGray8 p-10px text-start text-xs">
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                &nbsp;
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
                 投入費用和成本合計
               </td>
-              <td className="border border-lightGray8 p-10px text-end text-xs">
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                 {formatNumber(curPeriodTotal)}
               </td>
-              <td className="border border-lightGray8 p-10px text-end text-xs">
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                 {formatNumber(prePeriodTotal)}
               </td>
             </tr>
@@ -1099,44 +1139,46 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               <>
                 {' '}
                 <tr key={revenueToRD.revenue.code}>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {revenueToRD.revenue.code}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {revenueToRD.revenue.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.revenue.curPeriodAmountString}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.revenue.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr key={revenueToRD.researchAndDevelopmentExpense.code}>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.code}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.name}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.curPeriodAmountString}
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {revenueToRD.researchAndDevelopmentExpense.prePeriodAmountString}
                   </td>
                 </tr>
                 <tr className="font-semibold">
-                  <td className="border border-lightGray8 p-10px text-end text-xs">&nbsp;</td>
-                  <td className="border border-lightGray8 p-10px text-start text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                    &nbsp;
+                  </td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs">
                     收入提撥至研發費用比例
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {' '}
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
                     {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
-                  <td className="border border-lightGray8 p-10px text-end text-xs">
+                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                     {' '}
                     {revenueToRD.ratio.preRatio.toFixed(2)}%
                   </td>

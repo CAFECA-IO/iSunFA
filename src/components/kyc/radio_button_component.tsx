@@ -55,7 +55,16 @@ const RadioButtonComponent = ({
   selectedValue: RepresentativeIDType;
   onChange: (value: RepresentativeIDType) => void;
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const radioOptions: RadioOption[] = [
     { label: t('kyc:KYC.PASSPORT'), value: RepresentativeIDType.PASSPORT },
     { label: t('kyc:KYC.ID_CARD'), value: RepresentativeIDType.ID_CARD },

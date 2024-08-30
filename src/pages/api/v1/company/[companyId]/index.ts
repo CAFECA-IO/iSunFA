@@ -50,22 +50,24 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   const { code, name, regional } = req.body;
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
-    userId,
-    companyId: companyIdNum,
-  });
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-  } else if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
-    const getCompany = await getCompanyById(companyIdNum);
-    if (getCompany) {
-      const updatedCompany = await updateCompanyById(companyIdNum, code, name, regional);
-      const company = formatCompany(updatedCompany);
-      payload = company;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
+      userId,
+      companyId: companyIdNum,
+    });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const getCompany = await getCompanyById(companyIdNum);
+      if (getCompany) {
+        const updatedCompany = await updateCompanyById(companyIdNum, code, name, regional);
+        const company = formatCompany(updatedCompany);
+        payload = company;
+      }
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     }
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   }
 
   return { statusMessage, payload };
@@ -78,25 +80,26 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
   const companyIdNum = convertStringToNumber(req.query.companyId);
   const session = await getSession(req, res);
   const { userId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
-    userId,
-    companyId: companyIdNum,
-  });
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-  } else if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
   } else {
-    const getCompany = await getCompanyById(companyIdNum);
-    if (getCompany) {
-      const deletedCompany = await deleteCompanyById(companyIdNum);
-      await deleteAdminListByCompanyId(companyIdNum);
-      const company = formatCompany(deletedCompany);
-      payload = company;
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
+      userId,
+      companyId: companyIdNum,
+    });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const getCompany = await getCompanyById(companyIdNum);
+      if (getCompany) {
+        const deletedCompany = await deleteCompanyById(companyIdNum);
+        await deleteAdminListByCompanyId(companyIdNum);
+        const company = formatCompany(deletedCompany);
+        payload = company;
+      }
+      statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
     }
-    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
   }
-
   return { statusMessage, payload };
 }
 

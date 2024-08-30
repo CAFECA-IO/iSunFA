@@ -19,7 +19,16 @@ interface IAccountingVoucherRowMobile {
 }
 
 const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVoucherRowMobile) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const isDebit = type === 'Debit';
 
   const { id, account, particulars, debit, credit } = accountingVoucher;
@@ -160,14 +169,14 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
         className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch shadow-dropmenu ${isAccountingMenuOpen ? 'h-200px border-lightGray3 opacity-100' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border bg-dropdown-surface-menu-background-primary p-8px transition-all duration-300 ease-in-out`}
       >
         {/* Info: (20240806 - Julian) search */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="search-accounting"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>

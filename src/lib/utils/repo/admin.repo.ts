@@ -290,6 +290,9 @@ export async function listCompanyAndRole(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     },
+    orderBy: {
+      companyId: 'asc',
+    },
     select: {
       company: true,
       role: true,

@@ -93,7 +93,7 @@
 //                 ></path>
 //               </svg>
 //             </div>
-//             <div className="">{t('NAV_BAR.MARK_ALL_AS_READ')}</div>
+//             <div className="">{t('common:NAV_BAR.MARK_ALL_AS_READ')}</div>
 //           </Button>
 //         </div>
 
@@ -120,7 +120,7 @@
 //             variant={'secondaryBorderless'}
 //             className="mx-2 my-2 flex w-fit self-end px-2 py-1 text-text-neutral-link hover:text-text-neutral-link hover:opacity-70"
 //           >
-//             {t('NAV_BAR.READ_MORE')}
+//             {t('common:NAV_BAR.READ_MORE')}
 //           </Button>
 //         </div>
 //       </div>
@@ -180,7 +180,7 @@
 //                 ></path>
 //               </svg>
 //             </div>
-//             <div className="">{t('NAV_BAR.MARK_ALL_AS_READ')}</div>
+//             <div className="">{t('common:NAV_BAR.MARK_ALL_AS_READ')}</div>
 //           </Button>
 //         </div>
 
@@ -207,7 +207,7 @@
 //             variant={'secondaryBorderless'}
 //             className="mx-2 my-2 flex w-fit self-end px-2 py-1 text-text-neutral-link hover:text-text-neutral-link hover:opacity-70"
 //           >
-//             {t('NAV_BAR.READ_MORE')}
+//             {t('common:NAV_BAR.READ_MORE')}
 //           </Button>
 //         </div>
 //       </div>
@@ -241,7 +241,7 @@
 //               clipRule="evenodd"
 //             ></path>
 //           </svg>
-//           <p>{t('NAV_BAR.NOTIFICATION')}</p>
+//           <p>{t('common:NAV_BAR.NOTIFICATION')}</p>
 //         </div>
 
 //         <svg

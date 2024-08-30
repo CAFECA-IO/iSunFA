@@ -65,7 +65,16 @@ const UploadedFileItem = ({
   deleteHandler,
   clickHandler,
 }: IUploadedFileItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -157,7 +166,7 @@ const UploadedFileItem = ({
       </div>
       {/* Info: (20240523 - Julian) Progress Bar */}
       <div className="inline-flex w-full items-center gap-16px">
-        <p className="text-slider-surface-bar">{t('JOURNAL.AI_TECHNOLOGY_RECOGNIZING')}</p>
+        <p className="text-slider-surface-bar">{t('journal:JOURNAL.AI_TECHNOLOGY_RECOGNIZING')}</p>
         <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
           <div
             className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${isError ? 'bg-file-uploading-text-error' : 'bg-progress-bar-surface-bar-secondary'}`}

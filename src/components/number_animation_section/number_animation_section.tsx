@@ -11,21 +11,21 @@ const NumberAnimationSection = () => {
     {
       image: '/elements/lightening_1.png',
       alt: 'lighting_1',
-      description: 'LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_1',
+      description: 'common:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_1',
       targetNumber: 150,
       unit: 'X',
     },
     {
       image: '/elements/clock.png',
       alt: 'clock',
-      description: 'LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_2',
+      description: 'common:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_2',
       targetNumber: 85,
       unit: '%',
     },
     {
       image: '/elements/robot_hand.png',
       alt: 'robot_hand',
-      description: 'LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_3',
+      description: 'common:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_3',
       targetNumber: 24,
       unit: 'hrs',
     },
@@ -35,7 +35,7 @@ const NumberAnimationSection = () => {
     ({ image, alt, description, targetNumber, unit }) => (
       <div
         key={description}
-        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-tertiaryBlue px-0 py-10 lg:w-300px"
+        className="relative z-10 mx-0 flex h-300px flex-col items-center space-y-14 rounded-2xl bg-navy-blue-400 py-10 lg:w-300px"
       >
         {/* Info:(20230815 - Shirley) Image */}
         <div className="absolute -top-10 h-100px w-100px">
@@ -66,9 +66,7 @@ const NumberAnimationSection = () => {
         </div>
 
         {/* Info:(20240315 - Shirley) Description */}
-        <div className="pt-0">
-          <p className="w-300px px-5 text-start text-base lg:w-full">{t(description)}</p>
-        </div>
+        <p className="w-300px px-5 text-start text-base lg:w-full">{t(description)}</p>
       </div>
     )
   );

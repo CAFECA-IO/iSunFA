@@ -3,14 +3,14 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextApiRequest } from 'next';
 import { FORMIDABLE_OPTIONS } from '@/constants/config';
-import { BASE_STORAGE_FOLDER, FileFolder, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { FileFolder, getFileFolder } from '@/constants/file';
+import logger from '@/lib/utils/logger_back';
 
 export const parseForm = async (
   req: NextApiRequest,
-  subDir: string = FileFolder.TMP // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
+  subDir: FileFolder = FileFolder.TMP // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
 ) => {
-  const uploadDir =
-    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
+  const uploadDir = getFileFolder(subDir);
   const options = {
     ...FORMIDABLE_OPTIONS,
     uploadDir,
@@ -47,18 +47,40 @@ export async function findFileByName(baseFolder: string, fileName: string): Prom
 }
 
 /**
+ * Info: (20240828 - Murky)
+ * Read file from the given folder and file name
+ * @param baseFolder - the folder path
+ * @param fileName - the file name
+ * @returns - the file buffer
+ */
+export async function readFile(baseFolder: string, fileName?: string): Promise<Buffer | null> {
+  const filePath = fileName ? path.join(baseFolder, fileName) : baseFolder;
+  let fileBuffer: Buffer | null = null;
+  try {
+    fileBuffer = await fs.readFile(filePath);
+  } catch (error) {
+    logger.error(error, `Error in readFile: ${filePath}`);
+  }
+  return fileBuffer;
+}
+
+export function bufferToBlob(buffer: Buffer, type?: string): Blob {
+  return new Blob([buffer], { type });
+}
+
+/**
  * Info: (20240726 - Jacky) 讀取目標資料夾中的某個檔案，並將其加上前綴後改名
  * @param fileName - 要加前綴的檔案名稱
  * @param prefix - 要加的前綴
  * @param ext - 新的副檔名
  */
 export async function addPrefixToFile(
-  folder: string,
+  folder: FileFolder,
   fileName: string,
   prefix: string,
   ext: string
 ): Promise<string> {
-  const targetFolder = path.join(BASE_STORAGE_FOLDER, folder); // Info: (20240726 - Jacky) 確保是從專案根目錄開始找目標資料夾
+  const targetFolder = getFileFolder(folder); // Info: (20240726 - Jacky) 確保是從專案根目錄開始找目標資料夾
 
   // Info: (20240723 - Jacky) 檔案的完整路徑
   const oldFilePath = path.join(targetFolder, fileName);

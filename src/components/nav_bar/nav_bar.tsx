@@ -122,8 +122,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
@@ -131,7 +130,7 @@ const NavBar = () => {
           className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
         > */}
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
-        <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+        <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
         {/* </Link> */}
       </button>
       <Link
@@ -139,13 +138,12 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
-        <p>{t('NAV_BAR.ACCOUNT')}</p>
+        <p>{t('common:NAV_BAR.ACCOUNT')}</p>
       </Link>
       <button
         type="button"
         // TODO: (20240517 - Shirley) [Beta] temp disabled
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable disabled:hover:text-button-text-secondary"
       >
         <Image src={'/icons/document.svg'} width={30} height={30} alt="document_icon" />
@@ -154,8 +152,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
@@ -171,7 +168,7 @@ const NavBar = () => {
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-        <p>{t('REPORTS_SIDEBAR.REPORT')}</p>
+        <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
       </Link>
     </div>
   );
@@ -189,7 +186,7 @@ const NavBar = () => {
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
-          <p>{t('NAV_BAR.APPLICATIONS')}</p>
+          <p>{t('common:NAV_BAR.APPLICATIONS')}</p>
         </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -212,14 +209,14 @@ const NavBar = () => {
       >
         <FiLayout size={20} />
 
-        <p>{t('NAV_BAR.DASHBOARD')}</p>
+        <p>{t('common:NAV_BAR.DASHBOARD')}</p>
       </Link>
       <Link
         href={ISUNFA_ROUTE.CONTACT_US}
         className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
       >
         <FiMail size={20} />
-        <p>{t('NAV_BAR.CONTACT_US')}</p>
+        <p>{t('common:NAV_BAR.CONTACT_US')}</p>
       </Link>
 
       {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
@@ -241,8 +238,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
@@ -250,7 +246,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px"
         > */}
         <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-        <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+        <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
         {/* </Link> */}
       </button>
 
@@ -261,7 +257,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px"
         >
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
-          <p>{t('NAV_BAR.ACCOUNT')}</p>
+          <p>{t('common:NAV_BAR.ACCOUNT')}</p>
         </Link>
       </button>
 
@@ -269,8 +265,7 @@ const NavBar = () => {
       <button
         type="button"
         // TODO: (20240517 - Shirley) [Beta] temp disabled
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         <Image src={'/icons/document.svg'} width={48} height={48} alt="document_icon" />
@@ -280,8 +275,7 @@ const NavBar = () => {
       <button
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
-        // eslint-disable-next-line react/jsx-boolean-value
-        disabled={true}
+        disabled
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
@@ -299,7 +293,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px"
         >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
-          <p>{t('REPORTS_SIDEBAR.REPORT')}</p>
+          <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
         </Link>
       </button>
     </div>
@@ -332,8 +326,7 @@ const NavBar = () => {
           <button
             type="button"
             // TODO: (20240517 - Shirley) [Beta] temp disabled
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
+            disabled
             className="hidden shrink-0 flex-col justify-center rounded-xs px-2 text-button-surface-strong-secondary disabled:text-button-text-disable"
           >
             <div className="flex items-center justify-center">
@@ -383,7 +376,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
-            {t('NAV_BAR.SWITCH_COMPANY')}
+            {t('common:NAV_BAR.SWITCH_COMPANY')}
           </div>
         </Button>
         <Button
@@ -409,7 +402,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
-            {t('NAV_BAR.SUBSCRIPTION_BILLS')}
+            {t('common:NAV_BAR.SUBSCRIPTION_BILLS')}
           </div>
         </Button>
         <Button
@@ -435,7 +428,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
-            {t('NAV_BAR.SETTING')}
+            {t('common:NAV_BAR.SETTING')}
           </div>
         </Button>
         <div className="mt-3 flex flex-col justify-center py-2.5">
@@ -465,7 +458,7 @@ const NavBar = () => {
             </svg>
           </div>
           <div className="text-base font-medium leading-6 tracking-normal">
-            {t('NAV_BAR.LOGOUT')}
+            {t('common:NAV_BAR.LOGOUT')}
           </div>
         </Button>
       </div>
@@ -562,7 +555,7 @@ const NavBar = () => {
             <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
               <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
                 <div className="justify-center px-1 text-xs">
-                  {t('COMMON.V')}
+                  {t('common:COMMON.V')}
                   {version}
                 </div>
               </div>
@@ -595,7 +588,7 @@ const NavBar = () => {
                 </svg>
               </div>
               <div className="text-base font-medium leading-6 tracking-normal">
-                {t('NAV_BAR.DASHBOARD')}
+                {t('common:NAV_BAR.DASHBOARD')}
               </div>
             </Link>
             <Link
@@ -621,7 +614,7 @@ const NavBar = () => {
                 </svg>
               </div>
               <div className="text-base font-medium leading-6 tracking-normal">
-                {t('NAV_BAR.CONTACT_US')}
+                {t('common:NAV_BAR.CONTACT_US')}
               </div>
             </Link>
           </div>

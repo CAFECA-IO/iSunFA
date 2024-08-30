@@ -10,7 +10,16 @@ interface IReportListProps {
   reports: IReport[];
 }
 const PendingReportList = ({ reports }: IReportListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   const [reportItems, setReportItems] = useState<IReport[]>(reports);
@@ -72,10 +81,10 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       subtitle: 'Are you sure\n you want to delete the process?',
       content: `It will take 30 - 40 minutes\n
       if you want to apply it again.`,
-      submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
+      submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -219,7 +228,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       >
         {' '}
         {isCheckboxVisible ? (
-          <p>{t('PENDING_REPORT_LIST.CANCEL')}</p>
+          <p>{t('report_401:PENDING_REPORT_LIST.CANCEL')}</p>
         ) : (
           <>
             <svg
@@ -236,7 +245,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
+            <p>{t('report_401:PENDING_REPORT_LIST.SELECT')}</p>
           </>
         )}
       </Button>
@@ -275,14 +284,18 @@ const PendingReportList = ({ reports }: IReportListProps) => {
           <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
-            <th className="text-center">{t('PENDING_REPORT_LIST.DATE')}</th>
-            <th className="px-16px">{t('PENDING_REPORT_LIST.REPORT_NAME')}</th>
+            <th className="text-center">{t('report_401:PENDING_REPORT_LIST.DATE')}</th>
+            <th className="px-16px">{t('report_401:PENDING_REPORT_LIST.REPORT_NAME')}</th>
             <th className="hidden px-16px lg:table-cell">{t('journal:JOURNAL.TYPE')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('PENDING_REPORT_LIST.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">
-              {t('PENDING_REPORT_LIST.REMAINING_TIME')}
+              {t('report_401:PENDING_REPORT_LIST.PERIOD')}
             </th>
-            <th className="hidden px-16px lg:table-cell">{t('PENDING_REPORT_LIST.OPERATIONS')}</th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:PENDING_REPORT_LIST.REMAINING_TIME')}
+            </th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:PENDING_REPORT_LIST.OPERATIONS')}
+            </th>
           </tr>
         </thead>
 

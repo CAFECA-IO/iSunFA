@@ -1,4 +1,3 @@
-import { promises as fs } from 'fs';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
@@ -7,8 +6,7 @@ import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/co
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
-import path from 'path';
-import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { FileFolder } from '@/constants/file';
 import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 import { ROCDate } from '@/interfaces/locale';
 
@@ -333,11 +331,11 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
 }
 
 export function transformOCRImageIDToURL(
-  documentType: string,
+  fileFolder: FileFolder,
   companyId: number,
-  imageID: string
+  imageId: string
 ): string {
-  return `/api/v1/company/${companyId}/${documentType}/${imageID}/image`;
+  return `/api/v1/company/${companyId}/image/${imageId}?fileType=${fileFolder}`;
 }
 
 export function transformBytesToFileSizeString(bytes: number): string {
@@ -395,18 +393,6 @@ export const getTodayPeriodInSec = () => {
   );
   return { startTimeStamp, endTimeStamp };
 };
-
-// Info Murky (20240531): This function can only be used in the server side
-export async function mkUploadFolder(subDir: string) {
-  const uploadDir =
-    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
-
-  try {
-    await fs.mkdir(uploadDir, { recursive: false });
-  } catch (error) {
-    // Info: (20240329) Murky: Do nothing if /tmp already exist
-  }
-}
 
 export function isParamNumeric(param: string | string[] | undefined): param is string {
   if (!param || Array.isArray(param)) {
@@ -489,12 +475,15 @@ export function getTimestampOfSameDateOfLastYear(todayInSecond: number) {
 }
 
 export function getTimestampOfLastSecondOfDate(date: Date | number) {
+  let dateObject: Date;
   if (typeof date === 'number') {
-    // eslint-disable-next-line no-param-reassign
-    date = new Date(timestampInMilliSeconds(date));
+    // Info: (20230829 - Anna) 移除no-param-reassign註解，改將參數date的處理結果存在新變數，而不是直接重新賦值給date
+    dateObject = new Date(timestampInMilliSeconds(date));
+  } else {
+    dateObject = date;
   }
 
-  const timestamp = date.setHours(23, 59, 59, 999);
+  const timestamp = dateObject.setHours(23, 59, 59, 999);
   return timestampInSeconds(timestamp);
 }
 

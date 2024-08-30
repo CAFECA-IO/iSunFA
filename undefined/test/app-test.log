@@ -1,0 +1,34 @@
+{"level":50,"time":1725014382672,"pid":12804,"hostname":"eddieshao-MBP.mymeshdevice.home","err":{"type":"Error","message":"fetch failed","stack":"Error: fetch failed\n    at Object.<anonymous> (/Users/gibbs/iSunFA/src/pages/api/v1/company/[companyId]/ocr/index.test.ts:132:53)\n    at Promise.then.completed (/Users/gibbs/iSunFA/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/gibbs/iSunFA/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/gibbs/iSunFA/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at _runTest (/Users/gibbs/iSunFA/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/Users/gibbs/iSunFA/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/Users/gibbs/iSunFA/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/Users/gibbs/iSunFA/node_modules/jest-circus/build/run.js:121:9)\n    at run (/Users/gibbs/iSunFA/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/Users/gibbs/iSunFA/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/Users/gibbs/iSunFA/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/Users/gibbs/iSunFA/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/Users/gibbs/iSunFA/node_modules/jest-runner/build/runTest.js:444:34)\n    at Object.worker (/Users/gibbs/iSunFA/node_modules/jest-runner/build/testWorker.js:106:12)"},"msg":"Ocr uploadImageToAICH error, happen when POST AICH API"}
+{"level":30,"time":1725014382703,"pid":12804,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725014382703,"pid":12804,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725014382751,"pid":12804,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725014382752,"pid":12804,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725014382758,"pid":12804,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":null,"msg":"Ocr getPayloadFromResponseJSON response is not json, or json do not have payload"}
+{"level":30,"time":1725015281857,"pid":15016,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725015281866,"pid":15016,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725015281878,"pid":15016,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725015281883,"pid":15016,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725015479656,"pid":15183,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725015479661,"pid":15183,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725015479672,"pid":15183,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725015479673,"pid":15183,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016187257,"pid":16027,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016187266,"pid":16027,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016187277,"pid":16027,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016187278,"pid":16027,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016431053,"pid":16096,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016431060,"pid":16096,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016431079,"pid":16096,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016431080,"pid":16096,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016473214,"pid":16335,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016473221,"pid":16335,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016473241,"pid":16335,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016473241,"pid":16335,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016573500,"pid":16513,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016573548,"pid":16513,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016573584,"pid":16513,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016573585,"pid":16513,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016582394,"pid":16571,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016582416,"pid":16571,"hostname":"eddieshao-MBP.mymeshdevice.home","msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":30,"time":1725016582461,"pid":16571,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}
+{"level":50,"time":1725016582462,"pid":16571,"hostname":"eddieshao-MBP.mymeshdevice.home","aich_response":{"ok":false},"msg":"Ocr uploadImageToAICH response is not ok"}

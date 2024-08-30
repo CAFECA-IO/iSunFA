@@ -32,7 +32,16 @@ import { APIName } from '@/constants/api_connection';
 //   handelClick: () => void;
 // }) =>
 const StepOneTab = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -44,13 +53,11 @@ const StepOneTab = () => {
     pendingOCRList,
   } = useAccountingCtx();
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentFilePage, setCurrentFilePage] = useState<number>(1);
+  // const [currentFilePage, setCurrentFilePage] = useState<number>(1);
   const [fileList, setFileList] = useState<IOCR[]>(OCRList);
   // const [pendingFileList, setPendingFileList] = useState<IOCR[]>(pendingOCRList);
   // Info: (20240809 - Shirley) disabled for now , 分頁功能在 alpha release 還沒實作
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [, /* totalPages */ setTotalPages] = useState<number>(1);
   const { trigger: deleteOCRTrigger } = APIHandler<void>(APIName.OCR_DELETE);
 
   useEffect(() => {
@@ -227,7 +234,7 @@ const StepOneTab = () => {
       {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
         <input
           className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-lightGray4"
-          placeholder={t('COMMON.ENTER_A_DESCRIPTION')}
+          placeholder={t('common:COMMON.ENTER_A_DESCRIPTION')}
           value={inputDescription}
           onChange={handleInputChange}
         />
@@ -236,12 +243,12 @@ const StepOneTab = () => {
           className="flex items-center gap-10px p-20px text-tertiaryBlue hover:text-primaryYellow"
           onClick={handelClick}
         >
-          <p className="hidden md:block">{t('CONTACT_US.SUBMIT')}</p>
+          <p className="hidden md:block">{t('common:CONTACT_US.SUBMIT')}</p>
           <FiSend />
         </button>
       </div> */}
       {/* Info: (20240422 - Julian) tip */}
-      {/* <p className="text-sm text-lightGray5">{t('journal:JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
+      {/* <p className="text-sm text-input-text-secondary">{t('journal:JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
       {/* Info: (20240422 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-lightGray4 md:hidden" />
@@ -255,7 +262,7 @@ const StepOneTab = () => {
         {/* Info: (20240422 - Julian) Upload area */}
         <JournalUploadArea />
 
-        <h3 className="text-xl font-bold text-lightGray4">{t('COMMON.OR')}</h3>
+        <h3 className="text-xl font-bold text-lightGray4">{t('common:COMMON.OR')}</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
         <div className="h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1">
@@ -263,8 +270,7 @@ const StepOneTab = () => {
             type="button"
             onClick={qrCodeScanClickHandler}
             // ToDo: (20240802 - Julian) [Beta] Not released yet
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
+            disabled
             className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable disabled:text-drag-n-drop-text-disable md:p-48px"
           >
             <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />

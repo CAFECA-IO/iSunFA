@@ -113,7 +113,7 @@ const MessageModal = ({
     <button
       type="button"
       onClick={modalVisibilityHandler}
-      className="absolute right-12px top-12px text-lightGray5"
+      className="absolute right-12px top-12px text-icon-surface-single-color-primary"
     >
       <RxCross2 size={20} />
     </button>
@@ -122,7 +122,7 @@ const MessageModal = ({
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div
-        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-white px-32px py-16px`}
+        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-alert-surface-background px-32px py-16px`}
       >
         {isDisplayCross}
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
@@ -133,7 +133,9 @@ const MessageModal = ({
           <p className="text-base text-text-state-error">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
           <div className="space-y-1 text-sm text-text-neutral-primary">{displayedContent}</div>
-          <div className="text-sm font-semibold text-lightGray5">{notes}</div>
+          <div className="text-sm font-semibold text-accordion-surface-background-text-paragraph">
+            {notes}
+          </div>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}

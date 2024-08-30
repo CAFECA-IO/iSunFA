@@ -33,7 +33,16 @@ const Skeleton = ({ width, height, rounded, className }: ISkeletonProps) => {
 };
 
 export const SkeletonList = ({ count }: ISkeletonListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   return (
     <div role="status" className="space-y-2 rounded p-4 md:p-6">
       {' '}
@@ -49,7 +58,7 @@ export const SkeletonList = ({ count }: ISkeletonListProps) => {
           </div>
         </div>
       ))}
-      <span className="sr-only">{t('MY_REPORTS_SECTION.LOADING')}</span>
+      <span className="sr-only">{t('report_401:MY_REPORTS_SECTION.LOADING')}</span>
     </div>
   );
 };

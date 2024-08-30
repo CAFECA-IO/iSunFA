@@ -38,7 +38,16 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmData,
 }: IConfirmModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const {
     AIStatus,
@@ -164,7 +173,7 @@ const ConfirmModal = ({
       submitBtnStr: t('journal:JOURNAL.CONFIRM'),
       // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
       backBtnFunction: () => {
         getAIStatusHandler(undefined, false);
         messageModalVisibilityHandler();
@@ -224,7 +233,7 @@ const ConfirmModal = ({
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
+              {t('report_401:AUDIT_REPORT.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -238,9 +247,9 @@ const ConfirmModal = ({
       messageModalDataHandler({
         title: t('journal:CONFIRM_MODAL.UPLOAD_FAILED'),
         subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
-        content: t('COMMON.ERROR_CODE', { code: res.code }),
+        content: t('common:COMMON.ERROR_CODE', { code: res.code }),
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -309,7 +318,7 @@ const ConfirmModal = ({
         subMsg: 'Please try again later',
         content: `Error code: ${getJournalCode}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -337,8 +346,8 @@ const ConfirmModal = ({
           resultId: askAIId,
         },
       });
-      setIsAILoading(false);
     }
+    setIsAILoading(false);
     return () => getAIStatusHandler(undefined, false);
   }, [hasCompanyId, AIStatus]);
 
@@ -369,7 +378,6 @@ const ConfirmModal = ({
   }, [totalCredit, totalDebit, accountingVoucher, totalPrice]);
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
-  // const displayType = <p className="text-surface-state-error">{eventType}</p>;
   const typeString = eventType && typeof eventType === 'string' ? eventType : '';
   const translatedType = typeString
     ? t(`journal:JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
@@ -381,44 +389,44 @@ const ConfirmModal = ({
   const displayReason = (
     <div className="flex flex-col items-center gap-x-12px md:flex-row">
       <p>{reason}</p>
-      <div className="hidden items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+      <div className="hidden items-center gap-4px rounded-xs border border-badge-stroke-primary px-4px text-sm text-badge-text-primary">
         <LuTag size={14} />
         {t('journal:CONFIRM_MODAL.PRINTER')}
       </div>
     </div>
   );
 
-  const displayVendor = <p className="font-semibold text-navyBlue2">{companyName}</p>;
+  const displayVendor = <p className="font-semibold text-text-neutral-primary">{companyName}</p>;
 
-  const displayDescription = <p className="font-semibold text-navyBlue2">{description}</p>;
+  const displayDescription = (
+    <p className="font-semibold text-text-neutral-primary">{description}</p>
+  );
 
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span>{' '}
+        <span className="font-semibold text-text-neutral-primary">{totalPrice}</span>{' '}
         {t('journal:JOURNAL.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{taxPercentage}%</span>{' '}
+        (<span className="font-semibold text-text-neutral-primary">{taxPercentage}%</span>{' '}
         {t('journal:JOURNAL.TAX')}
-        <span className="font-semibold text-navyBlue2">{fee}</span>
+        <span className="font-semibold text-text-neutral-primary">{fee}</span>
         {t('journal:JOURNAL.TWD_FEE')})
       </p>
     </div>
   );
 
   const displayMethod = (
-    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+    <p className="text-right font-semibold text-text-neutral-primary">{t(paymentMethod)}</p>
   );
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
-  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
   const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
   const translatedPeriod = t(
     `journal:JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`
   );
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
-  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
   const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
   const translatedStatus = t(
     `journal:JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`
@@ -426,48 +434,49 @@ const ConfirmModal = ({
 
   const displayProject =
     project !== 'None' ? (
-      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-white">
+      <div className="flex w-fit items-center gap-2px rounded bg-badge-surface-soft-primary px-8px py-2px font-medium text-badge-text-primary-solid">
+        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-avatar-text-in-dark-background">
           {projectCode}
         </div>
         <p>{project}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.NONE')}</p>
+      <p className="font-semibold text-text-neutral-primary">{t('journal:JOURNAL.NONE')}</p>
     );
 
   // Info: (20240731 - Anna) 把合約None加上多語系
-  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
   const displayContract =
     contract !== 'None' ? (
-      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <p className="font-semibold text-darkBlue">{contract}</p>
+      <div className="flex w-fit items-center gap-2px rounded bg-badge-surface-soft-primary px-8px py-2px font-medium text-badge-text-primary-solid">
+        <p className="font-semibold text-link-text-primary">{contract}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('journal:JOURNAL.NONE')}</p>
+      <p className="font-semibold text-text-neutral-primary">{t('journal:JOURNAL.NONE')}</p>
     );
 
-  const displayedHint =
-    ((AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
-      isAILoading) ||
-    AIResultSuccess === undefined ? (
-      <p className="text-slider-surface-bar">
-        {t('journal:CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
-        <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
-        <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
-        <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
-      </p>
-    ) : hasAIResult ? (
-      <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
-    ) : AIResultSuccess === false && AIResultCode ? (
-      <p className="text-text-neutral-secondary">
-        {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
-      </p>
-    ) : (
-      <p className="text-slider-surface-bar">
-        {t('journal:CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
-      </p>
-    );
+  const displayedHint = hasAIResult ? (
+    // Info: (20240829 - Julian) AI 解析成功
+    <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+  ) : (AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
+    isAILoading ? (
+    // Info: (20240829 - Julian) AI 載入中
+    <p className="text-slider-surface-bar">
+      {t('journal:CONFIRM_MODAL.AI_TECHNOLOGY_PROCESSING')}
+      <span className="mx-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-300"></span>
+      <span className="mr-2px inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar delay-150"></span>
+      <span className="inline-block h-3px w-3px animate-bounce rounded-full bg-slider-surface-bar"></span>
+    </p>
+  ) : !AIResultSuccess && AIResultCode ? (
+    // Info: (20240829 - Julian) AI 解析失敗
+    <p className="text-text-neutral-secondary">
+      {t('journal:CONFIRM_MODAL.AI_DETECTION_ERROR_ERROR_CODE')} {AIResultCode}
+    </p>
+  ) : (
+    // Info: (20240829 - Julian) AI 無解析結果
+    <p className="text-slider-surface-bar">
+      {t('journal:CONFIRM_MODAL.THERE_ARE_NO_RECOMMENDATIONS_FROM_AI')}
+    </p>
+  );
 
   const accountingVoucherRow = accountingVoucher.map((voucher) => (
     <AccountingVoucherRow key={voucher.id} accountingVoucher={voucher} />
@@ -482,73 +491,75 @@ const ConfirmModal = ({
     .map((credit) => <AccountingVoucherRowMobile type="Credit" accountingVoucher={credit} />);
 
   const displayAccountingVoucherMobile = (
-    <div className="flex w-full flex-col gap-24px py-10px text-sm text-lightGray5 md:hidden">
+    <div className="flex w-full flex-col gap-24px py-10px text-sm md:hidden">
       {/* Info: (20240510 - Julian) Debit */}
       <div className="flex flex-col gap-24px">
         {/* Info: (20240510 - Julian) Divider */}
         <div className="flex items-center gap-4">
-          <hr className="flex-1 border-lightGray3" />
-          <div className="flex items-center gap-2 text-sm">
+          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
             <p>Debit</p>
           </div>
-          <hr className="flex-1 border-lightGray3" />
+          <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20240510 - Julian) List */}
         <div className="flex flex-col">{debitListMobile}</div>
 
         {/* Info: (20240510 - Julian) Add Button */}
-        <button
+        <Button
           id="add-debit-btn-mobile"
           type="button"
           onClick={addDebitRowHandler}
-          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+          variant="tertiaryOutline"
+          className="mx-auto mt-24px h-44px w-44px p-0"
         >
           <FiPlus size={20} />
-        </button>
+        </Button>
       </div>
 
       {/* Info: (20240510 - Julian) Credit */}
       <div className="flex flex-col gap-24px">
         {/* Info: (20240510 - Julian) Divider */}
         <div className="flex items-center gap-4">
-          <hr className="flex-1 border-lightGray3" />
-          <div className="flex items-center gap-2 text-sm">
+          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
             <p>Credit</p>
           </div>
-          <hr className="flex-1 border-lightGray3" />
+          <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20240510 - Julian) List */}
         <div className="flex flex-col">{creditListMobile}</div>
 
         {/* Info: (20240510 - Julian) Add Button */}
-        <button
+        <Button
           id="add-credit-btn-mobile"
           type="button"
           onClick={addCreditRowHandler}
-          className="mx-auto mt-24px rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+          className="mx-auto mt-24px h-44px w-44px p-0"
+          variant="tertiaryOutline"
         >
           <FiPlus size={20} />
-        </button>
+        </Button>
       </div>
     </div>
   );
 
   const displayAccountingVoucher = (
-    <div className="hidden w-full flex-col gap-24px text-base text-lightGray5 md:flex">
+    <div className="hidden w-full flex-col gap-24px text-base md:flex">
       {/* Info: (20240429 - Julian) Divider */}
       <div className="flex items-center gap-4">
-        <hr className="flex-1 border-lightGray3" />
-        <div className="flex items-center gap-2 text-sm">
+        <hr className="flex-1 border-divider-stroke-lv-1" />
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
           <p>{t('journal:JOURNAL.ACCOUNTING_VOUCHER')}</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-1" />
       </div>
       {/* Info: (20240429 - Julian) List */}
-      <div className="rounded-sm bg-lightGray7 p-20px">
-        <table className="w-full text-left text-navyBlue2">
+      <div className="rounded-sm bg-surface-neutral-main-background p-20px">
+        <table className="w-full text-left text-input-text-primary">
           {/* Info: (20240429 - Julian) Header */}
           <thead>
             <tr>
@@ -635,9 +646,9 @@ const ConfirmModal = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-white py-16px md:max-h-90vh">
+      <div className="relative flex max-h-500px w-90vw flex-col rounded-sm bg-card-surface-primary py-16px md:max-h-90vh">
         {/* Info: (20240429 - Julian) title */}
-        <div className="flex items-center gap-6px px-20px font-bold text-navyBlue2">
+        <div className="flex items-center gap-6px px-20px font-bold text-card-text-primary">
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
           {/* Info: (20240429 - Julian) desktop title */}
           <h1 className="hidden whitespace-nowrap text-xl md:block">
@@ -650,15 +661,15 @@ const ConfirmModal = ({
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-20px top-20px text-lightGray5"
+          className="absolute right-20px top-20px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
 
         {/* Info: (20240527 - Julian) Body */}
-        <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-lightGray7 px-20px pb-20px md:bg-white">
+        <div className="mt-10px flex flex-col overflow-y-auto overflow-x-hidden bg-surface-neutral-main-background px-20px pb-20px md:bg-transparent">
           {/* Info: (20240429 - Julian) content */}
-          <div className="mt-20px flex w-full flex-col gap-12px text-sm text-lightGray5 md:text-base">
+          <div className="mt-20px flex w-full flex-col gap-12px text-sm text-text-neutral-secondary md:text-base">
             {/* Info: (20240429 - Julian) Type */}
             <div className="flex items-center justify-between">
               <p>{t('journal:JOURNAL.TYPE')}</p>
@@ -667,7 +678,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between">
-              <p>{t('DATE_PICKER.DATE')}</p>
+              <p>{t('common:DATE_PICKER.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240429 - Julian) Reason */}
@@ -700,7 +711,7 @@ const ConfirmModal = ({
               <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_PERIOD')}</p>
               {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
               {translatedPeriod && (
-                <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
+                <p className="font-semibold text-text-neutral-primary">{translatedPeriod}</p>
               )}
             </div>
             {/* Info: (20240429 - Julian) Payment Status */}
@@ -708,13 +719,13 @@ const ConfirmModal = ({
               <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_STATUS')}</p>
               {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
               {translatedStatus && (
-                <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
+                <p className="font-semibold text-text-neutral-primary">{translatedStatus}</p>
               )}
               {/* Info: (20240731 - Anna) {displayStatus} */}
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">
-              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240429 - Julian) Contract */}
@@ -759,25 +770,28 @@ const ConfirmModal = ({
             </div>
 
             {/* Info: (20240430 - Julian) Add Button */}
-            <button
-              id="add-row-btn"
-              type="button"
-              onClick={addRowHandler}
-              className="mx-auto hidden rounded-sm border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow md:block"
-            >
-              <FiPlus size={20} />
-            </button>
+            <div className="flex justify-center">
+              <Button
+                id="add-row-btn"
+                type="button"
+                onClick={addRowHandler}
+                variant="tertiaryOutline"
+                className="mt-24px h-44px w-44px p-0"
+              >
+                <FiPlus size={20} />
+              </Button>
+            </div>
           </div>
 
           {/* Info: (20240429 - Julian) checkbox */}
           <div className="my-24px flex flex-wrap justify-between gap-y-4px">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-text-neutral-primary">
               {/* Info: (tzuhan - 20230513) eslint recommendation `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.eslint  */}
               {t('journal:CONFIRM_MODAL.ATTENTION')}
             </p>
             <label
               htmlFor="addToBook"
-              className="ml-auto flex items-center gap-8px text-sm text-navyBlue2"
+              className="ml-auto flex items-center gap-8px text-sm text-checkbox-text-primary"
             >
               <input id="addToBook" className={checkboxStyle} type="checkbox" />
               <p>{t('journal:CONFIRM_MODAL.ADD_ACCOUNTING_VOUCHER')}</p>
@@ -800,14 +814,9 @@ const ConfirmModal = ({
 
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
-          <button
-            id="cancel-btn"
-            type="button"
-            onClick={closeHandler}
-            className="flex items-center gap-4px px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
-          >
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
-          </button>
+          <Button id="cancel-btn" type="button" onClick={closeHandler} variant="tertiaryBorderless">
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+          </Button>
           <Button
             id="confirm-btn"
             type="button"
@@ -822,7 +831,6 @@ const ConfirmModal = ({
               )
             }
             onClick={confirmHandler}
-            className="disabled:bg-lightGray6"
           >
             {t('journal:JOURNAL.CONFIRM')}
           </Button>

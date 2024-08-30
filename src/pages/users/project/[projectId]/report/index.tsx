@@ -18,7 +18,16 @@ interface IProjectReportPageProps {
 }
 
 const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
   // ToDo: (20240624 - Julian) [Beta] Replace with api data
   const projectName = 'BAIFA';
@@ -36,13 +45,13 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
             {/* Info: (20240624 - Julian) Title */}
             <div className="flex items-center justify-between">
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                {projectName} - {t('REPORTS_SIDEBAR.ANALYSIS_REPORT')}
+                {projectName} - {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORT')}
               </h1>
 
               <Link href={`${ISUNFA_ROUTE.PROJECT_LIST}`}>
                 <Button type="button" variant="tertiary" className="flex items-center">
                   <BsClipboardPlus size={24} />
-                  <p>{t('MY_REPORTS_SECTION.GENERATE_REPORT')}</p>
+                  <p>{t('report_401:MY_REPORTS_SECTION.GENERATE_REPORT')}</p>
                 </Button>
               </Link>
             </div>
@@ -64,7 +73,7 @@ const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {projectName} {t('REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA
+          {projectName} {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA
         </title>
       </Head>
 

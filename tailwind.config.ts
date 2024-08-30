@@ -679,41 +679,28 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        lilac: '#ABA7BD',
-
         primaryYellow: '#FFA502',
         primaryYellow2: '#996301',
         primaryYellow3: '#FFD892',
-        primaryYellow4: '#FFA600',
-        primaryYellow5: '#CC8401',
-        primaryYellow6: '#997C15',
 
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
 
         lightGray: '#CED1D7',
-        lightGray2: '#828998',
+
         lightGray3: '#C1C9D5',
         lightGray4: '#7F8A9D',
-        lightGray5: '#58667F',
+
         lightGray6: '#CDD1D9',
-        lightGray7: '#F4F5F7',
-        lightGray8: '#DEE2E6',
-        lightGray9: '#E0E0E0',
 
         navyBlue: '#002462',
         navyBlue2: '#27354E',
-        darkBlue: '#1570EF',
-        darkBlue2: '#314362',
       },
       backgroundImage: {
-        login_bg: "url('/images/login_bg.svg')",
+        login_bg: "url('/images/login_bg.png')",
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
-        contact_bg: 'url("/elements/contact_bg.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
-        purpleLinear2:
-          'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
 
@@ -1304,56 +1291,28 @@ module.exports = {
         xl: '0 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
         xlSide: '4px 0px 24px rgba(0, 0, 0, 0.40)',
-        purple: '0px 0px 6px 0px #AB50FF',
-        violet:
-          '0px 0px 12px 0px rgba(175, 80, 255, 0.30), 0px 0px 24px 0px rgba(175, 80, 255, 0.30) inset',
-
-        custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
-        custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',
-        custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
-        custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
-        custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
 
         dropmenu:
           '0px 166px 46px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.10));',
-        tooltip:
-          '0px 166px 46px 0px rgba(49, 67, 98, 0.00), 0px 106px 42px 0px rgba(49, 67, 98, 0.01), 0px 60px 36px 0px rgba(49, 67, 98, 0.05), 0px 27px 27px 0px rgba(49, 67, 98, 0.09), 0px 7px 15px 0px rgba(49, 67, 98, 0.10)',
-        1: 'var(--shadow-lv-1)',
-        2: 'var(--shadow-lv-2)',
-        3: 'var(--shadow-lv-3)',
-        4: 'var(--shadow-lv-4)',
-        5: 'var(--shadow-lv-5)',
 
         sidebarMobile:
           '0px -2px 5px 0px #3143621A, 0px -6px 10px 0px #31436217, 0px -11px 13px 0px #3143620D, 0px -28px 15px 0px #31436203, 0px -50px 17px 0px #31436200',
         navbar:
           '0px 2px 5px 0px #3143621A, 0px 6px 10px 0px #31436217, 0px 11px 13px 0px #3143620D, 0px 28px 15px 0px #31436203, 0px 50px 17px 0px #31436200',
 
-        revertBtn:
-          '0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
         scrollBtn:
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
-        customShadowSmall:
-          '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0px 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
         xlSide: '4px 0px 24px rgba(0, 0, 0, 0.40)',
-        purple: '0 2px 10px #AB50FF',
-
-        custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
-        custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',
-        custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
-        custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
-        custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
 
         '3xl': '0 35px 35px rgba(0, 0, 0, 0.25)',
         '4xl': ['0 35px 35px rgba(0, 0, 0, 0.25)', '0 45px 65px rgba(0, 0, 0, 0.15)'],
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
       },
@@ -1399,7 +1358,6 @@ module.exports = {
       backgroundPosition: {
         'top-4': 'center top -2.5rem',
         'top-10': 'center top -10rem right -2.5rm',
-        // 'right-4': 'right -2.5rem center',
       },
       keyframes: {
         slideBottomToTop: {
@@ -1425,9 +1383,6 @@ module.exports = {
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
-        slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
-        slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
-        slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
         spinFast: 'spin 1s linear infinite',
         loading: 'loading 1.5s infinite',
       },

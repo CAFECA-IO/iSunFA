@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-
 import { IResponseData } from '@/interfaces/response_data';
 import { convertStringToNumber, formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
-
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { checkAuthorization } from '@/lib/utils/auth_check';
@@ -17,9 +15,8 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 import { SortOrder } from '@/constants/sort';
 
-export function isCompanyIdValid(companyId: unknown): companyId is number {
-  const isNumber = typeof companyId === 'number';
-  return isNumber;
+function isCompanyIdValid(companyId: unknown): companyId is number {
+  return typeof companyId === 'number';
 }
 
 function isValidQuery(query: unknown): query is {
@@ -60,7 +57,7 @@ function isValidQuery(query: unknown): query is {
   );
 }
 
-export function formatQuery(query: unknown) {
+function formatQuery(query: unknown) {
   if (typeof query !== 'object' || query === null || !isValidQuery(query)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -74,7 +71,7 @@ export function formatQuery(query: unknown) {
   const endDateInSecond =
     endDateNumber !== undefined ? timestampInSeconds(endDateNumber) : undefined;
 
-  const cleanQuery = {
+  return {
     page: page ? Number(page) : DEFAULT_PAGE_START_AT,
     pageSize: pageSize ? Number(pageSize) : DEFAULT_PAGE_LIMIT,
     eventType: eventType || undefined,
@@ -84,87 +81,115 @@ export function formatQuery(query: unknown) {
     endDate: endDateInSecond,
     searchQuery: searchQuery || undefined,
   };
-
-  return cleanQuery;
 }
 
-export async function handleGetRequest(companyId: number, req: NextApiRequest) {
-  const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
-    formatQuery(req.query);
-  const uploadedPaginatedJournalList = await listJournal(
-    companyId,
-    JOURNAL_EVENT.UPLOADED,
-    page,
-    pageSize,
-    eventType,
-    sortBy,
-    sortOrder,
-    startDate,
-    endDate,
-    searchQuery
-  );
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: { [key: string]: IPaginatedData<IJournalListItem[]> } | null = null;
 
-  const upComingPaginatedJournalList = await listJournal(
-    companyId,
-    JOURNAL_EVENT.UPCOMING,
-    page,
-    pageSize,
-    eventType,
-    sortBy,
-    sortOrder,
-    startDate,
-    endDate,
-    searchQuery
-  );
-  const uploadedPaginatedJournalListItems = {
-    ...uploadedPaginatedJournalList,
-    data: formatIJournalListItems(uploadedPaginatedJournalList.data),
-  };
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
 
-  const upComingPaginatedJournalListItems = {
-    ...upComingPaginatedJournalList,
-    data: formatIJournalListItems(upComingPaginatedJournalList.data),
-  };
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else if (!isCompanyIdValid(companyId)) {
+      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+    } else {
+      const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
+        formatQuery(req.query);
+      try {
+        const uploadedPaginatedJournalList = await listJournal(
+          companyId,
+          JOURNAL_EVENT.UPLOADED,
+          page,
+          pageSize,
+          eventType,
+          sortBy,
+          sortOrder,
+          startDate,
+          endDate,
+          searchQuery
+        );
 
-  const { httpCode, result } = formatApiResponse<{
-    [key: string]: IPaginatedData<IJournalListItem[]>;
-  }>(STATUS_MESSAGE.SUCCESS_LIST, {
-    [JOURNAL_EVENT.UPLOADED]: uploadedPaginatedJournalListItems,
-    [JOURNAL_EVENT.UPCOMING]: upComingPaginatedJournalListItems,
-  });
-  return {
-    httpCode,
-    result,
-  };
+        const upComingPaginatedJournalList = await listJournal(
+          companyId,
+          JOURNAL_EVENT.UPCOMING,
+          page,
+          pageSize,
+          eventType,
+          sortBy,
+          sortOrder,
+          startDate,
+          endDate,
+          searchQuery
+        );
+
+        const uploadedPaginatedJournalListItems = {
+          ...uploadedPaginatedJournalList,
+          data: formatIJournalListItems(uploadedPaginatedJournalList.data),
+        };
+
+        const upComingPaginatedJournalListItems = {
+          ...upComingPaginatedJournalList,
+          data: formatIJournalListItems(upComingPaginatedJournalList.data),
+        };
+
+        payload = {
+          [JOURNAL_EVENT.UPLOADED]: uploadedPaginatedJournalListItems,
+          [JOURNAL_EVENT.UPCOMING]: upComingPaginatedJournalListItems,
+        };
+        statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+      } catch (error) {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      }
+    }
+  }
+
+  return { statusMessage, payload };
 }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse<
+      IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>
+    >
+  ) => Promise<{
+    statusMessage: string;
+    payload: { [key: string]: IPaginatedData<IJournalListItem[]> } | null;
+  }>;
+} = {
+  GET: handleGetRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<
-    IResponseData<{
-      [key: string]: IPaginatedData<IJournalListItem[]>;
-    } | null>
-  >
+  res: NextApiResponse<IResponseData<{ [key: string]: IPaginatedData<IJournalListItem[]> } | null>>
 ) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: { [key: string]: IPaginatedData<IJournalListItem[]> } | null = null;
+
   try {
-    if (req.method === 'GET') {
-      const session = await getSession(req, res);
-      const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-      if (!isAuth) {
-        throw new Error(STATUS_MESSAGE.FORBIDDEN);
-      }
-      if (!isCompanyIdValid(companyId)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const { httpCode, result } = await handleGetRequest(companyId, req);
-      res.status(httpCode).json(result);
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<null>(error.message, null);
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<{
+      [key: string]: IPaginatedData<IJournalListItem[]>;
+    } | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

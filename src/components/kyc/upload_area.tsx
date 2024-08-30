@@ -29,7 +29,16 @@ const UploadArea = ({
   type: UploadDocumentKeys;
   onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
@@ -56,7 +65,7 @@ const UploadArea = ({
         title,
         content,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -345,10 +354,12 @@ const UploadArea = ({
         >
           <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
           <p className="mt-20px font-semibold text-navyBlue2">
-            {t('UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
-            <span className="text-darkBlue">{t('UPLOAD_AREA.BROWSE')}</span>
+            {t('common:UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
+            <span className="text-link-text-primary">{t('common:UPLOAD_AREA.BROWSE')}</span>
           </p>
-          <p className="text-center text-lightGray4">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
+          <p className="text-center text-drag-n-drop-text-note">
+            {t('common:UPLOAD_AREA.MAXIMUM_SIZE')}
+          </p>
 
           <input
             id={type}

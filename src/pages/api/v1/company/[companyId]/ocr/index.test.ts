@@ -1,4 +1,3 @@
-import { NextApiRequest } from 'next';
 import * as module from '@/pages/api/v1/company/[companyId]/ocr/index';
 import formidable from 'formidable';
 import { MockProxy, mock } from 'jest-mock-extended';
@@ -11,11 +10,20 @@ import * as repository from '@/lib/utils/repo/ocr.repo';
 import { Ocr } from '@prisma/client';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { IOCR } from '@/interfaces/ocr';
+import * as fileModule from '@/constants/file';
 
 global.fetch = jest.fn();
 
+jest.mock('../../../../../../constants/file', () => ({
+  getFileFolder: jest.fn(),
+  FileFolder: jest.requireActual('../../../../../../constants/file').FileFolder,
+}));
+
 jest.mock('../../../../../../lib/utils/parse_image_form', () => ({
   parseForm: jest.fn(),
+  findFileByName: jest.fn(),
+  readFile: jest.fn(),
+  bufferToBlob: jest.fn(),
 }));
 
 jest.mock('../../../../../../lib/utils/common', () => ({
@@ -40,17 +48,7 @@ jest.mock('../../../../../../lib/utils/auth_check', () => ({
   checkAdmin: jest.fn(),
 }));
 
-let req: jest.Mocked<NextApiRequest>;
-
-beforeEach(() => {
-  req = {
-    headers: {},
-    query: {},
-    method: '',
-    json: jest.fn(),
-    body: {},
-  } as unknown as jest.Mocked<NextApiRequest>;
-});
+beforeEach(() => {});
 
 afterEach(() => {
   jest.resetAllMocks();
@@ -69,9 +67,15 @@ describe('POST OCR', () => {
       jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
     });
     it('should return Blob', async () => {
-      const blob = await module.readImageFromFilePath(mockImage);
-      expect(fs.promises.readFile).toHaveBeenCalledWith(mockPath);
-      expect(blob).toEqual(new Blob([mockFileContent], { type: mockMimetype || undefined }));
+      jest.spyOn(fileModule, 'getFileFolder').mockReturnValue(mockPath);
+      jest.spyOn(parseImageForm, 'findFileByName').mockResolvedValue(mockPath);
+      const mockBuffer = Buffer.from('test');
+      const mockBlob = new Blob([mockBuffer], { type: mockMimetype || undefined });
+
+      jest.spyOn(parseImageForm, 'readFile').mockResolvedValue(mockBuffer);
+      jest.spyOn(parseImageForm, 'bufferToBlob').mockReturnValue(mockBlob);
+      const blob = await module.readImageFromFilePath(mockPath, mockMimetype);
+      expect(blob).toEqual(mockBlob);
     });
   });
 
@@ -81,7 +85,7 @@ describe('POST OCR', () => {
       const mockPath = './test';
       mockImage.filepath = mockPath;
 
-      const imageName = module.getImageName(mockImage);
+      const imageName = module.getImageName(mockPath);
       expect(imageName).toEqual('test');
     });
   });
@@ -165,123 +169,6 @@ describe('POST OCR', () => {
       await expect(module.getPayloadFromResponseJSON(promiseJson)).rejects.toThrow(
         STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL
       );
-    });
-  });
-
-  describe('postImageToAICH', () => {
-    let mockImages: MockProxy<formidable.Files<'image'>>;
-    let mockImage: MockProxy<formidable.File>;
-    let mockImageFields: {
-      imageSize: number;
-      imageName: string;
-      uploadIdentifier: string;
-    }[];
-    const mockPath = '/test';
-    const mockMimetype = 'image/png';
-    const mockFileContent = Buffer.from('mock image content');
-    beforeEach(() => {
-      mockImage = mock<formidable.File>();
-      mockImage.filepath = mockPath;
-      mockImage.mimetype = mockMimetype;
-      mockImageFields = [];
-      mockImage.size = 1000;
-      jest.spyOn(fs.promises, 'readFile').mockResolvedValue(mockFileContent);
-      jest.spyOn(common, 'transformOCRImageIDToURL').mockReturnValue('testImageUrl');
-
-      // Info: (20240604 - Murky) help me mock formidable.Files<"image">
-
-      mockImages = mock<formidable.Files<'image'>>({
-        image: [mockImage],
-      });
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('should return empty array when images is empty', async () => {
-      mockImages = mock<formidable.Files<'image'>>({
-        image: [],
-      });
-      mockImageFields = [];
-      const result = await module.postImageToAICH(mockImages, mockImageFields);
-      expect(result).toEqual([]);
-    });
-
-    it('should return resultJson', async () => {
-      const mockResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({ payload: 'testPayload' }),
-      };
-
-      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-      const resultJson = await module.postImageToAICH(mockImages, mockImageFields);
-
-      const resultJsonExpect = expect.objectContaining({
-        resultStatus: expect.any(String),
-        imageUrl: expect.any(String),
-        imageName: expect.any(String),
-        imageSize: expect.any(Number),
-      });
-
-      const resultJsonArrayExpect = expect.arrayContaining([resultJsonExpect]);
-
-      expect(resultJson).toEqual(resultJsonArrayExpect);
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/ocr/upload'),
-        expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
-      );
-    });
-  });
-
-  describe('getImageFileFromFormData', () => {
-    let mockFiles: MockProxy<formidable.Files<'image'>>;
-    let mockFields: MockProxy<formidable.Fields>;
-    beforeEach(() => {
-      mockFiles = {
-        image: [
-          {
-            filepath: '/test.png',
-            originalFilename: 'test.png',
-            mimetype: 'image/png',
-            hashAlgorithm: 'sha1',
-            newFilename: 'test.png',
-            size: 1024,
-            toJSON: jest.fn(),
-          },
-        ],
-      };
-      mockFields = {
-        imageSize: ['1 MB'],
-        imageName: ['test.png'],
-        uploadIdentifier: ['test'],
-      };
-    });
-
-    it('should return image file', async () => {
-      const mockReturn = {
-        fields: mockFields,
-        files: mockFiles,
-      };
-
-      jest.spyOn(parseImageForm, 'parseForm').mockResolvedValue(mockReturn);
-      const imageFile = await module.getImageFileAndFormFromFormData(req);
-
-      expect(imageFile).toEqual(mockReturn);
-    });
-
-    it('should return empty object when parseForm failed', async () => {
-      jest.spyOn(parseImageForm, 'parseForm').mockRejectedValue(new Error('parseForm failed'));
-      const result = await module.getImageFileAndFormFromFormData(req);
-
-      const expectReturn = {
-        fields: {},
-        files: {},
-      };
-
-      expect(result).toEqual(expectReturn);
     });
   });
 
@@ -401,6 +288,7 @@ describe('POST OCR', () => {
         files: mockFiles,
       });
 
+      // Deprecated: (20240605 - Murky) - This is not necessary
       jest
         .spyOn(common, 'formatApiResponse')
         .mockReturnValue({ httpCode: 201, result: mockReturn });
