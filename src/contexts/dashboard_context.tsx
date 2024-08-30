@@ -700,10 +700,13 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     });
   };
 
-   const value = useMemo(() => ({
-     bookmarkList: bookmarkListRef.current,
-     addSelectedBookmarks,
-   }), [bookmarkListRef.current, addSelectedBookmarks]);
+  const value = useMemo(
+    () => ({
+      bookmarkList: bookmarkListRef.current,
+      addSelectedBookmarks,
+    }),
+    [bookmarkListRef.current, addSelectedBookmarks]
+  );
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };

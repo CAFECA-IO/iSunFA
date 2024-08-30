@@ -13,11 +13,7 @@ interface ITaxReportBodyAllProps {
 }
 
 const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
-  const { t } = useTranslation([
-    'common',
-    'journal',
-    'report_401'
-  ]);
+  const { t } = useTranslation(['common', 'journal', 'report_401']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20240814 - Anna) 使用 useState 定義 report401 變量的狀態，並將其類型設為 TaxReport401 | null
 

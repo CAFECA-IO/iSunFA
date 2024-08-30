@@ -30,7 +30,7 @@
     "updatedAt": 1
   },
   {
-    "id":1003,
+    "id": 1003,
     "name": "Test_User",
     "fullName": "Test User",
     "email": "test@gmail.com",

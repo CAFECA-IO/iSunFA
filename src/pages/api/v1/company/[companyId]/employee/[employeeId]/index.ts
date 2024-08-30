@@ -139,10 +139,7 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<null>>
-) {
+async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<null>>) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const payload: null = null;
 
@@ -216,7 +213,10 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IEmployeeData | null } | { statusMessage: string; payload: null }>;
+  ) => Promise<
+    | { statusMessage: string; payload: IEmployeeData | null }
+    | { statusMessage: string; payload: null }
+  >;
 } = {
   GET: handleGetRequest,
   DELETE: handleDeleteRequest,

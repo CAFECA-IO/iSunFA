@@ -6,12 +6,12 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import logger from '@/lib/utils/logger';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import {
-  exportPublicKey,
-  getPublicKeyByCompany,
-} from '@/lib/utils/crypto';
+import { exportPublicKey, getPublicKeyByCompany } from '@/lib/utils/crypto';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<JsonWebKey | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<JsonWebKey | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   let payload: JsonWebKey | null = null;
 

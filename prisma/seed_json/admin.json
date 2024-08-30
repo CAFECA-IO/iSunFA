@@ -36,9 +36,9 @@
     "updatedAt": 1635724800
   },
   {
-    "userId":1003,
+    "userId": 1003,
     "companyId": 8867,
-    "roleId":1003,
+    "roleId": 1003,
     "email": "",
     "status": true,
     "startDate": 1721201350,

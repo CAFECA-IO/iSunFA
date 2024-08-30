@@ -8,7 +8,10 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IClient | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IClient | null = null;
 
@@ -32,7 +35,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IClient | null>>) {
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IClient | null = null;
 
@@ -59,7 +65,10 @@ async function handlePutRequest(req: NextApiRequest, res: NextApiResponse<IRespo
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IClient | null>>) {
+async function handleDeleteRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IClient | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IClient | null = null;
 

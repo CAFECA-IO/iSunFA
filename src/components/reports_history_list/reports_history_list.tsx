@@ -20,7 +20,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
     'terms',
   ]);
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
-  const [reportItems/* setReportItems */] = useState<IReport[]>(reports);
+  const [reportItems] = useState<IReport[]>(reports);
 
   const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
 

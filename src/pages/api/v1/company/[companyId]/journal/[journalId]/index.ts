@@ -29,7 +29,10 @@ function formatDeleteQuery(req: NextApiRequest) {
   return { journalId: formattedJournalId };
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IJournal | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IJournal | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IJournal | null = null;
 
@@ -63,7 +66,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IJournal | null>>) {
+async function handleDeleteRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IJournal | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IJournal | null = null;
 

@@ -41,7 +41,7 @@ const Tooltip = ({ children }: TooltipProps) => {
       {showTooltip ? (
         <div
           role="tooltip"
-          className={`absolute -top-3 right-[2rem] z-20 w-[250px] rounded-lg bg-white p-4 text-sm shadow-tooltip`}
+          className={`shadow-tooltip absolute -top-3 right-[2rem] z-20 w-[250px] rounded-lg bg-white p-4 text-sm`}
         >
           {/* Info: (20240416 - Shirley) triangle arrow svg */}
           <div className="absolute -right-3 top-3">

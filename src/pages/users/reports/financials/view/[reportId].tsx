@@ -40,7 +40,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  // TODO: (20240723 - Shirley) [Beta] refactor and delete it
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]

@@ -31,7 +31,7 @@ export class LiabilityAccountRetriever extends AbstractAccountRetriever {
       sortBy,
       sortOrder,
       searchKey,
-      isDeleted
+      isDeleted,
     });
   }
 }
