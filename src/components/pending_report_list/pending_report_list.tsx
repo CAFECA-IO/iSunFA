@@ -146,8 +146,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   }, [individualChecks, reportItems]);
 
   const displayedPauseOrResumeButton = !isSelectedItemPaused ? (
-    <Button onClick={pauseClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
-      {' '}
+    <Button onClick={pauseClickHandler} variant={'secondaryOutline'} className="p-2">
       {/* Info: (20240513 - Shirley) Pause */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -165,8 +164,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       </svg>
     </Button>
   ) : (
-    <Button onClick={resumeClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
-      {' '}
+    <Button onClick={resumeClickHandler} variant={'secondaryOutline'} className="p-2">
       {/* Info: (20240514 - Shirley) Resume */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -189,10 +187,8 @@ const PendingReportList = ({ reports }: IReportListProps) => {
     <div className="flex w-full items-center justify-end space-x-5">
       {isCheckboxVisible ? (
         <div className="flex space-x-5">
-          {' '}
           {displayedPauseOrResumeButton}
-          <Button onClick={deleteClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
-            {' '}
+          <Button onClick={deleteClickHandler} variant={'secondaryOutline'} className="p-2">
             {/* Info: (20240514 - Shirley) Delete */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -217,7 +213,6 @@ const PendingReportList = ({ reports }: IReportListProps) => {
         onClick={toggleCheckboxVisibility}
         variant={'secondaryBorderless'}
       >
-        {' '}
         {isCheckboxVisible ? (
           <p>{t('PENDING_REPORT_LIST.CANCEL')}</p>
         ) : (
@@ -261,7 +256,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
         checked={allChecked}
         onChange={allCheckboxClickHandler}
         type="checkbox"
-        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
       />
     </th>
   ) : null;
@@ -269,10 +264,10 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   return (
     <div className="">
       {displayedStatusButtons}
-      <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
+      <table className="my-20px w-full shrink-0 border border-stroke-neutral-quaternary font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
         <thead>
-          <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
+          <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
             <th className="text-center">{t('PENDING_REPORT_LIST.DATE')}</th>

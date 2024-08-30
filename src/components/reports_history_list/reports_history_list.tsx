@@ -137,7 +137,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
         checked={allChecked}
         onChange={allCheckboxClickHandler}
         type="checkbox"
-        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
       />
     </th>
   ) : null;
@@ -145,10 +145,10 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
   return (
     <div className="">
       {displayedStatusButtons}
-      <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
+      <table className="my-20px w-full shrink-0 border border-stroke-neutral-quaternary font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
         <thead>
-          <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
+          <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
             <th className="text-center">{t('REPORTS_HISTORY_LIST.DATE')}</th>
