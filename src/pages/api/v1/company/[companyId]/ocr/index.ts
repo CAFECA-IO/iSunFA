@@ -16,8 +16,7 @@ import {
   createOcrInPrisma,
   findManyOCRByCompanyIdWithoutUsedInPrisma,
 } from '@/lib/utils/repo/ocr.repo';
-import { IOCR } from '@/interfaces/ocr';
-import type { Ocr } from '@prisma/client';
+import { IOCR, ocrIncludeFile } from '@/interfaces/ocr';
 import { ProgressStatus } from '@/constants/account';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
@@ -28,6 +27,7 @@ import { AICH_APIS_TYPES } from '@/constants/aich';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 import logger from '@/lib/utils/logger';
 import { bufferToBlob, findFileByName, readFile } from '@/lib/utils/parse_image_form';
+import { findFileById } from '@/lib/utils/repo/file.repo';
 
 export async function readImageFromFilePath(
   fileName: string,
@@ -147,96 +147,52 @@ export async function getPayloadFromResponseJSON(
 
 // Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
+type postAICHReturnType = {
+  resultStatus: IAccountResultStatus;
+  fileId: number;
+  type: string;
+  uploadIdentifier: string;
+};
 export async function postImageToAICH(
-  filePaths: string[],
-  fileSizes: number[],
-  fileMimeTypes: string[],
-  imageFields: {
-    imageSize: number;
-    imageName: string;
-    uploadIdentifier: string;
-  }[]
-): Promise<
-  {
-    resultStatus: IAccountResultStatus;
-    imageName: string;
-    imageUrl: string;
-    imageSize: number;
-    type: string;
-    uploadIdentifier: string;
-  }[]
-> {
-  let resultJson: {
-    resultStatus: IAccountResultStatus;
-    imageName: string;
-    imageUrl: string;
-    imageSize: number;
-    type: string;
-    uploadIdentifier: string;
-  }[] = [];
-  if (filePaths && filePaths.length > 0) {
-    // Info: (20240504 - Murky) 圖片會先被存在本地端，然後才讀取路徑後轉傳給 AICH
-    resultJson = await Promise.all(
-      filePaths.map(async (filePath, index) => {
-        const imageFieldsLength = imageFields.length;
-        const isIndexValid = index < imageFieldsLength;
+  fileId: number,
+  uploadIdentifier: string
+): Promise<postAICHReturnType[]> {
+  const resultJson: postAICHReturnType[] = [];
 
-        // Info: (20240816 - Murky) 壞檔的 Image 會被標上特殊的 resultId
-        const defaultResultId = 'error-' + generateUUID();
-        let result: {
-          resultStatus: IAccountResultStatus;
-          imageName: string;
-          imageUrl: string;
-          imageSize: number;
-          type: string;
-          uploadIdentifier: string;
-        } = {
-          resultStatus: {
-            status: ProgressStatus.IN_PROGRESS,
-            resultId: defaultResultId,
-          },
-          imageUrl: '',
-          imageName: '',
-          imageSize: 0,
-          type: 'invoice',
-          uploadIdentifier: '',
-        };
-        try {
-          const imageBlob = await readImageFromFilePath(filePath, fileMimeTypes[index]);
+  const defaultResultId = 'error-' + generateUUID();
+  let result: postAICHReturnType = {
+    resultStatus: {
+      status: ProgressStatus.IN_PROGRESS,
+      resultId: defaultResultId,
+    },
+    fileId,
+    type: 'invoice',
+    uploadIdentifier: '',
+  };
 
-          const imageNameInLocal = getImageName(filePath);
-          const imageName = isIndexValid ? imageFields[index].imageName : imageNameInLocal;
-          const imageSize = isIndexValid ? imageFields[index].imageSize : fileSizes[index];
+  try {
+    const file = await findFileById(fileId);
 
-          const fetchResult = uploadImageToAICH(imageBlob, imageName);
+    if (!file) {
+      throw new Error(`File of fileId: ${fileId} not found in database`);
+    }
 
-          const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-          const imageUrl = transformOCRImageIDToURL(FileFolder.INVOICE, 0, imageNameInLocal);
-          result = {
-            resultStatus,
-            imageUrl,
-            imageName,
-            imageSize,
-            type: 'invoice',
-            uploadIdentifier: isIndexValid ? imageFields[index].uploadIdentifier : '',
-          };
-        } catch (error) {
-          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-          logger.error(error, 'Ocr postImageToAICH error, happen when POST Image to AICH API');
-        }
-        return result;
-      })
-    );
-  } else {
+    const imageBlob = await readImageFromFilePath(file.url, file.mimeType);
+    const fetchResult = uploadImageToAICH(imageBlob, file.name);
+
+    const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+    result = {
+      resultStatus,
+      fileId,
+      type: 'invoice',
+      uploadIdentifier,
+    };
+  } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    logger.info(
-      {
-        filePaths,
-      },
-      'Ocr postImageToAICH files.image is null or files.image.length is 0'
-    );
+    logger.error(error, 'Ocr postImageToAICH error, happen when POST Image to AICH API');
   }
 
+  resultJson.push(result);
   return resultJson;
 }
 
@@ -276,6 +232,7 @@ function formatFormBody(req: NextApiRequest) {
   const { body } = req;
 
   logger.info(body, 'ocr body');
+  let fileId: number;
   let imageName: string;
   let imageSizeNum: number; // Info: (20240829 - Murky) it's like 32 MB
   let uploadIdentifier: string;
@@ -285,6 +242,7 @@ function formatFormBody(req: NextApiRequest) {
   let imageType: string;
 
   if (
+    body.fileId &&
     body.imageName &&
     body.imageSize &&
     body.uploadIdentifier &&
@@ -292,6 +250,7 @@ function formatFormBody(req: NextApiRequest) {
     body.publicKey &&
     body.iv
   ) {
+    fileId = body.fileId;
     imageName = body.imageName;
     const imageSize = body.imageSize as string;
 
@@ -312,6 +271,7 @@ function formatFormBody(req: NextApiRequest) {
   }
 
   return {
+    fileId,
     imageName,
     imageSize: imageSizeNum,
     uploadIdentifier,
@@ -371,19 +331,24 @@ export function calculateProgress(createdAt: number, status: ProgressStatus, ocr
   return process;
 }
 
-export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
+export async function formatUnprocessedOCR(ocrData: ocrIncludeFile[]): Promise<IOCR[]> {
   const unprocessedOCRs = await Promise.all(
     ocrData.map(async (ocr) => {
       const status = await fetchStatus(ocr.aichResultId);
       const progress = calculateProgress(ocr.createdAt, status, ocr.aichResultId);
       // const progress = calculateProgress(ocr.imageUrl);
-      const imageSize = transformBytesToFileSizeString(ocr.imageSize);
+      const imageSize = transformBytesToFileSizeString(ocr.imageFile.size);
+      const imageUrl = transformOCRImageIDToURL(
+        FileFolder.INVOICE,
+        ocr.companyId,
+        ocr.imageFile.name
+      );
       const createdAt = timestampInSeconds(ocr.createdAt);
       const unprocessedOCR: IOCR = {
         id: ocr.id,
         aichResultId: ocr.aichResultId,
-        imageUrl: ocr.imageUrl,
-        imageName: ocr.imageName,
+        imageUrl,
+        imageName: ocr.imageFile.name,
         imageSize,
         status,
         progress,
@@ -399,22 +364,39 @@ export async function formatUnprocessedOCR(ocrData: Ocr[]): Promise<IOCR[]> {
 export async function createOcrFromAichResults(
   companyId: number,
   aichResults: {
+    fileId: number;
     resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
     type: string;
     uploadIdentifier: string;
   }[]
 ) {
   const resultJson: IOCR[] = [];
-  const ocrData: (Ocr | null)[] = [];
 
   try {
     await Promise.all(
       aichResults.map(async (aichResult) => {
-        const ocr = await createOcrInPrisma(companyId, aichResult);
-        ocrData.push(ocr);
+        const ocr = await createOcrInPrisma(
+          companyId,
+          aichResult.resultStatus,
+          aichResult.type,
+          aichResult.fileId
+        );
+
+        if (ocr) {
+          const iOcr: IOCR = {
+            id: ocr.id,
+            aichResultId: ocr.aichResultId,
+            imageName: ocr.imageFile.name,
+            imageUrl: transformOCRImageIDToURL(FileFolder.INVOICE, companyId, ocr.imageFile.name),
+            imageSize: transformBytesToFileSizeString(ocr.imageFile.size),
+            progress: 0,
+            status: ocr.status as ProgressStatus,
+            createdAt: timestampInSeconds(ocr.createdAt),
+            uploadIdentifier: aichResult.uploadIdentifier,
+          };
+
+          resultJson.push(iOcr);
+        }
       })
     );
   } catch (error) {
@@ -423,27 +405,6 @@ export async function createOcrFromAichResults(
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
-  aichResults.forEach((aichResult, index) => {
-    const ocr = ocrData[index];
-    if (ocr) {
-      const imageSize = transformBytesToFileSizeString(aichResult.imageSize);
-      const createdAt = timestampInSeconds(ocr.createdAt);
-      const unprocessedOCR: IOCR = {
-        id: ocr.id,
-        aichResultId: ocr.aichResultId,
-        imageUrl: aichResult.imageUrl,
-        imageName: aichResult.imageName,
-        imageSize,
-        status: ProgressStatus.IN_PROGRESS,
-        progress: 0,
-        createdAt,
-        uploadIdentifier: aichResult.uploadIdentifier,
-      };
-
-      resultJson.push(unprocessedOCR);
-    }
-  });
-
   return resultJson;
 }
 
@@ -451,18 +412,8 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
   let resultJson: IOCR[] = [];
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
-    // Deprecated: (20240829 - Murky) This function is not used
-    // const { filePaths, fileSizes, fileMimeTypes, fields } = await getImageFileAndFormFromFormData(req);
-    const { imageName, imageSize, uploadIdentifier, imageType } = formatFormBody(req);
-    // const imageFieldsArray = extractDataFromFields(fields);
-    const aichResults = await postImageToAICH(
-      [imageName],
-      [imageSize],
-      [imageType],
-      [{ imageSize, imageName, uploadIdentifier }]
-    );
-    // Deprecated: (20240611 - Murky) This function is not used
-    // resultJson = await createJournalsAndOcrFromAichResults(companyIdNumber, aichResults);
+    const { fileId, uploadIdentifier } = formatFormBody(req);
+    const aichResults = await postImageToAICH(fileId, uploadIdentifier);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
@@ -479,7 +430,7 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   // Info Murky (20240416): Check if companyId is string
   const { ocrType } = req.query;
 
-  let ocrData: Ocr[];
+  let ocrData: ocrIncludeFile[];
 
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);

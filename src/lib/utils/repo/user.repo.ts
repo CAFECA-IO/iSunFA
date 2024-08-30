@@ -22,23 +22,28 @@ export async function createUser({
   fullName,
   email,
   phone,
-  imageUrl,
+  imageId,
 }: {
   name: string;
   fullName: string;
   email: string;
   phone: string;
-  imageUrl: string;
+  imageId: number;
 }): Promise<User & { userAgreements: UserAgreement[] }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
+  const fileConnect: Prisma.FileCreateNestedOneWithoutUserImageFileInput = {
+    connect: {
+      id: imageId,
+    },
+  };
   const createdUser: Prisma.UserCreateInput = {
     name,
     fullName,
     email,
     phone,
-    imageId: imageUrl,
+    imageFile: fileConnect,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
   };
@@ -77,18 +82,24 @@ export async function updateUserById(
   fullName?: string,
   email?: string,
   phone?: string,
-  imageUrl?: string
+  imageId?: number
 ): Promise<User & { userAgreements: UserAgreement[] }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
+
+  const fileConnect: Prisma.FileUpdateOneWithoutUserImageFileNestedInput = {
+    connect: {
+      id: imageId,
+    },
+  };
 
   const updatedUser: Prisma.UserUpdateInput = {
     name,
     fullName,
     email,
     phone,
-    imageId: imageUrl,
     updatedAt: nowTimestamp,
+    imageFile: fileConnect,
   };
 
   const user = await prisma.user.update({

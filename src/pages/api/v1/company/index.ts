@@ -15,6 +15,9 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import { Company } from '@prisma/client';
+import { FileFolder } from '@/constants/file';
 
 async function checkInput(code: string, name: string, regional: string): Promise<boolean> {
   return !!code && !!name && !!regional;
@@ -44,6 +47,29 @@ async function handleGetRequest(
   }
 
   return { statusMessage, payload };
+}
+
+async function createFileAndConnectCompany(
+  companyIcon: {
+    iconUrl: string;
+    mimeType: string;
+    size: number;
+  },
+  company: Company
+) {
+  const { iconUrl, mimeType, size } = companyIcon;
+  const imageName = company.name + '_icon';
+  const file = await createFile({
+    name: imageName,
+    companyId: company.id,
+    size,
+    mimeType,
+    type: FileFolder.TMP,
+    url: iconUrl,
+    isEncrypted: false,
+    encryptedSymmetricKey: '',
+  });
+  return file;
 }
 
 async function handlePostRequest(
@@ -77,13 +103,10 @@ async function handlePostRequest(
             : STATUS_MESSAGE.DUPLICATE_COMPANY;
         } else {
           const companyIcon = await generateIcon(name);
-          const createdCompanyRoleList = await createCompanyAndRole(
-            userId,
-            code,
-            name,
-            regional,
-            companyIcon
-          );
+          const createdCompanyRoleList = await createCompanyAndRole(userId, code, name, regional);
+
+          // Info: (20240830 - Murky) 將圖片存放在database之後connect company
+          await createFileAndConnectCompany(companyIcon, createdCompanyRoleList.company);
           const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = newCompanyRoleList;

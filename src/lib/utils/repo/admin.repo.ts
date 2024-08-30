@@ -360,47 +360,49 @@ export async function createCompanyAndRole(
   code: string,
   name: string,
   regional: string,
-  imageId?: string,
   email?: string
 ): Promise<{ company: Company; role: Role }> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
+  const nowTimestamp = getTimestampNow();
+
+  const userConnect: Prisma.UserCreateNestedOneWithoutAdminsInput = {
+    connect: {
+      id: userId,
+    },
+  };
+
+  const roleConnectOrCreate: Prisma.RoleCreateNestedOneWithoutAdminsInput = {
+    connectOrCreate: {
+      where: {
+        name: ROLE_NAME.OWNER,
+      },
+      create: {
+        name: ROLE_NAME.OWNER,
+        // ToDo: (20240822 - Murky) [Beta] Should enum the permissions,
+        // however, since Beta version will change the permission type,
+        // and what permission per type is not clear yet, so just put it as string array
+        // and change it after beta mockup is clear
+        permissions: ['read', 'write', 'delete', 'invite'],
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    },
+  };
+
   const newCompanyRoleList: { company: Company; role: Role } = await prisma.admin.create({
     data: {
-      user: {
-        connect: {
-          id: userId,
-        },
-      },
+      user: userConnect,
       company: {
         create: {
           code,
           name,
           regional,
-          imageId,
           kycStatus: false,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
           startDate: nowTimestamp,
         },
       },
-      role: {
-        connectOrCreate: {
-          where: {
-            name: ROLE_NAME.OWNER,
-          },
-          create: {
-            name: ROLE_NAME.OWNER,
-            // ToDo: (20240822 - Murky) [Beta] Should enum the permissions,
-            // however, since Beta version will change the permission type,
-            // and what permission per type is not clear yet, so just put it as string array
-            // and change it after beta mockup is clear
-            permissions: ['read', 'write', 'delete', 'invite'],
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        },
-      },
+      role: roleConnectOrCreate,
       email: email || '',
       status: true,
       startDate: nowTimestamp,

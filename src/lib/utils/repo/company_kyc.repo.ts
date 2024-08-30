@@ -14,12 +14,11 @@ export async function createCompanyKYC(
 
   const companyKYC: CompanyKYC = await prisma.companyKYC.create({
     data: {
-      company: {
-        connect: {
-          id: companyId,
-        },
-      },
+      companyId,
       ...companyKYCForm,
+      registrationCertificateFileId: companyKYCForm.registrationCertificateId,
+      taxCertificateFileId: companyKYCForm.taxCertificateId,
+      representativeIdCardFileId: companyKYCForm.representativeIdCardId,
       status: KYCStatus.PENDING,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,

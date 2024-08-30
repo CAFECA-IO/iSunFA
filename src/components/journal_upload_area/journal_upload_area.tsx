@@ -192,8 +192,8 @@ const JournalUploadArea = () => {
     formData.append('file', encryptedFile);
 
     // Info: (20240829 - Murky) 下面的部份目前file upload的api沒有用到
-    formData.append('imageSize', item.size);
-    formData.append('imageName', item.name);
+    formData.append('fileSize', item.size);
+    formData.append('fileName', item.name);
     formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
     formData.append('publicKey', JSON.stringify(item.publicKey));
     formData.append('iv', Array.from(item.iv).join(','));
@@ -212,7 +212,8 @@ const JournalUploadArea = () => {
     item: IOCRItem,
     companyId: number,
     isNewPendingOCR: boolean,
-    fileName?: string
+    fileName?: string,
+    fileId?: number
   ) => {
     if (item.companyId !== companyId) {
       toastHandler({
@@ -236,6 +237,7 @@ const JournalUploadArea = () => {
         companyId,
       },
       body: {
+        fileId,
         imageName: fileName || item.name,
         imageSize: item.size,
         uploadIdentifier: item.uploadIdentifier,
@@ -272,7 +274,7 @@ const JournalUploadArea = () => {
 
     pendingOCRListFromBrowser.forEach(async (item) => {
       const file = await uploadToFileApi(item);
-      await upload(item, selectedCompany.id, false, file?.id);
+      await upload(item, selectedCompany.id, false, file?.name, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
 
@@ -281,7 +283,7 @@ const JournalUploadArea = () => {
       const uploadFileToOcr = async () => {
         // Info: (20240829 - Murky) To Shirely 更改這邊
         const file = await uploadToFileApi(uploadFile);
-        await upload(uploadFile, selectedCompany?.id || -1, true, file?.id);
+        await upload(uploadFile, selectedCompany?.id || -1, true, file?.name, file?.id);
       };
       uploadFileToOcr();
       setUploadFile(null);

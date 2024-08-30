@@ -67,7 +67,7 @@ export async function createProject(
   name: string,
   stage: Milestone,
   members?: number[],
-  imageId?: string
+  imageId?: number
 ): Promise<
   Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
@@ -77,12 +77,12 @@ export async function createProject(
 > {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
+
   const createdProject = await prisma.project.create({
     data: {
       companyId,
       name,
       stage,
-      imageId,
       employeeProjects: {
         create: (members ?? []).map((memberId: number) => ({
           employeeId: memberId,
@@ -116,6 +116,7 @@ export async function createProject(
       completedPercent: 0,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
+      imageFileId: imageId,
     },
     include: {
       employeeProjects: {
@@ -148,7 +149,7 @@ export async function createProject(
 export async function updateProjectById(
   projectId: number,
   name?: string,
-  imageId?: string
+  imageId?: number
 ): Promise<
   Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
@@ -164,7 +165,7 @@ export async function updateProjectById(
     },
     data: {
       name,
-      imageId,
+      imageFileId: imageId,
       updatedAt: nowTimestamp,
     },
     include: {

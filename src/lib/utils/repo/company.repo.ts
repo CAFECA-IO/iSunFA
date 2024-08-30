@@ -65,10 +65,16 @@ export async function updateCompanyById(
   code?: string,
   name?: string,
   regional?: string,
-  imageId?: string
+  imageId?: number
 ): Promise<Company> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
+
+  const fileConnect: Prisma.FileUpdateOneWithoutCompanyImageFileNestedInput = {
+    connect: {
+      id: imageId,
+    },
+  };
   const company = await prisma.company.update({
     where: {
       id: companyId,
@@ -77,8 +83,8 @@ export async function updateCompanyById(
       code,
       name,
       regional,
-      imageId,
       updatedAt: nowTimestamp,
+      imageFile: fileConnect,
     },
   });
   return company;

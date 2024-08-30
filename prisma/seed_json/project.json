@@ -5,7 +5,7 @@
     "name": "Test Project",
     "completedPercent": 83,
     "stage": "Beta Testing",
-    "imageId": "TP",
+    "imageFileId": 1,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -16,7 +16,7 @@
     "name": "iSunFA",
     "completedPercent": 30,
     "stage": "Designing",
-    "imageId": "ISF",
+    "imageFileId": 2,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -27,7 +27,7 @@
     "name": "BAIFA",
     "completedPercent": 80,
     "stage": "Beta Testing",
-    "imageId": "BF",
+    "imageFileId": 3,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -38,7 +38,7 @@
     "name": "iSunOne",
     "completedPercent": 60,
     "stage": "Develop",
-    "imageId": "ISO",
+    "imageFileId": 4,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -49,7 +49,7 @@
     "name": "TideBit",
     "completedPercent": 98,
     "stage": "Sold",
-    "imageId": "TB",
+    "imageFileId": 5,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -60,7 +60,7 @@
     "name": "ProjectE",
     "completedPercent": 95,
     "stage": "Selling",
-    "imageId": "E",
+    "imageFileId": 6,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -71,7 +71,7 @@
     "name": "ProjectF",
     "completedPercent": 100,
     "stage": "Archived",
-    "imageId": "F",
+    "imageFileId": 7,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -82,7 +82,7 @@
     "name": "ProjectG",
     "completedPercent": 70,
     "stage": "Develop",
-    "imageId": "G",
+    "imageFileId": 8,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -93,7 +93,7 @@
     "name": "ProjectH",
     "completedPercent": 85,
     "stage": "Beta Testing",
-    "imageId": "H",
+    "imageFileId": 9,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null
@@ -104,7 +104,7 @@
     "name": "Test update Project",
     "completedPercent": 83,
     "stage": "Beta Testing",
-    "imageId": "TP",
+    "imageFileId": 10,
     "createdAt": 1651368365,
     "updatedAt": 1651368365,
     "deletedAt": null

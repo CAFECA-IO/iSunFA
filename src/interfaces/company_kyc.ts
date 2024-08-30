@@ -55,9 +55,9 @@ export interface ICompanyKYCForm {
   [ContactInfoKeys.EMAIL_ADDRESS]: string;
   [ContactInfoKeys.COMPANY_WEBSITE]: string; // Info: (20240719 - Tzuhan) To Jacky, this field is optional
   [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]: RepresentativeIDType;
-  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: string;
-  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: string;
-  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: string;
+  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: number;
+  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: number;
+  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: number;
 }
 
 export function createFormData(data: ICompanyKYCForm): FormData {
