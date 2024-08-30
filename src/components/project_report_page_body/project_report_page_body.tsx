@@ -19,7 +19,16 @@ import { ReportStatusType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, MOCK_REPORTS } from '@/interfaces/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler } = useGlobalCtx();
@@ -262,7 +271,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedPendingSortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
@@ -283,7 +292,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="pendingReportSearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -298,7 +307,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/hour_glass.svg'} alt="pending_icon" width={16} height={16} />
-            <p>{t('MY_REPORTS_SECTION.PENDING')}</p>
+            <p>{t('report_401:MY_REPORTS_SECTION.PENDING')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
@@ -318,7 +327,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedHistorySortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
@@ -339,7 +348,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="historyReportSearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -354,7 +363,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/file.svg'} alt="history_icon" width={16} height={16} />
-            <p>{t('MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
+            <p>{t('report_401:MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
           </div>
           <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>

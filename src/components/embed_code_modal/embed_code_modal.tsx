@@ -13,7 +13,16 @@ interface IEmbedCodeModal {
 }
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const balanceSheetRef = useRef<HTMLInputElement>(null);
   const incomeStatementRef = useRef<HTMLInputElement>(null);
   const cashFlowStatementRef = useRef<HTMLInputElement>(null);
@@ -70,7 +79,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const copyClickHandler = () => {
     navigator.clipboard.writeText(generatedCode);
-    window.alert(t('EMBED_CODE_MODAL.CODE_COPIED_TO_CLIPBOARD'));
+    window.alert(t('report_401:EMBED_CODE_MODAL.CODE_COPIED_TO_CLIPBOARD'));
   };
 
   const generateClickHandler = () => {
@@ -148,7 +157,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -198,7 +207,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
             <input
               type="text"
-              placeholder={t('AUDIT_REPORT.SEARCH')}
+              placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -334,7 +343,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="flex flex-col gap-3 max-md:max-w-full">
                 <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-                  {t('REPORTS_HISTORY_LIST.PROJECT')}
+                  {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
                 </div>
 
                 {displayedProjectMenu}
@@ -342,7 +351,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             </div>
 
             <div className="mt-10 font-semibold text-input-text-input-filled max-md:max-w-full">
-              {t('EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
+              {t('report_401:EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
               <div
@@ -355,7 +364,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('PLUGIN.BALANCE_SHEET')}</button>
+                <button type="button">{t('common:PLUGIN.BALANCE_SHEET')}</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
@@ -367,7 +376,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</button>
+                <button type="button">{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
@@ -379,14 +388,14 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   readOnly
                   className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('PLUGIN.CASH_FLOW_STATEMENT')}</button>
+                <button type="button">{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</button>
               </div>
             </div>
           </div>
           <div className="mt-10 flex flex-col justify-center max-md:max-w-full">
             <div className="flex flex-col space-y-3 max-md:max-w-full">
               <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-input-filled max-md:max-w-full">
-                {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+                {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
               </div>
               {displayedLanguageMenu}
             </div>
@@ -399,7 +408,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             onClick={cancelClickHandler}
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </button>
           <Button
             disabled={
@@ -408,7 +417,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             variant={'tertiary'}
             onClick={generateClickHandler}
           >
-            {t('EMBED_CODE_MODAL.GENERATE')}
+            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </Button>
         </div>
       </div>
@@ -433,17 +442,19 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               </p>
             </div>
             <ol className="max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
-              {isBalanceSheetChecked && <li>{t('PLUGIN.BALANCE_SHEET')}</li>}
-              {isIncomeStatementChecked && <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>}
-              <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
-              {isCashFlowStatementChecked && <li>{t('PLUGIN.CASH_FLOW_STATEMENT')}</li>}
+              {isBalanceSheetChecked && <li>{t('common:PLUGIN.BALANCE_SHEET')}</li>}
+              {isIncomeStatementChecked && (
+                <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+              )}
+              <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+              {isCashFlowStatementChecked && <li>{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</li>}
               {!isBalanceSheetChecked &&
                 !isIncomeStatementChecked &&
                 !isCashFlowStatementChecked && (
                   <>
-                    <li>{t('PLUGIN.BALANCE_SHEET')}</li>
-                    <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
-                    <li>{t('PLUGIN.CASH_FLOW_STATEMENT')}</li>
+                    <li>{t('common:PLUGIN.BALANCE_SHEET')}</li>
+                    <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+                    <li>{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</li>
                   </>
                 )}
             </ol>
@@ -467,7 +478,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               clipRule="evenodd"
             ></path>
           </svg>
-          <p>{t('EMBED_CODE_MODAL.COPY')}</p>
+          <p>{t('report_401:EMBED_CODE_MODAL.COPY')}</p>
         </Button>
       </div>
     </>
@@ -479,10 +490,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <div className="flex w-full gap-2.5 bg-white pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 pb-10 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
-              {t('EMBED_CODE_MODAL.EMBED_CODE')}
+              {t('report_401:EMBED_CODE_MODAL.EMBED_CODE')}
             </div>
             <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
-              {t('EMBED_CODE_MODAL.THE_LATEST_REPORT')}
+              {t('report_401:EMBED_CODE_MODAL.THE_LATEST_REPORT')}
             </div>
           </div>
           <button

@@ -13,7 +13,16 @@ interface IProjectListProps {
 }
 
 const ProjectList = ({ projects, currentPage, setCurrentPage, totalPages }: IProjectListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const displayedProjectList =
     projects.length > 0 ? (
       <div className="flex w-full flex-col items-center gap-y-16px">
@@ -31,7 +40,7 @@ const ProjectList = ({ projects, currentPage, setCurrentPage, totalPages }: IPro
     ) : (
       <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
         <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-        <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
+        <p>{t('report_401:MY_REPORTS_SECTION.EMPTY')}</p>
       </div>
     );
 

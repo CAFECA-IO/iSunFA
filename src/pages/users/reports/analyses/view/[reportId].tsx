@@ -38,7 +38,16 @@ const ViewAnalysisReportPage = ({
   startTimestamp,
   endTimestamp,
 }: IServerSideProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -69,7 +78,7 @@ const ViewAnalysisReportPage = ({
     if (getARSuccess === false) {
       toastHandler({
         id: `getAR-${getARCode}}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET')} ${reportType}${t('DASHBOARD.REPORT')}${getARCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getARCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });

@@ -24,7 +24,10 @@ function formatGetQuery(req: NextApiRequest) {
   return { projectId: formattedProjectId };
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IWorkRate[] | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IWorkRate[] | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IWorkRate[] | null = null;
 
@@ -35,27 +38,30 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const { projectId } = formatGetQuery(req);
-      if (projectId > 0) {
-        const isAuth = await checkAuthorization([AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch], { userId, companyId, projectId });
-        if (!isAuth) {
-          statusMessage = STATUS_MESSAGE.FORBIDDEN;
-        } else {
-          try {
-            const employeeProjectList = await listEmployeeProject(projectId);
-            const employeeProjectsIdList = employeeProjectList.map(
-              (employeeProject) => employeeProject.id
-            );
-            const listedWorkRate = await listWorkRate(employeeProjectsIdList);
-            const workRateList = await formatWorkRateList(listedWorkRate);
-            statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-            payload = workRateList;
-          } catch (error) {
-            statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-          }
-        }
+    if (projectId > 0) {
+      const isAuth = await checkAuthorization(
+        [AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch],
+        { userId, companyId, projectId }
+      );
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+        try {
+          const employeeProjectList = await listEmployeeProject(projectId);
+          const employeeProjectsIdList = employeeProjectList.map(
+            (employeeProject) => employeeProject.id
+          );
+          const listedWorkRate = await listWorkRate(employeeProjectsIdList);
+          const workRateList = await formatWorkRateList(listedWorkRate);
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+          payload = workRateList;
+        } catch (error) {
+          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        }
       }
+    } else {
+      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+    }
   }
 
   return { statusMessage, payload };

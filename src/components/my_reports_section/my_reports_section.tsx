@@ -30,7 +30,16 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { cn } from '@/lib/utils/common';
 
 const MyReportsSection = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
@@ -122,7 +131,7 @@ const MyReportsSection = () => {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `${t('DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('DASHBOARD.USING_DUMMY_DATA')}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_FETCH_PENDING_REPORTS')} ${listPendingCode}.${t('common:DASHBOARD.USING_DUMMY_DATA')}`,
         closeable: true,
       });
     }
@@ -358,7 +367,7 @@ const MyReportsSection = () => {
           }
         }}
         type="text"
-        placeholder={t('AUDIT_REPORT.SEARCH')}
+        placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
@@ -389,7 +398,7 @@ const MyReportsSection = () => {
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
-            {t('MY_REPORTS_SECTION.SORT_BY')}
+            {t('report_401:MY_REPORTS_SECTION.SORT_BY')}
           </div>
           {/* Info: (20240513 - Shirley) sort menu */}
           {displayedPendingSortMenu}
@@ -523,7 +532,7 @@ const MyReportsSection = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('MY_REPORTS_SECTION.EMPTY')}
+          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
         </div>
       </section>
     </div>
@@ -594,7 +603,7 @@ const MyReportsSection = () => {
           }
         }}
         type="text"
-        placeholder={t('AUDIT_REPORT.SEARCH')}
+        placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
@@ -625,7 +634,7 @@ const MyReportsSection = () => {
       <div className="hidden flex-wrap items-end justify-between space-y-2 lg:flex lg:space-x-5">
         <div className="flex flex-col space-y-2 self-stretch">
           <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
-            {t('MY_REPORTS_SECTION.SORT_BY')}
+            {t('report_401:MY_REPORTS_SECTION.SORT_BY')}
           </div>
           {/* Info: (20240513 - Shirley) sort menu */}
           {displayedHistorySortMenu}
@@ -759,7 +768,7 @@ const MyReportsSection = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('MY_REPORTS_SECTION.EMPTY')}
+          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
         </div>
       </section>
     </div>
@@ -771,7 +780,7 @@ const MyReportsSection = () => {
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
           {/* Info: (20240513 - Shirley) desktop heading */}
           <div className="hidden w-full flex-col justify-center px-10 text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex md:px-16 lg:px-28">
-            {t('MY_REPORTS_SECTION.MY_REPORTS')}
+            {t('report_401:MY_REPORTS_SECTION.MY_REPORTS')}
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="mx-4 flex w-600px max-w-full flex-1 items-center space-x-2 md:hidden">
@@ -783,7 +792,7 @@ const MyReportsSection = () => {
               className="aspect-square shrink-0"
             />
             <div className="mt-1.5 text-text-neutral-secondary">
-              {t('MY_REPORTS_SECTION.MY_REPORTS')}
+              {t('report_401:MY_REPORTS_SECTION.MY_REPORTS')}
             </div>
           </div>
 
@@ -820,7 +829,7 @@ const MyReportsSection = () => {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <div>{t('MY_REPORTS_SECTION.PENDING')}</div>
+            <div>{t('report_401:MY_REPORTS_SECTION.PENDING')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
             <div className="mr-0 h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
@@ -851,7 +860,7 @@ const MyReportsSection = () => {
                 d="M13.857 5.714a.571.571 0 00-.167-.404L8.547.167A.571.571 0 008.143 0v5.143c0 .315.256.571.571.571h5.143z"
               ></path>
             </svg>
-            <div>{t('MY_REPORTS_SECTION.REPORTS_HISTORY')}</div>
+            <div>{t('report_401:MY_REPORTS_SECTION.REPORTS_HISTORY')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
             <div className="mr-0 h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />

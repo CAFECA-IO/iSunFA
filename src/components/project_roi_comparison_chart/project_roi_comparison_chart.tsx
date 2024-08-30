@@ -164,7 +164,16 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, layoutAssertion } = useGlobalCtx();
@@ -239,7 +248,7 @@ const ProjectRoiComparisonChart = () => {
     if (listSuccess === false) {
       toastHandler({
         id: `profit_comparison-${listCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -368,7 +377,7 @@ const ProjectRoiComparisonChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('MY_REPORTS_SECTION.EMPTY')}
+          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
         </div>
       </section>
     </div>

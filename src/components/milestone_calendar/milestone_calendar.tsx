@@ -25,15 +25,24 @@ const MilestoneCalendar = ({
   sellingPeriod,
   soldPeriod,
 }: ICalendarProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const weekdayTitle = [
-    t('DATE_PICKER.SUN'),
-    t('DATE_PICKER.MON'),
-    t('DATE_PICKER.TUE'),
-    t('DATE_PICKER.WED'),
-    t('DATE_PICKER.THU'),
-    t('DATE_PICKER.FRI'),
-    t('DATE_PICKER.SAT'),
+    t('common:DATE_PICKER.SUN'),
+    t('common:DATE_PICKER.MON'),
+    t('common:DATE_PICKER.TUE'),
+    t('common:DATE_PICKER.WED'),
+    t('common:DATE_PICKER.THU'),
+    t('common:DATE_PICKER.FRI'),
+    t('common:DATE_PICKER.SAT'),
   ];
   const [currentDate, setCurrentDate] = useState(new Date());
 

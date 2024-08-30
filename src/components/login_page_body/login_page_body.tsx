@@ -26,6 +26,16 @@ const AuthButton = React.memo(
     provider: Provider;
     disabled?: boolean;
   }) => {
+    const { t } = useTranslation([
+      'common',
+      'project',
+      'journal',
+      'kyc',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ]);
     const { logo, bgColor, textColor } = getProviderDetails(provider);
 
     return (
@@ -37,7 +47,9 @@ const AuthButton = React.memo(
       >
         <Image src={logo} alt={provider} width={16} height={16} className="h-6 w-6" />
         <span className={`font-semibold ${textColor}`}>
-          Log In with {provider.replace(provider[0], provider[0].toUpperCase())}
+          {t('common:LOGIN_PAGE_BODY.LOGIN_WITH_PROVIDER', {
+            provider: provider.replace(provider[0], provider[0].toUpperCase()),
+          })}
         </span>
       </button>
     );
@@ -52,9 +64,17 @@ const Loader = React.memo(() => {
   );
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { toastHandler } = useGlobalCtx();
   const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
 
@@ -64,7 +84,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
         toastHandler({
           id: `user-agree-error`,
           type: ToastType.ERROR,
-          content: `${t('COMMON.ERROR')}: ${userAgreeResponse.code}`,
+          content: `${t('common:COMMON.ERROR')}: ${userAgreeResponse.code}`,
           closeable: true,
         });
       }
@@ -85,7 +105,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
         <Loader />
       ) : (
         <div className="z-10 mb-8 flex flex-col items-center">
-          <h1 className="mb-6 text-4xl font-bold text-gray-800">Log In</h1>
+          <h1 className="mb-6 text-4xl font-bold text-gray-800">
+            {t('common:LOGIN_PAGE_BODY.LOG_IN')}
+          </h1>
           <div className="mx-2.5 mb-6 flex flex-col justify-center rounded-full">
             <AvatarSVG size="large" />
           </div>

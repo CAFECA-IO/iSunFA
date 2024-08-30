@@ -77,9 +77,7 @@ async function uploadInvoiceToAICH(invoice: IInvoice) {
   return response.json() as Promise<{ payload?: unknown } | null>;
 }
 
-async function getPayloadFromResponseJSON(
-  responseJSON: Promise<{ payload?: unknown } | null>
-) {
+async function getPayloadFromResponseJSON(responseJSON: Promise<{ payload?: unknown } | null>) {
   if (!responseJSON) {
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
@@ -136,7 +134,9 @@ async function handleGetRequest(
 
 async function handlePutRequest(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<{ journalId: number; resultStatus: IAccountResultStatus } | null>>
+  res: NextApiResponse<
+    IResponseData<{ journalId: number; resultStatus: IAccountResultStatus } | null>
+  >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: { journalId: number; resultStatus: IAccountResultStatus } | null = null;
@@ -173,7 +173,10 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null }>;
+  ) => Promise<{
+    statusMessage: string;
+    payload: IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null;
+  }>;
 } = {
   GET: handleGetRequest,
   PUT: handlePutRequest,
@@ -181,10 +184,15 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null>>
+  res: NextApiResponse<
+    IResponseData<
+      IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null
+    >
+  >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null = null;
+  let payload: IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null =
+    null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -198,7 +206,9 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<
+      IInvoice | null | { journalId: number; resultStatus: IAccountResultStatus } | null
+    >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

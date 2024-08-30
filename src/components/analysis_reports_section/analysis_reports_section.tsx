@@ -12,7 +12,16 @@ import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useTranslation } from 'next-i18next';
 
 const AnalysisReportSection = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
@@ -94,7 +103,7 @@ const AnalysisReportSection = () => {
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -146,7 +155,7 @@ const AnalysisReportSection = () => {
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
-              placeholder={t('AUDIT_REPORT.SEARCH')}
+              placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -228,7 +237,7 @@ const AnalysisReportSection = () => {
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {t(`BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`common:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
@@ -265,7 +274,7 @@ const AnalysisReportSection = () => {
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               {/* Info: (20240710 - Anna) {name} */}
-              {t(`BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
+              {t(`common:BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>
@@ -343,7 +352,7 @@ const AnalysisReportSection = () => {
         <Link href={targetedReportViewLink}>
           <div className="flex gap-1">
             <div className="text-sm font-medium leading-5 tracking-normal">
-              {t('EMBED_CODE_MODAL.GENERATE')}
+              {t('report_401:EMBED_CODE_MODAL.GENERATE')}
             </div>
             <div className="my-auto flex items-center justify-center">
               <svg
@@ -372,7 +381,7 @@ const AnalysisReportSection = () => {
       >
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">
-            {t('EMBED_CODE_MODAL.GENERATE')}
+            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </div>
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -402,14 +411,14 @@ const AnalysisReportSection = () => {
           {/* Info: (20240513 - Shirley) desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
-              {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+              {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
             </div>
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-              <div className="mt-1.5">{t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}</div>
+              <div className="mt-1.5">{t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}</div>
             </div>
           </div>
 
@@ -423,7 +432,7 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('REPORTS_HISTORY_LIST.PROJECT')}
+              {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
             </div>
 
             {displayedProjectMenu}
@@ -433,7 +442,7 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
+              {t('report_401:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
             </div>
             {displayedReportTypeMenu}
           </div>
@@ -441,7 +450,7 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
@@ -478,7 +487,7 @@ const AnalysisReportSection = () => {
                 </div>
               </div>
               <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
-                {t('PENDING_REPORT_LIST.PERIOD')}
+                {t('report_401:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
 
@@ -500,7 +509,7 @@ const AnalysisReportSection = () => {
         </div>
 
         <div className="my-10 flex flex-col justify-center text-text-neutral-primary">
-          <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
+          <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}
       </div>

@@ -16,7 +16,16 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
 
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
@@ -128,13 +137,13 @@ const SelectCompanyPageBody = () => {
             {companyAndRole.company.name}
           </p>
           <p className="text-xs text-dropdown-text-secondary">
-            {t(`ROLE.${companyAndRole.role.name.toUpperCase().replace(/ /g, '_')}`)}
+            {t(`common:ROLE.${companyAndRole.role.name.toUpperCase().replace(/ /g, '_')}`)}
           </p>
         </button>
       );
     })
   ) : (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div>{t('report_401:MY_REPORTS_SECTION.LOADING')}</div>
   );
 
   const displayCompanyMenu = (
@@ -148,7 +157,7 @@ const SelectCompanyPageBody = () => {
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"

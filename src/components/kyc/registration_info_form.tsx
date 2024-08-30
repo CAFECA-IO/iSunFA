@@ -68,7 +68,16 @@ const RegistrationInfoForm = ({
   data: IRegistrationInfo;
   onChange: (key: RegistrationInfoKeys, value: string) => void;
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [selectedDate, setSelectedDate] = useState({
     startTimeStamp: +data[RegistrationInfoKeys.REGISTRATION_DATE],
     endTimeStamp: +data[RegistrationInfoKeys.REGISTRATION_DATE],

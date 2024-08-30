@@ -24,7 +24,16 @@ const CompanyInvitationModal = ({
   modalVisibilityHandler,
   toastHandler,
 }: ICompanyInvitationModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
@@ -68,7 +77,7 @@ const CompanyInvitationModal = ({
         title: 'Invitation Code Expiry',
         subMsg: 'Oops! This verification code has expired.',
         content: 'Please verify again or contact the company administrator.',
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -94,7 +103,7 @@ const CompanyInvitationModal = ({
 
     // Info: (20240515 - Julian) Check if the code is valid
     if (codeRegex.test(codeInput)) {
-      addCompany({ params: { userId: userAuth?.id }, body: { invitation: codeInput } });
+      addCompany({ params: { userId: userAuth?.id }, body: { invitationCode: codeInput } });
     }
   };
 
@@ -152,10 +161,10 @@ const CompanyInvitationModal = ({
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
           <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
           </Button>
           <Button type="submit" variant={'tertiary'}>
-            {t('CONTACT_US.SUBMIT')}
+            {t('common:CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

@@ -364,8 +364,8 @@ const DatePicker = ({
 
   const defaultPeriodText =
     type === DatePickerType.TEXT_DATE
-      ? t('DATE_PICKER.SELECT_DATE')
-      : t('DATE_PICKER.SELECT_PERIOD');
+      ? t('common:DATE_PICKER.SELECT_DATE')
+      : t('common:DATE_PICKER.SELECT_PERIOD');
 
   // Info: (20240417 - Shirley) 顯示時間區間
   const displayedPeriod =
@@ -373,7 +373,7 @@ const DatePicker = ({
       ? type === DatePickerType.TEXT_DATE || type === DatePickerType.ICON_DATE
         ? `${timestampToString(period.startTimeStamp).date}`
         : `${timestampToString(period.startTimeStamp).date} ${t(
-            'DATE_PICKER.TO'
+            'common:DATE_PICKER.TO'
           )} ${timestampToString(period.endTimeStamp).date}`
       : defaultPeriodText;
 
@@ -484,7 +484,7 @@ const DatePicker = ({
             onClick={todayClickHandler}
             className="w-full p-1 text-sm"
           >
-            {t('DATE_PICKER.TODAY')}
+            {t('common:DATE_PICKER.TODAY')}
           </Button>
 
           <div className="flex w-full items-center justify-between">

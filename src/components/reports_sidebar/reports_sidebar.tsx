@@ -8,7 +8,16 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const ReportsSidebar = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
   const { embedCodeModalVisibilityHandler } = useGlobalCtx();
 
@@ -36,7 +45,7 @@ const ReportsSidebar = () => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-text-neutral-primary transition-all duration-300 ease-in-out`}
           >
-            {t('REPORTS_SIDEBAR.REPORT')}
+            {t('report_401:REPORTS_SIDEBAR.REPORT')}
           </p>
         </div>
 
@@ -45,8 +54,7 @@ const ReportsSidebar = () => {
             type="button"
             onClick={embedCodeModalVisibilityHandler}
             // ToDo: (20240802 - Julian) [Beta] Not released yet
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
+            disabled
             className={`flex w-full items-center gap-8px disabled:opacity-50 ${isExpanded ? 'bg-text-neutral-primary py-14px pl-28px text-button-text-invert hover:opacity-75' : 'py-8px pl-8px text-button-text-secondary-hover'} rounded-xs transition-all duration-300 ease-in-out`}
           >
             <svg
@@ -67,7 +75,7 @@ const ReportsSidebar = () => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-button-text-invert transition-all duration-300 ease-in-out`}
             >
-              {t('REPORTS_SIDEBAR.GET_EMBED_CODE')}
+              {t('report_401:REPORTS_SIDEBAR.GET_EMBED_CODE')}
             </p>
           </button>
 
@@ -105,7 +113,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('REPORTS_SIDEBAR.MY_REPORTS')}
+                {t('report_401:REPORTS_SIDEBAR.MY_REPORTS')}
               </p>
             </Link>
 
@@ -143,7 +151,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
+                {t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORTS')}
               </p>
             </Link>
 
@@ -160,8 +168,7 @@ const ReportsSidebar = () => {
             <button
               type="button"
               // ToDo: (20240802 - Julian) [Beta] Not released yet
-              // eslint-disable-next-line react/jsx-boolean-value
-              disabled={true}
+              disabled
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
@@ -184,7 +191,7 @@ const ReportsSidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-base transition-all duration-300 ease-in-out`}
               >
-                {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+                {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
               </p>
             </button>
             {/* </Link> */}
@@ -224,8 +231,7 @@ const ReportsSidebar = () => {
           type="button"
           onClick={embedCodeModalVisibilityHandler}
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-button-text-secondary-hover disabled:opacity-50"
         >
           <svg
@@ -283,8 +289,7 @@ const ReportsSidebar = () => {
         <button
           type="button"
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg

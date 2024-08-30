@@ -6,7 +6,16 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const SettingSidebar = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const router = useRouter();
 
   return (
@@ -19,7 +28,7 @@ const SettingSidebar = () => {
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
           <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>
-            {t('NAV_BAR.SETTING')}
+            {t('common:NAV_BAR.SETTING')}
           </p>
         </div>
 

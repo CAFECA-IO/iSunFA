@@ -33,7 +33,16 @@ enum ScannerStep {
 }
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const { setInvoiceIdHandler } = useAccountingCtx();
@@ -110,7 +119,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           title: 'Camera Error', // ToDo: (20240823 - Julian) i18n
           content: 'Failed to get camera video, please check your camera settings.',
           messageType: MessageType.ERROR,
-          submitBtnStr: t('COMMON.CLOSE'),
+          submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: () => messageModalVisibilityHandler(),
         });
         messageModalVisibilityHandler();
@@ -141,8 +150,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
       photo.toBlob(resolve, 'image/png');
     });
     // Info: (20240508 - Emily) Create a new file from the blob (optional but helpful for naming)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const file = new File([blob as any], 'canvas-image.png', { type: 'image/png' });
+    const file = new File([blob as Blob], 'canvas-image.png', { type: 'image/png' });
 
     formData.append('image', file);
     setIsShowSuccessModal(true); // Info: (20240528 - Julian) 點擊上傳後才升起 flag
@@ -206,7 +214,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
             title: 'Upload Invoice Failed', // ToDo: (20240823 - Julian) i18n
             content: `Upload invoice failed(${uploadCode}): ${result.status}`,
             messageType: MessageType.ERROR,
-            submitBtnStr: t('COMMON.CLOSE'),
+            submitBtnStr: t('common:COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
           });
           messageModalVisibilityHandler();
@@ -218,7 +226,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         title: 'Upload Invoice Failed', // ToDo: (20240823 - Julian) i18n
         content: `Upload invoice failed(${uploadCode})`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();

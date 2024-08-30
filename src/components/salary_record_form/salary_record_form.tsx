@@ -19,7 +19,16 @@ enum Department {
 
 // ToDo: (20240715 - Julian) [Beta] i18n
 const SalaryRecordForm = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { salaryBookConfirmModalVisibilityHandler } = useGlobalCtx();
 
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -175,7 +184,9 @@ const SalaryRecordForm = () => {
         <div className="flex flex-col items-end gap-x-16px gap-y-24px md:flex-row">
           {/* Info: (20240715 - Julian) Date */}
           <div className="flex w-full flex-col items-start gap-8px md:w-240px">
-            <p className="text-sm font-semibold text-input-text-primary">{t('DATE_PICKER.DATE')}</p>
+            <p className="text-sm font-semibold text-input-text-primary">
+              {t('common:DATE_PICKER.DATE')}
+            </p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}

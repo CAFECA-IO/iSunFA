@@ -14,23 +14,32 @@ interface BookmarkNameMap {
 }
 
 const bookmarkNameMap: BookmarkNameMap = {
-  'Add New Contract': 'BOOKMARK_LIST.ADD_NEW_CONTRACT',
-  'Add New KYC': 'BOOKMARK_LIST.ADD_NEW_KYC',
-  'Add New Employees': 'BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
-  'Add New Payroll': 'BOOKMARK_LIST.ADD_NEW_PAYROLL',
-  'Add New Journal': 'BOOKMARK_LIST.ADD_NEW_JOURNAL',
-  'Camera Scanner': 'BOOKMARK_LIST.CAMERA_SCANNER',
-  'Balance Sheet': 'BOOKMARK_LIST.BALANCE_SHEET',
-  'Income Statement': 'BOOKMARK_LIST.INCOME_STATEMENT',
-  'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
-  'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
-  'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
-  'HR Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
-  'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
+  'Add New Contract': 'common:BOOKMARK_LIST.ADD_NEW_CONTRACT',
+  'Add New KYC': 'common:BOOKMARK_LIST.ADD_NEW_KYC',
+  'Add New Employees': 'common:BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
+  'Add New Payroll': 'common:BOOKMARK_LIST.ADD_NEW_PAYROLL',
+  'Add New Journal': 'common:BOOKMARK_LIST.ADD_NEW_JOURNAL',
+  'Camera Scanner': 'common:BOOKMARK_LIST.CAMERA_SCANNER',
+  'Balance Sheet': 'common:BOOKMARK_LIST.BALANCE_SHEET',
+  'Income Statement': 'common:BOOKMARK_LIST.INCOME_STATEMENT',
+  'Cash Flow Statement': 'common:BOOKMARK_LIST.CASH_FLOW_STATEMENT',
+  'Financial Performance': 'common:BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
+  'Cost Analysis': 'common:BOOKMARK_LIST.COST_ANALYSIS',
+  'HR Utilization': 'common:BOOKMARK_LIST.HR_UTILIZATION',
+  'Forecast Report': 'common:BOOKMARK_LIST.FORECAST_REPORT',
 };
 
 const DashboardBookmark = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   // Info: (20240808 - Anna) Alpha版先隱藏(編輯書籤列)
   // const { addBookmarkModalVisibilityHandler } = useGlobalCtx();
   const { bookmarkList } = useDashboardCtx();

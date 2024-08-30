@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { FileFolder, UploadType } from '@/constants/file';
+import { FileFolder, UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
@@ -14,6 +14,8 @@ import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import formidable from 'formidable';
+import { isEnumValue } from '@/lib/utils/type_guard/common';
+import logger from '@/lib/utils/logger';
 
 export const config = {
   api: {
@@ -21,20 +23,42 @@ export const config = {
   },
 };
 
-async function authorizeUser(type: string, userId: number, companyId?: number): Promise<boolean> {
+async function authorizeUser(
+  type: UploadType,
+  userId: number,
+  companyId?: number
+): Promise<boolean> {
   let isAuthorized: boolean;
 
   if (type === UploadType.USER) {
     isAuthorized = await checkAuthorization([AuthFunctionsKeys.user], { userId });
   } else {
     const company = companyId ?? 0;
-    isAuthorized = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId: company });
+    isAuthorized = await checkAuthorization([AuthFunctionsKeys.admin], {
+      userId,
+      companyId: company,
+    });
   }
 
   return isAuthorized;
 }
 
-async function handleFileUpload(type: string, file: formidable.File[], targetIdNum: number): Promise<string> {
+async function ocrUploadLogic(file: formidable.File[]) {
+  const fileName = file[0].newFilename;
+
+  if (!fileName) {
+    logger.info(file, `API POST File: OCR upload failed: No file name in file `);
+    throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
+  }
+  return fileName;
+}
+
+/**
+ * Info: (20240829 - Murky)
+ * Handle different logic for different file upload type
+ * @param type - the type of the file upload
+ */
+async function handleFileUpload(type: UploadType, file: formidable.File[], targetIdNum: number) {
   let fileId = '';
   switch (type) {
     case UploadType.KYC: {
@@ -62,10 +86,31 @@ async function handleFileUpload(type: string, file: formidable.File[], targetIdN
       fileId = iconUrl;
       break;
     }
+    case UploadType.INVOICE: {
+      fileId = await ocrUploadLogic(file);
+      break;
+    }
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  return fileId;
+  return {
+    fileId,
+  };
+}
+
+function formatPostQuery(req: NextApiRequest) {
+  const { type, targetId } = req.query;
+
+  // Info: (20240829 - Murky) Check if type is upload type
+  const isTypeValid = isEnumValue(UploadType, type);
+  if (!isTypeValid) {
+    logger.info(`API POST File: Invalid type: ${type}`);
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+
+  const targetIdNum = convertStringToNumber(targetId);
+
+  return { type, targetId: targetIdNum };
 }
 
 async function handlePostRequest(
@@ -75,33 +120,35 @@ async function handlePostRequest(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
-  const { type, targetId } = req.query;
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await authorizeUser(type as string, userId, companyId);
+    const { type, targetId } = formatPostQuery(req);
+    const isAuth = await authorizeUser(type, userId, companyId);
 
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
       try {
-        const parsedForm = await parseForm(req, FileFolder.TMP);
+        const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
         const { files } = parsedForm;
         const { file } = files;
-        const targetIdNum = convertStringToNumber(targetId);
 
         if (!file) {
           statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
+          logger.info(`API POST File: No file uploaded`);
         } else {
-          const fileId = await handleFileUpload(type as string, file, targetIdNum);
+          const { fileId } = await handleFileUpload(type, file, targetId);
           payload = { id: fileId, size: file[0].size, existed: true };
           statusMessage = STATUS_MESSAGE.CREATED;
         }
-      } catch (error) {
-        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      } catch (_error) {
+        const error = _error as Error;
+        logger.error(error, `API POST File: ${error.message}`);
+        statusMessage = error.message;
       }
     }
   }

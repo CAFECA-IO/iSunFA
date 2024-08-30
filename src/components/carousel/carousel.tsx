@@ -56,7 +56,7 @@ export default function Carousel({
   return (
     <div className="mt-10 flex flex-col" ref={carouselRef}>
       <p className="ml-16 text-h6 leading-h6 md:ml-7rem md:text-h2 md:leading-h2 xl:ml-24">
-        {t('LANDING_PAGE.CAROUSEL_SECTION_TITLE')}
+        {t('common:LANDING_PAGE.CAROUSEL_SECTION_TITLE')}
       </p>
       <div
         className="relative overflow-hidden hover:cursor-pointer"

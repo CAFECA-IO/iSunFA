@@ -64,6 +64,10 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
   return fileBuffer;
 }
 
+export function bufferToBlob(buffer: Buffer, type?: string): Blob {
+  return new Blob([buffer], { type });
+}
+
 /**
  * Info: (20240726 - Jacky) 讀取目標資料夾中的某個檔案，並將其加上前綴後改名
  * @param fileName - 要加前綴的檔案名稱

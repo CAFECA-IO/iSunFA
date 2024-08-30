@@ -34,7 +34,16 @@ const JournalList = ({
 }) => {
   const { journals, isLoading, success, code } = journalsProps;
   const { currentPage, setCurrentPage, totalPages } = paginationProps;
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   // Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
   // const [checkedItems, setCheckedItems] = useState<string[]>([]);
   // const [isCheckAll, setIsCheckAll] = useState<boolean>(false);
@@ -102,7 +111,7 @@ const JournalList = ({
     // Info: (20240419 - Julian) No data
     <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
       <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-      <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
+      <p>{t('report_401:MY_REPORTS_SECTION.EMPTY')}</p>
     </div>
   ) : (
     <>
@@ -122,12 +131,14 @@ const JournalList = ({
                   onChange={checkAllHandler}
                 />
               </th> */}
-              <th className="whitespace-nowrap text-center">{t('DATE_PICKER.DATE')}</th>
+              <th className="whitespace-nowrap text-center">{t('common:DATE_PICKER.DATE')}</th>
               <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.TYPE')}</th>
               <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.PARTICULARS')}</th>
               <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.FROM_TO')}</th>
               <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.AMOUNT')}</th>
-              <th className="whitespace-nowrap px-16px">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
+              <th className="whitespace-nowrap px-16px">
+                {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+              </th>
               {event === JOURNAL_EVENT.UPLOADED && (
                 <th className="whitespace-nowrap px-16px text-right">
                   {t('journal:JOURNAL.VOUCHER_NO')}
@@ -161,7 +172,7 @@ const JournalList = ({
                   className="relative h-4 w-4 border border-tertiaryBlue bg-white accent-tertiaryBlue"
                 />
               </th> */}
-              <th className="whitespace-nowrap text-center">{t('DATE_PICKER.DATE')}</th>
+              <th className="whitespace-nowrap text-center">{t('common:DATE_PICKER.DATE')}</th>
               <th className="whitespace-nowrap text-center">{t('journal:JOURNAL.INFO')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
                 <th className="whitespace-nowrap px-16px text-right">

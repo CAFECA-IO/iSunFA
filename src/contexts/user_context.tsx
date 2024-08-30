@@ -76,38 +76,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [signedIn, setSignedIn, signedInRef] = useStateRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [credential, setCredential, credentialRef] = useStateRef<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [, setSignedIn, signedInRef] = useStateRef(false);
+  const [, setCredential, credentialRef] = useStateRef<string | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [username, setUsername, usernameRef] = useStateRef<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedCompany, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(
-    null
+  const [, setUsername, usernameRef] = useStateRef<string | null>(null);
+  const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
+  const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
+    undefined
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [successSelectCompany, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<
-    boolean | undefined
-  >(undefined);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isSignInError, setIsSignInError, isSignInErrorRef] = useStateRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [errorCode, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAuthLoading, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
+  const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
+  const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAgreeInfoCollection, setIsAgreeInfoCollection, isAgreeInfoCollectionRef] =
-    useStateRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAgreeTosNPrivacyPolicy, setIsAgreeTosNPrivacyPolicy, isAgreeTosNPrivacyPolicyRef] =
-    useStateRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [userAgreeResponse, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
+  const [, setIsAgreeInfoCollection, isAgreeInfoCollectionRef] = useStateRef(false);
+  const [, setIsAgreeTosNPrivacyPolicy, isAgreeTosNPrivacyPolicyRef] = useStateRef(false);
+  const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
     success: boolean;
     data: null;
     code: string;
@@ -218,28 +201,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const expiredAt = localStorage.getItem('expired_at');
     const isUserAuthAvailable = !!userAuthRef.current;
 
-    // Deprecated: (20240826-Tzuhan) [Beta] dev
-    // eslint-disable-next-line no-console
-    console.log(
-      'isProfileFetchNeeded userId:',
-      userId,
-      'expiredAt:',
-      expiredAt,
-      'isUserAuthAvailable:',
-      isUserAuthAvailable,
-      'Date.now() < Number(expiredAt)',
-      Date.now() < Number(expiredAt)
-    );
-
     // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
     if (!isUserAuthAvailable && userId && expiredAt) {
       // Info: (20240822-Tzuhan) 如果 expiredAt 未過期，應該重新獲取 profile
       if (Date.now() < Number(expiredAt)) {
         return true;
       } else {
-        // Deprecated: (20240826-Tzuhan) [Beta] dev
-        // eslint-disable-next-line no-console
-        console.log('expiredAt is expired, isNeed signOut');
         signOut();
         return false;
       }
@@ -262,9 +229,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20240409 - Shirley) 在用戶一進到網站後就去驗證是否登入
   const getStatusInfo = useCallback(async () => {
     const isNeed = isProfileFetchNeeded();
-    // Deprecated: (20240826-Tzuhan) [Beta] dev
-    // eslint-disable-next-line no-console
-    console.log('isProfileFetchNeeded isNeed:', isNeed);
     if (!isNeed) return;
     setIsAuthLoading(true);
     const {
@@ -276,12 +240,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
     if (getStatusInfoSuccess) {
       if (StatusInfo) {
-        // eslint-disable-next-line no-console
-        console.log(
-          'getStatusInfo StatusInfo',
-          StatusInfo,
-          `'company' in StatusInfo && Object.keys(StatusInfo.company).length > 0: ${'company' in StatusInfo && StatusInfo.company && Object.keys(StatusInfo.company).length > 0}`
-        );
         if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
           setUserAuth(StatusInfo.user);
           setUsername(StatusInfo.user.name);
@@ -448,9 +406,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const handleUnauthorizedAccess = () => {
-      // Deprecated: (20240826-Tzuhan) [Beta] dev
-      // eslint-disable-next-line no-console
-      console.log('useEffect message on "unauthorized": called signOut');
       signOut();
     };
 

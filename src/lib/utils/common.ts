@@ -475,12 +475,15 @@ export function getTimestampOfSameDateOfLastYear(todayInSecond: number) {
 }
 
 export function getTimestampOfLastSecondOfDate(date: Date | number) {
+  let dateObject: Date;
   if (typeof date === 'number') {
-    // eslint-disable-next-line no-param-reassign
-    date = new Date(timestampInMilliSeconds(date));
+    // Info: (20230829 - Anna) 移除no-param-reassign註解，改將參數date的處理結果存在新變數，而不是直接重新賦值給date
+    dateObject = new Date(timestampInMilliSeconds(date));
+  } else {
+    dateObject = date;
   }
 
-  const timestamp = date.setHours(23, 59, 59, 999);
+  const timestamp = dateObject.setHours(23, 59, 59, 999);
   return timestampInSeconds(timestamp);
 }
 

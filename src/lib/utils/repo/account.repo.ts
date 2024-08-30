@@ -248,9 +248,7 @@ export async function fuzzySearchAccountByName(name: string) {
     `;
     [account] = accounts;
   } catch (error) {
-    // Deprecated:（ 20240619 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna) feat. Murky - 使用 logger
   }
 
   return account;
