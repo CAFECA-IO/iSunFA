@@ -27,7 +27,16 @@ interface IServerSideProps {
 }
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -57,7 +66,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     if (getFRSuccess === false) {
       toastHandler({
         id: `getFR-${getFRCode}_${reportId}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET')} ${reportType}${t('DASHBOARD.REPORT')}${getFRCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getFRCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -99,7 +108,8 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>
-          {t(`PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}- iSunFA
+          {t(`common:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}-
+          iSunFA
         </title>
 
         <meta

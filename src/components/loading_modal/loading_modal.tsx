@@ -7,13 +7,22 @@ interface ILoadingModalProps {
 }
 
 const LoadingModal = ({ isModalVisible }: ILoadingModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div
         className={`relative flex h-376px w-90vw items-center justify-center gap-16px rounded-xs bg-white px-32px py-16px md:w-376px`}
       >
-        {t('LOADING_MODAL.LOADING')}
+        {t('common:LOADING_MODAL.LOADING')}
         <LoadingSVG />
       </div>
     </div>

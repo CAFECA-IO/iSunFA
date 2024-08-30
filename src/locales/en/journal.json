@@ -116,7 +116,10 @@
     "FEE_EXCEEDS_TOTAL": "Fee cannot exceed total amount",
     "DATE_HINT": "Please select date",
     "AMOUNT_HINT": "Please fill in amount",
-    "TIMES_HINT": "Please fill in times"
+    "TIMES_HINT": "Please fill in times",
+    "INCONSISTENT_COMPANY_ID": "Inconsistent companyId",
+    "FAILED_TO_FETCH_PUBLIC_KEY": "Failed to fetch public key",
+    "FAILED_TO_UPLOAD_FILE": "Failed to upload file"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",

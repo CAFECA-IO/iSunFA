@@ -1,7 +1,16 @@
 import { useTranslation } from 'next-i18next';
 
 export const LoadingSVG = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   return (
     <div role="status">
       <svg
@@ -20,7 +29,7 @@ export const LoadingSVG = () => {
           fill="currentFill"
         />
       </svg>
-      <span className="sr-only">{t('MY_REPORTS_SECTION.LOADING')}</span>
+      <span className="sr-only">{t('report_401:MY_REPORTS_SECTION.LOADING')}</span>
     </div>
   );
 };

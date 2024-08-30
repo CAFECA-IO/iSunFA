@@ -30,7 +30,16 @@ import { cn } from '@/lib/utils/common';
 // import Toggle from '@/components/toggle/toggle';
 
 const JournalListBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -193,7 +202,7 @@ const JournalListBody = () => {
         subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
         content: `Error code: ${deleteCode}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -315,7 +324,7 @@ const JournalListBody = () => {
       <input
         disabled={isJournalListLoading}
         type="text"
-        placeholder={t('AUDIT_REPORT.SEARCH')}
+        placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
         onChange={handleInputChange}
         onKeyDown={(e) => {
@@ -423,7 +432,7 @@ const JournalListBody = () => {
                   fill="#001840"
                 />
               </svg>
-              <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
+              <p>{t('report_401:PENDING_REPORT_LIST.SELECT')}</p>
             </button> */}
           </div>
         </div>
@@ -488,7 +497,7 @@ const JournalListBody = () => {
 
         {/* Info: (20240418 - Julian) Sort by */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-navyBlue2">{t('common:SORTING.SORT_BY')}</p>
           {displayedSortByDropMenu}
         </div>
 

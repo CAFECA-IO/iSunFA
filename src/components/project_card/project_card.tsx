@@ -11,7 +11,16 @@ interface IProjectCardProps {
 }
 
 const ProjectCard = ({ project }: IProjectCardProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { name, contractAmount, income, expense, profit, stage, members } = project;
 
   const stageColor = stageColorMap[stage as ProjectStage].bg ?? 'bg-surface-neutral-mute';

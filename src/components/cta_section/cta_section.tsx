@@ -32,18 +32,18 @@ const CTASection = () => {
           <div className="flex flex-col md:space-y-5">
             {' '}
             <h1 className="text-h4 font-bold tracking-wider text-primaryYellow md:text-6xl lg:text-7xl">
-              {t('LANDING_PAGE.MAIN_TITLE')}
+              {t('common:LANDING_PAGE.MAIN_TITLE')}
             </h1>
             <h1 className="text-h6 font-bold tracking-widest text-navy-blue-25 md:text-2xl lg:text-6xl">
-              {t('LANDING_PAGE.MAIN_SUBTITLE_1')}
+              {t('common:LANDING_PAGE.MAIN_SUBTITLE_1')}
             </h1>
           </div>
           <ol className="mt-8 max-w-md list-disc space-y-2 text-base tracking-widest text-navy-blue-25 md:max-w-xl lg:mt-10 lg:max-w-2xl lg:text-base">
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
-            <li>{t('LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
+            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
           </ol>
         </div>
 
@@ -56,7 +56,7 @@ const CTASection = () => {
                 'group-hover:text-white'
               )}
             >
-              {t('NAV_BAR.TRY_NOW')}
+              {t('common:NAV_BAR.TRY_NOW')}
             </p>
 
             <svg

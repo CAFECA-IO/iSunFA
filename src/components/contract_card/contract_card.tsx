@@ -33,7 +33,16 @@ const StatusMainColorMap = {
 };
 
 const ContractCard = ({ style, contract }: IContractCardProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const {
     name,
     projectName,
@@ -60,7 +69,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
 
   const displayContractPeriod = (
     <p className="text-sm font-semibold text-text-neutral-tertiary">
-      {contractStartStr} {t('DATE_PICKER.TO')}{' '}
+      {contractStartStr} {t('common:DATE_PICKER.TO')}{' '}
       <span className={`${durationColor}`}>{contractEndStr}</span>
     </p>
   );
@@ -163,7 +172,7 @@ const ContractCard = ({ style, contract }: IContractCardProps) => {
         <div className="flex flex-col gap-y-8px">
           <p className="text-xs text-text-neutral-tertiary">{t('journal:CONTRACT.DURATION')}</p>
           <p className="text-xs text-text-neutral-tertiary">
-            {contractStartStr} {t('DATE_PICKER.TO')}{' '}
+            {contractStartStr} {t('common:DATE_PICKER.TO')}{' '}
             <span className={`${durationColor}`}>{contractEndStr}</span>
           </p>
         </div>

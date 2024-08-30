@@ -22,7 +22,16 @@ const PreviewInvoiceModal = ({
   modalVisibilityHandler,
   previewInvoiceModalData,
 }: IPreviewInvoiceModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { date, imgStr } = previewInvoiceModalData;
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 
@@ -104,7 +113,7 @@ const PreviewInvoiceModal = ({
           {/* Info: (20240508 - Julian) Close Button */}
           <div className="flex w-full justify-end px-16px pt-16px">
             <Button type="button" onClick={closeClickHandler} className="bg-navyBlue2 text-white">
-              {t('COMMON.CLOSE')}
+              {t('common:COMMON.CLOSE')}
             </Button>
           </div>
         </div>

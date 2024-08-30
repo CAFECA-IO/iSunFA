@@ -1,7 +1,16 @@
 import { useTranslation } from 'next-i18next';
 
 const KYCButton = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   return (
     <button
       type="button"

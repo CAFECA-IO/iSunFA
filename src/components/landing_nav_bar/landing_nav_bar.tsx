@@ -85,7 +85,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
             <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
               <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
                 <div className="justify-center px-1 text-xs">
-                  {t('COMMON.V')}
+                  {t('common:COMMON.V')}
                   {version}
                 </div>
               </div>
@@ -113,7 +113,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 className="fill-current"
               />
             </svg>
-            <p className="text-base">{t('NAV_BAR.ABOUT')}</p>
+            <p className="text-base">{t('common:NAV_BAR.ABOUT')}</p>
           </Link>
         </li>
 
@@ -138,7 +138,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 className="fill-current"
               />
             </svg>{' '}
-            <p className="text-base">{t('NAV_BAR.FEATURES')}</p>
+            <p className="text-base">{t('common:NAV_BAR.FEATURES')}</p>
           </Link>
         </li>
 
@@ -162,14 +162,14 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <p className="text-base">{t('NAV_BAR.REPORTS')}</p>
+            <p className="text-base">{t('common:NAV_BAR.REPORTS')}</p>
           </Link> */}
 
           {/* // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放 */}
           {isLinkDisabled ? (
             <div
               className="flex cursor-wait items-center space-x-2 text-gray-600"
-              title={t('NAV_BAR.LINK_NOT_OPEN')}
+              title={t('common:NAV_BAR.LINK_NOT_OPEN')}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -185,7 +185,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p className="text-base">{t('NAV_BAR.REPORTS')}</p>
+              <p className="text-base">{t('common:NAV_BAR.REPORTS')}</p>
             </div>
           ) : (
             <Link
@@ -206,7 +206,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p className="text-base">{t('NAV_BAR.REPORTS')}</p>
+              <p className="text-base">{t('common:NAV_BAR.REPORTS')}</p>
             </Link>
           )}
         </li>
@@ -239,7 +239,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 </clipPath>
               </defs>
             </svg>{' '}
-            <p className="text-base"> {t('NAV_BAR.CONTACT_US')}</p>
+            <p className="text-base"> {t('common:NAV_BAR.CONTACT_US')}</p>
           </Link>
         </li>
 
@@ -306,7 +306,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   'group-hover:text-white'
                 )}
               >
-                {t('NAV_BAR.TRY_NOW')}
+                {t('common:NAV_BAR.TRY_NOW')}
               </p>
 
               <svg
@@ -344,7 +344,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-primaryYellow3 px-1 text-primaryYellow2">
             <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
               <div className="justify-center px-1 text-xs">
-                {t('COMMON.V')}
+                {t('common:COMMON.V')}
                 {version}
               </div>
             </div>
@@ -429,7 +429,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 </clipPath>
               </defs>
             </svg>
-            <p className="text-base">{t('NAV_BAR.ABOUT')}</p>
+            <p className="text-base">{t('common:NAV_BAR.ABOUT')}</p>
           </Link>
         </li>
 
@@ -461,7 +461,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 </clipPath>
               </defs>
             </svg>{' '}
-            <p className="text-base">{t('NAV_BAR.FEATURES')}</p>
+            <p className="text-base">{t('common:NAV_BAR.FEATURES')}</p>
           </Link>
         </li>
 
@@ -485,14 +485,14 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <p className="text-base">{t('NAV_BAR.REPORTS')}</p>
+            <p className="text-base">{t('common:NAV_BAR.REPORTS')}</p>
           </Link> */}
 
           {/* // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放 */}
           {isLinkDisabled ? (
             <div
               className="flex cursor-wait items-center space-x-2 text-gray-600"
-              title={t('NAV_BAR.LINK_NOT_OPEN')}
+              title={t('common:NAV_BAR.LINK_NOT_OPEN')}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -508,7 +508,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p className="text-base">{t('NAV_BAR.REPORTS')}</p>
+              <p className="text-base">{t('common:NAV_BAR.REPORTS')}</p>
             </div>
           ) : (
             <Link
@@ -529,7 +529,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p className="text-base">{t('NAV_BAR.REPORTS')}</p>
+              <p className="text-base">{t('common:NAV_BAR.REPORTS')}</p>
             </Link>
           )}
         </li>
@@ -563,7 +563,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                 </clipPath>
               </defs>
             </svg>{' '}
-            <p className="text-base"> {t('NAV_BAR.CONTACT_US')}</p>
+            <p className="text-base"> {t('common:NAV_BAR.CONTACT_US')}</p>
           </Link>
         </li>
 
@@ -577,7 +577,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   'group-hover:text-white'
                 )}
               >
-                {t('NAV_BAR.TRY_NOW')}
+                {t('common:NAV_BAR.TRY_NOW')}
               </p>
 
               <svg

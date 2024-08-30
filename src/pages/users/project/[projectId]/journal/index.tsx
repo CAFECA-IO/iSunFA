@@ -14,7 +14,16 @@ interface IProjectJournalPageProps {
 }
 
 const ProjectJournalPage = ({ projectId }: IProjectJournalPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (

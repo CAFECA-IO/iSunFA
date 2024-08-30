@@ -22,7 +22,16 @@ const FilterOptionsModal = ({
   filterType,
   getFilterOptions = () => {},
 }: IFilterOptionsModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const [period, setPeriod, periodRef] = useStateRef(default30DayPeriodInSec);
   const [sort, setSort, sortRef] = useStateRef<SortOptions>(SortOptions.newest);
   const [selectedReportType, setSelectedReportType, selectedReportTypeRef] = useStateRef<
@@ -251,7 +260,7 @@ const FilterOptionsModal = ({
     <div className="fixed inset-0 z-10000 -mt-40 flex items-center justify-center bg-black/50">
       <div className="relative mx-5 flex w-full flex-col items-center rounded-md bg-white pb-10 pt-3 shadow-lg shadow-black/80 sm:mx-auto sm:w-400px sm:px-3">
         <div className="flex w-full justify-between whitespace-nowrap bg-white px-5 py-4 text-xl font-bold leading-8 text-card-text-primary">
-          <div className="flex-1">{t('COMMON.FILTER')}</div>
+          <div className="flex-1">{t('common:COMMON.FILTER')}</div>
 
           {/* Info: (20240528 - Shirley) close button */}
           <Button
@@ -294,7 +303,7 @@ const FilterOptionsModal = ({
 
           <div className="flex flex-col space-y-2 self-stretch">
             <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
-              {t('MY_REPORTS_SECTION.SORT_BY')}
+              {t('report_401:MY_REPORTS_SECTION.SORT_BY')}
             </div>
             {/* Info: (20240513 - Shirley) sort menu */}
             {displayedSortMenu}
