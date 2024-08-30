@@ -2,9 +2,9 @@
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Info: (20240830 - Shirley) 執行 Prettier 和 ESLint 進行格式化和檢查
-npm run format
+# Info: (20240830 - Shirley) 執行 ESLint 和 Prettier 進行格式化和檢查
 npm run lint
+npm run format
 
 # Info: (20240830 - Shirley) 將格式化後的檔案加入 git staged
 git add .
