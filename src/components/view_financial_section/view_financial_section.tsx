@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -47,7 +46,7 @@ const generateThumbnails = (count: number) => {
   return Array.from({ length: count }, (_, index) => ({
     number: index + 1,
     active: index === 0,
-    src: `/elements/placeholder.png`,
+    src: `${count}`,
     alt: `${count}`,
   }));
 };
@@ -351,16 +350,21 @@ const ViewFinancialSection = ({
             : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
         }`}
       >
-        <div className="flex items-center justify-center border border-solid border-blue-950">
-          <Image width={100} height={142} src={thumbnail.src} alt={thumbnail.alt} />
-        </div>
         <div
+          className={`flex h-80px w-120px items-center justify-center border border-solid border-blue-950 text-3xl font-bold ${
+            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
+          }`}
+        >
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        </div>
+        {/* Info: (20240830 - Shirley) 等實作報告縮圖之後，將報告頁數 uncomment */}
+        {/* <div
           className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
             thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
           }`}
         >
-          {index + 1 < 10 ? `0${index + 1}` : index + 1}
-        </div>
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        </div> */}
       </div>
     </button>
   );
