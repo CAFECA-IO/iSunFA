@@ -66,7 +66,10 @@ export default async function handler(
     // ToDo: (20240828 - Jacky) Implement error logging
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<EmployeeDepartments | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<EmployeeDepartments | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

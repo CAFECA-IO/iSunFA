@@ -1,4 +1,4 @@
-import { IAccountReadyForFrontend } from "@/interfaces/accounting_account";
+import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
 export enum LifeCycleType {
   INTRODUCTION = '初創期',
@@ -10,13 +10,13 @@ export enum LifeCycleType {
 }
 
 export const EMPTY_I_ACCOUNT_READY_FRONTEND: IAccountReadyForFrontend = {
-  code: "Empty Account",
-  name: "Empty Account",
+  code: 'Empty Account',
+  name: 'Empty Account',
   curPeriodAmount: 0,
-  curPeriodAmountString: "0",
+  curPeriodAmountString: '0',
   curPeriodPercentage: 0,
   prePeriodAmount: 0,
-  prePeriodAmountString: "0",
+  prePeriodAmountString: '0',
   prePeriodPercentage: 0,
-  indent: 0
+  indent: 0,
 };

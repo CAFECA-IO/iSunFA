@@ -52,7 +52,16 @@ const AddProjectModal = ({
   modalVisibilityHandler,
   defaultStage,
 }: IAddProjectModalProps) => {
-  const { t } = useTranslation(['common', 'project', 'journal', 'kyc', 'report_401', 'salary', 'setting', 'terms']);
+  const { t } = useTranslation([
+    'common',
+    'project',
+    'journal',
+    'kyc',
+    'report_401',
+    'salary',
+    'setting',
+    'terms',
+  ]);
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 

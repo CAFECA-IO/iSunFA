@@ -112,8 +112,8 @@ export async function getFolderContent(
           journal: {
             select: {
               event: true,
-            }
-          }
+            },
+          },
         },
       },
     },

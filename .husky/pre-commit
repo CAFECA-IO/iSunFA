@@ -1,4 +1,17 @@
 # Info: (20240829 - Jacky) - Make sure NVM is loaded before running the tests
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-npm run test && npx lint-staged && npm run update-version
+
+# Info: (20240830 - Shirley) 執行 ESLint 和 Prettier 進行格式化和檢查
+npm run lint
+npm run format
+
+# Info: (20240830 - Shirley) 將格式化後的檔案加入 git staged
+git add .
+
+# Info: (20240830 - Shirley) 測試和版本更新
+npm run test
+npm run update-version
+
+# Info: (20240830 - Shirley) 最後執行 lint-staged，有不符合規定就會阻止 commit
+npx lint-staged

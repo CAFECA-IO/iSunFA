@@ -17,7 +17,6 @@ export class GeneralAccountRetriever extends AbstractAccountRetriever {
     sortOrder?: 'asc' | 'desc',
     searchKey?: string,
     isDeleted?: boolean
-
   ) {
     super({
       companyId,
@@ -32,7 +31,7 @@ export class GeneralAccountRetriever extends AbstractAccountRetriever {
       sortBy,
       sortOrder,
       searchKey,
-      isDeleted
+      isDeleted,
     });
   }
 }

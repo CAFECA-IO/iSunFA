@@ -9,7 +9,10 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 import { isCompanyKYC, isCompanyKYCForm } from '@/lib/utils/type_guard/company_kyc';
 
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<ICompanyKYC>>) {
+async function handlePostRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ICompanyKYC>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompanyKYC | null = null;
 

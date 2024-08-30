@@ -8,7 +8,10 @@ import { createOrder, listOrder } from '@/lib/utils/repo/order.repo';
 import { IOrder } from '@/interfaces/order';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IOrder[]>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IOrder[]>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IOrder[] | null = null;
 
@@ -95,7 +98,10 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<IOrder | IOrder[] | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IOrder | IOrder[] | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

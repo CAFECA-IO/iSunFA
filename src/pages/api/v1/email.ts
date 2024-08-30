@@ -7,7 +7,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 
 // Info: (20240823 - Julian) Handle POST request for sending email
 export async function handlePostRequest(
-  req: NextApiRequest,
+  req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: boolean | null }> {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: boolean | null = null;

@@ -13,7 +13,10 @@ import { formatProject } from '@/lib/utils/formatter/project.formatter';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IProject | null>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProject | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IProject | null = null;
 
@@ -41,7 +44,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
   return { statusMessage, payload };
 }
 
-async function handlePutRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<IProject | null>>) {
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProject | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IProject | null = null;
 
