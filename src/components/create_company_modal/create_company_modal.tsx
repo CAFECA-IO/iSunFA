@@ -104,9 +104,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           messageType: MessageType.WARNING,
           title: t('kyc:COMPANY_BASIC_INFO.EXISTED_COMPANY'),
           subMsg: t('kyc:COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
-          // Info: (20240805 - Anna) content: `If you are the owner of this company,
-          // Info: (20240805 - Anna) please complete KYC to get access back. Error code: ${createCompanyCode}`,
-          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
+          // Info: (20240830 - Anna) 因為用戶不需要知道錯誤代碼，所以把{ code: createCompanyCode }移除
+          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC'),
           submitBtnStr: t('kyc:COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
             // Info: (20240807 - Anna) 隱藏 create company modal
@@ -131,9 +130,10 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: 'Create Company Failed',
-          subMsg: 'Please try again later',
-          content: `Error code: ${createCompanyCode}`,
+          title: t('kyc:KYC.CREATE_COMPANY_FAILED'),
+          subMsg: t('kyc:KYC.PLEASE_TRY_AGAIN_LATER'),
+          // Info: (20240830 - Anna) content: `Error code: ${createCompanyCode}`,因為錯誤代碼不需要顯示給用戶看，所以改為空字串
+          content: '',
           submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
@@ -181,8 +181,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   });
 
   const isDisplayedCreateCompanyModal = isModalVisible ? (
-    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <form
         onSubmit={confirmClickHandler}
         className="relative mx-auto flex w-90vw flex-col items-center gap-y-16px rounded-lg bg-white py-16px shadow-lg shadow-black/80 sm:w-500px"

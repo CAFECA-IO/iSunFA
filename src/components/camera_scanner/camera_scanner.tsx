@@ -379,8 +379,9 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
           variant="secondaryOutline"
           className="h-40px w-40px p-0"
         >
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+          {/* Info: (20240830 - Anna) 因為出現 A form label must be associated with a control. 錯誤，所以增加 id="uploadImageLabel"和aria-labelledby="uploadImageLabel"來關聯 */}
           <label
+            id="uploadImageLabel"
             htmlFor="uploadImageFromAlbum"
             className="flex h-full w-full cursor-pointer items-center justify-center"
           >
@@ -399,13 +400,13 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
                 fill="#001840"
               />
             </svg>
-
             <input
               id="uploadImageFromAlbum"
               name="uploadImageFromAlbum"
               accept="image/*"
               type="file"
               className="hidden"
+              aria-labelledby="uploadImageLabel"
               onChange={handleInputChange}
             />
           </label>

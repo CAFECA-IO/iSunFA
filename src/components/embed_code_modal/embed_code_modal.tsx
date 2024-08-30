@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -169,6 +168,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <button
           className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
+          type="button"
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {selectedProjectName === 'Overall' ? t('project:PROJECT.OVERALL') : selectedProjectName}
@@ -197,7 +197,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
       {/* Info: (20240425 - Shirley) Project Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -233,20 +233,19 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               ></path>
             </svg>
           </div>
-
+          {/* Info: (20240830 - Anna) 為了解決Unexpected newline before '}'錯誤，請prettier不要格式化 */}
+          {/* prettier-ignore */}
           <div className="mt-2 max-h-60 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
               .filter((project) =>
                 DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase()))
               .map((project) => (
                 <li
                   key={project}
                   onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                  }
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)}
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">
@@ -282,6 +281,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
+        type="button"
       >
         <Image
           width={20}
@@ -313,7 +313,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -406,6 +406,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <div className="flex gap-3">
           <button
             onClick={cancelClickHandler}
+            type="button"
             className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
           >
             {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
@@ -485,8 +486,8 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   );
 
   const isDisplayedEmbedCodeModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:max-w-[511px] sm:px-3">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
+      <div className="relative mx-auto flex flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
         <div className="flex w-full gap-2.5 bg-white pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 pb-10 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
@@ -498,6 +499,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           </div>
           <button
             onClick={cancelClickHandler}
+            type="button"
             className="-mr-3 flex items-center justify-center self-start"
           >
             <svg
@@ -527,7 +529,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     </div>
   ) : null;
 
-  return <>{isDisplayedEmbedCodeModal}</>;
+  return isDisplayedEmbedCodeModal;
 };
 
 export default EmbedCodeModal;

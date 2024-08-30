@@ -98,14 +98,12 @@ const SelectCompanyPageBody = () => {
     }
   }, [companyAndRoleListSuccess, companyAndRoleList]);
 
+  // Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解，所以加上prettier-ignore，請Prettier不要格式化
   useEffect(() => {
+    // prettier-ignore
     if (searchValue !== '') {
-      const filteredList = companyList.filter(
-        (companyAndRole) =>
-          // eslint-disable-next-line implicit-arrow-linebreak
-          companyAndRole.company.name.toLowerCase().includes(searchValue.toLowerCase())
-        // eslint-disable-next-line implicit-arrow-linebreak
-      );
+      const filteredList = companyList.filter((companyAndRole) =>
+        companyAndRole.company.name.toLowerCase().includes(searchValue.toLowerCase()));
       setFilteredCompanyList(filteredList);
     } else {
       setFilteredCompanyList(companyList);

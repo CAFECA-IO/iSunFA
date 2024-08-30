@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import useStateRef from 'react-usestateref';
 
 export interface INotificationProvider {
@@ -30,14 +30,21 @@ export const NotificationProvider = ({ children }: INotificationProvider) => {
   };
 
   // TODO: (20240517 - Shirley) [Beta] websocket connection of pending report and generated report
-
-  /* eslint-disable react/jsx-no-constructed-context-values */
-  const value = {
-    reportPendingStatus: reportPendingStatusRef.current,
-    reportGeneratedStatus: reportGeneratedStatusRef.current,
-    reportPendingStatusHandler,
-    reportGeneratedStatusHandler,
-  };
+  // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
+  const value = useMemo(
+    () => ({
+      reportPendingStatus: reportPendingStatusRef.current,
+      reportGeneratedStatus: reportGeneratedStatusRef.current,
+      reportPendingStatusHandler,
+      reportGeneratedStatusHandler,
+    }),
+    [
+      reportPendingStatusRef.current,
+      reportGeneratedStatusRef.current,
+      reportPendingStatusHandler,
+      reportGeneratedStatusHandler,
+    ]
+  );
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };

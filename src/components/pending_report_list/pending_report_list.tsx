@@ -39,17 +39,13 @@ const PendingReportList = ({ reports }: IReportListProps) => {
     setIndividualChecks(new Array(reportItems.length).fill(false));
   };
 
+  // Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請Prettier不要格式化
   const handleReportItemUpdate = (updatedReportItem: IReport) => {
-    setReportItems(
-      (prevReportItems) =>
-        // Info: (20240515 - Shirley) result from prettier format rules
-        // eslint-disable-next-line implicit-arrow-linebreak
-        prevReportItems.map((item) => {
-          return item.id === updatedReportItem.id ? updatedReportItem : item;
-        })
-      // Info: (20240515 - Shirley) result from prettier format rules
-      // eslint-disable-next-line function-paren-newline
-    );
+    // prettier-ignore
+    setReportItems((prevReportItems) => {
+      return prevReportItems.map((item) =>
+        (item.id === updatedReportItem.id ? updatedReportItem : item));
+    });
   };
 
   const handleReportItemDelete = (reportId: number) => {

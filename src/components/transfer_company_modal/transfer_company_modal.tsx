@@ -100,11 +100,11 @@ const TransferCompanyModal = ({
       // TODO: (20240717 - Shirley) [Beta] validate the userId
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: 'Transfer company',
+        title: t('kyc:KYC.TRANSFER_COMPANY'),
         content: (
           <div className="flex w-full flex-col gap-2">
             <p className="text-text-neutral-secondary">
-              Are you sure you want to transfer the administration to
+              {t('kyc:KYC.TRANSFER_THE_ADMINISTRATION_TO')}
             </p>
             <p className="text-text-neutral-primary">{inputRef.current.value}</p>
           </div>
@@ -137,7 +137,7 @@ const TransferCompanyModal = ({
       <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-card-surface-primary px-0 pb-5 pt-2 shadow-lg shadow-black/80 lg:w-500px">
         <div className="flex gap-2.5 py-4 pl-10 pr-5">
           <div className="w-full text-center text-xl font-bold text-card-text-primary">
-            Transfer Company
+            {t('kyc:KYC.TRANSFER_COMPANY')}
           </div>
           <div className="absolute right-3 top-3">
             <Button
@@ -175,7 +175,7 @@ const TransferCompanyModal = ({
         <div className="flex w-full flex-col justify-center px-8 py-2.5">
           <div className="flex flex-col justify-start gap-2">
             <div className="text-divider-text-lv-1">
-              <p>Transfer company to ...</p>
+              <p>{t('kyc:KYC.TRANSFER_COMPANY_TO')}</p>
             </div>
             <div className="flex gap-0 rounded-sm border border-solid border-input-stroke-input shadow-sm">
               <div className="flex flex-1">
@@ -183,7 +183,7 @@ const TransferCompanyModal = ({
                   ref={inputRef}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder="User ID"
+                  placeholder={t('kyc:KYC.USER_ID')}
                 />
               </div>
             </div>
@@ -196,10 +196,10 @@ const TransferCompanyModal = ({
               onClick={modalVisibilityHandler}
               className="flex-1 rounded-xs"
             >
-              Cancel
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button variant={'tertiary'} onClick={saveClickHandler} className="flex-1 rounded-xs">
-              Transfer
+              {t('kyc:KYC.TRANSFER')}
             </Button>
           </div>
         </div>
