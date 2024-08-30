@@ -31,7 +31,7 @@ const ReportsSidebar = () => {
       <div
         onMouseEnter={sidebarEnterHandler}
         onMouseLeave={sidebarLeaveHandler}
-        className={`fixed z-10 hidden h-screen flex-col items-center lg:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
+        className={`fixed z-10 hidden h-screen flex-col items-center lg:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-surface-neutral-surface-lv2 px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
       >
         {/* Info: (20240423 - Shirley) Main icon */}
         <div className="flex flex-col items-center pt-20px">
@@ -43,7 +43,7 @@ const ReportsSidebar = () => {
             className={`${isExpanded ? 'scale-150' : 'scale-100'} transition-all duration-300 ease-in-out`}
           />
           <p
-            className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-secondaryBlue transition-all duration-300 ease-in-out`}
+            className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-text-neutral-primary transition-all duration-300 ease-in-out`}
           >
             {t('report_401:REPORTS_SIDEBAR.REPORT')}
           </p>
@@ -54,9 +54,8 @@ const ReportsSidebar = () => {
             type="button"
             onClick={embedCodeModalVisibilityHandler}
             // ToDo: (20240802 - Julian) [Beta] Not released yet
-            // eslint-disable-next-line react/jsx-boolean-value
-            disabled={true}
-            className={`flex w-full items-center gap-8px disabled:opacity-50 ${isExpanded ? 'bg-tertiaryBlue py-14px pl-28px text-white hover:opacity-75' : 'py-8px pl-8px text-secondaryBlue'} rounded-xs transition-all duration-300 ease-in-out`}
+            disabled
+            className={`flex w-full items-center gap-8px disabled:opacity-50 ${isExpanded ? 'bg-text-neutral-primary py-14px pl-28px text-button-text-invert hover:opacity-75' : 'py-8px pl-8px text-button-text-secondary-hover'} rounded-xs transition-all duration-300 ease-in-out`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -65,18 +64,16 @@ const ReportsSidebar = () => {
               fill="none"
               viewBox="0 0 24 24"
             >
-              <g>
-                <path
-                  className="fill-current"
-                  fill="none"
-                  fillRule="evenodd"
-                  d="M14.22 2.025a1 1 0 01.76 1.193l-4 18a1 1 0 11-1.953-.434l4-18a1 1 0 011.193-.76zM7.71 6.294a1 1 0 010 1.414l-4.293 4.293 4.293 4.293a1 1 0 11-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414l4.293-4.293-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </g>
+              <path
+                className="fill-current"
+                fill="none"
+                fillRule="evenodd"
+                d="M14.22 2.025a1 1 0 01.76 1.193l-4 18a1 1 0 11-1.953-.434l4-18a1 1 0 011.193-.76zM7.71 6.294a1 1 0 010 1.414l-4.293 4.293 4.293 4.293a1 1 0 11-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414l4.293-4.293-4.293-4.293a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              ></path>
             </svg>
             <p
-              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-white transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-button-text-invert transition-all duration-300 ease-in-out`}
             >
               {t('report_401:REPORTS_SIDEBAR.GET_EMBED_CODE')}
             </p>
@@ -84,7 +81,7 @@ const ReportsSidebar = () => {
 
           {/* Info: (20240423 - Shirley) Divider */}
           <div
-            className={`${isExpanded ? 'h-12px' : 'h-15px'} w-full border-b border-lightGray6 transition-all duration-300 ease-in-out`}
+            className={`${isExpanded ? 'h-12px' : 'h-15px'} w-full border-b border-divider-stroke-lv-4 transition-all duration-300 ease-in-out`}
           ></div>
 
           {/* Info: (20240423 - Shirley) Menu */}
@@ -98,7 +95,6 @@ const ReportsSidebar = () => {
                   : 'text-tabs-text-default hover:text-tabs-text-active'
               )}
             >
-              {' '}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -123,7 +119,7 @@ const ReportsSidebar = () => {
 
             {/* Info: (20240423 - Shirley) Divider */}
             <div
-              className={`${isExpanded ? 'h-12px' : 'h-15px'} w-full border-b border-lightGray6 transition-all duration-300 ease-in-out`}
+              className={`${isExpanded ? 'h-12px' : 'h-15px'} w-full border-b border-divider-stroke-lv-4 transition-all duration-300 ease-in-out`}
             ></div>
 
             <Link
@@ -142,21 +138,14 @@ const ReportsSidebar = () => {
                 fill="none"
                 viewBox="0 0 20 20"
               >
-                <g clipPath="url(#clip0_904_38640)">
-                  <path
-                    className="stroke-current transition-all duration-300 ease-in-out"
-                    stroke="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M11.667 7.5H9.583a1.25 1.25 0 100 2.5h.834a1.25 1.25 0 110 2.5H8.333M10 6.667V7.5m0 5v.833M15 10h.008M5 10h.008M1.667 6.833v6.334c0 .933 0 1.4.181 1.756.16.314.415.569.729.729.356.181.823.181 1.756.181h11.334c.933 0 1.4 0 1.756-.181.314-.16.569-.415.729-.729.181-.356.181-.823.181-1.756V6.833c0-.933 0-1.4-.181-1.756a1.667 1.667 0 00-.729-.729c-.356-.181-.823-.181-1.756-.181H4.333c-.933 0-1.4 0-1.756.181-.314.16-.569.415-.729.729-.181.356-.181.823-.181 1.756zM15.417 10a.417.417 0 11-.833 0 .417.417 0 01.833 0zm-10 0a.417.417 0 11-.834 0 .417.417 0 01.834 0z"
-                  ></path>
-                </g>
-                <defs>
-                  <clipPath id="clip0_904_38640">
-                    <path fill="#fff" d="M0 0H20V20H0z"></path>
-                  </clipPath>
-                </defs>
+                <path
+                  className="stroke-current transition-all duration-300 ease-in-out"
+                  stroke="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M11.667 7.5H9.583a1.25 1.25 0 100 2.5h.834a1.25 1.25 0 110 2.5H8.333M10 6.667V7.5m0 5v.833M15 10h.008M5 10h.008M1.667 6.833v6.334c0 .933 0 1.4.181 1.756.16.314.415.569.729.729.356.181.823.181 1.756.181h11.334c.933 0 1.4 0 1.756-.181.314-.16.569-.415.729-.729.181-.356.181-.823.181-1.756V6.833c0-.933 0-1.4-.181-1.756a1.667 1.667 0 00-.729-.729c-.356-.181-.823-.181-1.756-.181H4.333c-.933 0-1.4 0-1.756.181-.314.16-.569.415-.729.729-.181.356-.181.823-.181 1.756zM15.417 10a.417.417 0 11-.833 0 .417.417 0 01.833 0zm-10 0a.417.417 0 11-.834 0 .417.417 0 01.834 0z"
+                ></path>
               </svg>
 
               <p
@@ -179,8 +168,7 @@ const ReportsSidebar = () => {
             <button
               type="button"
               // ToDo: (20240802 - Julian) [Beta] Not released yet
-              // eslint-disable-next-line react/jsx-boolean-value
-              disabled={true}
+              disabled
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
@@ -212,7 +200,7 @@ const ReportsSidebar = () => {
       </div>
 
       {/* Info: (20240507 - Shirley) ----- mobile version ----- */}
-      <div className="fixed bottom-0 z-50 grid h-72px w-screen grid-cols-4 bg-white px-16px py-8px shadow-sidebarMobile lg:hidden">
+      <div className="fixed bottom-0 z-50 grid h-72px w-screen grid-cols-4 bg-surface-neutral-surface-lv2 px-16px py-8px shadow-sidebarMobile lg:hidden">
         <Link
           href={ISUNFA_ROUTE.USERS_MY_REPORTS}
           className={cn(
@@ -243,9 +231,8 @@ const ReportsSidebar = () => {
           type="button"
           onClick={embedCodeModalVisibilityHandler}
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
-          className="mx-auto p-16px text-secondaryBlue disabled:opacity-50"
+          disabled
+          className="mx-auto p-16px text-button-text-secondary-hover disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -254,15 +241,13 @@ const ReportsSidebar = () => {
             fill="none"
             viewBox="0 0 24 24"
           >
-            <g>
-              <path
-                className="fill-current"
-                fill="none"
-                fillRule="evenodd"
-                d="M14.22 2.025a1 1 0 01.76 1.193l-4 18a1 1 0 11-1.953-.434l4-18a1 1 0 011.193-.76zM7.71 6.294a1 1 0 010 1.414l-4.293 4.293 4.293 4.293a1 1 0 11-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414l4.293-4.293-4.293-4.293a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              ></path>
-            </g>
+            <path
+              className="fill-current"
+              fill="none"
+              fillRule="evenodd"
+              d="M14.22 2.025a1 1 0 01.76 1.193l-4 18a1 1 0 11-1.953-.434l4-18a1 1 0 011.193-.76zM7.71 6.294a1 1 0 010 1.414l-4.293 4.293 4.293 4.293a1 1 0 11-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414l4.293-4.293-4.293-4.293a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            ></path>
           </svg>
         </button>
         <Link
@@ -281,22 +266,15 @@ const ReportsSidebar = () => {
             fill="none"
             viewBox="0 0 20 20"
           >
-            <g clipPath="url(#clip0_904_38640)">
-              <path
-                className="stroke-current"
-                stroke="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M11.667 7.5H9.583a1.25 1.25 0 100 2.5h.834a1.25 1.25 0 110 2.5H8.333M10 6.667V7.5m0 5v.833M15 10h.008M5 10h.008M1.667 6.833v6.334c0 .933 0 1.4.181 1.756.16.314.415.569.729.729.356.181.823.181 1.756.181h11.334c.933 0 1.4 0 1.756-.181.314-.16.569-.415.729-.729.181-.356.181-.823.181-1.756V6.833c0-.933 0-1.4-.181-1.756a1.667 1.667 0 00-.729-.729c-.356-.181-.823-.181-1.756-.181H4.333c-.933 0-1.4 0-1.756.181-.314.16-.569.415-.729.729-.181.356-.181.823-.181 1.756zM15.417 10a.417.417 0 11-.833 0 .417.417 0 01.833 0zm-10 0a.417.417 0 11-.834 0 .417.417 0 01.834 0z"
-              ></path>
-            </g>
-            <defs>
-              <clipPath id="clip0_904_38640">
-                <path fill="#fff" d="M0 0H20V20H0z"></path>
-              </clipPath>
-            </defs>
-          </svg>{' '}
+            <path
+              className="stroke-current"
+              stroke="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M11.667 7.5H9.583a1.25 1.25 0 100 2.5h.834a1.25 1.25 0 110 2.5H8.333M10 6.667V7.5m0 5v.833M15 10h.008M5 10h.008M1.667 6.833v6.334c0 .933 0 1.4.181 1.756.16.314.415.569.729.729.356.181.823.181 1.756.181h11.334c.933 0 1.4 0 1.756-.181.314-.16.569-.415.729-.729.181-.356.181-.823.181-1.756V6.833c0-.933 0-1.4-.181-1.756a1.667 1.667 0 00-.729-.729c-.356-.181-.823-.181-1.756-.181H4.333c-.933 0-1.4 0-1.756.181-.314.16-.569.415-.729.729-.181.356-.181.823-.181 1.756zM15.417 10a.417.417 0 11-.833 0 .417.417 0 01.833 0zm-10 0a.417.417 0 11-.834 0 .417.417 0 01.834 0z"
+            ></path>
+          </svg>
         </Link>
         {/* Info: (20240802 - Julian) */}
         {/* <Link
@@ -311,8 +289,7 @@ const ReportsSidebar = () => {
         <button
           type="button"
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg

@@ -143,7 +143,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             if (!value.code) {
               return (
                 <tr key={value.code}>
-                  <td colSpan={6} className="border border-lightGray8 p-10px text-xs font-bold">
+                  <td
+                    colSpan={6}
+                    className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+                  >
                     {value.name}
                   </td>
                 </tr>
@@ -151,12 +154,16 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             }
             return (
               <tr key={value.code}>
-                <td className="border border-lightGray8 p-10px text-xs">{value.code}</td>
-                <td className="border border-lightGray8 p-10px text-xs">{value.name}</td>
-                <td className="border border-lightGray8 p-10px text-end text-xs">
+                <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  {value.code}
+                </td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                  {value.name}
+                </td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                   {value.curPeriodAmount}
                 </td>
-                <td className="border border-lightGray8 p-10px text-end text-xs">
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
                   {value.prePeriodAmount}
                 </td>
               </tr>
@@ -213,50 +220,50 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       reportFinancial?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
-            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               營業活動現金流入
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[
                 currentYear
               ]?.operatingCashFlow.toLocaleString()}
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[
                 previousYear
               ]?.operatingCashFlow.toLocaleString()}
             </td>
           </tr>
           <tr>
-            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               不動產、廠房及設備
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
             </td>
           </tr>
           <tr>
-            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               無形資產支出
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset.toLocaleString()}
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset.toLocaleString()}
             </td>
           </tr>
           <tr>
-            <td className="border border-lightGray8 p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
               自由現金流量
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
-            <td className="border border-lightGray8 p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
             </td>
           </tr>
@@ -604,28 +611,43 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </thead>
               <tbody className="text-xs">
                 <tr>
-                  <td className="border border-lightGray8 p-10px font-semibold">A</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px font-semibold">
+                    A
+                  </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td key={year} className="border border-lightGray8 p-10px font-semibold"></td>
+                      <td
+                        key={year}
+                        className="border border-stroke-brand-secondary-soft p-10px font-semibold"
+                      ></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px">稅前淨利（淨損）</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                    稅前淨利（淨損）
+                  </td>
                   {Object.entries(
                     reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
                   ).map(([year, value]) => (
-                    <td key={year} className="border border-lightGray8 p-10px text-end">
+                    <td
+                      key={year}
+                      className="border border-stroke-brand-secondary-soft p-10px text-end"
+                    >
                       {value.toLocaleString()}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px">折舊及攤銷費用</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                    折舊及攤銷費用
+                  </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td key={year} className="border border-lightGray8 p-10px text-end">
+                      <td
+                        key={year}
+                        className="border border-stroke-brand-secondary-soft p-10px text-end"
+                      >
                         {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
                           year
                         ].toLocaleString()}
@@ -634,46 +656,65 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px">支付的所得稅</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px">支付的所得稅</td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
                     ([year, value]) => (
-                      <td key={year} className="border border-lightGray8 p-10px text-end">
+                      <td
+                        key={year}
+                        className="border border-stroke-brand-secondary-soft p-10px text-end"
+                      >
                         {value.toLocaleString()}
                       </td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px font-semibold">B</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px font-semibold">
+                    B
+                  </td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td key={year} className="border border-lightGray8 p-10px font-semibold"></td>
+                      <td
+                        key={year}
+                        className="border border-stroke-brand-secondary-soft p-10px font-semibold"
+                      ></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px">營業活動的現金</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px">
+                    營業活動的現金
+                  </td>
                   {Object.entries(
                     reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
                   ).map(([year, value]) => (
-                    <td key={year} className="border border-lightGray8 p-10px text-end">
+                    <td
+                      key={year}
+                      className="border border-stroke-brand-secondary-soft p-10px text-end"
+                    >
                       {value.toLocaleString()}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px"></td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px"></td>
                   {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
                     (year) => (
-                      <td key={year} className="border border-lightGray8 p-10px"></td>
+                      <td
+                        key={year}
+                        className="border border-stroke-brand-secondary-soft p-10px"
+                      ></td>
                     )
                   )}
                 </tr>
                 <tr>
-                  <td className="border border-lightGray8 p-10px">A和B比例關係</td>
+                  <td className="border border-stroke-brand-secondary-soft p-10px">A和B比例關係</td>
                   {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
                     ([year, value]) => (
-                      <td key={year} className="border border-lightGray8 p-10px text-end">
+                      <td
+                        key={year}
+                        className="border border-stroke-brand-secondary-soft p-10px text-end"
+                      >
                         {value.toFixed(2)}
                       </td>
                     )
@@ -726,7 +767,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-end text-xs font-semibold text-lightGray5">
+              <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
                 {curYear}年度投資活動項目佔比
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
@@ -742,7 +783,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-end text-xs font-semibold text-lightGray5">
+              <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
                 {preYear}年度投資活動項目佔比
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>

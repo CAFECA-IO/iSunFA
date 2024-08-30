@@ -15,7 +15,10 @@ async function handleGetRequest(
   res: NextApiResponse<IResponseData<{ user: IUser; company: ICompany }>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  const payload: { user: IUser; company: ICompany } = { user: {} as IUser, company: {} as ICompany };
+  const payload: { user: IUser; company: ICompany } = {
+    user: {} as IUser,
+    company: {} as ICompany,
+  };
 
   const session = await getSession(req, res);
   const { userId, companyId } = session || {};

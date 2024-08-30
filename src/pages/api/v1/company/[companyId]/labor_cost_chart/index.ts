@@ -98,7 +98,10 @@ function formatDateQuery(req: NextApiRequest) {
   return { date: null };
 }
 
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IResponseData<ILaborCostChartData>>) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ILaborCostChartData>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ILaborCostChartData | null = null;
 
@@ -166,7 +169,10 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<ILaborCostChartData | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<ILaborCostChartData | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

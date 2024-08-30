@@ -37,8 +37,7 @@ const Pagination = ({
     'setting',
     'terms',
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [targetPage, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
+  const [, /* targetPage */ setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
   const router = useRouter();
 
   // Info: (20240712 - Shirley) 從 URL 獲取初始頁碼

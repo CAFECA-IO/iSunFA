@@ -187,7 +187,10 @@ const AddProjectModal = ({
           setSelectedMembers(newMembers);
         };
         return (
-          <div className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary">
+          <div
+            key={member.name}
+            className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary"
+          >
             <Image src="/elements/yellow_check.svg" alt="member_avatar" width={20} height={20} />
             <p className="whitespace-nowrap">{member.name}</p>
             <button type="button" onClick={removeMemberHandler}>
@@ -238,7 +241,7 @@ const AddProjectModal = ({
   const displayMembersMenu = (
     <div
       ref={membersRef}
-      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-dropdown-surface-menu-background-primary px-12px py-10px ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
@@ -266,7 +269,7 @@ const AddProjectModal = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex w-90vw max-w-600px flex-col rounded-sm bg-white py-20px">
+      <div className="relative flex w-90vw max-w-600px flex-col rounded-sm bg-card-surface-primary py-20px">
         {/* Info: (20240611 - Julian) title */}
         <div className="flex flex-col items-start gap-2px whitespace-nowrap border-b px-20px pb-20px">
           {/* Info: (20240611 - Julian) desktop title */}
@@ -281,14 +284,14 @@ const AddProjectModal = ({
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
+          className="absolute right-12px top-12px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
         {/* Info: (20240611 - Julian) content */}
         <form
           onSubmit={addProjectSubmitHandler}
-          className="flex w-full flex-col gap-y-40px text-sm text-navyBlue2"
+          className="flex w-full flex-col gap-y-40px text-sm text-input-text-primary"
         >
           {/* Info: (20240611 - Julian) input fields */}
           <div className="flex flex-col items-center gap-x-16px gap-y-50px px-20px pt-40px text-center md:grid-cols-2">

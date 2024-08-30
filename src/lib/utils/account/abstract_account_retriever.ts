@@ -46,7 +46,7 @@ export abstract class AbstractAccountRetriever {
     sortBy,
     sortOrder,
     searchKey,
-    isDeleted
+    isDeleted,
   }: IAccountQueryArgs) {
     this.companyId = companyId;
     this.includeDefaultAccount = includeDefaultAccount;
@@ -77,7 +77,7 @@ export abstract class AbstractAccountRetriever {
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
       searchKey: this.searchKey,
-      isDeleted: this.isDeleted
+      isDeleted: this.isDeleted,
     });
 
     const paginatedAccount = formatIPaginatedAccount(accounts);

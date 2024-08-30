@@ -27,8 +27,6 @@ import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 // eslint-disable-next-line import/no-cycle
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
@@ -37,8 +35,6 @@ import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
 // eslint-disable-next-line import/no-cycle
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
@@ -828,18 +824,5 @@ export const useGlobalCtx = () => {
   if (!context) {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
-
-  // Deprecated: (20231120 - Shirley) Debug tool [to be removed]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g: any =
-    typeof globalThis === 'object'
-      ? globalThis
-      : typeof window === 'object'
-        ? window
-        : typeof global === 'object'
-          ? global
-          : null; // Info: (20240409 - Shirley) Causes an error on the next line
-
-  g.globalContext = context;
   return context;
 };

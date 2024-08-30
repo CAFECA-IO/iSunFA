@@ -20,7 +20,10 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<IRespo
     const { projectId } = req.query;
     const projectIdNum = convertStringToNumber(projectId);
     if (projectIdNum > 0) {
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch], { userId, companyId, projectId: projectIdNum });
+      const isAuth = await checkAuthorization(
+        [AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch],
+        { userId, companyId, projectId: projectIdNum }
+      );
       if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
