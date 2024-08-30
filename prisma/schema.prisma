@@ -101,7 +101,7 @@ model Authentication {
   credentialId String @unique @map("credential_id")
   method       String
   provider     String
-  authData     Json  @map("auth_data")
+  authData     Json   @map("auth_data")
   createdAt    Int    @map("created_at")
   updatedAt    Int    @map("updated_at")
   deletedAt    Int?   @map("deleted_at")
@@ -155,6 +155,7 @@ model Company {
   accounts                   Account[]
   reports                    Report[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
+  files                      File[]
 
   @@map("company")
 }
@@ -291,6 +292,23 @@ model EmployeeProject {
   workRates  WorkRate[]
 
   @@map("employee_project")
+}
+
+model File {
+  id                  Int     @id @default(autoincrement())
+  companyId           Int     @map("company_id")
+  name                String // Info: (20240830 - Murky) Name example: "100000.jpg"
+  size                Float // Info: (20240830 - Murky) File Size in bytes
+  mimeType            String  @map("mime_type") // Info: (20240830 - Murky) File Mime Type ex: image/jpeg
+  type                String //Info: (20240830 - Murky) FileFolder Type ex: invoice, tmp
+  url                 String // Info: (20240830 - Murky) File URL, it can be local folder or google bucket
+  encryptSymmetricKey String // Info: (20240830 - Murky) File Encrypt Symmetric Key
+  createdAt           Int     @map("created_at")
+  updatedAt           Int     @map("updated_at")
+  deletedAt           Int?    @map("deleted_at")
+  company             Company @relation(fields: [companyId], references: [id])
+
+  @@map("file")
 }
 
 model Invoice {
