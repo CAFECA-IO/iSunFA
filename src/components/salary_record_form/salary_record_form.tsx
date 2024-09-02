@@ -110,7 +110,7 @@ const SalaryRecordForm = () => {
       </div>
     </div>
   );
-
+  // ToDo: (20240902 - Shirley) 整個 i18n
   const workingHoursPart = isRecordWorkingHours ? (
     <div className="grid grid-flow-row grid-cols-1 gap-x-60px gap-y-40px md:grid-cols-2">
       {/* Info: (20240715 - Julian) Working hours for the period */}

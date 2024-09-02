@@ -30,7 +30,7 @@ const SalaryBookConfirmModal = ({
 
     modalVisibilityHandler();
   };
-
+  // ToDo: (20240902 - Shirley) 整個的 i18n
   const isDisplayedModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 py-16px font-barlow">
