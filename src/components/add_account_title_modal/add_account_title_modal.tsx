@@ -117,7 +117,7 @@ const AddAccountTitleModal = ({
       toastHandler({
         id: `getAccount-${errorCode}`,
         type: ToastType.ERROR,
-        content: 'Failed to get account data, please try again later.',
+        content: t('setting:SETTING.FAILED_TO_GET_ACCOUNT_DATA'),
         closeable: true,
       });
     }

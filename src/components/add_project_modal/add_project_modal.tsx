@@ -144,8 +144,8 @@ const AddProjectModal = ({
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Error',
-        content: 'Create project failed, please try again later.',
-        subMsg: `Error code: ${code}`,
+        content: t('project:PROJECT.CREATE_PROJECT_FAILED'),
+        subMsg: t('common:COMMON.ERROR_CODE', { code }),
         submitBtnFunction: messageModalVisibilityHandler,
         submitBtnStr: t('project:PROJECT.OK'),
       });

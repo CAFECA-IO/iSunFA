@@ -121,7 +121,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           messageType: MessageType.ERROR,
           title: 'Verified Company',
           subMsg: 'This company has already been registered and verified.',
-          content: `Please check the information again, or contact with us. Error code: ${createCompanyCode}`,
+          content: t('kyc:KYC.CHECK_THE_INFORMATION', { code: createCompanyCode }),
           submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });

@@ -143,7 +143,10 @@ const MyReportsSection = () => {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
+        // Info: (20240901 - Anna) 原本是content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,翻譯為如下：
+        content: t('report_401:MY_REPORTS_SECTION.FAILED_TO_FETCH_GENERATED_REPORTS', {
+          code: listGeneratedCode,
+        }),
         closeable: true,
       });
     }
