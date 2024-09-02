@@ -22,7 +22,6 @@ export async function getCompanyByCode(code: string): Promise<Company | null> {
     company = await prisma.company.findUnique({
       where: {
         code,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
   }

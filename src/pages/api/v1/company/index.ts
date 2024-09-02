@@ -69,6 +69,7 @@ async function handlePostRequest(
       if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
+        // Info: (20240902 - Jacky) Check if company already exist in database
         const getCompany = await getCompanyByCode(code);
 
         if (getCompany) {
