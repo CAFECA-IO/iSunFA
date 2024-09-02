@@ -96,7 +96,9 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
+        content: t('report_401:PENDING_REPORT_LIST.FAILED_TO_FETCH_PENDING_REPORTS', {
+          code: listPendingCode,
+        }),
         closeable: true,
       });
       setPendingData(MOCK_REPORTS);
@@ -110,7 +112,9 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
+        content: t('report_401:MY_REPORTS_SECTION.FAILED_TO_FETCH_GENERATED_REPORTS', {
+          code: listGeneratedCode,
+        }),
         closeable: true,
       });
       setHistoryData(MOCK_REPORTS);

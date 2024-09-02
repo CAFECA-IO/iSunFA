@@ -117,7 +117,7 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         // Info: (20240823 - Julian) Show error message
         messageModalDataHandler({
           title: 'Camera Error', // ToDo: (20240823 - Julian) i18n
-          content: 'Failed to get camera video, please check your camera settings.',
+          content: t('journal:JOURNAL.FAILED_TO_GET_CAMERA_VIDEO'),
           messageType: MessageType.ERROR,
           submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: () => messageModalVisibilityHandler(),
@@ -211,8 +211,11 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
           messageModalDataHandler({
-            title: 'Upload Invoice Failed', // ToDo: (20240823 - Julian) i18n
-            content: `Upload invoice failed(${uploadCode}): ${result.status}`,
+            title: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED'),
+            content: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED_INSERT', {
+              uploadCode,
+              status: result.status,
+            }),
             messageType: MessageType.ERROR,
             submitBtnStr: t('common:COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
@@ -223,8 +226,9 @@ const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScanne
     }
     if (uploadSuccess === false) {
       messageModalDataHandler({
-        title: 'Upload Invoice Failed', // ToDo: (20240823 - Julian) i18n
-        content: `Upload invoice failed(${uploadCode})`,
+        title: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED'),
+        // Info: (20240902 - Anna) `Upload invoice failed(${uploadCode})`,因為錯誤代碼不需要顯示給用戶看，所以改為空字串
+        content: '',
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),

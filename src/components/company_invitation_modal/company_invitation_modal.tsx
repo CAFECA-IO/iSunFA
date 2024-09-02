@@ -74,9 +74,9 @@ const CompanyInvitationModal = ({
       // Info: (20240516 - Julian) Error handling
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Invitation Code Expiry',
-        subMsg: 'Oops! This verification code has expired.',
-        content: 'Please verify again or contact the company administrator.',
+        title: t('kyc:KYC.INVITATION_CODE_EXPIRY'),
+        subMsg: t('kyc:KYC.VERIFICATION_CODE_HAS_EXPIRED'),
+        content: t('kyc:KYC.VERIFY_AGAIN'),
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });

@@ -41,7 +41,8 @@
     "NAME_YOUR_PROJECT": "Name your project",
     "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
     "OVERALL": "Overall",
-    "OK": "OK"
+    "OK": "OK",
+    "CREATE_PROJECT_FAILED": "Create project failed, please try again later."
   },
   "STAGE_NAME_MAP": {
     "ALL": "All",

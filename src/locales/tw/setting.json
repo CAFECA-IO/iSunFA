@@ -38,6 +38,8 @@
     "CURRENT_LIQUIDITY": "流動/非流動",
     "REMOVE_ACCOUNTING_TITLE": "刪除會計科目",
     "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您確定要刪除這個會計科目嗎？",
-    "SUCCESSFULLY_UPDATED_ACCOUNT": "會計科目更新成功："
+    "SUCCESSFULLY_UPDATED_ACCOUNT": "會計科目更新成功：",
+    "FAILED_TO_UPDATE_ACCOUNT": "更新科目失敗，請稍後重試。",
+    "FAILED_TO_GET_ACCOUNT_DATA": "取得科目資料失敗，請稍後重試。"
   }
 }

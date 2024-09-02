@@ -274,7 +274,7 @@ const UploadArea = ({
     if (getSuccess === false) {
       toastHandler({
         id: `getFile-${getCode}`,
-        content: `Failed to list uploaded files: ${getCode}`,
+        content: t('kyc:KYC.FAILED_TO_LIST_UPLOADED_FILES', { getCode }),
         type: ToastType.ERROR,
         closeable: true,
       });
