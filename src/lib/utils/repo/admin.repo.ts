@@ -356,6 +356,36 @@ export async function getCompanyDetailAndRoleByCompanyId(
   return companyDetail;
 }
 
+export async function getCompanyAndRoleByCompanyCode(
+  userId: number,
+  companyCode: string
+): Promise<{
+  company: Company;
+  role: Role;
+} | null> {
+  let companyDetail: {
+    company: Company;
+    role: Role;
+  } | null = null;
+  if (companyCode) {
+    const companyRole = await prisma.admin.findFirst({
+      where: {
+        company: {
+          code: companyCode,
+        },
+        userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        company: true,
+        role: true,
+      },
+    });
+    companyDetail = companyRole;
+  }
+  return companyDetail;
+}
+
 export async function createCompanyAndRole(
   userId: number,
   code: string,

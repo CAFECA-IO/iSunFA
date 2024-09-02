@@ -8,8 +8,11 @@ import {
   formatCompanyAndRole,
   formatCompanyAndRoleList,
 } from '@/lib/utils/formatter/admin.formatter';
-import { createCompanyAndRole, listCompanyAndRole } from '@/lib/utils/repo/admin.repo';
-import { getCompanyByCode } from '@/lib/utils/repo/company.repo';
+import {
+  createCompanyAndRole,
+  getCompanyAndRoleByCompanyCode,
+  listCompanyAndRole,
+} from '@/lib/utils/repo/admin.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
@@ -70,27 +73,25 @@ async function handlePostRequest(
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
         // Info: (20240902 - Jacky) Check if company already exist in database
-        const getCompany = await getCompanyByCode(code);
+        const getCompanyAndRole = await getCompanyAndRoleByCompanyCode(userId, code);
 
-        if (getCompany) {
-          statusMessage = getCompany.kycStatus
-            ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
-            : STATUS_MESSAGE.DUPLICATE_COMPANY;
+        if (getCompanyAndRole) {
+          statusMessage = STATUS_MESSAGE.DUPLICATE_COMPANY;
         } else {
           const companyIcon = await generateIcon(name);
-          const createdCompanyRoleList = await createCompanyAndRole(
+          const createdCompanyAndRole = await createCompanyAndRole(
             userId,
             code,
             name,
             regional,
             companyIcon
           );
-          const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
+          const newCompanyAndRole = formatCompanyAndRole(createdCompanyAndRole);
           statusMessage = STATUS_MESSAGE.CREATED;
-          payload = newCompanyRoleList;
+          payload = newCompanyAndRole;
 
           // Info: (20240827 - Murky) Generate Company Key , only new company will generate key
-          const companyId = createdCompanyRoleList.company.id;
+          const companyId = createdCompanyAndRole.company.id;
 
           const companyKeyPair = await generateKeyPair();
           await storeKeyByCompany(companyId, companyKeyPair);

@@ -128,7 +128,7 @@ model Client {
 model Company {
   id        Int     @id @default(autoincrement())
   name      String
-  code      String  @unique
+  code      String 
   regional  String
   kycStatus Boolean @map("kyc_status")
   imageId   String? @map("image_id")

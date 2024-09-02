@@ -641,9 +641,6 @@ CREATE UNIQUE INDEX "account_code_key" ON "account"("code");
 CREATE UNIQUE INDEX "authentication_credential_id_key" ON "authentication"("credential_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "company_code_key" ON "company"("code");
-
--- CreateIndex
 CREATE UNIQUE INDEX "contract_payment_id_key" ON "contract"("payment_id");
 
 -- CreateIndex
