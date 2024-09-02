@@ -6,6 +6,7 @@ import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
+import { SortOrder } from '@/constants/sort';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -19,7 +20,7 @@ export async function findManyAccountsInPrisma({
   page = DEFAULT_PAGE_OFFSET,
   limit = DEFAULT_PAGE_LIMIT,
   sortBy = 'code',
-  sortOrder = 'asc',
+  sortOrder = SortOrder.ASC,
   searchKey,
 }: {
   companyId: number;
@@ -33,7 +34,7 @@ export async function findManyAccountsInPrisma({
   page: number;
   limit: number;
   sortBy: 'code' | 'createdAt';
-  sortOrder: 'asc' | 'desc';
+  sortOrder: SortOrder.ASC | SortOrder.DESC;
   searchKey?: string;
 }): Promise<{
   data: Account[];
@@ -43,7 +44,7 @@ export async function findManyAccountsInPrisma({
   totalCount: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: SortOrder.ASC | SortOrder.DESC;
   sortBy: 'code' | 'createdAt';
 }> {
   let accounts: Account[] = [];
@@ -207,7 +208,7 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
         parentCode: parentAccount.code,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: SortOrder.DESC,
       },
     });
   } catch (error) {

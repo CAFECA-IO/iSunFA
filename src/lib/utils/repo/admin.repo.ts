@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
+import { SortOrder } from '@/constants/sort';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Admin, Company, CompanyKYC, Prisma, Role, User, UserAgreement } from '@prisma/client';
 
@@ -14,7 +15,7 @@ export async function listAdminByCompanyId(
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       user: {
@@ -291,7 +292,7 @@ export async function listCompanyAndRole(
       },
     },
     orderBy: {
-      companyId: 'asc',
+      companyId: SortOrder.ASC,
     },
     select: {
       company: true,
@@ -341,7 +342,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
                 OR: [{ deletedAt: 0 }, { deletedAt: null }],
               },
               orderBy: {
-                createdAt: 'desc',
+                createdAt: SortOrder.DESC,
               },
               take: 1,
             },

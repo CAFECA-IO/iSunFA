@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
 
 export async function getProjectLists(companyId: number) {
   return prisma.project.findMany({
@@ -10,7 +11,7 @@ export async function getProjectLists(companyId: number) {
       companyId,
     },
     orderBy: {
-      name: 'asc',
+      id: SortOrder.ASC,
     },
   });
 }

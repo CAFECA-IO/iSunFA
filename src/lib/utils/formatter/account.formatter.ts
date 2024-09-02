@@ -1,3 +1,4 @@
+import { SortOrder } from '@/constants/sort';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { Account } from '@prisma/client';
 
@@ -30,7 +31,7 @@ export function formatIPaginatedAccount(accounts: {
   totalCount: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: SortOrder.ASC | SortOrder.DESC;
   sortBy: 'code' | 'createdAt';
 }): IPaginatedAccount {
   const formattedAccounts: IAccount[] = formatAccounts(accounts.data);

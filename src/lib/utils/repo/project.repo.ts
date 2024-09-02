@@ -2,6 +2,7 @@ import prisma from '@/client';
 import { Employee, Project, Value } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { SortOrder } from '@/constants/sort';
 
 export async function listProject(companyId: number) {
   const listedProject = await prisma.project.findMany({
@@ -10,7 +11,7 @@ export async function listProject(companyId: number) {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       employeeProjects: {

@@ -1,6 +1,7 @@
 import prisma from '@/client';
 import { Prisma, User, UserAgreement } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { SortOrder } from '@/constants/sort';
 
 export async function listUser(): Promise<(User & { userAgreements: UserAgreement[] })[]> {
   const userList = await prisma.user.findMany({
@@ -8,7 +9,7 @@ export async function listUser(): Promise<(User & { userAgreements: UserAgreemen
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       userAgreements: true,

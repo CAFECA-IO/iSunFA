@@ -7,6 +7,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IReportIncludeCompanyProject } from '@/interfaces/report';
+import { SortOrder } from '@/constants/sort';
 
 export async function findFirstReportByFromTo(
   companyId: number,
@@ -124,7 +125,7 @@ export async function findManyReports(
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   sortBy: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt',
-  sortOrder: 'asc' | 'desc' = 'desc',
+  sortOrder: SortOrder.ASC | SortOrder.DESC = SortOrder.DESC,
   startDateInSecond?: number,
   endDateInSecond?: number,
   searchQuery?: string
