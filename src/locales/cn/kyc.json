@@ -22,6 +22,7 @@
     "READ_FILE_FAILED": "读取文件失败",
     "FILE_READ_ERROR": "读取文件时发生错误",
     "DELETE_FILE_FAILED": "删除文件失败",
+    "CHECK_THE_INFORMATION": "请再次核对讯息，或与我们联系。错误代码: {{code}}",
     "DELETE_FILE_ERROR": "删除文件错误代码: {{code}}",
     "SUBMIT_SUCCESS": "你的申请已经提交成功",
     "SUBMIT_SUCCESS_MESSAGE": "我们将在3-5个工作日内审核你的申请，谢谢你的耐心。",
@@ -98,7 +99,11 @@
     "TRANSFER_THE_ADMINISTRATION_TO": "您确定要将管理权转移至",
     "TRANSFER_COMPANY_TO": "公司管理权转移至...",
     "TRANSFER": "管理权转移",
-    "USER_ID": "使用者帐号"
+    "USER_ID": "使用者帐号",
+    "VERIFY_AGAIN": "请再次确认或联络公司管理员。",
+    "VERIFICATION_CODE_HAS_EXPIRED": "邀请码已过期",
+    "INVITATION_CODE_EXPIRY": "邀请码已过期",
+    "FAILED_TO_LIST_UPLOADED_FILES": "无法列出上传的文件: {{getCode}}"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",

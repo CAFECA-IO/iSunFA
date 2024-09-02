@@ -327,8 +327,11 @@ const JournalUploadArea = () => {
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
           messageModalDataHandler({
-            title: 'Upload Invoice Failed',
-            content: `Upload invoice failed(${uploadCode}): ${result.status}`,
+            title: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED'),
+            content: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED_INSERT', {
+              uploadCode,
+              status: result.status,
+            }),
             messageType: MessageType.ERROR,
             submitBtnStr: t('common:COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
@@ -339,8 +342,8 @@ const JournalUploadArea = () => {
     }
     if (uploadSuccess === false) {
       messageModalDataHandler({
-        title: 'Upload Invoice Failed',
-        content: `Upload invoice failed(${uploadCode})`,
+        title: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED'),
+        content: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED_WITH_CODE', { uploadCode }),
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
