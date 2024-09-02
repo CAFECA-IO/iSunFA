@@ -678,18 +678,6 @@ module.exports = {
         'tree-stroke-divider': 'var(--tree-stroke-divider)',
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
-
-        primaryYellow: '#FFA502',
-        primaryYellow2: '#996301',
-        primaryYellow3: '#FFD892',
-
-        secondaryBlue: '#001840',
-        tertiaryBlue: '#304872',
-
-        lightGray: '#CED1D7',
-
-        navyBlue: '#002462',
-        navyBlue2: '#27354E',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",
@@ -1289,6 +1277,8 @@ module.exports = {
 
         dropmenu:
           '0px 166px 46px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.10));',
+        tooltip:
+          '0px 166px 46px 0px rgba(49, 67, 98, 0.00), 0px 106px 42px 0px rgba(49, 67, 98, 0.01), 0px 60px 36px 0px rgba(49, 67, 98, 0.05), 0px 27px 27px 0px rgba(49, 67, 98, 0.09), 0px 7px 15px 0px rgba(49, 67, 98, 0.10)',
 
         sidebarMobile:
           '0px -2px 5px 0px #3143621A, 0px -6px 10px 0px #31436217, 0px -11px 13px 0px #3143620D, 0px -28px 15px 0px #31436203, 0px -50px 17px 0px #31436200',

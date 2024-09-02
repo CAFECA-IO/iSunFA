@@ -11,14 +11,14 @@ import { Ocr, Prisma } from '@prisma/client';
 
 export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<{
   id: number;
-  imageUrl: string;
+  imageFileId: number;
 } | null> {
   if (!ocrId) {
     return null;
   }
   let ocrIdInDB: {
     id: number;
-    imageUrl: string;
+    imageFileId: number;
   } | null;
 
   try {
@@ -29,7 +29,7 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
       },
       select: {
         id: true,
-        imageUrl: true,
+        imageFileId: true,
       },
     });
   } catch (error) {
@@ -198,7 +198,7 @@ export async function createInvoiceInPrisma(
   invoiceData: IInvoiceBeta,
   paymentId: number,
   journalId: number,
-  imageUrl: string | undefined
+  imageFileId: number | undefined
 ) {
   let invoice: {
     id: number;
@@ -219,17 +219,9 @@ export async function createInvoiceInPrisma(
         vendorTaxId: invoiceData.vendorTaxId,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
         deductible: invoiceData.deductible,
-        imageUrl,
-        payment: {
-          connect: {
-            id: paymentId,
-          },
-        },
-        journal: {
-          connect: {
-            id: journalId,
-          },
-        },
+        imageFileId,
+        paymentId,
+        journalId,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
       },
@@ -248,7 +240,7 @@ export async function createInvoiceInPrisma(
 export async function createInvoiceAndPaymentInPrisma(
   invoiceData: IInvoiceBeta,
   journalId: number,
-  imageUrl: string | undefined
+  imageFileId: number | undefined
 ) {
   const paymentData = invoiceData.payment;
   // Info (20240807 - Jacky): 這邊是為了讓payment的taxPrice可以被存入prisma
@@ -259,7 +251,7 @@ export async function createInvoiceAndPaymentInPrisma(
   try {
     createdInvoiceId = await prisma.$transaction(async () => {
       const payment = await createPaymentInPrisma(paymentDataBeta);
-      const invoice = await createInvoiceInPrisma(invoiceData, payment.id, journalId, imageUrl);
+      const invoice = await createInvoiceInPrisma(invoiceData, payment.id, journalId, imageFileId);
       return invoice.id;
     });
   } catch (error) {
@@ -275,7 +267,7 @@ export async function updateInvoiceInPrisma(
   paymentId: number,
   invoiceData: IInvoice,
   journalId: number,
-  imageUrl: string | undefined
+  imageFileId: number | undefined
 ) {
   let invoice: {
     id: number;
@@ -297,17 +289,9 @@ export async function updateInvoiceInPrisma(
         description: invoiceData.description,
         vendorOrSupplier: invoiceData.vendorOrSupplier,
         updatedAt,
-        imageUrl,
-        payment: {
-          connect: {
-            id: paymentId,
-          },
-        },
-        journal: {
-          connect: {
-            id: journalId,
-          },
-        },
+        imageFileId,
+        paymentId,
+        journalId,
       },
     });
   } catch (error) {
@@ -322,7 +306,7 @@ export async function updateInvoiceAndPaymentInPrisma(
   invoiceIdToBeUpdated: number,
   invoiceData: IInvoice,
   journalId: number,
-  imageUrl?: string
+  imageFileId?: number
 ) {
   const paymentData = invoiceData.payment;
 
@@ -341,7 +325,7 @@ export async function updateInvoiceAndPaymentInPrisma(
       payment.id,
       invoiceData,
       journalId,
-      imageUrl
+      imageFileId
     );
 
     updatedInvoiceId = invoice.id;
@@ -481,7 +465,7 @@ export async function handlePrismaSavingLogic(
       await createInvoiceAndPaymentInPrisma(
         formattedInvoice,
         journalIdBeCreated,
-        ocrIdInDB?.imageUrl
+        ocrIdInDB?.imageFileId
       );
 
       // Info: (20240524 - Murky) 更新ocr的狀態, 等到其他db操作都沒有錯誤後才更新

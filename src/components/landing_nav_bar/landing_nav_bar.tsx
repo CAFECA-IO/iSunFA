@@ -70,7 +70,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
 
   /* Info:(20230814 - Shirley) Change Navbar Background Style */
   const bgStyle =
-    transparentInitially && scroll <= 100 ? 'bg-transparent' : 'bg-secondaryBlue shadow-xl';
+    transparentInitially && scroll <= 100 ? 'bg-transparent' : 'bg-navy-blue-600 shadow-xl';
 
   /* Info: (20230712 - Shirley) desktop navbar */
   const desktopNavBar = (
@@ -242,46 +242,44 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
 
       <ul className="flex items-center space-x-0 lg:mr-10">
         {/* TODO: (20240315 - Shirley) [Beta] refactor i18n */}
-        <div>
-          <li>
-            <div
-              ref={dropdownRef}
-              className={`absolute right-11rem top-3 flex flex-col items-center justify-center rounded-full font-bold lg:right-13rem ${dropdownOpen ? 'bg-navy-blue-400 py-4' : 'm-4'} hover:cursor-pointer`}
-              onClick={toggleDropdown}
+        <li>
+          <div
+            ref={dropdownRef}
+            className={`absolute right-11rem top-3 flex flex-col items-center justify-center rounded-full font-bold lg:right-13rem ${dropdownOpen ? 'bg-navy-blue-400 py-4' : 'm-4'} hover:cursor-pointer`}
+            onClick={toggleDropdown}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M3.22595 10.0011C3.07999 10.6443 3.00293 11.3137 3.00293 12.0011C3.00293 12.6885 3.07999 13.3579 3.22595 14.0011H7.16533C7.07152 13.3483 7.01701 12.6874 7.00315 12.0219C7.00286 12.008 7.00286 11.9942 7.00315 11.9803C7.01701 11.3148 7.07152 10.6539 7.16533 10.0011H3.22595ZM3.93845 8.0011H7.58211C8.04133 6.32991 8.76512 4.73916 9.72864 3.29093C7.18774 3.95252 5.08372 5.69654 3.93845 8.0011ZM12.0029 3.5519C10.9633 4.89137 10.1749 6.39902 9.66732 8.0011H14.3385C13.831 6.39902 13.0426 4.89137 12.0029 3.5519ZM14.8171 10.0011H9.18881C9.08066 10.6592 9.01818 11.3274 9.00316 12.0011C9.01818 12.6748 9.08066 13.343 9.18881 14.0011H14.8171C14.9252 13.343 14.9877 12.6748 15.0027 12.0011C14.9877 11.3274 14.9252 10.6592 14.8171 10.0011ZM16.8405 14.0011C16.9343 13.3483 16.9888 12.6874 17.0027 12.0219C17.003 12.008 17.003 11.9942 17.0027 11.9803C16.9888 11.3148 16.9343 10.6539 16.8405 10.0011H20.7799C20.9259 10.6443 21.0029 11.3137 21.0029 12.0011C21.0029 12.6885 20.9259 13.3579 20.7799 14.0011H16.8405ZM14.3385 16.0011H9.66732C10.1749 17.6032 10.9633 19.1108 12.0029 20.4503C13.0426 19.1108 13.831 17.6032 14.3385 16.0011ZM9.72864 20.7113C8.76512 19.263 8.04133 17.6723 7.58211 16.0011H3.93845C5.08372 18.3057 7.18774 20.0497 9.72864 20.7113ZM14.2772 20.7113C15.2407 19.263 15.9645 17.6723 16.4237 16.0011H20.0674C18.9221 18.3057 16.8181 20.0497 14.2772 20.7113ZM20.0674 8.0011H16.4237C15.9645 6.32991 15.2407 4.73916 14.2772 3.29093C16.8181 3.95252 18.9221 5.69654 20.0674 8.0011ZM1.00293 12.0011C1.00293 5.92597 5.9278 1.0011 12.0029 1.0011C18.0781 1.0011 23.0029 5.92597 23.0029 12.0011C23.0029 18.0762 18.0781 23.0011 12.0029 23.0011C5.9278 23.0011 1.00293 18.0762 1.00293 12.0011Z"
-                  className="fill-current text-neutral-white hover:text-orange-400"
-                />
-              </svg>
-              <ul
-                className={`w-60px flex-col items-center justify-center space-y-0 pb-3 pt-4 text-center ${dropdownOpen ? 'flex' : 'hidden'}`}
-              >
-                {languages.map((lang: { label: string; code: string }) => (
-                  <li
-                    key={lang.code}
-                    className="w-full cursor-pointer px-5 py-2.5 font-bold text-orange-400 hover:text-navy-blue-25"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      changeLanguage(lang.code);
-                    }}
-                  >
-                    {lang.label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        </div>
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M3.22595 10.0011C3.07999 10.6443 3.00293 11.3137 3.00293 12.0011C3.00293 12.6885 3.07999 13.3579 3.22595 14.0011H7.16533C7.07152 13.3483 7.01701 12.6874 7.00315 12.0219C7.00286 12.008 7.00286 11.9942 7.00315 11.9803C7.01701 11.3148 7.07152 10.6539 7.16533 10.0011H3.22595ZM3.93845 8.0011H7.58211C8.04133 6.32991 8.76512 4.73916 9.72864 3.29093C7.18774 3.95252 5.08372 5.69654 3.93845 8.0011ZM12.0029 3.5519C10.9633 4.89137 10.1749 6.39902 9.66732 8.0011H14.3385C13.831 6.39902 13.0426 4.89137 12.0029 3.5519ZM14.8171 10.0011H9.18881C9.08066 10.6592 9.01818 11.3274 9.00316 12.0011C9.01818 12.6748 9.08066 13.343 9.18881 14.0011H14.8171C14.9252 13.343 14.9877 12.6748 15.0027 12.0011C14.9877 11.3274 14.9252 10.6592 14.8171 10.0011ZM16.8405 14.0011C16.9343 13.3483 16.9888 12.6874 17.0027 12.0219C17.003 12.008 17.003 11.9942 17.0027 11.9803C16.9888 11.3148 16.9343 10.6539 16.8405 10.0011H20.7799C20.9259 10.6443 21.0029 11.3137 21.0029 12.0011C21.0029 12.6885 20.9259 13.3579 20.7799 14.0011H16.8405ZM14.3385 16.0011H9.66732C10.1749 17.6032 10.9633 19.1108 12.0029 20.4503C13.0426 19.1108 13.831 17.6032 14.3385 16.0011ZM9.72864 20.7113C8.76512 19.263 8.04133 17.6723 7.58211 16.0011H3.93845C5.08372 18.3057 7.18774 20.0497 9.72864 20.7113ZM14.2772 20.7113C15.2407 19.263 15.9645 17.6723 16.4237 16.0011H20.0674C18.9221 18.3057 16.8181 20.0497 14.2772 20.7113ZM20.0674 8.0011H16.4237C15.9645 6.32991 15.2407 4.73916 14.2772 3.29093C16.8181 3.95252 18.9221 5.69654 20.0674 8.0011ZM1.00293 12.0011C1.00293 5.92597 5.9278 1.0011 12.0029 1.0011C18.0781 1.0011 23.0029 5.92597 23.0029 12.0011C23.0029 18.0762 18.0781 23.0011 12.0029 23.0011C5.9278 23.0011 1.00293 18.0762 1.00293 12.0011Z"
+                className="fill-current text-neutral-white hover:text-orange-400"
+              />
+            </svg>
+            <ul
+              className={`w-60px flex-col items-center justify-center space-y-0 pb-3 pt-4 text-center ${dropdownOpen ? 'flex' : 'hidden'}`}
+            >
+              {languages.map((lang: { label: string; code: string }) => (
+                <li
+                  key={lang.code}
+                  className="w-full cursor-pointer px-5 py-2.5 font-bold text-orange-400 hover:text-navy-blue-25"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    changeLanguage(lang.code);
+                  }}
+                >
+                  {lang.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </li>
         <li>
           <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
             <Button className="flex space-x-3">
@@ -362,7 +360,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
                   d="M3.22595 10.0011C3.07999 10.6443 3.00293 11.3137 3.00293 12.0011C3.00293 12.6885 3.07999 13.3579 3.22595 14.0011H7.16533C7.07152 13.3483 7.01701 12.6874 7.00315 12.0219C7.00286 12.008 7.00286 11.9942 7.00315 11.9803C7.01701 11.3148 7.07152 10.6539 7.16533 10.0011H3.22595ZM3.93845 8.0011H7.58211C8.04133 6.32991 8.76512 4.73916 9.72864 3.29093C7.18774 3.95252 5.08372 5.69654 3.93845 8.0011ZM12.0029 3.5519C10.9633 4.89137 10.1749 6.39902 9.66732 8.0011H14.3385C13.831 6.39902 13.0426 4.89137 12.0029 3.5519ZM14.8171 10.0011H9.18881C9.08066 10.6592 9.01818 11.3274 9.00316 12.0011C9.01818 12.6748 9.08066 13.343 9.18881 14.0011H14.8171C14.9252 13.343 14.9877 12.6748 15.0027 12.0011C14.9877 11.3274 14.9252 10.6592 14.8171 10.0011ZM16.8405 14.0011C16.9343 13.3483 16.9888 12.6874 17.0027 12.0219C17.003 12.008 17.003 11.9942 17.0027 11.9803C16.9888 11.3148 16.9343 10.6539 16.8405 10.0011H20.7799C20.9259 10.6443 21.0029 11.3137 21.0029 12.0011C21.0029 12.6885 20.9259 13.3579 20.7799 14.0011H16.8405ZM14.3385 16.0011H9.66732C10.1749 17.6032 10.9633 19.1108 12.0029 20.4503C13.0426 19.1108 13.831 17.6032 14.3385 16.0011ZM9.72864 20.7113C8.76512 19.263 8.04133 17.6723 7.58211 16.0011H3.93845C5.08372 18.3057 7.18774 20.0497 9.72864 20.7113ZM14.2772 20.7113C15.2407 19.263 15.9645 17.6723 16.4237 16.0011H20.0674C18.9221 18.3057 16.8181 20.0497 14.2772 20.7113ZM20.0674 8.0011H16.4237C15.9645 6.32991 15.2407 4.73916 14.2772 3.29093C16.8181 3.95252 18.9221 5.69654 20.0674 8.0011ZM1.00293 12.0011C1.00293 5.92597 5.9278 1.0011 12.0029 1.0011C18.0781 1.0011 23.0029 5.92597 23.0029 12.0011C23.0029 18.0762 18.0781 23.0011 12.0029 23.0011C5.9278 23.0011 1.00293 18.0762 1.00293 12.0011Z"
                   className="fill-current text-navy-blue-25 hover:text-orange-400"
                 />
-              </svg>{' '}
+              </svg>
               <ul
                 className={`mx-auto flex w-full flex-col items-center justify-center space-y-4 py-8 text-center ${dropdownOpen ? 'block' : 'hidden'}`}
               >
@@ -388,7 +386,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
       </div>
 
       <ul
-        className={`absolute left-0 top-0 mt-60px flex h-fit w-full flex-col items-start overflow-hidden bg-navy-blue-500 px-0 text-navy-blue-25 ${
+        className={`absolute left-0 top-0 mt-60px flex h-fit w-full flex-col items-start overflow-hidden bg-navy-blue-500 text-navy-blue-25 ${
           menuVisible ? 'translate-y-0' : '-z-10 -translate-y-140%'
         } pb-5 drop-shadow-xlSide transition-all duration-700 ease-in-out`}
       >

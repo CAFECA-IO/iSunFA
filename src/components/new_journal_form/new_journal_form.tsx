@@ -785,7 +785,7 @@ const NewJournalForm = () => {
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}
-              className={`ml-auto ${isHideAddAssetBtn ? 'opacity-0' : 'opacity-100'} ${disabledAddNewAsset ? 'text-gray-400' : 'text-input-text-input-filled hover:text-dropdown-stroke-input-hover'}`}
+              className={`ml-auto ${isHideAddAssetBtn ? 'opacity-0' : 'opacity-100'} ${disabledAddNewAsset ? 'text-button-text-disable' : 'text-input-text-input-filled hover:text-dropdown-stroke-input-hover'}`}
               disabled={disabledAddNewAsset}
             >
               {t('journal:JOURNAL.ADD_NEW_ASSET')}

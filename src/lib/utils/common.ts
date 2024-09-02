@@ -571,7 +571,7 @@ export const loadFileFromLocalStorage = (
 export const deleteFileFromLocalStorage = (
   fileType: UploadDocumentKeys,
   loacalStorageFilesKey: string = KYCFiles,
-  fileId?: string
+  fileId?: number
 ) => {
   const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
   const data = currentData;

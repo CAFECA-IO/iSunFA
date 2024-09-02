@@ -206,7 +206,7 @@ const ProfitTrendChart = () => {
 
   const displayedDataSection = (
     <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-surface-neutral-surface-lv2 px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
-      <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
+      <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-2xl font-bold leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
         <div className="flex-1">{t('project:PROFIT_TREND_CHART.PROFIT_STATUS_TREND_CHART')}</div>
 
         <div className="justify-end">
@@ -218,14 +218,17 @@ const ProfitTrendChart = () => {
 
       <div className="mt-2">
         <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
-          <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
+          <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
+            2024
+          </div>
           <div className="flex space-x-2 md:space-x-5">
             <div className="">
               <Button
+                type="button"
                 variant={'tertiaryOutline'}
                 className={cn(
                   selectedPeriod === Period.WEEK
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
@@ -236,10 +239,11 @@ const ProfitTrendChart = () => {
             </div>
             <div className="">
               <Button
+                type="button"
                 variant={'tertiaryOutline'}
                 className={cn(
                   selectedPeriod === Period.MONTH
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
@@ -250,10 +254,11 @@ const ProfitTrendChart = () => {
             </div>
             <div className="">
               <Button
+                type="button"
                 variant={'tertiaryOutline'}
                 className={cn(
                   selectedPeriod === Period.YEAR
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}

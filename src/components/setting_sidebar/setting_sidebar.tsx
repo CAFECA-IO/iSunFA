@@ -22,12 +22,12 @@ const SettingSidebar = () => {
     <>
       {/* Info: (20240423 - Shirley) ----- desktop version ----- */}
       <div
-        className={`fixed z-10 hidden h-screen w-240px flex-col items-center bg-white px-12px pb-40px pt-100px lg:flex`}
+        className={`fixed z-10 hidden h-screen w-240px flex-col items-center bg-surface-neutral-surface-lv2 px-12px pb-40px pt-100px lg:flex`}
       >
         {/* Info: (20240423 - Shirley) Main icon */}
         <div className="flex flex-col items-center pt-0">
           <Image src={'/icons/setting.svg'} width={32} height={32} alt="setting_icon" />
-          <p className={`mt-20px text-sm font-semibold text-secondaryBlue opacity-100`}>
+          <p className={`mt-20px text-sm font-semibold text-text-neutral-primary`}>
             {t('common:NAV_BAR.SETTING')}
           </p>
         </div>
@@ -48,7 +48,7 @@ const SettingSidebar = () => {
                     ? 'text-tabs-text-active'
                     : 'text-tabs-text-default hover:text-tabs-text-active'
                 )}
-              > */}{' '}
+              > */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -106,7 +106,7 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTING.BASIC_INFO')}{' '}
+                  {t('setting:SETTING.BASIC_INFO')}
                 </p>
               </Link>
 
@@ -138,7 +138,7 @@ const SettingSidebar = () => {
                 </svg>
 
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTING.ACCOUNTING_TITLE')}{' '}
+                  {t('setting:SETTING.ACCOUNTING_TITLE')}
                 </p>
               </Link>
 
@@ -160,18 +160,16 @@ const SettingSidebar = () => {
                   fill="none"
                   viewBox="0 0 20 20"
                 >
-                  <g>
-                    <path
-                      className="stroke-current"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M13.334 5.833c0-.775 0-1.162-.085-1.48a2.5 2.5 0 00-1.768-1.768C11.163 2.5 10.775 2.5 10 2.5c-.776 0-1.163 0-1.481.085a2.5 2.5 0 00-1.768 1.768c-.085.318-.085.705-.085 1.48M4.334 17.5h11.333c.933 0 1.4 0 1.757-.182.313-.16.568-.414.728-.728.182-.357.182-.823.182-1.757V8.5c0-.933 0-1.4-.182-1.757a1.667 1.667 0 00-.728-.728c-.357-.182-.824-.182-1.757-.182H4.334c-.934 0-1.4 0-1.757.182-.314.16-.569.415-.728.728-.182.357-.182.824-.182 1.757v6.333c0 .934 0 1.4.182 1.757.16.314.414.569.728.728.357.182.823.182 1.757.182z"
-                    ></path>
-                  </g>
+                  <path
+                    className="stroke-current"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M13.334 5.833c0-.775 0-1.162-.085-1.48a2.5 2.5 0 00-1.768-1.768C11.163 2.5 10.775 2.5 10 2.5c-.776 0-1.163 0-1.481.085a2.5 2.5 0 00-1.768 1.768c-.085.318-.085.705-.085 1.48M4.334 17.5h11.333c.933 0 1.4 0 1.757-.182.313-.16.568-.414.728-.728.182-.357.182-.823.182-1.757V8.5c0-.933 0-1.4-.182-1.757a1.667 1.667 0 00-.728-.728c-.357-.182-.824-.182-1.757-.182H4.334c-.934 0-1.4 0-1.757.182-.314.16-.569.415-.728.728-.182.357-.182.824-.182 1.757v6.333c0 .934 0 1.4.182 1.757.16.314.414.569.728.728.357.182.823.182 1.757.182z"
+                  ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTING.TRADING_PARTNER_LIST')}{' '}
+                  {t('setting:SETTING.TRADING_PARTNER_LIST')}
                 </p>
                 {/* </Link> */}
               </div>
@@ -203,7 +201,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTING.ADMINISTRATOR')}{' '}
+                  {t('setting:SETTING.ADMINISTRATOR')}
                 </p>
                 {/* </Link> */}
               </div>
@@ -235,7 +233,7 @@ const SettingSidebar = () => {
                   ></path>
                 </svg>
                 <p className={`w-8/10 overflow-hidden whitespace-nowrap text-left text-base`}>
-                  {t('setting:SETTING.SUBSCRIPTION_BILLS')}{' '}
+                  {t('setting:SETTING.SUBSCRIPTION_BILLS')}
                 </p>
                 {/* </Link> */}
               </div>
@@ -246,7 +244,7 @@ const SettingSidebar = () => {
 
       {/* TODO: (20240715 - Shirley) [Beta] developing */}
       {/* Info: (20240507 - Shirley) ----- mobile version ----- */}
-      <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-white px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
+      <div className="fixed bottom-0 z-50 flex h-72px w-full justify-between bg-surface-neutral-surface-lv2 px-10 py-8px shadow-sidebarMobile sm:px-16 md:px-32 lg:hidden">
         <Link
           href={ISUNFA_ROUTE.COMPANY_INFO}
           className={cn(
@@ -307,15 +305,13 @@ const SettingSidebar = () => {
             fill="none"
             viewBox="0 0 20 20"
           >
-            <g>
-              <path
-                className="stroke-current"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M13.334 5.833c0-.775 0-1.162-.085-1.48a2.5 2.5 0 00-1.768-1.768C11.163 2.5 10.775 2.5 10 2.5c-.776 0-1.163 0-1.481.085a2.5 2.5 0 00-1.768 1.768c-.085.318-.085.705-.085 1.48M4.334 17.5h11.333c.933 0 1.4 0 1.757-.182.313-.16.568-.414.728-.728.182-.357.182-.823.182-1.757V8.5c0-.933 0-1.4-.182-1.757a1.667 1.667 0 00-.728-.728c-.357-.182-.824-.182-1.757-.182H4.334c-.934 0-1.4 0-1.757.182-.314.16-.569.415-.728.728-.182.357-.182.824-.182 1.757v6.333c0 .934 0 1.4.182 1.757.16.314.414.569.728.728.357.182.823.182 1.757.182z"
-              ></path>
-            </g>
+            <path
+              className="stroke-current"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M13.334 5.833c0-.775 0-1.162-.085-1.48a2.5 2.5 0 00-1.768-1.768C11.163 2.5 10.775 2.5 10 2.5c-.776 0-1.163 0-1.481.085a2.5 2.5 0 00-1.768 1.768c-.085.318-.085.705-.085 1.48M4.334 17.5h11.333c.933 0 1.4 0 1.757-.182.313-.16.568-.414.728-.728.182-.357.182-.823.182-1.757V8.5c0-.933 0-1.4-.182-1.757a1.667 1.667 0 00-.728-.728c-.357-.182-.824-.182-1.757-.182H4.334c-.934 0-1.4 0-1.757.182-.314.16-.569.415-.728.728-.182.357-.182.824-.182 1.757v6.333c0 .934 0 1.4.182 1.757.16.314.414.569.728.728.357.182.823.182 1.757.182z"
+            ></path>
           </svg>
         </div>
 

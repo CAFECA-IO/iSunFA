@@ -105,9 +105,9 @@ export enum ContactInfoKeys {
 
 export enum UploadDocumentKeys {
   REPRESENTATIVE_ID_TYPE = 'representativeIdType',
-  BUSINESS_REGISTRATION_CERTIFICATE_ID = 'registrationCertificateId',
-  TAX_STATUS_CERTIFICATE_ID = 'taxCertificateId',
-  REPRESENTATIVE_CERTIFICATE_ID = 'representativeIdCardId',
+  BUSINESS_REGISTRATION_CERTIFICATE_ID = 'registrationCertificateFileId',
+  TAX_STATUS_CERTIFICATE_ID = 'taxCertificateFileId',
+  REPRESENTATIVE_CERTIFICATE_ID = 'representativeIdCardFileId',
 }
 
 export enum KYCStatus {

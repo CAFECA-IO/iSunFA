@@ -5,7 +5,7 @@
     "code": "TEST123",
     "regional": "United States",
     "kycStatus": true,
-    "imageId": null,
+    "imageFileId": null,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006
@@ -16,7 +16,7 @@
     "code": "TRIAL123",
     "regional": "United States",
     "kycStatus": true,
-    "imageId": null,
+    "imageFileId": null,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006
@@ -27,7 +27,7 @@
     "code": "1",
     "regional": "Taiwan",
     "kycStatus": false,
-    "imageId": null,
+    "imageFileId": null,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006
@@ -38,7 +38,7 @@
     "code": "202406111752",
     "regional": "Taiwan",
     "kycStatus": false,
-    "imageId": null,
+    "imageFileId": null,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006

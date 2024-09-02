@@ -1,4 +1,5 @@
 import { ProgressStatus } from '@/constants/account';
+import { Prisma } from '@prisma/client';
 
 export interface IOCR {
   id: number;
@@ -31,3 +32,9 @@ export interface IOCRItemFromIndexedDB {
   id: string;
   data: IOCRItem;
 }
+
+export type ocrIncludeFile = Prisma.OcrGetPayload<{
+  include: {
+    imageFile: true;
+  };
+}>;

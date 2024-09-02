@@ -48,11 +48,11 @@ const ViewAnalysisSection = ({
   };
 
   return (
-    <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
+    <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background pt-32">
       {/* Info: (20240830 - Anna) 因為實作分析報告時會用到reportLink，為了保留它及解決現在reportLink' is defined but never used的錯誤 */}
       {reportLink && <div style={{ display: 'none' }}>{reportLink}</div>}
       {/* Info: (20240426 - Shirley) financial title, print button and share button */}
-      <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
+      <div className="mx-10 flex items-center gap-5 border-b border-divider-stroke-lv-4 px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
           onClick={backClickHandler}
           variant={'tertiaryOutline'}
@@ -76,7 +76,7 @@ const ViewAnalysisSection = ({
             </svg>
           </div>
         </Button>
-        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
+        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full lg:text-4xl">
           {t(`common:BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
@@ -143,7 +143,6 @@ const ViewAnalysisSection = ({
               <div className="font-semibold text-link-text-primary">{tokenContract} </div>
 
               <button onClick={copyTokenContractClickHandler} type="button">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -173,7 +172,6 @@ const ViewAnalysisSection = ({
               <div className="font-semibold text-link-text-primary">{tokenId} </div>
 
               <button onClick={copyTokenIdClickHandler} type="button">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -193,16 +191,15 @@ const ViewAnalysisSection = ({
           </div>
         </div>
 
-        <div className="mt-0 flex flex-col lg:hidden">
+        <div className="flex flex-col lg:hidden">
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-text-neutral-secondary">
                 {t('journal:JOURNAL.TOKEN_CONTRACT')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
                   <button onClick={copyTokenContractClickHandler} type="button">
-                    {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -229,13 +226,12 @@ const ViewAnalysisSection = ({
           </div>
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
+              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-text-neutral-tertiary">
                 {t('journal:JOURNAL.Token ID')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
                   <button onClick={copyTokenIdClickHandler} type="button">
-                    {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
