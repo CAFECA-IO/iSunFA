@@ -109,7 +109,7 @@ CREATE TABLE "company" (
     "code" TEXT NOT NULL,
     "regional" TEXT NOT NULL,
     "kyc_status" BOOLEAN NOT NULL,
-    "image_id" TEXT,
+    "image_file_id" INTEGER,
     "start_date" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -132,9 +132,9 @@ CREATE TABLE "company_kyc" (
     "contact_email" TEXT NOT NULL,
     "website" TEXT NOT NULL,
     "registration_certificate_id" TEXT NOT NULL,
-    "tax_certificate_id" TEXT NOT NULL,
-    "representative_id_type" TEXT NOT NULL,
-    "representative_id_card_id" TEXT NOT NULL,
+    "registration_certificate_file_id" INTEGER NOT NULL,
+    "representative_id_card_file_id" INTEGER NOT NULL,
+    "tax_certificate_file_id" INTEGER NOT NULL,
     "city" TEXT NOT NULL,
     "industry" TEXT NOT NULL,
     "legal_name" TEXT NOT NULL,
@@ -242,6 +242,25 @@ CREATE TABLE "employee_project" (
 );
 
 -- CreateTable
+CREATE TABLE "file" (
+    "id" SERIAL NOT NULL,
+    "company_id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "size" DOUBLE PRECISION NOT NULL,
+    "mime_type" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "is_encrypted" BOOLEAN NOT NULL,
+    "encryptedSymmetricKey" TEXT NOT NULL,
+    "iv" BYTEA NOT NULL DEFAULT '\x',
+    "created_at" INTEGER NOT NULL,
+    "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
+
+    CONSTRAINT "file_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "invoice" (
     "id" SERIAL NOT NULL,
     "journal_id" INTEGER NOT NULL,
@@ -255,7 +274,7 @@ CREATE TABLE "invoice" (
     "description" TEXT NOT NULL,
     "vendor_or_supplier" TEXT NOT NULL,
     "deductible" BOOLEAN NOT NULL,
-    "image_url" TEXT NOT NULL DEFAULT '',
+    "image_file_id" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
@@ -345,9 +364,7 @@ CREATE TABLE "ocr" (
     "id" SERIAL NOT NULL,
     "aich_result_id" TEXT NOT NULL,
     "company_id" INTEGER NOT NULL,
-    "image_name" TEXT NOT NULL,
-    "image_url" TEXT NOT NULL,
-    "image_size" DOUBLE PRECISION NOT NULL,
+    "image_file_id" INTEGER NOT NULL,
     "status" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
@@ -377,7 +394,7 @@ CREATE TABLE "project" (
     "name" TEXT NOT NULL,
     "completed_percent" INTEGER NOT NULL,
     "stage" TEXT NOT NULL,
-    "image_id" TEXT,
+    "image_id" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
@@ -546,7 +563,7 @@ CREATE TABLE "user" (
     "full_name" TEXT,
     "email" TEXT,
     "phone" TEXT,
-    "image_id" TEXT,
+    "image_File_id" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
@@ -682,6 +699,30 @@ CREATE UNIQUE INDEX "voucher_journal_id_key" ON "voucher"("journal_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "value_project_id_key" ON "value"("project_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "company_image_file_id_key" ON "company"("image_file_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "company_kyc_registration_certificate_file_id_key" ON "company_kyc"("registration_certificate_file_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "company_kyc_tax_certificate_file_id_key" ON "company_kyc"("tax_certificate_file_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "company_kyc_representative_id_card_file_id_key" ON "company_kyc"("representative_id_card_file_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "invoice_image_file_id_key" ON "invoice"("image_file_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ocr_image_file_id_key" ON "ocr"("image_file_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "project_image_id_key" ON "project"("image_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_image_File_id_key" ON "user"("image_File_id");
 
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -847,6 +888,34 @@ ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_vouche
 
 -- AddForeignKey
 ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company" ADD CONSTRAINT "company_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_registration_certificate_file_id_fkey" FOREIGN KEY ("registration_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_tax_certificate_file_id_fkey" FOREIGN KEY ("tax_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_representative_id_card_file_id_fkey" FOREIGN KEY ("representative_id_card_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "file" ADD CONSTRAINT "file_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "invoice" ADD CONSTRAINT "invoice_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ocr" ADD CONSTRAINT "ocr_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "project" ADD CONSTRAINT "project_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user" ADD CONSTRAINT "user_image_File_id_fkey" FOREIGN KEY ("image_File_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
 
 ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "admin_id_seq" RESTART WITH 10000000;
