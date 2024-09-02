@@ -90,7 +90,15 @@
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "You might lose progress if you leave",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "Are you sure you want to leave this page",
     "LEAVE_NOW": "Leave now",
-    "BACK": "Back"
+    "BACK": "Back",
+    "CREATE_COMPANY_FAILED": "Create Company Failed",
+    "PLEASE_TRY_AGAIN_LATER": "Please try again later",
+    "DELETE_COMPANY_CHECK": "Are you sure you want to delete the company?\n\nPlease know that you can not undo this.",
+    "TRANSFER_COMPANY": "Transfer company",
+    "TRANSFER_THE_ADMINISTRATION_TO": "Are you sure you want to transfer the administration to",
+    "TRANSFER_COMPANY_TO": "Transfer company to ...",
+    "TRANSFER": "Transfer",
+    "USER_ID": "User ID"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "Congratulations! You",
@@ -121,7 +129,7 @@
     "DELETE": "Delete",
     "EXISTED_COMPANY": "Existed Company",
     "COMPANY_ALREADY_REGISTERED": "This company has already been registered.",
-    "PLEASE_COMPLETE_KYC": "If you are the owner of this company, please complete KYC to get access back. Error code:{{code}}",
+    "PLEASE_COMPLETE_KYC": "If you are the owner of this company, please complete KYC to get access back.",
     "TRANSFER_ADMINISTRATION": "Transfer Administration",
     "UNDER_REVIEW": "Under Review",
     "VERIFIED": "Verified",

@@ -178,8 +178,8 @@ const ProfileUploadModal = ({
   }, [success, code]);
 
   const uploadArea = (
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
     <label
+      htmlFor="file"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

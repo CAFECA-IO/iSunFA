@@ -39,17 +39,13 @@ const PendingReportList = ({ reports }: IReportListProps) => {
     setIndividualChecks(new Array(reportItems.length).fill(false));
   };
 
+  // Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請Prettier不要格式化
   const handleReportItemUpdate = (updatedReportItem: IReport) => {
-    setReportItems(
-      (prevReportItems) =>
-        // Info: (20240515 - Shirley) result from prettier format rules
-        // eslint-disable-next-line implicit-arrow-linebreak
-        prevReportItems.map((item) => {
-          return item.id === updatedReportItem.id ? updatedReportItem : item;
-        })
-      // Info: (20240515 - Shirley) result from prettier format rules
-      // eslint-disable-next-line function-paren-newline
-    );
+    // prettier-ignore
+    setReportItems((prevReportItems) => {
+      return prevReportItems.map((item) =>
+        (item.id === updatedReportItem.id ? updatedReportItem : item));
+    });
   };
 
   const handleReportItemDelete = (reportId: number) => {
@@ -155,8 +151,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   }, [individualChecks, reportItems]);
 
   const displayedPauseOrResumeButton = !isSelectedItemPaused ? (
-    <Button onClick={pauseClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
-      {' '}
+    <Button onClick={pauseClickHandler} variant={'secondaryOutline'} className="p-2">
       {/* Info: (20240513 - Shirley) Pause */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -174,8 +169,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       </svg>
     </Button>
   ) : (
-    <Button onClick={resumeClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
-      {' '}
+    <Button onClick={resumeClickHandler} variant={'secondaryOutline'} className="p-2">
       {/* Info: (20240514 - Shirley) Resume */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -198,10 +192,8 @@ const PendingReportList = ({ reports }: IReportListProps) => {
     <div className="flex w-full items-center justify-end space-x-5">
       {isCheckboxVisible ? (
         <div className="flex space-x-5">
-          {' '}
           {displayedPauseOrResumeButton}
-          <Button onClick={deleteClickHandler} variant={'secondaryOutline'} className="px-2 py-2">
-            {' '}
+          <Button onClick={deleteClickHandler} variant={'secondaryOutline'} className="p-2">
             {/* Info: (20240514 - Shirley) Delete */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -226,7 +218,6 @@ const PendingReportList = ({ reports }: IReportListProps) => {
         onClick={toggleCheckboxVisibility}
         variant={'secondaryBorderless'}
       >
-        {' '}
         {isCheckboxVisible ? (
           <p>{t('report_401:PENDING_REPORT_LIST.CANCEL')}</p>
         ) : (
@@ -270,7 +261,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
         checked={allChecked}
         onChange={allCheckboxClickHandler}
         type="checkbox"
-        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
       />
     </th>
   ) : null;
@@ -278,10 +269,10 @@ const PendingReportList = ({ reports }: IReportListProps) => {
   return (
     <div className="">
       {displayedStatusButtons}
-      <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
+      <table className="my-20px w-full shrink-0 border border-stroke-neutral-quaternary font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
         <thead>
-          <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
+          <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
             <th className="text-center">{t('report_401:PENDING_REPORT_LIST.DATE')}</th>

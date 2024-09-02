@@ -51,7 +51,7 @@ const ContactInfoForm = ({
       <li
         key={areaCode}
         onClick={selectionClickHandler}
-        className={`flex w-full cursor-pointer items-center gap-8px px-3 py-2 text-navyBlue2 hover:text-primaryYellow`}
+        className={`flex w-full cursor-pointer items-center gap-8px px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover`}
       >
         <Image
           src={areaCodeFlagMap[areaCode]}
@@ -94,7 +94,7 @@ const ContactInfoForm = ({
           type="text"
           placeholder={t('kyc:KYC.EXAMPLE')}
           required
-          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          className="w-full cursor-pointer rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyContactPersonInputHandler}
           value={data[ContactInfoKeys.KEY_CONTACT_PERSON]}
         />
@@ -106,12 +106,12 @@ const ContactInfoForm = ({
           {t('kyc:KYC.CONTACT_NUMBER')}
         </h6>
 
-        <div className="relative flex rounded-sm bg-white">
+        <div className="relative flex rounded-sm bg-input-surface-input-background">
           {/* Info: (20240718 - Liz) ----- Area Code */}
           <div
             id="areaCode"
             onClick={areaCodeMenuOpenHandler}
-            className={`group flex w-120px cursor-pointer items-center gap-8px rounded-l-sm border border-lightGray3 text-input-text-input-placeholder ${isAreaCodeMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'text-navyBlue2'} items-center bg-white px-10px hover:text-primaryYellow`}
+            className={`group flex w-120px cursor-pointer items-center gap-8px rounded-l-sm border border-input-stroke-input text-input-text-input-placeholder ${isAreaCodeMenuOpen ? 'border-input-stroke-input-hover hover:text-input-text-highlight' : 'text-input-text-input-filled'} items-center px-10px hover:text-input-text-highlight`}
           >
             <Image
               src={areaCodeFlagMap[data[ContactInfoKeys.AREA_CODE]]}
@@ -139,11 +139,11 @@ const ContactInfoForm = ({
             </div>
             {/* Info: (20240718 - Liz) Dropmenu */}
             <div
-              className={`absolute left-0 top-50px grid w-fit grid-cols-1 shadow-dropmenu ${isAreaCodeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+              className={`absolute left-0 top-50px grid w-fit grid-cols-1 shadow-dropmenu ${isAreaCodeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
             >
               <ul
                 ref={areaCodeMenuRef}
-                className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
               >
                 {areaCodeDropmenu}
               </ul>
@@ -156,7 +156,7 @@ const ContactInfoForm = ({
             type="text"
             placeholder={t('kyc:KYC.EXAMPLE')}
             required
-            className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
+            className="w-full cursor-pointer rounded-r-sm border border-l-0 border-input-stroke-input bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={contactNumberInputHandler}
             value={data[ContactInfoKeys.CONTACT_NUMBER]}
           />
@@ -168,8 +168,8 @@ const ContactInfoForm = ({
         <h6 className="text-sm font-semibold text-input-text-primary">
           {t('kyc:KYC.EMAIL_ADDRESS')}
         </h6>
-        <div className="flex rounded-sm bg-white">
-          <div className="flex items-center rounded-l-sm border border-lightGray3 px-12px">
+        <div className="flex rounded-sm bg-input-surface-input-background">
+          <div className="flex items-center rounded-l-sm border border-input-stroke-input px-12px">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -196,7 +196,7 @@ const ContactInfoForm = ({
             type="text"
             placeholder={t('kyc:KYC.EXAMPLE')}
             required
-            className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
+            className="w-full cursor-pointer rounded-r-sm border border-l-0 border-input-stroke-input bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={emailAddressInputHandler}
             value={data[ContactInfoKeys.EMAIL_ADDRESS]}
           />
@@ -208,8 +208,8 @@ const ContactInfoForm = ({
         <h6 className="text-sm font-semibold text-input-text-primary">
           {t('kyc:KYC.COMPANY_WEBSITE_OPTIONAL')}
         </h6>
-        <div className="flex rounded-sm bg-white">
-          <p className="flex items-center rounded-l-sm border border-r border-lightGray3 px-12px text-input-text-input-placeholder">
+        <div className="flex rounded-sm bg-input-surface-input-background">
+          <p className="flex items-center rounded-l-sm border border-r border-input-stroke-input px-12px text-input-text-input-placeholder">
             http://
           </p>
           <input
@@ -217,7 +217,7 @@ const ContactInfoForm = ({
             type="text"
             placeholder={t('kyc:KYC.EXAMPLE')}
             required
-            className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
+            className="w-full cursor-pointer rounded-r-sm border border-l-0 border-input-stroke-input bg-transparent p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={companyWebsiteInputHandler}
             value={data[ContactInfoKeys.COMPANY_WEBSITE]}
           />

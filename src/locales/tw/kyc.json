@@ -90,7 +90,15 @@
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果離開，可能會失去目前您已完成的進度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "確定要離開此頁面嗎",
     "LEAVE_NOW": "現在離開",
-    "BACK": "上一步"
+    "BACK": "上一步",
+    "CREATE_COMPANY_FAILED": "創建公司失敗",
+    "PLEASE_TRY_AGAIN_LATER": "請稍後再試",
+    "DELETE_COMPANY_CHECK": "您確定要刪除該公司嗎？ 請注意，您無法撤銷此操作。",
+    "TRANSFER_COMPANY": "轉移公司管理權",
+    "TRANSFER_THE_ADMINISTRATION_TO": "您確定要將管理權轉移至",
+    "TRANSFER_COMPANY_TO": "公司管理權轉移至...",
+    "TRANSFER": "管理權轉移",
+    "USER_ID": "使用者帳號"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",
@@ -127,7 +135,7 @@
     "DELETE": "刪除",
     "EXISTED_COMPANY": "已經存在的公司",
     "COMPANY_ALREADY_REGISTERED": "該公司已註冊",
-    "PLEASE_COMPLETE_KYC": "如果您是該公司的所有者，請完成KYC以重新獲得存取權限。錯誤代碼:{{code}}"
+    "PLEASE_COMPLETE_KYC": "如果您是該公司的所有者，請完成KYC以重新獲得存取權限。"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "歡迎回來，",

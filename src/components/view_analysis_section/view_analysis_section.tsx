@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from 'react';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
@@ -50,6 +49,8 @@ const ViewAnalysisSection = ({
 
   return (
     <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
+      {/* Info: (20240830 - Anna) 因為實作分析報告時會用到reportLink，為了保留它及解決現在reportLink' is defined but never used的錯誤 */}
+      {reportLink && <div style={{ display: 'none' }}>{reportLink}</div>}
       {/* Info: (20240426 - Shirley) financial title, print button and share button */}
       <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
@@ -82,7 +83,7 @@ const ViewAnalysisSection = ({
           <div className="flex gap-3">
             <Button
               // TODO: (20240507 - Shirley) [Beta] yet to dev
-              disabled={true}
+              disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -105,7 +106,7 @@ const ViewAnalysisSection = ({
             </Button>
             <Button
               // TODO: (20240507 - Shirley) [Beta] yet to dev
-              disabled={true}
+              disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -129,7 +130,6 @@ const ViewAnalysisSection = ({
           </div>
         </div>
       </div>
-
       {/* Info: (20240426 - Shirley) token contract and token id info */}
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">

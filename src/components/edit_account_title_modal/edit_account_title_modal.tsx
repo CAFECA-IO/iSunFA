@@ -90,7 +90,7 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.SUCCESS,
-        content: `Successfully updated account: ${updateResult.name}`,
+        content: `${t('setting:SETTING.SUCCESSFULLY_UPDATED_ACCOUNT')} ${updateResult.name}`,
         closeable: true,
       });
     } else if (updateSuccess === false) {

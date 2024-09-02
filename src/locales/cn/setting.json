@@ -37,6 +37,7 @@
     "EDIT_MY_NEW_ACCOUNTING_TITLE": "编辑会计科目",
     "CURRENT_LIQUIDITY": "流动/非流动",
     "REMOVE_ACCOUNTING_TITLE": "删除会计科目",
-    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？"
+    "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？",
+    "SUCCESSFULLY_UPDATED_ACCOUNT": "会计科目更新成功"
   }
 }

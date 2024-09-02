@@ -112,9 +112,8 @@ const CompanyInfoPageBody = () => {
     if (!company) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: 'Delete company',
-      content:
-        'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
+      title: t('kyc:COMPANY_BASIC_INFO.DELETE_COMPANY'),
+      content: t('kyc:KYC.DELETE_COMPANY_CHECK'),
       backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
       submitBtnStr: t('kyc:COMPANY_BASIC_INFO.DELETE'),
       submitBtnFunction: procedureOfDelete,

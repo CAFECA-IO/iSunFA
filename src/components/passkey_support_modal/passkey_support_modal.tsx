@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
@@ -22,10 +20,14 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
     'terms',
   ]);
   const isDisplayedPasskeySupportModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
       <div className="relative mx-5 flex w-full flex-col items-start rounded-md bg-white pb-6 pt-2 shadow-lg shadow-black/80 sm:w-400px sm:px-3 lg:mx-auto">
         <div className="absolute right-3 top-3">
-          <button onClick={modalVisibilityHandler} className="flex items-center justify-center">
+          <button
+            type="button"
+            onClick={modalVisibilityHandler}
+            className="flex items-center justify-center"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="30"
@@ -142,7 +144,7 @@ const PasskeySupportModal = ({ isModalVisible, modalVisibilityHandler }: IPasske
             variant={'tertiaryOutline'}
             type="button"
             onClick={modalVisibilityHandler}
-            className="w-full border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow lg:w-[89px]"
+            className="w-full border border-navyBlue2 px-4 py-2 text-center text-navyBlue2 hover:border-primaryYellow hover:text-primaryYellow lg:w-90px"
           >
             {t('common:PASSKEY_SUPPORT_MODAL.GOT_IT')}
           </Button>

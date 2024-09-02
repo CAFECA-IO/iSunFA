@@ -59,13 +59,10 @@ export function generateRandomPaginatedData(
     Array.from({ length: totalItems }, () => Math.floor(Math.random() * 150) + 100),
   ];
 
-  const paginatedSeriesData = newSeries.map(
-    (series: number[]) =>
-      // TODO: (20240513 - Shirley) [Beta] eslint disable for workaround
-      // eslint-disable-next-line implicit-arrow-linebreak
-      series.slice(startIndex, endIndex)
-    // eslint-disable-next-line function-paren-newline
-  );
+  // Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解所以改寫
+  const paginatedSeriesData = newSeries.map((series: number[]) => {
+    return series.slice(startIndex, endIndex);
+  });
 
   const startDate = timestampInSeconds(new Date('2024-04-01').getTime());
   const endDate = timestampInSeconds(new Date('2024-05-01').getTime());

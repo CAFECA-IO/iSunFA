@@ -15,6 +15,8 @@ const MessageModal = ({
   modalVisibilityHandler,
   messageModalData,
 }: IMessageModalProps) => {
+  let keyIndex = 0;
+
   const {
     title,
     subtitle,
@@ -89,24 +91,30 @@ const MessageModal = ({
   ) : null;
 
   // Info: (20240515 - Shirley) 換行處理
-  const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
-    // eslint-disable-next-line react/no-array-index-key
-    <div key={index}>
-      {line}
-      {index < subtitle.split('\n').length - 1 && <br />}
-    </div>
-  ));
+  // Info: (20240830 - Anna) 把key由index改成keyIndex
+  const displayedSubtitles = subtitle?.split('\n').map((line, index) => {
+    keyIndex += 1;
+    return (
+      <div key={keyIndex}>
+        {line}
+        {index < subtitle.split('\n').length - 1 && <br />}
+      </div>
+    );
+  });
 
   // Info: (20240515 - Shirley) 換行處理
+  // Info: (20240830 - Anna) 把key由index改成keyIndex
   const displayedContent =
     typeof content === 'string'
-      ? content.split('\n').map((line, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <div key={index} className="-mt-2">
-            {line}
-            {index < content.split('\n').length - 1}
-          </div>
-        ))
+      ? content.split('\n').map((line, index) => {
+          keyIndex += 1;
+          return (
+            <div key={keyIndex} className="-mt-2">
+              {line}
+              {index < content.split('\n').length - 1}
+            </div>
+          );
+        })
       : content;
 
   const isDisplayCross = !hideCloseBtn ? (

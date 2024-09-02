@@ -607,7 +607,7 @@ const NewJournalForm = () => {
       <li
         key={type}
         onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+        className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
       >
         <p>{t(eventTypeMap[type])}</p>
       </li>
@@ -624,7 +624,7 @@ const NewJournalForm = () => {
       <li
         key={rate}
         onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-left text-navyBlue2 hover:text-primaryYellow"
+        className="w-full cursor-pointer px-3 py-2 text-left text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
       >
         {rate}%
       </li>
@@ -642,7 +642,7 @@ const NewJournalForm = () => {
       <li
         key={method}
         onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+        className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
       >
         {method}
       </li>
@@ -658,7 +658,7 @@ const NewJournalForm = () => {
       <li
         key={accountKey}
         onClick={selectionClickHandler}
-        className="w-full cursor-pointer px-3 py-2 text-left text-navyBlue2 hover:text-primaryYellow"
+        className="w-full cursor-pointer px-3 py-2 text-left text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
       >
         {t(accountKey)}
       </li>
@@ -678,7 +678,7 @@ const NewJournalForm = () => {
   //       <li
   //         key={project.name}
   //         onClick={selectionClickHandler}
-  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //         className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
   //       >
   //         {t(project.name)}
   //       </li>
@@ -700,7 +700,7 @@ const NewJournalForm = () => {
   //       <li
   //         key={contract.name}
   //         onClick={selectionClickHandler}
-  //         className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+  //         className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
   //       >
   //         {t(contract.name)}
   //       </li>
@@ -712,12 +712,12 @@ const NewJournalForm = () => {
     <>
       {/* Info: (20240423 - Julian) Title */}
       <div className="my-5 flex items-center gap-4">
-        <hr className="block flex-1 border-lightGray3 md:hidden" />
-        <div className="flex items-center gap-2 text-sm">
+        <hr className="block flex-1 border-divider-stroke-lv-3 md:hidden" />
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/info.svg" width={16} height={16} alt="info_icon" />
           <p>{t('journal:JOURNAL.BASIC_INFO')}</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
 
       {/* Info: (20240423 - Julian) Form */}
@@ -727,7 +727,9 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Date */}
           <div className="relative flex w-full flex-col items-start gap-8px md:w-240px">
             <div id="date-picker" className="absolute -top-20"></div>
-            <p className="text-sm font-semibold text-navyBlue2">{t('common:DATE_PICKER.DATE')}</p>
+            <p className="text-sm font-semibold text-input-text-primary">
+              {t('common:DATE_PICKER.DATE')}
+            </p>
             <DatePicker
               period={datePeriod}
               setFilteredPeriod={setDatePeriod}
@@ -742,23 +744,23 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Event Type */}
           <div className="flex w-full flex-col items-start gap-8px md:w-130px">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('journal:JOURNAL.EVENT_TYPE')}
             </p>
             <div
               id="event-type-menu"
               onClick={eventMenuOpenHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isEventMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
             >
               <p>{t(eventTypeMap[selectedEventType])}</p>
               <FaChevronDown />
               {/* Info: (20240423 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isEventMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isEventMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={eventMenuRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                  className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                 >
                   {displayEventDropmenu}
                 </ul>
@@ -768,7 +770,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240423 - Julian) Reason */}
           <div className="flex w-full flex-col items-start gap-8px md:w-3/5">
-            <p className="text-sm font-semibold text-navyBlue2">{reasonText}</p>
+            <p className="text-sm font-semibold text-input-text-primary">{reasonText}</p>
             <input
               id="input-reason"
               name="input-reason"
@@ -777,30 +779,12 @@ const NewJournalForm = () => {
               value={inputReason}
               onChange={reasonChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
             />
-            {/*             <div
-              id="paymentReasonMenu"
-              onClick={reasonMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isReasonMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
-            >
-              <p>{selectedPaymentReason}</p>
-              <FaChevronDown />
-              <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isReasonMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-              >
-                <ul
-                  ref={reasonRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
-                >
-                  {displayReasonDropmenu}
-                </ul>
-              </div>
-            </div> */}
             <button
               type="button"
               onClick={addAssetModalVisibilityHandler}
-              className={`ml-auto ${isHideAddAssetBtn ? 'opacity-0' : 'opacity-100'} ${disabledAddNewAsset ? 'text-gray-400' : 'text-secondaryBlue hover:text-primaryYellow'}`}
+              className={`ml-auto ${isHideAddAssetBtn ? 'opacity-0' : 'opacity-100'} ${disabledAddNewAsset ? 'text-gray-400' : 'text-input-text-input-filled hover:text-dropdown-stroke-input-hover'}`}
               disabled={disabledAddNewAsset}
             >
               {t('journal:JOURNAL.ADD_NEW_ASSET')}
@@ -812,7 +796,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-x-60px gap-y-24px md:flex-row">
           {/* Info: (20240423 - Julian) Description */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('journal:JOURNAL.DESCRIPTION')}
             </p>
             <input
@@ -823,13 +807,13 @@ const NewJournalForm = () => {
               value={inputDescription}
               onChange={descriptionChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
             />
           </div>
 
           {/* Info: (20240423 - Julian) vendor */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">{vendorText}</p>
+            <p className="text-sm font-semibold text-input-text-primary">{vendorText}</p>
             <input
               id="input-vendor"
               name="input-vendor"
@@ -838,7 +822,7 @@ const NewJournalForm = () => {
               value={inputVendor}
               onChange={vendorChangeHandler}
               required
-              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none"
+              className="h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
             />
           </div>
         </div>
@@ -850,12 +834,12 @@ const NewJournalForm = () => {
     <>
       {/* Info: (20240423 - Julian) Title */}
       <div className="my-5 flex items-center gap-4">
-        <hr className="block flex-1 border-lightGray3 md:hidden" />
-        <div className="flex items-center gap-2 text-sm">
+        <hr className="block flex-1 border-divider-stroke-lv-3 md:hidden" />
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/credit_card.svg" width={16} height={16} alt="credit_card_icon" />
           <p>{t('journal:JOURNAL.PAYMENT')}</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
 
       {/* Info: (20240423 - Julian) Form */}
@@ -865,7 +849,7 @@ const NewJournalForm = () => {
           {/* Info: (20240423 - Julian) Total Price */}
           <div className="relative flex w-full flex-1 flex-col items-start gap-8px">
             <div id="price" className="absolute -top-20"></div>
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('journal:JOURNAL.TOTAL_PRICE')}
             </p>
             <div className="flex w-full items-center">
@@ -878,9 +862,9 @@ const NewJournalForm = () => {
                 required
                 hasComma
                 triggerWhenChanged={amountChangeHandler}
-                className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-white p-10px outline-none"
+                className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
               />
-              <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 bg-white p-12px text-sm text-lightGray4">
+              <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-12px text-sm text-input-text-input-placeholder">
                 <Image
                   src="/currencies/twd.svg"
                   width={16}
@@ -900,9 +884,9 @@ const NewJournalForm = () => {
           </div>
 
           {/* Info: (20240423 - Julian) Tax */}
-          <div className="flex w-full flex-col gap-8px text-lightGray4 md:w-200px">
+          <div className="flex w-full flex-col gap-8px md:w-200px">
             {/* Info: (20240424 - Julian) toggle */}
-            <div className="flex items-center gap-18px">
+            <div className="flex items-center gap-18px text-switch-text-primary">
               <p>{t('journal:JOURNAL.NO_SLASH_TAX')}</p>
               <Toggle
                 id="tax-toggle"
@@ -919,14 +903,17 @@ const NewJournalForm = () => {
               type="button"
               onClick={taxMenuHandler}
               disabled={!taxToggle}
-              className={`group relative flex h-46px cursor-pointer ${isTaxMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px transition-all duration-300 ease-in-out enabled:hover:border-primaryYellow enabled:hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6`}
+              className={`group relative flex h-46px cursor-pointer ${isTaxMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px transition-all duration-300 ease-in-out enabled:hover:border-input-stroke-selected enabled:hover:text-dropdown-stroke-input-hover disabled:cursor-default disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
             >
               <p>{taxRate}%</p>
               <FaChevronDown />
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
-                <ul ref={taxRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
+                <ul
+                  ref={taxRef}
+                  className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
+                >
                   {displayTaxDropmenu}
                 </ul>
               </div>
@@ -934,9 +921,9 @@ const NewJournalForm = () => {
           </div>
 
           {/* Info: (20240424 - Julian) Fee */}
-          <div className="flex w-full flex-col gap-8px text-lightGray4 md:w-200px">
+          <div className="flex w-full flex-col gap-8px md:w-200px">
             {/* Info: (20240424 - Julian) toggle */}
-            <div className="flex items-center gap-18px">
+            <div className="flex items-center gap-18px text-switch-text-primary">
               <p>{t('journal:JOURNAL.FEE')}</p>
               <Toggle
                 id="fee-toggle"
@@ -946,7 +933,7 @@ const NewJournalForm = () => {
               />
             </div>
             <div
-              className={`flex w-full items-center ${feeToggle ? 'bg-white text-navyBlue2' : 'bg-lightGray6 text-lightGray4'} rounded-sm transition-all duration-300 ease-in-out`}
+              className={`flex w-full items-center ${feeToggle ? 'bg-input-surface-input-background text-input-text-input-filled' : 'bg-input-surface-input-disable text-input-stroke-disable'} rounded-sm transition-all duration-300 ease-in-out`}
             >
               <NumericInput
                 id="fee-input"
@@ -958,9 +945,9 @@ const NewJournalForm = () => {
                 required={feeToggle}
                 hasComma
                 triggerWhenChanged={amountChangeHandler}
-                className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
+                className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-transparent p-10px outline-none md:w-1/2"
               />
-              <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+              <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input p-12px text-sm text-input-text-input-placeholder">
                 <Image
                   src="/currencies/twd.svg"
                   width={16}
@@ -983,23 +970,23 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start justify-between gap-24px md:flex-row md:items-end">
           {/* Info: (20240424 - Julian) Payment Method */}
           <div className="flex w-full flex-col items-start gap-8px md:w-200px">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('journal:JOURNAL.PAYMENT_METHOD')}
             </p>
             <div
               id="payment-method-menu"
               onClick={methodMenuHandler}
-              className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isMethodMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
             >
               <p>{t(selectedMethod)}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isMethodMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isMethodMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={methodRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                  className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                 >
                   {displayMethodDropmenu}
                 </ul>
@@ -1009,7 +996,7 @@ const NewJournalForm = () => {
 
           {/* Info: (20240424 - Julian) Financial Institution Code */}
           <div className="flex w-full flex-col items-start gap-8px md:w-300px">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('journal:JOURNAL.BANK_ACCOUNT')}
             </p>
             <button
@@ -1017,17 +1004,17 @@ const NewJournalForm = () => {
               type="button"
               onClick={bankAccountMenuHandler}
               disabled={!isAccountNumberVisible}
-              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-sm border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow disabled:cursor-default disabled:bg-lightGray6 disabled:hover:border-lightGray3 disabled:hover:text-navyBlue2`}
+              className={`group relative flex h-46px w-full cursor-pointer ${isBankAccountMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-dropdown-surface-menu-background-primary p-10px enabled:hover:border-input-stroke-selected enabled:hover:text-dropdown-stroke-input-hover disabled:cursor-default disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
             >
               <p>{t(selectedFIC)}</p>
               <FaChevronDown />
               {/* Info: (20240424 - Julian) Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isBankAccountMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isBankAccountMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={bankAccountRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                  className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                 >
                   {displayFICDropmenu}
                 </ul>
@@ -1046,7 +1033,7 @@ const NewJournalForm = () => {
               onChange={accountNumberChangeHandler}
               required={isAccountNumberVisible}
               disabled={!isAccountNumberVisible}
-              className="h-46px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none disabled:cursor-default disabled:bg-lightGray6"
+              className="h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none disabled:cursor-default disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable disabled:placeholder:text-input-text-disable"
             />
           </div>
         </div>
@@ -1056,7 +1043,7 @@ const NewJournalForm = () => {
         <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-end">
           {/* Info: (20240424 - Julian) Payment Period */}
           <div className="flex w-full flex-col items-start gap-8px md:w-fit">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('report_401:REPORTS_HISTORY_LIST.PERIOD')}
             </p>
             {/* Info: (20240424 - Julian) radio buttons */}
@@ -1064,7 +1051,7 @@ const NewJournalForm = () => {
               {/* Info: (20240424 - Julian) At Once */}
               <label
                 htmlFor="input-at-once"
-                className="flex items-center gap-8px whitespace-nowrap"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
               >
                 <input
                   type="radio"
@@ -1083,7 +1070,7 @@ const NewJournalForm = () => {
                 <div className="flex w-full flex-1 flex-col items-start gap-8px md:flex-row md:items-center">
                   <label
                     htmlFor="input-installment"
-                    className="flex w-full items-center gap-8px whitespace-nowrap"
+                    className="flex w-full items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
                   >
                     <input
                       type="radio"
@@ -1097,7 +1084,7 @@ const NewJournalForm = () => {
                   </label>
                   {/* Info: (20240424 - Julian) input */}
                   <div
-                    className={`flex w-full items-center ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
+                    className={`flex w-full items-center ${paymentPeriod === PaymentPeriodType.INSTALLMENT ? 'bg-input-surface-input-background text-input-text-input-filled' : 'bg-input-surface-input-disable text-input-stroke-disable'} rounded-sm transition-all duration-300 ease-in-out`}
                   >
                     <NumericInput
                       id="input-installment-times"
@@ -1106,9 +1093,9 @@ const NewJournalForm = () => {
                       setValue={setInputInstallment}
                       required={paymentPeriod === PaymentPeriodType.INSTALLMENT}
                       disabled={paymentPeriod !== PaymentPeriodType.INSTALLMENT}
-                      className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none"
+                      className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-transparent p-10px outline-none"
                     />
-                    <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+                    <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input p-12px text-sm text-input-text-input-placeholder">
                       <p style={{ whiteSpace: 'nowrap' }}>{t('journal:JOURNAL.TIMES')}</p>
                     </div>
                   </div>
@@ -1124,13 +1111,16 @@ const NewJournalForm = () => {
 
           {/* Info: (20240424 - Julian) Payment State */}
           <div className="flex w-full flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-navyBlue2">
+            <p className="text-sm font-semibold text-input-text-primary">
               {t('journal:JOURNAL.PAYMENT_STATE')}
             </p>
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
               {/* Info: (20240424 - Julian) Unpaid */}
-              <label htmlFor="input-unpaid" className="flex items-center gap-8px whitespace-nowrap">
+              <label
+                htmlFor="input-unpaid"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+              >
                 <input
                   type="radio"
                   id="input-unpaid"
@@ -1147,7 +1137,7 @@ const NewJournalForm = () => {
                 <div className="flex w-full flex-col items-start gap-8px md:flex-row md:items-center">
                   <label
                     htmlFor="input-partial-paid"
-                    className="flex items-center gap-8px whitespace-nowrap"
+                    className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
                   >
                     <input
                       type="radio"
@@ -1161,7 +1151,7 @@ const NewJournalForm = () => {
                   </label>
                   {/* Info: (20240424 - Julian) input */}
                   <div
-                    className={`flex w-full items-center ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-white' : 'bg-lightGray6'} rounded-sm transition-all duration-300 ease-in-out`}
+                    className={`flex w-full items-center ${paymentStatus === PaymentStatusType.PARTIAL ? 'bg-input-surface-input-background text-input-text-input-filled' : 'bg-input-surface-input-disable text-input-stroke-disable'} rounded-sm transition-all duration-300 ease-in-out`}
                   >
                     <NumericInput
                       id="input-partial-paid-amount"
@@ -1172,9 +1162,9 @@ const NewJournalForm = () => {
                       hasComma
                       required={paymentStatus === PaymentStatusType.PARTIAL}
                       disabled={paymentStatus !== PaymentStatusType.PARTIAL}
-                      className="h-46px flex-1 rounded-l-sm border border-lightGray3 bg-transparent p-10px outline-none md:w-1/2"
+                      className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-transparent p-10px outline-none md:w-1/2"
                     />
-                    <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-lightGray3 p-12px text-sm text-lightGray4">
+                    <div className="flex items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input p-12px text-sm text-input-text-input-placeholder">
                       <Image
                         src="/currencies/twd.svg"
                         width={16}
@@ -1194,7 +1184,10 @@ const NewJournalForm = () => {
                 </div>
               </div>
               {/* Info: (20240424 - Julian) Paid */}
-              <label htmlFor="input-paid" className="flex items-center gap-8px whitespace-nowrap">
+              <label
+                htmlFor="input-paid"
+                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+              >
                 <input
                   type="radio"
                   id="input-paid"
@@ -1264,7 +1257,7 @@ const NewJournalForm = () => {
   //         <div
   //           id="project-menu"
   //           onClick={projectMenuHandler}
-  //           className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+  //           className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
   //         >
   //           <div className="p-12px text-sm text-lightGray4">
   //             <p style={{ whiteSpace: 'nowrap' }}>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
@@ -1274,7 +1267,7 @@ const NewJournalForm = () => {
   //             <FaChevronDown />
   //             {/* Info: (20240424 - Julian) Dropmenu */}
   //             <div
-  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isProjectMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
   //             >
   //               <ul
   //                 ref={projectRef}
@@ -1290,7 +1283,7 @@ const NewJournalForm = () => {
   //         <div
   //           id="contract-menu"
   //           onClick={contractMenuHandler}
-  //           className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
+  //           className={`group relative flex w-full cursor-pointer ${isContractMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
   //         >
   //           <div className="p-12px text-sm text-lightGray4">
   //             <p style={{ whiteSpace: 'nowrap' }}>{t('journal:JOURNAL.CONTRACT')}</p>
@@ -1300,7 +1293,7 @@ const NewJournalForm = () => {
   //             <FaChevronDown />
   //             {/* Info: (20240424 - Julian) Dropmenu */}
   //             <div
-  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+  //               className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isContractMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
   //             >
   //               <ul
   //                 ref={contractRef}
@@ -1334,14 +1327,14 @@ const NewJournalForm = () => {
         {/* {displayedProject} */}
         {/* Info: (20240423 - Julian) Buttons */}
         <div className="ml-auto flex items-center gap-24px">
-          <button
+          <Button
             id="clear-journal-form-btn"
             type="button"
             onClick={clearAllClickHandler}
-            className="px-16px py-8px text-secondaryBlue hover:text-primaryYellow"
+            variant="secondaryBorderless"
           >
             {t('journal:JOURNAL.CLEAR_ALL')}
-          </button>
+          </Button>
           <Button id="upload-btn" type="submit" className="px-16px py-8px" disabled={!isFeeValid}>
             <p>{t('journal:JOURNAL.UPLOAD')}</p>
             <svg

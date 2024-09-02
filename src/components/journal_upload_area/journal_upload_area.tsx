@@ -356,7 +356,7 @@ const JournalUploadArea = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1`}
+      className={`h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-auto md:flex-1`}
     >
       <label
         htmlFor="journal-upload-area"
@@ -372,12 +372,28 @@ const JournalUploadArea = () => {
               ]
         )}
       >
-        <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-        <p className="mt-20px font-semibold text-navyBlue2">
+        <Image
+          src="/icons/upload_file.svg"
+          width={55}
+          height={60}
+          alt="upload_file"
+          className={isUploadDisabled ? 'grayscale' : ''}
+        />
+        <p
+          className={`mt-20px font-semibold ${isUploadDisabled ? 'text-drag-n-drop-text-disable' : 'text-drag-n-drop-text-primary'}`}
+        >
           {t('journal:JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-          <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
+          <span
+            className={
+              isUploadDisabled ? 'text-drag-n-drop-text-disable' : 'text-link-text-primary'
+            }
+          >
+            {t('journal:JOURNAL.BROWSE')}
+          </span>
         </p>
-        <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
+        <p className="text-center text-drag-n-drop-text-note">
+          {t('journal:JOURNAL.MAXIMUM_SIZE')}
+        </p>
 
         <input
           id="journal-upload-area"

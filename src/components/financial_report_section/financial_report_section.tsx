@@ -311,12 +311,9 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               .map((project) => (
                 <li
                   key={project}
-                  onClick={
-                    () =>
-                      // eslint-disable-next-line implicit-arrow-linebreak
-                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                    // eslint-disable-next-line react/jsx-curly-newline
-                  }
+                  onClick={() => {
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP);
+                  }}
                   className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">
