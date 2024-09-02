@@ -25,6 +25,7 @@ import { IProject } from '@/interfaces/project';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -165,13 +166,11 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             <div className="flex w-full items-center justify-between">
               {/* Info: (20240611 - Julian) Title */}
               <div className="flex items-center gap-24px">
-                <Link
-                  href={ISUNFA_ROUTE.PROJECT_LIST}
-                  className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
-                >
-                  <FaArrowLeft />
-                </Link>
-
+                <Button type="button" className="h-40px w-40px p-0" variant="tertiaryOutline">
+                  <Link href={ISUNFA_ROUTE.PROJECT_LIST}>
+                    <FaArrowLeft />
+                  </Link>
+                </Button>
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
                   {projectName}
                 </h1>

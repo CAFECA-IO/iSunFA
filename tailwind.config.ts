@@ -679,15 +679,8 @@ module.exports = {
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
 
-        primaryYellow: '#FFA502',
-        primaryYellow2: '#996301',
-        primaryYellow3: '#FFD892',
-
         secondaryBlue: '#001840',
         tertiaryBlue: '#304872',
-
-        navyBlue: '#002462',
-        navyBlue2: '#27354E',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",

@@ -15,11 +15,11 @@ const buttonVariants = cva(
         tertiaryOutline:
           'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover group-hover:border-button-stroke-primary-hover group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         secondaryOutline:
-          'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable disabled:border-button-stroke-disable',
+          'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary-hover group-hover:border-button-text-primary group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         tertiaryBorderless:
-          'border-none border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable',
+          'border-none border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-text-primary hover:text-button-text-primary-hover group-hover:border-button-text-primary group-hover:text-button-text-primary-hover disabled:text-button-text-disable',
         secondaryBorderless:
-          'border-none border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary group-hover:border-button-text-primary group-hover:text-button-text-primary disabled:text-button-text-disable',
+          'border-none border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary-hover group-hover:border-button-text-primary group-hover:text-button-text-primary-hover disabled:text-button-text-disable',
         disabledGray: 'border border-button-stroke-disable text-button-text-disable',
         disabledYellow: 'border border-button-stroke-primary text-button-text-primary',
       },
