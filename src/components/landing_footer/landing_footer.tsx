@@ -14,7 +14,7 @@ import {
 
 function LandingFooter() {
   return (
-    <div className="flex flex-col space-y-12 bg-secondaryBlue px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-28">
+    <div className="flex flex-col space-y-12 bg-navy-blue-700 px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-28">
       <div className="flex w-full flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
         <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           {/* Info:(20230711 - Shirley) Desktop Logo */}
@@ -35,7 +35,7 @@ function LandingFooter() {
           />
         </Link>
 
-        <div className="flex flex-1 flex-col items-center space-y-6 text-sm lg:flex-row lg:space-x-6 lg:space-y-0 lg:divide-x lg:divide-white">
+        <div className="flex flex-1 flex-col items-center space-y-6 text-sm lg:flex-row lg:space-x-6 lg:space-y-0 lg:divide-x lg:divide-navy-blue-25">
           <div className="flex flex-col items-start space-y-4">
             <Link
               href={iSunFAAddressOnMap ?? ''}
@@ -52,11 +52,11 @@ function LandingFooter() {
           </div>
         </div>
 
-        <div className="flex w-full flex-1 justify-center border-t border-white lg:justify-end lg:border-t-0">
+        <div className="flex w-full flex-1 justify-center border-t border-navy-blue-25 lg:justify-end lg:border-t-0">
           <Link
             href={githubLink ?? ''}
             target="_blank"
-            className="px-6 py-4 lg:border-l lg:border-white"
+            className="px-6 py-4 lg:border-l lg:border-navy-blue-25"
           >
             <BiLogoGithub className="text-40px" />
           </Link>

@@ -678,9 +678,6 @@ module.exports = {
         'tree-stroke-divider': 'var(--tree-stroke-divider)',
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
-
-        secondaryBlue: '#001840',
-        tertiaryBlue: '#304872',
       },
       backgroundImage: {
         login_bg: "url('/images/login_bg.png')",

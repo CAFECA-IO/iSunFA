@@ -55,11 +55,11 @@ function LandingI18n() {
         >
           {currentLanguage}
         </div>
-        <span className="-mt-2 h-12px w-12px rotate-45 border-b-2 border-r-2 border-white" />
+        <span className="-mt-2 h-12px w-12px rotate-45 border-b-2 border-r-2 border-button-text-invert" />
       </div>
       <div ref={targetRef}>
         <ul
-          className={`absolute left-0 top-12 grid h-auto w-full grid-cols-1 rounded bg-secondaryBlue font-sans ${
+          className={`absolute left-0 top-12 grid h-auto w-full grid-cols-1 rounded bg-button-surface-strong-secondary ${
             componentVisible ? 'visible grid-rows-1 opacity-100' : 'invisible grid-rows-0 opacity-0'
           } drop-shadow-lg transition-all duration-300 ease-in-out`}
         >
@@ -77,15 +77,15 @@ function LandingI18n() {
         onClick={clickMenuHandler}
       >
         <div className="flex">{currentLanguage}</div>
-        <span className="ml-2 h-12px w-12px -rotate-45 border-b-2 border-r-2 border-white" />
+        <span className="ml-2 h-12px w-12px -rotate-45 border-b-2 border-r-2 border-button-text-invert" />
       </div>
       <ul
         className={`absolute left-0 top-0 flex h-95vh w-full flex-col items-center rounded ${
           componentVisible ? 'visible translate-x-0' : 'invisible translate-x-full'
-        } bg-secondaryBlue py-2 font-sans transition-all duration-300 ease-in-out`}
+        } bg-button-surface-strong-secondary py-2 transition-all duration-300 ease-in-out`}
       >
         <li className="w-full px-6 py-2" onClick={clickMenuHandler}>
-          <span className="block h-12px w-12px rotate-135 border-b-2 border-r-2 border-white" />
+          <span className="block h-12px w-12px rotate-135 border-b-2 border-r-2 border-button-text-invert" />
         </li>
         {subMenu}
       </ul>

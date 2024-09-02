@@ -215,7 +215,7 @@ const KYCForm = () => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
+                className="rounded px-4 py-2 text-button-text-secondary"
                 onClick={handleBackButtonClick}
               >
                 {t('kyc:KYC.BACK')}
@@ -237,7 +237,7 @@ const KYCForm = () => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
+                className="rounded px-4 py-2 text-button-text-secondary"
                 onClick={handleBackButtonClick}
               >
                 {t('kyc:KYC.BACK')}
@@ -263,7 +263,7 @@ const KYCForm = () => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
+                className="rounded px-4 py-2 text-button-text-secondary"
                 onClick={handleBackButtonClick}
               >
                 {t('kyc:KYC.BACK')}
