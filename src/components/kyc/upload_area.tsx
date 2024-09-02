@@ -27,7 +27,7 @@ const UploadArea = ({
 }: {
   loacalStorageFilesKey: string;
   type: UploadDocumentKeys;
-  onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
+  onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
 }) => {
   const { t } = useTranslation([
     'common',
@@ -50,7 +50,7 @@ const UploadArea = ({
   const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
   const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
-  const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
+  const [uploadedFileId, setUploadedFileId] = useState<number | undefined>(undefined);
   const {
     trigger: getFile,
     data: getData,
@@ -73,7 +73,7 @@ const UploadArea = ({
     [messageModalDataHandler, messageModalVisibilityHandler]
   );
 
-  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: string) => {
+  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: number) => {
     const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
     const data = currentData;
 
@@ -104,6 +104,7 @@ const UploadArea = ({
       setStatus(ProgressStatus.SYSTEM_ERROR);
     }
     if (success && data) {
+      // Info: (20240830 - Murky) To Emily and Jacky To Emily and Jacky, File update down below
       onChange(type, data.id);
       setUploadedFileId(data.id);
       updateFileIdInLocalStorage(type, data.id);
@@ -248,7 +249,7 @@ const UploadArea = ({
     try {
       const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
       setUploadedFile(file);
-      setUploadedFileId(id);
+      setUploadedFileId(Number(id));
       setUploadProgress(100);
       if (id && file) {
         getFile({

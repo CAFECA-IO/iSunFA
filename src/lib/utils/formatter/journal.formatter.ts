@@ -12,6 +12,8 @@ import {
 } from '@/lib/utils/type_guard/account';
 import { sumLineItemsAndReturnBiggest } from '@/lib/utils/line_item';
 import { assertIsJournalEvent } from '@/lib/utils/type_guard/journal';
+import { FileFolder } from '@/constants/file';
+import { transformOCRImageIDToURL } from '@/lib/utils/common';
 
 export function formatSingleIJournalListItem(
   journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
@@ -28,7 +30,7 @@ export function formatSingleIJournalListItem(
     event: journalFromPrisma.event,
     account: [debit, credit],
     projectName: journalFromPrisma.project?.name,
-    projectImageId: journalFromPrisma.project?.imageId,
+    projectImageId: journalFromPrisma.project?.imageFile?.name,
     voucherId: journalFromPrisma.voucher?.id,
     voucherNo: journalFromPrisma.voucher?.no,
   };
@@ -50,7 +52,9 @@ export function formatIJournal(
   const { projectId } = journalFromPrisma;
   const contractName = journalFromPrisma?.contract?.name;
   const { contractId } = journalFromPrisma;
-  const imageUrl = journalFromPrisma.invoice?.imageUrl || null;
+
+  const imageName = journalFromPrisma.invoice?.imageFile?.name || '';
+  const imageUrl = transformOCRImageIDToURL(FileFolder.INVOICE, 0, imageName);
 
   const invoice: IInvoice = journalFromPrisma.invoice
     ? {

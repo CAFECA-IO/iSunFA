@@ -30,7 +30,7 @@ export async function createUserByAuth({
   method,
   provider,
   authData,
-  imageUrl,
+  imageId,
   fullName,
   email,
   phone,
@@ -40,7 +40,7 @@ export async function createUserByAuth({
   method: string;
   provider: string;
   authData: object;
-  imageUrl: string;
+  imageId?: number;
   fullName?: string;
   email?: string;
   phone?: string;
@@ -48,6 +48,11 @@ export async function createUserByAuth({
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
+  const imageFileConnect = {
+    connect: {
+      id: imageId,
+    },
+  };
   const createdAuthentication = await prisma.authentication.create({
     data: {
       user: {
@@ -56,7 +61,7 @@ export async function createUserByAuth({
           fullName,
           email,
           phone,
-          imageId: imageUrl,
+          imageFile: imageId ? imageFileConnect : undefined,
           createdAt: nowTimestamp,
           updatedAt: nowTimestamp,
         },
