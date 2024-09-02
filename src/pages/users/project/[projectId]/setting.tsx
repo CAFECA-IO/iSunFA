@@ -238,13 +238,14 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
           <div className="flex flex-col px-16px md:px-60px">
             {/* Info: (20240611 - Julian) Title */}
             <div className="flex items-center gap-24px">
-              <button
+              <Button
                 type="button"
+                variant="tertiaryOutline"
                 onClick={backClickHandler}
-                className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+                className="h-40px w-40px p-0"
               >
                 <FaArrowLeft />
-              </button>
+              </Button>
               {/* Info: (20240611 - Julian) Project Name */}
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
                 {projectName} - {t('common:NAV_BAR.SETTING')}
@@ -271,7 +272,10 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     height={150}
                     className="group-hover:brightness-50"
                   />
-                  <FiEdit className="absolute hidden text-white group-hover:block" size={40} />
+                  <FiEdit
+                    className="absolute hidden text-surface-neutral-solid-light group-hover:block"
+                    size={40}
+                  />
                 </button>
                 <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                   {/* Info: (20240617 - Julian) Project Name */}

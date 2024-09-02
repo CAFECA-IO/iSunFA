@@ -351,7 +351,7 @@ const ViewFinancialSection = ({
         }`}
       >
         <div
-          className={`flex h-80px w-120px items-center justify-center border border-solid border-blue-950 text-3xl font-bold ${
+          className={`flex h-80px w-120px items-center justify-center border border-solid border-stroke-brand-secondary text-3xl font-bold ${
             thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
           }`}
         >
@@ -372,7 +372,7 @@ const ViewFinancialSection = ({
   const displayedReport = (
     <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
       {/* Info: (20240426 - Shirley) Sidebar */}
-      <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+      <div className="hidden w-1/4 overflow-y-scroll bg-surface-neutral-surface-lv2 lg:flex">
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading ? (
@@ -388,7 +388,7 @@ const ViewFinancialSection = ({
         <iframe
           ref={iframeRef}
           src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full origin-top-left scale-90 overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
+          className={`h-full w-full origin-top-left scale-90 overflow-x-auto border-none bg-surface-neutral-depth transition-transform duration-300 md:scale-100`}
           title="Financial Report"
           onLoad={handleIframeLoad}
         />
@@ -397,9 +397,9 @@ const ViewFinancialSection = ({
   );
 
   return (
-    <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
+    <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background pt-32">
       {/* Info: (20240426 - Shirley) financial title, print button and share button */}
-      <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
+      <div className="mx-10 flex items-center gap-5 border-b border-divider-stroke-lv-4 px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
           onClick={backClickHandler}
           variant={'tertiaryOutline'}
@@ -427,7 +427,7 @@ const ViewFinancialSection = ({
         {/* <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
           {displayedReportType}
         </div> */}
-        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
+        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full lg:text-4xl">
           {getReportFinancialIsLoading ? (
             <Skeleton width={200} height={40} />
           ) : (

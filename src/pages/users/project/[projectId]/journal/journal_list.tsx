@@ -43,19 +43,20 @@ const ProjectJournalListPage = ({ projectId }: IProjectJournalListPageProps) => 
   ) : (
     <div className="flex w-full flex-1 flex-col overflow-x-hidden">
       <ProjectSidebar projectId={projectId} />
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-surface-neutral-main-background">
         <div className="my-120px flex-1 md:ml-80px">
           <div className="flex flex-col px-16px md:px-60px">
             <div className="flex w-full items-center justify-between">
               {/* Info: (2024621 - Julian) Title */}
               <div className="flex items-center gap-24px">
-                <button
+                <Button
                   type="button"
+                  variant="tertiaryOutline"
                   onClick={backClickHandler}
-                  className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+                  className="h-40px w-40px p-0"
                 >
                   <FaArrowLeft />
-                </button>
+                </Button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
                   {projectName} - {t('journal:JOURNAL.JOURNAL_LIST')}

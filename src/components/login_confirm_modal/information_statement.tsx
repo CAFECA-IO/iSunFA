@@ -13,7 +13,7 @@ const InformationStatement: React.FC = () => {
     'terms',
   ]);
   return (
-    <div className="space-y-4 p-6 text-navyBlue">
+    <div className="space-y-4 p-6 text-text-brand-secondary-lv1">
       <p className="font-semibold">{t('terms:INFO_COLLECTION.DEAR_USER')}</p>
       <p>{t('terms:INFO_COLLECTION.THANK_YOU')}</p>
 

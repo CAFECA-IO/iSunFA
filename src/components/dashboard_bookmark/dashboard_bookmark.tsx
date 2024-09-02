@@ -112,7 +112,8 @@ const DashboardBookmark = () => {
           <Button
             key={key}
             type="button"
-            className={`flex justify-center gap-2 rounded-full border border-transparent bg-button-surface-strong-secondary px-3 py-3 text-white hover:bg-button-surface-strong-secondary-hover lg:px-8 lg:py-2`}
+            variant="tertiary"
+            className={`flex justify-center gap-2 rounded-full p-3 lg:px-8 lg:py-2`}
           >
             <div className="my-auto flex items-center justify-center">
               {bookmarkList[key].iconOnSection}
@@ -168,7 +169,7 @@ const DashboardBookmark = () => {
             type="button"
             onClick={slideLeft}
             disabled={isAtScrollStart}
-            className="absolute left-20px rounded-full bg-surface-neutral-solid-light p-10px shadow-scrollBtn hover:text-primaryYellow disabled:hidden"
+            className="absolute left-20px rounded-full bg-surface-neutral-solid-light p-10px text-button-text-secondary shadow-scrollBtn hover:text-button-text-primary-hover disabled:hidden"
           >
             <FaChevronLeft size={16} />
           </button>
@@ -176,7 +177,7 @@ const DashboardBookmark = () => {
             type="button"
             onClick={slideRight}
             disabled={isAtScrollEnd}
-            className="absolute right-20px rounded-full bg-surface-neutral-solid-light p-10px shadow-scrollBtn hover:text-primaryYellow disabled:hidden"
+            className="absolute right-20px rounded-full bg-surface-neutral-solid-light p-10px text-button-text-secondary shadow-scrollBtn hover:text-button-text-primary-hover disabled:hidden"
           >
             <FaChevronRight size={16} />
           </button>
