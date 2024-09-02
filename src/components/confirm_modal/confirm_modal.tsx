@@ -167,9 +167,9 @@ const ConfirmModal = ({
     // Info: (20240605 - Julian) Show warning message after clicking the button
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: 'Replace Input',
-      subMsg: 'Are you sure you want to use Ai information?',
-      content: 'The text you entered will be replaced.',
+      title: t('journal:JOURNAL.REPLACE_INPUT'),
+      subMsg: t('journal:JOURNAL.USE_AI'),
+      content: t('journal:JOURNAL.TEXT_WILL_BE_REPLACED'),
       submitBtnStr: t('journal:JOURNAL.CONFIRM'),
       // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
@@ -314,9 +314,9 @@ const ConfirmModal = ({
     }
     if (getJournalSuccess === false) {
       messageModalDataHandler({
-        title: 'Get Journal Failed',
-        subMsg: 'Please try again later',
-        content: `Error code: ${getJournalCode}`,
+        title: t('journal:JOURNAL.GET_JOURNAL_FAILED'),
+        subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
+        content: t('common:COMMON.ERROR_CODE', { code: getJournalCode }),
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),

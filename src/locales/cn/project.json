@@ -41,7 +41,8 @@
     "NAME_YOUR_PROJECT": "为您的项目命名",
     "ENTER_NEW_PROJECT_NAME": "输入新项目名称",
     "OVERALL": "全部",
-    "OK": "好"
+    "OK": "好",
+    "CREATE_PROJECT_FAILED": "建立项目失败，请稍后重试。"
   },
   "STAGE_NAME_MAP": {
     "ALL": "全部",

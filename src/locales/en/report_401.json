@@ -144,7 +144,8 @@
     "REPORTS_HISTORY": "Reports History",
     "GENERATE_REPORT": "Generate Report",
     "WE_RECEIVED_YOUR_APPLICATION": "We received your application",
-    "TAKE_MINUTES": "It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later."
+    "TAKE_MINUTES": "It will take 30 to 40 minutes for the AI to generate the report, you can comeback and check it later.",
+    "FAILED_TO_FETCH_GENERATED_REPORTS": "Failed to fetch generated reports. Error code: {{code}}"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "From",
@@ -166,7 +167,8 @@
     "REMAINING_TIME": "Remaining Time",
     "OPERATIONS": "Operations",
     "CANCEL": "Cancel",
-    "SELECT": "Select"
+    "SELECT": "Select",
+    "FAILED_TO_FETCH_PENDING_REPORTS": "Failed to fetch pending reports. Error code: {{code}}"
   },
   "PENDING_REPORT_ITEM": {
     "ESTIMATED": "Estimated",

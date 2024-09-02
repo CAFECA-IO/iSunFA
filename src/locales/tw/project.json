@@ -39,9 +39,10 @@
     "PROJECT_REPORT": "專案報告",
     "PROJECT_LIST_ISUNFA": "項目清單 - iSunFA",
     "NAME_YOUR_PROJECT": "為您的專案命名",
-    "ENTER_NEW_PROJECT_NAME": "輸入新項目名稱",
+    "ENTER_NEW_PROJECT_NAME": "輸入新專案名稱",
     "OVERALL": "全部",
-    "OK": "好"
+    "OK": "好",
+    "CREATE_PROJECT_FAILED": "建立專案失敗，請稍後重試。"
   },
   "STAGE_NAME_MAP": {
     "ALL": "全部",

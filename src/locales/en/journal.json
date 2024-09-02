@@ -119,7 +119,17 @@
     "TIMES_HINT": "Please fill in times",
     "INCONSISTENT_COMPANY_ID": "Inconsistent companyId",
     "FAILED_TO_FETCH_PUBLIC_KEY": "Failed to fetch public key",
-    "FAILED_TO_UPLOAD_FILE": "Failed to upload file"
+    "FAILED_TO_UPLOAD_FILE": "Failed to upload file",
+    "JOURNAL_DETAIL_FAILED": "Journal Detail Failed",
+    "FAILED_TO_GET_CAMERA_VIDEO": "Failed to get camera video, please check your camera settings.",
+    "UPLOAD_INVOICE_FAILED": "Upload Invoice Failed",
+    "UPLOAD_INVOICE_FAILED_INSERT": "Upload invoice failed ({{uploadCode}}): {{status}}",
+    "UPLOAD_INVOICE_FAILED_WITH_CODE": "Upload invoice failed ({{uploadCode}})",
+    "REPLACE_INPUT": "Replace Input",
+    "USE_AI": "Are you sure you want to use Ai information?",
+    "TEXT_WILL_BE_REPLACED": "The text you entered will be replaced.",
+    "GET_JOURNAL_FAILED": "Get Journal Failed",
+    "GET_JOURNAL_DETAIL_FAILED": "Get journal detail failed"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
