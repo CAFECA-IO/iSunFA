@@ -253,9 +253,13 @@ async function createLineItems() {
 
 async function main() {
   await createCompany();
-
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
   await createFile();
-
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
   await createUser();
 
   await createRole();
