@@ -44,9 +44,14 @@ export async function transferOwnership(
             user: {
               include: {
                 userAgreements: true,
+                imageFile: true,
               },
             },
-            company: true,
+            company: {
+              include: {
+                imageFile: true,
+              },
+            },
             role: true,
           },
         });
@@ -66,10 +71,15 @@ export async function transferOwnership(
             include: {
               user: {
                 include: {
+                  imageFile: true,
                   userAgreements: true,
                 },
               },
-              company: true,
+              company: {
+                include: {
+                  imageFile: true,
+                },
+              },
               role: true,
             },
           });
@@ -90,10 +100,15 @@ export async function transferOwnership(
             include: {
               user: {
                 include: {
+                  imageFile: true,
                   userAgreements: true,
                 },
               },
-              company: true,
+              company: {
+                include: {
+                  imageFile: true,
+                },
+              },
               role: true,
             },
           });

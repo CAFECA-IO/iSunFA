@@ -10,7 +10,7 @@ const DocumentUploadForm = ({
   onSelect,
 }: {
   data: IUploadDocuments;
-  onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
+  onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
   onSelect: (value: RepresentativeIDType) => void;
 }) => {
   const { t } = useTranslation([

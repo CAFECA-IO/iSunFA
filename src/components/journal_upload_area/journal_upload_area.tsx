@@ -183,7 +183,7 @@ const JournalUploadArea = () => {
     }
   };
 
-  const uploadToFileApi = async (item: IOCRItem) => {
+  const uploadToFileApi = async (companyId: number, item: IOCRItem) => {
     const formData = new FormData();
     const encryptedFile = new File([item.encryptedContent], item.name, {
       type: item.type,
@@ -192,8 +192,8 @@ const JournalUploadArea = () => {
     formData.append('file', encryptedFile);
 
     // Info: (20240829 - Murky) 下面的部份目前file upload的api沒有用到
-    formData.append('imageSize', item.size);
-    formData.append('imageName', item.name);
+    formData.append('fileSize', item.size);
+    formData.append('fileName', item.name);
     formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
     formData.append('publicKey', JSON.stringify(item.publicKey));
     formData.append('iv', Array.from(item.iv).join(','));
@@ -201,7 +201,7 @@ const JournalUploadArea = () => {
     const { data } = await uploadInvoiceImgToLocal({
       query: {
         type: UploadType.INVOICE,
-        targetId: '0',
+        targetId: companyId,
       },
       body: formData,
     });
@@ -212,7 +212,8 @@ const JournalUploadArea = () => {
     item: IOCRItem,
     companyId: number,
     isNewPendingOCR: boolean,
-    fileName?: string
+    fileName?: string,
+    fileId?: number
   ) => {
     if (item.companyId !== companyId) {
       toastHandler({
@@ -236,6 +237,7 @@ const JournalUploadArea = () => {
         companyId,
       },
       body: {
+        fileId,
         imageName: fileName || item.name,
         imageSize: item.size,
         uploadIdentifier: item.uploadIdentifier,
@@ -271,8 +273,8 @@ const JournalUploadArea = () => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
 
     pendingOCRListFromBrowser.forEach(async (item) => {
-      const file = await uploadToFileApi(item);
-      await upload(item, selectedCompany.id, false, file?.id);
+      const file = await uploadToFileApi(selectedCompany?.id, item);
+      await upload(item, selectedCompany.id, false, file?.name, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
 
@@ -280,8 +282,8 @@ const JournalUploadArea = () => {
     if (uploadFile && selectedCompany) {
       const uploadFileToOcr = async () => {
         // Info: (20240829 - Murky) To Shirely 更改這邊
-        const file = await uploadToFileApi(uploadFile);
-        await upload(uploadFile, selectedCompany?.id || -1, true, file?.id);
+        const file = await uploadToFileApi(selectedCompany?.id, uploadFile);
+        await upload(uploadFile, selectedCompany?.id || -1, true, file?.name, file?.id);
       };
       uploadFileToOcr();
       setUploadFile(null);

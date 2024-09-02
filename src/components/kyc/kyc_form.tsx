@@ -67,7 +67,7 @@ const KYCForm = () => {
     setStep(newStep);
   };
 
-  const handleDocumentChange = (key: UploadDocumentKeys, id: string | undefined) => {
+  const handleDocumentChange = (key: UploadDocumentKeys, id: number | undefined) => {
     setUploadDocuments((prev) => ({ ...prev, [key]: id }));
   };
 
@@ -90,12 +90,26 @@ const KYCForm = () => {
 
     if (!hasCompanyId) return;
     const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
+
+    // Info: (20240830 - Murky) To Emily and Jacky, File update down below
+    const intUploadDocuments = {
+      ...uploadDocuments,
+      [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: Number(
+        uploadDocuments[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]
+      ),
+      [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: Number(
+        uploadDocuments[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]
+      ),
+      [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: Number(
+        uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]
+      ),
+    };
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
       ...registrationInfoValues,
       ...restContactInfoValues,
       [ContactInfoKeys.CONTACT_PHONE]: contactInfoValues.areaCode + contactInfoValues.contactNumber,
-      ...uploadDocuments,
+      ...intUploadDocuments,
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
     if (isComplete) {

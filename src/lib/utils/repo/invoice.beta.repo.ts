@@ -69,7 +69,7 @@ export async function createInvoice(
   invoiceData: IInvoiceBeta,
   paymentId: number,
   journalId: number,
-  imageUrl?: string
+  imageFileId?: number
 ) {
   const nowInSecond = getTimestampNow();
   const invoiceCreatedDate = timestampInSeconds(invoiceData.date);
@@ -97,7 +97,11 @@ export async function createInvoice(
     vendorTaxId: invoiceData.vendorTaxId,
     vendorOrSupplier: invoiceData.vendorOrSupplier,
     deductible: invoiceData.deductible,
-    imageUrl,
+    imageFile: {
+      connect: {
+        id: imageFileId,
+      },
+    },
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
     payment: paymentConnect,
@@ -139,7 +143,7 @@ export async function createInvoice(
 export async function updateInvoice(
   invoiceId: number,
   invoiceData: IInvoiceBeta,
-  imageUrl?: string,
+  imageFileId?: number,
   paymentId?: number,
   journalId?: number
 ) {
@@ -168,7 +172,11 @@ export async function updateInvoice(
     description: invoiceData.description,
     vendorTaxId: invoiceData.vendorTaxId,
     vendorOrSupplier: invoiceData.vendorOrSupplier,
-    imageUrl,
+    imageFile: {
+      connect: {
+        id: imageFileId,
+      },
+    },
     payment: paymentConnect,
     journal: journalConnect,
   };
