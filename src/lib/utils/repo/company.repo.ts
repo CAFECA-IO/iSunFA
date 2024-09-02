@@ -16,18 +16,6 @@ export async function getCompanyById(companyId: number): Promise<Company | null>
   return company;
 }
 
-export async function getCompanyByCode(code: string): Promise<Company | null> {
-  let company: Company | null = null;
-  if (code) {
-    company = await prisma.company.findUnique({
-      where: {
-        code,
-      },
-    });
-  }
-  return company;
-}
-
 export async function getCompanyWithOwner(companyId: number): Promise<
   | (Company & {
       admins: Admin[];
