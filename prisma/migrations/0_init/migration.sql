@@ -131,7 +131,7 @@ CREATE TABLE "company_kyc" (
     "contact_phone" TEXT NOT NULL,
     "contact_email" TEXT NOT NULL,
     "website" TEXT NOT NULL,
-    "registration_certificate_id" TEXT NOT NULL,
+    "representative_id_type" TEXT NOT NULL,
     "registration_certificate_file_id" INTEGER NOT NULL,
     "representative_id_card_file_id" INTEGER NOT NULL,
     "tax_certificate_file_id" INTEGER NOT NULL,
