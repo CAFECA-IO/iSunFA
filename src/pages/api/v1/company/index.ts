@@ -15,9 +15,9 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
-import { createFile } from '@/lib/utils/repo/file.repo';
+import { connectFileById, createFile } from '@/lib/utils/repo/file.repo';
 import { Company } from '@prisma/client';
-import { FileFolder } from '@/constants/file';
+import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
 
 async function checkInput(code: string, name: string, regional: string): Promise<boolean> {
   return !!code && !!name && !!regional;
@@ -69,6 +69,10 @@ async function createFileAndConnectCompany(
     isEncrypted: false,
     encryptedSymmetricKey: '',
   });
+
+  if (file) {
+    await connectFileById(FileDatabaseConnectionType.COMPANY_IMAGE, file.id, company.id);
+  }
   return file;
 }
 

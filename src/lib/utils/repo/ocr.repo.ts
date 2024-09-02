@@ -4,7 +4,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ocrIncludeFile } from '@/interfaces/ocr';
 import { getTimestampNow } from '@/lib/utils/common';
-import { Ocr, Prisma } from '@prisma/client';
+import { File, Ocr, Prisma } from '@prisma/client';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -114,7 +114,9 @@ export async function createOcrInPrisma(
   return ocrData;
 }
 
-export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
+export async function deleteOcrByResultId(
+  aichResultId: string
+): Promise<Ocr & { imageFile: File }> {
   const nowInSecond = getTimestampNow();
   const where: Prisma.OcrWhereUniqueInput = {
     aichResultId,
@@ -126,10 +128,14 @@ export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
     deletedAt: nowInSecond,
   };
 
-  const updatedArgs: Prisma.OcrUpdateArgs = {
+  const include = {
+    imageFile: true,
+  };
+
+  const ocr = await prisma.ocr.update({
     where,
     data,
-  };
-  const ocr = await prisma.ocr.update(updatedArgs);
+    include,
+  });
   return ocr;
 }

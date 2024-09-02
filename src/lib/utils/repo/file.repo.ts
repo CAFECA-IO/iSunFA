@@ -3,6 +3,7 @@ import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
 import { Prisma, File } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import logger from '@/lib/utils/logger';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
 /**
  * Info: (20240830 - Murky)
@@ -19,7 +20,7 @@ import logger from '@/lib/utils/logger';
  */
 export async function createFile({
   name,
-  companyId,
+  companyId = PUBLIC_COMPANY_ID,
   size,
   mimeType,
   type,
@@ -29,7 +30,7 @@ export async function createFile({
   iv,
 }: {
   name: string;
-  companyId: number;
+  companyId?: number;
   size: number;
   mimeType: string;
   type: FileFolder;
@@ -81,9 +82,13 @@ export async function createFile({
  * @param connectTo: FileDatabaseConnectionType - The type of the record that the file will connect to.
  * @returns File | null - The file record that connected to the record.
  */
-export async function connectFileById(connectTo: FileDatabaseConnectionType, fileId: number) {
+export async function connectFileById(
+  connectTo: FileDatabaseConnectionType,
+  fileId: number,
+  connectToId: number
+) {
   const connectFile: Prisma.FileWhereUniqueInput = {
-    id: fileId,
+    id: connectToId,
   };
 
   const connectData: Prisma.FileUpdateInput = {
@@ -119,5 +124,71 @@ export async function findFileById(fileId: number): Promise<File | null> {
   } catch (error) {
     logger.error(error, 'Error happened in findFileById in file.repo.ts');
   }
+  return file;
+}
+
+export async function findFileInDBByName(name: string): Promise<File | null> {
+  let file: File | null = null;
+
+  try {
+    file = await prisma.file.findFirst({
+      where: {
+        name,
+      },
+    });
+  } catch (error) {
+    logger.error(error, 'Error happened in findFileByName in file.repo.ts');
+  }
+  return file;
+}
+
+export async function deleteFileById(fileId: number) {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.FileWhereUniqueInput = {
+    id: fileId,
+  };
+
+  const data: Prisma.FileUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  let file: File | null = null;
+  try {
+    file = await prisma.file.update({
+      where,
+      data,
+    });
+  } catch (error) {
+    logger.error(error, 'Error happened in deleteFileById in file.repo.ts');
+  }
+
+  return file;
+}
+
+export async function deleteFileByName(name: string) {
+  const nowInSecond = getTimestampNow();
+
+  const where: Prisma.FileWhereInput = {
+    name,
+  };
+
+  const data: Prisma.FileUpdateInput = {
+    updatedAt: nowInSecond,
+    deletedAt: nowInSecond,
+  };
+
+  let file: Prisma.BatchPayload | null = null;
+
+  try {
+    file = await prisma.file.updateMany({
+      where,
+      data,
+    });
+  } catch (error) {
+    logger.error(error, 'Error happened in deleteFileByName in file.repo.ts');
+  }
+
   return file;
 }

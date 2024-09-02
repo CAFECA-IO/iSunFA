@@ -1,8 +1,10 @@
 import prisma from '@/client';
-import { Prisma, User, UserAgreement } from '@prisma/client';
+import { Prisma, User, UserAgreement, File } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
-export async function listUser(): Promise<(User & { userAgreements: UserAgreement[] })[]> {
+export async function listUser(): Promise<
+  (User & { userAgreements: UserAgreement[]; imageFile: File | null })[]
+> {
   const userList = await prisma.user.findMany({
     where: {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -12,6 +14,7 @@ export async function listUser(): Promise<(User & { userAgreements: UserAgreemen
     },
     include: {
       userAgreements: true,
+      imageFile: true,
     },
   });
   return userList;
@@ -60,7 +63,7 @@ export async function createUser({
 
 export async function getUserById(
   userId: number
-): Promise<(User & { userAgreements: UserAgreement[] }) | null> {
+): Promise<(User & { userAgreements: UserAgreement[]; imageFile: File | null }) | null> {
   let user = null;
   if (userId > 0) {
     user = await prisma.user.findUnique({
@@ -70,6 +73,7 @@ export async function getUserById(
       },
       include: {
         userAgreements: true,
+        imageFile: true,
       },
     });
   }
@@ -83,7 +87,7 @@ export async function updateUserById(
   email?: string,
   phone?: string,
   imageId?: number
-): Promise<User & { userAgreements: UserAgreement[] }> {
+): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
@@ -109,6 +113,7 @@ export async function updateUserById(
     data: updatedUser,
     include: {
       userAgreements: true,
+      imageFile: true,
     },
   });
 

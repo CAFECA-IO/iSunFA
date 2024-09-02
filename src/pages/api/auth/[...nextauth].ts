@@ -5,6 +5,10 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
+import { connectFileById, createFile } from '@/lib/utils/repo/file.repo';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
+import { User } from '@prisma/client';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -48,6 +52,71 @@ import { generateIcon } from '@/lib/utils/generate_user_icon';
 //   );
 // };
 
+async function fetchImageInfo(imageUrl: string): Promise<{
+  iconUrl: string;
+  mimeType: string;
+  size: number;
+}> {
+  let mimeType = 'image/jpeg'; // Info: (20240902 - Murky) Default image type is jpeg
+  let size = 0;
+
+  try {
+    const response = await fetch(imageUrl);
+    if (response.ok) {
+      const blob = await response.blob();
+      mimeType = blob.type;
+      size = blob.size;
+    }
+  } catch {
+    // Info: (20240902 - Murky) Do nothing
+  }
+
+  return {
+    iconUrl: imageUrl,
+    mimeType,
+    size,
+  };
+}
+
+/**
+ * Info: (20240902 - Murky)
+ * 1. Create a file and connect it with the user
+ * 2. If create file success, connect the file with user
+ * @param userIcon need to have iconUrl, mimeType, size
+ * @param user Prisma user type
+ * @returns Prisma file type or null
+ */
+async function createFileAndConnectUser(
+  userIcon: {
+    iconUrl: string;
+    mimeType: string;
+    size: number;
+  },
+  user: User
+) {
+  const { iconUrl, mimeType, size } = userIcon;
+
+  // Info: (20240902 - Murky) Do nothing
+  const imageName = user.name + '_icon';
+  const file = await createFile({
+    name: imageName,
+    companyId: PUBLIC_COMPANY_ID, // Info: (20240902 - Murky) User don't have company, so use public company id
+    size,
+    mimeType,
+    type: FileFolder.TMP,
+    url: iconUrl,
+    isEncrypted: false,
+    encryptedSymmetricKey: '',
+  });
+
+  // Info: (20240902 - Murky) If file is not null, connect the file with user
+  if (file) {
+    await connectFileById(FileDatabaseConnectionType.USER_IMAGE, file.id, user.id);
+  }
+
+  return file;
+}
+
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   return NextAuth(req, res, {
     providers: [
@@ -77,7 +146,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           if (!getUser) {
             // Info: (20240813 - Tzuhan) check if the user is in the database and update the token and if the user is not in the database, create a new user in the database.
             if (account && user) {
-              const imageUrl = user.image ?? (await generateIcon(user.name ?? ''));
+              let userImage = {
+                iconUrl: user.image ?? '',
+                mimeType: 'image/jpeg',
+                size: 0,
+              };
+
+              if (user.image) {
+                userImage = await fetchImageInfo(user.image);
+              } else {
+                userImage = await generateIcon(user.name ?? '');
+              }
+
               const createdUser = await createUserByAuth({
                 name: user.name || '',
                 email: user.email || '',
@@ -85,10 +165,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
                 credentialId: account.providerAccountId,
                 method: account.type,
                 authData: account,
-                imageUrl,
               });
+
               // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
               // Dbuser = createdUser;
+
+              await createFileAndConnectUser(userImage, createdUser.user);
 
               await setSession(session, createdUser.user.id);
             }
@@ -114,7 +196,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           */
         } catch (_error) {
           // ToDo: (20240829 - Jacky) Add error handling with logger
-          // const error = _error as Error;
         }
         return true;
       },

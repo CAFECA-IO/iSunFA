@@ -7,8 +7,8 @@ import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/compan
 
 export async function formatAdminList(
   listedAdmin: (Admin & {
-    company: Company & { imageFile: File };
-    user: User & { userAgreements: UserAgreement[]; imageFile: File };
+    company: Company & { imageFile: File | null };
+    user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
     role: Role;
   })[]
 ): Promise<IAdmin[]> {
@@ -49,7 +49,7 @@ export async function formatAdmin(
 }
 
 export async function formatCompanyAndRoleList(
-  listedCompanyAndRole: Array<{ company: Company & { imageFile: File }; role: Role }>
+  listedCompanyAndRole: Array<{ company: Company & { imageFile: File | null }; role: Role }>
 ): Promise<Array<{ company: ICompany; role: IRole }>> {
   const formatPromises = listedCompanyAndRole.map(async (companyAndRole) => {
     const formattedCompany = await formatCompany(companyAndRole.company);
@@ -62,7 +62,7 @@ export async function formatCompanyAndRoleList(
 }
 
 export async function formatCompanyAndRole(companyAndRole: {
-  company: Company & { imageFile: File };
+  company: Company & { imageFile: File | null };
   role: Role;
 }): Promise<{ company: ICompany; role: IRole }> {
   const formattedCompany = await formatCompany(companyAndRole.company);
@@ -74,7 +74,7 @@ export function formatCompanyDetailAndRole(companyDetailAndRole: {
   company: Company & {
     admins: Admin[];
     companyKYCs: CompanyKYC[];
-    imageFile: File;
+    imageFile: File | null;
   };
   role: Role;
 }): ICompanyAndRole {

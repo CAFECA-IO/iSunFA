@@ -183,7 +183,7 @@ const JournalUploadArea = () => {
     }
   };
 
-  const uploadToFileApi = async (item: IOCRItem) => {
+  const uploadToFileApi = async (companyId: number, item: IOCRItem) => {
     const formData = new FormData();
     const encryptedFile = new File([item.encryptedContent], item.name, {
       type: item.type,
@@ -201,7 +201,7 @@ const JournalUploadArea = () => {
     const { data } = await uploadInvoiceImgToLocal({
       query: {
         type: UploadType.INVOICE,
-        targetId: '0',
+        targetId: companyId,
       },
       body: formData,
     });
@@ -273,7 +273,7 @@ const JournalUploadArea = () => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
 
     pendingOCRListFromBrowser.forEach(async (item) => {
-      const file = await uploadToFileApi(item);
+      const file = await uploadToFileApi(selectedCompany?.id, item);
       await upload(item, selectedCompany.id, false, file?.name, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
@@ -282,7 +282,7 @@ const JournalUploadArea = () => {
     if (uploadFile && selectedCompany) {
       const uploadFileToOcr = async () => {
         // Info: (20240829 - Murky) To Shirely 更改這邊
-        const file = await uploadToFileApi(uploadFile);
+        const file = await uploadToFileApi(selectedCompany?.id, uploadFile);
         await upload(uploadFile, selectedCompany?.id || -1, true, file?.name, file?.id);
       };
       uploadFileToOcr();

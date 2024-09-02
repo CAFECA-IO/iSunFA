@@ -231,7 +231,6 @@ export function extractDataFromFields(fields: formidable.Fields) {
 function formatFormBody(req: NextApiRequest) {
   const { body } = req;
 
-  logger.info(body, 'ocr body');
   let fileId: number;
   let imageName: string;
   let imageSizeNum: number; // Info: (20240829 - Murky) it's like 32 MB
@@ -264,8 +263,7 @@ function formatFormBody(req: NextApiRequest) {
     iv = (body.iv as string).split(',');
     imageType = body.imageType as string;
   } else {
-    /* eslint-disable no-console */
-    console.error('Ocr formatFormBody error, body does not have all required fields');
+    logger.info(body, 'ocr body is not valid');
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
     /* eslint-enable no-console */
   }

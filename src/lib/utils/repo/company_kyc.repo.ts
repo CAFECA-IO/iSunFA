@@ -16,9 +16,9 @@ export async function createCompanyKYC(
     data: {
       companyId,
       ...companyKYCForm,
-      registrationCertificateFileId: companyKYCForm.registrationCertificateId,
-      taxCertificateFileId: companyKYCForm.taxCertificateId,
-      representativeIdCardFileId: companyKYCForm.representativeIdCardId,
+      registrationCertificateFileId: companyKYCForm.registrationCertificateFileId,
+      taxCertificateFileId: companyKYCForm.taxCertificateFileId,
+      representativeIdCardFileId: companyKYCForm.representativeIdCardFileId,
       status: KYCStatus.PENDING,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,

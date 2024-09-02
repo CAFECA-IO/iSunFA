@@ -27,9 +27,9 @@ export interface ICompanyKYC {
   contactEmail: string;
   website: string; // Info: (20240719 - Tzuhan) To Jacky, this field is optional
   representativeIdType: RepresentativeIDType;
-  registrationCertificateId: string;
-  taxCertificateId: string;
-  representativeIdCardId: string;
+  registrationCertificateFileId: number;
+  taxCertificateFileId: number;
+  representativeIdCardFileId: number;
   status: string;
   reviewer: string;
   note: string;

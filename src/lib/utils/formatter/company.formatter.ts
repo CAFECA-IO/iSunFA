@@ -26,7 +26,7 @@ export function formatCompany(
   // Info: (20240830 - Murky) To Emily and Jacky - , File update down below ,it suppose to image name
   const formattedCompany: ICompany = {
     ...company,
-    imageId: company?.imageFile?.name || '',
+    imageId: company?.imageFile?.url || '',
   };
   return formattedCompany;
 }
@@ -35,14 +35,14 @@ export function formatCompanyDetail(
   company: Company & {
     admins: Admin[];
     companyKYCs: CompanyKYC[];
-    imageFile: File;
+    imageFile: File | null;
   }
 ): ICompanyDetail {
   const { admins, companyKYCs, ...companyWithoutAdmins } = company;
 
   const formattedCompanyDetail: ICompanyDetail = {
     ...companyWithoutAdmins,
-    imageId: company.imageFile.name,
+    imageId: company?.imageFile?.url || '',
     ownerId: admins[0]?.userId ?? 0,
     kycStatusDetail: companyKYCs[0]?.status ?? KYCStatus.NOT_STARTED,
   };

@@ -71,9 +71,9 @@ export function isCompanyKYCForm(obj: ICompanyKYCForm): obj is ICompanyKYCForm {
     typeof obj[ContactInfoKeys.EMAIL_ADDRESS] === 'string' &&
     typeof obj[ContactInfoKeys.COMPANY_WEBSITE] === 'string' &&
     typeof obj[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE] === 'string' &&
-    typeof obj.registrationCertificateId === 'string' &&
-    typeof obj.taxCertificateId === 'string' &&
-    typeof obj.representativeIdCardId === 'string'
+    typeof obj.registrationCertificateFileId === 'number' &&
+    typeof obj.taxCertificateFileId === 'number' &&
+    typeof obj.representativeIdCardFileId === 'number'
   );
 }
 
@@ -120,14 +120,17 @@ export function isKYCFormComplete(data: ICompanyKYCForm): {
   ) {
     missingFields.push('representativeIdType');
   }
-  if (typeof data.registrationCertificateId !== 'string' || !data.registrationCertificateId) {
-    missingFields.push('registrationCertificateId');
+  if (
+    typeof data.registrationCertificateFileId !== 'number' ||
+    !data.registrationCertificateFileId
+  ) {
+    missingFields.push('registrationCertificateFileId');
   }
-  if (typeof data.taxCertificateId !== 'string' || !data.taxCertificateId) {
-    missingFields.push('taxCertificateId');
+  if (typeof data.taxCertificateFileId !== 'number' || !data.taxCertificateFileId) {
+    missingFields.push('taxCertificateFileId');
   }
-  if (typeof data.representativeIdCardId !== 'string' || !data.representativeIdCardId) {
-    missingFields.push('representativeIdCardId');
+  if (typeof data.representativeIdCardFileId !== 'number' || !data.representativeIdCardFileId) {
+    missingFields.push('representativeIdCardFileId');
   }
   return {
     isComplete: missingFields.length === 0,

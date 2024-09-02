@@ -1,15 +1,20 @@
 import prisma from '@/client';
-import { Admin, Company, Prisma } from '@prisma/client';
+import { Admin, Company, Prisma, File } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { ROLE_NAME } from '@/constants/role_name';
 
-export async function getCompanyById(companyId: number): Promise<Company | null> {
-  let company: Company | null = null;
+export async function getCompanyById(
+  companyId: number
+): Promise<(Company & { imageFile: File | null }) | null> {
+  let company: (Company & { imageFile: File | null }) | null = null;
   if (companyId > 0) {
     company = await prisma.company.findUnique({
       where: {
         id: companyId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        imageFile: true,
       },
     });
   }
@@ -66,7 +71,7 @@ export async function updateCompanyById(
   name?: string,
   regional?: string,
   imageId?: number
-): Promise<Company> {
+): Promise<Company & { imageFile: File | null }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
@@ -86,11 +91,16 @@ export async function updateCompanyById(
       updatedAt: nowTimestamp,
       imageFile: fileConnect,
     },
+    include: {
+      imageFile: true,
+    },
   });
   return company;
 }
 
-export async function deleteCompanyById(companyId: number): Promise<Company> {
+export async function deleteCompanyById(
+  companyId: number
+): Promise<Company & { imageFile: File | null }> {
   const nowInSecond = getTimestampNow();
 
   const where: Prisma.CompanyWhereUniqueInput = {
@@ -103,9 +113,14 @@ export async function deleteCompanyById(companyId: number): Promise<Company> {
     deletedAt: nowInSecond,
   };
 
+  const include = {
+    imageFile: true,
+  };
+
   const updateArgs = {
     where,
     data,
+    include,
   };
 
   const company = await prisma.company.update(updateArgs);

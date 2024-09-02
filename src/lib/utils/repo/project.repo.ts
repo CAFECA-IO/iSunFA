@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { Employee, Project, Value } from '@prisma/client';
+import { Employee, File, Project, Value } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
@@ -24,6 +24,7 @@ export async function listProject(companyId: number) {
           contracts: true,
         },
       },
+      imageFile: true,
     },
   });
   return listedProject;
@@ -34,6 +35,7 @@ export async function getProjectById(projectId: number): Promise<
       employeeProjects: { employee: Employee }[];
       value: Value | null;
       _count: { contracts: number };
+      imageFile: File | null;
     })
   | null
 > {
@@ -45,6 +47,7 @@ export async function getProjectById(projectId: number): Promise<
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
+        imageFile: true,
         employeeProjects: {
           select: {
             employee: true,
@@ -73,6 +76,7 @@ export async function createProject(
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
+    imageFile: File | null;
   }
 > {
   const now = Date.now();
@@ -141,6 +145,7 @@ export async function createProject(
           contracts: true,
         },
       },
+      imageFile: true,
     },
   });
   return createdProject;
@@ -155,6 +160,7 @@ export async function updateProjectById(
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
+    imageFile: File | null;
   }
 > {
   const now = Date.now();
@@ -169,6 +175,7 @@ export async function updateProjectById(
       updatedAt: nowTimestamp,
     },
     include: {
+      imageFile: true,
       employeeProjects: {
         include: {
           employee: {

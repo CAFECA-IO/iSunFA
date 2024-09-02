@@ -13,7 +13,7 @@ export function formatUser(
     fullName: user.fullName ?? '',
     email: user.email ?? '',
     phone: user.phone ?? '',
-    imageId: user?.imageFile?.name ?? '',
+    imageId: user?.imageFile?.url ?? '',
     agreementList,
   };
 
@@ -21,7 +21,7 @@ export function formatUser(
 }
 
 export async function formatUserList(
-  userList: (User & { userAgreements: UserAgreement[]; imageFile: File })[]
+  userList: (User & { userAgreements: UserAgreement[]; imageFile: File | null })[]
 ): Promise<IUser[]> {
   const formattedUserList: IUser[] = userList.map((user) => {
     const formattedUser: IUser = formatUser(user);

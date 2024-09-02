@@ -67,7 +67,7 @@ const KYCForm = () => {
     setStep(newStep);
   };
 
-  const handleDocumentChange = (key: UploadDocumentKeys, id: string | undefined) => {
+  const handleDocumentChange = (key: UploadDocumentKeys, id: number | undefined) => {
     setUploadDocuments((prev) => ({ ...prev, [key]: id }));
   };
 
