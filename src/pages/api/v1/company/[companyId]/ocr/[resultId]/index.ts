@@ -114,13 +114,21 @@ export async function handleGetRequest(resultId: string, type: string = 'invoice
       case 'invoice': {
         ocrResult = await getPayloadFromResponseJSON(fetchResult);
         if (ocrResult) {
-          setOCRResultJournalId(ocrResult, null);
-          formatOCRResultDate(ocrResult);
+          let newOcr: IInvoice | null = setOCRResultJournalId(ocrResult, null);
+          newOcr = formatOCRResultDate(newOcr);
 
-          if (!isIInvoice(ocrResult)) {
+          if (!isIInvoice(newOcr)) {
             // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-            ocrResult = null;
+            logger.error(
+              {
+                newOcr,
+              },
+              `Error in ocr/[resultId]: ocr/${resultId}, Invoice json from AICH is not valid`
+            );
+            newOcr = null;
           }
+
+          ocrResult = newOcr;
         }
 
         break;
@@ -167,9 +175,9 @@ export default async function handler(
   let payload: APIReturnType = null;
   let status: string = STATUS_MESSAGE.BAD_REQUEST;
 
+  const { resultId, type } = req.query;
   if (isAuth) {
     try {
-      const { resultId, type } = req.query;
       if (!isResultIdValid(resultId)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
@@ -191,6 +199,7 @@ export default async function handler(
       }
     } catch (_error) {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      logger.error(_error, `Error in ocr/[resultId]: ocr/${resultId}`);
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

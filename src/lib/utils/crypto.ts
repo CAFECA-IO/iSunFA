@@ -313,3 +313,21 @@ export async function getPrivateKeyByCompany(companyId: number): Promise<CryptoK
 
   return privateKey;
 }
+
+export function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  const arrayBuffer = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.length; i += 1) {
+    view[i] = buffer[i];
+  }
+  return arrayBuffer;
+}
+
+export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
+  const buffer = Buffer.alloc(arrayBuffer.byteLength);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.length; i += 1) {
+    buffer[i] = view[i];
+  }
+  return buffer;
+}
