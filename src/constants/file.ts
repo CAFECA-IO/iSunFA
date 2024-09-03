@@ -59,3 +59,5 @@ export function getFileFolder(folder: FileFolder): string {
 export const UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER = Object.values(FileFolder).map(
   (folder) => getFileFolder(folder)
 );
+
+export const PUBLIC_IMAGE_ID = 1000;

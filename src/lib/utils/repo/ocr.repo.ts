@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
+import { SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ocrIncludeFile } from '@/interfaces/ocr';
@@ -44,7 +45,7 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   };
 
   const orderBy: Prisma.OcrOrderByWithRelationInput = {
-    createdAt: 'asc',
+    createdAt: SortOrder.ASC,
   };
 
   const include: Prisma.OcrInclude = {

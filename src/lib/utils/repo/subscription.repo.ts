@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
 import { SubscriptionPeriod } from '@/constants/subscription';
 import { ONE_DAY_IN_S } from '@/constants/time';
 import { ISubscription } from '@/interfaces/subscription';
@@ -84,7 +85,7 @@ export async function listSubscriptions(companyId: number): Promise<ISubscriptio
       companyId,
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
   });
   return subscriptions;

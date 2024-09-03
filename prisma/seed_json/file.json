@@ -1,7 +1,6 @@
 [
   {
     "id": 1000,
-    "companyId": 1000,
     "name": "100000.jpg",
     "size": 1024.5,
     "mimeType": "image/jpeg",
@@ -16,7 +15,6 @@
   },
   {
     "id": 1001,
-    "companyId": 1000,
     "name": "100001.pdf",
     "size": 2048.75,
     "mimeType": "application/pdf",
@@ -31,7 +29,6 @@
   },
   {
     "id": 1002,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -46,7 +43,6 @@
   },
   {
     "id": 1003,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -61,7 +57,6 @@
   },
   {
     "id": 1004,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -76,7 +71,6 @@
   },
   {
     "id": 1005,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -91,7 +85,6 @@
   },
   {
     "id": 1006,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -106,7 +99,6 @@
   },
   {
     "id": 1007,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -121,7 +113,6 @@
   },
   {
     "id": 1008,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",
@@ -136,7 +127,6 @@
   },
   {
     "id": 1009,
-    "companyId": 1000,
     "name": "100002.png",
     "size": 512.25,
     "mimeType": "image/png",

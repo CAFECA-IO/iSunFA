@@ -25,7 +25,7 @@ export async function findManyJournalsInPrisma(
   try {
     journals = await prisma.journal.findMany({
       orderBy: {
-        createdAt: sort === 'asc' ? 'asc' : 'desc',
+        createdAt: sort === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC,
       },
       skip: offset,
       take: limit,

@@ -21,6 +21,7 @@ import { convertStringToReportSheetType, isReportSheetType } from '@/lib/utils/t
 import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { SortOrder } from '@/constants/sort';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -107,10 +108,11 @@ function formatSortBy(sortBy: unknown): 'code' | 'createdAt' | undefined {
   return formattedSortBy;
 }
 
-function formatSortOrder(sortOrder: unknown): 'asc' | 'desc' | undefined {
-  let formattedSortOrder: 'asc' | 'desc' | undefined;
+function formatSortOrder(sortOrder: unknown): SortOrder.ASC | SortOrder.DESC | undefined {
+  let formattedSortOrder: SortOrder.ASC | SortOrder.DESC | undefined;
   if (sortOrder && typeof sortOrder === 'string') {
-    formattedSortOrder = sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : undefined;
+    formattedSortOrder =
+      sortOrder === SortOrder.ASC || sortOrder === SortOrder.DESC ? sortOrder : undefined;
   }
   return formattedSortOrder;
 }
