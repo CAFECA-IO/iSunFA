@@ -182,3 +182,20 @@ export async function deleteFileByName(name: string) {
 
   return file;
 }
+
+export async function deleteFileByIdForTesting(fileId: number) {
+  const where: Prisma.FileWhereUniqueInput = {
+    id: fileId,
+  };
+
+  let file: File | null = null;
+  try {
+    file = await prisma.file.delete({
+      where,
+    });
+  } catch (error) {
+    logger.error(error, 'Error happened in deleteFileByIdForTest in file.repo.ts');
+  }
+
+  return file;
+}

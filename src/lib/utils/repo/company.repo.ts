@@ -71,11 +71,7 @@ export async function updateCompanyById(
       name,
       regional,
       updatedAt: nowTimestamp,
-      imageFile: {
-        connect: {
-          id: imageId,
-        },
-      },
+      imageFileId: imageId,
     },
     include: {
       imageFile: true,

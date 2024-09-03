@@ -92,24 +92,18 @@ export async function updateUserById(
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
-  const updatedUser: Prisma.UserUpdateInput = {
-    name,
-    fullName,
-    email,
-    phone,
-    updatedAt: nowTimestamp,
-    imageFile: {
-      connect: {
-        id: imageId,
-      },
-    },
-  };
-
   const user = await prisma.user.update({
     where: {
       id: userId,
     },
-    data: updatedUser,
+    data: {
+      name,
+      fullName,
+      email,
+      phone,
+      updatedAt: nowTimestamp,
+      imageFileId: imageId,
+    },
     include: {
       userAgreements: true,
       imageFile: true,
