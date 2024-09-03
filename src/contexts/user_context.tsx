@@ -226,7 +226,51 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
-  // Info: (20240409 - Shirley) 在用戶一進到網站後就去驗證是否登入
+  /** Info: (20240903 - Shirley)
+   * 前端登入流程：
+   * 1. 當用戶點擊登入按鈕時，會調用 `authenticateUser` 函數，傳入選擇的登入方式（如 Google 或 Apple）和登入頁面的 props。
+   * 2. `authenticateUser` 函數會調用 `authSignIn` 函數（來自 `next-auth/react`），傳入選擇的登入方式和額外的參數，開始 OAuth2.0 的登入流程。
+   * 3. 登入流程跳轉到 `[...nextauth].ts` 中的 `/api/auth/signin` 路由，該路由由 NextAuth 處理。
+   * 4. NextAuth 根據選擇的登入方式（如 Google 或 Apple），跳轉到相應的 OAuth 提供者進行用戶認證。
+   * 5. 用戶在 OAuth 提供者的頁面上輸入憑證並授權應用訪問其資料。
+   * 6. OAuth 提供者認證成功後，會將用戶重定向回應用的 `/api/auth/callback/:provider` 路由，該路由也由 NextAuth 處理。
+   * 7. NextAuth 在 `[...nextauth].ts` 的 `signIn` 回調函數中處理登入成功後的邏輯：
+   *    - 檢查用戶是否已存在於資料庫中，如果不存在則創建新用戶。
+   *    - 調用 `setSession` 函數（來自 `session.ts`）將用戶的 ID 存儲在 session 中。
+   * 8. 登入成功後，NextAuth 會將用戶重定向到應用的主頁面(iSunFA login page)。
+   * 9. 在主頁面(iSunFA login page)中，`UserProvider` 組件會調用 `getStatusInfo` 函數來獲取當前登入用戶和公司的資料。
+   *    - `getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 會攜帶 NextAuth 管理的 session。
+   *    - 在 `status_info.ts` 中的 `handleGetRequest` 函數中，通過調用 `getSession` 函數（來自 `session.ts`）獲取當前請求的 session，並從中獲取用戶的 ID 和公司 ID。
+   *    - 根據獲取到的用戶 ID 和公司 ID，從資料庫中獲取相應的用戶和公司資料，並返回給前端。
+   *    - 如果回傳的資料有 user 但沒有 company，透過 `handleSignInRoute` 將用戶導向選擇公司的頁面，有 user 跟 company 則透過 `handleReturnUrl` 將用戶導向之前儀表板/嘗試訪問的頁面。
+   * 10. 如果 `getStatusInfoAPI` 請求成功，並且返回的數據中包含用戶和公司的資訊：
+   *     - 將這些資料存儲到 React 的 state 中。
+   *     - 將用戶 ID 存儲到 localStorage 中。
+   *     - 設置一個過期時間（例如 1 小時後），並將其存儲到 localStorage 中。
+   * 11. React state 中的用戶和公司資料會通過 `UserContext` 提供給應用的其他組件使用。
+   * 12. 檢查用戶是否已同意所有必要的條款：
+   *     - 如果用戶尚未同意所有必要的條款（如資訊收集同意書和服務條款），系統會顯示相應的同意書頁面。
+   *     - 用戶需要閱讀並同意這些條款。
+   * 13. 當用戶同意條款時：
+   *     - 調用 `handleUserAgree` 函數，該函數會發送 API 請求（`agreementAPI`）來更新用戶的同意狀態。
+   *     - 如果 API 請求成功，更新本地 state 中的用戶同意狀態（`setIsAgreeInfoCollection` 和 `setIsAgreeTosNPrivacyPolicy`）。
+   * 14. 當用戶同意所有必要的條款後：
+   *     - 如果用戶尚未選擇公司，系統會將用戶重定向到選擇公司的頁面。
+   *     - 如果用戶已經選擇了公司，系統會將用戶重定向到儀表板或之前嘗試訪問的頁面（如果有的話）。
+   * 15. 在每次頁面加載或路由變更時，系統會檢查 localStorage 中的用戶 ID 和過期時間：
+   *     - 如果存在有效的用戶 ID 和未過期的時間戳，系統會嘗試重新獲取用戶狀態（調用 `getStatusInfo`）。
+   *     - 如果 localStorage 中的數據已過期或不存在，系統會清除 state 並將用戶重定向到登入頁面。
+   *
+   * 總結：
+   * - NextAuth 負責管理 OAuth2.0 的登入流程，並在登入成功後調用 `setSession` 函數將用戶的 ID 存儲在 session 中。
+   * - 在主頁面(iSunFA login page)中，`getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 通過 `getSession` 函數從 NextAuth 管理的 session 中獲取當前登入用戶的 ID 和公司 ID，並根據這些 ID 從資料庫中獲取相應的用戶和公司資料。
+   * - 獲取到的用戶和公司資料會存儲到 React 的 state 中，並通過 `UserContext` 提供給應用的其他組件使用。
+   * - 用戶 ID 和登入狀態的過期時間會被存儲在 localStorage 中，用於在頁面刷新或重新訪問時快速恢復用戶狀態。
+   * - `session.ts` 中提供的 `getSession` 和 `setSession` 函數封裝了 `next-session` 庫的功能，不僅 NextAuth 可以使用這些函數來操作 session，其他後端檔案（如 API 路由）也可以通過調用這些函數來讀取和修改 session。
+   * - 登入流程包含了檢查和處理用戶同意條款的邏輯，確保用戶在使用系統之前已經同意了所有必要的條款。
+   * - 用戶同意條款的狀態會被更新到資料庫中，並反映在本地 state 中，影響後續的導航邏輯。
+   * - 系統使用 localStorage 來保存用戶的登入狀態，以提高用戶體驗並減少不必要的 API 請求。
+   */
   const getStatusInfo = useCallback(async () => {
     const isNeed = isProfileFetchNeeded();
     if (!isNeed) return;
@@ -287,6 +331,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setIsAuthLoading(false);
   }, [router.pathname]);
+
+  // Info: (20240903 - Shirley) 第一次登入，在用戶同意後，重新導向到選擇公司的頁面
+  useEffect(() => {
+    handleSignInRoute();
+  }, [userAgreeResponseRef.current]);
 
   const handleUserAgree = async (hash: Hash) => {
     try {
@@ -450,6 +499,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoadingRef.current,
       returnUrlRef.current,
       router.pathname,
+      userAuthRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

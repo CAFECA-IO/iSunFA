@@ -41,6 +41,7 @@ const PreviewInvoiceModal = ({
   // Info: (20240508 - Julian) 下載
   const downloadClickHandler = () => {
     messageModalDataHandler({
+      // ToDo: (20240902 - Shirley) i18n
       title: 'Download Selected Voucher',
       content: 'Are you sure you want to download the selected items?',
       messageType: MessageType.INFO,

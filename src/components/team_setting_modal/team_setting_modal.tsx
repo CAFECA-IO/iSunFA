@@ -67,6 +67,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     }
   }, [isModalVisible, selectedCompany]);
 
+  // ToDo: (20240902 - Shirley) 整個 i18n
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-surface-neutral-surface-lv2 pb-5 pt-2 shadow-lg shadow-black/80 lg:w-500px">
