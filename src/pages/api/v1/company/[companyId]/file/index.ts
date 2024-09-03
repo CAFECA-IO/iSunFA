@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getFileFolder, UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
+import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { findFileByName, parseForm } from '@/lib/utils/parse_image_form';
+import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
 import { updateCompanyById } from '@/lib/utils/repo/company.repo';
@@ -17,6 +17,7 @@ import { isEnumValue } from '@/lib/utils/type_guard/common';
 import logger from '@/lib/utils/logger';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
+import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 
 export const config = {
   api: {
@@ -68,8 +69,10 @@ async function handleFileUpload(
   switch (type) {
     case UploadType.KYC:
     case UploadType.INVOICE: {
-      const baseFolder = getFileFolder(UPLOAD_TYPE_TO_FOLDER_MAP[type]);
-      const localUrl = await findFileByName(baseFolder, fileName);
+      const localUrl = generateFilePathWithBaseUrlPlaceholder(
+        fileName,
+        UPLOAD_TYPE_TO_FOLDER_MAP[type]
+      );
       fileUrl = localUrl || '';
       break;
     }

@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { getSession } from '@/lib/utils/session';
-import { findFileByName, readFile } from '@/lib/utils/parse_image_form';
-import { formatApiResponse } from '@/lib/utils/common';
+import { readFile } from '@/lib/utils/parse_image_form';
+import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import logger from '@/lib/utils/logger';
-import { FileFolder, getFileFolder } from '@/constants/file';
+import { FileFolder } from '@/constants/file';
+import { File } from '@prisma/client';
+import { findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
+import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 
 function formatFileType(fileType: unknown): FileFolder {
   let result = FileFolder.TMP;
@@ -30,6 +33,19 @@ function formatQueryParams(req: NextApiRequest) {
     fileFolder,
   };
 }
+
+async function getFileFromDB(imageId: string) {
+  let file: File | null;
+  if (isStringNumber(imageId)) {
+    const fileIdInt = Number(imageId);
+    file = await findFileById(fileIdInt);
+  } else {
+    file = await findFileInDBByName(imageId);
+  }
+
+  return file;
+}
+
 async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: Buffer | null = null;
@@ -43,14 +59,16 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
-    const { imageId, fileFolder } = formatQueryParams(req);
-    const folderPath = getFileFolder(fileFolder);
-    const filePath = await findFileByName(folderPath, imageId);
+    const { imageId } = formatQueryParams(req);
+    // Info: (20240903 - Murky) 這裡假定所有的file.url都可以確實指向該檔案，不需要重新組裝路徑
+    const file = await getFileFromDB(imageId);
 
-    if (!filePath) {
-      logger.info(`Image file not found in image/[imageId]: ${imageId}`);
+    if (!file) {
+      logger.info(`Image file not found in DB in image/[imageId]: ${imageId}`);
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
+
+    const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
 
     const fileBuffer = await readFile(filePath);
     if (!fileBuffer) {
@@ -58,7 +76,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
-    payload = fileBuffer;
+    payload = await decryptImageFile({ imageBuffer: fileBuffer, file, companyId: file.companyId });
   } catch (_error) {
     const error = _error as Error;
     logger.error(error, `Error in GET image/[imageId]:`);

@@ -28,6 +28,7 @@ import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
 import logger from '@/lib/utils/logger';
 import { bufferToBlob, findFileByName, readFile } from '@/lib/utils/parse_image_form';
 import { findFileById } from '@/lib/utils/repo/file.repo';
+import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 
 export async function readImageFromFilePath(
   fileName: string,
@@ -145,6 +146,19 @@ export async function getPayloadFromResponseJSON(
   return json.payload as IAccountResultStatus;
 }
 
+async function readFileFromLocalUrl(url: string): Promise<Buffer> {
+  const filePath = parseFilePathWithBaseUrlPlaceholder(url);
+
+  const fileBuffer = await readFile(filePath);
+  if (!fileBuffer) {
+    logger.info(
+      `Error in reading image file from local url in OCR (but image existed), Url : ${url}`
+    );
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
+  return fileBuffer;
+}
+
 // Info: (20240521 - Murky) 回傳目前還是 array 的型態，因為可能會有多張圖片一起上傳
 // 上傳圖片的時候把每個圖片的欄位名稱都叫做"image" 就可以了
 type postAICHReturnType = {
@@ -177,8 +191,14 @@ export async function postImageToAICH(
       throw new Error(`File of fileId: ${fileId} not found in database`);
     }
 
-    const imageBlob = await readImageFromFilePath(file.url, file.mimeType);
-    const fetchResult = uploadImageToAICH(imageBlob, file.name);
+    const fileBuffer = await readFileFromLocalUrl(file.url);
+    const decryptFileBuffer = await decryptImageFile({
+      imageBuffer: fileBuffer,
+      file,
+      companyId: file.companyId,
+    });
+    const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
+    const fetchResult = uploadImageToAICH(decryptFileBlob, file.name);
 
     const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
     result = {
@@ -187,6 +207,7 @@ export async function postImageToAICH(
       type: 'invoice',
       uploadIdentifier,
     };
+    logger.info(result, `Ocr postImageToAICH result, field: ${fileId}`);
   } catch (error) {
     // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     logger.error(error, 'Ocr postImageToAICH error, happen when POST Image to AICH API');
