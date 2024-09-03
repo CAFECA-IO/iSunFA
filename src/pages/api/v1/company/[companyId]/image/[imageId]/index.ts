@@ -52,7 +52,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     const session = await getSession(req, res);
-    const { userId } = session;
+    const { userId, companyId } = session;
     const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
     if (!isAuth) {
       logger.info(`Unauthorized access in image/[imageId] by user: ${userId}`);
@@ -76,7 +76,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
-    payload = await decryptImageFile({ imageBuffer: fileBuffer, file, companyId: file.companyId });
+    payload = await decryptImageFile({ imageBuffer: fileBuffer, file, companyId });
   } catch (_error) {
     const error = _error as Error;
     logger.error(error, `Error in GET image/[imageId]:`);

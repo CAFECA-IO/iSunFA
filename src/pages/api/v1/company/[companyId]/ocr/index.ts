@@ -168,6 +168,7 @@ type postAICHReturnType = {
   uploadIdentifier: string;
 };
 export async function postImageToAICH(
+  companyId: number,
   fileId: number,
   uploadIdentifier: string
 ): Promise<postAICHReturnType[]> {
@@ -195,7 +196,7 @@ export async function postImageToAICH(
     const decryptFileBuffer = await decryptImageFile({
       imageBuffer: fileBuffer,
       file,
-      companyId: file.companyId,
+      companyId,
     });
     const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
     const fetchResult = uploadImageToAICH(decryptFileBlob, file.name);
@@ -432,7 +433,7 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
     const { fileId, uploadIdentifier } = formatFormBody(req);
-    const aichResults = await postImageToAICH(fileId, uploadIdentifier);
+    const aichResults = await postImageToAICH(companyId, fileId, uploadIdentifier);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
