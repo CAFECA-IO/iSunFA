@@ -288,6 +288,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAuthLoading(false);
   }, [router.pathname]);
 
+  // Info: (20240903 - Shirley) 第一次登入，在用戶同意後，重新導向到選擇公司的頁面
+  useEffect(() => {
+    handleSignInRoute();
+  }, [userAgreeResponseRef.current]);
+
   const handleUserAgree = async (hash: Hash) => {
     try {
       setIsAuthLoading(true);
