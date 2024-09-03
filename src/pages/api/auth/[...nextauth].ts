@@ -27,6 +27,49 @@ import { User } from '@prisma/client';
   * next-auth 集成：此檔案配置了不同的 OAuth 提供者（如 Google 和 Apple），並處理與用戶認證、會話管理等相關的所有操作
 */
 
+/** Info: (20240903 - Shirley)
+ * 後端登入流程：
+ * 1. 當用戶在前端點擊登入按鈕並選擇登入方式後，NextAuth 會處理 `/api/auth/signIn` 路由的請求。
+ * 2. NextAuth 根據選擇的登入方式（如 Google 或 Apple），將用戶重定向到相應的 OAuth 提供者進行認證。
+ * 3. 用戶在 OAuth 提供者的頁面上完成認證後，提供者會將用戶重定向回應用的 `/api/auth/callback/:provider` 路由。
+ * 4. NextAuth 處理這個回調路由，並觸發 `signIn` 回調函數：
+ *    a. 通過 `getUserByCredential` 函數檢查用戶是否已存在於資料庫中。
+ *    b. 如果用戶不存在：
+ *       - 使用 `createUserByAuth` 函數在資料庫中創建新用戶。
+ *       - 如果用戶有頭像，使用 `fetchImageInfo` 獲取頭像信息，否則使用 `generateIcon` 生成默認頭像。
+ *       - 使用 `createFileAndConnectUser` 函數將用戶頭像保存為文件並與用戶關聯。
+ *    c. 無論是新用戶還是已存在的用戶，都使用 `setSession` 函數將用戶的 ID 存儲在 session 中。
+ * 5. 登入成功後，NextAuth 將用戶重定向回應用的主頁面(iSunFA login page)。
+ *
+ * 後續的 API 請求處理：
+ * 6. 當前端調用 `getStatusInfo` API 時，後端的 `status_info.ts` 處理這個請求：
+ *    a. 使用 `getSession` 函數獲取當前請求的 session，從中提取用戶 ID 和公司 ID。
+ *    b. 使用 `getUserById` 函數從資料庫獲取用戶詳細信息。
+ *    c. 如果 session 中有公司 ID，則使用 `getCompanyById` 函數獲取公司詳細信息。
+ *    d. 將獲取到的用戶和公司信息格式化後返回給前端。
+ *
+ * 用戶同意條款的處理：
+ * 7. 當用戶同意條款時，前端會調用相應的 API，後端處理這個請求：
+ *    a. 驗證用戶的 session。
+ *    b. 更新資料庫中用戶的同意狀態。
+ *    c. 返回更新結果給前端。
+ *
+ * 選擇公司的處理：
+ * 8. 當用戶選擇公司時，前端會調用相應的 API，後端處理這個請求：
+ *    a. 驗證用戶的 session。
+ *    b. 更新資料庫中用戶的公司關聯。
+ *    c. 使用 `setSession` 函數更新 session 中的公司 ID。
+ *    d. 返回更新結果給前端。
+ *
+ * 總結：
+ * - 後端使用 NextAuth 處理 OAuth2.0 的認證流程。
+ * - `session.ts` 中的 `getSession` 和 `setSession` 函數被用於管理用戶的 session，這些函數可以被 NextAuth 和其他 API 路由使用。
+ * - 用戶數據的創建、讀取和更新操作都通過資料庫操作函數（如 `getUserByCredential`, `createUserByAuth` 等）來完成。
+ * - API 路由（如 `status_info.ts`）使用 `getSession` 函數來獲取當前用戶的 session 信息，確保只有已登入的用戶可以訪問受保護的資源。
+ * - 用戶同意條款不會更新 session，而是更新資料庫中的用戶同意狀態。
+ * - 選擇公司的操作更新資料庫和 session，確保用戶狀態的一致性。
+ */
+
 // const generateAppleClientSecret = () => {
 //   const privateKey = process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 //   if (!privateKey) {
