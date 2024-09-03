@@ -499,6 +499,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthLoadingRef.current,
       returnUrlRef.current,
       router.pathname,
+      userAuthRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
