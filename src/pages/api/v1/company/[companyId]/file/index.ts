@@ -86,7 +86,6 @@ async function handleFileUpload(
 
   const fileInDB = await createFile({
     name: fileName,
-    companyId: targetIdNum,
     size: fileSize,
     mimeType: fileMimeType,
     type: UPLOAD_TYPE_TO_FOLDER_MAP[type],

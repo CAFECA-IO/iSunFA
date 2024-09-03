@@ -252,11 +252,11 @@ async function createLineItems() {
 }
 
 async function main() {
+  await createFile();
   await createCompany();
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });
-  await createFile();
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
   });

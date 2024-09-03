@@ -109,7 +109,7 @@ CREATE TABLE "company" (
     "code" TEXT NOT NULL,
     "regional" TEXT NOT NULL,
     "kyc_status" BOOLEAN NOT NULL,
-    "image_file_id" INTEGER,
+    "image_file_id" INTEGER NOT NULL,
     "start_date" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -244,7 +244,6 @@ CREATE TABLE "employee_project" (
 -- CreateTable
 CREATE TABLE "file" (
     "id" SERIAL NOT NULL,
-    "company_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "size" DOUBLE PRECISION NOT NULL,
     "mime_type" TEXT NOT NULL,
@@ -394,7 +393,7 @@ CREATE TABLE "project" (
     "name" TEXT NOT NULL,
     "completed_percent" INTEGER NOT NULL,
     "stage" TEXT NOT NULL,
-    "image_id" INTEGER,
+    "image_file_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
@@ -563,7 +562,7 @@ CREATE TABLE "user" (
     "full_name" TEXT,
     "email" TEXT,
     "phone" TEXT,
-    "image_File_id" INTEGER,
+    "image_File_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
@@ -658,9 +657,6 @@ CREATE UNIQUE INDEX "account_code_key" ON "account"("code");
 CREATE UNIQUE INDEX "authentication_credential_id_key" ON "authentication"("credential_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "company_code_key" ON "company"("code");
-
--- CreateIndex
 CREATE UNIQUE INDEX "contract_payment_id_key" ON "contract"("payment_id");
 
 -- CreateIndex
@@ -719,7 +715,7 @@ CREATE UNIQUE INDEX "invoice_image_file_id_key" ON "invoice"("image_file_id");
 CREATE UNIQUE INDEX "ocr_image_file_id_key" ON "ocr"("image_file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "project_image_id_key" ON "project"("image_id");
+CREATE UNIQUE INDEX "project_image_file_id_key" ON "project"("image_file_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_image_File_id_key" ON "user"("image_File_id");
@@ -890,7 +886,7 @@ ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_vouche
 ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "company" ADD CONSTRAINT "company_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "company" ADD CONSTRAINT "company_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_registration_certificate_file_id_fkey" FOREIGN KEY ("registration_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -902,20 +898,16 @@ ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_tax_certificate_file_id_fk
 ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_representative_id_card_file_id_fkey" FOREIGN KEY ("representative_id_card_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "file" ADD CONSTRAINT "file_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "invoice" ADD CONSTRAINT "invoice_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ocr" ADD CONSTRAINT "ocr_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "project" ADD CONSTRAINT "project_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "project" ADD CONSTRAINT "project_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user" ADD CONSTRAINT "user_image_File_id_fkey" FOREIGN KEY ("image_File_id") REFERENCES "file"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
+ALTER TABLE "user" ADD CONSTRAINT "user_image_File_id_fkey" FOREIGN KEY ("image_File_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "admin_id_seq" RESTART WITH 10000000;

@@ -9,6 +9,7 @@ import ToggleButton from '@/components/toggle_button/toggle_button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { SortOrder } from '@/constants/sort';
 
 const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
 
@@ -142,12 +143,16 @@ const AuditReport = () => {
   ]);
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortDirection, setSortDirection] = useState<SortOrder.ASC | SortOrder.DESC>(SortOrder.ASC);
   const [checked, setChecked] = useState(false);
 
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
+  const compareCreditRatings = (
+    a: string,
+    b: string,
+    direction: SortOrder.ASC | SortOrder.DESC
+  ) => {
     const ratingOrder: { [key: string]: number } = {
       AAA: 1,
       AA: 2,
@@ -162,18 +167,19 @@ const AuditReport = () => {
     };
     const aRating = ratingOrder[a] || Number.MAX_SAFE_INTEGER;
     const bRating = ratingOrder[b] || Number.MAX_SAFE_INTEGER;
-    return direction === 'asc' ? aRating - bRating : bRating - aRating;
+    return direction === SortOrder.ASC ? aRating - bRating : bRating - aRating;
   };
 
   const handleSort = (column: string) => {
-    const direction = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    const direction =
+      sortBy === column && sortDirection === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
     setSortBy(column);
     setSortDirection(direction);
     const sortedData = data.sort((a, b) => {
       if (column === 'creditRating') {
         return compareCreditRatings(a[column], b[column], direction);
       } else {
-        return direction === 'asc'
+        return direction === SortOrder.ASC
           ? a[column].localeCompare(b[column])
           : b[column].localeCompare(a[column]);
       }

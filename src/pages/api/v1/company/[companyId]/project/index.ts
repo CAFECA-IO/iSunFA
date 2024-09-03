@@ -66,7 +66,6 @@ async function createFileAndConnectProject(
   const imageName = project.name + '_icon';
   const file = await createFile({
     name: imageName,
-    companyId: project.companyId, // Info: (20240902 - Murky) User don't have company, so use public company id
     size,
     mimeType,
     type: FileFolder.TMP,
