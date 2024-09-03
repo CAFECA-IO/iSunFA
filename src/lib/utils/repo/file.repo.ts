@@ -3,7 +3,6 @@ import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
 import { Prisma, File } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import logger from '@/lib/utils/logger';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
 /**
  * Info: (20240830 - Murky)
@@ -20,7 +19,6 @@ import { PUBLIC_COMPANY_ID } from '@/constants/company';
  */
 export async function createFile({
   name,
-  companyId = PUBLIC_COMPANY_ID,
   size,
   mimeType,
   type,
@@ -30,7 +28,6 @@ export async function createFile({
   iv,
 }: {
   name: string;
-  companyId?: number;
   size: number;
   mimeType: string;
   type: FileFolder;
@@ -44,12 +41,6 @@ export async function createFile({
 
   const nowInSecond = getTimestampNow();
 
-  const connectCompany: Prisma.CompanyCreateNestedOneWithoutFilesInput = {
-    connect: {
-      id: companyId,
-    },
-  };
-
   const fileData: Prisma.FileCreateInput = {
     name,
     size,
@@ -61,7 +52,6 @@ export async function createFile({
     iv: ivBuffer,
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
-    company: connectCompany,
   };
 
   let file: File | null = null;

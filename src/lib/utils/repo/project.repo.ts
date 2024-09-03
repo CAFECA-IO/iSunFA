@@ -70,14 +70,14 @@ export async function createProject(
   companyId: number,
   name: string,
   stage: Milestone,
-  members?: number[],
-  imageId?: number
+  imageId: number,
+  members?: number[]
 ): Promise<
   Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
-    imageFile: File | null;
+    imageFile: File;
   }
 > {
   const now = Date.now();
@@ -88,6 +88,7 @@ export async function createProject(
       companyId,
       name,
       stage,
+      imageFileId: imageId,
       employeeProjects: {
         create: (members ?? []).map((memberId: number) => ({
           employeeId: memberId,
@@ -121,7 +122,6 @@ export async function createProject(
       completedPercent: 0,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
-      imageFileId: imageId,
     },
     include: {
       employeeProjects: {

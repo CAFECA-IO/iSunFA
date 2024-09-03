@@ -92,19 +92,17 @@ export async function updateUserById(
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
-  const fileConnect: Prisma.FileUpdateOneWithoutUserImageFileNestedInput = {
-    connect: {
-      id: imageId,
-    },
-  };
-
   const updatedUser: Prisma.UserUpdateInput = {
     name,
     fullName,
     email,
     phone,
     updatedAt: nowTimestamp,
-    imageFile: fileConnect,
+    imageFile: {
+      connect: {
+        id: imageId,
+      },
+    },
   };
 
   const user = await prisma.user.update({

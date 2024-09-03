@@ -3,7 +3,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { IRole } from '@/interfaces/role';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import {
   formatCompanyAndRole,
   formatCompanyAndRoleList,
@@ -18,9 +18,8 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
-import { connectFileById, createFile } from '@/lib/utils/repo/file.repo';
-import { Company } from '@prisma/client';
-import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import { FileFolder } from '@/constants/file';
 
 async function checkInput(code: string, name: string, regional: string): Promise<boolean> {
   return !!code && !!name && !!regional;
@@ -50,33 +49,6 @@ async function handleGetRequest(
   }
 
   return { statusMessage, payload };
-}
-
-async function createFileAndConnectCompany(
-  companyIcon: {
-    iconUrl: string;
-    mimeType: string;
-    size: number;
-  },
-  company: Company
-) {
-  const { iconUrl, mimeType, size } = companyIcon;
-  const imageName = company.name + '_icon';
-  const file = await createFile({
-    name: imageName,
-    companyId: company.id,
-    size,
-    mimeType,
-    type: FileFolder.TMP,
-    url: iconUrl,
-    isEncrypted: false,
-    encryptedSymmetricKey: '',
-  });
-
-  if (file) {
-    await connectFileById(FileDatabaseConnectionType.COMPANY_IMAGE, file.id, company.id);
-  }
-  return file;
 }
 
 async function handlePostRequest(
@@ -109,19 +81,36 @@ async function handlePostRequest(
           statusMessage = STATUS_MESSAGE.DUPLICATE_COMPANY;
         } else {
           const companyIcon = await generateIcon(name);
-          const createdCompanyAndRole = await createCompanyAndRole(userId, code, name, regional);
+          const nowInSecond = getTimestampNow();
+          const imageName = name + '_icon' + nowInSecond;
+          const file = await createFile({
+            name: imageName,
+            size: companyIcon.size,
+            mimeType: companyIcon.mimeType,
+            type: FileFolder.TMP,
+            url: companyIcon.iconUrl,
+            isEncrypted: false,
+            encryptedSymmetricKey: '',
+          });
+          if (file) {
+            // Info: (20240830 - Murky) 將圖片存放在database之後connect company
+            const createdCompanyAndRole = await createCompanyAndRole(
+              userId,
+              code,
+              name,
+              regional,
+              file?.id
+            );
+            const newCompanyAndRole = formatCompanyAndRole(createdCompanyAndRole);
+            statusMessage = STATUS_MESSAGE.CREATED;
+            payload = newCompanyAndRole;
 
-          // Info: (20240830 - Murky) 將圖片存放在database之後connect company
-          await createFileAndConnectCompany(companyIcon, createdCompanyRoleList.company);
-          const newCompanyAndRole = await formatCompanyAndRole(createdCompanyRoleList);
-          statusMessage = STATUS_MESSAGE.CREATED;
-          payload = newCompanyAndRole;
+            // Info: (20240827 - Murky) Generate Company Key , only new company will generate key
+            const companyId = createdCompanyAndRole.company.id;
 
-          // Info: (20240827 - Murky) Generate Company Key , only new company will generate key
-          const companyId = createdCompanyAndRole.company.id;
-
-          const companyKeyPair = await generateKeyPair();
-          await storeKeyByCompany(companyId, companyKeyPair);
+            const companyKeyPair = await generateKeyPair();
+            await storeKeyByCompany(companyId, companyKeyPair);
+          }
         }
       }
     }

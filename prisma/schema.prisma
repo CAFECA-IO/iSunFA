@@ -131,13 +131,13 @@ model Company {
   code        String 
   regional    String
   kycStatus   Boolean @map("kyc_status")
-  imageFileId Int?    @unique @map("image_file_id")
+  imageFileId Int    @unique @map("image_file_id")
   startDate   Int     @map("start_date")
   createdAt   Int     @map("created_at")
   updatedAt   Int     @map("updated_at")
   deletedAt   Int?    @map("deleted_at")
 
-  imageFile File? @relation("company_image_file", fields: [imageFileId], references: [id])
+  imageFile File  @relation("company_image_file", fields: [imageFileId], references: [id])
 
   admins                     Admin[]
   clients                    Client[]
@@ -157,7 +157,6 @@ model Company {
   accounts                   Account[]
   reports                    Report[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
-  files                      File[]
 
   @@map("company")
 }
@@ -302,7 +301,6 @@ model EmployeeProject {
 
 model File {
   id                    Int     @id @default(autoincrement())
-  companyId             Int     @map("company_id")
   name                  String // Info: (20240830 - Murky) Name example: "100000.jpg"
   size                  Float // Info: (20240830 - Murky) File Size in bytes
   mimeType              String  @map("mime_type") // Info: (20240830 - Murky) File Mime Type ex: image/jpeg
@@ -314,7 +312,6 @@ model File {
   createdAt             Int     @map("created_at")
   updatedAt             Int     @map("updated_at")
   deletedAt             Int?    @map("deleted_at")
-  company               Company @relation(fields: [companyId], references: [id])
 
   companyKYCregistrationCertificateFile CompanyKYC? @relation("registration_certificate_file")
   companyKYCtaxCertificateFile          CompanyKYC? @relation("tax_certificate_file")
@@ -477,7 +474,7 @@ model Project {
   name             String
   completedPercent Int               @map("completed_percent")
   stage            String
-  imageFileId      Int?              @unique @map("image_id")
+  imageFileId      Int               @unique @map("image_file_id")
   createdAt        Int               @map("created_at")
   updatedAt        Int               @map("updated_at")
   deletedAt        Int?              @map("deleted_at")
@@ -492,7 +489,7 @@ model Project {
   income_expenses  IncomeExpense[]
 
   company   Company @relation(fields: [companyId], references: [id])
-  imageFile File?   @relation("project_image_file", fields: [imageFileId], references: [id])
+  imageFile File    @relation("project_image_file", fields: [imageFileId], references: [id])
 
   @@map("project")
 }
@@ -665,7 +662,7 @@ model User {
   fullName        String?          @map("full_name")
   email           String?
   phone           String?
-  imageFileId     Int?             @unique @map("image_File_id")
+  imageFileId     Int              @unique @map("image_File_id")
   createdAt       Int              @map("created_at")
   updatedAt       Int              @map("updated_at")
   deletedAt       Int?             @map("deleted_at")
@@ -674,7 +671,7 @@ model User {
   authentications Authentication[]
   userAgreements  UserAgreement[]
 
-  imageFile File? @relation("user_image_file", fields: [imageFileId], references: [id])
+  imageFile File @relation("user_image_file", fields: [imageFileId], references: [id])
 
   @@map("user")
 }
