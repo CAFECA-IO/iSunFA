@@ -416,7 +416,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const closeButton = closeable
       ? () => (
           <div className="h-20px w-20px">
-            <RxCross2 size={16} className="text-secondaryBlue" />
+            <RxCross2 size={16} className="text-button-text-secondary" />
           </div>
         )
       : false;

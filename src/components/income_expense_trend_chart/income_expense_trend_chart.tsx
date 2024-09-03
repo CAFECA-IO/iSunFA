@@ -277,7 +277,6 @@ const IncomeExpenseTrendChart = () => {
 
   const displayedChart = isNoData ? (
     <div className="mt-20">
-      {' '}
       <section className="flex flex-col items-center">
         <div>
           <svg
@@ -347,52 +346,50 @@ const IncomeExpenseTrendChart = () => {
   const displayedDataSection = (
     <div
       className={cn(
-        'flex flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px',
+        'flex flex-col rounded-2xl px-5 pb-9 pt-5 max-md:max-w-full md:h-400px',
         isNoData ? 'h-400px' : 'h-500px'
       )}
     >
-      <div>
-        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
-          <div className="lg:flex-1">
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#002462"
-                  fillRule="evenodd"
-                  d="M9.568 10.293a1.286 1.286 0 011.817-.064l2.786 2.599a1.286 1.286 0 01-1.754 1.88L9.631 12.11a1.286 1.286 0 01-.063-1.817zM19.413 6.265c.667.243 1.01.98.768 1.648l-2.01 5.518a1.286 1.286 0 11-2.415-.88l2.009-5.518a1.286 1.286 0 011.648-.768z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  fill="#002462"
-                  fillRule="evenodd"
-                  d="M2.571 1.286a1.286 1.286 0 00-2.571 0v21.428C0 23.424.576 24 1.286 24h21.428a1.286 1.286 0 000-2.571H2.571v-4.95l3.998-4.268a1.286 1.286 0 10-1.877-1.758l-2.12 2.264V1.287z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  fill="#FFA502"
-                  fillRule="evenodd"
-                  d="M4.429 9.652a3.424 3.424 0 106.848 0 3.424 3.424 0 00-6.848 0zM16.427 4.563a3.426 3.426 0 106.852 0 3.426 3.426 0 00-6.852 0zM12.192 15.74a3.429 3.429 0 106.857 0 3.429 3.429 0 00-6.857 0z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-              <p>
-                {t('project:PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
-                {t('project:PROJECT.INCOME_VS_EXPENDITURE')})
-              </p>
-            </div>
+      <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+        <div className="lg:flex-1">
+          <div className="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="#002462"
+                fillRule="evenodd"
+                d="M9.568 10.293a1.286 1.286 0 011.817-.064l2.786 2.599a1.286 1.286 0 01-1.754 1.88L9.631 12.11a1.286 1.286 0 01-.063-1.817zM19.413 6.265c.667.243 1.01.98.768 1.648l-2.01 5.518a1.286 1.286 0 11-2.415-.88l2.009-5.518a1.286 1.286 0 011.648-.768z"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#002462"
+                fillRule="evenodd"
+                d="M2.571 1.286a1.286 1.286 0 00-2.571 0v21.428C0 23.424.576 24 1.286 24h21.428a1.286 1.286 0 000-2.571H2.571v-4.95l3.998-4.268a1.286 1.286 0 10-1.877-1.758l-2.12 2.264V1.287z"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#FFA502"
+                fillRule="evenodd"
+                d="M4.429 9.652a3.424 3.424 0 106.848 0 3.424 3.424 0 00-6.848 0zM16.427 4.563a3.426 3.426 0 106.852 0 3.426 3.426 0 00-6.852 0zM12.192 15.74a3.429 3.429 0 106.857 0 3.429 3.429 0 00-6.857 0z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+            <p>
+              {t('project:PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
+              {t('project:PROJECT.INCOME_VS_EXPENDITURE')})
+            </p>
           </div>
+        </div>
 
-          <div className="hidden justify-end lg:flex">
-            <Tooltip>
-              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
-            </Tooltip>
-          </div>
+        <div className="hidden justify-end lg:flex">
+          <Tooltip>
+            <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
+          </Tooltip>
         </div>
       </div>
 
@@ -409,7 +406,7 @@ const IncomeExpenseTrendChart = () => {
                 className={cn(
                   'disabled:border-button-text-disable disabled:bg-transparent disabled:text-button-text-disable',
                   selectedPeriod === Period.MONTH
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
@@ -417,9 +414,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 <p>
                   <span className="lg:hidden">{t('common:COMMON.M')}</span>
-                  <span className="hidden lg:inline">
-                    {t('journal:ADD_ASSET_MODAL.MONTH')}
-                  </span>{' '}
+                  <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.MONTH')}</span>
                 </p>
               </Button>
             </div>
@@ -430,7 +425,7 @@ const IncomeExpenseTrendChart = () => {
                 className={cn(
                   'disabled:border-button-text-disable disabled:bg-transparent disabled:text-button-text-disable',
                   selectedPeriod === Period.YEAR
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
@@ -438,7 +433,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 <p>
                   <span className="lg:hidden">{t('common:COMMON.Y')}</span>
-                  <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.YEAR')}</span>{' '}
+                  <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.YEAR')}</span>
                 </p>
               </Button>
             </div>

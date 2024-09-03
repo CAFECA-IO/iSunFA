@@ -1,23 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import path from 'path';
 import { promises as fs } from 'fs';
-import { BASE_STORAGE_FOLDER, FileFolder } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { getSession } from '@/lib/utils/session';
-import { findFileByName } from '@/lib/utils/parse_image_form';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-
-async function getFilePath(companyId: number, fileId: string): Promise<string | null> {
-  const companyIdStr = companyId.toString();
-  const filename = `${companyIdStr}-${fileId}`;
-  const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
-  const filePath = await findFileByName(tmpFolder, filename);
-  return filePath;
-}
+import { deleteFileById, findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
+import { File } from '@prisma/client';
 
 async function handleGetRequest(
   req: NextApiRequest,
@@ -39,14 +30,24 @@ async function handleGetRequest(
     } else {
       try {
         const { fileId } = req.query;
-        const fileIdStr = String(fileId);
-        const filePath = await getFilePath(companyId, fileIdStr);
+        const fileName = String(fileId);
 
-        if (filePath) {
-          const stat = await fs.stat(filePath);
-          payload = { id: fileIdStr, size: stat.size, existed: true };
+        let file: File | null;
+
+        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
+        if (isStringNumber(fileName)) {
+          const fileIdInt = Number(fileName);
+          file = await findFileById(fileIdInt);
         } else {
-          payload = { id: fileIdStr, size: 0, existed: false };
+          file = await findFileInDBByName(fileName);
+        }
+
+        if (file) {
+          const filePath = file.url;
+          const stat = await fs.stat(filePath);
+          payload = { id: file.id, name: file.name, size: stat.size, existed: true };
+        } else {
+          payload = { id: -1, name: 'not found', size: 0, existed: false };
         }
         statusMessage = STATUS_MESSAGE.SUCCESS_GET;
       } catch (error) {
@@ -78,17 +79,30 @@ async function handleDeleteRequest(
     } else {
       try {
         const { fileId } = req.query;
-        const fileIdStr = fileId as string;
-        const filePath = await getFilePath(companyId, fileIdStr);
+        const fileName = fileId as string;
 
-        if (filePath) {
-          const stat = await fs.stat(filePath);
-          await fs.unlink(filePath);
+        let file: File | null = null;
+
+        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
+        if (isStringNumber(fileName)) {
+          const fileIdInt = Number(fileName);
+          file = await deleteFileById(fileIdInt);
+        } else {
+          const fileForDelete = await findFileInDBByName(fileName);
+          if (fileForDelete) {
+            file = await deleteFileById(fileForDelete.id);
+          }
+        }
+
+        if (file) {
+          const stat = await fs.stat(file.url);
+          await fs.unlink(file.url);
+
           statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-          payload = { id: fileIdStr, size: stat.size, existed: false };
+          payload = { id: file.id, name: file.name, size: stat.size, existed: false };
         } else {
           statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-          payload = { id: fileIdStr, size: 0, existed: false };
+          payload = { id: -1, name: 'not found', size: 0, existed: false };
         }
       } catch (error) {
         // ToDo: (20240828 - Jacky) Log error message

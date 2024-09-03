@@ -102,7 +102,7 @@ const NavBar = () => {
       <button
         onClick={appMenuMobileClickHandler}
         type="button"
-        className="p-16px text-button-text-secondary hover:text-button-text-primary"
+        className="p-16px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -135,7 +135,7 @@ const NavBar = () => {
       </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
         <p>{t('common:NAV_BAR.ACCOUNT')}</p>
@@ -165,7 +165,7 @@ const NavBar = () => {
       </button>
       <Link
         href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
-        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary"
+        className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
         <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
@@ -182,7 +182,7 @@ const NavBar = () => {
       <button
         type="button"
         onClick={appMenuMobileClickHandler}
-        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary`}
+        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
@@ -205,7 +205,7 @@ const NavBar = () => {
       </button>
       <Link
         href={ISUNFA_ROUTE.DASHBOARD}
-        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary`}
+        className={`${selectedCompany ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
       >
         <FiLayout size={20} />
 
@@ -213,7 +213,7 @@ const NavBar = () => {
       </Link>
       <Link
         href={ISUNFA_ROUTE.CONTACT_US}
-        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary"
+        className="flex w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <FiMail size={20} />
         <p>{t('common:NAV_BAR.CONTACT_US')}</p>
@@ -239,7 +239,7 @@ const NavBar = () => {
         type="button"
         // ToDo: (20240802 - Julian) [Beta] Not released
         disabled
-        className="mx-auto flex flex-col items-center gap-8px hover:text-button-text-primary disabled:text-button-text-disable"
+        className="mx-auto flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
         {/* <Link
           href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
@@ -254,7 +254,7 @@ const NavBar = () => {
       <button type="button" className="mx-auto">
         <Link
           href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
-          className="flex flex-col items-center gap-8px hover:text-button-text-primary disabled:text-button-text-disable"
+          className="flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
         >
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
           <p>{t('common:NAV_BAR.ACCOUNT')}</p>
@@ -290,7 +290,7 @@ const NavBar = () => {
       <button type="button" className="mx-auto">
         <Link
           href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
-          className="flex flex-col items-center gap-8px hover:text-button-text-primary disabled:text-button-text-disable"
+          className="flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
         >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
           <p>{t('report_401:REPORTS_SIDEBAR.REPORT')}</p>
@@ -567,7 +567,7 @@ const NavBar = () => {
             <Link
               href={ISUNFA_ROUTE.DASHBOARD}
               // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-              className={`${selectedCompany ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary max-md:px-5`}
+              className={`${selectedCompany ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary-hover max-md:px-5`}
             >
               <div className="my-auto flex items-center justify-center">
                 <svg
@@ -591,7 +591,7 @@ const NavBar = () => {
             </Link>
             <Link
               href={ISUNFA_ROUTE.CONTACT_US}
-              className="flex justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary max-md:px-5"
+              className="flex justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary-hover max-md:px-5"
             >
               <div className="my-auto flex items-center justify-center">
                 <svg

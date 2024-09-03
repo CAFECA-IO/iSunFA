@@ -140,9 +140,13 @@ export async function handleDeleteRequest(resultId: string) {
   // Info: (20240715 - Jacky) payload should add ad unify formatter @TinyMurky
   if (getOCR) {
     const deletedOCR = await deleteOcrByResultId(resultId);
-    const imageSize = transformBytesToFileSizeString(deletedOCR.imageSize);
+    const imageSize = transformBytesToFileSizeString(deletedOCR.imageFile.size);
     payload = {
-      ...deletedOCR,
+      id: deletedOCR.id,
+      aichResultId: deletedOCR.aichResultId,
+      imageName: deletedOCR.imageFile.name,
+      imageUrl: deletedOCR.imageFile.url,
+      createdAt: deletedOCR.createdAt,
       progress: 0,
       imageSize,
       status: deletedOCR.status as ProgressStatus,

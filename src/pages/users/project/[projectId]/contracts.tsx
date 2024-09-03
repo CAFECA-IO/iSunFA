@@ -59,13 +59,14 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
             <div className="flex w-full items-center justify-between">
               {/* Info: (2024618 - Julian) Title */}
               <div className="flex items-center gap-24px">
-                <button
+                <Button
                   type="button"
+                  className="h-40px w-40px p-0"
+                  variant="tertiaryOutline"
                   onClick={backClickHandler}
-                  className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
                 >
                   <FaArrowLeft />
-                </button>
+                </Button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
                   {projectName} - {t('journal:JOURNAL.CONTRACTS')}
