@@ -5,10 +5,8 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
-import { connectFileById, createFile } from '@/lib/utils/repo/file.repo';
-import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
-import { User } from '@prisma/client';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -121,45 +119,6 @@ async function fetchImageInfo(imageUrl: string): Promise<{
   };
 }
 
-/**
- * Info: (20240902 - Murky)
- * 1. Create a file and connect it with the user
- * 2. If create file success, connect the file with user
- * @param userIcon need to have iconUrl, mimeType, size
- * @param user Prisma user type
- * @returns Prisma file type or null
- */
-async function createFileAndConnectUser(
-  userIcon: {
-    iconUrl: string;
-    mimeType: string;
-    size: number;
-  },
-  user: User
-) {
-  const { iconUrl, mimeType, size } = userIcon;
-
-  // Info: (20240902 - Murky) Do nothing
-  const imageName = user.name + '_icon';
-  const file = await createFile({
-    name: imageName,
-    companyId: PUBLIC_COMPANY_ID, // Info: (20240902 - Murky) User don't have company, so use public company id
-    size,
-    mimeType,
-    type: FileFolder.TMP,
-    url: iconUrl,
-    isEncrypted: false,
-    encryptedSymmetricKey: '',
-  });
-
-  // Info: (20240902 - Murky) If file is not null, connect the file with user
-  if (file) {
-    await connectFileById(FileDatabaseConnectionType.USER_IMAGE, file.id, user.id);
-  }
-
-  return file;
-}
-
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   return NextAuth(req, res, {
     providers: [
@@ -200,7 +159,16 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
               } else {
                 userImage = await generateIcon(user.name ?? '');
               }
-
+              const imageName = user.name + '_icon';
+              const file = await createFile({
+                name: imageName,
+                size: userImage.size,
+                mimeType: userImage.mimeType,
+                type: FileFolder.TMP,
+                url: userImage.iconUrl,
+                isEncrypted: false,
+                encryptedSymmetricKey: '',
+              });
               const createdUser = await createUserByAuth({
                 name: user.name || '',
                 email: user.email || '',
@@ -208,14 +176,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
                 credentialId: account.providerAccountId,
                 method: account.type,
                 authData: account,
+                imageId: file?.id ?? PUBLIC_IMAGE_ID,
               });
+              await setSession(session, createdUser.user.id);
 
               // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
               // Dbuser = createdUser;
-
-              await createFileAndConnectUser(userImage, createdUser.user);
-
-              await setSession(session, createdUser.user.id);
             }
           } else {
             // Info: (20240829 - Anna) 與邀請碼相關，目前先註解

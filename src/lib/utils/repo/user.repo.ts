@@ -1,6 +1,7 @@
 import prisma from '@/client';
 import { Prisma, User, UserAgreement, File } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { SortOrder } from '@/constants/sort';
 
 export async function listUser(): Promise<
   (User & { userAgreements: UserAgreement[]; imageFile: File | null })[]
@@ -10,7 +11,7 @@ export async function listUser(): Promise<
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       userAgreements: true,
@@ -91,26 +92,18 @@ export async function updateUserById(
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
-  const fileConnect: Prisma.FileUpdateOneWithoutUserImageFileNestedInput = {
-    connect: {
-      id: imageId,
-    },
-  };
-
-  const updatedUser: Prisma.UserUpdateInput = {
-    name,
-    fullName,
-    email,
-    phone,
-    updatedAt: nowTimestamp,
-    imageFile: fileConnect,
-  };
-
   const user = await prisma.user.update({
     where: {
       id: userId,
     },
-    data: updatedUser,
+    data: {
+      name,
+      fullName,
+      email,
+      phone,
+      updatedAt: nowTimestamp,
+      imageFileId: imageId,
+    },
     include: {
       userAgreements: true,
       imageFile: true,

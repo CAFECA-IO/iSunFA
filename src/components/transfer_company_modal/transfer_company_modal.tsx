@@ -46,6 +46,7 @@ const TransferCompanyModal = ({
     })
       .then((res) => {
         if (res.data?.length ?? 0) {
+          // ToDo: (20240902 - Shirley) i18n
           messageModalDataHandler({
             messageType: MessageType.SUCCESS,
             title: 'Transfer Owner',
@@ -58,6 +59,7 @@ const TransferCompanyModal = ({
             },
           });
         } else {
+          // ToDo: (20240902 - Shirley) i18n
           messageModalDataHandler({
             messageType: MessageType.ERROR,
             title: 'Transfer Owner',
@@ -72,6 +74,7 @@ const TransferCompanyModal = ({
         messageModalVisibilityHandler();
       })
       .catch(() => {
+        // ToDo: (20240902 - Shirley) i18n
         messageModalDataHandler({
           messageType: MessageType.ERROR,
           title: 'Transfer Owner',

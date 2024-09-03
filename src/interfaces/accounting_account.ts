@@ -2,6 +2,7 @@ import { AccountType, EquityType, ProgressStatus } from '@/constants/account';
 import { Account } from '@prisma/client';
 import { ReportSheetType } from '@/constants/report';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { SortOrder } from '@/constants/sort';
 
 export interface IAccount {
   id: number;
@@ -63,7 +64,7 @@ export type IAccountQueryArgs = {
   page?: number;
   limit?: number;
   sortBy?: 'code' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: SortOrder.ASC | SortOrder.DESC;
   searchKey?: string;
   isDeleted?: boolean;
 };

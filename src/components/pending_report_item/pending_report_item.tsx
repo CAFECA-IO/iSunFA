@@ -81,6 +81,7 @@ const PendingReportItem = ({
   const deleteClickHandler = () => {
     messageModalDataHandler({
       title: '',
+      // ToDo: (20240902 - Shirley) i18n
       subtitle: 'Are you sure\n you want to delete the process?',
       content: `It will take 30 - 40 minutes\n
       if you want to apply it again.`,

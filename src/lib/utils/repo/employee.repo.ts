@@ -6,6 +6,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { getInsuranceInfo } from '@/lib/utils/insurance';
+import { SortOrder } from '@/constants/sort';
 
 export async function listEmployees(
   companyId: number,
@@ -242,7 +243,7 @@ export async function getProjectsByEmployeeId(employeeIdNumber: number) {
       project: true,
     },
     orderBy: {
-      startDate: 'asc',
+      startDate: SortOrder.ASC,
     },
   });
   return projects;

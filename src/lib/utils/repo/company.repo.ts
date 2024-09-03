@@ -21,19 +21,6 @@ export async function getCompanyById(
   return company;
 }
 
-export async function getCompanyByCode(code: string): Promise<Company | null> {
-  let company: Company | null = null;
-  if (code) {
-    company = await prisma.company.findUnique({
-      where: {
-        code,
-        OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      },
-    });
-  }
-  return company;
-}
-
 export async function getCompanyWithOwner(companyId: number): Promise<
   | (Company & {
       admins: Admin[];
@@ -75,11 +62,6 @@ export async function updateCompanyById(
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
-  const fileConnect: Prisma.FileUpdateOneWithoutCompanyImageFileNestedInput = {
-    connect: {
-      id: imageId,
-    },
-  };
   const company = await prisma.company.update({
     where: {
       id: companyId,
@@ -89,7 +71,7 @@ export async function updateCompanyById(
       name,
       regional,
       updatedAt: nowTimestamp,
-      imageFile: fileConnect,
+      imageFileId: imageId,
     },
     include: {
       imageFile: true,
