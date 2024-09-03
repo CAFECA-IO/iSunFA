@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
+import { SortOrder } from '@/constants/sort';
 import {
   IVoucherDataForSavingToDB,
   IVoucherFromPrismaIncludeJournalLineItems,
@@ -24,7 +25,7 @@ export async function getLatestVoucherNo(companyId: number) {
   };
 
   const orderBy: Prisma.VoucherOrderByWithRelationInput = {
-    no: 'desc',
+    no: SortOrder.DESC,
   };
 
   const select: Prisma.VoucherSelect = {

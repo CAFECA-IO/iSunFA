@@ -10,11 +10,10 @@ import {
   UserAgreement,
 } from '@prisma/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
+import { SortOrder } from '@/constants/sort';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
-export async function listAdminByCompanyId(
-  companyId: number
-): Promise<
+export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
     company: Company & { imageFile: File | null };
     user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
@@ -27,7 +26,7 @@ export async function listAdminByCompanyId(
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       user: {
@@ -47,9 +46,7 @@ export async function listAdminByCompanyId(
   return listedAdmin;
 }
 
-export async function getAdminById(
-  adminId: number
-): Promise<
+export async function getAdminById(adminId: number): Promise<
   | (Admin & {
       company: Company & { imageFile: File | null };
       user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
@@ -260,9 +257,7 @@ export async function updateAdminById(
   return updatedAdmin;
 }
 
-export async function deleteAdminById(
-  adminId: number
-): Promise<
+export async function deleteAdminById(adminId: number): Promise<
   Admin & {
     company: Company & { imageFile: File | null };
     user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
@@ -337,7 +332,7 @@ export async function listCompanyAndRole(
         },
       },
       orderBy: {
-        companyId: 'asc',
+        companyId: SortOrder.ASC,
       },
       select: {
         company: {
@@ -394,7 +389,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
                 OR: [{ deletedAt: 0 }, { deletedAt: null }],
               },
               orderBy: {
-                createdAt: 'desc',
+                createdAt: SortOrder.DESC,
               },
               take: 1,
             },
@@ -408,11 +403,42 @@ export async function getCompanyDetailAndRoleByCompanyId(
   return companyDetail;
 }
 
+export async function getCompanyAndRoleByCompanyCode(
+  userId: number,
+  companyCode: string
+): Promise<{
+  company: Company;
+  role: Role;
+} | null> {
+  let companyDetail: {
+    company: Company;
+    role: Role;
+  } | null = null;
+  if (companyCode) {
+    const companyRole = await prisma.admin.findFirst({
+      where: {
+        company: {
+          code: companyCode,
+        },
+        userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        company: true,
+        role: true,
+      },
+    });
+    companyDetail = companyRole;
+  }
+  return companyDetail;
+}
+
 export async function createCompanyAndRole(
   userId: number,
   code: string,
   name: string,
   regional: string,
+  imageFileId: number,
   email?: string
 ): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
   const nowTimestamp = getTimestampNow();
@@ -441,7 +467,7 @@ export async function createCompanyAndRole(
     },
   };
 
-  const newCompanyRoleList: { company: Company & { imageFile: File | null }; role: Role } =
+  const newCompanyRoleList: { company: Company & { imageFile: File }; role: Role } =
     await prisma.admin.create({
       data: {
         user: userConnect,
@@ -451,6 +477,11 @@ export async function createCompanyAndRole(
             name,
             regional,
             kycStatus: false,
+            imageFile: {
+              connect: {
+                id: imageFileId,
+              },
+            },
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
             startDate: nowTimestamp,

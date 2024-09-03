@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
 import { EmployeeProject } from '@prisma/client';
 
 export async function listEmployeeProject(projectId: number): Promise<EmployeeProject[]> {
@@ -8,7 +9,7 @@ export async function listEmployeeProject(projectId: number): Promise<EmployeePr
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
   });
   return employeeInProject;

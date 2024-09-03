@@ -2,6 +2,7 @@ import prisma from '@/client';
 import { Employee, File, Project, Value } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { SortOrder } from '@/constants/sort';
 
 export async function listProject(companyId: number) {
   const listedProject = await prisma.project.findMany({
@@ -10,7 +11,7 @@ export async function listProject(companyId: number) {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       employeeProjects: {
@@ -69,14 +70,14 @@ export async function createProject(
   companyId: number,
   name: string,
   stage: Milestone,
-  members?: number[],
-  imageId?: number
+  imageId: number,
+  members?: number[]
 ): Promise<
   Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
-    imageFile: File | null;
+    imageFile: File;
   }
 > {
   const now = Date.now();
@@ -87,6 +88,7 @@ export async function createProject(
       companyId,
       name,
       stage,
+      imageFileId: imageId,
       employeeProjects: {
         create: (members ?? []).map((memberId: number) => ({
           employeeId: memberId,
@@ -120,7 +122,6 @@ export async function createProject(
       completedPercent: 0,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
-      imageFileId: imageId,
     },
     include: {
       employeeProjects: {

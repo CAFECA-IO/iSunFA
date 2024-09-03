@@ -61,11 +61,11 @@ export async function formatCompanyAndRoleList(
   return formattedCompanyAndRoleList;
 }
 
-export async function formatCompanyAndRole(companyAndRole: {
+export function formatCompanyAndRole(companyAndRole: {
   company: Company & { imageFile: File | null };
   role: Role;
-}): Promise<{ company: ICompany; role: IRole }> {
-  const formattedCompany = await formatCompany(companyAndRole.company);
+}): { company: ICompany; role: IRole } {
+  const formattedCompany = formatCompany(companyAndRole.company);
   const formattedRole = companyAndRole.role;
   return { company: formattedCompany, role: formattedRole };
 }

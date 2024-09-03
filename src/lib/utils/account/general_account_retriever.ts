@@ -1,5 +1,6 @@
 import { AccountType, EquityType } from '@/constants/account';
 import { ReportSheetType } from '@/constants/report';
+import { SortOrder } from '@/constants/sort';
 import { AbstractAccountRetriever } from '@/lib/utils/account/abstract_account_retriever';
 
 export class GeneralAccountRetriever extends AbstractAccountRetriever {
@@ -14,7 +15,7 @@ export class GeneralAccountRetriever extends AbstractAccountRetriever {
     page?: number,
     limit?: number,
     sortBy?: 'code' | 'createdAt',
-    sortOrder?: 'asc' | 'desc',
+    sortOrder?: SortOrder.ASC | SortOrder.DESC,
     searchKey?: string,
     isDeleted?: boolean
   ) {
