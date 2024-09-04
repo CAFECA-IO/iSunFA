@@ -167,10 +167,11 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       };
     });
 
-  // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
-  const invoicePreviewSrc = imgSrcHasError
-    ? '/elements/default_certificate.svg'
-    : (journalDetail?.imageUrl ?? '');
+  /* Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
+   * 順序是：畫面載入 => journalDetail 不存在 => 預設圖片 => journalDetail載入 => 頁面更新
+   */
+  const invoicePreviewSrc =
+    journalDetail && !imgSrcHasError ? journalDetail.imageUrl : '/elements/default_certificate.svg';
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);
@@ -569,6 +570,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
                 width={236}
                 height={300}
                 alt="certificate"
+                priority
                 onError={(e) => {
                   if (e && !imgSrcHasError) {
                     setImgSrcHasError(true);
