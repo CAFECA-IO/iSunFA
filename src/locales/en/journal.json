@@ -129,7 +129,11 @@
     "USE_AI": "Are you sure you want to use Ai information?",
     "TEXT_WILL_BE_REPLACED": "The text you entered will be replaced.",
     "GET_JOURNAL_FAILED": "Get Journal Failed",
-    "GET_JOURNAL_DETAIL_FAILED": "Get journal detail failed"
+    "GET_JOURNAL_DETAIL_FAILED": "Get journal detail failed",
+    "UPDATE_INVOICE_FAILED": "Update Invoice Failed",
+    "UPDATE_INVOICE_FAILED_CODE": "Update Invoice failed: {{updateCode}}",
+    "DOWNLOAD_SELECTED_VOUCHER": "Download Selected Voucher",
+    "DOWNLOAD_SELECTED_ITEMS": "Are you sure you want to download the selected items?"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",

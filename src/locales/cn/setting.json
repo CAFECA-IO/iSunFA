@@ -40,6 +40,7 @@
     "REMOVE_THIS_ACCOUNTING_TITLE_CHECK": "您确定要删除这个会计科目吗？",
     "SUCCESSFULLY_UPDATED_ACCOUNT": "会计科目更新成功",
     "FAILED_TO_UPDATE_ACCOUNT": "更新科目失败，请稍后重试。",
-    "FAILED_TO_GET_ACCOUNT_DATA": "取得科目资料失败，请稍后重试。"
+    "FAILED_TO_GET_ACCOUNT_DATA": "取得科目资料失败，请稍后重试。",
+    "FAIL_UPDATE_COMPANY_NAME": "无法更新公司名称。错误代码：{{updateTeamCode}}"
   }
 }
