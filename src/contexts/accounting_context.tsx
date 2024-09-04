@@ -493,13 +493,17 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
     if (OCRListParams && OCRListParams.update) {
       interval = setInterval(async () => {
-        const response = await listUnprocessedOCR({
-          params: {
-            companyId: OCRListParams.companyId,
-          },
-        });
-        if (response?.data) {
-          setUnprocessedOCRs(response.data);
+        try {
+          const response = await listUnprocessedOCR({
+            params: {
+              companyId: OCRListParams.companyId,
+            },
+          });
+          if (response?.data) {
+            setUnprocessedOCRs(response.data);
+          }
+        } catch (error) {
+          clearInterval(interval);
         }
       }, 2000);
     }
