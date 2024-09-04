@@ -145,7 +145,9 @@
     "GENERATE_REPORT": "生成报告",
     "WE_RECEIVED_YOUR_APPLICATION": "我们已经收到您的申请",
     "TAKE_MINUTES": "AI产生报告需要30到40分钟，您可以稍后再回来查看。",
-    "FAILED_TO_FETCH_GENERATED_REPORTS": "无法取得产生的报告。错误代码： {{code}}"
+    "FAILED_TO_FETCH_GENERATED_REPORTS": "无法取得产生的报告。错误代码： {{code}}",
+    "DELETE_PROCESS": "您确定要删除吗？",
+    "APPLY_AGAIN": "如果您再次申请，则需要30到40分钟。"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "从",

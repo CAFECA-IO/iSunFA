@@ -234,7 +234,19 @@
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "第一次登录时，请阅读并同意",
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意信息收集声明",
     "AGREE_WITH_TOS_N_PP": "同意服务条款和隐私政策",
-    "ALPHA_TEST_REMINDER": "Alpha 版本的资料只用于测试"
+    "ALPHA_TEST_REMINDER": "Alpha 版本的资料只用于测试",
+    "TYPE": "类型",
+    "EMPLOYEE": "员工",
+    "DESCRIPTION": "描述",
+    "TOTAL_PRICE": "总价",
+    "TWD": "新台币",
+    "PAYMENT_STATUS": "付款状态",
+    "CONFIRM": "确认",
+    "DEPARTMENTS": "部门",
+    "EMPLOYEE_NAME": "员工姓名",
+    "SETTINGS": "设置",
+    "COMPANY_NAME": "公司名称",
+    "YOUR_COMPANY_NAME": "您的公司名称"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",

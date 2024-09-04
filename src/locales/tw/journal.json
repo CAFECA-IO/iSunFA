@@ -129,7 +129,11 @@
     "USE_AI": "您確定要使用Ai提供的資訊嗎？",
     "TEXT_WILL_BE_REPLACED": "您輸入的文字將被替換",
     "GET_JOURNAL_FAILED": "取得日記帳失敗",
-    "GET_JOURNAL_DETAIL_FAILED": "取得日記帳詳細資訊失敗"
+    "GET_JOURNAL_DETAIL_FAILED": "取得日記帳詳細資訊失敗",
+    "UPDATE_INVOICE_FAILED": "更新發票失敗",
+    "UPDATE_INVOICE_FAILED_CODE": "更新發票失敗: {{updateCode}}",
+    "DOWNLOAD_SELECTED_VOUCHER": "下載傳票",
+    "DOWNLOAD_SELECTED_ITEMS": "您確定要下載所選項目嗎？"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",

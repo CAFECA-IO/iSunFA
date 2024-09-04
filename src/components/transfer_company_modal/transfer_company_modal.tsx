@@ -46,11 +46,10 @@ const TransferCompanyModal = ({
     })
       .then((res) => {
         if (res.data?.length ?? 0) {
-          // ToDo: (20240902 - Shirley) i18n
           messageModalDataHandler({
             messageType: MessageType.SUCCESS,
-            title: 'Transfer Owner',
-            content: 'Transfer owner successfully',
+            title: t('kyc:KYC.TRANSFER_OWNER'),
+            content: t('kyc:KYC.TRANSFER_OWNER_SUCCESSFULLY'),
             submitBtnStr: t('project:PROJECT.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
@@ -59,11 +58,10 @@ const TransferCompanyModal = ({
             },
           });
         } else {
-          // ToDo: (20240902 - Shirley) i18n
           messageModalDataHandler({
             messageType: MessageType.ERROR,
-            title: 'Transfer Owner',
-            content: 'Transfer owner failed',
+            title: t('kyc:KYC.TRANSFER_OWNER'),
+            content: t('kyc:KYC.TRANSFER_OWNER_FAILED'),
             submitBtnStr: t('project:PROJECT.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
@@ -74,11 +72,10 @@ const TransferCompanyModal = ({
         messageModalVisibilityHandler();
       })
       .catch(() => {
-        // ToDo: (20240902 - Shirley) i18n
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: 'Transfer Owner',
-          content: 'Transfer owner failed',
+          title: t('kyc:KYC.TRANSFER_OWNER'),
+          content: t('kyc:KYC.TRANSFER_OWNER_FAILED'),
           submitBtnStr: t('project:PROJECT.OK'),
           hideCloseBtn: true,
           submitBtnFunction: () => {
