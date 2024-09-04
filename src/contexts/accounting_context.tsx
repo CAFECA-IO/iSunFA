@@ -457,13 +457,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   };
 
-  const clearState = () => {
+  const clearOCRs = () => {
     setPendingOCRList([]);
     setPendingOCRListFromBrowser([]);
-    setUnprocessedOCRs([]); // 重置 newUnprocessedOCRs
-    setOCRList([]); // 同時也清空 OCRList
-    // eslint-disable-next-line no-console
-    console.log('clearState called');
+    setUnprocessedOCRs([]);
+    setOCRList([]);
   };
 
   useEffect(() => {
@@ -481,7 +479,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [isDBReady, userAuth, selectedCompany]);
 
   useEffect(() => {
-    clearState();
+    clearOCRs();
   }, [signedIn, selectedCompany]);
 
   useEffect(() => {
