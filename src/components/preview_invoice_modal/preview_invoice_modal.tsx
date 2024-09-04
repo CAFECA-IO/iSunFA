@@ -41,9 +41,8 @@ const PreviewInvoiceModal = ({
   // Info: (20240508 - Julian) 下載
   const downloadClickHandler = () => {
     messageModalDataHandler({
-      // ToDo: (20240902 - Shirley) i18n
-      title: 'Download Selected Voucher',
-      content: 'Are you sure you want to download the selected items?',
+      title: t('journal:JOURNAL.DOWNLOAD_SELECTED_VOUCHER'),
+      content: t('journal:JOURNAL.DOWNLOAD_SELECTED_ITEMS'),
       messageType: MessageType.INFO,
       submitBtnStr: t('journal:JOURNAL.DOWNLOAD'),
       // ToDo: (20240508 - Julian) [Beta] 下載功能

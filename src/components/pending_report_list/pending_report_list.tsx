@@ -74,10 +74,8 @@ const PendingReportList = ({ reports }: IReportListProps) => {
 
     messageModalDataHandler({
       title: '',
-      // ToDo: (20240902 - Shirley) i18n
-      subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes\n
-      if you want to apply it again.`,
+      subtitle: t('report_401:MY_REPORTS_SECTION.DELETE_PROCESS'),
+      content: t('report_401:MY_REPORTS_SECTION.APPLY_AGAIN'),
       submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,

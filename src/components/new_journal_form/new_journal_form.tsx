@@ -441,9 +441,8 @@ const NewJournalForm = () => {
     } else if (updateSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        // ToDo: (20240902 - Shirley) i18n
-        title: 'Update Invoice Failed',
-        content: `Update Invoice failed: ${updateCode}`,
+        title: t('journal:JOURNAL.UPDATE_INVOICE_FAILED'),
+        content: t('journal:JOURNAL.UPDATE_INVOICE_FAILED_CODE', { updateCode }),
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });

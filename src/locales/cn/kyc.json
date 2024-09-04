@@ -103,7 +103,10 @@
     "VERIFY_AGAIN": "请再次确认或联络公司管理员。",
     "VERIFICATION_CODE_HAS_EXPIRED": "邀请码已过期",
     "INVITATION_CODE_EXPIRY": "邀请码已过期",
-    "FAILED_TO_LIST_UPLOADED_FILES": "无法列出上传的文件: {{getCode}}"
+    "FAILED_TO_LIST_UPLOADED_FILES": "无法列出上传的文件: {{getCode}}",
+    "TRANSFER_OWNER": "转移拥有者",
+    "TRANSFER_OWNER_SUCCESSFULLY": "成功转移拥有者",
+    "TRANSFER_OWNER_FAILED": "转移拥有者失败"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",

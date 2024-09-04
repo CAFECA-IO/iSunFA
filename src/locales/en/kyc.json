@@ -103,7 +103,10 @@
     "VERIFY_AGAIN": "Please verify again or contact the company administrator.",
     "VERIFICATION_CODE_HAS_EXPIRED": "Oops! This verification code has expired.",
     "INVITATION_CODE_EXPIRY": "Invitation Code Expiry",
-    "FAILED_TO_LIST_UPLOADED_FILES": "Failed to list uploaded files: {{getCode}}"
+    "FAILED_TO_LIST_UPLOADED_FILES": "Failed to list uploaded files: {{getCode}}",
+    "TRANSFER_OWNER": "Transfer Owner",
+    "TRANSFER_OWNER_SUCCESSFULLY": "Transfer owner successfully",
+    "TRANSFER_OWNER_FAILED": "Transfer owner failed"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "Congratulations! You",

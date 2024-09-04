@@ -7,6 +7,7 @@ import { ICompany } from '@/interfaces/company';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
+import { useTranslation } from 'next-i18next';
 
 interface ITeamSettingModal {
   isModalVisible: boolean;
@@ -15,6 +16,7 @@ interface ITeamSettingModal {
 
 // ToDo: (20240822 - Julian) [Beta] i18n
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
+  const { t } = useTranslation(['common', 'setting']);
   const { selectedCompany, selectCompany } = useUserCtx();
   const { toastHandler } = useGlobalCtx();
   const [companyName, setCompanyName] = useState<string>(selectedCompany?.name ?? '');
@@ -55,7 +57,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
       toastHandler({
         id: `update_team-${updateTeamCode}`,
         type: ToastType.ERROR,
-        content: <p>Fail to update company name. Code: {updateTeamCode}</p>,
+        content: <p>{t('setting:SETTING.FAIL_UPDATE_COMPANY_NAME', { updateTeamCode })}</p>,
         closeable: true,
       });
     }
@@ -67,12 +69,13 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     }
   }, [isModalVisible, selectedCompany]);
 
-  // ToDo: (20240902 - Shirley) 整個 i18n
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-surface-neutral-surface-lv2 pb-5 pt-2 shadow-lg shadow-black/80 lg:w-500px">
         <div className="py-4">
-          <div className="text-xl font-bold text-card-text-primary">Settings</div>
+          <div className="text-xl font-bold text-card-text-primary">
+            {t('common:COMMON.SETTINGS')}
+          </div>
           <div className="absolute right-3 top-3">
             <Button
               variant={'secondaryBorderless'}
@@ -108,7 +111,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
 
         <div className="flex w-full flex-col justify-center px-8 py-2.5">
           <div className="flex flex-col justify-start gap-2 text-divider-text-lv-1">
-            <p>Company Name</p>
+            <p>{t('common:COMMON.COMPANY_NAME')}</p>
             <div className="flex rounded-sm border border-solid border-input-stroke-input bg-input-surface-input-background shadow-sm">
               <div className="flex flex-1">
                 <input
@@ -116,7 +119,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
                   onChange={(e) => setCompanyName(e.target.value)}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder={selectedCompany?.name ?? 'your company name'}
+                  placeholder={selectedCompany?.name ?? t('common:COMMON.YOUR_COMPANY_NAME')}
                 />
               </div>
             </div>
@@ -129,7 +132,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               onClick={modalVisibilityHandler}
               className="flex-1 rounded-xs"
             >
-              Cancel
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button
               disabled={
@@ -142,7 +145,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               onClick={saveClickHandler}
               className="flex-1 rounded-xs"
             >
-              Save
+              {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
             </Button>
           </div>
         </div>
