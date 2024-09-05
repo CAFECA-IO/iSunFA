@@ -1,4 +1,5 @@
 import { LOG_FOLDER } from '@/constants/file';
+import { Prisma } from '@prisma/client';
 import pino, { Logger } from 'pino';
 import pretty from 'pino-pretty';
 import { createStream } from 'rotating-file-stream';
@@ -49,17 +50,84 @@ const loggerBack: Logger = pino({ level }, pino.multistream(streams));
 
 export default loggerBack;
 
+function getErrorCode(
+  error: Prisma.PrismaClientKnownRequestError | Prisma.PrismaClientInitializationError
+): string | undefined {
+  if ('code' in error) {
+    return error.code;
+  } else if ('errorCode' in error) {
+    return error.errorCode;
+  }
+  return undefined;
+}
+
 /**
  * Info: (20240828 - Gibbs) 記錄錯誤和異常的詳細信息
  * @param {number} [userId] - 用戶ID
  * @param {string} errorType - 錯誤類型
- * @param {string} errorMessage - 錯誤訊息
+ * @param {string | Error} errorMessage - 錯誤訊息
  */
-export function loggerError(userId: number, errorType: string, errorMessage: string) {
+export function loggerError(userId: number, errorType: string, errorMessage: string | Error) {
   const logData = { level: 'error', userId, errorType, errorMessage };
   if (userId) {
     logData.userId = userId;
   }
+
+  if (typeof errorMessage === 'string') {
+    // 已知指定錯誤訊息
+    logData.errorMessage = errorMessage;
+    // 處理 Prisma 錯誤, PrismaClientUnknownRequestError, PrismaClientRustPanicError, Prisma.PrismaClientValidationError 無 error code
+    // PrismaClientKnownRequestError: code, PrismaClientInitializationError: errorCode
+  } else if (
+    errorMessage instanceof Prisma.PrismaClientKnownRequestError ||
+    errorMessage instanceof Prisma.PrismaClientInitializationError
+  ) {
+    // 轉換特定 Prisma code 錯誤, 其餘 Prisma code 錯誤給預設值
+    const errorCode = getErrorCode(errorMessage);
+    switch (errorCode) {
+      case 'P1017':
+        logData.errorMessage = 'Server has closed the connection!';
+        break;
+      case 'P2002':
+        logData.errorMessage = 'Unique constraint failed!';
+        break;
+      case 'P2003':
+        logData.errorMessage = 'Foreign key constraint failed!';
+        break;
+      case 'P2004':
+        logData.errorMessage = 'A constraint failed on the database!';
+        break;
+      case 'P2005':
+        logData.errorMessage =
+          "The value stored in the database for the field is invalid for the field's type!";
+        break;
+      case 'P2011':
+        logData.errorMessage = 'Null constraint violation!';
+        break;
+      case 'P2021':
+        logData.errorMessage = 'The table does not exist in the current database!';
+        break;
+      case 'P2022':
+        logData.errorMessage = 'The column does not exist in the current database!';
+        break;
+      case 'P2024':
+        logData.errorMessage = 'Timed out fetching a new connection from the connection pool!';
+        break;
+      default:
+        logData.errorMessage = `Unhandled Prisma error code: ${errorCode},\n${errorMessage.message}`;
+    }
+  } else if (
+    errorMessage instanceof Prisma.PrismaClientUnknownRequestError ||
+    errorMessage instanceof Prisma.PrismaClientRustPanicError ||
+    errorMessage instanceof Prisma.PrismaClientValidationError
+  ) {
+    // 處理其餘 Prisma 錯誤,
+    logData.errorMessage = `A Prisma error:\n${errorMessage.message}`;
+  } else if (errorMessage instanceof Error) {
+    // 處理一般錯誤
+    logData.errorMessage = `Non Prisma error:\n${errorMessage.message}`;
+  }
+
   return loggerBack.child(logData);
 }
 
