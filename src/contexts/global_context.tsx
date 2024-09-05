@@ -507,7 +507,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('report_401:AUDIT_REPORT.GO_CHECK_IT')}
+              {t('common:COMMON.GO_CHECK_IT')}
             </Link>
           </div>
         ),

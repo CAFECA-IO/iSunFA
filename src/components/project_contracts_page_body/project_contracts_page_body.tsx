@@ -16,16 +16,7 @@ import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
 
 const ProjectContractsPageBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { filterOptionsModalVisibilityHandler, filterOptionsForContract } = useGlobalCtx();
 
   const statusList = Object.values(ContractStatus);
@@ -186,7 +177,7 @@ const ProjectContractsPageBody = () => {
       <div className="hidden w-full items-end gap-x-24px gap-y-40px md:flex">
         {/* Info: (20240618 - Julian) Status filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('project:PROJECT.STATUS')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.STATUS')}</p>
           <div
             ref={statusRef}
             onClick={statusClickHandler}

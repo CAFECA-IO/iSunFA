@@ -121,10 +121,8 @@
     "ISUNFA_AUDIT_REPORT": "iSunFA - Audit Report",
     "COMPANY_CODE_OR ABBREVIATION": "Company Code or Abbreviation",
     "OF_100": "of 100",
-    "SEARCH": "Search",
     "DON_T_SHOW_DAILY_REPORTS": "Don't show daily reports",
-    "YOUR_REPORT_IS_DONE": "Your report is done",
-    "GO_CHECK_IT": "Go check it !"
+    "YOUR_REPORT_IS_DONE": "Your report is done"
   },
   "REPORTS_SIDEBAR": {
     "REPORT": "Report",
@@ -138,7 +136,6 @@
   "MY_REPORTS_SECTION": {
     "LOADING": "Loading...",
     "SORT_BY": "Sort by",
-    "EMPTY": "Empty",
     "MY_REPORTS": "My Reports",
     "PENDING": "Pending",
     "REPORTS_HISTORY": "Reports History",
@@ -154,13 +151,10 @@
     "TO": "to"
   },
   "REPORTS_HISTORY_LIST": {
-    "CANCEL": "Cancel",
     "DATE": "Date",
     "REPORT_NAME": "Report Name",
     "PERIOD": "Period",
-    "BLOCKCHAIN": "Blockchain",
-    "PROJECT": "Project",
-    "OPERATIONS": "Operations"
+    "BLOCKCHAIN": "Blockchain"
   },
   "PENDING_REPORT_LIST": {
     "DATE": "Date",
@@ -169,7 +163,6 @@
     "REMAINING_TIME": "Remaining Time",
     "OPERATIONS": "Operations",
     "CANCEL": "Cancel",
-    "SELECT": "Select",
     "FAILED_TO_FETCH_PENDING_REPORTS": "Failed to fetch pending reports. Error code: {{code}}"
   },
   "PENDING_REPORT_ITEM": {

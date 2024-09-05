@@ -31,16 +31,7 @@ import { Button } from '@/components/button/button';
 // import Toggle from '@/components/toggle/toggle';
 
 const JournalListBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -331,7 +322,7 @@ const JournalListBody = () => {
       <input
         disabled={isJournalListLoading}
         type="text"
-        placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+        placeholder={t('common:COMMON.SEARCH')}
         className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
         onChange={handleInputChange}
         onKeyDown={(e) => {
@@ -439,7 +430,7 @@ const JournalListBody = () => {
                   fill="#001840"
                 />
               </svg>
-              <p>{t('report_401:PENDING_REPORT_LIST.SELECT')}</p>
+              <p>{t('common:COMMON.SELECT')}</p>
             </button> */}
           </div>
         </div>
@@ -498,7 +489,7 @@ const JournalListBody = () => {
       <div className="my-10px flex items-center gap-24px text-sm md:items-end">
         {/* Info: (20240417 - Julian) Type */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-input-text-primary">{t('journal:JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.TYPE')}</p>
           {displayedTypeDropMenu}
         </div>
 

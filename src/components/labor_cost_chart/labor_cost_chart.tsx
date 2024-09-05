@@ -195,16 +195,7 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const LaborCostChart = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'salary']);
   const { layoutAssertion } = useGlobalCtx();
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
@@ -311,7 +302,7 @@ const LaborCostChart = () => {
         >
           <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
           <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
-            {t('project:PROJECT.NO_DATA')}
+            {t('common:COMMON.NO_DATA')}
           </text>
         </svg>
       </div>
@@ -376,7 +367,7 @@ const LaborCostChart = () => {
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

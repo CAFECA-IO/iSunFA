@@ -19,16 +19,7 @@ const ContactInfoForm = ({
   data: IContactInfo;
   onChange: (key: ContactInfoKeys, value: string) => void;
 }) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
 
   // Info: (20240718 - Liz) OuterClick Hook
   const {

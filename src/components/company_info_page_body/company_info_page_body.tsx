@@ -22,16 +22,7 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';
 
 const CompanyInfoPageBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
 
   const router = useRouter();
   const { isAuthLoading, selectedCompany, selectCompany } = useUserCtx();
@@ -114,7 +105,7 @@ const CompanyInfoPageBody = () => {
       messageType: MessageType.WARNING,
       title: t('kyc:COMPANY_BASIC_INFO.DELETE_COMPANY'),
       content: t('kyc:KYC.DELETE_COMPANY_CHECK'),
-      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
       submitBtnStr: t('kyc:COMPANY_BASIC_INFO.DELETE'),
       submitBtnFunction: procedureOfDelete,
     });

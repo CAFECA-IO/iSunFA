@@ -16,16 +16,7 @@ interface IAddAssetModalProps {
 }
 
 const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const [inputName, setInputName] = useState('');
   const [inputDescription, setInputDescription] = useState('');
   const [inputPurchasePrice, setInputPurchasePrice] = useState(0);
@@ -295,8 +286,8 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                   onChange={selectedUsefulLifeUnit}
                   className="h-full p-12px outline-none"
                 >
-                  <option value="year">{t('journal:ADD_ASSET_MODAL.YEAR')}</option>
-                  <option value="month">{t('journal:ADD_ASSET_MODAL.MONTH')}</option>
+                  <option value="year">{t('common:COMMON.YEAR')}</option>
+                  <option value="month">{t('common:COMMON.MONTH')}</option>
                   <option value="day">{t('journal:ADD_ASSET_MODAL.DAY')}</option>
                 </select>
               </div>
@@ -310,7 +301,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               onClick={modalVisibilityHandler}
               variant={null}
             >
-              {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button
               className="px-16px py-8px"
@@ -318,7 +309,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
               variant="tertiary"
               disabled={isAddButtonDisabled}
             >
-              <p>{t('project:PROJECT.ADD')}</p> <FaPlus />
+              <p>{t('common:COMMON.ADD')}</p> <FaPlus />
             </Button>
           </div>
         </form>

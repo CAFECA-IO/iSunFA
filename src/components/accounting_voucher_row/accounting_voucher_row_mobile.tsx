@@ -19,16 +19,7 @@ interface IAccountingVoucherRowMobile {
 }
 
 const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVoucherRowMobile) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const isDebit = type === 'Debit';
 
   const { id, account, particulars, debit, credit } = accountingVoucher;
@@ -173,7 +164,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           <input
             id="search-accounting"
             type="text"
-            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -181,7 +172,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px uppercase text-dropdown-text-head">
-          {t('setting:SETTING.ASSETS')}
+          {t('common:COMMON.ASSETS')}
         </div>
         <div
           ref={accountingRef}

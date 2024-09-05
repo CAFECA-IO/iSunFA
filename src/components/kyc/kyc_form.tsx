@@ -27,16 +27,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 
 const KYCForm = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
 
   const formRef = useRef<HTMLFormElement>(null);

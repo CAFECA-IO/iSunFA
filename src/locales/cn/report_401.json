@@ -121,10 +121,8 @@
     "ISUNFA_AUDIT_REPORT": "iSunFA - 审计报告",
     "COMPANY_CODE_OR ABBREVIATION": "公司代码或简称",
     "OF_100": "（共 100 页）",
-    "SEARCH": "搜索",
     "DON_T_SHOW_DAILY_REPORTS": "不显示每日报告",
-    "YOUR_REPORT_IS_DONE": "您的报告已完成",
-    "GO_CHECK_IT": "去检查一下吧！"
+    "YOUR_REPORT_IS_DONE": "您的报告已完成"
   },
   "REPORTS_SIDEBAR": {
     "REPORT": "报告",
@@ -138,7 +136,6 @@
   "MY_REPORTS_SECTION": {
     "LOADING": "加载中...",
     "SORT_BY": "排序方式",
-    "EMPTY": "无资料",
     "MY_REPORTS": "我的报告",
     "PENDING": "生成中",
     "REPORTS_HISTORY": "历史报告",
@@ -154,13 +151,10 @@
     "TO": "至"
   },
   "REPORTS_HISTORY_LIST": {
-    "CANCEL": "取消",
     "DATE": "日期",
     "REPORT_NAME": "报告名称",
     "PERIOD": "期间",
-    "BLOCKCHAIN": "区块链",
-    "PROJECT": "项目",
-    "OPERATIONS": "操作"
+    "BLOCKCHAIN": "区块链"
   },
   "PENDING_REPORT_LIST": {
     "DATE": "日期",
@@ -169,7 +163,6 @@
     "REMAINING_TIME": "剩余时间",
     "OPERATIONS": "操作",
     "CANCEL": "取消",
-    "SELECT": "选择",
     "FAILED_TO_FETCH_PENDING_REPORTS": "无法取得处理中的报告。错误代码："
   },
   "PENDING_REPORT_ITEM": {

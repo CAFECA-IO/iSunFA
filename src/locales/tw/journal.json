@@ -7,7 +7,6 @@
     "FAILED_TO_DELETE": "刪除失敗",
     "UPCOMING": "即將到來的",
     "EVENTS": "會計事件",
-    "TYPE": "類型",
     "JOURNAL_LIST": "日記帳",
     "INVOICE_LIST": "發票列表",
     "ADD_NEW_JOURNAL": "新增日記帳",
@@ -169,8 +168,6 @@
     "DOUBLE_DECLINING": "雙倍餘額遞減法",
     "UNITS_OF_PRODUCTION": "工作量法",
     "ESTIMATED_USEFUL_LIFE": "預計使用壽命",
-    "YEAR": "年",
-    "MONTH": "月",
     "DAY": "日",
     "NAME_YOUR_ASSET": "為您的資產命名",
     "ADD_NOTE": "新增備註"
@@ -178,8 +175,6 @@
   "CONTRACT": {
     "SIGNATORY": "簽署人",
     "DURATION": "期間",
-    "COMPANY_NAME": "公司名稱",
-    "BUSINESS_REGISTRATION_NUMBER": "商業登記號碼",
     "SEARCH_CONTRACT": "搜尋合約"
   },
   "CONFIRM_MODAL": {

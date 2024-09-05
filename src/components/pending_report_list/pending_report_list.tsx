@@ -10,16 +10,7 @@ interface IReportListProps {
   reports: IReport[];
 }
 const PendingReportList = ({ reports }: IReportListProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   const [reportItems, setReportItems] = useState<IReport[]>(reports);
@@ -79,7 +70,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
       submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteSelectedReports,
       messageType: MessageType.WARNING,
-      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -235,7 +226,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
                 clipRule="evenodd"
               ></path>
             </svg>
-            <p>{t('report_401:PENDING_REPORT_LIST.SELECT')}</p>
+            <p>{t('common:COMMON.SELECT')}</p>
           </>
         )}
       </Button>
@@ -276,7 +267,7 @@ const PendingReportList = ({ reports }: IReportListProps) => {
             {displayedCheckbox}
             <th className="text-center">{t('report_401:PENDING_REPORT_LIST.DATE')}</th>
             <th className="px-16px">{t('report_401:PENDING_REPORT_LIST.REPORT_NAME')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('journal:JOURNAL.TYPE')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('common:COMMON.TYPE')}</th>
             <th className="hidden px-16px lg:table-cell">
               {t('report_401:PENDING_REPORT_LIST.PERIOD')}
             </th>

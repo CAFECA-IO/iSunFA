@@ -29,16 +29,7 @@ const BasicInfoForm = ({
   data: IBasicInfo;
   onChange: (key: BasicInfoKeys, value: string) => void;
 }) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   // Info: (20240719 - Liz) OuterClick Hook
   const {
     targetRef: countryFlagMenuRef,

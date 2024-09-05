@@ -28,16 +28,7 @@ interface IFinancialReportSectionProps {
 const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) => {
   // Info: (20240807 - Anna) 初始化 useRouter
   const router = useRouter();
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {
@@ -217,7 +208,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -233,7 +224,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
             {DUMMY_PROJECTS_MAP[selectedProjectName].name === 'Overall'
-              ? t('project:PROJECT.OVERALL')
+              ? t('common:COMMON.OVERALL')
               : DUMMY_PROJECTS_MAP[selectedProjectName].name}
           </div>
 
@@ -270,7 +261,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
-              placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+              placeholder={t('common:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -331,7 +322,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
                       {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('project:PROJECT.OVERALL')
+                        ? t('common:COMMON.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -525,7 +516,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+              {t('common:COMMON.PROJECT')}
             </div>
 
             {displayedProjectMenu}

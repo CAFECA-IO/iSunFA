@@ -246,7 +246,22 @@
     "EMPLOYEE_NAME": "Employee Name",
     "SETTINGS": "Settings",
     "COMPANY_NAME": "Company Name",
-    "YOUR_COMPANY_NAME": "your company name"
+    "YOUR_COMPANY_NAME": "your company name",
+    "SEARCH": "Search",
+    "OPERATIONS": "Operations",
+    "ASSETS": "Assets",
+    "ADD": "Add",
+    "OVERALL": "Overall",
+    "PROJECT": "Project",
+    "GO_CHECK_IT": "Go check it !",
+    "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number",
+    "EMPTY": "Empty",
+    "STATUS": "Status",
+    "MONTH": "Month",
+    "YEAR": "Year",
+    "SELECT": "Select",
+    "NO_DATA": "No Data",
+    "TOOLTIP_MESSAGE": "A message which appears when a cursor is positioned over an icon, image, hyperlink, or other element in a graphical user interface."
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",

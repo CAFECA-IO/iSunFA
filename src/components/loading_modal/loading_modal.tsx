@@ -7,16 +7,7 @@ interface ILoadingModalProps {
 }
 
 const LoadingModal = ({ isModalVisible }: ILoadingModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div

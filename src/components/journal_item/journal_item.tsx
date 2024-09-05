@@ -36,16 +36,7 @@ const Operations = ({
   onDelete: (companyId: number, journalId: number) => Promise<void>;
 }) => {
   const router = useRouter();
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { selectJournalHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
@@ -131,16 +122,7 @@ const JournalItem = ({
   journal,
   onDelete,
 }: IJournalItemProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const {
     id: journalId,
     date: createdTimestamp,
@@ -338,16 +320,7 @@ export const JournalItemMobile = ({
   journal,
   onDelete,
 }: IJournalItemProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { id, date, type: eventType, particulars: description, voucherNo } = journal;
   const price = 0; // ToDo: (20240528 - Julian) [Beta] Interface lacks price
 
