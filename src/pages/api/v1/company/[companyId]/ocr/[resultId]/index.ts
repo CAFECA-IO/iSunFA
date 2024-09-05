@@ -119,12 +119,6 @@ export async function handleGetRequest(resultId: string, type: string = 'invoice
 
           if (!isIInvoice(newOcr)) {
             // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-            logger.error(
-              {
-                newOcr,
-              },
-              `Error in ocr/[resultId]: ocr/${resultId}, Invoice json from AICH is not valid`
-            );
             newOcr = null;
           }
 
@@ -199,7 +193,6 @@ export default async function handler(
       }
     } catch (_error) {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-      logger.error(_error, `Error in ocr/[resultId]: ocr/${resultId}`);
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
