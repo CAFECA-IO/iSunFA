@@ -61,8 +61,7 @@ function getErrorCode(
   return undefined;
 }
 
-/**
- * Info: (20240828 - Gibbs) 記錄錯誤和異常的詳細信息
+/** (20240828 - Gibbs) 記錄錯誤和異常的詳細信息
  * @param {number} [userId] - 用戶ID
  * @param {string} errorType - 錯誤類型
  * @param {string | Error} errorMessage - 錯誤訊息
@@ -74,15 +73,17 @@ export function loggerError(userId: number, errorType: string, errorMessage: str
   }
 
   if (typeof errorMessage === 'string') {
-    // 已知指定錯誤訊息
+    // Info: (20240905 - Gibbs) 已知指定錯誤訊息
     logData.errorMessage = errorMessage;
-    // 處理 Prisma 錯誤, PrismaClientUnknownRequestError, PrismaClientRustPanicError, Prisma.PrismaClientValidationError 無 error code
-    // PrismaClientKnownRequestError: code, PrismaClientInitializationError: errorCode
+    /* Info: (20240905 - Gibbs) 已知指定錯誤訊息
+     * 處理 Prisma 錯誤, PrismaClientUnknownRequestError, PrismaClientRustPanicError, Prisma.PrismaClientValidationError 無 error code
+     * PrismaClientKnownRequestError: code, PrismaClientInitializationError: errorCode
+     */
   } else if (
     errorMessage instanceof Prisma.PrismaClientKnownRequestError ||
     errorMessage instanceof Prisma.PrismaClientInitializationError
   ) {
-    // 轉換特定 Prisma code 錯誤, 其餘 Prisma code 錯誤給預設值
+    // Info: (20240905 - Gibbs) 轉換特定 Prisma code 錯誤, 其餘 Prisma code 錯誤給預設值
     const errorCode = getErrorCode(errorMessage);
     switch (errorCode) {
       case 'P1008':
@@ -124,18 +125,17 @@ export function loggerError(userId: number, errorType: string, errorMessage: str
     errorMessage instanceof Prisma.PrismaClientRustPanicError ||
     errorMessage instanceof Prisma.PrismaClientValidationError
   ) {
-    // 處理其餘 Prisma 錯誤,
+    // Info: (20240905 - Gibbs) 處理其餘 Prisma 錯誤
     logData.errorMessage = `A Prisma error:\n${errorMessage.message}`;
   } else if (errorMessage instanceof Error) {
-    // 處理一般錯誤
+    // Info: (20240905 - Gibbs) 處理一般錯誤
     logData.errorMessage = `Non Prisma error:\n${errorMessage.message}`;
   }
 
   return loggerBack.child(logData);
 }
 
-/**
- * Info: (20240828 - Gibbs) 記錄請求和響應的詳細信息
+/** Info: (20240828 - Gibbs) 記錄請求和響應的詳細信息
  * @param {number} [userId] - 用戶ID
  * @param {string} url - 請求的URL
  * @param {string} method - HTTP方法 (如GET, POST)
@@ -160,8 +160,7 @@ export function loggerRequest(
   return loggerBack.child(logData);
 }
 
-/**
- * Info: (20240828 - Gibbs) 記錄用戶行為
+/** Info: (20240828 - Gibbs) 記錄用戶行為
  * @param {number} userId - 用戶ID
  * @param {string} actionType - 操作類型
  * @param {object} actionDetails - 操作詳細信息
@@ -170,8 +169,7 @@ export function loggerUserAction(userId: number, actionType: string, actionDetai
   return loggerBack.child({ level: 'info', userId, actionType, actionDetails });
 }
 
-/**
- * Info: (20240828 - Gibbs) 記錄系統事件
+/** Info: (20240828 - Gibbs) 記錄系統事件
  * @param {string} eventType - 事件類型
  * @param {object} details - 事件詳細信息
  */
@@ -179,8 +177,7 @@ export function loggerSystemEvent(eventType: string, details: object) {
   return loggerBack.child({ level: 'info', eventType, details });
 }
 
-/**
- * Info: (20240828 - Gibbs) 記錄性能數據
+/** Info: (20240828 - Gibbs) 記錄性能數據
  * @param {number} [userId] - 用戶ID
  * @param {number} responseTime - 響應時間
  * @param {object} queryPerformance - 查詢性能
@@ -199,8 +196,7 @@ export function loggerPerformance(
   return loggerBack.child(logData);
 }
 
-/**
- * Info: (20240828 - Gibbs) 記錄安全相關事件
+/** Info: (20240828 - Gibbs) 記錄安全相關事件
  * @param {number} [userId] - 用戶ID
  * @param {object} authProcess - 認證過程
  * @param {object} securityEvent - 安全事件
