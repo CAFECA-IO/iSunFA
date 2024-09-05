@@ -13,16 +13,7 @@ interface IEmbedCodeModal {
 }
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const balanceSheetRef = useRef<HTMLInputElement>(null);
   const incomeStatementRef = useRef<HTMLInputElement>(null);
   const cashFlowStatementRef = useRef<HTMLInputElement>(null);
@@ -157,7 +148,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -172,7 +163,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {selectedProjectName === 'Overall' ? t('project:PROJECT.OVERALL') : selectedProjectName}
+            {selectedProjectName === 'Overall' ? t('common:COMMON.OVERALL') : selectedProjectName}
           </div>
 
           <div className="my-auto flex flex-col justify-center">
@@ -206,7 +197,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal shadow-sm">
             <input
               type="text"
-              placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+              placeholder={t('common:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none text-input-text-input-filled focus:outline-none"
@@ -261,7 +252,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                     <div className="text-base font-medium leading-6 tracking-normal">
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('project:PROJECT.OVERALL')
+                        ? t('common:COMMON.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -340,7 +331,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="flex flex-col gap-3 max-md:max-w-full">
                 <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-                  {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+                  {t('common:COMMON.PROJECT')}
                 </div>
 
                 {displayedProjectMenu}
@@ -402,7 +393,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <div className="flex gap-3">
           <Button type="button" onClick={cancelClickHandler} variant="tertiaryBorderless">
-            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             disabled={

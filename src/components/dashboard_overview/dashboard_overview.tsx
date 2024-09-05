@@ -9,16 +9,7 @@ import { IProfitInsight } from '@/interfaces/project_insight';
 import { useTranslation } from 'next-i18next';
 
 const DashboardOverview = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const [dashboardOverview, setDashboardOverview] = React.useState<IProfitInsight>(
     {} as IProfitInsight
   );
@@ -43,19 +34,19 @@ const DashboardOverview = () => {
   const displayedProfitChangeRate =
     dashboardOverview.emptyProfitChange ||
     (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)
-      ? t('project:PROJECT.NO_DATA')
+      ? t('common:COMMON.NO_DATA')
       : `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange.toFixed(0)}`;
 
   const displayedTopProjectRoi =
     dashboardOverview.emptyTopProjectRoi ||
     (!dashboardOverview.topProjectRoi && dashboardOverview.topProjectRoi !== 0)
-      ? t('project:PROJECT.NO_DATA')
+      ? t('common:COMMON.NO_DATA')
       : `${dashboardOverview.topProjectRoi > 0 ? `+${dashboardOverview.topProjectRoi.toFixed(0)}` : dashboardOverview.topProjectRoi.toFixed(0)}`;
 
   const displayedPreLaunchProjects =
     dashboardOverview.emptyPreLaunchProject ||
     (!dashboardOverview.preLaunchProject && dashboardOverview.preLaunchProject !== 0)
-      ? t('project:PROJECT.NO_DATA')
+      ? t('common:COMMON.NO_DATA')
       : dashboardOverview.preLaunchProject;
 
   React.useEffect(() => {

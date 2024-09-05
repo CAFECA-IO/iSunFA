@@ -38,16 +38,7 @@ const ConfirmModal = ({
   modalVisibilityHandler,
   confirmData,
 }: IConfirmModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const {
     AIStatus,
@@ -173,7 +164,7 @@ const ConfirmModal = ({
       submitBtnStr: t('journal:JOURNAL.CONFIRM'),
       // Info: (20240716 - Julian) 從 API response 取出傳票列表
       submitBtnFunction: importVoucherHandler,
-      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
       backBtnFunction: () => {
         getAIStatusHandler(undefined, false);
         messageModalVisibilityHandler();
@@ -233,7 +224,7 @@ const ConfirmModal = ({
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('report_401:AUDIT_REPORT.GO_CHECK_IT')}
+              {t('common:COMMON.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -456,7 +447,9 @@ const ConfirmModal = ({
 
   const displayedHint = hasAIResult ? (
     // Info: (20240829 - Julian) AI 解析成功
-    <p className="text-badge-text-success-solid">{t('CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}</p>
+    <p className="text-badge-text-success-solid">
+      {t('journal:CONFIRM_MODAL.AI_ANALYSIS_COMPLETE')}
+    </p>
   ) : (AIStatus === ProgressStatus.IN_PROGRESS || AIStatus === ProgressStatus.SUCCESS) &&
     isAILoading ? (
     // Info: (20240829 - Julian) AI 載入中
@@ -672,7 +665,7 @@ const ConfirmModal = ({
           <div className="mt-20px flex w-full flex-col gap-12px text-sm text-text-neutral-secondary md:text-base">
             {/* Info: (20240429 - Julian) Type */}
             <div className="flex items-center justify-between">
-              <p>{t('journal:JOURNAL.TYPE')}</p>
+              <p>{t('common:COMMON.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
               <p className="text-surface-state-error">{translatedType}</p>
             </div>
@@ -725,7 +718,7 @@ const ConfirmModal = ({
             </div>
             {/* Info: (20240429 - Julian) Project */}
             <div className="flex items-center justify-between">
-              <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p>{t('common:COMMON.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240429 - Julian) Contract */}
@@ -815,7 +808,7 @@ const ConfirmModal = ({
         {/* Info: (20240429 - Julian) Buttons */}
         <div className="mx-20px mt-24px flex items-center justify-end gap-12px">
           <Button id="cancel-btn" type="button" onClick={closeHandler} variant="tertiaryBorderless">
-            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             id="confirm-btn"

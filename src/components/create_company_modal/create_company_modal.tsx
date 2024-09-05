@@ -36,16 +36,7 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
@@ -113,7 +104,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
             messageModalVisibilityHandler();
             router.push(ISUNFA_ROUTE.KYC);
           },
-          backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
+          backBtnStr: t('common:COMMON.CANCEL'),
         });
         messageModalVisibilityHandler();
       } else if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE]) {
@@ -204,7 +195,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
-              {t('journal:CONTRACT.COMPANY_NAME')}
+              {t('common:COMMON.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
@@ -219,7 +210,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           {/* Info: (20240514 - Julian) Business Registration Number */}
           <div className="inline-flex w-full flex-col items-start gap-2">
             <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
-              {t('journal:CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
+              {t('common:COMMON.BUSINESS_REGISTRATION_NUMBER')}
             </p>
             <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-input-text-input-filled shadow">
               {/* Info: (20240514 - Julian) country selection */}
@@ -260,7 +251,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
           <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
-            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button type="submit" variant="tertiary">
             {t('common:CONTACT_US.SUBMIT')}

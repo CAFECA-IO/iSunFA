@@ -7,16 +7,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 
 const DashboardPageBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const companyName = selectedCompany?.name ?? 'iSunFA';
 

@@ -34,16 +34,7 @@ enum EquityOptions {
 const ITEM_PER_PAGE = 10;
 
 const AccountingTitlePageBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'setting']);
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler, accountList } = useAccountingCtx();
 
@@ -203,7 +194,7 @@ const AccountingTitlePageBody = () => {
       <div className="mt-40px flex flex-col items-center gap-x-20px gap-y-8px lg:mt-0 lg:flex-row">
         {/* Info: (20240717 - Julian) Assets */}
         <div className="flex w-full flex-col gap-8px lg:w-200px">
-          <p className="font-semibold text-input-text-primary">{t('setting:SETTING.ASSETS')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.ASSETS')}</p>
           <div
             onClick={assetDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
@@ -256,7 +247,7 @@ const AccountingTitlePageBody = () => {
           type="text"
           value={searchValue}
           onChange={searchValueHandler}
-          placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+          placeholder={t('common:COMMON.SEARCH')}
           className="flex-1 bg-transparent text-input-text-input-filled outline-none"
         />
         <FiSearch size={20} />

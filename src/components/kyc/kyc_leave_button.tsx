@@ -5,16 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const LeaveButton = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 

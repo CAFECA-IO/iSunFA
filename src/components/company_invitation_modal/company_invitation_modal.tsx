@@ -24,16 +24,7 @@ const CompanyInvitationModal = ({
   modalVisibilityHandler,
   toastHandler,
 }: ICompanyInvitationModal) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
@@ -161,7 +152,7 @@ const CompanyInvitationModal = ({
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
           <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
-            {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button type="submit" variant={'tertiary'}>
             {t('common:CONTACT_US.SUBMIT')}

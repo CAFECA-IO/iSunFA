@@ -1244,7 +1244,7 @@ const NewJournalForm = () => {
   //       <hr className="block flex-1 border-lightGray3 md:hidden" />
   //       <div className="flex items-center gap-2 text-sm">
   //         <Image src="/icons/rocket_launch.svg" width={16} height={16} alt="rocket_launch_icon" />
-  //         <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //         <p>{t('common:COMMON.PROJECT')}</p>
   //       </div>
   //       <hr className="flex-1 border-lightGray3" />
   //     </div> */}
@@ -1260,7 +1260,7 @@ const NewJournalForm = () => {
   //           className={`group relative flex w-full cursor-pointer ${isProjectMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between divide-x divide-lightGray3 rounded-sm border bg-white hover:border-primaryYellow hover:text-primaryYellow`}
   //         >
   //           <div className="p-12px text-sm text-lightGray4">
-  //             <p style={{ whiteSpace: 'nowrap' }}>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
+  //             <p style={{ whiteSpace: 'nowrap' }}>{t('common:COMMON.PROJECT')}</p>
   //           </div>
   //           <div className="flex w-full items-center p-10px">
   //             <p className="flex-1">{projectName}</p>

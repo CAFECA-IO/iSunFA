@@ -33,16 +33,7 @@ const StatusMainColorMap = {
 };
 
 const ContractCard = ({ style, contract }: IContractCardProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const {
     name,
     projectName,

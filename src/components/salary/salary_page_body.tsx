@@ -161,7 +161,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 <div className="grow">
                   <input
                     type="text"
-                    placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+                    placeholder={t('common:COMMON.SEARCH')}
                     className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
                   />
                 </div>
@@ -319,7 +319,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 <div className="grow">
                   <input
                     type="text"
-                    placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+                    placeholder={t('common:COMMON.SEARCH')}
                     className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
                   />
                 </div>

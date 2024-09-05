@@ -217,7 +217,7 @@ const ProfileUploadModal = ({
       {/* Info: (20240618 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-12px px-20px py-16px text-button-text-secondary">
         <Button type="button" variant="secondaryBorderless" onClick={cancelHandler}>
-          {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+          {t('common:COMMON.CANCEL')}
         </Button>
         <Button type="button" className="w-full" variant="tertiary" onClick={saveImage}>
           <p>{t('common:EDIT_BOOKMARK_MODAL.SAVE')}</p>

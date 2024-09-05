@@ -22,16 +22,7 @@ const FilterOptionsModal = ({
   filterType,
   getFilterOptions = () => {},
 }: IFilterOptionsModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const [period, setPeriod, periodRef] = useStateRef(default30DayPeriodInSec);
   const [sort, setSort, sortRef] = useStateRef<SortOptions>(SortOptions.newest);
   const [selectedReportType, setSelectedReportType, selectedReportTypeRef] = useStateRef<
@@ -243,13 +234,13 @@ const FilterOptionsModal = ({
     // Info: (20240620 - Julian)
     filterType === FilterOptionsModalType.contract ? (
       <div className="flex flex-col items-start gap-8px">
-        <p className="font-semibold text-input-text-primary">{t('project:PROJECT.STATUS')}</p>
+        <p className="font-semibold text-input-text-primary">{t('common:COMMON.STATUS')}</p>
         {displayedStatusMenu}
       </div>
     ) : (
       <div className="flex flex-col space-y-2 self-stretch">
         <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-primary">
-          {t('journal:JOURNAL.TYPE')}
+          {t('common:COMMON.TYPE')}
         </div>
         {/* Info: (20240513 - Shirley) type menu */}
         {displayedTypeMenu}

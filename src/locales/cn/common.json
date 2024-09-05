@@ -246,7 +246,22 @@
     "EMPLOYEE_NAME": "员工姓名",
     "SETTINGS": "设置",
     "COMPANY_NAME": "公司名称",
-    "YOUR_COMPANY_NAME": "您的公司名称"
+    "YOUR_COMPANY_NAME": "您的公司名称",
+    "SEARCH": "搜索",
+    "OPERATIONS": "操作",
+    "ASSET": "资产",
+    "ADD": "新增",
+    "OVERALL": "全部",
+    "PROJECT": "项目",
+    "GO_CHECK_IT": "去检查一下吧！",
+    "BUSINESS_REGISTRATION_NUMBER": "商业登记号码",
+    "EMPTY": "无资料",
+    "STATUS": "状态",
+    "MONTH": "月",
+    "YEAR": "年",
+    "SELECT": "选择",
+    "NO_DATA": "没有数据",
+    "TOOLTIP_MESSAGE": "当游标位于图形使用者介面中的图示、图像、超连结或其他元素上时出现的讯息。"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",

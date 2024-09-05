@@ -25,16 +25,7 @@ interface FileInfo extends IOCRItem {
 }
 
 const JournalUploadArea = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { userAuth, selectedCompany } = useUserCtx();
   const {
     setInvoiceIdHandler,

@@ -369,7 +369,7 @@ const MyReportsSection = () => {
           }
         }}
         type="text"
-        placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+        placeholder={t('common:COMMON.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
@@ -533,7 +533,7 @@ const MyReportsSection = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
+          {t('common:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -604,7 +604,7 @@ const MyReportsSection = () => {
           }
         }}
         type="text"
-        placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+        placeholder={t('common:COMMON.SEARCH')}
         className={`relative flex h-44px w-full min-w-200px items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
       />
       <div
@@ -768,7 +768,7 @@ const MyReportsSection = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
+          {t('common:COMMON.EMPTY')}
         </div>
       </section>
     </div>

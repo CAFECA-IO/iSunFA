@@ -130,7 +130,7 @@ const NavBar = () => {
           className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
         > */}
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
-        <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
+        <p>{t('common:COMMON.PROJECT')}</p>
         {/* </Link> */}
       </button>
       <Link
@@ -246,7 +246,7 @@ const NavBar = () => {
           className="flex flex-col items-center gap-8px"
         > */}
         <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
-        <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
+        <p>{t('common:COMMON.PROJECT')}</p>
         {/* </Link> */}
       </button>
 

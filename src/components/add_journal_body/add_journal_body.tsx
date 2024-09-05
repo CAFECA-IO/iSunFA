@@ -11,16 +11,7 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useGlobalCtx } from '@/contexts/global_context';
 
 const AddJournalBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const {

@@ -67,7 +67,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
           <p
             className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm text-text-neutral-primary transition-all duration-300 ease-in-out`}
           >
-            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </p>
 
           {displayedCompanyName}

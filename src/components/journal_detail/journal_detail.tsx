@@ -35,16 +35,7 @@ interface IJournalDetailProps {
 }
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
@@ -584,7 +575,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
           <div className="flex w-full flex-col gap-12px text-base text-text-neutral-secondary md:w-2/3">
             {/* Info: (20240503 - Julian) Type */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('journal:JOURNAL.TYPE')}</p>
+              <p>{t('common:COMMON.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
               <p className="text-surface-state-error">{translatedType}</p>
             </div>
@@ -636,7 +627,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             </div>
             {/* Info: (20240503 - Julian) Project */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('report_401:REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p>{t('common:COMMON.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240503 - Julian) Contract */}
