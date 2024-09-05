@@ -4,7 +4,7 @@ import {
   generateSavePath,
   uploadFileToGoogleCloud,
 } from '@/lib/utils/google_image_upload';
-import logger from './logger';
+import logger from '@/lib/utils/logger_back';
 
 function isChinese(name: string): boolean {
   return /[\u3400-\u9FBF]/.test(name);

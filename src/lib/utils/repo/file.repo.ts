@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
 import { Prisma, File } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
-import logger from '@/lib/utils/logger';
+import logger from '@/lib/utils/logger_back';
 
 /**
  * Info: (20240830 - Murky)

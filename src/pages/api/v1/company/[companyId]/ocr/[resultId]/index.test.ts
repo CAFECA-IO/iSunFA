@@ -3,7 +3,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import * as common from '@/lib/utils/common';
-import logger from '@/lib/utils/logger';
+import logger from '@/lib/utils/logger_back';
 
 // Info: (20240806 - Murky) Temporary not use
 // let res: jest.Mocked<NextApiResponse>;

@@ -66,5 +66,4 @@ try {
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }
 
-// Info:(20240701-Jacky) - Log the updated version
 // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger

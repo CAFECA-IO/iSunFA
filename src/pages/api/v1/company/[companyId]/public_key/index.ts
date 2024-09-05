@@ -4,9 +4,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import logger from '@/lib/utils/logger';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { exportPublicKey, getPublicKeyByCompany } from '@/lib/utils/crypto';
+import logger from '@/lib/utils/logger_back';
 
 async function handleGetRequest(
   req: NextApiRequest,

@@ -6,6 +6,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 // eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
+// import logger from '@/lib/utils/logger';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;

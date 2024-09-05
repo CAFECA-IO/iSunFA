@@ -37,12 +37,10 @@ async function handleVoucherCreatePrismaLogic(
       await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
     if (!journal || !journal.invoice || !journal.invoice.payment) {
-      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
-      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
       throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 

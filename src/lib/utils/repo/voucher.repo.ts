@@ -109,18 +109,6 @@ export async function createLineItemInPrisma(
   companyId: number
 ) {
   try {
-    // Deprecated: (20240527 - Murky) LineItem has accountId
-    // let accountId = await findFirstAccountInPrisma(lineItem.account);
-
-    // Deprecated: (20240527 - Murky) LineItem has accountId
-    // if (!accountId) {
-    //   accountId = await findFirstAccountInPrisma('其他費用');
-    //   if (!accountId) {
-    //     accountId = await createFakeAccountInPrisma(companyId);
-    //   }
-    // }
-
-    // Deprecated: (20240619 - Murky) LineItem has accountId, no need to check
     if (!lineItem.accountId) {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
