@@ -85,6 +85,9 @@ export function loggerError(userId: number, errorType: string, errorMessage: str
     // 轉換特定 Prisma code 錯誤, 其餘 Prisma code 錯誤給預設值
     const errorCode = getErrorCode(errorMessage);
     switch (errorCode) {
+      case 'P1008':
+        logData.errorMessage = 'Operations timed out!';
+        break;
       case 'P1017':
         logData.errorMessage = 'Server has closed the connection!';
         break;
