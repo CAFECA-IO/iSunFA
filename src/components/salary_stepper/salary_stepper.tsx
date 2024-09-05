@@ -25,7 +25,7 @@ const SalaryStepper = () => {
       <div className="absolute left-40px top-12px h-4px w-200px bg-stepper-surface-base"></div>
 
       {/* Info: (20240715 - Julian) Step 2 */}
-      <div className="z-10 flex w-80px flex-col items-center gap-2px text-lightGray4">
+      <div className="z-10 flex w-80px flex-col items-center gap-2px text-stepper-text-default">
         <Image src="/icons/confirm.svg" width={30} height={30} alt="step_3_confirm" />
         <p>{t('journal:JOURNAL.CONFIRM')}</p>
       </div>

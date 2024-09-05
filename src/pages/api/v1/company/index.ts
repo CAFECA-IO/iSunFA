@@ -3,18 +3,23 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { IRole } from '@/interfaces/role';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import {
   formatCompanyAndRole,
   formatCompanyAndRoleList,
 } from '@/lib/utils/formatter/admin.formatter';
-import { createCompanyAndRole, listCompanyAndRole } from '@/lib/utils/repo/admin.repo';
-import { getCompanyByCode } from '@/lib/utils/repo/company.repo';
+import {
+  createCompanyAndRole,
+  getCompanyAndRoleByCompanyCode,
+  listCompanyAndRole,
+} from '@/lib/utils/repo/admin.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import { FileFolder } from '@/constants/file';
 
 async function checkInput(code: string, name: string, regional: string): Promise<boolean> {
   return !!code && !!name && !!regional;
@@ -69,30 +74,43 @@ async function handlePostRequest(
       if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
-        const getCompany = await getCompanyByCode(code);
+        // Info: (20240902 - Jacky) Check if company already exist in database
+        const getCompanyAndRole = await getCompanyAndRoleByCompanyCode(userId, code);
 
-        if (getCompany) {
-          statusMessage = getCompany.kycStatus
-            ? STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE
-            : STATUS_MESSAGE.DUPLICATE_COMPANY;
+        if (getCompanyAndRole) {
+          statusMessage = STATUS_MESSAGE.DUPLICATE_COMPANY;
         } else {
           const companyIcon = await generateIcon(name);
-          const createdCompanyRoleList = await createCompanyAndRole(
-            userId,
-            code,
-            name,
-            regional,
-            companyIcon
-          );
-          const newCompanyRoleList = await formatCompanyAndRole(createdCompanyRoleList);
-          statusMessage = STATUS_MESSAGE.CREATED;
-          payload = newCompanyRoleList;
+          const nowInSecond = getTimestampNow();
+          const imageName = name + '_icon' + nowInSecond;
+          const file = await createFile({
+            name: imageName,
+            size: companyIcon.size,
+            mimeType: companyIcon.mimeType,
+            type: FileFolder.TMP,
+            url: companyIcon.iconUrl,
+            isEncrypted: false,
+            encryptedSymmetricKey: '',
+          });
+          if (file) {
+            // Info: (20240830 - Murky) 將圖片存放在database之後connect company
+            const createdCompanyAndRole = await createCompanyAndRole(
+              userId,
+              code,
+              name,
+              regional,
+              file?.id
+            );
+            const newCompanyAndRole = formatCompanyAndRole(createdCompanyAndRole);
+            statusMessage = STATUS_MESSAGE.CREATED;
+            payload = newCompanyAndRole;
 
-          // Info: (20240827 - Murky) Generate Company Key , only new company will generate key
-          const companyId = createdCompanyRoleList.company.id;
+            // Info: (20240827 - Murky) Generate Company Key , only new company will generate key
+            const companyId = createdCompanyAndRole.company.id;
 
-          const companyKeyPair = await generateKeyPair();
-          await storeKeyByCompany(companyId, companyKeyPair);
+            const companyKeyPair = await generateKeyPair();
+            await storeKeyByCompany(companyId, companyKeyPair);
+          }
         }
       }
     }

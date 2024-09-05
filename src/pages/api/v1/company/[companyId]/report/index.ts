@@ -33,6 +33,7 @@ import {
   isReportSheetType,
 } from '@/lib/utils/type_guard/report';
 import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
+import { SortOrder } from '@/constants/sort';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -62,10 +63,10 @@ export function formatSortByFromQuery(sortBy: string | string[] | undefined) {
 }
 
 export function formatSortOrderFromQuery(sortOrder: string | string[] | undefined) {
-  let sortOrderString: 'desc' | 'asc' = 'desc';
+  let sortOrderString: SortOrder.DESC | SortOrder.ASC = SortOrder.DESC;
 
   if (isParamString(sortOrder)) {
-    sortOrderString = sortOrder === 'asc' ? 'asc' : 'desc';
+    sortOrderString = sortOrder === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC;
   }
   return sortOrderString;
 }

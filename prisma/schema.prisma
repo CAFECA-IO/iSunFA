@@ -101,7 +101,7 @@ model Authentication {
   credentialId String @unique @map("credential_id")
   method       String
   provider     String
-  authData     Json  @map("auth_data")
+  authData     Json   @map("auth_data")
   createdAt    Int    @map("created_at")
   updatedAt    Int    @map("updated_at")
   deletedAt    Int?   @map("deleted_at")
@@ -126,16 +126,18 @@ model Client {
 }
 
 model Company {
-  id        Int     @id @default(autoincrement())
-  name      String
-  code      String  @unique
-  regional  String
-  kycStatus Boolean @map("kyc_status")
-  imageId   String? @map("image_id")
-  startDate Int     @map("start_date")
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  deletedAt Int?    @map("deleted_at")
+  id          Int     @id @default(autoincrement())
+  name        String
+  code        String 
+  regional    String
+  kycStatus   Boolean @map("kyc_status")
+  imageFileId Int    @unique @map("image_file_id")
+  startDate   Int     @map("start_date")
+  createdAt   Int     @map("created_at")
+  updatedAt   Int     @map("updated_at")
+  deletedAt   Int?    @map("deleted_at")
+
+  imageFile File  @relation("company_image_file", fields: [imageFileId], references: [id])
 
   admins                     Admin[]
   clients                    Client[]
@@ -160,34 +162,38 @@ model Company {
 }
 
 model CompanyKYC {
-  id                        Int     @id @default(autoincrement())
-  companyId                 Int     @map("company_id")
-  address                   String
-  representativeName        String  @map("representative_name")
-  country                   String
-  registrationNumber        String  @map("registration_number")
-  registrationDate          String  @map("registration_date")
-  contactPerson             String  @map("contact_person")
-  contactPhone              String  @map("contact_phone")
-  contactEmail              String  @map("contact_email")
-  website                   String
-  registrationCertificateId String  @map("registration_certificate_id")
-  taxCertificateId          String  @map("tax_certificate_id")
-  representativeIdType      String  @map("representative_id_type")
-  representativeIdCardId    String  @map("representative_id_card_id")
-  city                      String
-  industry                  String
-  legalName                 String  @map("legal_name")
-  structure                 String
-  zipCode                   String  @map("zip_code")
-  status                    String
-  reviewer                  String?
-  note                      String?
-  reviewAt                  Int?    @map("review_at")
-  createdAt                 Int     @map("created_at")
-  updatedAt                 Int     @map("updated_at")
-  deletedAt                 Int?    @map("deleted_at")
-  company                   Company @relation(fields: [companyId], references: [id])
+  id                            Int     @id @default(autoincrement())
+  companyId                     Int     @map("company_id")
+  address                       String
+  representativeName            String  @map("representative_name")
+  country                       String
+  registrationNumber            String  @map("registration_number")
+  registrationDate              String  @map("registration_date")
+  contactPerson                 String  @map("contact_person")
+  contactPhone                  String  @map("contact_phone")
+  contactEmail                  String  @map("contact_email")
+  website                       String
+  registrationCertificateFileId Int     @unique @map("registration_certificate_file_id") // Info: (2024839 - Murky) File ID
+  taxCertificateFileId          Int     @unique @map("tax_certificate_file_id")
+  representativeIdType          String  @map("representative_id_type")
+  representativeIdCardFileId    Int     @unique @map("representative_id_card_file_id")
+  city                          String
+  industry                      String
+  legalName                     String  @map("legal_name")
+  structure                     String
+  zipCode                       String  @map("zip_code")
+  status                        String
+  reviewer                      String?
+  note                          String?
+  reviewAt                      Int?    @map("review_at")
+  createdAt                     Int     @map("created_at")
+  updatedAt                     Int     @map("updated_at")
+  deletedAt                     Int?    @map("deleted_at")
+
+  company                     Company @relation(fields: [companyId], references: [id])
+  registrationCertificateFile File    @relation("registration_certificate_file", fields: [registrationCertificateFileId], references: [id])
+  taxCertificateFile          File    @relation("tax_certificate_file", fields: [taxCertificateFileId], references: [id])
+  representativeIdCardFile    File    @relation("representative_id_card_file", fields: [representativeIdCardFileId], references: [id])
 
   @@map("company_kyc")
 }
@@ -293,6 +299,32 @@ model EmployeeProject {
   @@map("employee_project")
 }
 
+model File {
+  id                    Int     @id @default(autoincrement())
+  name                  String // Info: (20240830 - Murky) Name example: "100000.jpg"
+  size                  Float // Info: (20240830 - Murky) File Size in bytes
+  mimeType              String  @map("mime_type") // Info: (20240830 - Murky) File Mime Type ex: image/jpeg
+  type                  String //Info: (20240830 - Murky) FileFolder Type ex: invoice, tmp
+  url                   String // Info: (20240830 - Murky) File URL, it can be local folder or google bucket
+  isEncrypted           Boolean @map("is_encrypted") // Info: (20240830 - Murky) File is Encrypted by encryptSymmetricKey
+  encryptedSymmetricKey String // Info: (20240830 - Murky) File Encrypt Symmetric Key
+  iv                    Bytes   @default("") // Info: (20240830 - Murky) File Encrypt IV
+  createdAt             Int     @map("created_at")
+  updatedAt             Int     @map("updated_at")
+  deletedAt             Int?    @map("deleted_at")
+
+  companyKYCregistrationCertificateFile CompanyKYC? @relation("registration_certificate_file")
+  companyKYCtaxCertificateFile          CompanyKYC? @relation("tax_certificate_file")
+  companyKYCrepresentativeIdCardFile    CompanyKYC? @relation("representative_id_card_file")
+  companyImageFile                      Company?    @relation("company_image_file")
+  invoiceImageFile                      Invoice?    @relation("invoice_image_file")
+  ocrImageFile                          Ocr?        @relation("ocr_image_file")
+  userImageFile                         User?       @relation("user_image_file")
+  projectImageFile                      Project?    @relation("project_image_file")
+
+  @@map("file")
+}
+
 model Invoice {
   id               Int     @id @default(autoincrement())
   journalId        Int     @unique @map("journal_id")
@@ -305,13 +337,14 @@ model Invoice {
   description      String
   vendorTaxId      String  @map("vendor_tax_id")
   vendorOrSupplier String  @map("vendor_or_supplier")
-  imageUrl         String  @default("") @map("image_url")
+  imageFileId      Int?    @unique @map("image_file_id")
   deductible       Boolean
   createdAt        Int     @map("created_at")
   updatedAt        Int     @map("updated_at")
   deletedAt        Int?    @map("deleted_at")
   payment          Payment @relation(fields: [paymentId], references: [id])
   journal          Journal @relation(fields: [journalId], references: [id])
+  imageFile        File?   @relation("invoice_image_file", fields: [imageFileId], references: [id])
 
   @@map("invoice")
 }
@@ -407,15 +440,14 @@ model Ocr {
   id           Int     @id @default(autoincrement())
   aichResultId String  @unique @map("aich_result_id")
   companyId    Int     @map("company_id")
-  imageName    String  @map("image_name")
-  imageUrl     String  @map("image_url")
-  imageSize    Float   @map("image_size")
+  imageFileId  Int     @unique @map("image_file_id")
   status       String
   type         String // Info (20240626 - Jacky) ex: "invoice", "contract"
   createdAt    Int     @map("created_at")
   updatedAt    Int     @map("updated_at")
   deletedAt    Int?    @map("deleted_at")
   company      Company @relation(fields: [companyId], references: [id])
+  imageFile    File    @relation("ocr_image_file", fields: [imageFileId], references: [id])
 
   @@map("ocr")
 }
@@ -442,7 +474,7 @@ model Project {
   name             String
   completedPercent Int               @map("completed_percent")
   stage            String
-  imageId          String?           @map("image_id")
+  imageFileId      Int               @unique @map("image_file_id")
   createdAt        Int               @map("created_at")
   updatedAt        Int               @map("updated_at")
   deletedAt        Int?              @map("deleted_at")
@@ -456,7 +488,8 @@ model Project {
   employeeProjects EmployeeProject[]
   income_expenses  IncomeExpense[]
 
-  company Company @relation(fields: [companyId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
+  imageFile File    @relation("project_image_file", fields: [imageFileId], references: [id])
 
   @@map("project")
 }
@@ -629,7 +662,7 @@ model User {
   fullName        String?          @map("full_name")
   email           String?
   phone           String?
-  imageId         String?          @map("image_id")
+  imageFileId     Int              @unique @map("image_File_id")
   createdAt       Int              @map("created_at")
   updatedAt       Int              @map("updated_at")
   deletedAt       Int?             @map("deleted_at")
@@ -637,6 +670,8 @@ model User {
   invitations     Invitation[]
   authentications Authentication[]
   userAgreements  UserAgreement[]
+
+  imageFile File @relation("user_image_file", fields: [imageFileId], references: [id])
 
   @@map("user")
 }

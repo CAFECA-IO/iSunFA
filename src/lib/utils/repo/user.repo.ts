@@ -1,17 +1,21 @@
 import prisma from '@/client';
-import { Prisma, User, UserAgreement } from '@prisma/client';
+import { Prisma, User, UserAgreement, File } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { SortOrder } from '@/constants/sort';
 
-export async function listUser(): Promise<(User & { userAgreements: UserAgreement[] })[]> {
+export async function listUser(): Promise<
+  (User & { userAgreements: UserAgreement[]; imageFile: File | null })[]
+> {
   const userList = await prisma.user.findMany({
     where: {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       userAgreements: true,
+      imageFile: true,
     },
   });
   return userList;
@@ -22,23 +26,28 @@ export async function createUser({
   fullName,
   email,
   phone,
-  imageUrl,
+  imageId,
 }: {
   name: string;
   fullName: string;
   email: string;
   phone: string;
-  imageUrl: string;
+  imageId: number;
 }): Promise<User & { userAgreements: UserAgreement[] }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
+  const fileConnect: Prisma.FileCreateNestedOneWithoutUserImageFileInput = {
+    connect: {
+      id: imageId,
+    },
+  };
   const createdUser: Prisma.UserCreateInput = {
     name,
     fullName,
     email,
     phone,
-    imageId: imageUrl,
+    imageFile: fileConnect,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
   };
@@ -55,7 +64,7 @@ export async function createUser({
 
 export async function getUserById(
   userId: number
-): Promise<(User & { userAgreements: UserAgreement[] }) | null> {
+): Promise<(User & { userAgreements: UserAgreement[]; imageFile: File | null }) | null> {
   let user = null;
   if (userId > 0) {
     user = await prisma.user.findUnique({
@@ -65,6 +74,7 @@ export async function getUserById(
       },
       include: {
         userAgreements: true,
+        imageFile: true,
       },
     });
   }
@@ -77,27 +87,26 @@ export async function updateUserById(
   fullName?: string,
   email?: string,
   phone?: string,
-  imageUrl?: string
-): Promise<User & { userAgreements: UserAgreement[] }> {
+  imageId?: number
+): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-
-  const updatedUser: Prisma.UserUpdateInput = {
-    name,
-    fullName,
-    email,
-    phone,
-    imageId: imageUrl,
-    updatedAt: nowTimestamp,
-  };
 
   const user = await prisma.user.update({
     where: {
       id: userId,
     },
-    data: updatedUser,
+    data: {
+      name,
+      fullName,
+      email,
+      phone,
+      updatedAt: nowTimestamp,
+      imageFileId: imageId,
+    },
     include: {
       userAgreements: true,
+      imageFile: true,
     },
   });
 

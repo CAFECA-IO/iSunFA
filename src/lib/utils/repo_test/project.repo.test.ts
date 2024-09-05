@@ -7,6 +7,8 @@ import {
   deleteProjectByIdForTest,
 } from '@/lib/utils/repo/project.repo';
 import projects from '@/seed_json/project.json';
+import { FileFolder } from '@/constants/file';
+import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
 
 describe('Project Repository', () => {
   describe('listProject', () => {
@@ -54,8 +56,21 @@ describe('Project Repository', () => {
       const name = 'New Test Project';
       const stage = MILESTONE.BETA_TESTING;
       const members = [] as number[];
-      const project = await createProject(companyId, name, stage, members);
+      const testFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      if (!testFile) {
+        throw new Error('Failed to create a test file');
+      }
+      const project = await createProject(companyId, name, stage, testFile.id, members);
       await deleteProjectByIdForTest(project.id);
+      await deleteFileByIdForTesting(testFile.id);
       expect(project).toBeDefined();
       expect(project.name).toBe(name);
       expect(project.stage).toBe(stage);

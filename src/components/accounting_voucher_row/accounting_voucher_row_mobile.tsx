@@ -146,27 +146,27 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
             key={title}
             id={`accounting-menu-item-${id}`}
             onClick={clickHandler}
-            className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+            className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
           >
             {displayTitle}
           </div>
         );
       })
     ) : (
-      <div className="text-navyBlue2">{'no result'}</div>
+      <div className="text-dropdown-text-primary">{'no result'}</div>
     );
 
   const displayAccounting = (
     <div
       id={`accounting-menu-${id}`}
       onClick={accountingMenuOpenHandler}
-      className={`group relative flex h-46px w-full cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-input-surface-input-background p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-46px w-full cursor-pointer ${isAccountingMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-xs border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
     >
       <div className="line-clamp-2 w-9/10">{t(accountTitle)}</div>
       <PiBookOpen />
       {/* Info: (20240423 - Julian) Dropmenu */}
       <div
-        className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch shadow-dropmenu ${isAccountingMenuOpen ? 'h-200px border-lightGray3 opacity-100' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border bg-dropdown-surface-menu-background-primary p-8px transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch shadow-dropmenu ${isAccountingMenuOpen ? 'h-200px border-dropdown-stroke-menu opacity-100' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border bg-dropdown-surface-menu-background-primary p-8px transition-all duration-300 ease-in-out`}
       >
         {/* Info: (20240806 - Julian) search */}
         <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
@@ -197,23 +197,23 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
     <div className="flex flex-col gap-y-16px rounded-sm p-20px">
       {/* Info: (20240508 - Julian) Accounting */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">{t('journal:JOURNAL.ACCOUNTING')}</p>
+        <p className="text-input-text-primary">{t('journal:JOURNAL.ACCOUNTING')}</p>
         {displayAccounting}
       </div>
       {/* Info: (20240508 - Julian) Particulars */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">{t('journal:JOURNAL.PARTICULARS')}</p>
+        <p className="text-input-text-primary">{t('journal:JOURNAL.PARTICULARS')}</p>
         <input
           id={`input-particulars-mobile-${id}`}
           type="text"
           value={particulars ?? ''}
           onChange={changeParticularMobileHandler}
-          className={`h-46px rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none`}
+          className={`h-46px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none`}
         />
       </div>
       {/* Info: (20240508 - Julian) amount */}
       <div className="flex flex-col gap-y-8px">
-        <p className="text-navyBlue2">{t(amountTitle)}</p>
+        <p className="text-input-text-primary">{t(amountTitle)}</p>
         <input
           id={`${elementId}-${id}`}
           type="number"
@@ -222,7 +222,7 @@ const AccountingVoucherRowMobile = ({ type, accountingVoucher }: IAccountingVouc
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
-          className={`h-46px w-full rounded-xs border border-lightGray3 bg-input-surface-input-background p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+          className={`h-46px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none transition-all duration-300 ease-in-out disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
         />
       </div>
       {/* Info: (20240510 - Julian) Buttons */}

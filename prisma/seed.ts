@@ -29,9 +29,21 @@ import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
+import file from '@/seed_json/file.json';
 
 const prisma = new PrismaClient();
 
+async function createFile() {
+  const files = file.map((f) => {
+    return {
+      ...f,
+      iv: Buffer.from('1'),
+    };
+  });
+  await prisma.file.createMany({
+    data: files,
+  });
+}
 async function createSalaryRecord() {
   await prisma.salaryRecord.createMany({
     data: salaryRecords,
@@ -240,9 +252,17 @@ async function createLineItems() {
 }
 
 async function main() {
-  await createRole();
-  await createUser();
+  await createFile();
   await createCompany();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createUser();
+
+  await createRole();
   await createCompanyKYC();
   await createClient();
   await createAccount();

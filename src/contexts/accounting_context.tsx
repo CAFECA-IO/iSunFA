@@ -201,7 +201,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS);
   const {
     trigger: listUnprocessedOCR,
-    data: unprocessOCRs,
     error: listError,
     success: listSuccess,
     code: listCode,
@@ -245,6 +244,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [pendingOCRList, setPendingOCRList] = useState<IOCRItem[]>([]);
   const [isDBReady, setIsDBReady] = useState(false);
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
+  const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
 
   const getAccountListHandler = (
     companyId: number,
@@ -457,9 +457,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }
   };
 
-  const clearState = () => {
+  const clearOCRs = () => {
     setPendingOCRList([]);
     setPendingOCRListFromBrowser([]);
+    setUnprocessedOCRs([]);
+    setOCRList([]);
   };
 
   useEffect(() => {
@@ -477,7 +479,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   }, [isDBReady, userAuth, selectedCompany]);
 
   useEffect(() => {
-    clearState();
+    clearOCRs();
   }, [signedIn, selectedCompany]);
 
   useEffect(() => {
@@ -488,30 +490,46 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
+
     if (OCRListParams && OCRListParams.update) {
-      interval = setInterval(() => {
-        listUnprocessedOCR({
-          params: {
-            companyId: OCRListParams.companyId,
-          },
-        });
+      interval = setInterval(async () => {
+        try {
+          const response = await listUnprocessedOCR({
+            params: {
+              companyId: OCRListParams.companyId,
+            },
+          });
+          if (response?.data) {
+            setUnprocessedOCRs(response.data);
+          }
+        } catch (error) {
+          clearInterval(interval);
+        }
       }, 2000);
-      if (OCRListStatus.listSuccess !== listSuccess || OCRListStatus.listCode !== listCode) {
-        setOCRLisStatus({
-          listSuccess,
-          listCode,
-        });
-      }
-      if (listSuccess && unprocessOCRs) {
-        setOCRList((prevList) => mergeOCRLists(unprocessOCRs, prevList));
-        setPendingOCRList((prevList) => excludeUploadIdentifier(unprocessOCRs, prevList));
-      }
-      if (listSuccess === false) {
-        setOCRListParams((prev) => (prev ? { ...prev, update: false } : prev));
-      }
     }
-    return () => clearInterval(interval);
-  }, [OCRListParams, listError, listSuccess, listCode, unprocessOCRs]);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [OCRListParams]);
+
+  useEffect(() => {
+    if (OCRListStatus.listSuccess !== listSuccess || OCRListStatus.listCode !== listCode) {
+      setOCRLisStatus({
+        listSuccess,
+        listCode,
+      });
+    }
+
+    if (listSuccess) {
+      setOCRList((prevList) => mergeOCRLists(unprocessedOCRs, prevList));
+      setPendingOCRList((prevList) => excludeUploadIdentifier(unprocessedOCRs, prevList));
+    }
+
+    if (listSuccess === false) {
+      setOCRListParams((prev) => (prev ? { ...prev, update: false } : prev));
+    }
+  }, [listSuccess, listError, listCode, unprocessedOCRs]);
 
   const generateAccountTitle = (account: IAccount | null) => {
     if (account) return account.code + ' - ' + account.name;

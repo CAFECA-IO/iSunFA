@@ -1,5 +1,5 @@
 import useStateRef from 'react-usestateref';
-import React, { createContext } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { BookmarkItem } from '@/interfaces/modals';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
@@ -700,11 +700,13 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     });
   };
 
-  // eslint-disable-next-line react/jsx-no-constructed-context-values
-  const value = {
-    bookmarkList: bookmarkListRef.current,
-    addSelectedBookmarks,
-  };
+  const value = useMemo(
+    () => ({
+      bookmarkList: bookmarkListRef.current,
+      addSelectedBookmarks,
+    }),
+    [bookmarkListRef.current, addSelectedBookmarks]
+  );
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };

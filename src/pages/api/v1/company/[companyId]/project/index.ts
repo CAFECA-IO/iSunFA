@@ -9,6 +9,9 @@ import { formatProject, formatProjectList } from '@/lib/utils/formatter/project.
 import { getSession } from '@/lib/utils/session';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { Project } from '@prisma/client';
+import { connectFileById, createFile } from '@/lib/utils/repo/file.repo';
+import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
 
 async function handleGetRequest(
   req: NextApiRequest,
@@ -41,6 +44,44 @@ async function handleGetRequest(
   return { statusMessage, payload };
 }
 
+/**
+ * Info: (20240902 - Murky)
+ * 1. Create a file and connect it with the project
+ * 2. If create file success, connect the file with project
+ * @param projectIcon need to have iconUrl, mimeType, size
+ * @param project Prisma project type
+ * @returns Prisma file type or null
+ */
+async function createFileAndConnectProject(
+  projectIcon: {
+    iconUrl: string;
+    mimeType: string;
+    size: number;
+  },
+  project: Project
+) {
+  const { iconUrl, mimeType, size } = projectIcon;
+
+  // Info: (20240902 - Murky) Do nothing
+  const imageName = project.name + '_icon';
+  const file = await createFile({
+    name: imageName,
+    size,
+    mimeType,
+    type: FileFolder.TMP,
+    url: iconUrl,
+    isEncrypted: false,
+    encryptedSymmetricKey: '',
+  });
+
+  // Info: (20240902 - Murky) If file is not null, connect the file with user
+  if (file) {
+    await connectFileById(FileDatabaseConnectionType.PROJECT_IMAGE, file.id, project.id);
+  }
+
+  return file;
+}
+
 async function handlePostRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProject | null>>
@@ -64,13 +105,9 @@ async function handlePostRequest(
       } else {
         try {
           const projectIcon = await generateIcon(name);
-          const createdProject = await createProject(
-            companyId,
-            name,
-            stage,
-            memberIdList,
-            projectIcon
-          );
+          const createdProject = await createProject(companyId, name, stage, memberIdList);
+
+          await createFileAndConnectProject(projectIcon, createdProject);
           const project = formatProject(createdProject);
           statusMessage = STATUS_MESSAGE.CREATED;
           payload = project;

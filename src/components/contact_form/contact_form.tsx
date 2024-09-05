@@ -55,8 +55,9 @@ function ContactForm() {
     setShowAnim(true);
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
-    // eslint-disable-next-line no-promise-executor-return
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
     // Info: (20230731 - Shirley) 清空表單
     setInputName('');
     setInputPhone('');
@@ -74,8 +75,9 @@ function ContactForm() {
     };
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
-    // eslint-disable-next-line no-promise-executor-return
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
 
     email({ header: { 'Content-Type': 'application/json; charset=UTF-8' }, body: emailData });
   };
@@ -128,14 +130,13 @@ function ContactForm() {
     <div
       className={`${
         showAnim ? 'relative' : 'hidden'
-      } mx-auto mt-20 flex h-700px w-800px max-w-full flex-col items-center justify-center rounded-2xl bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5`}
+      } mx-auto mt-20 flex h-700px w-800px max-w-full flex-col items-center justify-center rounded-2xl bg-navy-blue-600 p-12 shadow-xl max-md:mt-10 max-md:px-5`}
     >
       <div
         className={`absolute left-0 top-0 ${
           showAnim ? 'flex' : 'hidden'
         } h-full w-full items-center justify-center`}
       >
-        {/* eslint-disable no-nested-ternary */}
         {animation === FormAnimation.LOADING ? (
           /* Info:(20230731 - Shirley) Loading animation */
           <div className="flex flex-col items-center space-y-10">
@@ -178,12 +179,11 @@ function ContactForm() {
       onSubmit={submitHandler}
       className={`${
         showAnim ? 'invisible opacity-0' : 'visible opacity-100'
-      } mt-20 flex w-330px max-w-full flex-col rounded-2xl bg-secondaryBlue p-12 shadow-xl max-md:mt-10 max-md:px-5 md:w-620px lg:w-800px`}
+      } mt-20 flex w-330px max-w-full flex-col rounded-2xl bg-navy-blue-600 p-12 shadow-xl max-md:mt-10 max-md:px-5 md:w-620px lg:w-800px`}
     >
       <div className="flex flex-col">
         {/* Info: (tzuhan - 20240513) remove arbitrary value? @Shirley  */}
-        {/* eslint-disable-next-line tailwindcss/no-arbitrary-value */}
-        <h1 className="justify-center text-5xl font-semibold leading-52px tracking-tighter text-amber-400">
+        <h1 className="justify-center text-5xl font-semibold leading-52px tracking-tighter text-orange-400">
           {t('common:CONTACT_US.TITLE')}
         </h1>
         <p className="mt-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
@@ -192,33 +192,35 @@ function ContactForm() {
       </div>
       <div className="mt-12">
         <div className="flex flex-col pb-4">
-          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley  */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
+          <label
+            htmlFor="Name"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
             {t('common:CONTACT_US.NAME')}
-            <span className="text-red-400">*</span>
+            <span className="text-red-500">*</span>
           </label>
           <input
             id="Name"
             type="text"
             value={inputName}
             onChange={nameChangeHandler}
-            className="rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400"
+            className="rounded border border-solid border-navy-blue-600 bg-navy-blue-400 px-4 py-2.5 text-xl leading-7 tracking-tight text-navy-blue-200 outline-none"
             required
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-            {t('common:CONTACT_US.EMAIL')} <span className="text-red-400">*</span>
+          <label
+            htmlFor="Email"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
+            {t('common:CONTACT_US.EMAIL')} <span className="text-red-500">*</span>
           </label>
           <input
             id="Email"
             type="email"
             value={inputEmail}
             onChange={emailChangeHandler}
-            className={`rounded border border-solid ${emailValid ? 'border-secondaryBlue' : 'border-red-500'} bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400`}
+            className={`rounded border border-solid ${emailValid ? 'border-navy-blue-600' : 'border-red-500'} bg-navy-blue-400 px-4 py-2.5 text-xl leading-7 tracking-tight text-navy-blue-200 outline-none`}
             required
           />
           {!emailValid && (
@@ -226,9 +228,10 @@ function ContactForm() {
           )}
         </div>
         <div className="mt-4 flex flex-col pb-4">
-          {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
+          <label
+            htmlFor="Phone"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
             {t('common:CONTACT_US.PHONE')}
           </label>
           <input
@@ -236,14 +239,16 @@ function ContactForm() {
             type="tel"
             value={inputPhone}
             onChange={phoneChangeHandler}
-            className="rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400"
+            className="rounded border border-solid border-navy-blue-600 bg-navy-blue-400 px-4 py-2.5 text-xl leading-7 tracking-tight text-navy-blue-200 outline-none"
           />
         </div>
         <div className="mt-4 flex flex-col pb-4">
           {/* Info: (tzuhan - 20240513) A form label must be associated with a control? @Shirley */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-            {t('common:CONTACT_US.MESSAGE')} <span className="text-red-400">*</span>
+          <label
+            htmlFor="Message"
+            className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
+          >
+            {t('common:CONTACT_US.MESSAGE')} <span className="text-red-500">*</span>
           </label>
           <textarea
             id="Message"
@@ -251,7 +256,7 @@ function ContactForm() {
             onChange={messageChangeHandler}
             rows={3}
             value={inputMessage}
-            className="min-h-120px rounded border border-solid border-secondaryBlue bg-tertiaryBlue px-4 py-2.5 text-xl leading-7 tracking-tight text-slate-400"
+            className="min-h-120px rounded border border-solid border-navy-blue-600 bg-navy-blue-400 px-4 py-2.5 text-xl leading-7 tracking-tight text-navy-blue-200 outline-none"
             placeholder={t('common:CONTACT_US.MESSAGE_PLACEHOLDER')}
             required
           ></textarea>

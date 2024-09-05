@@ -93,9 +93,9 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       // Info: (20240517 - Julian) If get journal detail failed, show error message modal
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Journal Detail Failed',
-        content: `Error code: ${code}`,
-        subMsg: 'Get journal detail failed',
+        title: t('journal:JOURNAL.JOURNAL_DETAIL_FAILED'),
+        content: t('common:COMMON.ERROR_CODE', { code }),
+        subMsg: t('journal:JOURNAL.GET_JOURNAL_DETAIL_FAILED'),
         submitBtnStr: t('journal:JOURNAL.GO_BACK_TO_JOURNAL_LIST'),
         hideCloseBtn: true,
         submitBtnFunction: backClickHandler,
@@ -167,10 +167,11 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       };
     });
 
-  // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
-  const invoicePreviewSrc = imgSrcHasError
-    ? '/elements/default_certificate.svg'
-    : journalDetail?.imageUrl ?? '';
+  /* Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
+   * 順序是：畫面載入 => journalDetail 不存在 => 預設圖片 => journalDetail載入 => 頁面更新
+   */
+  const invoicePreviewSrc =
+    journalDetail && !imgSrcHasError ? journalDetail.imageUrl : '/elements/default_certificate.svg';
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);
@@ -225,7 +226,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
         <p>{t('journal:JOURNAL.RECEIVING')}</p>
       </div>
     ) : type === 'Transfer' ? (
-      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-lightGray3 px-10px py-6px text-sm font-medium text-navyBlue">
+      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-badge-surface-soft-secondary px-10px py-6px text-sm font-medium text-badge-text-secondary-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -569,6 +570,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
                 width={236}
                 height={300}
                 alt="certificate"
+                priority
                 onError={(e) => {
                   if (e && !imgSrcHasError) {
                     setImgSrcHasError(true);

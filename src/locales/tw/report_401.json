@@ -144,7 +144,10 @@
     "REPORTS_HISTORY": "歷史報告",
     "GENERATE_REPORT": "產生報告",
     "WE_RECEIVED_YOUR_APPLICATION": "我們已經收到您的申請",
-    "TAKE_MINUTES": "AI產生報告需要30到40分鐘，您可以稍後再回來查看。"
+    "TAKE_MINUTES": "AI產生報告需要30到40分鐘，您可以稍後再回來查看。",
+    "FAILED_TO_FETCH_GENERATED_REPORTS": "無法取得產生的報告。錯誤代碼： {{code}}",
+    "DELETE_PROCESS": "您確定要刪除嗎？",
+    "APPLY_AGAIN": "如果您再次申請，則需要30到40分鐘。"
   },
   "REPORTS_HISTORY_ITEM": {
     "FROM": "從",
@@ -166,7 +169,8 @@
     "REMAINING_TIME": "剩餘時間",
     "OPERATIONS": "操作",
     "CANCEL": "取消",
-    "SELECT": "選擇"
+    "SELECT": "選擇",
+    "FAILED_TO_FETCH_PENDING_REPORTS": "無法取得處理中的報告。錯誤代碼："
   },
   "PENDING_REPORT_ITEM": {
     "ESTIMATED": "估計",

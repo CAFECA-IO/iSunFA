@@ -9,6 +9,7 @@ import {
   IVoucherDataForSavingToDB,
   IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
+import { SortOrder } from '@/constants/sort';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -164,7 +165,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
         },
       },
       orderBy: {
-        no: 'desc',
+        no: SortOrder.DESC,
       },
       select: {
         no: true,

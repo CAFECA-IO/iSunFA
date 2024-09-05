@@ -3,7 +3,6 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '@/interfaces/locale';
 import { Button } from '@/components/button/button';
-import { cn } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import Image from 'next/image';
 import { UserContext } from '@/contexts/user_context';
@@ -32,8 +31,7 @@ const CTASection = () => {
       >
         <div className="ml-10">
           <div className="flex flex-col md:space-y-5">
-            {' '}
-            <h1 className="text-h4 font-bold tracking-wider text-primaryYellow md:text-6xl lg:text-7xl">
+            <h1 className="text-h4 font-bold tracking-wider text-orange-400 md:text-6xl lg:text-7xl">
               {t('common:LANDING_PAGE.MAIN_TITLE')}
             </h1>
             <h1 className="text-h6 font-bold tracking-widest text-navy-blue-25 md:text-2xl lg:text-6xl">
@@ -53,17 +51,11 @@ const CTASection = () => {
           href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}
           className="z-5 flex w-full justify-center px-5 md:w-auto"
         >
-          <Button className="flex w-full space-x-3 lg:w-fit">
-            <p
-              className={cn(
-                'text-base leading-6 tracking-normal',
-                'text-secondaryBlue',
-                'group-hover:text-white'
-              )}
-            >
-              {t('common:NAV_BAR.TRY_NOW')}
-            </p>
-
+          <Button
+            variant="default"
+            className="flex w-full space-x-3 text-base leading-6 tracking-normal text-button-text-secondary hover:text-button-text-invert lg:w-fit"
+          >
+            <p>{t('common:NAV_BAR.TRY_NOW')}</p>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -75,7 +67,7 @@ const CTASection = () => {
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M8.86388 3.52973C9.12423 3.26939 9.54634 3.26939 9.80669 3.52973L13.8067 7.52974C14.067 7.79008 14.067 8.21219 13.8067 8.47254L9.80669 12.4725C9.54634 12.7329 9.12423 12.7329 8.86388 12.4725C8.60353 12.2122 8.60353 11.7901 8.86388 11.5297L11.7258 8.66781H2.66862C2.30043 8.66781 2.00195 8.36933 2.00195 8.00114C2.00195 7.63295 2.30043 7.33447 2.66862 7.33447H11.7258L8.86388 4.47254C8.60353 4.21219 8.60353 3.79008 8.86388 3.52973Z"
-                className={cn(`fill-current`, `text-secondaryBlue`, `group-hover:text-white`)}
+                className="fill-current"
               />
             </svg>
           </Button>

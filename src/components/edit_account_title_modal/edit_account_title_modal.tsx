@@ -90,14 +90,14 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.SUCCESS,
-        content: `Successfully updated account: ${updateResult.name}`,
+        content: `${t('setting:SETTING.SUCCESSFULLY_UPDATED_ACCOUNT')} ${updateResult.name}`,
         closeable: true,
       });
     } else if (updateSuccess === false) {
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.ERROR,
-        content: 'Failed to update account, please try again later.',
+        content: t('setting:SETTING.FAILED_TO_UPDATE_ACCOUNT'),
         closeable: true,
       });
     }
@@ -117,7 +117,7 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `getAccount-${errorCode}`,
         type: ToastType.ERROR,
-        content: 'Failed to get account data, please try again later.',
+        content: t('setting:SETTING.FAILED_TO_GET_ACCOUNT_DATA'),
         closeable: true,
       });
     }
@@ -247,7 +247,6 @@ const EditAccountTitleModal = ({
               type="text"
               value={nameValue}
               onChange={handleNameChange}
-              // Info: (20240805 - Anna) placeholder="Enter name"
               placeholder={t('setting:SETTING.ENTER_NAME')}
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />

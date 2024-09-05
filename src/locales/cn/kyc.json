@@ -22,6 +22,7 @@
     "READ_FILE_FAILED": "读取文件失败",
     "FILE_READ_ERROR": "读取文件时发生错误",
     "DELETE_FILE_FAILED": "删除文件失败",
+    "CHECK_THE_INFORMATION": "请再次核对讯息，或与我们联系。错误代码: {{code}}",
     "DELETE_FILE_ERROR": "删除文件错误代码: {{code}}",
     "SUBMIT_SUCCESS": "你的申请已经提交成功",
     "SUBMIT_SUCCESS_MESSAGE": "我们将在3-5个工作日内审核你的申请，谢谢你的耐心。",
@@ -90,7 +91,22 @@
     "YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE": "如果您离开，您可能会失去目前完成的进度",
     "ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE": "您确定要离开此页面吗",
     "LEAVE_NOW": "现在离开",
-    "BACK": "上一步"
+    "BACK": "上一步",
+    "CREATE_COMPANY_FAILED": "创建公司失败",
+    "PLEASE_TRY_AGAIN_LATER": "请稍后再试",
+    "DELETE_COMPANY_CHECK": "您确定要删除该公司吗？ 请注意，您无法撤销此操作。",
+    "TRANSFER_COMPANY": "转移公司管理权",
+    "TRANSFER_THE_ADMINISTRATION_TO": "您确定要将管理权转移至",
+    "TRANSFER_COMPANY_TO": "公司管理权转移至...",
+    "TRANSFER": "管理权转移",
+    "USER_ID": "使用者帐号",
+    "VERIFY_AGAIN": "请再次确认或联络公司管理员。",
+    "VERIFICATION_CODE_HAS_EXPIRED": "邀请码已过期",
+    "INVITATION_CODE_EXPIRY": "邀请码已过期",
+    "FAILED_TO_LIST_UPLOADED_FILES": "无法列出上传的文件: {{getCode}}",
+    "TRANSFER_OWNER": "转移拥有者",
+    "TRANSFER_OWNER_SUCCESSFULLY": "成功转移拥有者",
+    "TRANSFER_OWNER_FAILED": "转移拥有者失败"
   },
   "COMPANY_INVITATION_MODAL": {
     "CONGRATULATIONS_YOU": "恭喜！您",
@@ -127,7 +143,7 @@
     "DELETE": "删除",
     "EXISTED_COMPANY": "已经存在的公司",
     "COMPANY_ALREADY_REGISTERED": "该公司已注册",
-    "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。错误代码:{{code}}"
+    "PLEASE_COMPLETE_KYC": "如果您是该公司的所有者，请完成KYC以重新获得存取权限。"
   },
   "SELECT_COMPANY": {
     "WELCOME_BACK": "欢迎回来，",

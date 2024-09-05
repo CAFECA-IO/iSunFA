@@ -14,6 +14,17 @@ export enum UploadType {
   INVOICE = 'invoice',
 }
 
+export enum FileDatabaseConnectionType {
+  COMPANY_KYC_REGISTRATION_CERTIFICATE = 'companyKYCregistrationCertificateFile',
+  COMPANY_KYC_TAX_CERTIFICATE = 'companyKYCtaxCertificateFile',
+  COMPANY_KYC_REPRESENTATIVE_ID_CARD = 'companyKYCrepresentativeIdCardFile',
+  COMPANY_IMAGE = 'companyImageFile',
+  INVOICE_IMAGE = 'invoiceImageFile',
+  OCR_IMAGE = 'ocrImageFile',
+  USER_IMAGE = 'userImageFile',
+  PROJECT_IMAGE = 'projectImageFile',
+}
+
 export const UPLOAD_TYPE_TO_FOLDER_MAP = {
   [UploadType.KYC]: FileFolder.KYC,
   [UploadType.COMPANY]: FileFolder.TMP,
@@ -27,6 +38,8 @@ export enum UploadDocumentType {
   TAX_STATUS_CERTIFICATE = 'tax_status_certificate',
   REPRESENTATIVE_ID_CERTIFICATE = 'representative_id_certificate',
 }
+
+export const BASE_STORAGE_PLACEHOLDER = '{BASE_URL_PLACEHOLDER}';
 
 export const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || '.';
 
@@ -46,3 +59,5 @@ export function getFileFolder(folder: FileFolder): string {
 export const UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER = Object.values(FileFolder).map(
   (folder) => getFileFolder(folder)
 );
+
+export const PUBLIC_IMAGE_ID = 1000;

@@ -53,7 +53,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
                 scroll={false}
                 locale={item.value}
                 href={asPath}
-                className="block rounded-none py-3 text-center hover:text-button-surface-strong-primary"
+                className="block rounded-none py-3 text-center hover:text-button-text-primary-hover"
               >
                 {item.label}
               </Link>
@@ -79,7 +79,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
         <button
           onClick={mobileClickHandler}
           type="button"
-          className="px-4 pt-2 text-button-text-secondary hover:text-button-text-primary"
+          className="px-4 pt-2 text-button-text-secondary hover:text-button-text-primary-hover"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +107,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
                 scroll={false}
                 locale={item.value}
                 href={asPath}
-                className="block rounded-none px-3 py-7 font-medium text-button-text-secondary hover:cursor-pointer hover:text-button-text-primary"
+                className="block rounded-none px-3 py-7 font-medium text-button-text-secondary hover:cursor-pointer hover:text-button-text-primary-hover"
               >
                 {item.label}
               </Link>
@@ -128,7 +128,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
         id="NavLanguageMobile"
         onClick={mobileClickHandler}
         type="button"
-        className="flex w-screen items-center justify-between gap-8px py-10px pl-6 pr-6 text-button-text-secondary hover:text-primaryYellow disabled:text-button-text-secondary disabled:opacity-50 lg:hidden"
+        className="flex w-screen items-center justify-between gap-8px py-10px pl-6 pr-6 text-button-text-secondary hover:text-button-text-primary-hover disabled:text-button-text-secondary disabled:opacity-50 lg:hidden"
       >
         <div className="flex w-full items-center gap-8px">
           <svg

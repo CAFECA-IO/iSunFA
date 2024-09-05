@@ -41,12 +41,10 @@
 //     setNotifications(
 //       (prevNotifications) =>
 //         // Info: (20240606 - Shirley) prettier 排版
-//         // eslint-disable-next-line implicit-arrow-linebreak
 //         prevNotifications.map((notification) => {
 //           return notification.id === id ? { ...notification, isRead: true } : notification;
 //         })
 //       // Info: (20240606 - Shirley) prettier 排版
-//       // eslint-disable-next-line function-paren-newline
 //     );
 //   };
 
@@ -54,13 +52,11 @@
 //     setNotifications(
 //       (prevNotifications) =>
 //         // Info: (20240606 - Shirley) prettier 排版
-//         // eslint-disable-next-line implicit-arrow-linebreak
 //         prevNotifications.map((notification) => ({
 //           ...notification,
 //           isRead: true,
 //         }))
 //       // Info: (20240606 - Shirley) prettier 排版
-//       // eslint-disable-next-line function-paren-newline
 //     );
 //   };
 

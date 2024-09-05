@@ -13,7 +13,7 @@ const TermsOfServiceAndPrivacyPolicy: React.FC = () => {
     'terms',
   ]);
   return (
-    <div className="space-y-4 p-6 text-navyBlue">
+    <div className="space-y-4 p-6 text-text-brand-secondary-lv1">
       <p className="font-semibold">{t('terms:TOS_N_PP.DEAR_USER')}</p>
       <p>{t('terms:TOS_N_PP.WELCOME')}</p>
 

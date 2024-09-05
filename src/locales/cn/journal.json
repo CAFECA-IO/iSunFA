@@ -119,7 +119,21 @@
     "TIMES_HINT": "请填入次数",
     "INCONSISTENT_COMPANY_ID": "公司 ID 不一致",
     "FAILED_TO_FETCH_PUBLIC_KEY": "获取公钥失败",
-    "FAILED_TO_UPLOAD_FILE": "上传文件失败"
+    "FAILED_TO_UPLOAD_FILE": "上传文件失败",
+    "JOURNAL_DETAIL_FAILED": "取得日记帐资讯失败",
+    "FAILED_TO_GET_CAMERA_VIDEO": "取得相机失败，请检查您的相机设定。",
+    "UPLOAD_INVOICE_FAILED": "凭证上传失败",
+    "UPLOAD_INVOICE_FAILED_INSERT": "凭证上传失败 ({{uploadCode}}): {{status}}",
+    "UPLOAD_INVOICE_FAILED_WITH_CODE": "凭证上传失败 ({{uploadCode}})",
+    "REPLACE_INPUT": "将已输入的内容替换",
+    "USE_AI": "您确定要使用Ai提供的资讯吗？",
+    "TEXT_WILL_BE_REPLACED": "您输入的文字将被替换",
+    "GET_JOURNAL_FAILED": "取得日记帐失败",
+    "GET_JOURNAL_DETAIL_FAILED": "取得日记帐详细资讯失败",
+    "UPDATE_INVOICE_FAILED": "更新发票失败",
+    "UPDATE_INVOICE_FAILED_CODE": "更新发票失败: {{updateCode}}",
+    "DOWNLOAD_SELECTED_VOUCHER": "下载传票",
+    "DOWNLOAD_SELECTED_ITEMS": "您确定要下载所选项目吗？"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",

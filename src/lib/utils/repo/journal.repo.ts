@@ -25,7 +25,7 @@ export async function findManyJournalsInPrisma(
   try {
     journals = await prisma.journal.findMany({
       orderBy: {
-        createdAt: sort === 'asc' ? 'asc' : 'desc',
+        createdAt: sort === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC,
       },
       skip: offset,
       take: limit,
@@ -65,11 +65,16 @@ export async function findManyJournalsInPrisma(
         ],
       },
       include: {
-        project: true,
+        project: {
+          include: {
+            imageFile: true,
+          },
+        },
         contract: true,
         invoice: {
           include: {
             payment: true,
+            imageFile: true,
           },
         },
         voucher: {
@@ -138,9 +143,13 @@ export async function listJournal(
         : { [sortBy]: sortOrder };
 
     const include = {
-      project: true,
+      project: {
+        include: {
+          imageFile: true,
+        },
+      },
       contract: true,
-      invoice: { include: { payment: true } },
+      invoice: { include: { payment: true, imageFile: true } },
       voucher: { include: { lineItems: { include: { account: true } } } },
     };
 
@@ -198,11 +207,16 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
     };
 
     const include = {
-      project: true,
+      project: {
+        include: {
+          imageFile: true,
+        },
+      },
       contract: true,
       invoice: {
         include: {
           payment: true,
+          imageFile: true,
         },
       },
       voucher: {
@@ -305,11 +319,16 @@ export async function deleteJournalInPrisma(
             id: journalId,
           },
           include: {
-            project: true,
+            project: {
+              include: {
+                imageFile: true,
+              },
+            },
             contract: true,
             invoice: {
               include: {
                 payment: true,
+                imageFile: true,
               },
             },
             voucher: {

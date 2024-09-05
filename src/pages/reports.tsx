@@ -9,6 +9,7 @@ import ToggleButton from '@/components/toggle_button/toggle_button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { SortOrder } from '@/constants/sort';
 
 const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
 
@@ -142,12 +143,16 @@ const AuditReport = () => {
   ]);
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortDirection, setSortDirection] = useState<SortOrder.ASC | SortOrder.DESC>(SortOrder.ASC);
   const [checked, setChecked] = useState(false);
 
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
+  const compareCreditRatings = (
+    a: string,
+    b: string,
+    direction: SortOrder.ASC | SortOrder.DESC
+  ) => {
     const ratingOrder: { [key: string]: number } = {
       AAA: 1,
       AA: 2,
@@ -162,18 +167,19 @@ const AuditReport = () => {
     };
     const aRating = ratingOrder[a] || Number.MAX_SAFE_INTEGER;
     const bRating = ratingOrder[b] || Number.MAX_SAFE_INTEGER;
-    return direction === 'asc' ? aRating - bRating : bRating - aRating;
+    return direction === SortOrder.ASC ? aRating - bRating : bRating - aRating;
   };
 
   const handleSort = (column: string) => {
-    const direction = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    const direction =
+      sortBy === column && sortDirection === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
     setSortBy(column);
     setSortDirection(direction);
     const sortedData = data.sort((a, b) => {
       if (column === 'creditRating') {
         return compareCreditRatings(a[column], b[column], direction);
       } else {
-        return direction === 'asc'
+        return direction === SortOrder.ASC
           ? a[column].localeCompare(b[column])
           : b[column].localeCompare(a[column]);
       }
@@ -256,7 +262,7 @@ const AuditReport = () => {
         </div>
 
         {/* Search */}
-        <div className="flex grow items-center justify-between rounded-sm border border-lightGray3 bg-input-surface-input-background">
+        <div className="flex grow items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background">
           <div className="grow">
             <input
               type="text"
@@ -449,7 +455,7 @@ const AuditReport = () => {
             setFilteredPeriod={setDatePeriod}
             calenderClassName="right-0"
             btnClassName="rounded-xs border border-stroke-neutral-solid-light bg-inherit p-2.5 text-neutral-white"
-            buttonStyleAfterDateSelected="border-stroke-neutral-solid-light text-primaryYellow"
+            buttonStyleAfterDateSelected="border-stroke-neutral-solid-light"
           />
         </div>
         {/* Sort */}
@@ -508,23 +514,21 @@ const AuditReport = () => {
       {/* Info: (20240424 - Liz) ===== Divider ===== */}
       <div className="flex items-center gap-16px pt-6">
         <div className="flex items-center gap-8px">
-          <div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                d="M14 8.00004L6 8.00004M14 4.00004L6 4.00004M14 12L6 12M3.33333 8.00004C3.33333 8.36823 3.03486 8.66671 2.66667 8.66671C2.29848 8.66671 2 8.36823 2 8.00004C2 7.63185 2.29848 7.33337 2.66667 7.33337C3.03486 7.33337 3.33333 7.63185 3.33333 8.00004ZM3.33333 4.00004C3.33333 4.36823 3.03486 4.66671 2.66667 4.66671C2.29848 4.66671 2 4.36823 2 4.00004C2 3.63185 2.29848 3.33337 2.66667 3.33337C3.03486 3.33337 3.33333 3.63185 3.33333 4.00004ZM3.33333 12C3.33333 12.3682 3.03486 12.6667 2.66667 12.6667C2.29848 12.6667 2 12.3682 2 12C2 11.6319 2.29848 11.3334 2.66667 11.3334C3.03486 11.3334 3.33333 11.6319 3.33333 12Z"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+          >
+            <path
+              d="M14 8.00004L6 8.00004M14 4.00004L6 4.00004M14 12L6 12M3.33333 8.00004C3.33333 8.36823 3.03486 8.66671 2.66667 8.66671C2.29848 8.66671 2 8.36823 2 8.00004C2 7.63185 2.29848 7.33337 2.66667 7.33337C3.03486 7.33337 3.33333 7.63185 3.33333 8.00004ZM3.33333 4.00004C3.33333 4.36823 3.03486 4.66671 2.66667 4.66671C2.29848 4.66671 2 4.36823 2 4.00004C2 3.63185 2.29848 3.33337 2.66667 3.33337C3.03486 3.33337 3.33333 3.63185 3.33333 4.00004ZM3.33333 12C3.33333 12.3682 3.03486 12.6667 2.66667 12.6667C2.29848 12.6667 2 12.3682 2 12C2 11.6319 2.29848 11.3334 2.66667 11.3334C3.03486 11.3334 3.33333 11.6319 3.33333 12Z"
+              stroke="white"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           <div className="whitespace-nowrap text-navy-blue-25">
             {t('report_401:AUDIT_REPORT.CARD_LIST')}
           </div>

@@ -72,7 +72,7 @@ export const checkboxStyle =
 
 // Info: (20240425 - Julian) radio button CSS style
 export const radioButtonStyle =
-  'relative h-16px w-16px appearance-none outline-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
+  'relative h-16px w-16px appearance-none outline-none rounded-full border border-checkbox-stroke-unselected bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block';
 
 export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;
 

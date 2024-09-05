@@ -181,7 +181,8 @@ const AnalysisReportSection = () => {
               ></path>
             </svg>
           </div>
-
+          {/* Info: (20240830 - Anna) 為了解決Unexpected newline before '}'錯誤，請prettier不要格式化 */}
+          {/* prettier-ignore */}
           <div className="mt-2 max-h-52 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
               .filter((project) => {
@@ -192,12 +193,8 @@ const AnalysisReportSection = () => {
               .map((project) => (
                 <li
                   key={project}
-                  onClick={
-                    () =>
-                      // eslint-disable-next-line implicit-arrow-linebreak
-                      projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                    // eslint-disable-next-line react/jsx-curly-newline
-                  }
+                  onClick={() =>
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)}
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">

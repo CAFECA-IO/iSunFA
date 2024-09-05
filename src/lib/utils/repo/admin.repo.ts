@@ -1,12 +1,24 @@
 import prisma from '@/client';
+import {
+  File,
+  Admin,
+  Company,
+  CompanyKYC,
+  Prisma,
+  Role,
+  User,
+  UserAgreement,
+} from '@prisma/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
+import { SortOrder } from '@/constants/sort';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Admin, Company, CompanyKYC, Prisma, Role, User, UserAgreement } from '@prisma/client';
 
-export async function listAdminByCompanyId(
-  companyId: number
-): Promise<
-  (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })[]
+export async function listAdminByCompanyId(companyId: number): Promise<
+  (Admin & {
+    company: Company & { imageFile: File | null };
+    user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
+    role: Role;
+  })[]
 > {
   const listedAdmin = await prisma.admin.findMany({
     where: {
@@ -14,25 +26,32 @@ export async function listAdminByCompanyId(
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       user: {
         include: {
+          imageFile: true,
           userAgreements: true,
         },
       },
-      company: true,
+      company: {
+        include: {
+          imageFile: true,
+        },
+      },
       role: true,
     },
   });
   return listedAdmin;
 }
 
-export async function getAdminById(
-  adminId: number
-): Promise<
-  | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
+export async function getAdminById(adminId: number): Promise<
+  | (Admin & {
+      company: Company & { imageFile: File | null };
+      user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
+      role: Role;
+    })
   | null
 > {
   let admin = null;
@@ -46,9 +65,14 @@ export async function getAdminById(
         user: {
           include: {
             userAgreements: true,
+            imageFile: true,
           },
         },
-        company: true,
+        company: {
+          include: {
+            imageFile: true,
+          },
+        },
         role: true,
       },
     });
@@ -198,7 +222,11 @@ export async function updateAdminById(
   status?: boolean,
   roleId?: number
 ): Promise<
-  Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role }
+  Admin & {
+    company: Company & { imageFile: File | null };
+    user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
+    role: Role;
+  }
 > {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -215,19 +243,26 @@ export async function updateAdminById(
       user: {
         include: {
           userAgreements: true,
+          imageFile: true,
         },
       },
-      company: true,
+      company: {
+        include: {
+          imageFile: true,
+        },
+      },
       role: true,
     },
   });
   return updatedAdmin;
 }
 
-export async function deleteAdminById(
-  adminId: number
-): Promise<
-  Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role }
+export async function deleteAdminById(adminId: number): Promise<
+  Admin & {
+    company: Company & { imageFile: File | null };
+    user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
+    role: Role;
+  }
 > {
   const nowInSecond = getTimestampNow();
 
@@ -247,9 +282,14 @@ export async function deleteAdminById(
       user: {
         include: {
           userAgreements: true,
+          imageFile: true,
         },
       },
-      company: true,
+      company: {
+        include: {
+          imageFile: true,
+        },
+      },
       role: true,
     },
   });
@@ -281,23 +321,28 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
 
 export async function listCompanyAndRole(
   userId: number
-): Promise<Array<{ company: Company; role: Role }>> {
-  const listedCompanyRole: Array<{ company: Company; role: Role }> = await prisma.admin.findMany({
-    where: {
-      userId,
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      company: {
+): Promise<Array<{ company: Company & { imageFile: File | null }; role: Role }>> {
+  const listedCompanyRole: Array<{ company: Company & { imageFile: File | null }; role: Role }> =
+    await prisma.admin.findMany({
+      where: {
+        userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
+        company: {
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+        },
       },
-    },
-    orderBy: {
-      companyId: 'asc',
-    },
-    select: {
-      company: true,
-      role: true,
-    },
-  });
+      orderBy: {
+        companyId: SortOrder.ASC,
+      },
+      select: {
+        company: {
+          include: {
+            imageFile: true,
+          },
+        },
+        role: true,
+      },
+    });
   return listedCompanyRole;
 }
 
@@ -308,6 +353,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
   company: Company & {
     admins: Admin[];
     companyKYCs: CompanyKYC[];
+    imageFile: File | null;
   };
   role: Role;
 } | null> {
@@ -315,6 +361,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
     company: Company & {
       admins: Admin[];
       companyKYCs: CompanyKYC[];
+      imageFile: File | null;
     };
     role: Role;
   } | null = null;
@@ -328,6 +375,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
       select: {
         company: {
           include: {
+            imageFile: true,
             admins: {
               where: {
                 role: {
@@ -341,7 +389,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
                 OR: [{ deletedAt: 0 }, { deletedAt: null }],
               },
               orderBy: {
-                createdAt: 'desc',
+                createdAt: SortOrder.DESC,
               },
               take: 1,
             },
@@ -355,63 +403,106 @@ export async function getCompanyDetailAndRoleByCompanyId(
   return companyDetail;
 }
 
+export async function getCompanyAndRoleByCompanyCode(
+  userId: number,
+  companyCode: string
+): Promise<{
+  company: Company;
+  role: Role;
+} | null> {
+  let companyDetail: {
+    company: Company;
+    role: Role;
+  } | null = null;
+  if (companyCode) {
+    const companyRole = await prisma.admin.findFirst({
+      where: {
+        company: {
+          code: companyCode,
+        },
+        userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        company: true,
+        role: true,
+      },
+    });
+    companyDetail = companyRole;
+  }
+  return companyDetail;
+}
+
 export async function createCompanyAndRole(
   userId: number,
   code: string,
   name: string,
   regional: string,
-  imageId?: string,
+  imageFileId: number,
   email?: string
-): Promise<{ company: Company; role: Role }> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  const newCompanyRoleList: { company: Company; role: Role } = await prisma.admin.create({
-    data: {
-      user: {
-        connect: {
-          id: userId,
-        },
+): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
+  const nowTimestamp = getTimestampNow();
+
+  const userConnect: Prisma.UserCreateNestedOneWithoutAdminsInput = {
+    connect: {
+      id: userId,
+    },
+  };
+
+  const roleConnectOrCreate: Prisma.RoleCreateNestedOneWithoutAdminsInput = {
+    connectOrCreate: {
+      where: {
+        name: ROLE_NAME.OWNER,
       },
-      company: {
-        create: {
-          code,
-          name,
-          regional,
-          imageId,
-          kycStatus: false,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
-          startDate: nowTimestamp,
-        },
+      create: {
+        name: ROLE_NAME.OWNER,
+        // ToDo: (20240822 - Murky) [Beta] Should enum the permissions,
+        // however, since Beta version will change the permission type,
+        // and what permission per type is not clear yet, so just put it as string array
+        // and change it after beta mockup is clear
+        permissions: ['read', 'write', 'delete', 'invite'],
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
-      role: {
-        connectOrCreate: {
-          where: {
-            name: ROLE_NAME.OWNER,
-          },
+    },
+  };
+
+  const newCompanyRoleList: { company: Company & { imageFile: File }; role: Role } =
+    await prisma.admin.create({
+      data: {
+        user: userConnect,
+        company: {
           create: {
-            name: ROLE_NAME.OWNER,
-            // ToDo: (20240822 - Murky) [Beta] Should enum the permissions,
-            // however, since Beta version will change the permission type,
-            // and what permission per type is not clear yet, so just put it as string array
-            // and change it after beta mockup is clear
-            permissions: ['read', 'write', 'delete', 'invite'],
+            code,
+            name,
+            regional,
+            kycStatus: false,
+            imageFile: {
+              connect: {
+                id: imageFileId,
+              },
+            },
             createdAt: nowTimestamp,
             updatedAt: nowTimestamp,
+            startDate: nowTimestamp,
           },
         },
+        role: roleConnectOrCreate,
+        email: email || '',
+        status: true,
+        startDate: nowTimestamp,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
       },
-      email: email || '',
-      status: true,
-      startDate: nowTimestamp,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    },
-    select: {
-      company: true,
-      role: true,
-    },
-  });
+      select: {
+        company: {
+          include: {
+            imageFile: true,
+          },
+        },
+        role: true,
+      },
+    });
 
   return newCompanyRoleList;
 }

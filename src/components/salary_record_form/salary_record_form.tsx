@@ -110,13 +110,12 @@ const SalaryRecordForm = () => {
       </div>
     </div>
   );
-
   const workingHoursPart = isRecordWorkingHours ? (
     <div className="grid grid-flow-row grid-cols-1 gap-x-60px gap-y-40px md:grid-cols-2">
       {/* Info: (20240715 - Julian) Working hours for the period */}
       <div className="flex w-full flex-1 flex-col items-start gap-8px">
         <p className="text-sm font-semibold text-input-text-primary">
-          Working hours for the period
+          {t('salary:SALARY.WORKING_HOURS')}
         </p>
         <NumericInput
           id="input-working-hours"
@@ -129,7 +128,7 @@ const SalaryRecordForm = () => {
       {/* Info: (20240715 - Julian) Number of Participating Projects */}
       <div className="flex w-full flex-1 flex-col items-start gap-8px">
         <p className="text-sm font-semibold text-input-text-primary">
-          Number of Participating Projects
+          {t('salary:SALARY.NUMBER_OF_PARTICIPATING_PROJECTS')}
         </p>
         <NumericInput
           id="input-participating-projects"
@@ -140,7 +139,9 @@ const SalaryRecordForm = () => {
       </div>
       {/* Info: (20240715 - Julian) iSunFA (hours) */}
       <div className="flex w-full flex-1 flex-col items-start gap-8px">
-        <p className="text-sm font-semibold text-input-text-primary">iSunFA (hours)</p>
+        <p className="text-sm font-semibold text-input-text-primary">
+          {t('salary:SALARY.ISUNFA_HOURS')}
+        </p>
         <NumericInput
           id="input-isunfa-hours"
           value={isunfaHours}
@@ -151,7 +152,9 @@ const SalaryRecordForm = () => {
       </div>
       {/* Info: (20240715 - Julian) Routine work (hours) */}
       <div className="flex w-full flex-1 flex-col items-start gap-8px">
-        <p className="text-sm font-semibold text-input-text-primary">Routine work (hours)</p>
+        <p className="text-sm font-semibold text-input-text-primary">
+          {t('salary:SALARY.ROUTINE_WORK_HOURS')}
+        </p>
         <NumericInput
           id="input-routine-work-hours"
           value={routineWorkHours}
@@ -162,9 +165,9 @@ const SalaryRecordForm = () => {
       </div>
     </div>
   ) : (
-    <div className="my-20px flex items-center gap-x-8px">
+    <div className="my-20px flex items-center gap-x-8px text-base text-text-brand-secondary-lv2">
       <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
-      <p> Working hours for the period : {workingHours} pts</p>
+      <p>{t('salary:SALARY.WORKING_HOURS_PERIOD', { workingHours })}</p>
     </div>
   );
 
@@ -172,11 +175,11 @@ const SalaryRecordForm = () => {
     <form className="mt-40px flex flex-col" onSubmit={submitHandler}>
       {/* Info: (20240715 - Julian) Divider */}
       <div className="flex items-center gap-4 font-medium">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/record.svg" width={16} height={16} alt="record_icon" />
-          <p>Create new payroll records</p>
+          <p>{t('salary:SALARY.CREATE_NEW_PAYROLL_RECORDS')}</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       {/* Info: (20240715 - Julian) Main Form */}
       <div className="mt-40px flex flex-col gap-y-24px md:gap-y-40px">
@@ -195,7 +198,9 @@ const SalaryRecordForm = () => {
           </div>
           {/* Info: (20240715 - Julian) Departments */}
           <div className="relative flex w-full flex-col items-start gap-8px md:w-200px">
-            <p className="text-sm font-semibold text-input-text-primary">Departments</p>
+            <p className="text-sm font-semibold text-input-text-primary">
+              {t('common:COMMON.DEPARTMENTS')}
+            </p>
             <div
               id="dropdown-department"
               onClick={departmentToggleHandler}
@@ -210,14 +215,16 @@ const SalaryRecordForm = () => {
           </div>
           {/* Info: (20240715 - Julian) Employee */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">Employee</p>
+            <p className="text-sm font-semibold text-input-text-primary">
+              {t('common:COMMON.EMPLOYEE')}
+            </p>
             <input
               id="input-employee-name"
               type="text"
               className="h-44px w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px outline-none placeholder:text-input-text-input-placeholder"
               value={employeeName}
               onChange={nameChangeHandler}
-              placeholder="Employee Name"
+              placeholder={t('common:COMMON.EMPLOYEE_NAME')}
               required
             />
           </div>
@@ -226,7 +233,9 @@ const SalaryRecordForm = () => {
         <div className="flex flex-col items-end gap-x-60px gap-y-24px md:flex-row">
           {/* Info: (20240715 - Julian) Salary */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">Salary</p>
+            <p className="text-sm font-semibold text-input-text-primary">
+              {t('salary:SALARY.SALARY')}
+            </p>
             <NumericInput
               id="input-salary-amount"
               value={salaryAmount}
@@ -238,7 +247,9 @@ const SalaryRecordForm = () => {
           </div>
           {/* Info: (20240715 - Julian) Bonus */}
           <div className="flex w-full flex-1 flex-col items-start gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">Bonus</p>
+            <p className="text-sm font-semibold text-input-text-primary">
+              {t('salary:SALARY.BONUS')}
+            </p>
             <NumericInput
               id="input-bonus-amount"
               value={bonusAmount}
@@ -251,8 +262,10 @@ const SalaryRecordForm = () => {
         </div>
         {/* Info: (20240715 - Julian) Third Column */}
         <div className="flex flex-col gap-8px">
-          <p className="text-sm font-semibold text-input-text-primary">Insurance Payments</p>
-          <div className="flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white">
+          <p className="text-sm font-semibold text-input-text-primary">
+            {t('salary:SALARY.INSURANCE_PAYMENTS')}
+          </p>
+          <div className="flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
             <NumericInput
               id="input-insurance-payments"
               value={insurancePayments}
@@ -261,7 +274,7 @@ const SalaryRecordForm = () => {
               required
               className="flex-1 bg-transparent px-10px outline-none"
             />
-            <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+            <div className="flex items-center gap-4px p-12px text-sm text-icon-surface-single-color-primary">
               <svg
                 width="21"
                 height="20"
@@ -281,7 +294,9 @@ const SalaryRecordForm = () => {
         </div>
         {/* Info: (20240715 - Julian) Fourth Column */}
         <div className="flex flex-col gap-8px">
-          <p className="text-sm font-semibold text-input-text-primary">Description</p>
+          <p className="text-sm font-semibold text-input-text-primary">
+            {t('common:COMMON.DESCRIPTION')}
+          </p>
           <input
             id="input-description"
             value={description}
@@ -293,18 +308,18 @@ const SalaryRecordForm = () => {
       </div>
       {/* Info: (20240715 - Julian) Divider */}
       <div className="mt-20px flex items-center gap-4 font-medium">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/work.svg" width={16} height={16} alt="work_icon" />
-          <p>Working hours</p>
+          <p>{t('salary:SALARY.WORKING_HOURS_ALONE')}</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       {/* Info: (20240716 - Julian) Working Hours */}
       <div className="mt-40px flex flex-col gap-y-40px">
         {/* Info: (20240716 - Julian) Toggle */}
         <div className="flex flex-col gap-y-8px">
           <div className="flex items-center gap-x-16px text-switch-text-primary">
-            <p>Record Working hours</p>
+            <p>{t('salary:SALARY.RECORD_WORKING_HOURS')}</p>
             <Toggle
               id="toggle-record-working-hours"
               initialToggleState={isRecordWorkingHours}
@@ -312,12 +327,7 @@ const SalaryRecordForm = () => {
             />
           </div>
           <p className="text-xs text-text-brand-secondary-lv2">
-            iSUNFA Working Hours enables you to accurately calculate employee working hours. By
-            entering the hours and calculating project labor costs based on percentages, you can
-            allocate work hours to specific projects. If no hours are entered, all work hours will
-            be recorded as regular work, and individual project costs cannot be calculated
-            separately. Regardless of whether hours are entered, an accounting voucher will be
-            issued.
+            {t('salary:SALARY.DESCRIPTION_OF_WORKING_HOURS')}
           </p>
         </div>
         {/* Info: (20240716 - Julian) Inputs */}
@@ -326,10 +336,10 @@ const SalaryRecordForm = () => {
       {/* Info: (20240715 - Julian) Hours */}
       <div className="ml-auto mt-20px flex items-center gap-24px">
         <Button type="button" variant={null} onClick={cancelHandler}>
-          Cancel
+          {t('common:COMMON.CANCEL')}
         </Button>
         <Button type="submit" variant="default" disabled={disableSubmit}>
-          Submit
+          {t('common:CONTACT_US.SUBMIT')}
         </Button>
       </div>
     </form>

@@ -119,7 +119,21 @@
     "TIMES_HINT": "請填入次數",
     "INCONSISTENT_COMPANY_ID": "公司 ID 不一致",
     "FAILED_TO_FETCH_PUBLIC_KEY": "獲取公鑰失敗",
-    "FAILED_TO_UPLOAD_FILE": "上傳文件失敗"
+    "FAILED_TO_UPLOAD_FILE": "上傳文件失敗",
+    "JOURNAL_DETAIL_FAILED": "取得日記帳資訊失敗",
+    "FAILED_TO_GET_CAMERA_VIDEO": "取得相機失敗，請檢查您的相機設定。",
+    "UPLOAD_INVOICE_FAILED": "憑證上傳失敗",
+    "UPLOAD_INVOICE_FAILED_INSERT": "憑證上傳失敗 ({{uploadCode}}): {{status}}",
+    "UPLOAD_INVOICE_FAILED_WITH_CODE": "憑證上傳失敗 ({{uploadCode}})",
+    "REPLACE_INPUT": "將已輸入的內容替換",
+    "USE_AI": "您確定要使用Ai提供的資訊嗎？",
+    "TEXT_WILL_BE_REPLACED": "您輸入的文字將被替換",
+    "GET_JOURNAL_FAILED": "取得日記帳失敗",
+    "GET_JOURNAL_DETAIL_FAILED": "取得日記帳詳細資訊失敗",
+    "UPDATE_INVOICE_FAILED": "更新發票失敗",
+    "UPDATE_INVOICE_FAILED_CODE": "更新發票失敗: {{updateCode}}",
+    "DOWNLOAD_SELECTED_VOUCHER": "下載傳票",
+    "DOWNLOAD_SELECTED_ITEMS": "您確定要下載所選項目嗎？"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",

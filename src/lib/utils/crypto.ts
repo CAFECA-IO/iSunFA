@@ -34,6 +34,26 @@ enum CryptoOperationMode {
 
 const sssSecret = new SSSSecret();
 
+/**
+ * Info: (20240830 - Murky)
+ * Postgres can only store bytea for "iv" so we need to convert it to Uint8Array
+ * @param uint8Array - The Uint8Array to convert to Buffer
+ * @returns Buffer - The Buffer converted from Uint8Array
+ */
+export function uint8ArrayToBuffer(uint8Array: Uint8Array): Buffer {
+  return Buffer.from(uint8Array);
+}
+
+/**
+ * Info: (20240830 - Murky)
+ * Postgres can only store bytea for "iv" so we need to convert it to Uint8Array
+ * @param buffer - The Buffer to convert to Uint8Array
+ * @returns Uint8Array - The Uint8Array converted from Buffer
+ */
+export function bufferToUint8Array(buffer: Buffer): Uint8Array {
+  return new Uint8Array(buffer);
+}
+
 /*
   Info: [0x01, 0x00, 0x01]，對應到十進制的 65537 (20240822 - Shirley)
   使用 65537 作為 publicExponent 是一種常見且安全的做法，因為：
@@ -292,4 +312,22 @@ export async function getPrivateKeyByCompany(companyId: number): Promise<CryptoK
   privateKey = await importPrivateKey(privateKeyAssembled);
 
   return privateKey;
+}
+
+export function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  const arrayBuffer = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.length; i += 1) {
+    view[i] = buffer[i];
+  }
+  return arrayBuffer;
+}
+
+export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
+  const buffer = Buffer.alloc(arrayBuffer.byteLength);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.length; i += 1) {
+    buffer[i] = view[i];
+  }
+  return buffer;
 }

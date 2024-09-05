@@ -201,7 +201,7 @@ const JournalListBody = () => {
       messageModalDataHandler({
         title: t('journal:JOURNAL.FAILED_TO_DELETE'),
         subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
-        content: `Error code: ${deleteCode}`,
+        content: t('common:COMMON.ERROR_CODE', { code: deleteCode }),
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),

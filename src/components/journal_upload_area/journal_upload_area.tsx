@@ -183,7 +183,7 @@ const JournalUploadArea = () => {
     }
   };
 
-  const uploadToFileApi = async (item: IOCRItem) => {
+  const uploadToFileApi = async (companyId: number, item: IOCRItem) => {
     const formData = new FormData();
     const encryptedFile = new File([item.encryptedContent], item.name, {
       type: item.type,
@@ -192,8 +192,8 @@ const JournalUploadArea = () => {
     formData.append('file', encryptedFile);
 
     // Info: (20240829 - Murky) 下面的部份目前file upload的api沒有用到
-    formData.append('imageSize', item.size);
-    formData.append('imageName', item.name);
+    formData.append('fileSize', item.size);
+    formData.append('fileName', item.name);
     formData.append('encryptedSymmetricKey', item.encryptedSymmetricKey);
     formData.append('publicKey', JSON.stringify(item.publicKey));
     formData.append('iv', Array.from(item.iv).join(','));
@@ -201,7 +201,7 @@ const JournalUploadArea = () => {
     const { data } = await uploadInvoiceImgToLocal({
       query: {
         type: UploadType.INVOICE,
-        targetId: '0',
+        targetId: companyId,
       },
       body: formData,
     });
@@ -212,7 +212,8 @@ const JournalUploadArea = () => {
     item: IOCRItem,
     companyId: number,
     isNewPendingOCR: boolean,
-    fileName?: string
+    fileName?: string,
+    fileId?: number
   ) => {
     if (item.companyId !== companyId) {
       toastHandler({
@@ -236,6 +237,7 @@ const JournalUploadArea = () => {
         companyId,
       },
       body: {
+        fileId,
         imageName: fileName || item.name,
         imageSize: item.size,
         uploadIdentifier: item.uploadIdentifier,
@@ -271,8 +273,8 @@ const JournalUploadArea = () => {
     if (!selectedCompany?.id || pendingOCRListFromBrowser.length === 0) return;
 
     pendingOCRListFromBrowser.forEach(async (item) => {
-      const file = await uploadToFileApi(item);
-      await upload(item, selectedCompany.id, false, file?.id);
+      const file = await uploadToFileApi(selectedCompany?.id, item);
+      await upload(item, selectedCompany.id, false, file?.name, file?.id);
     });
   }, [pendingOCRListFromBrowser]);
 
@@ -280,8 +282,8 @@ const JournalUploadArea = () => {
     if (uploadFile && selectedCompany) {
       const uploadFileToOcr = async () => {
         // Info: (20240829 - Murky) To Shirely 更改這邊
-        const file = await uploadToFileApi(uploadFile);
-        await upload(uploadFile, selectedCompany?.id || -1, true, file?.id);
+        const file = await uploadToFileApi(selectedCompany?.id, uploadFile);
+        await upload(uploadFile, selectedCompany?.id || -1, true, file?.name, file?.id);
       };
       uploadFileToOcr();
       setUploadFile(null);
@@ -327,8 +329,11 @@ const JournalUploadArea = () => {
         } else {
           // Info: (20240522 - Julian) 顯示上傳失敗的錯誤訊息
           messageModalDataHandler({
-            title: 'Upload Invoice Failed',
-            content: `Upload invoice failed(${uploadCode}): ${result.status}`,
+            title: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED'),
+            content: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED_INSERT', {
+              uploadCode,
+              status: result.status,
+            }),
             messageType: MessageType.ERROR,
             submitBtnStr: t('common:COMMON.CLOSE'),
             submitBtnFunction: () => messageModalVisibilityHandler(),
@@ -339,8 +344,8 @@ const JournalUploadArea = () => {
     }
     if (uploadSuccess === false) {
       messageModalDataHandler({
-        title: 'Upload Invoice Failed',
-        content: `Upload invoice failed(${uploadCode})`,
+        title: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED'),
+        content: t('journal:JOURNAL.UPLOAD_INVOICE_FAILED_WITH_CODE', { uploadCode }),
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
@@ -354,7 +359,7 @@ const JournalUploadArea = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1`}
+      className={`h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-auto md:flex-1`}
     >
       <label
         htmlFor="journal-upload-area"
@@ -370,12 +375,28 @@ const JournalUploadArea = () => {
               ]
         )}
       >
-        <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-        <p className="mt-20px font-semibold text-navyBlue2">
+        <Image
+          src="/icons/upload_file.svg"
+          width={55}
+          height={60}
+          alt="upload_file"
+          className={isUploadDisabled ? 'grayscale' : ''}
+        />
+        <p
+          className={`mt-20px font-semibold ${isUploadDisabled ? 'text-drag-n-drop-text-disable' : 'text-drag-n-drop-text-primary'}`}
+        >
           {t('journal:JOURNAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-          <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
+          <span
+            className={
+              isUploadDisabled ? 'text-drag-n-drop-text-disable' : 'text-link-text-primary'
+            }
+          >
+            {t('journal:JOURNAL.BROWSE')}
+          </span>
         </p>
-        <p className="text-center text-lightGray4">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
+        <p className="text-center text-drag-n-drop-text-note">
+          {t('journal:JOURNAL.MAXIMUM_SIZE')}
+        </p>
 
         <input
           id="journal-upload-area"

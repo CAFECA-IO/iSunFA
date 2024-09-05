@@ -81,9 +81,8 @@ const PendingReportItem = ({
   const deleteClickHandler = () => {
     messageModalDataHandler({
       title: '',
-      subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes\n
-      if you want to apply it again.`,
+      subtitle: t('report_401:MY_REPORTS_SECTION.DELETE_PROCESS'),
+      content: t('report_401:MY_REPORTS_SECTION.APPLY_AGAIN'),
       submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
@@ -117,12 +116,7 @@ const PendingReportItem = ({
   }, [isPaused]);
 
   const displayedPauseOrResumeButton = !isPaused ? (
-    <Button
-      onClick={pauseClickHandler}
-      variant={'tertiaryBorderless'}
-      className="my-auto mr-2 px-0 py-0"
-    >
-      {' '}
+    <Button onClick={pauseClickHandler} variant="tertiaryBorderless" className="my-auto mr-2 p-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -139,12 +133,7 @@ const PendingReportItem = ({
       </svg>
     </Button>
   ) : (
-    <Button
-      onClick={resumeClickHandler}
-      variant={'tertiaryBorderless'}
-      className="my-auto mr-2 px-0 py-0"
-    >
-      {' '}
+    <Button onClick={resumeClickHandler} variant="tertiaryBorderless" className="my-auto mr-2 p-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -170,11 +159,7 @@ const PendingReportItem = ({
         {/* Info: (20240514 - Shirley) Pause / Resume */}
         {displayedPauseOrResumeButton}
         {/* Info: (20240514 - Shirley) Delete */}
-        <Button
-          onClick={deleteClickHandler}
-          variant={'tertiaryBorderless'}
-          className="mr-2 px-0 py-0"
-        >
+        <Button onClick={deleteClickHandler} variant={'tertiaryBorderless'} className="mr-2 p-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -234,7 +219,7 @@ const PendingReportItem = ({
   return (
     <tr
       key={id}
-      className="h-20 border-b border-lightGray6 text-center align-middle text-lightGray4"
+      className="h-20 border-b border-stroke-neutral-quaternary text-center align-middle"
     >
       {/* Info: (20240514 - Shirley) checkboxes */}
       {isCheckboxVisible ? (
@@ -243,11 +228,11 @@ const PendingReportItem = ({
             checked={checked}
             onChange={onCheckChange}
             type="checkbox"
-            className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+            className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
           />
         </td>
       ) : null}
-      <td className="border-x border-lightGray6">
+      <td className="border-x border-stroke-neutral-quaternary">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdAt} />
       </td>
@@ -269,7 +254,7 @@ const PendingReportItem = ({
           )}
         </span>
       </td>
-      <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-220px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">
             {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
@@ -282,7 +267,7 @@ const PendingReportItem = ({
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
-      <td className="hidden min-w-150px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-150px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
           <span className="text-text-neutral-tertiary">
             {t('report_401:PENDING_REPORT_ITEM.ESTIMATED')}

@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
 import { IOrder } from '@/interfaces/order';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Plan, Prisma } from '@prisma/client';
@@ -10,7 +11,7 @@ export async function listOrder(companyId: number): Promise<IOrder[]> {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
   });
   return listedOrder;

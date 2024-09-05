@@ -6,6 +6,8 @@ import {
   deleteUserByIdForTesting,
 } from '@/lib/utils/repo/user.repo';
 import users from '@/seed_json/user.json';
+import { FileFolder } from '@/constants/file';
+import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
 
 describe('User Repository', () => {
   describe('listUser', () => {
@@ -38,15 +40,28 @@ describe('User Repository', () => {
 
   describe('createUser', () => {
     it('should create a new user', async () => {
+      const testFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
       const newUser = {
         name: 'Test User new',
         fullName: 'test_credential_id_new',
         email: 'test_public_key_new',
         phone: 'test_algorithm_new',
-        imageUrl: 'test_image_url_new',
+        imageId: testFile?.id ?? 0,
       };
+      if (!testFile) {
+        throw new Error('Failed to create a test file');
+      }
       const user = await createUser(newUser);
       await deleteUserByIdForTesting(user.id); // Info: (20240723 - Murky) Clean up after test
+      await deleteFileByIdForTesting(testFile.id);
       expect(user).toBeDefined();
       expect(user.name).toBe(newUser.name);
       expect(user.email).toBe(newUser.email);

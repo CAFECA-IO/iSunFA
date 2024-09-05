@@ -73,9 +73,9 @@ const FeatureSection = () => {
         <Image src={image} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
       </div>
 
-      <p className="text-h6 leading-h6 text-primaryYellow md:text-h5 md:leading-h5">{t(title)}</p>
+      <p className="text-h6 leading-h6 text-orange-500 md:text-h5 md:leading-h5">{t(title)}</p>
 
-      <p className="w-3/5 text-xs leading-normal text-white md:w-full md:text-base">
+      <p className="w-3/5 text-xs leading-normal text-navy-blue-25 md:w-full md:text-base">
         {t(description)}
       </p>
     </div>
@@ -85,7 +85,7 @@ const FeatureSection = () => {
     <div className="container mx-auto flex h-fit w-full flex-col pt-10 md:pt-20 lg:pb-20 lg:pt-20">
       <div className="flex flex-col items-center space-y-3 px-4 pt-20 text-center md:space-y-10 md:pt-20 lg:mb-40 lg:h-450px lg:space-y-16 lg:px-20 lg:py-20">
         <div className="flex flex-col">
-          <h3 className="text-h5 font-bold leading-h5 text-white md:text-h1 md:leading-h1">
+          <h3 className="text-h5 font-bold leading-h5 text-navy-blue-25 md:text-h1 md:leading-h1">
             {t('common:LANDING_PAGE.FEATURES_SUBTITLE')}
           </h3>
         </div>

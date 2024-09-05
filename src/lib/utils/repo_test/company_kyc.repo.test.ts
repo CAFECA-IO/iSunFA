@@ -1,3 +1,4 @@
+import { FileFolder } from '@/constants/file';
 import {
   CountryOptions,
   IndustryOptions,
@@ -10,35 +11,68 @@ import {
   getCompanyKYCByCompanyId,
 } from '@/lib/utils/repo/company_kyc.repo';
 import companyKYCs from '@/seed_json/company_kyc.json';
+import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
 
 const testCompanyId = 1000;
 
 describe('CompanyKYC Repository Tests', () => {
-  const newCompanyKYCData = {
-    legalName: 'New Legal Name',
-    country: CountryOptions.TAIWAN,
-    city: 'New City',
-    address: 'New Address',
-    zipCode: '54321',
-    representativeName: 'New Representative',
-    structure: LegalStructureOptions.CORPORATION,
-    registrationNumber: '987654321',
-    registrationDate: '2023-01-02',
-    industry: IndustryOptions.FINANCIAL_SERVICES,
-    contactPerson: 'Jane Doe',
-    contactPhone: '+987654321',
-    contactEmail: 'jane.doe@example.com',
-    website: 'https://newexample.com',
-    representativeIdType: RepresentativeIDType.DRIVER_LICENSE,
-    registrationCertificateId: 'newcert123',
-    taxCertificateId: 'newtax123',
-    representativeIdCardId: 'newid123',
-  };
-
-  xdescribe('createCompanyKYC', () => {
+  describe('createCompanyKYC', () => {
     it('should create a new CompanyKYC record', async () => {
+      const registrationCertificateFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      const taxCertificateFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      const representativeIdCardFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      if (!registrationCertificateFile || !taxCertificateFile || !representativeIdCardFile) {
+        throw new Error('Failed to create a test file');
+      }
+      const newCompanyKYCData = {
+        legalName: 'New Legal Name',
+        country: CountryOptions.TAIWAN,
+        city: 'New City',
+        address: 'New Address',
+        zipCode: '54321',
+        representativeName: 'New Representative',
+        structure: LegalStructureOptions.CORPORATION,
+        registrationNumber: '987654321',
+        registrationDate: '2023-01-02',
+        industry: IndustryOptions.FINANCIAL_SERVICES,
+        contactPerson: 'Jane Doe',
+        contactPhone: '+987654321',
+        contactEmail: 'jane.doe@example.com',
+        website: 'https://newexample.com',
+        representativeIdType: RepresentativeIDType.DRIVER_LICENSE,
+        registrationCertificateFileId: registrationCertificateFile.id,
+        taxCertificateFileId: taxCertificateFile.id,
+        representativeIdCardFileId: representativeIdCardFile.id,
+      };
       const companyKYC = await createCompanyKYC(testCompanyId, newCompanyKYCData);
-      await deleteCompanyKYCForTesting(companyKYC.id); // Info: (20240723 - Murky) Clean up after test
+      await deleteCompanyKYCForTesting(companyKYC.id);
+      await deleteFileByIdForTesting(registrationCertificateFile.id); // Info: (20240903 - Jacky) Clean up after test
+      await deleteFileByIdForTesting(taxCertificateFile.id);
+      await deleteFileByIdForTesting(representativeIdCardFile.id);
       expect(companyKYC).toBeDefined();
       expect(companyKYC.companyId).toBe(testCompanyId);
       expect(companyKYC.legalName).toBe(newCompanyKYCData.legalName);

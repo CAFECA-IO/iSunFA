@@ -27,7 +27,7 @@ const UploadArea = ({
 }: {
   loacalStorageFilesKey: string;
   type: UploadDocumentKeys;
-  onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
+  onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
 }) => {
   const { t } = useTranslation([
     'common',
@@ -50,7 +50,7 @@ const UploadArea = ({
   const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
   const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
-  const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
+  const [uploadedFileId, setUploadedFileId] = useState<number | undefined>(undefined);
   const {
     trigger: getFile,
     data: getData,
@@ -73,7 +73,7 @@ const UploadArea = ({
     [messageModalDataHandler, messageModalVisibilityHandler]
   );
 
-  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: string) => {
+  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: number) => {
     const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
     const data = currentData;
 
@@ -104,6 +104,7 @@ const UploadArea = ({
       setStatus(ProgressStatus.SYSTEM_ERROR);
     }
     if (success && data) {
+      // Info: (20240830 - Murky) To Emily and Jacky To Emily and Jacky, File update down below
       onChange(type, data.id);
       setUploadedFileId(data.id);
       updateFileIdInLocalStorage(type, data.id);
@@ -248,7 +249,7 @@ const UploadArea = ({
     try {
       const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
       setUploadedFile(file);
-      setUploadedFileId(id);
+      setUploadedFileId(Number(id));
       setUploadProgress(100);
       if (id && file) {
         getFile({
@@ -274,7 +275,7 @@ const UploadArea = ({
     if (getSuccess === false) {
       toastHandler({
         id: `getFile-${getCode}`,
-        content: `Failed to list uploaded files: ${getCode}`,
+        content: t('kyc:KYC.FAILED_TO_LIST_UPLOADED_FILES', { getCode }),
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -289,7 +290,7 @@ const UploadArea = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-full`}
+      className={`h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-full`}
     >
       {uploadedFile ? (
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px">
@@ -353,7 +354,7 @@ const UploadArea = ({
           } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
         >
           <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-          <p className="mt-20px font-semibold text-navyBlue2">
+          <p className="mt-20px font-semibold text-drag-n-drop-text-primary">
             {t('common:UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
             <span className="text-link-text-primary">{t('common:UPLOAD_AREA.BROWSE')}</span>
           </p>

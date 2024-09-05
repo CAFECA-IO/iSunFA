@@ -114,13 +114,21 @@ export async function handleGetRequest(resultId: string, type: string = 'invoice
       case 'invoice': {
         ocrResult = await getPayloadFromResponseJSON(fetchResult);
         if (ocrResult) {
-          setOCRResultJournalId(ocrResult, null);
-          formatOCRResultDate(ocrResult);
+          let newOcr: IInvoice | null = setOCRResultJournalId(ocrResult, null);
+          newOcr = formatOCRResultDate(newOcr);
 
-          if (!isIInvoice(ocrResult)) {
+          if (!isIInvoice(newOcr)) {
             // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-            ocrResult = null;
+            logger.error(
+              {
+                newOcr,
+              },
+              `Error in ocr/[resultId]: ocr/${resultId}, Invoice json from AICH is not valid`
+            );
+            newOcr = null;
           }
+
+          ocrResult = newOcr;
         }
 
         break;
@@ -140,9 +148,13 @@ export async function handleDeleteRequest(resultId: string) {
   // Info: (20240715 - Jacky) payload should add ad unify formatter @TinyMurky
   if (getOCR) {
     const deletedOCR = await deleteOcrByResultId(resultId);
-    const imageSize = transformBytesToFileSizeString(deletedOCR.imageSize);
+    const imageSize = transformBytesToFileSizeString(deletedOCR.imageFile.size);
     payload = {
-      ...deletedOCR,
+      id: deletedOCR.id,
+      aichResultId: deletedOCR.aichResultId,
+      imageName: deletedOCR.imageFile.name,
+      imageUrl: deletedOCR.imageFile.url,
+      createdAt: deletedOCR.createdAt,
       progress: 0,
       imageSize,
       status: deletedOCR.status as ProgressStatus,
@@ -163,9 +175,9 @@ export default async function handler(
   let payload: APIReturnType = null;
   let status: string = STATUS_MESSAGE.BAD_REQUEST;
 
+  const { resultId, type } = req.query;
   if (isAuth) {
     try {
-      const { resultId, type } = req.query;
       if (!isResultIdValid(resultId)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
@@ -187,6 +199,7 @@ export default async function handler(
       }
     } catch (_error) {
       // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      logger.error(_error, `Error in ocr/[resultId]: ocr/${resultId}`);
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

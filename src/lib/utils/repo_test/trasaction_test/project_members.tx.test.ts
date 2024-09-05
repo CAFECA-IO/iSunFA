@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
 import { updateProjectMembers } from '@/lib/utils/repo/transaction/project_members.tx';
 
 describe('ProjectMembers Transaction Tests', () => {
@@ -30,7 +31,7 @@ describe('ProjectMembers Transaction Tests', () => {
           employeeId: 1002, // Info: (20240704 - Jacky) The new member ID
         },
         orderBy: {
-          id: 'desc',
+          id: SortOrder.DESC,
         },
       });
       expect(newMember).toBeDefined();

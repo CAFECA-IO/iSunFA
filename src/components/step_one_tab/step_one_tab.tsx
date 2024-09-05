@@ -190,7 +190,7 @@ const StepOneTab = () => {
     fileList.length > 0 || pendingOCRList.length > 0 ? (
       <>
         <div className="my-5 flex items-center gap-4">
-          <hr className="block flex-1 border-lightGray4 md:hidden" />
+          <hr className="block flex-1 border-divider-stroke-lv-3 md:hidden" />
           <div className="flex items-center gap-2 text-sm">
             <Image
               src="/icons/upload_file_list.svg"
@@ -200,7 +200,7 @@ const StepOneTab = () => {
             />
             <p>{t('journal:JOURNAL.UPLOADED_FILE')}</p>
           </div>
-          <hr className="flex-1 border-lightGray4" />
+          <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
         {/* Info: (20240523 - Julian) Uploaded File List */}
         <div className="mb-50px flex flex-col items-center gap-y-50px">
@@ -231,9 +231,9 @@ const StepOneTab = () => {
       {/* Info: (20240422 - Julian) label */}
       {/* <p className="text-sm font-semibold text-navyBlue2">{t('journal:JOURNAL.DESCRIPTION_OF_EVENTS')}</p> */}
       {/* Info: (20240422 - Julian) input */}
-      {/* <div className="flex items-center divide-x divide-lightGray3 rounded border border-lightGray3 bg-white">
+      {/* <div className="flex items-center divide-x divide-input-stroke-input rounded border border-input-stroke-input bg-white">
         <input
-          className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-lightGray4"
+          className="flex-1 bg-transparent px-20px text-tertiaryBlue outline-none placeholder:text-input-text-input-placeholder"
           placeholder={t('common:COMMON.ENTER_A_DESCRIPTION')}
           value={inputDescription}
           onChange={handleInputChange}
@@ -251,37 +251,53 @@ const StepOneTab = () => {
       {/* <p className="text-sm text-input-text-secondary">{t('journal:JOURNAL.DESCRIPTION_EXAMPLE')}</p> */}
       {/* Info: (20240422 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
-        <hr className="block flex-1 border-lightGray4 md:hidden" />
+        <hr className="block flex-1 border-divider-stroke-lv-3 md:hidden" />
         <div className="flex items-center gap-2 text-sm">
           <Image src="/icons/upload.svg" width={16} height={16} alt="bill_icon" />
           <p>{t('journal:JOURNAL.UPLOAD_CERTIFICATE')}</p>
         </div>
-        <hr className="flex-1 border-lightGray4" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       <div className="my-20px flex flex-col items-center gap-40px md:flex-row">
         {/* Info: (20240422 - Julian) Upload area */}
         <JournalUploadArea />
 
-        <h3 className="text-xl font-bold text-lightGray4">{t('common:COMMON.OR')}</h3>
+        <h3 className="text-xl font-bold text-text-neutral-tertiary">{t('common:COMMON.OR')}</h3>
 
         {/* Info: (20240422 - Julian) Scan QR code */}
-        <div className="h-200px w-300px rounded-lg bg-white md:h-240px md:w-auto md:flex-1">
+        <div className="h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-auto md:flex-1">
           <button
             type="button"
             onClick={qrCodeScanClickHandler}
             // ToDo: (20240802 - Julian) [Beta] Not released yet
             disabled
-            className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable disabled:text-drag-n-drop-text-disable md:p-48px"
+            className="group flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover disabled:border-drag-n-drop-stroke-disable disabled:bg-drag-n-drop-surface-disable md:p-48px"
           >
-            <Image src="/icons/scan_qrcode.svg" width={55} height={60} alt="scan_qr_code" />
+            <Image
+              src="/icons/scan_qrcode.svg"
+              width={55}
+              height={60}
+              alt="scan_qr_code"
+              className="group-disabled:grayscale"
+            />
             <div className="mt-20px flex items-center gap-10px">
-              <Image src="/icons/scan.svg" width={20} height={20} alt="scan" />
-              <p className="font-semibold text-navyBlue2">
+              <Image
+                src="/icons/scan.svg"
+                width={20}
+                height={20}
+                alt="scan"
+                className="group-disabled:grayscale"
+              />
+              <p className="font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
                 {t('journal:JOURNAL.USE_YOUR_PHONE_AS')}{' '}
-                <span className="text-primaryYellow">{t('journal:JOURNAL.SCANNER')}</span>
+                <span className="text-text-brand-primary-lv2 group-disabled:text-drag-n-drop-text-disable">
+                  {t('journal:JOURNAL.SCANNER')}
+                </span>
               </p>
             </div>
-            <p className="text-center text-lightGray4">{t('journal:JOURNAL.SCAN_THE_QRCODE')}</p>
+            <p className="text-center text-drag-n-drop-text-note group-disabled:text-drag-n-drop-text-disable">
+              {t('journal:JOURNAL.SCAN_THE_QRCODE')}
+            </p>
           </button>
         </div>
       </div>

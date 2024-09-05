@@ -4,6 +4,7 @@ import { ProjectStage } from '@/constants/project';
 import ProjectCard from '@/components/project_card/project_card';
 import { IProject } from '@/interfaces/project';
 import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/button/button';
 
 interface IProjectStageBlockProps {
   stage: ProjectStage;
@@ -40,14 +41,15 @@ const ProjectStageBlock = ({ stage, projects }: IProjectStageBlockProps) => {
       <div className="flex h-330px w-full flex-col gap-y-8px overflow-y-auto border-t border-stroke-neutral-quaternary py-14px md:h-500px">
         {displayedProjects}
       </div>
-      <div>
-        <button
+      <div className="mx-auto mt-24px">
+        <Button
           type="button"
-          className="mx-auto mt-24px rounded-xs border border-navyBlue2 p-12px hover:border-primaryYellow hover:text-primaryYellow"
+          variant="tertiaryOutline"
+          className="flex h-46px w-46px p-0"
           onClick={addClickHandler}
         >
           <FiPlus size={20} />
-        </button>
+        </Button>
       </div>
     </div>
   );

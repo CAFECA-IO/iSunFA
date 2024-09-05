@@ -65,7 +65,7 @@ const Operations = ({
       messageModalDataHandler({
         title: t('journal:JOURNAL.FAILED_TO_FETCH_DATA'),
         subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
-        content: `Error code: ${code}`,
+        content: t('common:COMMON.ERROR_CODE', { code }),
         messageType: MessageType.ERROR,
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),

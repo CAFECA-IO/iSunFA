@@ -234,7 +234,19 @@
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "Please read and agree the first time you login",
     "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "Agree with the Information Collection Statement",
     "AGREE_WITH_TOS_N_PP": "Agree with Terms of Service & Privacy Policy",
-    "ALPHA_TEST_REMINDER": "The data used in the Alpha version is for testing purposes only."
+    "ALPHA_TEST_REMINDER": "The data used in the Alpha version is for testing purposes only.",
+    "TYPE": "Type",
+    "EMPLOYEE": "Employee",
+    "DESCRIPTION": "Description",
+    "TOTAL_PRICE": "Total Price",
+    "TWD": "TWD",
+    "PAYMENT_STATUS": "Payment Status",
+    "CONFIRM": "Confirm",
+    "DEPARTMENTS": "Departments",
+    "EMPLOYEE_NAME": "Employee Name",
+    "SETTINGS": "Settings",
+    "COMPANY_NAME": "Company Name",
+    "YOUR_COMPANY_NAME": "your company name"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
