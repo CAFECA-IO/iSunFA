@@ -86,7 +86,7 @@ const PendingReportItem = ({
       submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: t('report_401:REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };

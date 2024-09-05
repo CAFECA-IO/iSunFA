@@ -164,16 +164,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, layoutAssertion } = useGlobalCtx();
@@ -376,7 +367,7 @@ const ProjectRoiComparisonChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
+          {t('common:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -428,7 +419,7 @@ const ProjectRoiComparisonChart = () => {
 
         <div className="hidden justify-end lg:flex">
           <Tooltip>
-            <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
+            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
           </Tooltip>
         </div>
       </div>

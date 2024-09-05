@@ -29,16 +29,7 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -155,7 +146,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('project:PROJECT.NO_DATA')}
+          {t('common:COMMON.NO_DATA')}
         </text>
       </svg>
     </div>
@@ -176,7 +167,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       >
         <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
         <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('project:PROJECT.NO_DATA')}
+          {t('common:COMMON.NO_DATA')}
         </text>
       </svg>
     </div>

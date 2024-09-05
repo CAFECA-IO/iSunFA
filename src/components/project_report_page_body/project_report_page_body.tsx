@@ -19,16 +19,7 @@ import { ReportStatusType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, MOCK_REPORTS } from '@/interfaces/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler } = useGlobalCtx();
@@ -280,7 +271,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('journal:JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.TYPE')}</p>
           {displayedPendingTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -296,7 +287,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="pendingReportSearchBar"
             type="text"
-            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"
@@ -336,7 +327,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('journal:JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.TYPE')}</p>
           {displayedHistoryTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -352,7 +343,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="historyReportSearchBar"
             type="text"
-            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"

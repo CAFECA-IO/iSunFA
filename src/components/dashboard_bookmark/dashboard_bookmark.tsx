@@ -30,16 +30,7 @@ const bookmarkNameMap: BookmarkNameMap = {
 };
 
 const DashboardBookmark = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   // Info: (20240808 - Anna) Alpha版先隱藏(編輯書籤列)
   // const { addBookmarkModalVisibilityHandler } = useGlobalCtx();
   const { bookmarkList } = useDashboardCtx();

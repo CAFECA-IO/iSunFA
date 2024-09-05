@@ -2,16 +2,7 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 
 const TermsOfServiceAndPrivacyPolicy: React.FC = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'terms']);
   return (
     <div className="space-y-4 p-6 text-text-brand-secondary-lv1">
       <p className="font-semibold">{t('terms:TOS_N_PP.DEAR_USER')}</p>

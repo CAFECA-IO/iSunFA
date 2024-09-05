@@ -7,7 +7,6 @@
     "FAILED_TO_DELETE": "删除失败",
     "EVENTS": "会计事件",
     "UPCOMING": "即将到来的",
-    "TYPE": "类型",
     "JOURNAL_LIST": "日记帐",
     "INVOICE_LIST": "发票清单",
     "ADD_NEW_JOURNAL": "新增日记帐",
@@ -169,8 +168,6 @@
     "DOUBLE_DECLINING": "双倍余额递减法",
     "UNITS_OF_PRODUCTION": "工作量法",
     "ESTIMATED_USEFUL_LIFE": "预计使用寿命",
-    "YEAR": "年",
-    "MONTH": "月",
     "DAY": "日",
     "NAME_YOUR_ASSET": "为您的资产命名",
     "ADD_NOTE": "添加备注"
@@ -178,8 +175,6 @@
   "CONTRACT": {
     "SIGNATORY": "签署人",
     "DURATION": "期间",
-    "COMPANY_NAME": "公司名称",
-    "BUSINESS_REGISTRATION_NUMBER": "商业登记号码",
     "SEARCH_CONTRACT": "搜寻合约"
   },
   "CONFIRM_MODAL": {

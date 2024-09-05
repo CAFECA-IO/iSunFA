@@ -29,16 +29,7 @@ const UploadArea = ({
   type: UploadDocumentKeys;
   onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
 }) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();

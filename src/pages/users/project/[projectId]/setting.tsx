@@ -208,7 +208,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('report_401:AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
             className="w-full outline-none placeholder:text-input-text-input-placeholder"

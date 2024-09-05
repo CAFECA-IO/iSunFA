@@ -9,16 +9,7 @@ import KYCForm from '@/components/kyc/kyc_form';
 const KYCIntro = () => {
   const { layoutAssertion } = useGlobalCtx();
   const isMobile = layoutAssertion === LayoutAssertion.MOBILE;
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const [step, setStep] = useState(0);
 
   const handleStepChange = (newStep: number) => {

@@ -243,7 +243,7 @@ const ProjectPageBody = () => {
         {/* Info: (2024606 - Julian) Title */}
         <div className="flex items-center justify-between">
           <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-            {t('report_401:REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </h1>
           <Button
             type="button"

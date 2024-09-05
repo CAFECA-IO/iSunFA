@@ -209,16 +209,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   const { toastHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -333,7 +324,7 @@ const IncomeExpenseTrendChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('report_401:MY_REPORTS_SECTION.EMPTY')}
+          {t('common:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -388,7 +379,7 @@ const IncomeExpenseTrendChart = () => {
 
         <div className="hidden justify-end lg:flex">
           <Tooltip>
-            <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
+            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
           </Tooltip>
         </div>
       </div>
@@ -414,7 +405,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 <p>
                   <span className="lg:hidden">{t('common:COMMON.M')}</span>
-                  <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.MONTH')}</span>
+                  <span className="hidden lg:inline">{t('common:COMMON.MONTH')}</span>
                 </p>
               </Button>
             </div>
@@ -433,7 +424,7 @@ const IncomeExpenseTrendChart = () => {
               >
                 <p>
                   <span className="lg:hidden">{t('common:COMMON.Y')}</span>
-                  <span className="hidden lg:inline">{t('journal:ADD_ASSET_MODAL.YEAR')}</span>
+                  <span className="hidden lg:inline">{t('common:COMMON.YEAR')}</span>
                 </p>
               </Button>
             </div>

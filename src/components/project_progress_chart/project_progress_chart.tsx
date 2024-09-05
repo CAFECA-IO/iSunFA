@@ -171,16 +171,7 @@ const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
 
   // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
@@ -285,7 +276,7 @@ const ProjectProgressChart = () => {
     <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
       <ColumnChart data={data} />
       <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-        <p className="text-xl font-bold text-text-neutral-mute">{t('project:PROJECT.NO_DATA')}</p>
+        <p className="text-xl font-bold text-text-neutral-mute">{t('common:COMMON.NO_DATA')}</p>
       </div>
     </div>
   ) : (
@@ -326,7 +317,7 @@ const ProjectProgressChart = () => {
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('project:PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

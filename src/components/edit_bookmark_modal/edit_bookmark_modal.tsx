@@ -33,16 +33,7 @@ const bookmarkNameMap: BookmarkNameMap = {
 };
 
 const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
   const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
 
@@ -272,7 +263,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
         <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal">
           <div className="flex gap-3">
             <Button onClick={cancelBtnClickHandler} variant="tertiaryBorderless">
-              {t('report_401:REPORTS_HISTORY_LIST.CANCEL')}
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button variant={'tertiary'} onClick={addBtnClickHandler}>
               {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
