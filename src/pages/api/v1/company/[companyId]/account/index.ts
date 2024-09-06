@@ -22,6 +22,7 @@ import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -251,9 +252,15 @@ export async function handlePostRequest(
     updatedAt: timeInSeconds,
     level: parentAccount.level + 1,
   };
-  const savedNewOwnAccount = await prisma.account.create({
-    data: newOwnAccount,
-  });
+  let savedNewOwnAccount: IAccount | null = null;
+  try {
+    savedNewOwnAccount = await prisma.account.create({
+      data: newOwnAccount,
+    });
+  } catch (error) {
+    const logError = loggerError(userId, 'Failed to create new own account', error as Error);
+    logError.error('Prisma related error');
+  }
   return savedNewOwnAccount;
 }
 
