@@ -15,8 +15,6 @@ import { ILineItem } from '@/interfaces/line_item';
 import AccountingVoucherRow from '@/components/accounting_voucher_row/accounting_voucher_row';
 import AccountingVoucherRowMobile from '@/components/accounting_voucher_row/accounting_voucher_row_mobile';
 import { Button } from '@/components/button/button';
-// ToDo: (20240527 - Luphia) Fix me
-// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';

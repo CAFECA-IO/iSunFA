@@ -2,7 +2,6 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
-// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';

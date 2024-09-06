@@ -4,7 +4,6 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { ICompany } from '@/interfaces/company';
-// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';

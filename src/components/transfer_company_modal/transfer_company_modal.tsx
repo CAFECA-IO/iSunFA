@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
-// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';

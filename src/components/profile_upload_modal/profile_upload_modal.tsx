@@ -6,7 +6,6 @@ import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';

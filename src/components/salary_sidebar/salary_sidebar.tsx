@@ -142,8 +142,7 @@ const SalarySidebar = () => {
         <button
           type="button"
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg

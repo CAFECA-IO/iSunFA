@@ -10,7 +10,6 @@ import { FiSearch } from 'react-icons/fi';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
