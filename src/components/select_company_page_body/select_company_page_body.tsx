@@ -16,16 +16,7 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
 
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
@@ -141,7 +132,7 @@ const SelectCompanyPageBody = () => {
       );
     })
   ) : (
-    <div>{t('report_401:MY_REPORTS_SECTION.LOADING')}</div>
+    <div>{t('common:COMMON.LOADING')}</div>
   );
 
   const displayCompanyMenu = (

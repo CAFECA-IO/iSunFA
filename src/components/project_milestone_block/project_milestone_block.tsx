@@ -64,16 +64,7 @@ const dummyMilestone: IMilestone[] = [
 ];
 
 const ProjectMilestoneBlock = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   const getMilestonePeriod = (milestone: IMilestone) => {
     const result: IDatePeriod = {
       startTimeStamp: milestone.startDate,
@@ -108,7 +99,7 @@ const ProjectMilestoneBlock = () => {
           <p className="w-100px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
-          <p className="text-text-neutral-secondary">{t('report_401:REPORTS_HISTORY_ITEM.TO')}</p>
+          <p className="text-text-neutral-secondary">{t('common:COMMON.TO')}</p>
           <p className="w-100px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>
@@ -145,7 +136,7 @@ const ProjectMilestoneBlock = () => {
           <p className="w-65px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
-          <p className="text-text-neutral-secondary">{t('report_401:REPORTS_HISTORY_ITEM.TO')}</p>
+          <p className="text-text-neutral-secondary">{t('common:COMMON.TO')}</p>
           <p className="w-65px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>

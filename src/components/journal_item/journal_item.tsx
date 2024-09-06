@@ -142,7 +142,7 @@ const JournalItem = ({
   };
 
   const debitItem = lineItems
-    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -150,7 +150,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
     : defaultItem;
   const credit = {
     account: creditItem.account,
@@ -213,7 +213,7 @@ const JournalItem = ({
             fill="#002462"
           />
         </svg>
-        <p className="whitespace-nowrap">{t('journal:JOURNAL.TRANSFER')}</p>
+        <p className="whitespace-nowrap">{t('common:COMMON.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -229,7 +229,7 @@ const JournalItem = ({
         </p>
         <p className="whitespace-nowrap text-text-neutral-primary">
           {debit.amount}{' '}
-          <span className="text-text-neutral-tertiary">{t('journal:JOURNAL.TWD')}</span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
         </p>
       </div>
       <div className="flex items-center gap-6px">
@@ -242,7 +242,7 @@ const JournalItem = ({
         </p>
         <p className="whitespace-nowrap text-text-neutral-primary">
           {credit.amount}{' '}
-          <span className="text-text-neutral-tertiary">{t('journal:JOURNAL.TWD')}</span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
         </p>
       </div>
     </div>
@@ -417,7 +417,7 @@ export const JournalItemMobile = ({
             {/* Info: (20240517 - Julian) 金額 */}
             <p>
               {numberWithCommas(price)}{' '}
-              <span className="text-text-neutral-tertiary">{t('journal:JOURNAL.TWD')}</span>
+              <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
             </p>
           </div>
         </div>

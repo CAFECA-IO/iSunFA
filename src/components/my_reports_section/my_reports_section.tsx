@@ -30,16 +30,7 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { cn } from '@/lib/utils/common';
 
 const MyReportsSection = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const router = useRouter();
 
   const { isAuthLoading, selectedCompany } = useUserCtx();

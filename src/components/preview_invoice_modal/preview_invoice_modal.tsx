@@ -5,6 +5,7 @@ import { PiShareFat } from 'react-icons/pi';
 import { timestampToString } from '@/lib/utils/common';
 import { IPreviewInvoiceModal } from '@/interfaces/preview_invoice_modal';
 import { Button } from '@/components/button/button';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
@@ -21,16 +22,7 @@ const PreviewInvoiceModal = ({
   modalVisibilityHandler,
   previewInvoiceModalData,
 }: IPreviewInvoiceModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { date, imgStr } = previewInvoiceModalData;
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 

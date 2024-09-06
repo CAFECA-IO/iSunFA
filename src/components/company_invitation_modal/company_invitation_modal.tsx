@@ -3,6 +3,7 @@ import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
 import { IToastify, ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';

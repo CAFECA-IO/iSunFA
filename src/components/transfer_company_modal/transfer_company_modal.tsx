@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
@@ -17,16 +18,7 @@ const TransferCompanyModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: ITransferCompanyModal) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +41,7 @@ const TransferCompanyModal = ({
             messageType: MessageType.SUCCESS,
             title: t('kyc:KYC.TRANSFER_OWNER'),
             content: t('kyc:KYC.TRANSFER_OWNER_SUCCESSFULLY'),
-            submitBtnStr: t('project:PROJECT.OK'),
+            submitBtnStr: t('common:COMMON.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               // Info: (20240729 - Liz) reload this page to get the latest data and hide the UI
@@ -61,7 +53,7 @@ const TransferCompanyModal = ({
             messageType: MessageType.ERROR,
             title: t('kyc:KYC.TRANSFER_OWNER'),
             content: t('kyc:KYC.TRANSFER_OWNER_FAILED'),
-            submitBtnStr: t('project:PROJECT.OK'),
+            submitBtnStr: t('common:COMMON.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               messageModalVisibilityHandler();
@@ -75,7 +67,7 @@ const TransferCompanyModal = ({
           messageType: MessageType.ERROR,
           title: t('kyc:KYC.TRANSFER_OWNER'),
           content: t('kyc:KYC.TRANSFER_OWNER_FAILED'),
-          submitBtnStr: t('project:PROJECT.OK'),
+          submitBtnStr: t('common:COMMON.OK'),
           hideCloseBtn: true,
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -110,7 +102,7 @@ const TransferCompanyModal = ({
         ), // TODO: (20240717 - Shirley) [Beta] message color
         // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`,
         backBtnStr: t('common:COMMON.CANCEL'),
-        submitBtnStr: t('journal:JOURNAL.TRANSFER'),
+        submitBtnStr: t('common:COMMON.TRANSFER'),
         submitBtnFunction: () => handleSubmit(newOwnerId),
       });
 

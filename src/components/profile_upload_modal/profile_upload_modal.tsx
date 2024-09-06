@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+// eslint-disable-next-line import/no-cycle
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
@@ -24,16 +25,7 @@ const ProfileUploadModal = ({
   modalVisibilityHandler,
   uploadType,
 }: IProfileUploadModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
@@ -97,7 +89,7 @@ const ProfileUploadModal = ({
       messageType: MessageType.ERROR,
       title: t('common:PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
       content: `${t('common:PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
-      submitBtnStr: t('project:PROJECT.OK'),
+      submitBtnStr: t('common:COMMON.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();

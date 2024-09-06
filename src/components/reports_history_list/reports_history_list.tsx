@@ -153,9 +153,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
             <th className="text-center">{t('report_401:REPORTS_HISTORY_LIST.DATE')}</th>
             <th className="px-16px">{t('report_401:REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
             <th className="hidden px-16px lg:table-cell">{t('common:COMMON.TYPE')}</th>
-            <th className="hidden px-16px lg:table-cell">
-              {t('report_401:REPORTS_HISTORY_LIST.PERIOD')}
-            </th>
+            <th className="hidden px-16px lg:table-cell">{t('common:COMMON.PERIOD')}</th>
             <th className="hidden px-16px lg:table-cell">
               {t('report_401:REPORTS_HISTORY_LIST.BLOCKCHAIN')}
             </th>

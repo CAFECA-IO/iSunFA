@@ -8,16 +8,7 @@ interface IProgressBarProps {
 }
 
 const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
 
   useEffect(() => {
     // Info: (20240509 - Julian) 找到 sliderProgress 的 style element

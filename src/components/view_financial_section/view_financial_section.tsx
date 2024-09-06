@@ -117,16 +117,7 @@ const ViewFinancialSection = ({
   tokenId,
   reportLink,
 }: IViewReportSectionProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const router = useRouter();
 
   // Info: (20240807 - Anna)
@@ -376,7 +367,7 @@ const ViewFinancialSection = ({
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading ? (
-              <p>{t('report_401:MY_REPORTS_SECTION.LOADING')}</p>
+              <p>{t('common:COMMON.LOADING')}</p>
             ) : isInvalidReport ? null : (
               reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
             )}

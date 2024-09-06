@@ -131,16 +131,7 @@ const initialData: ITableData[] = [
 ];
 
 const AuditReport = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortOrder.ASC | SortOrder.DESC>(SortOrder.ASC);

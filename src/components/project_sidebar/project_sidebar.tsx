@@ -12,16 +12,7 @@ interface IProjectDetailPageProps {
 }
 
 const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -187,7 +178,7 @@ const ProjectSidebar = ({ projectId }: IProjectDetailPageProps) => {
             <p
               className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left`}
             >
-              {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+              {t('common:COMMON.ANALYSIS_REPORTS')}
             </p>
           </Link>
           {/* Info: (20240611 - Julian) Divider */}

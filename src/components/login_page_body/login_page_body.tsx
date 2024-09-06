@@ -56,16 +56,7 @@ const Loader = React.memo(() => {
 });
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const { toastHandler } = useGlobalCtx();
   const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
 

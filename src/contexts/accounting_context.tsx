@@ -56,7 +56,7 @@ interface AccountTitleMap {
 export const accountTitleMap: AccountTitleMap = {
   Income: 'project:PROJECT.INCOME',
   Payment: 'journal:JOURNAL.PAYMENT',
-  Transfer: 'journal:JOURNAL.TRANSFER',
+  Transfer: 'common:COMMON.TRANSFER',
 };
 
 interface IAccountingContext {

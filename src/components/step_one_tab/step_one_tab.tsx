@@ -32,16 +32,7 @@ import { APIName } from '@/constants/api_connection';
 //   handelClick: () => void;
 // }) =>
 const StepOneTab = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
   const {

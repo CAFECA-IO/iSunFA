@@ -16,16 +16,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const JournalListPage = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
 
