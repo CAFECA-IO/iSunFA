@@ -16,7 +16,7 @@ import {
   decryptFile,
   getPrivateKeyByCompany,
 } from '@/lib/utils/crypto';
-import logger from '@/lib/utils/logger';
+import logger from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {

@@ -5,6 +5,7 @@ import { useDashboardCtx } from '@/contexts/dashboard_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useTranslation } from 'next-i18next';
+// import logger from '@/lib/utils/logger';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;

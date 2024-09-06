@@ -14,7 +14,7 @@ import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import formidable from 'formidable';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
-import logger from '@/lib/utils/logger';
+import logger from '@/lib/utils/logger_back';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';

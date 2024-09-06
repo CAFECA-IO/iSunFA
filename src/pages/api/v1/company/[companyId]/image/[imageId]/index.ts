@@ -6,7 +6,7 @@ import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import logger from '@/lib/utils/logger';
+import logger from '@/lib/utils/logger_back';
 import { FileFolder } from '@/constants/file';
 import { File } from '@prisma/client';
 import { findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';

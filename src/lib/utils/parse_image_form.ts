@@ -4,7 +4,7 @@ import path from 'path';
 import { NextApiRequest } from 'next';
 import { FORMIDABLE_OPTIONS } from '@/constants/config';
 import { FileFolder, getFileFolder } from '@/constants/file';
-import logger from '@/lib/utils/logger';
+import logger from '@/lib/utils/logger_back';
 
 export const parseForm = async (
   req: NextApiRequest,
