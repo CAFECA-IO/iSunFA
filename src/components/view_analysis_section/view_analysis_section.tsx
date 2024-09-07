@@ -15,16 +15,7 @@ const ViewAnalysisSection = ({
   tokenId,
   reportLink,
 }: IViewAnalysisSectionProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
     window.alert(`Token contract ${tokenContract} copied to clipboard!`);

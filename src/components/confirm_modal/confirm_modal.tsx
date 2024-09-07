@@ -397,7 +397,7 @@ const ConfirmModal = ({
     <div className="flex flex-col items-end">
       <p>
         <span className="font-semibold text-text-neutral-primary">{totalPrice}</span>{' '}
-        {t('journal:JOURNAL.TWD')}
+        {t('common:COMMON.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-text-neutral-primary">{taxPercentage}%</span>{' '}

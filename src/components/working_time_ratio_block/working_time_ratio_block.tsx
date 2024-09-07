@@ -36,16 +36,7 @@ const dummyEmployeeData = [
 ];
 
 const WorkingTimeRatioBlock = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'salary']);
   const displayEmployeeList = dummyEmployeeData.map((employee) => {
     return (
       <div

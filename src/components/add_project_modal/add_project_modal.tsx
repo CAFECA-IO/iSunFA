@@ -138,7 +138,7 @@ const AddProjectModal = ({
         content: t('project:PROJECT.CREATE_PROJECT_FAILED'),
         subMsg: t('common:COMMON.ERROR_CODE', { code }),
         submitBtnFunction: messageModalVisibilityHandler,
-        submitBtnStr: t('project:PROJECT.OK'),
+        submitBtnStr: t('common:COMMON.OK'),
       });
     }
   }, [createSuccess, data]);

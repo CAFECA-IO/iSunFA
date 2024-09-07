@@ -20,16 +20,7 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
   // ('reportType on FinancialsReportsPage',reportType,
   //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey])
 
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">

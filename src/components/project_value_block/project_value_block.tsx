@@ -3,16 +3,7 @@ import { BsGraphUpArrow, BsGraphDownArrow } from 'react-icons/bs';
 import { useTranslation } from 'next-i18next';
 
 const ProjectValueBlock = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   // ToDo: (20240612 - Julian) [Beta] replace with actual data
   const totalValue = 187000;
   const apy = 1.5;
@@ -65,7 +56,7 @@ const ProjectValueBlock = () => {
         <p className="text-2xl font-bold text-text-neutral-primary">
           {totalValue}
           <span className="ml-8px text-base font-medium text-text-neutral-secondary">
-            {t('journal:JOURNAL.TWD')}
+            {t('common:COMMON.TWD')}
           </span>
         </p>
         {/* Info: (20240612 - Julian) APY */}
@@ -82,7 +73,7 @@ const ProjectValueBlock = () => {
           </div>
           <div className="mx-auto flex items-end gap-x-8px">
             <p className="text-5xl">{totalRevenue}</p>
-            <p>{t('journal:JOURNAL.TWD')}</p>
+            <p>{t('common:COMMON.TWD')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-x-8px">
@@ -102,7 +93,7 @@ const ProjectValueBlock = () => {
           </div>
           <div className="mx-auto flex items-end gap-x-8px">
             <p className="text-5xl">{totalExpenses}</p>
-            <p>{t('journal:JOURNAL.TWD')}</p>
+            <p>{t('common:COMMON.TWD')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-x-8px">
@@ -122,7 +113,7 @@ const ProjectValueBlock = () => {
           </div>
           <div className="mx-auto flex items-end gap-x-8px">
             <p className="text-5xl">{netProfit}</p>
-            <p>{t('journal:JOURNAL.TWD')}</p>
+            <p>{t('common:COMMON.TWD')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-x-8px">

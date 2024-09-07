@@ -19,16 +19,7 @@ const ProjectContractList = ({
   setCurrentPage,
   totalPages,
 }: IProjectContractListProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const displayedContractList =
     contracts.length > 0 ? (
       <div className="flex w-full flex-col gap-20px">

@@ -11,16 +11,7 @@ import SettingSidebar from '@/components/setting_sidebar/setting_sidebar';
 import AccountingTitlePageBody from '@/components/accounting_title_page_body/accounting_title_page_body';
 
 const AccountingTitlePage = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'setting']);
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (

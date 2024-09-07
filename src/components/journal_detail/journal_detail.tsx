@@ -232,7 +232,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#002462"
           />
         </svg>
-        <p>{t('journal:JOURNAL.TRANSFER')}</p>
+        <p>{t('common:COMMON.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -267,7 +267,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     <div className="flex flex-col items-end">
       <p>
         <span className="font-semibold text-text-neutral-primary">{totalPrice}</span>{' '}
-        {t('journal:JOURNAL.TWD')}
+        {t('common:COMMON.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-text-neutral-primary">{tax}%</span>{' '}

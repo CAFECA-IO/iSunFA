@@ -134,7 +134,6 @@
     "MY_REPORTS": "My Reports"
   },
   "MY_REPORTS_SECTION": {
-    "LOADING": "Loading...",
     "SORT_BY": "Sort by",
     "MY_REPORTS": "My Reports",
     "PENDING": "Pending",
@@ -147,13 +146,11 @@
     "APPLY_AGAIN": "It will take 30 - 40 minutes\n if you want to apply it again."
   },
   "REPORTS_HISTORY_ITEM": {
-    "FROM": "From",
-    "TO": "to"
+    "FROM": "From"
   },
   "REPORTS_HISTORY_LIST": {
     "DATE": "Date",
     "REPORT_NAME": "Report Name",
-    "PERIOD": "Period",
     "BLOCKCHAIN": "Blockchain"
   },
   "PENDING_REPORT_LIST": {

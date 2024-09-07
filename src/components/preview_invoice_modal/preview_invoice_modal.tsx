@@ -22,16 +22,7 @@ const PreviewInvoiceModal = ({
   modalVisibilityHandler,
   previewInvoiceModalData,
 }: IPreviewInvoiceModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { date, imgStr } = previewInvoiceModalData;
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
 

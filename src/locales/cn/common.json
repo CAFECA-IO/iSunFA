@@ -261,7 +261,15 @@
     "YEAR": "年",
     "SELECT": "选择",
     "NO_DATA": "没有数据",
-    "TOOLTIP_MESSAGE": "当游标位于图形使用者介面中的图示、图像、超连结或其他元素上时出现的讯息。"
+    "TOOLTIP_MESSAGE": "当游标位于图形使用者介面中的图示、图像、超连结或其他元素上时出现的讯息。",
+    "PERIOD": "期间",
+    "OK": "好",
+    "TO": "至",
+    "ANALYSIS_REPORTS": "分析报告",
+    "TRANSFER": "移转",
+    "LOADING": "加载中...",
+    "COMPLETED": "已完成",
+    "DAY": "日"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",

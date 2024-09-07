@@ -15,7 +15,6 @@
     "MILESTONE": "里程碑",
     "MONTHLY_SALES": "每月销售额",
     "REMAINING": "剩余的",
-    "COMPLETED": "已完成",
     "PROJECT_STAGE_CHART": "专案阶段图",
     "NO_DATA": "没有数据",
     "INCOME_VS_EXPENSE": "收入与支出",
@@ -37,7 +36,6 @@
     "PROJECT_LIST_ISUNFA": "项目清单 - iSunFA",
     "NAME_YOUR_PROJECT": "为您的项目命名",
     "ENTER_NEW_PROJECT_NAME": "输入新项目名称",
-    "OK": "好",
     "CREATE_PROJECT_FAILED": "建立项目失败，请稍后重试。"
   },
   "STAGE_NAME_MAP": {

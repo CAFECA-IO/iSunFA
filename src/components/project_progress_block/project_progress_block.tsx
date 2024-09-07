@@ -3,16 +3,7 @@ import ProgressCircle from '@/components/progress_circle/progress_circle';
 import { useTranslation } from 'next-i18next';
 
 const ProjectProgressBlock = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   // ToDo: (20240612 - Julian) [Beta] replace with actual data
   const progress = 64;
 
@@ -25,7 +16,7 @@ const ProjectProgressBlock = () => {
       <div className="flex items-center gap-24px">
         <div className="flex items-center gap-10px">
           <div className="block h-8px w-8px rounded-full bg-surface-brand-primary"></div>
-          <p>{t('project:PROJECT.COMPLETED')}</p>
+          <p>{t('common:COMMON.COMPLETED')}</p>
         </div>
         <div className="flex items-center gap-10px">
           <div className="block h-8px w-8px rounded-full bg-surface-neutral-depth"></div>

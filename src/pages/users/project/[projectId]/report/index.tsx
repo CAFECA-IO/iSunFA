@@ -18,16 +18,7 @@ interface IProjectReportPageProps {
 }
 
 const ProjectReportPage = ({ projectId }: IProjectReportPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading } = useUserCtx();
   // ToDo: (20240624 - Julian) [Beta] Replace with api data
   const projectName = 'BAIFA';

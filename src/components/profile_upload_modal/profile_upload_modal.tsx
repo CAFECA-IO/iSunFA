@@ -25,16 +25,7 @@ const ProfileUploadModal = ({
   modalVisibilityHandler,
   uploadType,
 }: IProfileUploadModalProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
@@ -98,7 +89,7 @@ const ProfileUploadModal = ({
       messageType: MessageType.ERROR,
       title: t('common:PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
       content: `${t('common:PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
-      submitBtnStr: t('project:PROJECT.OK'),
+      submitBtnStr: t('common:COMMON.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();

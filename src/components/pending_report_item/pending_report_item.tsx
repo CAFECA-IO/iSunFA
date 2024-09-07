@@ -27,16 +27,7 @@ const PendingReportItem = ({
   onReportItemUpdate = () => {},
   onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'report_401']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const [reportItem, setReportItem] = useState(report);
@@ -260,9 +251,7 @@ const PendingReportItem = ({
             {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
           </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">
-            {t('report_401:REPORTS_HISTORY_ITEM.TO')}
-          </span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>

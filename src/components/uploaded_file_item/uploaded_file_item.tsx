@@ -65,16 +65,7 @@ const UploadedFileItem = ({
   deleteHandler,
   clickHandler,
 }: IUploadedFileItemProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -122,7 +113,7 @@ const UploadedFileItem = ({
     </button>
   );
 
-  const displayedProgress = progress === 100 ? t('project:PROJECT.COMPLETED') : `${progress}%`;
+  const displayedProgress = progress === 100 ? t('common:COMMON.COMPLETED') : `${progress}%`;
 
   const displayedFileItem = (
     <div
