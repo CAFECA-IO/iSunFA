@@ -23,7 +23,7 @@ interface ICreateCompanyModal {
   modalVisibilityHandler: () => void;
 }
 
-// ToDo: (20240514 - Julian) Replace with actual country list
+// ToDo: (20240514 - Julian) [Beta] Replace with actual country list
 const countryList = [
   {
     name: 'Taiwan',
@@ -36,9 +36,9 @@ const countryList = [
 ];
 
 const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateCompanyModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
-  const { messageModalDataHandler, messageModalVisibilityHandler, } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { username, selectCompany } = useUserCtx();
   const {
     targetRef: menuRef,
@@ -86,27 +86,25 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   useEffect(() => {
     if (createCompanySuccess && companyAndRole) {
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
+      resetValues();
       selectCompany(companyAndRole.company);
       modalVisibilityHandler();
-      resetValues();
-      router.push(ISUNFA_ROUTE.DASHBOARD);
     } else if (createCompanyError) {
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {
         messageModalDataHandler({
           messageType: MessageType.WARNING,
-          title: t('COMPANY_BASIC_INFO.EXISTED_COMPANY'),
-          subMsg: t('COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
-          // content: `If you are the owner of this company,
-          // please complete KYC to get access back. Error code: ${createCompanyCode}`,
-          content: t('COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC', { code: createCompanyCode }),
-          submitBtnStr: t('COMPANY_BASIC_INFO.GO_KYC'),
+          title: t('kyc:COMPANY_BASIC_INFO.EXISTED_COMPANY'),
+          subMsg: t('kyc:COMPANY_BASIC_INFO.COMPANY_ALREADY_REGISTERED'),
+          // Info: (20240830 - Anna) 因為用戶不需要知道錯誤代碼，所以把{ code: createCompanyCode }移除
+          content: t('kyc:COMPANY_BASIC_INFO.PLEASE_COMPLETE_KYC'),
+          submitBtnStr: t('kyc:COMPANY_BASIC_INFO.GO_KYC'),
           submitBtnFunction: () => {
             // Info: (20240807 - Anna) 隱藏 create company modal
             modalVisibilityHandler();
             messageModalVisibilityHandler();
             router.push(ISUNFA_ROUTE.KYC);
           },
-          backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+          backBtnStr: t('common:COMMON.CANCEL'),
         });
         messageModalVisibilityHandler();
       } else if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY_KYC_DONE]) {
@@ -114,8 +112,8 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           messageType: MessageType.ERROR,
           title: 'Verified Company',
           subMsg: 'This company has already been registered and verified.',
-          content: `Please check the information again, or contact with us. Error code: ${createCompanyCode}`,
-          submitBtnStr: t('COMMON.CLOSE'),
+          content: t('kyc:KYC.CHECK_THE_INFORMATION', { code: createCompanyCode }),
+          submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
@@ -123,10 +121,11 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         // Info: (20240520 - Julian) 如果失敗，顯示錯誤訊息
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: 'Create Company Failed',
-          subMsg: 'Please try again later',
-          content: `Error code: ${createCompanyCode}`,
-          submitBtnStr: t('COMMON.CLOSE'),
+          title: t('kyc:KYC.CREATE_COMPANY_FAILED'),
+          subMsg: t('kyc:KYC.PLEASE_TRY_AGAIN_LATER'),
+          // Info: (20240830 - Anna) content: `Error code: ${createCompanyCode}`,因為錯誤代碼不需要顯示給用戶看，所以改為空字串
+          content: '',
+          submitBtnStr: t('common:COMMON.CLOSE'),
           submitBtnFunction: messageModalVisibilityHandler,
         });
         messageModalVisibilityHandler();
@@ -173,21 +172,20 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
   });
 
   const isDisplayedCreateCompanyModal = isModalVisible ? (
-    // eslint-disable-next-line tailwindcss/migration-from-tailwind-2
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <form
         onSubmit={confirmClickHandler}
         className="relative mx-auto flex w-90vw flex-col items-center gap-y-16px rounded-lg bg-white py-16px shadow-lg shadow-black/80 sm:w-500px"
       >
         {/* Info: (20240514 - Julian) Title */}
         <div className="flex justify-center px-20px">
-          <h2 className="text-xl font-bold leading-8 text-navyBlue2">
-            {t('SELECT_COMPANY.CREATE_MY_COMPANY')}
+          <h2 className="text-xl font-bold leading-8 text-card-text-primary">
+            {t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}
           </h2>
           <button
             type="button"
             onClick={cancelBtnClickHandler}
-            className="absolute right-3 top-3 flex items-center justify-center text-darkBlue2"
+            className="absolute right-3 top-3 flex items-center justify-center text-icon-surface-single-color-primary"
           >
             <RxCross2 size={20} />
           </button>
@@ -196,25 +194,25 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
         <div className="flex w-full flex-col justify-center gap-y-16px border-b border-t p-40px">
           {/* Info: (20240514 - Julian) Company Name */}
           <div className="inline-flex w-full flex-col items-start gap-2">
-            <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('CONTRACT.COMPANY_NAME')}
+            <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
+              {t('common:COMMON.COMPANY_NAME')}
             </p>
             <input
               id="companyNameInput"
               type="text"
-              placeholder={t('SELECT_COMPANY.ENTER_COMPANY_NAME')}
+              placeholder={t('kyc:SELECT_COMPANY.ENTER_COMPANY_NAME')}
               value={nameValue}
               onChange={changeNameHandler}
               required
-              className="w-full rounded-sm border px-12px py-10px text-darkBlue2 shadow outline-none placeholder:text-lightGray4"
+              className="w-full rounded-sm border px-12px py-10px text-input-text-input-filled shadow outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
           {/* Info: (20240514 - Julian) Business Registration Number */}
           <div className="inline-flex w-full flex-col items-start gap-2">
-            <p className="text-sm font-semibold leading-tight tracking-tight text-navyBlue2">
-              {t('CONTRACT.BUSINESS_REGISTRATION_NUMBER')}
+            <p className="text-sm font-semibold leading-tight tracking-tight text-divider-text-lv-1">
+              {t('common:COMMON.BUSINESS_REGISTRATION_NUMBER')}
             </p>
-            <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-darkBlue2 shadow">
+            <div className="relative flex w-full items-center divide-x rounded-sm border px-12px text-input-text-input-filled shadow">
               {/* Info: (20240514 - Julian) country selection */}
               <button
                 type="button"
@@ -230,21 +228,21 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
                 />
                 <FaChevronDown
                   size={16}
-                  className={`text-darkBlue2 ${isMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+                  className={`${isMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
                 />
               </button>
               <input
                 id="registrationNumberInput"
                 type="text"
-                placeholder={t('SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
+                placeholder={t('kyc:SELECT_COMPANY.ENTER_BUSINESS_REGISTRATION_NUMBER')}
                 value={registrationNumberValue}
                 onChange={changeRegistrationNumberHandler}
                 required
-                className="w-full p-10px outline-none placeholder:text-lightGray4"
+                className="w-full p-10px outline-none placeholder:text-input-text-input-placeholder"
               />
               <div
                 ref={menuRef}
-                className={`absolute left-4px top-46px flex w-44px flex-col items-center rounded-xs bg-white shadow-dropmenu ${isMenuOpen ? 'max-h-100px overflow-y-auto' : 'max-h-0 overflow-y-hidden'} transition-all duration-300 ease-in-out`}
+                className={`absolute left-4px top-46px flex w-44px flex-col items-center rounded-xs bg-dropdown-surface-menu-background-primary shadow-dropmenu ${isMenuOpen ? 'max-h-100px overflow-y-auto' : 'max-h-0 overflow-y-hidden'} transition-all duration-300 ease-in-out`}
               >
                 {displayCountryMenu}
               </div>
@@ -252,15 +250,11 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
           </div>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
-          <button
-            type="button"
-            onClick={cancelBtnClickHandler}
-            className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
-          >
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
-          </button>
-          <Button type="submit" variant={'tertiary'}>
-            {t('CONTACT_US.SUBMIT')}
+          <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
+            {t('common:COMMON.CANCEL')}
+          </Button>
+          <Button type="submit" variant="tertiary">
+            {t('common:CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

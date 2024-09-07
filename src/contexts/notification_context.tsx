@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import useStateRef from 'react-usestateref';
 
 export interface INotificationProvider {
@@ -14,13 +14,11 @@ interface INotificationContext {
 
 const NotificationContext = createContext<INotificationContext | undefined>(undefined);
 
-// TODO: notification context (20240429 - Shirley)
+// TODO: (20240429 - Shirley) [Beta] notification context
 export const NotificationProvider = ({ children }: INotificationProvider) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportPendingStatus, setReportPendingStatus, reportPendingStatusRef] =
+  const [, /* reportPendingStatus */ setReportPendingStatus, reportPendingStatusRef] =
     useStateRef<boolean>(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportGeneratedStatus, setReportGeneratedStatus, reportGeneratedStatusRef] =
+  const [, /* reportGeneratedStatus */ setReportGeneratedStatus, reportGeneratedStatusRef] =
     useStateRef<boolean>(false);
 
   const reportPendingStatusHandler = (status: boolean) => {
@@ -31,27 +29,22 @@ export const NotificationProvider = ({ children }: INotificationProvider) => {
     setReportGeneratedStatus(status);
   };
 
-  // Deprecated: demo (20240527 - Shirley)
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setReportPendingStatus((prev) => !prev);
-  //     setReportGeneratedStatus((prev) => !prev);
-  //   }, 10000);
-
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, []);
-
-  // TODO: websocket connection of pending report and generated report (20240517 - Shirley)
-
-  /* eslint-disable react/jsx-no-constructed-context-values */
-  const value = {
-    reportPendingStatus: reportPendingStatusRef.current,
-    reportGeneratedStatus: reportGeneratedStatusRef.current,
-    reportPendingStatusHandler,
-    reportGeneratedStatusHandler,
-  };
+  // TODO: (20240517 - Shirley) [Beta] websocket connection of pending report and generated report
+  // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
+  const value = useMemo(
+    () => ({
+      reportPendingStatus: reportPendingStatusRef.current,
+      reportGeneratedStatus: reportGeneratedStatusRef.current,
+      reportPendingStatusHandler,
+      reportGeneratedStatusHandler,
+    }),
+    [
+      reportPendingStatusRef.current,
+      reportGeneratedStatusRef.current,
+      reportPendingStatusHandler,
+      reportGeneratedStatusHandler,
+    ]
+  );
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };
@@ -62,17 +55,5 @@ export const useNotificationCtx = () => {
     throw new Error('useNotificationContext must be used within a NotificationProvider');
   }
 
-  // Deprecated: Debug tool [to be removed](20240517 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g: any =
-    typeof globalThis === 'object'
-      ? globalThis
-      : typeof window === 'object'
-        ? window
-        : typeof global === 'object'
-          ? global
-          : null; // Info: Causes an error on the next line
-
-  g.notificationContext = context;
   return context;
 };

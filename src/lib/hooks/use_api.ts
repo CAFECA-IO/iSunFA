@@ -67,8 +67,8 @@ export async function fetchData<Data>(
 const useAPI = <Data>(
   apiConfig: IAPIConfig,
   options: IAPIInput,
-  cancel?: boolean,
-  triggerImmediately: boolean = true
+  triggerImmediately: boolean = false,
+  cancel?: boolean
 ): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [code, setCode] = useState<string | undefined>(undefined);
@@ -114,7 +114,7 @@ const useAPI = <Data>(
         if (!response.success) {
           const apiError = new Error(
             response.message || STATUS_MESSAGE.MISSING_ERROR_FROM_BACKEND_API
-          ); // Info: 實際上這裡應該要顯示從後端 API response 的錯誤訊息 (20240716 - Shirley)
+          ); // Info: (20240716 - Shirley) 實際上這裡應該要顯示從後端 API response 的錯誤訊息
           setError(apiError);
           return {
             success: false,

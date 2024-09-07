@@ -19,7 +19,10 @@ import { SortOrder } from '@/constants/sort';
  * @param {number | undefined} companyId if you want to add more condition, use companyId, otherwise is undefined
  * @returns {Promise<IInvoiceIncludePaymentJournal | null>} return include payment and journal, will be null if not found or error
  */
-export async function findUniqueInvoiceById(invoiceId: number, companyId?: number) {
+export async function findUniqueInvoiceById(
+  invoiceId: number,
+  companyId?: number
+): Promise<IInvoiceIncludePaymentJournal | null> {
   let invoice: IInvoiceIncludePaymentJournal | null = null;
 
   const where: Prisma.InvoiceWhereUniqueInput = {
@@ -46,14 +49,10 @@ export async function findUniqueInvoiceById(invoiceId: number, companyId?: numbe
     });
 
     if (!invoice) {
-      // Deprecate: ( 20240605 - Murky ) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`Invoice with id ${invoiceId} not found in findUniqueInvoiceInPrisma`);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return invoice;
 }
@@ -70,7 +69,7 @@ export async function createInvoice(
   invoiceData: IInvoiceBeta,
   paymentId: number,
   journalId: number,
-  imageUrl?: string
+  imageFileId?: number
 ) {
   const nowInSecond = getTimestampNow();
   const invoiceCreatedDate = timestampInSeconds(invoiceData.date);
@@ -98,7 +97,11 @@ export async function createInvoice(
     vendorTaxId: invoiceData.vendorTaxId,
     vendorOrSupplier: invoiceData.vendorOrSupplier,
     deductible: invoiceData.deductible,
-    imageUrl,
+    imageFile: {
+      connect: {
+        id: imageFileId,
+      },
+    },
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
     payment: paymentConnect,
@@ -123,9 +126,7 @@ export async function createInvoice(
   try {
     invoiceBeCreated = await prisma.invoice.create(invoiceCreateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return invoiceBeCreated;
@@ -142,7 +143,7 @@ export async function createInvoice(
 export async function updateInvoice(
   invoiceId: number,
   invoiceData: IInvoiceBeta,
-  imageUrl?: string,
+  imageFileId?: number,
   paymentId?: number,
   journalId?: number
 ) {
@@ -171,7 +172,11 @@ export async function updateInvoice(
     description: invoiceData.description,
     vendorTaxId: invoiceData.vendorTaxId,
     vendorOrSupplier: invoiceData.vendorOrSupplier,
-    imageUrl,
+    imageFile: {
+      connect: {
+        id: imageFileId,
+      },
+    },
     payment: paymentConnect,
     journal: journalConnect,
   };
@@ -205,9 +210,7 @@ export async function updateInvoice(
   try {
     invoiceBeUpdated = await prisma.invoice.update(invoiceUpdateArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return invoiceBeUpdated;
@@ -252,7 +255,6 @@ export async function listInvoice({
     journal: {
       companyId,
     },
-    deletedAt: null,
     eventType,
     createdAt: {
       gte: startDateInSecond,
@@ -306,21 +308,19 @@ export async function listInvoice({
   try {
     invoices = await prisma.invoice.findMany(findManyArgs);
   } catch (error) {
-    // Deprecate: ( 20240605 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const hasNextPage = invoices.length > pageSize;
   const hasPreviousPage = page > 1;
 
   if (invoices.length > pageSize) {
-    invoices.pop(); // 移除多余的记录
+    invoices.pop(); // Info: (202040808 - Jacky) 移除多餘的記錄
   }
 
   const sort: {
-    sortBy: string; // 排序欄位的鍵
-    sortOrder: string; // 排序欄位的值
+    sortBy: string; // Info: (202040808 - Jacky) 排序欄位的鍵
+    sortOrder: string; // Info: (202040808 - Jacky) 排序欄位的值
   }[] = [{ sortBy, sortOrder }];
 
   const paginatedInvoiceList = {

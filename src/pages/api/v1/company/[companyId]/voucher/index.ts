@@ -5,7 +5,7 @@ import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import {
   IVoucherDataForAPIResponse,
   IVoucherDataForSavingToDB,
-  IVoucherFromPrismaIncludeLineItems,
+  IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
 import { formatApiResponse } from '@/lib/utils/common';
 
@@ -29,7 +29,7 @@ async function handleVoucherCreatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,
   companyId: number
 ) {
-  let updatedVoucher: IVoucherFromPrismaIncludeLineItems | null = null;
+  let updatedVoucher: IVoucherFromPrismaIncludeJournalLineItems | null = null;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
 
   try {
@@ -37,12 +37,10 @@ async function handleVoucherCreatePrismaLogic(
       await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
     if (!journal || !journal.invoice || !journal.invoice.payment) {
-      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
-      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
       throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 
@@ -59,9 +57,7 @@ async function handleVoucherCreatePrismaLogic(
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate: (20240806 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
 
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
@@ -130,10 +126,7 @@ export default async function handler(
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }
     } catch (_error) {
-      const error = _error as Error;
-      // Deprecate: (20240524 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
   const { httpCode, result } = formatApiResponse<ApiResponseType>(statusMessage, payload);

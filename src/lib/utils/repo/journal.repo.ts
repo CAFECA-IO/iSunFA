@@ -1,7 +1,10 @@
 import prisma from '@/client';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IJournalFromPrismaIncludeProjectContractInvoiceVoucher } from '@/interfaces/journal';
+import {
+  IJournalFromPrismaIncludeProjectContractInvoiceVoucher,
+  IJournalIncludeVoucherLineItemsInvoicePayment,
+} from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
 import { calculateTotalPages, getTimestampNow } from '@/lib/utils/common';
@@ -22,7 +25,7 @@ export async function findManyJournalsInPrisma(
   try {
     journals = await prisma.journal.findMany({
       orderBy: {
-        createdAt: sort === 'asc' ? 'asc' : 'desc',
+        createdAt: sort === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC,
       },
       skip: offset,
       take: limit,
@@ -62,11 +65,16 @@ export async function findManyJournalsInPrisma(
         ],
       },
       include: {
-        project: true,
+        project: {
+          include: {
+            imageFile: true,
+          },
+        },
         contract: true,
         invoice: {
           include: {
             payment: true,
+            imageFile: true,
           },
         },
         voucher: {
@@ -81,9 +89,7 @@ export async function findManyJournalsInPrisma(
       },
     });
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journals;
@@ -92,7 +98,7 @@ export async function findManyJournalsInPrisma(
 export async function listJournal(
   companyId: number,
   journalEvent?: JOURNAL_EVENT,
-  page: number = 1, // 将 pageDelta 改为 targetPage，默认值为 1
+  page: number = 1, // Info: (202040717 - Jacky) 將 pageDelta 改為 targetPage，預設值為 1
   pageSize: number = DEFAULT_PAGE_LIMIT,
   eventType: string | undefined = undefined,
   sortBy: SortBy = SortBy.CREATED_AT,
@@ -137,9 +143,13 @@ export async function listJournal(
         : { [sortBy]: sortOrder };
 
     const include = {
-      project: true,
+      project: {
+        include: {
+          imageFile: true,
+        },
+      },
       contract: true,
-      invoice: { include: { payment: true } },
+      invoice: { include: { payment: true, imageFile: true } },
       voucher: { include: { lineItems: { include: { account: true } } } },
     };
 
@@ -159,12 +169,12 @@ export async function listJournal(
     const hasPreviousPage = page > 1;
 
     if (journalList.length > pageSize) {
-      journalList.pop(); // 移除多余的记录
+      journalList.pop(); // Info: (202040717 - Jacky) 移除多餘的紀錄
     }
 
     const sort: {
-      sortBy: string; // 排序欄位的鍵
-      sortOrder: string; // 排序欄位的值
+      sortBy: string; // Info: (202040717 - Jacky) 排序欄位的鍵
+      sortOrder: string; // Info: (202040717 - Jacky) 排序欄位的值
     }[] = [{ sortBy, sortOrder }];
 
     if (journalEvent) {
@@ -183,9 +193,7 @@ export async function listJournal(
 
     return paginatedJournalList;
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -199,11 +207,16 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
     };
 
     const include = {
-      project: true,
+      project: {
+        include: {
+          imageFile: true,
+        },
+      },
       contract: true,
       invoice: {
         include: {
           payment: true,
+          imageFile: true,
         },
       },
       voucher: {
@@ -224,9 +237,7 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
 
     journal = await prisma.journal.findUnique(findUniqueArgs);
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -243,9 +254,7 @@ export async function deleteJournalInPrisma(
   try {
     journalExists = await findUniqueJournalInPrisma(journalId, companyId);
   } catch (error) {
-    // Deprecated: (20240522 - Murk) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   if (journalExists) {
@@ -310,11 +319,16 @@ export async function deleteJournalInPrisma(
             id: journalId,
           },
           include: {
-            project: true,
+            project: {
+              include: {
+                imageFile: true,
+              },
+            },
             contract: true,
             invoice: {
               include: {
                 payment: true,
+                imageFile: true,
               },
             },
             voucher: {
@@ -330,10 +344,32 @@ export async function deleteJournalInPrisma(
         });
       });
     } catch (error) {
-      // Deprecated: (20240522 - Murk) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(error);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
   return journal;
+}
+
+export async function listJournalFor401(
+  companyId: number,
+  startDateInSecond: number,
+  endDateInSecond: number
+): Promise<IJournalIncludeVoucherLineItemsInvoicePayment[]> {
+  const where: Prisma.JournalWhereInput = {
+    companyId,
+    invoice: {
+      date: {
+        gte: startDateInSecond,
+        lte: endDateInSecond,
+      },
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    OR: [{ deletedAt: 0 }, { deletedAt: null }],
+  };
+  const include = {
+    invoice: { include: { payment: true } },
+    voucher: { include: { lineItems: { include: { account: true } } } },
+  };
+  const journalList = await prisma.journal.findMany({ where, include });
+  return journalList;
 }

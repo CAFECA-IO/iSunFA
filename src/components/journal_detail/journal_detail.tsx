@@ -13,6 +13,7 @@ import { ILineItem } from '@/interfaces/line_item';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { Button } from '@/components/button/button';
 
 interface IVoucherItem {
   id: string;
@@ -34,7 +35,7 @@ interface IJournalDetailProps {
 }
 
 const JournalDetail = ({ journalId }: IJournalDetailProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
@@ -60,8 +61,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [journalTokenId, setJournalTokenId] = useState<string>('');
   const [type, setType] = useState<string>('');
   const [dateTimestamp, setDateTimestamp] = useState<number>(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reason, setReason] = useState<string>('');
+  // const [reason, setReason] = useState<string>('');
   const [vendor, setVendor] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -73,6 +73,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const [project, setProject] = useState<string>('');
   const [contract, setContract] = useState<string>('');
   const [lineItems, setLineItems] = useState<ILineItem[]>([]);
+  const [imgSrcHasError, setImgSrcHasError] = useState(false);
 
   const backClickHandler = () => {
     window.location.href = ISUNFA_ROUTE.JOURNAL_LIST;
@@ -83,10 +84,10 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       // Info: (20240517 - Julian) If get journal detail failed, show error message modal
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Journal Detail Failed',
-        content: `Error code: ${code}`,
-        subMsg: 'Get journal detail failed',
-        submitBtnStr: t('JOURNAL.GO_BACK_TO_JOURNAL_LIST'),
+        title: t('journal:JOURNAL.JOURNAL_DETAIL_FAILED'),
+        content: t('common:COMMON.ERROR_CODE', { code }),
+        subMsg: t('journal:JOURNAL.GET_JOURNAL_DETAIL_FAILED'),
+        submitBtnStr: t('journal:JOURNAL.GO_BACK_TO_JOURNAL_LIST'),
         hideCloseBtn: true,
         submitBtnFunction: backClickHandler,
       });
@@ -104,7 +105,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       if (invoice) {
         setType(invoice.eventType);
         setDateTimestamp(invoice.date);
-        // setReason(invoice.reason); ToDo: (20240503 - Julian) interface lacks reason
+        // setReason(invoice.reason); ToDo: (20240503 - Julian) [Beta] interface lacks reason
         setVendor(invoice.vendorOrSupplier);
         setDescription(invoice.description);
         setTotalPrice(invoice.payment.price);
@@ -157,8 +158,11 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       };
     });
 
-  // Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
-  const invoicePreviewSrc = journalDetail?.imageUrl ?? '';
+  /* Info: (20240726 - Murky) 如果略過 OCR，預覽圖片會是預設的圖片
+   * 順序是：畫面載入 => journalDetail 不存在 => 預設圖片 => journalDetail載入 => 頁面更新
+   */
+  const invoicePreviewSrc =
+    journalDetail && !imgSrcHasError ? journalDetail.imageUrl : '/elements/default_certificate.svg';
 
   const copyTokenContractHandler = () => {
     navigator.clipboard.writeText(contractId);
@@ -177,7 +181,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayJournalType =
     type === 'Payment' ? (
-      <div className="flex w-full items-center justify-center gap-5px rounded-full bg-errorRed2 px-10px py-6px text-sm font-medium text-errorRed">
+      <div className="flex w-full items-center justify-center gap-5px rounded-full bg-badge-surface-soft-error px-10px py-6px text-sm font-medium text-badge-text-error-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -192,10 +196,10 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#C84949"
           />
         </svg>
-        <p>{t('JOURNAL.PAYMENT')}</p>
+        <p>{t('journal:JOURNAL.PAYMENT')}</p>
       </div>
     ) : type === 'Receiving' ? (
-      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-successGreen2 px-10px py-6px text-sm font-medium text-successGreen">
+      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-badge-surface-soft-success px-10px py-6px text-sm font-medium text-badge-text-success-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -210,10 +214,10 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#3CA876"
           />
         </svg>
-        <p>{t('JOURNAL.RECEIVING')}</p>
+        <p>{t('journal:JOURNAL.RECEIVING')}</p>
       </div>
     ) : type === 'Transfer' ? (
-      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-lightGray3 px-10px py-6px text-sm font-medium text-navyBlue">
+      <div className="flex w-fit items-center justify-center gap-5px rounded-full bg-badge-surface-soft-secondary px-10px py-6px text-sm font-medium text-badge-text-secondary-solid">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -228,16 +232,16 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#002462"
           />
         </svg>
-        <p>{t('JOURNAL.TRANSFER')}</p>
+        <p>{t('common:COMMON.TRANSFER')}</p>
       </div>
     ) : null;
 
-  // const displayType = <p className="text-lightRed">{type}</p>;
+  // const displayType = <p className="text-surface-state-error">{type}</p>; // Info: (20240731 - Anna)
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(會計事件類型)
   const typeString = type && typeof type === 'string' ? type : '';
   const translatedType = typeString
-    ? t(`JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
+    ? t(`journal:JOURNAL_TYPES.${typeString.toUpperCase().replace(/ /g, '_')}`)
     : '';
 
   const displayDate = <p>{timestampToString(dateTimestamp).date}</p>;
@@ -246,66 +250,72 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   // const displayReason = (
   //   <div className="flex flex-col items-center gap-x-12px md:flex-row">
   //     <p>{reason}</p>
-  //     <div className="flex items-center gap-4px rounded-xs border border-primaryYellow5 px-4px text-sm text-primaryYellow5">
+  //     <div className="flex items-center gap-4px rounded-xs border border-badge-stroke-primary px-4px text-sm text-badge-text-primary">
   //       <LuTag size={14} />
   //       Printer
   //     </div>
   //   </div>
   // );
 
-  const displayVendor = <p className="font-semibold text-navyBlue2">{vendor}</p>;
+  const displayVendor = <p className="font-semibold text-text-neutral-primary">{vendor}</p>;
 
-  const displayDescription = <p className="font-semibold text-navyBlue2">{description}</p>;
+  const displayDescription = (
+    <p className="font-semibold text-text-neutral-primary">{description}</p>
+  );
 
   const displayTotalPrice = (
     <div className="flex flex-col items-end">
       <p>
-        <span className="font-semibold text-navyBlue2">{totalPrice}</span> {t('JOURNAL.TWD')}
+        <span className="font-semibold text-text-neutral-primary">{totalPrice}</span>{' '}
+        {t('common:COMMON.TWD')}
       </p>
       <p>
-        (<span className="font-semibold text-navyBlue2">{tax}%</span> {t('JOURNAL.TAX')} /
-        <span className="font-semibold text-navyBlue2">{fee}</span> {t('JOURNAL.TWD_FEE')})
+        (<span className="font-semibold text-text-neutral-primary">{tax}%</span>{' '}
+        {t('journal:JOURNAL.TAX')} /
+        <span className="font-semibold text-text-neutral-primary">{fee}</span>{' '}
+        {t('journal:JOURNAL.TWD_FEE')})
       </p>
     </div>
   );
 
   const displayMethod = (
-    <p className="text-right font-semibold text-navyBlue2">{t(paymentMethod)}</p>
+    <p className="text-right font-semibold text-text-neutral-primary">{t(paymentMethod)}</p>
   );
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款期間)
-  // const displayPeriod = <p className="font-semibold text-navyBlue2">{paymentPeriod}</p>;
   const paymentPeriodString = typeof paymentPeriod === 'string' ? paymentPeriod : '';
-  const translatedPeriod = t(`JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`);
+  const translatedPeriod = t(
+    `journal:JOURNAL.${paymentPeriodString.toUpperCase().replace(/ /g, '_')}`
+  );
 
   // Info: (20240731 - Anna) 創建一個新的變數來儲存翻譯後的字串(付款狀態)
-  // const displayStatus = <p className="font-semibold text-navyBlue2">{paymentStatus}</p>;
   const paymentStatusString = typeof paymentStatus === 'string' ? paymentStatus : '';
-  const translatedStatus = t(`JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`);
+  const translatedStatus = t(
+    `journal:JOURNAL.${paymentStatusString.toUpperCase().replace(/ /g, '_')}`
+  );
 
   // Info: (20240503 - Julian) Get first letter of each word
   const projectCode = project.split(' ').reduce((acc, word) => acc + word[0], '');
   const displayProject =
     project !== 'None' ? (
-      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+      <div className="flex w-fit items-center gap-2px rounded bg-badge-surface-soft-primary px-8px py-2px font-medium text-badge-text-primary-solid">
+        <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-avatar-text-in-dark-background">
           {projectCode}
         </div>
         <p>{project}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+      <p className="font-semibold text-text-neutral-primary">{t('journal:JOURNAL.NONE')}</p>
     );
 
   // Info: (20240731 - Anna) 把合約None加上多語系
-  // const displayContract = <p className="font-semibold text-darkBlue">{contract}</p>;
   const displayContract =
     contract !== 'None' ? (
-      <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-        <p className="font-semibold text-darkBlue">{contract}</p>
+      <div className="flex w-fit items-center gap-2px rounded bg-badge-surface-soft-primary px-8px py-2px font-medium text-badge-text-primary-solid">
+        <p className="font-semibold text-link-text-primary">{contract}</p>
       </div>
     ) : (
-      <p className="font-semibold text-navyBlue2">{t('JOURNAL.NONE')}</p>
+      <p className="font-semibold text-text-neutral-primary">{t('journal:JOURNAL.NONE')}</p>
     );
 
   const createVoucherLayout = (dataType: VoucherItem) => {
@@ -321,7 +331,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       return (
         <div
           key={voucher.id}
-          className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px"
+          className="h-44px overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px"
         >
           <p className="w-9/10 whitespace-nowrap">{str}</p>
         </div>
@@ -336,37 +346,37 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const displayVoucherCredit = createVoucherLayout(VoucherItem.CREDIT);
 
   const displayVoucherDesktop = (
-    <div className="hidden w-full flex-col gap-24px overflow-x-auto text-base text-lightGray5 md:flex">
+    <div className="hidden w-full flex-col gap-24px overflow-x-auto text-base md:flex">
       {/* Info: (20240503 - Julian) Divider */}
       <div className="flex items-center gap-4">
-        <hr className="flex-1 border-lightGray3" />
-        <div className="flex items-center gap-2 text-sm">
+        <hr className="flex-1 border-divider-stroke-lv-1" />
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-          <p>{t('JOURNAL.ACCOUNTING_VOUCHER')}</p>
+          <p>{t('journal:JOURNAL.ACCOUNTING_VOUCHER')}</p>
         </div>
-        <hr className="flex-1 border-lightGray3" />
+        <hr className="flex-1 border-divider-stroke-lv-1" />
       </div>
       {/* Info: (20240503 - Julian) List */}
-      <div className="w-90vw rounded-sm bg-lightGray3 p-20px">
-        <div className="flex text-left text-navyBlue2">
+      <div className="w-90vw rounded-sm bg-surface-brand-secondary-soft p-20px">
+        <div className="flex text-left text-text-neutral-solid-dark">
           {/* Info: (20240503 - Julian) Accounting */}
           <div className="w-1/4">
-            <p>{t('JOURNAL.ACCOUNTING')}</p>
+            <p>{t('journal:JOURNAL.ACCOUNTING')}</p>
             {displayVoucherAccounting}
           </div>
           {/* Info: (20240503 - Julian) Particulars */}
           <div className="w-1/4">
-            <p>{t('JOURNAL.PARTICULARS')}</p>
+            <p>{t('journal:JOURNAL.PARTICULARS')}</p>
             {displayVoucherParticulars}
           </div>
           {/* Info: (20240503 - Julian) Debit */}
           <div className="w-1/4">
-            <p>{t('JOURNAL.DEBIT')}</p>
+            <p>{t('journal:JOURNAL.DEBIT')}</p>
             {displayVoucherDebit}
           </div>
           {/* Info: (20240503 - Julian) Credit */}
           <div className="w-1/4">
-            <p>{t('JOURNAL.CREDIT')}</p>
+            <p>{t('journal:JOURNAL.CREDIT')}</p>
             {displayVoucherCredit}
           </div>
         </div>
@@ -376,25 +386,25 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayDebitList = debitList.map((debit) => {
     return (
-      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-surface-brand-secondary-soft p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
-          <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <p className="text-text-neutral-solid-dark">{t('journal:JOURNAL.ACCOUNTING')}</p>
+          <div className="h-44px w-full overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px">
             <p className="whitespace-nowrap">{debit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">{t('JOURNAL.PARTICULARS')}</p>
-          <div className="h-44px w-full overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <p className="text-text-neutral-solid-dark">{t('journal:JOURNAL.PARTICULARS')}</p>
+          <div className="h-44px w-full overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px">
             <p className="whitespace-nowrap">{debit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">{t('JOURNAL.DEBIT')}</p>
-          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <p className="text-text-neutral-solid-dark">{t('journal:JOURNAL.DEBIT')}</p>
+          <div className="h-44px overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px">
             <p className="whitespace-nowrap">{debit.debit}</p>
           </div>
         </div>
@@ -404,25 +414,25 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
 
   const displayCreditList = creditList.map((credit) => {
     return (
-      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-lightGray3 p-20px">
+      <div className="mx-auto flex w-300px flex-col gap-y-16px rounded-sm bg-surface-brand-secondary-soft p-20px">
         {/* Info: (20240508 - Julian) Accounting */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">{t('JOURNAL.ACCOUNTING')}</p>
-          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <p className="text-text-neutral-solid-dark">{t('journal:JOURNAL.ACCOUNTING')}</p>
+          <div className="h-44px overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px">
             <p className="whitespace-nowrap">{credit.accounting}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) Particulars */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">{t('JOURNAL.PARTICULARS')}</p>
-          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <p className="text-text-neutral-solid-dark">{t('journal:JOURNAL.PARTICULARS')}</p>
+          <div className="h-44px overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px">
             <p className="whitespace-nowrap">{credit.particulars}</p>
           </div>
         </div>
         {/* Info: (20240508 - Julian) amount */}
         <div className="flex flex-col gap-y-8px">
-          <p className="text-navyBlue2">{t('JOURNAL.CREDIT')}</p>
-          <div className="h-44px overflow-x-auto rounded-sm bg-white px-12px py-10px">
+          <p className="text-text-neutral-solid-dark">{t('journal:JOURNAL.CREDIT')}</p>
+          <div className="h-44px overflow-x-auto rounded-sm bg-input-surface-input-background px-12px py-10px">
             <p className="whitespace-nowrap">{credit.credit}</p>
           </div>
         </div>
@@ -431,16 +441,16 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   });
 
   const displayVoucherMobile = (
-    <div className="flex flex-col gap-32px text-sm text-lightGray5 md:hidden">
+    <div className="flex flex-col gap-32px text-sm md:hidden">
       <div className="flex flex-col gap-32px">
         {/* Info: (20240508 - Julian) Debit divider */}
         <div className="flex items-center gap-4">
-          <hr className="flex-1 border-lightGray3" />
-          <div className="flex items-center gap-2 text-sm">
+          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-            <p>{t('JOURNAL.DEBIT')}</p>
+            <p>{t('journal:JOURNAL.DEBIT')}</p>
           </div>
-          <hr className="flex-1 border-lightGray3" />
+          <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20240508 - Julian) Debit list */}
         {displayDebitList}
@@ -449,12 +459,12 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
       <div className="flex flex-col gap-32px">
         {/* Info: (20240508 - Julian) Credit divider */}
         <div className="flex items-center gap-4">
-          <hr className="flex-1 border-lightGray3" />
-          <div className="flex items-center gap-2 text-sm">
+          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/ticket.svg" width={16} height={16} alt="ticket_icon" />
-            <p>{t('JOURNAL.CREDIT')}</p>
+            <p>{t('journal:JOURNAL.CREDIT')}</p>
           </div>
-          <hr className="flex-1 border-lightGray3" />
+          <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20240508 - Julian) Credit list */}
         {displayCreditList}
@@ -467,48 +477,48 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     selectedCompany?.id !== FREE_COMPANY_ID ? (
       <div className="flex flex-col items-start gap-x-80px md:flex-row md:items-center">
         {/* Info: (20240503 - Julian) Token Contract */}
-        <div className="flex flex-wrap items-center text-base text-lightGray4">
+        <div className="flex flex-wrap items-center text-base text-text-neutral-tertiary">
           <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
             <div className="flex items-center">
-              <p>{t('JOURNAL.TOKEN_CONTRACT')}</p>
+              <p>{t('journal:JOURNAL.TOKEN_CONTRACT')}</p>
               <button
                 type="button"
                 onClick={copyTokenContractHandler}
-                className="block p-10px text-secondaryBlue md:hidden"
+                className="block p-10px text-button-text-secondary md:hidden"
               >
                 <PiCopySimpleBold size={16} />
               </button>
             </div>
 
-            <p className="break-all text-darkBlue">{contractId}</p>
+            <p className="break-all text-link-text-primary">{contractId}</p>
           </div>
           <button
             type="button"
             onClick={copyTokenContractHandler}
-            className="hidden p-10px text-secondaryBlue md:block"
+            className="hidden p-10px text-button-text-secondary md:block"
           >
             <PiCopySimpleBold size={16} />
           </button>
         </div>
         {/* Info: (20240503 - Julian) Token ID */}
-        <div className="flex flex-col items-start text-base text-lightGray4 md:flex-row md:items-center">
+        <div className="flex flex-col items-start text-base text-text-neutral-tertiary md:flex-row md:items-center">
           <div className="flex flex-col items-start gap-x-20px md:flex-row md:items-center">
             <div className="flex items-center">
-              <p>{t('JOURNAL.TOKEN_ID')}</p>
+              <p>{t('journal:JOURNAL.TOKEN_ID')}</p>
               <button
                 type="button"
                 onClick={copyTokenIdHandler}
-                className="block p-10px text-secondaryBlue md:hidden"
+                className="block p-10px text-button-text-secondary md:hidden"
               >
                 <PiCopySimpleBold size={16} />
               </button>
             </div>
-            <p className="text-darkBlue">{journalTokenId}</p>
+            <p className="text-link-text-primary">{journalTokenId}</p>
           </div>
           <button
             type="button"
             onClick={copyTokenIdHandler}
-            className="hidden p-10px text-secondaryBlue md:block"
+            className="hidden p-10px text-button-text-secondary md:block"
           >
             <PiCopySimpleBold size={16} />
           </button>
@@ -520,20 +530,21 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     <div className="flex min-h-screen w-full flex-col px-16px pb-80px pt-32px md:p-40px">
       {/* Info: (20240503 - Julian) Title */}
       <div className="flex h-45px items-center gap-24px">
-        <button
+        <Button
           type="button"
           onClick={backClickHandler}
-          className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+          variant="tertiaryOutline"
+          className="h-40px w-40px p-0"
         >
           <FaArrowLeft />
-        </button>
-        <h1 className="flex gap-4px text-base font-semibold text-lightGray5 md:text-4xl">
-          <span className="hidden md:block">{t('JOURNAL.VIEW_JOURNAL')}</span>
+        </Button>
+        <h1 className="flex gap-4px text-base font-semibold text-text-neutral-secondary md:text-4xl">
+          <span className="hidden md:block">{t('journal:JOURNAL.VIEW_JOURNAL')}</span>
           {journalId}
         </h1>
       </div>
       {/* Info: (20240503 - Julian) Divider */}
-      <hr className="my-20px w-full border-lightGray6" />
+      <hr className="my-20px w-full border-divider-stroke-lv-4" />
       {/* Info: (20240503 - Julian) Journal detail */}
       <div className="flex flex-col py-10px">
         {displayToken}
@@ -543,85 +554,85 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             <button
               type="button"
               onClick={invoicePreviewClickHandler}
-              className="border border-lightGray6"
+              className="border border-stroke-neutral-quaternary"
             >
               <Image
                 src={invoicePreviewSrc}
                 width={236}
                 height={300}
                 alt="certificate"
+                priority
                 onError={(e) => {
-                  e.currentTarget.src = '/elements/default_certificate.svg';
+                  if (e && !imgSrcHasError) {
+                    setImgSrcHasError(true);
+                  }
                 }}
               />
             </button>
             {displayJournalType}
           </div>
           {/* Info: (20240503 - Julian) details */}
-          <div className="flex w-full flex-col gap-12px text-base text-lightGray5 md:w-2/3">
+          <div className="flex w-full flex-col gap-12px text-base text-text-neutral-secondary md:w-2/3">
             {/* Info: (20240503 - Julian) Type */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('JOURNAL.TYPE')}</p>
+              <p>{t('common:COMMON.TYPE')}</p>
               {/* Info: (20240731 - Anna) 把displayType(會計事件類型)替換成翻譯過的 */}
-              {/* {displayType} */}
-              <p className="text-lightRed">{translatedType}</p>
+              <p className="text-surface-state-error">{translatedType}</p>
             </div>
             {/* Info: (20240507 - Julian) Date */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('DATE_PICKER.DATE')}</p>
+              <p>{t('common:DATE_PICKER.DATE')}</p>
               {displayDate}
             </div>
             {/* Info: (20240503 - Julian) Reason */}
-            {/*             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('JOURNAL.REASON')}</p>
+            {/* <div className="flex items-center justify-between gap-x-10px">
+              <p>{t('journal:JOURNAL.REASON')}</p>
               {displayReason}
             </div> */}
             {/* Info: (20240503 - Julian) Vendor/Supplier */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('JOURNAL.VENDOR_SUPPLIER')}</p>
+              <p>{t('journal:JOURNAL.VENDOR_SUPPLIER')}</p>
               {displayVendor}
             </div>
             {/* Info: (20240503 - Julian) Description */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('JOURNAL.DESCRIPTION')}</p>
+              <p>{t('journal:JOURNAL.DESCRIPTION')}</p>
               {displayDescription}
             </div>
             {/* Info: (20240503 - Julian) Total Price */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">{t('JOURNAL.TOTAL_PRICE')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.TOTAL_PRICE')}</p>
               {displayTotalPrice}
             </div>
             {/* Info: (20240503 - Julian) Payment Method */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_METHOD')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_METHOD')}</p>
               {displayMethod}
             </div>
             {/* Info: (20240503 - Julian) Payment Period */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_PERIOD')}</p>
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_PERIOD')}</p>
               {/* Info: (20240731 - Anna) 把displayPeriod(付款期間)替換成翻譯過的 */}
-              {/* {displayPeriod} */}
               {translatedPeriod && (
-                <p className="font-semibold text-navyBlue2">{translatedPeriod}</p>
+                <p className="font-semibold text-text-neutral-primary">{translatedPeriod}</p>
               )}
             </div>
             {/* Info: (20240503 - Julian) Payment Status */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p className="whitespace-nowrap">{t('JOURNAL.PAYMENT_STATUS')}</p>
-              {/* Info: (20240731 - Anna) 把displayType(付款狀態)替換成翻譯過的 */}
-              {/* {displayStatus} */}
+              <p className="whitespace-nowrap">{t('journal:JOURNAL.PAYMENT_STATUS')}</p>
+              {/* Info: (20240731 - Anna) 把displayStatus(付款狀態)替換成翻譯過的 */}
               {translatedStatus && (
-                <p className="font-semibold text-navyBlue2">{translatedStatus}</p>
+                <p className="font-semibold text-text-neutral-primary">{translatedStatus}</p>
               )}
             </div>
             {/* Info: (20240503 - Julian) Project */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('REPORTS_HISTORY_LIST.PROJECT')}</p>
+              <p>{t('common:COMMON.PROJECT')}</p>
               {displayProject}
             </div>
             {/* Info: (20240503 - Julian) Contract */}
             <div className="flex items-center justify-between gap-x-10px">
-              <p>{t('JOURNAL.CONTRACT')}</p>
+              <p>{t('journal:JOURNAL.CONTRACT')}</p>
               {displayContract}
             </div>
           </div>

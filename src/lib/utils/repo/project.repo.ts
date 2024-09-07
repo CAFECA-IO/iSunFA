@@ -1,7 +1,8 @@
 import prisma from '@/client';
-import { Employee, Project, Value } from '@prisma/client';
+import { Employee, File, Project, Value } from '@prisma/client';
 import { Milestone } from '@/constants/milestone';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { SortOrder } from '@/constants/sort';
 
 export async function listProject(companyId: number) {
   const listedProject = await prisma.project.findMany({
@@ -10,7 +11,7 @@ export async function listProject(companyId: number) {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
     include: {
       employeeProjects: {
@@ -24,6 +25,7 @@ export async function listProject(companyId: number) {
           contracts: true,
         },
       },
+      imageFile: true,
     },
   });
   return listedProject;
@@ -34,6 +36,7 @@ export async function getProjectById(projectId: number): Promise<
       employeeProjects: { employee: Employee }[];
       value: Value | null;
       _count: { contracts: number };
+      imageFile: File | null;
     })
   | null
 > {
@@ -45,6 +48,7 @@ export async function getProjectById(projectId: number): Promise<
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
+        imageFile: true,
         employeeProjects: {
           select: {
             employee: true,
@@ -66,23 +70,25 @@ export async function createProject(
   companyId: number,
   name: string,
   stage: Milestone,
-  members?: number[],
-  imageId?: string
+  imageId: number,
+  members?: number[]
 ): Promise<
   Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
+    imageFile: File;
   }
 > {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
+
   const createdProject = await prisma.project.create({
     data: {
       companyId,
       name,
       stage,
-      imageId,
+      imageFileId: imageId,
       employeeProjects: {
         create: (members ?? []).map((memberId: number) => ({
           employeeId: memberId,
@@ -140,6 +146,7 @@ export async function createProject(
           contracts: true,
         },
       },
+      imageFile: true,
     },
   });
   return createdProject;
@@ -148,12 +155,13 @@ export async function createProject(
 export async function updateProjectById(
   projectId: number,
   name?: string,
-  imageId?: string
+  imageId?: number
 ): Promise<
   Project & {
     employeeProjects: { employee: { name: string; imageId: string | null } }[];
     value: { totalRevenue: number; totalExpense: number; netProfit: number } | null;
     _count: { contracts: number };
+    imageFile: File | null;
   }
 > {
   const now = Date.now();
@@ -164,10 +172,11 @@ export async function updateProjectById(
     },
     data: {
       name,
-      imageId,
+      imageFileId: imageId,
       updatedAt: nowTimestamp,
     },
     include: {
+      imageFile: true,
       employeeProjects: {
         include: {
           employee: {

@@ -10,7 +10,7 @@ import { SaveData } from 'node_modules/@google-cloud/storage/build/esm/src/file'
 import path from 'path';
 import fs from 'fs/promises';
 import { File } from 'formidable';
-import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { FileFolder, getFileFolder } from '@/constants/file';
 
 // Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleStorage = new Storage({
@@ -18,8 +18,7 @@ export const googleStorage = new Storage({
   credentials: GOOGLE_CREDENTIALS,
 });
 
-const savePath =
-  process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, 'tmp');
+const savePath = getFileFolder(FileFolder.TMP); // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
 
 function generateRandomUUID() {
   return crypto.randomUUID();
@@ -60,13 +59,11 @@ export async function uploadFileToGoogleCloud(
       },
     });
 
-    // 將文件設置為公開
+    // Info: (20240712 - Jacky) 將文件設置為公開
     await file.makePublic();
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
-    // Info: For debugging purpose
-    // eslint-disable-next-line no-console
-    console.error('Failed to upload SVG to Google Cloud', error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return url;
 }
@@ -85,7 +82,7 @@ export async function uploadFile(file: File) {
 export async function uploadFiles(files: File[]) {
   const uploadPromises = files.map(uploadFile);
 
-  // 等待所有文件上傳完成
+  // Info: (20240712 - Jacky) 等待所有文件上傳完成
   const urls = await Promise.all(uploadPromises);
-  return urls; // 返回所有文件的URLs
+  return urls; // Info: (20240712 - Jacky) 回傳所有文件的 URLs
 }

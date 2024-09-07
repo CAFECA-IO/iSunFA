@@ -4,7 +4,7 @@ import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 import { deleteAdminById } from '@/lib/utils/repo/admin.repo';
 
 describe('Admin Invitation Repository Tests', () => {
-  const testUserId = 1000; // Assuming this is a valid user ID from your seed data or setup
+  const testUserId = 1000; // Info: (20240704 - Jacky) Assuming this is a valid user ID from your seed data or setup
   const testInvitation = invitations[0];
 
   describe('createAdminByInvitation', () => {
@@ -13,11 +13,11 @@ describe('Admin Invitation Repository Tests', () => {
       await deleteAdminById(createdAdmin.id);
       expect(createdAdmin).toBeDefined();
       expect(createdAdmin.email).toEqual(testInvitation.email);
-      // Assuming the created admin should have a status of true
+      // Info: (20240704 - Jacky) Assuming the created admin should have a status of true
       expect(createdAdmin.status).toBe(true);
 
-      // Verify the invitation has been marked as used
-      // This assumes there's a way to fetch the updated invitation, adjust according to your actual data fetching method
+      // Info: (20240704 - Jacky) Verify the invitation has been marked as used
+      // Info: (20240704 - Jacky) This assumes there's a way to fetch the updated invitation, adjust according to your actual data fetching method
       const updatedInvitation = await getInvitationByCode(testInvitation.code);
       expect(updatedInvitation).toBeDefined();
       expect(updatedInvitation?.hasUsed).toBe(true);

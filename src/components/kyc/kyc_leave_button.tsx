@@ -5,7 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const LeaveButton = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
@@ -16,12 +16,12 @@ const LeaveButton = () => {
   const leaveClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: t('KYC.LEAVE_THIS_PAGE'),
-      content: t('KYC.YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE'),
-      subMsg: `${t('KYC.ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE')} ?`,
-      submitBtnStr: t('KYC.LEAVE_NOW'),
+      title: t('kyc:KYC.LEAVE_THIS_PAGE'),
+      content: t('kyc:KYC.YOU_MIGHT_LOSE_PROGRESS_IF_YOU_LEAVE'),
+      subMsg: `${t('kyc:KYC.ARE_YOU_SURE_YOU_WANT_TO_LEAVE_THIS_PAGE')} ?`,
+      submitBtnStr: t('kyc:KYC.LEAVE_NOW'),
       submitBtnFunction: handleBack,
-      backBtnStr: t('KYC.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };

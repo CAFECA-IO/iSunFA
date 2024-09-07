@@ -8,7 +8,7 @@ import SalaryRecordForm from '@/components/salary_record_form/salary_record_form
 import SalaryStepper from '@/components/salary_stepper/salary_stepper';
 
 const SalaryBookkeepingPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'salary']);
 
   return (
     <>
@@ -16,7 +16,7 @@ const SalaryBookkeepingPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('SALARY.SALARY_ISUNFA')}</title>
+        <title>{t('salary:SALARY.SALARY_ISUNFA')}</title>
       </Head>
 
       <div className="font-barlow">
@@ -57,7 +57,16 @@ const SalaryBookkeepingPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

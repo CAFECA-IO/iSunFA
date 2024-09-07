@@ -3,6 +3,7 @@ import { IVoucher } from '@/interfaces/voucher';
 import { ICompanyKYCForm } from './company_kyc';
 
 export type IAPIName =
+  | 'AGREE_TO_TERMS'
   | 'CREATE_CHALLENGE'
   | 'SIGN_UP'
   | 'SIGN_IN'
@@ -36,12 +37,11 @@ export type IAPIName =
   | 'VOUCHER_UPDATE'
   | 'JOURNAL_GET_BY_ID'
   | 'JOURNAL_LIST'
-  // | 'JOURNAL_UPDATE'
   | 'JOURNAL_DELETE'
   | 'REPORT_LIST'
   | 'REPORT_GET_BY_ID'
   | 'REPORT_GENERATE'
-  | 'SESSION_GET'
+  | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
   | 'FILE_DELETE'
@@ -60,7 +60,9 @@ export type IAPIName =
   | 'TRANSFER_OWNER'
   | 'PROJECT_LIST'
   | 'CREATE_PROJECT'
-  | 'GET_PROJECT_BY_ID';
+  | 'GET_PROJECT_BY_ID'
+  | 'UPDATE_PROJECT_BY_ID'
+  | 'PUBLIC_KEY_GET';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

@@ -21,6 +21,7 @@ import { convertStringToReportSheetType, isReportSheetType } from '@/lib/utils/t
 import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { SortOrder } from '@/constants/sort';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -107,10 +108,11 @@ function formatSortBy(sortBy: unknown): 'code' | 'createdAt' | undefined {
   return formattedSortBy;
 }
 
-function formatSortOrder(sortOrder: unknown): 'asc' | 'desc' | undefined {
-  let formattedSortOrder: 'asc' | 'desc' | undefined;
+function formatSortOrder(sortOrder: unknown): SortOrder.ASC | SortOrder.DESC | undefined {
+  let formattedSortOrder: SortOrder.ASC | SortOrder.DESC | undefined;
   if (sortOrder && typeof sortOrder === 'string') {
-    formattedSortOrder = sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : undefined;
+    formattedSortOrder =
+      sortOrder === SortOrder.ASC || sortOrder === SortOrder.DESC ? sortOrder : undefined;
   }
   return formattedSortOrder;
 }
@@ -132,7 +134,6 @@ function formatIsDeleted(isDeleted: unknown): boolean | undefined {
 }
 
 export function formatGetQuery(companyId: number, req: NextApiRequest): IAccountQueryArgs {
-  // ToDo: (20240613 - Murky) - need to move to type guard
   const {
     includeDefaultAccount,
     liquidity,
@@ -173,7 +174,7 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
     sortBy: formattedSortBy,
     sortOrder: formattedSortOrder,
     searchKey: formattedSearchKey,
-    isDeleted: formattedIsDeleted
+    isDeleted: formattedIsDeleted,
   };
 }
 
@@ -190,9 +191,7 @@ export async function handleGetRequest(
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    // Deprecate (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.log('error', error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return paginatedAccount;
@@ -220,6 +219,9 @@ export async function handlePostRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
   const { accountId, name } = req.body;
+  if (!userId) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   if (!isAuth) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -233,7 +235,7 @@ export async function handlePostRequest(
   }
   const latestSubAccount = await findLatestSubAccountInPrisma(parentAccount);
   const newCode = setNewCode(parentAccount, latestSubAccount);
-  const newName = parentAccount.name + "-" + String(name);
+  const newName = parentAccount.name + '-' + String(name);
   const newOwnAccount = {
     companyId: companyIdNumber,
     system: parentAccount.system,
@@ -276,9 +278,7 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.log('error', error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

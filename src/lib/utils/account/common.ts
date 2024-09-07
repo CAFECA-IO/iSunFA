@@ -3,12 +3,6 @@ import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_a
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { Account } from '@prisma/client';
 
-// Deprecated: (20240702 - Murky) This is for testing purpose
-// import { AccountType } from "@/constants/account";
-// import { findManyAccountsInPrisma } from "@/lib/utils/repo/account.repo";
-// import { getLineItemsInPrisma } from "@/lib/utils/repo/line_item.repo";
-// import balanceSheetMapping from '@/constants/account_sheet_mapping/balance_sheet_mapping.json';
-
 export function transformLineItemsFromDBToMap(
   lineItemsFromDB: ILineItemIncludeAccount[]
 ): Map<number, number> {
@@ -90,7 +84,7 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
     children: updatedChildren,
   };
 
-  // updatedAccount.amount = newAmount;
+  // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   updatedAccount.children = updatedAccount.children.filter(
@@ -184,7 +178,6 @@ export function mappingAccountToSheetDisplay(
   return sheetDisplay;
 }
 
-// Deprecated: (20240702 - Murky) Accounting logic need to be refactor, Income sum up should be done when update account tree
 export function calculateIncomeStatementNetIncome(accounts: IAccountNode[]): IAccountNode[] {
   const operatingRevenues = accounts.find((account) => account.code === '4000')?.amount || 0;
   const operatingCosts = accounts.find((account) => account.code === '5000')?.amount || 0;

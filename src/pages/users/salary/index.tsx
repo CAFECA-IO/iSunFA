@@ -7,7 +7,7 @@ import { useTranslation } from 'next-i18next';
 import SalaryPageBody from '@/components/salary/salary_page_body';
 
 const SalaryHomePage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'salary']);
   const { isAuthLoading } = useUserCtx();
 
   return (
@@ -16,7 +16,7 @@ const SalaryHomePage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('SALARY.SALARY_ISUNFA')}</title>
+        <title>{t('salary:SALARY.SALARY_ISUNFA')}</title>
       </Head>
 
       <div className="font-barlow">
@@ -30,7 +30,16 @@ const SalaryHomePage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

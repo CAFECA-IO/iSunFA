@@ -12,7 +12,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 const AccountingPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
 
@@ -42,8 +42,7 @@ const AccountingPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (20240416 - Julian) i18n */}
-        <title>{t('JOURNAL.ACCOUNTING')} - iSunFA</title>
+        <title>{t('journal:JOURNAL.ACCOUNTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -59,7 +58,16 @@ const AccountingPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

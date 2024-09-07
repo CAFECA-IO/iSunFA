@@ -51,14 +51,14 @@ const HowWeWork = () => {
       {/* ----- Dot & Line components ----- */}
       <div className="flex items-center rounded-lg px-12 pt-10">
         {/* ----- filled circle ----- */}
-        <div className={`absolute left-1.8rem z-10 h-27px w-27px rounded-full bg-primaryYellow`} />
+        <div className={`absolute left-1.8rem z-10 h-27px w-27px rounded-full bg-orange-400`} />
 
         {/* ----- filled circle bg ----- */}
-        <div className={`absolute left-1.4rem h-40px w-40px rounded-full bg-tertiaryBlue`}></div>
+        <div className={`absolute left-1.4rem h-40px w-40px rounded-full bg-navy-blue-400`}></div>
 
         {/* ----- Line ----- */}
         <div
-          className={`absolute left-2.3rem top-5 h-800px w-1px border-5px border-solid border-tertiaryBlue md:h-400px`}
+          className={`absolute left-2.3rem top-5 h-800px w-1px border-5px border-solid border-navy-blue-400 md:h-400px`}
         />
       </div>
     </div>
@@ -70,24 +70,24 @@ const HowWeWork = () => {
       isVisible: isAnimeRef21Visible,
       imageUrl: '/elements/how_we_work_1.png',
       alt: 'how we work - privacy',
-      title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_1',
-      content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1',
+      title: 'common:LANDING_PAGE.PRIVACY_BLOCK_TITLE_1',
+      content: 'common:LANDING_PAGE.PRIVACY_BLOCK_CONTENT_1',
     },
     {
       ref: animeRef22,
       isVisible: isAnimeRef22Visible,
       imageUrl: '/elements/how_we_work_2.png',
       alt: 'how we work - privacy',
-      title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_2',
-      content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2',
+      title: 'common:LANDING_PAGE.PRIVACY_BLOCK_TITLE_2',
+      content: 'common:LANDING_PAGE.PRIVACY_BLOCK_CONTENT_2',
     },
     {
       ref: animeRef23,
       isVisible: isAnimeRef23Visible,
       imageUrl: '/elements/how_we_work_3.png',
       alt: 'how we work - privacy',
-      title: 'LANDING_PAGE.PRIVACY_BLOCK_TITLE_3',
-      content: 'LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3',
+      title: 'common:LANDING_PAGE.PRIVACY_BLOCK_TITLE_3',
+      content: 'common:LANDING_PAGE.PRIVACY_BLOCK_CONTENT_3',
     },
   ];
 
@@ -103,22 +103,20 @@ const HowWeWork = () => {
             <Image src={imageUrl} alt={alt} fill style={{ objectFit: 'contain' }} loading="lazy" />
           </div>
 
-          {/* Info: ----- `lg` and above ----- (20240321 - Shirley) */}
+          {/* Info: (20240321 - Shirley) ----- `lg` and above ----- */}
           <div className="mt-20 hidden flex-col space-y-5 text-start lg:mt-0 lg:flex lg:max-w-lg lg:space-y-8">
-            {' '}
-            <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+            <p className="text-h3 leading-h3 text-orange-400 lg:text-h1 lg:leading-h1">
               {t(title)}
             </p>
-            <p className="w-full text-white md:text-base">{t(content)}</p>
+            <p className="w-full text-navy-blue-25 md:text-base">{t(content)}</p>
           </div>
 
-          {/* Info: ----- below `lg` ----- (20240321 - Shirley) */}
+          {/* Info: (20240321 - Shirley) ----- below `lg` ----- */}
           <div className="-mt-16 flex w-full flex-col space-y-5 text-wrap text-center md:-mt-0 md:text-start lg:hidden">
-            {' '}
-            <p className="text-h3 leading-h3 text-primaryYellow lg:text-h1 lg:leading-h1">
+            <p className="text-h3 leading-h3 text-orange-400 lg:text-h1 lg:leading-h1">
               {t(title)}
             </p>
-            <p className="w-full text-sm text-white">{t(content)}</p>
+            <p className="w-full text-sm text-navy-blue-25">{t(content)}</p>
           </div>
         </div>
       ))}
@@ -127,8 +125,8 @@ const HowWeWork = () => {
 
   return (
     <div className="container mx-auto flex h-fit w-full flex-col pb-20 pt-40 md:pt-56 lg:pb-20 lg:pt-0">
-      <h1 className="z-10 flex w-full justify-center pt-28 text-h4 font-bold tracking-wider text-white md:text-h1">
-        {t('LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
+      <h1 className="z-10 flex w-full justify-center pt-28 text-h4 font-bold tracking-wider text-navy-blue-25 md:text-h1">
+        {t('common:LANDING_PAGE.HOW_WE_WORK_TITLE')}{' '}
       </h1>
 
       <div className="flex">

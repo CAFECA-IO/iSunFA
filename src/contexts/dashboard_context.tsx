@@ -1,21 +1,15 @@
 import useStateRef from 'react-usestateref';
-import React, { createContext } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { BookmarkItem } from '@/interfaces/modals';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface DashboardContextType {
   bookmarkList: Record<string, BookmarkItem>;
-  toggleBookmark: (bookmarkName: string[]) => void;
-  addBookmarks: (bookmarks: string[]) => void;
-  removeBookmark: (bookmarkName: string) => void;
   addSelectedBookmarks: (bookmarks: string[]) => void;
 }
 
 const initialDashboardContext: DashboardContextType = {
   bookmarkList: {},
-  toggleBookmark: () => {},
-  addBookmarks: () => {},
-  removeBookmark: () => {},
   addSelectedBookmarks: () => {},
 };
 
@@ -157,7 +151,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240424 - Shirley)
+    link: '', // TODO: (20240424 - Shirley) [Beta] link
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -200,7 +194,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240424 - Shirley)
+    link: '', // TODO: (20240424 - Shirley) [Beta] link
     added: false,
     tempSelectedOnSection: false,
     tempSelectedOnModal: false,
@@ -286,7 +280,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.ACCOUNTING,
     added: false,
     tempSelectedOnSection: false,
@@ -498,7 +492,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -556,7 +550,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -614,7 +608,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -672,7 +666,7 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
       </svg>
     ),
 
-    link: '', // TODO: link (20240807 - Shirley)
+    link: '', // TODO: (20240807 - Shirley) [Beta] link
     // link: ISUNFA_ROUTE.USERS_ANALYSES_REPORTS,
     added: false,
     tempSelectedOnSection: false,
@@ -683,70 +677,19 @@ export const BookmarkAvailableList: Record<string, BookmarkItem> = {
 export const DashboardContext = createContext<DashboardContextType>(initialDashboardContext);
 
 export const DashboardProvider = ({ children }: IDashboardProvider) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [bookmarkList, setBookmarkList, bookmarkListRef] =
+  const [, /* bookmarkList */ setBookmarkList, bookmarkListRef] =
     useStateRef<Record<string, BookmarkItem>>(BookmarkAvailableList);
-
-  // Deprecated: 20240815 - Shirley
-  const toggleBookmark = (bookmarkNames: string[]) => {
-    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
-      const updatedBookmarkList = { ...prevBookmarkList };
-
-      bookmarkNames.forEach((bookmarkName: string) => {
-        if (updatedBookmarkList[bookmarkName]) {
-          updatedBookmarkList[bookmarkName] = {
-            ...updatedBookmarkList[bookmarkName],
-            added: !updatedBookmarkList[bookmarkName].added,
-          };
-        }
-      });
-      return updatedBookmarkList;
-    });
-  };
-
-  // Deprecated: 20240815 - Shirley
-  const removeBookmark = (bookmarkName: string) => {
-    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => ({
-      ...prevBookmarkList,
-      [bookmarkName]: {
-        ...prevBookmarkList[bookmarkName],
-        added: true,
-      },
-    }));
-  };
-
-  // Deprecated: 20240815 - Shirley
-  const addBookmarks = (bookmarks: string[]) => {
-    setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
-      const updatedBookmarkList = { ...prevBookmarkList };
-      Object.entries(updatedBookmarkList).forEach(([key, value]) => {
-        updatedBookmarkList[key] = {
-          ...value,
-          added: true,
-        };
-      });
-      bookmarks.forEach((bookmarkName: string) => {
-        if (updatedBookmarkList[bookmarkName]) {
-          updatedBookmarkList[bookmarkName] = {
-            ...updatedBookmarkList[bookmarkName],
-            added: true,
-          };
-        }
-      });
-      return updatedBookmarkList;
-    });
-  };
 
   const addSelectedBookmarks = (bookmarks: string[]) => {
     setBookmarkList((prevBookmarkList: Record<string, BookmarkItem>) => {
       const updatedBookmarkList = { ...prevBookmarkList };
 
-      // Info: 將所有書籤的 added 屬性設為 false (20240603 - Shirley)
+      // Info: (20240603 - Shirley) 將所有書籤的 added 屬性設為 false
       Object.values(updatedBookmarkList).forEach((bookmark: BookmarkItem) => {
         updatedBookmarkList[bookmark.id] = { ...bookmark, added: false };
       });
 
-      // Info: 將參數中的書籤的 added 屬性設為 true (20240603 - Shirley)
+      // Info: (20240603 - Shirley) 將參數中的書籤的 added 屬性設為 true
       bookmarks.forEach((bookmarkName: string) => {
         if (updatedBookmarkList[bookmarkName]) {
           updatedBookmarkList[bookmarkName].added = true;
@@ -757,14 +700,13 @@ export const DashboardProvider = ({ children }: IDashboardProvider) => {
     });
   };
 
-  // eslint-disable-next-line react/jsx-no-constructed-context-values
-  const value = {
-    bookmarkList: bookmarkListRef.current,
-    toggleBookmark,
-    addBookmarks,
-    removeBookmark,
-    addSelectedBookmarks,
-  };
+  const value = useMemo(
+    () => ({
+      bookmarkList: bookmarkListRef.current,
+      addSelectedBookmarks,
+    }),
+    [bookmarkListRef.current, addSelectedBookmarks]
+  );
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };

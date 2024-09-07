@@ -1,12 +1,9 @@
-import { Invitation } from '@prisma/client';
-
 export enum AuthFunctionsKeys {
   user = 'user',
   admin = 'admin',
   owner = 'owner',
   superAdmin = 'superAdmin',
   CompanyAdminMatch = 'CompanyAdminMatch',
-  invitation = 'invitation',
   projectCompanyMatch = 'projectCompanyMatch',
 }
 
@@ -22,7 +19,6 @@ export interface AuthFunctions {
     companyId: number;
     adminId: number;
   }) => Promise<boolean>;
-  [AuthFunctionsKeys.invitation]: (params: { invitation: Invitation }) => Promise<boolean>;
   [AuthFunctionsKeys.projectCompanyMatch]: (params: {
     projectId: number;
     companyId: number;
@@ -33,7 +29,7 @@ export type AuthFunctionsParams = {
   [K in AuthFunctionsKeys]: Parameters<AuthFunctions[K]>[0];
 };
 
-// 提取所有检查函数的参数类型
+// Info: (20240710 - Jacky) 提取所有檢查函數的參數類型
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
   k: infer I
 ) => void

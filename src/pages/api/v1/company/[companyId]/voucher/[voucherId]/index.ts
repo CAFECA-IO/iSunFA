@@ -62,12 +62,10 @@ async function handleVoucherUpdatePrismaLogic(
     const journal = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
     if (!journal || !journal.invoice || !journal.invoice.payment) {
-      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
-      // Info: （ 20240806 - Murky）This message will appear in the console.log, but still single output
       throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 
@@ -75,9 +73,7 @@ async function handleVoucherUpdatePrismaLogic(
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
-    // Deprecate: (20240524 - Murky) Deprecate this error message
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -108,9 +104,7 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
       voucherUpdated = voucherUpdatedData.voucherUpdated;
       statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
-      // Deprecate: (20240524 - Murky) Deprecate this error message
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     }
   }
 
@@ -133,7 +127,6 @@ export default async function handler(
 
   if (isAuth) {
     try {
-      // ToDo: (20240703 - Murky) Need to check Auth
       switch (req.method) {
         case 'PUT': {
           const { voucherUpdated, statusMessage: message } = await handlePutRequest(companyId, req);
@@ -147,9 +140,7 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Deprecate: (20240524 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       statusMessage = error.message;
     }
   }

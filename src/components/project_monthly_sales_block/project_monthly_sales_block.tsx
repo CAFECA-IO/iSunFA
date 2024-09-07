@@ -7,7 +7,7 @@ import { useTranslation } from 'next-i18next';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-// ToDo: (20240612 - Julian) data format
+// ToDo: (20240612 - Julian) [Beta] data format
 const data = {
   categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   seriesData: [
@@ -49,7 +49,7 @@ const ProjectMonthlySalesBlock = () => {
     stroke: {
       show: true,
       width: layoutAssertion === LayoutAssertion.MOBILE ? 5 : 2,
-      colors: ['transparent'], // Info: 讓每一個欄位裡面的 column 有空隙的方式 (20240419 - Shirley)
+      colors: ['transparent'], // Info: (20240419 - Shirley) 讓每一個欄位裡面的 column 有空隙的方式
     },
 
     colors: ['#ffa50266', '#FFB632'],
@@ -85,9 +85,9 @@ const ProjectMonthlySalesBlock = () => {
       fontWeight: 500,
       markers: {
         fillColors: ['#ffa50266', '#FFB632'],
-        // width: 8, // 標記的寬度
-        // height: 8, // 標記的高度
-        // radius: 4, // 標記的半徑（如果是圓形）
+        // width: 8, // 標記的寬度 // Info: (20240706 - Luphia)
+        // height: 8, // 標記的高度 // Info: (20240706 - Luphia)
+        // radius: 4, // 標記的半徑（如果是圓形）// Info: (20240722 - Shirley)
       },
     },
 
@@ -112,6 +112,7 @@ const ProjectMonthlySalesBlock = () => {
       followCursor: false,
       intersect: false,
       inverseOrder: true,
+      // Info: (20240622 - Julian)
       // custom: function t({ series, seriesIndex, dataPointIndex, w }) {
       //   const currentYear = series[1][dataPointIndex];
       //   const passYear = series[0][dataPointIndex];
@@ -137,13 +138,13 @@ const ProjectMonthlySalesBlock = () => {
 
   const series = [
     {
-      // name: 'Pass Year',
-      name: translate('DASHBOARD.PASS_YEAR'),
+      // name: 'Pass Year', // Info: (20240715 - Anna)
+      name: translate('common:DASHBOARD.PASS_YEAR'),
       data: data.seriesData[0],
     },
     {
-      // name: 'Current Year',
-      name: translate('DASHBOARD.CURRENT_YEAR'),
+      // name: 'Current Year', // Info: (20240715 - Anna)
+      name: translate('common:DASHBOARD.CURRENT_YEAR'),
       data: data.seriesData[1],
     },
   ];
@@ -153,7 +154,7 @@ const ProjectMonthlySalesBlock = () => {
       {/* Info: (20240614 - Julian) Title */}
       <div className="flex gap-8px font-medium text-text-neutral-secondary">
         <Image src="/icons/shopping.svg" width={24} height={24} alt="shopping_icon" />
-        <p>{translate('PROJECT.MONTHLY_SALES')}</p>
+        <p>{translate('project:PROJECT.MONTHLY_SALES')}</p>
       </div>
       {/* Info: (20240614 - Julian) Chart */}
       <Chart options={options} series={series} type="bar" height={400} />

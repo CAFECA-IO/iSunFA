@@ -23,22 +23,22 @@ interface StageNameMap {
 }
 
 const stageNameMap: StageNameMap = {
-  Designing: 'STAGE_NAME_MAP.DESIGNING',
-  Developing: 'STAGE_NAME_MAP.DEVELOPING',
-  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
-  Selling: 'STAGE_NAME_MAP.SELLING',
-  Sold: 'STAGE_NAME_MAP.SOLD',
-  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+  Designing: 'project:STAGE_NAME_MAP.DESIGNING',
+  Developing: 'project:STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'project:STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'project:STAGE_NAME_MAP.SELLING',
+  Sold: 'project:STAGE_NAME_MAP.SOLD',
+  Archived: 'project:STAGE_NAME_MAP.ARCHIVED',
 };
 
 // Info: (2024704 - Anna) 反向映射，用於從翻譯值回到原始名稱，讓篩選時可以比對
 // const stageNameMapReverse: { [key: string]: ProjectStage } = {
-//   'STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
-//   'STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
-//   'STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
-//   'STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
-//   'STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
-//   'STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
+//   'project:STAGE_NAME_MAP.DESIGNING': ProjectStage.DESIGNING,
+//   'project:STAGE_NAME_MAP.DEVELOPING': ProjectStage.DEVELOPING,
+//   'project:STAGE_NAME_MAP.BETA_TESTING': ProjectStage.BETA_TESTING,
+//   'project:STAGE_NAME_MAP.SELLING': ProjectStage.SELLING,
+//   'project:STAGE_NAME_MAP.SOLD': ProjectStage.SOLD,
+//   'project:STAGE_NAME_MAP.ARCHIVED': ProjectStage.ARCHIVED,
 // };
 
 interface IAddProjectModalProps {
@@ -52,7 +52,7 @@ const AddProjectModal = ({
   modalVisibilityHandler,
   defaultStage,
 }: IAddProjectModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { selectedCompany } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
 
@@ -85,7 +85,7 @@ const AddProjectModal = ({
     setComponentVisible: setMembersVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const isConfirmValid = inputName !== ''; // && selectedMembers.length > 0;
+  const isConfirmValid = inputName !== ''; // Info: (20240802 - Julian) && selectedMembers.length > 0;
   const membersAmount = selectedMembers.length;
 
   const stageMenuClickHandler = () => setStageOptionsVisible(!isStageOptionsVisible);
@@ -99,7 +99,6 @@ const AddProjectModal = ({
   };
   const addProjectSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // ToDo: (20240611 - Julian) send data to API
     createProject({
       params: {
         companyId: selectedCompany?.id,
@@ -107,7 +106,7 @@ const AddProjectModal = ({
       body: {
         name: inputName,
         stage: selectedStage,
-        // ToDo: (20240802 - Julian) get member list
+        // ToDo: (20240802 - Julian) [Beta] get member list
         memberIdList: [], // selectedMembers.map((member) => member.id),
       },
     });
@@ -136,15 +135,15 @@ const AddProjectModal = ({
       messageModalDataHandler({
         messageType: MessageType.ERROR,
         title: 'Error',
-        content: 'Create project failed, please try again later.',
-        subMsg: `Error code: ${code}`,
+        content: t('project:PROJECT.CREATE_PROJECT_FAILED'),
+        subMsg: t('common:COMMON.ERROR_CODE', { code }),
         submitBtnFunction: messageModalVisibilityHandler,
-        submitBtnStr: t('PROJECT.OK'),
+        submitBtnStr: t('common:COMMON.OK'),
       });
     }
   }, [createSuccess, data]);
 
-  // ToDo: (20240612 - Julian) get member list from API
+  // ToDo: (20240612 - Julian) [Beta] get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱
@@ -179,7 +178,10 @@ const AddProjectModal = ({
           setSelectedMembers(newMembers);
         };
         return (
-          <div className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary">
+          <div
+            key={member.name}
+            className="flex flex-none items-center gap-8px rounded-full border border-badge-text-secondary p-6px text-sm text-dropdown-text-primary"
+          >
             <Image src="/elements/yellow_check.svg" alt="member_avatar" width={20} height={20} />
             <p className="whitespace-nowrap">{member.name}</p>
             <button type="button" onClick={removeMemberHandler}>
@@ -190,7 +192,7 @@ const AddProjectModal = ({
       })
     ) : (
       <p className="text-left text-input-text-input-placeholder">
-        {t('PROJECT.CHOOSE_TEAM_MEMBERS')}
+        {t('project:PROJECT.CHOOSE_TEAM_MEMBERS')}
       </p>
     );
 
@@ -230,23 +232,23 @@ const AddProjectModal = ({
   const displayMembersMenu = (
     <div
       ref={membersRef}
-      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-12px py-10px ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-dropdown-surface-menu-background-primary px-12px py-10px ${isMembersVisible ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-          {t('PROJECT.DEVELOPMENT_DEPARTMENT')}
+          {t('project:PROJECT.DEVELOPMENT_DEPARTMENT')}
         </div>
         {/* Info: (20240611 - Julian) member list */}
         <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
@@ -258,29 +260,29 @@ const AddProjectModal = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex w-90vw max-w-600px flex-col rounded-sm bg-white py-20px">
+      <div className="relative flex w-90vw max-w-600px flex-col rounded-sm bg-card-surface-primary py-20px">
         {/* Info: (20240611 - Julian) title */}
         <div className="flex flex-col items-start gap-2px whitespace-nowrap border-b px-20px pb-20px">
           {/* Info: (20240611 - Julian) desktop title */}
           <h1 className="text-xl font-bold text-card-text-primary">
-            {t('PROJECT.ADD_NEW_PROJECT')}
+            {t('project:PROJECT.ADD_NEW_PROJECT')}
           </h1>
           <p className="text-xs text-card-text-secondary">
-            {t('PROJECT.EDIT_PROJECT_INFORMATION')}
+            {t('project:PROJECT.EDIT_PROJECT_INFORMATION')}
           </p>
         </div>
         {/* Info: (20240611 - Julian) close button */}
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
+          className="absolute right-12px top-12px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
         {/* Info: (20240611 - Julian) content */}
         <form
           onSubmit={addProjectSubmitHandler}
-          className="flex w-full flex-col gap-y-40px text-sm text-navyBlue2"
+          className="flex w-full flex-col gap-y-40px text-sm text-input-text-primary"
         >
           {/* Info: (20240611 - Julian) input fields */}
           <div className="flex flex-col items-center gap-x-16px gap-y-50px px-20px pt-40px text-center md:grid-cols-2">
@@ -288,10 +290,10 @@ const AddProjectModal = ({
             <div className="flex w-full flex-col items-start justify-between gap-y-20px md:flex-row">
               {/* Info: (20240611 - Julian) project name */}
               <div className="flex w-full flex-col items-start gap-y-8px md:w-250px">
-                <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
+                <p className="font-semibold">{t('project:PROJECT.PROJECT_NAME')}</p>
                 <input
                   type="text"
-                  placeholder={t('PROJECT.NAME_YOUR_PROJECT')}
+                  placeholder={t('project:PROJECT.NAME_YOUR_PROJECT')}
                   value={inputName}
                   onChange={nameChangeHandler}
                   required
@@ -300,7 +302,7 @@ const AddProjectModal = ({
               </div>
               {/* Info: (20240611 - Julian) stage selection */}
               <div className="flex w-full flex-col items-start gap-y-8px md:w-200px">
-                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+                <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
@@ -316,7 +318,7 @@ const AddProjectModal = ({
             {/* Info: (20240611 - Julian) member selection */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <div className="flex w-full items-end justify-between">
-                <p className="font-semibold">{t('PROJECT.TEAM_MEMBERS')}</p>
+                <p className="font-semibold">{t('project:PROJECT.TEAM_MEMBERS')}</p>
                 {/* Info: (20240611 - Julian) amount of selected members */}
                 <p className="text-sm text-input-text-secondary">{membersAmount}</p>
               </div>
@@ -340,7 +342,7 @@ const AddProjectModal = ({
               onClick={modalVisibilityHandler}
               variant={null}
             >
-              {t('REPORTS_HISTORY_LIST.CANCEL')}
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button
               className="px-16px py-8px"
@@ -348,7 +350,7 @@ const AddProjectModal = ({
               variant="tertiary"
               disabled={!isConfirmValid}
             >
-              <p>{t('PROJECT.ADD')}</p> <FaPlus />
+              <p>{t('common:COMMON.ADD')}</p> <FaPlus />
             </Button>
           </div>
         </form>

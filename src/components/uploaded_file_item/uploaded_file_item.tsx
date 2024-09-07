@@ -5,6 +5,7 @@ import { ProgressStatus } from '@/constants/account';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
 
 interface IUploadedFileItemProps {
   itemData: IOCR;
@@ -13,24 +14,69 @@ interface IUploadedFileItemProps {
   clickHandler: (unprocessedJournal: IOCR) => void;
 }
 
+interface IPendingUploadedFileItemProps {
+  imageName: string;
+  imageSize: string;
+}
+
+export const PendingUploadedFileItem = ({
+  imageName,
+  imageSize,
+}: IPendingUploadedFileItemProps) => {
+  const truncatedFileName =
+    imageName.length > 20 ? `${imageName.slice(0, 5)}...${imageName.slice(-4)}` : imageName;
+
+  return (
+    <div
+      className={`relative inline-flex w-90vw flex-col gap-10px rounded-sm border border-file-uploading-stroke-outline bg-white p-5 hover:cursor-pointer hover:border-slider-surface-bar disabled:hover:border-file-uploading-stroke-outline md:w-full`}
+    >
+      <div className="relative inline-flex w-full items-center gap-20px">
+        <Skeleton width={56} height={56} /> {/* Info: (20240814 - Shirley) 掃描動畫 */}
+        <Skeleton width={64} height={64} /> {/* Info: (20240814 - Shirley) 文件縮略圖 */}
+        <div className="flex shrink grow flex-col items-start">
+          <h3
+            className={`text-base font-semibold leading-normal tracking-tight text-file-uploading-text-primary`}
+          >
+            {truncatedFileName}
+          </h3>
+          <p className="text-xs font-normal leading-tight tracking-tight text-file-uploading-text-disable">
+            {imageSize}
+          </p>
+        </div>
+        <div className="absolute right-0 z-10 flex items-center gap-10px">
+          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 狀態圖標 */}
+          <Skeleton width={20} height={20} /> {/* Info: (20240814 - Shirley) 刪除按鈕 */}
+        </div>
+      </div>
+      <div className="inline-flex w-full items-center gap-16px">
+        <Skeleton width={150} height={20} /> {/* Info: (20240814 - Shirley) AI 識別文字 */}
+        <div className="relative h-5px flex-1 rounded-full">
+          <Skeleton width={100} height={5} /> {/* Info: (20240814 - Shirley) 進度條 */}
+        </div>
+        <Skeleton width={40} height={16} /> {/* Info: (20240814 - Shirley) 進度百分比 */}
+      </div>
+    </div>
+  );
+};
+
 const UploadedFileItem = ({
   itemData,
   pauseHandler,
   deleteHandler,
   clickHandler,
 }: IUploadedFileItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const { id, aichResultId, imageName, imageUrl, imageSize, progress, status } = itemData;
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   // Info: (20240527 - Julian) 若 status 不是 in progress, success, paused 則視為 error
   const isError = !(
-    // Info (20240809 - Murky): To Julian 設定成P
+    // Info: (20240809 - Murky) To Julian 設定成P
     // status === ProgressStatus.IN_PROGRESS ||
     // status === ProgressStatus.SUCCESS ||
     // status === ProgressStatus.PAUSED
-    imageUrl && imageUrl.length > 0
+    (imageUrl && imageUrl.length > 0)
   );
 
   const pauseClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -50,9 +96,9 @@ const UploadedFileItem = ({
     clickHandler(itemData);
   };
 
-  // Info: (20240527 - Julian) 若檔名過長，則擷取前 3 個和後 4 個(副檔名)字元，中間以 ... 代替
+  // Info: (20240527 - Julian) 若檔名過長，則擷取前 5 個和後 4 個(副檔名)字元，中間以 ... 代替
   const truncatedFileName =
-    imageName.length > 20 ? `${imageName.slice(0, 3)}...${imageName.slice(-4)}` : imageName;
+    imageName.length > 20 ? `${imageName.slice(0, 5)}...${imageName.slice(-4)}` : imageName;
 
   const displayedPauseButton =
     status === ProgressStatus.PAUSED ? <FiPlay size={20} /> : <FiPauseCircle size={20} />;
@@ -67,10 +113,9 @@ const UploadedFileItem = ({
     </button>
   );
 
-  // const displayedProgress = progress === 100 ? 'Completed' : `${progress}%`;
-  const displayedProgress = progress === 100 ? t('PROJECT.COMPLETED') : `${progress}%`;
+  const displayedProgress = progress === 100 ? t('common:COMMON.COMPLETED') : `${progress}%`;
 
-  return (
+  const displayedFileItem = (
     <div
       // Info: (20240523 - Julian) 達成 100% 後，點擊將 invoiceId 寫入 context
       onClick={itemClickHandler}
@@ -112,7 +157,7 @@ const UploadedFileItem = ({
       </div>
       {/* Info: (20240523 - Julian) Progress Bar */}
       <div className="inline-flex w-full items-center gap-16px">
-        <p className="text-slider-surface-bar">{t('JOURNAL.AI_TECHNOLOGY_RECOGNIZING')}</p>
+        <p className="text-slider-surface-bar">{t('journal:JOURNAL.AI_TECHNOLOGY_RECOGNIZING')}</p>
         <div className="relative h-5px flex-1 rounded-full bg-progress-bar-surface-base">
           <div
             className={`absolute left-0 top-0 h-5px rounded-full transition-all duration-300 ${isError ? 'bg-file-uploading-text-error' : 'bg-progress-bar-surface-bar-secondary'}`}
@@ -125,6 +170,8 @@ const UploadedFileItem = ({
       </div>
     </div>
   );
+
+  return <div className="w-full">{displayedFileItem}</div>;
 };
 
 export default UploadedFileItem;

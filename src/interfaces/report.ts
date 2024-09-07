@@ -148,7 +148,7 @@ export interface FinancialReportItem {
 export interface YearlyData {
   [year: string]: number;
 }
-// Info Murky (20240729): To Shirley, New Interface need to be connect to front end
+// Info: (20240729 - Murky): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
   company: {
     id: number;
@@ -169,17 +169,26 @@ export interface FinancialReport {
   otherInfo: unknown;
 }
 
+export interface IReportContent {
+  content: IFinancialReportInDB | TaxReport401;
+}
+
+export interface IFinancialReportInDB {
+  content: IAccountReadyForFrontend[];
+  otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+}
+
 export interface BalanceSheetOtherInfo {
   assetLiabilityRatio: {
     [date: string]: {
-      data: number[]; // Info: [資產,負債,權益] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
-      labels: string[]; // Info: ["資產", "負債", "權益"] (20240730 - Shirley)
+      data: number[]; // Info: (20240730 - Shirley) [資產,負債,權益], 數字是已經*100的數字, 不會有小數點
+      labels: string[]; // Info: (20240730 - Shirley) ["資產", "負債", "權益"]
     };
   };
   assetMixRatio: {
-    // Info: 資產組成，包含數量最大的五種資產跟其他 (20240730 - Shirley)
+    // Info: (20240730 - Shirley) 資產組成，包含數量最大的五種資產跟其他
     [date: string]: {
-      data: number[]; // Info: [資產1, 資產2, 資產3, 資產4, 資產5, 其他] (20240730 - Shirley), 數字是已經*100的數字, 不會有小數點
+      data: number[]; // Info: (20240730 - Shirley) [資產1, 資產2, 資產3, 資產4, 資產5, 其他], 數字是已經*100的數字, 不會有小數點
       labels: string[];
     };
   };
@@ -217,7 +226,7 @@ export interface IncomeStatementOtherInfo {
 export interface CashFlowStatementOtherInfo {
   operatingStabilized: {
     beforeIncomeTax: YearlyData;
-    amortizationDepreciation: YearlyData; // Info: 折舊攤銷費用 (20240730 - Shirley)
+    amortizationDepreciation: YearlyData; // Info: (20240730 - Shirley) 折舊攤銷費用
     tax: YearlyData;
     operatingIncomeCashFlow: YearlyData;
     ratio: YearlyData;
@@ -246,17 +255,14 @@ export interface CashFlowStatementOtherInfo {
   };
 }
 
-// Todo Murky (20240729):
 export interface BalanceSheetReport extends FinancialReport {
   otherInfo: BalanceSheetOtherInfo;
 }
 
-// Todo Murky (20240729):
 export interface IncomeStatementReport extends FinancialReport {
   otherInfo: IncomeStatementOtherInfo;
 }
 
-// Todo Murky (2024729):
 export interface CashFlowStatementReport extends FinancialReport {
   otherInfo: CashFlowStatementOtherInfo;
 }
@@ -275,16 +281,19 @@ export interface IFinancialReportsProgressStatusResponse extends IAccountResultS
   endDate: Date;
 }
 
-// Info Murky (20240505): type guards can input any type and return a boolean
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isIAnalysisReportRequest(obj: any): obj is IAnalysisReportRequest {
+// Info: (20240505 - Murky): type guards can input any type and return a boolean
+export function isIAnalysisReportRequest(obj: unknown): obj is IAnalysisReportRequest {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    typeof obj.type === 'string' &&
-    typeof obj.language === 'string' &&
-    obj.start_date instanceof Date &&
-    obj.end_date instanceof Date
+    'type' in obj &&
+    typeof (obj as { type: unknown }).type === 'string' &&
+    'language' in obj &&
+    typeof (obj as { language: unknown }).language === 'string' &&
+    'start_date' in obj &&
+    (obj as { start_date: unknown }).start_date instanceof Date &&
+    'end_date' in obj &&
+    (obj as { end_date: unknown }).end_date instanceof Date
   );
 }
 
@@ -304,47 +313,54 @@ interface BasicInfo {
   taxSerialNumber: string;
   businessAddress: string;
   currentYear: string;
-  currentMonth: string;
+  startMonth: string;
+  endMonth: string;
   usedInvoiceCount: number;
 }
 
-interface Sales {
+export interface Sales {
   breakdown: SalesBreakdown;
   totalTaxableAmount: number;
   includeFixedAsset: number;
 }
 
-interface SalesBreakdown {
-  triplicateAndElectronic: AmountAndTax;
-  cashRegisterTriplicate: AmountAndTax;
-  duplicateAndCashRegister: AmountAndTax;
-  taxExempt: AmountAndTax;
-  returnsAndAllowances: AmountAndTax;
-  total: AmountAndTax;
+export interface SalesBreakdown {
+  triplicateAndElectronic: SalesDetail;
+  cashRegisterTriplicate: SalesDetail;
+  duplicateAndCashRegister: SalesDetail;
+  invoiceExempt: SalesDetail;
+  returnsAndAllowances: SalesDetail;
+  total: SalesDetail;
 }
 
-interface AmountAndTax {
+interface SalesDetail {
+  sales: number;
+  tax: number;
+  zeroTax: number;
+}
+
+interface PurchasesDetail {
   amount: number;
   tax: number;
 }
 
-interface Purchases {
+export interface Purchases {
   breakdown: PurchaseBreakdown;
-  total: PurchaseCategory;
   totalWithNonDeductible: PurchaseTotal;
 }
 
-interface PurchaseBreakdown {
+export interface PurchaseBreakdown {
   uniformInvoice: PurchaseCategory;
   cashRegisterAndElectronic: PurchaseCategory;
   otherTaxableVouchers: PurchaseCategory;
   customsDutyPayment: PurchaseCategory;
   returnsAndAllowances: PurchaseCategory;
+  total: PurchaseCategory;
 }
 
 interface PurchaseCategory {
-  generalPurchases: AmountAndTax;
-  fixedAssets: AmountAndTax;
+  generalPurchases: PurchasesDetail;
+  fixedAssets: PurchasesDetail;
 }
 
 interface PurchaseTotal {
@@ -352,7 +368,7 @@ interface PurchaseTotal {
   fixedAssets: number;
 }
 
-interface TaxCalculation {
+export interface TaxCalculation {
   outputTax: number;
   deductibleInputTax: number;
   previousPeriodOffset: number;
@@ -364,7 +380,31 @@ interface TaxCalculation {
   currentPeriodAccumulatedOffset: number;
 }
 
-interface Imports {
+export interface Imports {
   taxExemptGoods: number;
   foreignServices: number;
+}
+
+export interface TaxReport401Content {
+  id: number;
+  companyId: number;
+  tokenContract: string;
+  tokenId: string;
+  name: string;
+  from: number;
+  to: number;
+  type: string;
+  reportType: string;
+  status: string;
+  remainingSeconds: number;
+  paused: boolean;
+  projectId: number | null;
+  project: string | null;
+  reportLink: string;
+  downloadLink: string;
+  blockChainExplorerLink: string;
+  evidenceId: string;
+  content: TaxReport401;
+  createdAt: number;
+  updatedAt: number;
 }

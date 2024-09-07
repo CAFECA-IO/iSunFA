@@ -25,11 +25,11 @@ export interface ICompanyKYC {
   contactPerson: string;
   contactPhone: string;
   contactEmail: string;
-  website: string; // Info: To Jacky, this field is optional (20240719 - Tzuhan)
+  website: string;
   representativeIdType: RepresentativeIDType;
-  registrationCertificateId: string;
-  taxCertificateId: string;
-  representativeIdCardId: string;
+  registrationCertificateFileId: number;
+  taxCertificateFileId: number;
+  representativeIdCardFileId: number;
   status: string;
   reviewer: string;
   note: string;
@@ -53,11 +53,11 @@ export interface ICompanyKYCForm {
   [ContactInfoKeys.KEY_CONTACT_PERSON]: string;
   [ContactInfoKeys.CONTACT_PHONE]: string;
   [ContactInfoKeys.EMAIL_ADDRESS]: string;
-  [ContactInfoKeys.COMPANY_WEBSITE]: string; // Info: To Jacky, this field is optional (20240719 - Tzuhan)
+  [ContactInfoKeys.COMPANY_WEBSITE]: string; // Info: (20240719 - Tzuhan) To Jacky, this field is optional
   [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]: RepresentativeIDType;
-  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: string;
-  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: string;
-  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: string;
+  [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: number;
+  [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: number;
+  [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: number;
 }
 
 export function createFormData(data: ICompanyKYCForm): FormData {

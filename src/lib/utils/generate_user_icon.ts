@@ -4,6 +4,7 @@ import {
   generateSavePath,
   uploadFileToGoogleCloud,
 } from '@/lib/utils/google_image_upload';
+import logger from '@/lib/utils/logger_back';
 
 function isChinese(name: string): boolean {
   return /[\u3400-\u9FBF]/.test(name);
@@ -69,10 +70,22 @@ function generateUserIconSvg(
   return cleanedSvg;
 }
 
+function getSizeAndMimeType(svg: string) {
+  const mimeType = 'image/svg+xml';
+
+  const blob = new Blob([svg], { type: mimeType });
+  const { size } = blob;
+  return {
+    size,
+    mimeType,
+  };
+}
+
 export async function generateIcon(name: string) {
   let iconUrl = '';
+  let mimeType = '';
+  let size = 0;
   try {
-    // await mkUploadFolder();
     const initials = generateInitials(name);
     const backgroundColor = generateRandomColor();
     const iconSvg = generateUserIconSvg(
@@ -85,8 +98,15 @@ export async function generateIcon(name: string) {
     const destFileName = generateDestinationFileNameInGoogleBucket(filepath);
 
     iconUrl = await uploadFileToGoogleCloud(iconSvg, destFileName, 'image/svg+xml');
+    const mimeAndSize = getSizeAndMimeType(iconSvg);
+    mimeType = mimeAndSize.mimeType;
+    size = mimeAndSize.size;
   } catch (error) {
-    iconUrl = '';
+    logger.error(error, 'Error happened in generateIcon in generate_user_icon.ts');
   }
-  return iconUrl;
+  return {
+    iconUrl,
+    mimeType,
+    size,
+  };
 }

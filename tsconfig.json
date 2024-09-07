@@ -3,7 +3,7 @@
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "downlevelIteration": true, // for Map<T, U> loop
+    "downlevelIteration": true, // Info: (20240710 - Murky) for Map<T, U> loop
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -26,7 +26,7 @@
     "**/*.ts",
     "**/*.tsx",
     "tailwind.config.ts",
-    "src/lib/utils/email.js"
-, "scripts/update_version.js"  ],
+    "scripts/update_version.js"
+  ],
   "exclude": ["node_modules"]
 }

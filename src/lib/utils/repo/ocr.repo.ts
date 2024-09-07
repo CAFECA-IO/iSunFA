@@ -1,9 +1,11 @@
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
+import { SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
-import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { Ocr, Prisma } from '@prisma/client';
+import { ocrIncludeFile } from '@/interfaces/ocr';
+import { getTimestampNow } from '@/lib/utils/common';
+import { File, Ocr, Prisma } from '@prisma/client';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -16,9 +18,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -29,13 +29,11 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
   return company;
 }
 
-// Todo: (20240625 - Jacky) Should change prisma to add type
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   companyId: number,
   ocrType: string = 'invoice'
-): Promise<Ocr[]> {
-  let ocrData: Ocr[];
+): Promise<ocrIncludeFile[]> {
+  let ocrData: ocrIncludeFile[] = [];
 
   const where: Prisma.OcrWhereInput = {
     companyId,
@@ -47,20 +45,21 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   };
 
   const orderBy: Prisma.OcrOrderByWithRelationInput = {
-    createdAt: 'asc',
+    createdAt: SortOrder.ASC,
   };
 
-  const findManyOptions: Prisma.OcrFindManyArgs = {
-    where,
-    orderBy,
+  const include: Prisma.OcrInclude = {
+    imageFile: true,
   };
 
   try {
-    ocrData = await prisma.ocr.findMany(findManyOptions);
+    ocrData = await prisma.ocr.findMany({
+      where,
+      include,
+      orderBy,
+    });
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -87,42 +86,38 @@ export async function getOcrByResultId(
 
 export async function createOcrInPrisma(
   companyId: number,
-  aichResult: {
-    resultStatus: IAccountResultStatus;
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-    type: string;
-  }
-) {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
+  resultStatus: IAccountResultStatus,
+  type: string,
+  fileId: number
+): Promise<ocrIncludeFile | null> {
+  const nowTimestamp = getTimestampNow();
 
+  let ocrData: ocrIncludeFile | null = null;
   try {
-    const ocrData = await prisma.ocr.create({
+    ocrData = await prisma.ocr.create({
       data: {
         companyId,
-        aichResultId: aichResult.resultStatus.resultId,
-        imageName: aichResult.imageName,
-        imageUrl: aichResult.imageUrl,
-        imageSize: aichResult.imageSize,
-        status: aichResult.resultStatus.status,
-        type: aichResult.type,
+        aichResultId: resultStatus.resultId,
+        status: resultStatus.status,
+        type,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
+        imageFileId: fileId,
+      },
+      include: {
+        imageFile: true,
       },
     });
-
-    return ocrData;
   } catch (error) {
-    // Deprecated (20240611 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
+
+  return ocrData;
 }
 
-export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
+export async function deleteOcrByResultId(
+  aichResultId: string
+): Promise<Ocr & { imageFile: File }> {
   const nowInSecond = getTimestampNow();
   const where: Prisma.OcrWhereUniqueInput = {
     aichResultId,
@@ -134,10 +129,14 @@ export async function deleteOcrByResultId(aichResultId: string): Promise<Ocr> {
     deletedAt: nowInSecond,
   };
 
-  const updatedArgs: Prisma.OcrUpdateArgs = {
+  const include = {
+    imageFile: true,
+  };
+
+  const ocr = await prisma.ocr.update({
     where,
     data,
-  };
-  const ocr = await prisma.ocr.update(updatedArgs);
+    include,
+  });
   return ocr;
 }

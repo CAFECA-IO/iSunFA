@@ -1,6 +1,5 @@
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { timestampToString, truncateString } from '@/lib/utils/common';
-import { Button } from '@/components/button/button';
 import Link from 'next/link';
 import { FinancialReportTypeName, ReportTypeToBaifaReportType } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -20,15 +19,15 @@ const ReportsHistoryItem = ({
   isCheckboxVisible,
   onCheckChange = () => {},
 }: IReportsHistoryItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { id, createdAt, name, from, to, project, reportType, blockChainExplorerLink } = report;
 
   const startDate = timestampToString(from);
   const endDate = timestampToString(to);
 
   const displayedProject = project ? (
-    <div className="flex w-fit items-center gap-2px rounded bg-primaryYellow3 px-8px py-2px font-medium text-primaryYellow2">
-      <div className="flex h-14px w-14px items-center justify-center rounded-full bg-indigo text-xxs text-white">
+    <div className="flex w-fit items-center gap-2px rounded bg-badge-surface-soft-primary px-8px py-2px font-medium text-badge-text-primary-solid">
+      <div className="flex h-14px w-14px items-center justify-center rounded-full bg-surface-support-strong-indigo text-xxs text-avatar-text-in-dark-background">
         {project?.code}
       </div>
       <p>{project?.name}</p>
@@ -38,7 +37,7 @@ const ReportsHistoryItem = ({
   return (
     <tr
       key={id}
-      className="h-20 border-b border-lightGray6 text-center align-middle text-lightGray4"
+      className="h-20 border-b border-stroke-neutral-quaternary text-center align-middle"
     >
       {/* Info: (20240514 - Shirley) checkboxes */}
       {isCheckboxVisible ? (
@@ -47,15 +46,15 @@ const ReportsHistoryItem = ({
             checked={checked}
             onChange={onCheckChange}
             type="checkbox"
-            className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+            className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
           />
         </td>
       ) : null}
-      <td className="border-x border-lightGray6">
+      <td className="border-x border-stroke-neutral-quaternary">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdAt} />
       </td>
-      {/* Info: report name (20240528 - Shirley) */}
+      {/* Info: (20240528 - Shirley) report name */}
       <td className="pl-5 text-start text-base text-text-neutral-primary">
         <div className="flex w-full flex-col justify-start">
           <Link
@@ -64,8 +63,8 @@ const ReportsHistoryItem = ({
           >
             {name}
           </Link>
-          {/* 錯的http://localhost:3000/users/reports/financials/view?report_type=balance */}
-          {/* 對的http://localhost:3000/users/reports/financials/view/10000008?report_type=cash-flow */}
+          {/* Info: (20240722 - Anna) 錯的http://localhost:3000/users/reports/financials/view?report_type=balance */}
+          {/*  Info: (20240722 - Anna) 對的http://localhost:3000/users/reports/financials/view/10000008?report_type=cash-flow */}
           <div className="flex flex-col space-y-2 lg:hidden">
             <Link
               className="sm:hidden"
@@ -92,49 +91,49 @@ const ReportsHistoryItem = ({
       <td className="hidden px-16px text-left font-medium lg:table-cell">
         <span className="text-sm text-text-neutral-primary">
           {t(
-            `PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+            `common:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
           )}
         </span>
       </td>
-      {/* Info: period (20240528 - Shirley) */}
-      <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      {/* Info: (20240528 - Shirley) period */}
+      <td className="hidden min-w-220px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
+          <span className="text-text-neutral-tertiary">
+            {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
+          </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.TO')}</span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Blockchain explorer link */}
-      <td className="hidden px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden px-16px text-left font-medium text-button-text-secondary-hover lg:table-cell">
         {blockChainExplorerLink ? (
           <Link href={blockChainExplorerLink} target="_blank">
-            <Button variant={'tertiaryBorderless'} size={'small'}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  className="fill-current"
-                  fillRule="evenodd"
-                  d="M12.952 2.932a5.75 5.75 0 018.13 8.131l-.009.01-3 3a5.75 5.75 0 01-8.67-.622.75.75 0 011.2-.898 4.25 4.25 0 006.41.459l2.995-2.996a4.25 4.25 0 00-6.01-6.008l-1.716 1.706a.75.75 0 01-1.058-1.064l1.72-1.71.008-.008zM7.989 8.61a5.75 5.75 0 016.615 1.944.75.75 0 01-1.202.898 4.247 4.247 0 00-4.888-1.436 4.249 4.249 0 00-1.52.977l-2.996 2.995a4.25 4.25 0 006.01 6.01l1.705-1.705a.75.75 0 111.06 1.06l-1.71 1.71-.009.01a5.75 5.75 0 01-8.13-8.131l.008-.01 3-3A5.75 5.75 0 017.99 8.61z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </Button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                className="fill-current"
+                fillRule="evenodd"
+                d="M12.952 2.932a5.75 5.75 0 018.13 8.131l-.009.01-3 3a5.75 5.75 0 01-8.67-.622.75.75 0 011.2-.898 4.25 4.25 0 006.41.459l2.995-2.996a4.25 4.25 0 00-6.01-6.008l-1.716 1.706a.75.75 0 01-1.058-1.064l1.72-1.71.008-.008zM7.989 8.61a5.75 5.75 0 016.615 1.944.75.75 0 01-1.202.898 4.247 4.247 0 00-4.888-1.436 4.249 4.249 0 00-1.52.977l-2.996 2.995a4.25 4.25 0 006.01 6.01l1.705-1.705a.75.75 0 111.06 1.06l-1.71 1.71-.009.01a5.75 5.75 0 01-8.13-8.131l.008-.01 3-3A5.75 5.75 0 017.99 8.61z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
           </Link>
         ) : null}
       </td>
-      {/* Info: project (20240528 - Shirley) */}
+      {/* Info: (20240528 - Shirley) project */}
       <td className="hidden px-16px text-left lg:table-cell">{displayedProject}</td>
-      {/* Info: operation buttons (20240516 - Shirley) */}
+      {/* Info: (20240516 - Shirley) operation buttons */}
       <td className="hidden min-w-100px px-16px lg:table-cell">
         <div className="flex items-center justify-between">
           {/* Info: (20240808 - Anna) Alpha版先隱藏(下載按鈕) */}
-          {/* Info: download button (20240516 - Shirley) */}
+          {/* Info: (20240516 - Shirley) download button */}
           {/* <Button variant={'tertiaryBorderless'} className="my-auto mr-5 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +151,7 @@ const ReportsHistoryItem = ({
             </svg>
           </Button> */}
           {/* Info: (20240808 - Anna) Alpha版先隱藏(分享按鈕) */}
-          {/* Info: share button (20240516 - Shirley) */}
+          {/* Info: (20240516 - Shirley) share button */}
           {/* <Button variant={'tertiaryBorderless'} className="mr-2 px-0 py-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"

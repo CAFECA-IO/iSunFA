@@ -2,9 +2,7 @@ import { useEffect, useRef } from 'react';
 import useStateRef from 'react-usestateref';
 
 function useOuterClick<T extends HTMLElement>(initialVisibleState: boolean) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [componentVisible, setComponentVisible, componentVisibleRef] =
-    useStateRef<boolean>(initialVisibleState);
+  const [, setComponentVisible, componentVisibleRef] = useStateRef<boolean>(initialVisibleState);
 
   const targetRef = useRef<T>(null);
 

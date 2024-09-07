@@ -93,7 +93,7 @@ const LineChart = ({ data }: LineChartProps) => {
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // formatter: value => `${value}%`,  // Info: (20240416 - Shirley)
       },
     },
     yaxis: {
@@ -106,7 +106,7 @@ const LineChart = ({ data }: LineChartProps) => {
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // formatter: value => `${value}%`,  // Info: (20240416 - Shirley)
       },
     },
 
@@ -120,9 +120,9 @@ const LineChart = ({ data }: LineChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#FFA502'],
-        // width: 20, // 標記的寬度
-        // height: 12, // 標記的高度
-        // radius: 0, // 標記的半徑（如果是圓形）
+        // width: 20, // 標記的寬度 // Info: (20240706 - Luphia)
+        // height: 12, // 標記的高度 // Info: (20240706 - Luphia)
+        // radius: 0, // 標記的半徑（如果是圓形）// Info: (20240722 - Shirley)
       },
       showForSingleSeries: true,
     },
@@ -157,9 +157,9 @@ const LineChart = ({ data }: LineChartProps) => {
         highlightDataSeries: false,
       },
       x: {
-        show: false, // Info: 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值 (20240416 - Shirley)
+        show: false, // Info: (20240416 - Shirley) 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值
         format: 'dd MMM',
-        // formatter: value => `${value}`,
+        // formatter: value => `${value}`, // Info: (20240416 - Shirley)
       },
       y: {
         formatter: (value) => `${value}%`,
@@ -186,7 +186,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const ProfitTrendChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const [selectedPeriod, setSelectedPeriod] = React.useState<Period>(Period.WEEK);
   const [data, setData] = React.useState(DUMMY_PROFIT_TREND_CHART_DATA[selectedPeriod]);
 
@@ -196,63 +196,66 @@ const ProfitTrendChart = () => {
   };
 
   const displayedDataSection = (
-    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
-      <div>
-        <div className="flex w-full justify-between gap-2 border-b border-navyBlue2 pb-2 text-2xl font-bold leading-8 text-navyBlue2 max-md:max-w-full max-md:flex-wrap">
-          <div className="flex-1">{t('PROFIT_TREND_CHART.PROFIT_STATUS_TREND_CHART')}</div>
+    <div className="dashboardCardShadow flex h-450px flex-col rounded-2xl bg-surface-neutral-surface-lv2 px-5 pb-9 pt-5 max-md:max-w-full md:h-400px">
+      <div className="flex w-full justify-between gap-2 border-b border-stroke-neutral-secondary pb-2 text-2xl font-bold leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap">
+        <div className="flex-1">{t('project:PROFIT_TREND_CHART.PROFIT_STATUS_TREND_CHART')}</div>
 
-          <div className="justify-end">
-            <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
-            </Tooltip>
-          </div>
+        <div className="justify-end">
+          <Tooltip>
+            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+          </Tooltip>
         </div>
       </div>
 
       <div className="mt-2">
         <div className="flex flex-col justify-between max-md:space-y-2 md:mx-2 md:flex-row">
-          <div className="my-auto text-xl font-bold leading-8 text-slate-700">2024</div>
+          <div className="my-auto text-xl font-bold leading-8 text-text-brand-primary-lv2">
+            2024
+          </div>
           <div className="flex space-x-2 md:space-x-5">
             <div className="">
               <Button
+                type="button"
                 variant={'tertiaryOutline'}
                 className={cn(
                   selectedPeriod === Period.WEEK
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.WEEK)}
               >
-                {t('PROFIT_TREND_CHART.WEEK')}
+                {t('project:PROFIT_TREND_CHART.WEEK')}
               </Button>
             </div>
             <div className="">
               <Button
+                type="button"
                 variant={'tertiaryOutline'}
                 className={cn(
                   selectedPeriod === Period.MONTH
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
-                {t('ADD_ASSET_MODAL.MONTH')}
+                {t('common:COMMON.MONTH')}
               </Button>
             </div>
             <div className="">
               <Button
+                type="button"
                 variant={'tertiaryOutline'}
                 className={cn(
                   selectedPeriod === Period.YEAR
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
-                {t('ADD_ASSET_MODAL.YEAR')}
+                {t('common:COMMON.YEAR')}
               </Button>
             </div>
           </div>

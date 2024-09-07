@@ -22,7 +22,7 @@ export default class AccountRetrieverFactory {
     sortBy,
     sortOrder,
     searchKey,
-    isDeleted
+    isDeleted,
   }: IAccountQueryArgs) {
     const reportTypeLocal = type
       ? type !== AccountType.OTHER

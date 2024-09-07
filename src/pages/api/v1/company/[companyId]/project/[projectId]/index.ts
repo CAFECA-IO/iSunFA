@@ -1,135 +1,122 @@
-import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { IProject } from '@/interfaces/project';
 import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse, convertStringToNumber } from '@/lib/utils/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
+import { getProjectById, updateProjectById } from '@/lib/utils/repo/project.repo';
+import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
+import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
+import { updateProjectMembers } from '@/lib/utils/repo/transaction/project_members.tx';
 import { formatMilestoneList } from '@/lib/utils/formatter/milestone.formatter';
 import { formatProject } from '@/lib/utils/formatter/project.formatter';
-import { listProjectMilestone } from '@/lib/utils/repo/milestone.repo';
-import { getProjectById, updateProjectById } from '@/lib/utils/repo/project.repo';
-import { updateProjectMembers } from '@/lib/utils/repo/transaction/project_members.tx';
-import { updateProjectMilestone } from '@/lib/utils/repo/transaction/project_milestone.tx';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getSession } from '@/lib/utils/session';
-import { NextApiRequest, NextApiResponse } from 'next';
 
-async function checkInput(
-  method: string,
-  projectId: string,
-  name?: string,
-  stage?: string,
-  memberIdList?: number[],
-  imageId?: string
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProject | null>>
 ) {
-  let isValid = true;
-  switch (method) {
-    case 'GET':
-      if (!projectId) {
-        isValid = false;
-      }
-      break;
-    case 'PUT':
-      if (!projectId || (!name && !stage && !memberIdList && !imageId)) {
-        isValid = false;
-      }
-      break;
-    default:
-      isValid = false;
-  }
-  return isValid;
-}
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IProject | null = null;
 
-async function checkAuth(userId: number, companyId: number, projectId: number) {
-  let isValid = true;
-  const isAdmin = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAdmin) {
-    isValid = false;
+  const { projectId } = req.query;
+  const projectIdNum = convertStringToNumber(projectId as string);
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const project = await getProjectById(projectId);
-    if (!project || project.companyId !== companyId) {
-      isValid = false;
+    const isAuth = await checkAuthorization(
+      [AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch],
+      { userId, companyId, projectId: projectIdNum }
+    );
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const project = await getProjectById(projectIdNum);
+      payload = project ? formatProject(project) : null;
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     }
   }
 
-  return isValid;
+  return { statusMessage, payload };
 }
+
+async function handlePutRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IProject | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IProject | null = null;
+
+  const { projectId } = req.query;
+  const { name, stage, memberIdList, imageId } = req.body;
+  const projectIdNum = convertStringToNumber(projectId as string);
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization(
+      [AuthFunctionsKeys.admin, AuthFunctionsKeys.projectCompanyMatch],
+      { userId, companyId, projectId: projectIdNum }
+    );
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      if (stage) {
+        const listedMilestone = await listProjectMilestone(projectIdNum);
+        if (listedMilestone.length === 0) {
+          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        } else {
+          const milestoneList = formatMilestoneList(listedMilestone);
+          await updateProjectMilestone(projectIdNum, milestoneList, stage);
+        }
+      }
+      if (memberIdList) {
+        await updateProjectMembers(projectIdNum, memberIdList);
+      }
+      const updatedProject = await updateProjectById(projectIdNum, name, imageId);
+      payload = formatProject(updatedProject);
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse<IResponseData<IProject | null>>
+  ) => Promise<{ statusMessage: string; payload: IProject | null }>;
+} = {
+  GET: handleGetRequest,
+  PUT: handlePutRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IProject | null>>
 ) {
-  let shouldContinue = true;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IProject | null = null;
 
   try {
-    switch (req.method) {
-      case 'GET': {
-        const { projectId } = req.query;
-        shouldContinue = await checkInput('GET', projectId as string);
-        if (!shouldContinue) {
-          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-        } else {
-          const projectIdNum = convertStringToNumber(projectId as string);
-          const session = await getSession(req, res);
-          const { userId, companyId } = session;
-          shouldContinue = await checkAuth(userId, companyId, projectIdNum);
-          if (!shouldContinue) {
-            statusMessage = STATUS_MESSAGE.FORBIDDEN;
-          } else {
-            const project = await getProjectById(projectIdNum);
-            payload = project ? await formatProject(project) : null;
-            statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-          }
-        }
-        break;
-      }
-      case 'PUT': {
-        const { projectId } = req.query;
-        const { name, stage, memberIdList, imageId } = req.body;
-        shouldContinue = await checkInput(
-          'PUT',
-          projectId as string,
-          name,
-          stage,
-          memberIdList,
-          imageId
-        );
-        if (!shouldContinue) {
-          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-        } else {
-          const session = await getSession(req, res);
-          const { userId, companyId } = session;
-          const projectIdNum = convertStringToNumber(projectId as string);
-          shouldContinue = await checkAuth(userId, companyId, projectIdNum);
-          if (shouldContinue) {
-            if (stage) {
-              const listedMilestone = await listProjectMilestone(projectIdNum);
-              if (listedMilestone.length === 0) {
-                statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-              } else {
-                const milestoneList = formatMilestoneList(listedMilestone);
-                await updateProjectMilestone(projectIdNum, milestoneList, stage);
-              }
-            }
-            if (memberIdList) {
-              await updateProjectMembers(projectIdNum, memberIdList);
-            }
-            const updatedProject = await updateProjectById(projectIdNum, name, imageId);
-            payload = await formatProject(updatedProject);
-            statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-          }
-        }
-        break;
-      }
-      default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IProject | null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-  const { httpCode, result } = formatApiResponse<IProject | null>(statusMessage, payload);
-  res.status(httpCode).json(result);
 }

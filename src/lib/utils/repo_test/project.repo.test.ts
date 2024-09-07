@@ -7,6 +7,8 @@ import {
   deleteProjectByIdForTest,
 } from '@/lib/utils/repo/project.repo';
 import projects from '@/seed_json/project.json';
+import { FileFolder } from '@/constants/file';
+import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
 
 describe('Project Repository', () => {
   describe('listProject', () => {
@@ -28,11 +30,11 @@ describe('Project Repository', () => {
       const projectId = 1000;
       const project = await getProjectById(projectId);
 
-      // Assert that project is defined
+      // Info: (20240704 - Jacky) Assert that project is defined
       expect(project).toBeDefined();
       expect(project).toBeTruthy();
 
-      // TypeScript now knows project is defined, no need for optional chaining
+      // Info: (20240704 - Jacky) TypeScript now knows project is defined, no need for optional chaining
       expect(project!.id).toBe(projectId);
       expect(project!.companyId).toBe(projects[0].companyId);
       expect(project!.name).toContain(projects[0].name);
@@ -54,8 +56,21 @@ describe('Project Repository', () => {
       const name = 'New Test Project';
       const stage = MILESTONE.BETA_TESTING;
       const members = [] as number[];
-      const project = await createProject(companyId, name, stage, members);
+      const testFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      if (!testFile) {
+        throw new Error('Failed to create a test file');
+      }
+      const project = await createProject(companyId, name, stage, testFile.id, members);
       await deleteProjectByIdForTest(project.id);
+      await deleteFileByIdForTesting(testFile.id);
       expect(project).toBeDefined();
       expect(project.name).toBe(name);
       expect(project.stage).toBe(stage);

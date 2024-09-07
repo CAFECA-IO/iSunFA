@@ -11,8 +11,6 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAdmin } from '@/interfaces/admin';
 import { ICompany } from '@/interfaces/company';
-import { useRouter } from 'next/router';
-import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 
 interface ICompanyInvitationModal {
@@ -26,11 +24,10 @@ const CompanyInvitationModal = ({
   modalVisibilityHandler,
   toastHandler,
 }: ICompanyInvitationModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const { userAuth, selectCompany } = useUserCtx();
   const [codeInput, setCodeInput] = useState<string>('');
   const [isCodeValid, setIsCodeValid] = useState<boolean>(true);
-  const router = useRouter();
 
   const {
     data: adminData,
@@ -55,24 +52,23 @@ const CompanyInvitationModal = ({
           type: ToastType.SUCCESS,
           content: (
             <p>
-              {t('COMPANY_INVITATION_MODAL.CONGRATULATIONS_YOU')}&apos;
-              {t('COMPANY_INVITATION_MODAL.VE_SUCCESSFULLY_JOINED_THE')}{' '}
+              {t('kyc:COMPANY_INVITATION_MODAL.CONGRATULATIONS_YOU')}&apos;
+              {t('kyc:COMPANY_INVITATION_MODAL.VE_SUCCESSFULLY_JOINED_THE')}{' '}
               <span className="font-semibold">{companyName}</span>
-              {t('COMPANY_INVITATION_MODAL.TEAM')}
+              {t('kyc:COMPANY_INVITATION_MODAL.TEAM')}
             </p>
           ),
           closeable: true,
         });
-        router.push(ISUNFA_ROUTE.DASHBOARD);
       }
     } else if (success === false) {
       // Info: (20240516 - Julian) Error handling
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Invitation Code Expiry',
-        subMsg: 'Oops! This verification code has expired.',
-        content: 'Please verify again or contact the company administrator.',
-        submitBtnStr: t('COMMON.CLOSE'),
+        title: t('kyc:KYC.INVITATION_CODE_EXPIRY'),
+        subMsg: t('kyc:KYC.VERIFICATION_CODE_HAS_EXPIRED'),
+        content: t('kyc:KYC.VERIFY_AGAIN'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
       messageModalVisibilityHandler();
@@ -93,12 +89,12 @@ const CompanyInvitationModal = ({
     e.preventDefault();
 
     // Info: (20240515 - Julian) Verify invitation code
-    const codeRegex = /^[A-Za-z0-9]{8}$/; // ToDo: (20240515 - Julian) code regex
+    const codeRegex = /^[A-Za-z0-9]{8}$/;
     setIsCodeValid(codeRegex.test(codeInput));
 
     // Info: (20240515 - Julian) Check if the code is valid
     if (codeRegex.test(codeInput)) {
-      addCompany({ params: { userId: userAuth?.id }, body: { invitation: codeInput } });
+      addCompany({ params: { userId: userAuth?.id }, body: { invitationCode: codeInput } });
     }
   };
 
@@ -106,22 +102,22 @@ const CompanyInvitationModal = ({
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <form
         onSubmit={submitBtnClickHandler}
-        className="relative mx-auto flex w-350px flex-col items-center gap-y-24px rounded-lg bg-white py-16px shadow-lg shadow-black/80"
+        className="relative mx-auto flex w-350px flex-col items-center gap-y-24px rounded-lg bg-card-surface-primary py-16px shadow-lg shadow-black/80"
       >
         {/* Info: (20240515 - Julian) Title */}
         <div className="flex justify-center px-20px">
           <div className="flex flex-col items-center">
-            <h2 className="text-xl font-bold leading-8 text-navyBlue2">
-              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+            <h2 className="text-xl font-bold leading-8 text-card-text-primary">
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION_CODE')}
             </h2>
-            <p className="text-xs font-normal leading-tight tracking-tight text-lightGray5">
-              {t('COMPANY_INVITATION_MODAL.ENTER_YOUR_COMPANY_INVITATION_CODE')}
+            <p className="text-xs font-normal leading-tight tracking-tight text-card-text-secondary">
+              {t('kyc:COMPANY_INVITATION_MODAL.ENTER_YOUR_COMPANY_INVITATION_CODE')}
             </p>
           </div>
           <button
             type="button"
             onClick={cancelBtnClickHandler}
-            className="absolute right-3 top-3 flex items-center justify-center text-darkBlue2"
+            className="absolute right-3 top-3 flex items-center justify-center text-icon-surface-single-color-primary"
           >
             <RxCross2 size={20} />
           </button>
@@ -129,35 +125,37 @@ const CompanyInvitationModal = ({
         <div className="flex w-full flex-col justify-center gap-8px px-20px py-10px">
           {/* Info: (20240515 - Julian) Invitation Code */}
           <div
-            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-lightGray3 border-lightGray3 text-darkBlue2' : 'divide-lightRed border-lightRed text-lightRed'}`}
+            className={`inline-flex w-full items-center gap-12px divide-x rounded-sm border px-12px shadow ${isCodeValid ? 'divide-input-stroke-input border-input-stroke-input text-input-text-input-filled' : 'divide-surface-state-error-dark border-surface-state-error-dark text-text-state-error'}`}
           >
-            <p className={isCodeValid ? 'text-lightGray4' : 'text-lightRed'}>
-              {t('COMPANY_INVITATION_MODAL.INVITATION CODE')}
+            <p
+              className={
+                isCodeValid ? 'text-input-text-input-placeholder' : 'text-input-text-error'
+              }
+            >
+              {t('kyc:COMPANY_INVITATION_MODAL.INVITATION_CODE')}
             </p>
             <input
               id="invitationCodeInput"
               type="text"
-              placeholder={t('COMPANY_INVITATION_MODAL.ENTER_CODE')}
+              placeholder={t('kyc:COMPANY_INVITATION_MODAL.ENTER_CODE')}
               value={codeInput}
               onChange={changeCodeHandler}
               required
-              className="w-full flex-1 px-12px py-10px outline-none placeholder:text-lightGray4"
+              className="w-full flex-1 px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
-          <p className={`text-right text-lightRed ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}>
-            {t('COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
+          <p
+            className={`text-right text-input-text-error ${isCodeValid ? 'opacity-0' : 'opacity-100'}`}
+          >
+            {t('kyc:COMPANY_INVITATION_MODAL.FORMAT_ERROR')}
           </p>
         </div>
         <div className="flex w-full justify-end gap-3 whitespace-nowrap px-20px text-sm font-medium leading-5 tracking-normal">
-          <button
-            type="button"
-            onClick={cancelBtnClickHandler}
-            className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
-          >
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
-          </button>
+          <Button type="button" onClick={cancelBtnClickHandler} variant="secondaryBorderless">
+            {t('common:COMMON.CANCEL')}
+          </Button>
           <Button type="submit" variant={'tertiary'}>
-            {t('CONTACT_US.SUBMIT')}
+            {t('common:CONTACT_US.SUBMIT')}
           </Button>
         </div>
       </form>

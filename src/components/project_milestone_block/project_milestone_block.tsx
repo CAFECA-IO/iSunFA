@@ -64,7 +64,7 @@ const dummyMilestone: IMilestone[] = [
 ];
 
 const ProjectMilestoneBlock = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const getMilestonePeriod = (milestone: IMilestone) => {
     const result: IDatePeriod = {
       startTimeStamp: milestone.startDate,
@@ -85,7 +85,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Stage Title */}
         <div
           key={`${item.id}-stage-title`}
-          className={`flex w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
+          className={`flex h-40px w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
         >
           <div className={`${stageColor.bg} h-6px w-6px rounded-full`}></div>
           <p>{item.status}</p>
@@ -96,11 +96,11 @@ const ProjectMilestoneBlock = () => {
           key={`${item.id}-period`}
           className="flex items-center justify-center gap-16px text-sm"
         >
-          <p className="w-80px whitespace-normal text-right">
+          <p className="w-100px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
-          <p className="text-text-neutral-secondary">{t('REPORTS_HISTORY_ITEM.TO')}</p>
-          <p className="w-80px whitespace-normal text-left">
+          <p className="text-text-neutral-secondary">{t('common:COMMON.TO')}</p>
+          <p className="w-100px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>
         </div>
@@ -108,7 +108,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Number of Days */}
         <div key={`${item.id}-num-days`} className="ml-auto flex items-center gap-8px">
           <p>{numDays}</p>
-          <p className="text-text-neutral-secondary">{t('PROJECT.DAYS')}</p>
+          <p className="text-text-neutral-secondary">{t('project:PROJECT.DAYS')}</p>
         </div>
       </>
     );
@@ -122,7 +122,7 @@ const ProjectMilestoneBlock = () => {
         {/* Info: (20240613 - Julian) Stage Title */}
         <div
           key={`${item.id}-stage-title`}
-          className={`flex w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
+          className={`flex h-40px w-100px items-center gap-6px rounded-xs border p-6px text-xs ${stageColor.border} ${stageColor.text}`}
         >
           <div className={`${stageColor.bg} h-6px w-6px rounded-full`}></div>
           <p>{item.status}</p>
@@ -136,7 +136,7 @@ const ProjectMilestoneBlock = () => {
           <p className="w-65px whitespace-normal text-right">
             {timestampToString(item.startDate).date}
           </p>
-          <p className="text-text-neutral-secondary">{t('REPORTS_HISTORY_ITEM.TO')}</p>
+          <p className="text-text-neutral-secondary">{t('common:COMMON.TO')}</p>
           <p className="w-65px whitespace-normal text-left">
             {timestampToString(item.endDate).date}
           </p>
@@ -151,7 +151,7 @@ const ProjectMilestoneBlock = () => {
       <div className="flex flex-1 flex-col items-center gap-y-16px md:items-stretch">
         <div className="flex items-center gap-8px text-text-neutral-secondary">
           <Image src="/icons/milestone.svg" alt="Milestone Block" width={24} height={24} />
-          <p>{t('PROJECT.MILESTONE')}</p>
+          <p>{t('project:PROJECT.MILESTONE')}</p>
         </div>
         <div className="hidden grid-cols-3 gap-16px border-t border-divider-stroke-lv-4 p-10px md:grid">
           {displayMilestoneDesktop}

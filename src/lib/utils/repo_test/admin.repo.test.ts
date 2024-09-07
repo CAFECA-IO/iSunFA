@@ -14,6 +14,8 @@ import {
 } from '@/lib/utils/repo/admin.repo';
 import admins from '@/seed_json/admin.json';
 import { deleteCompanyByIdForTesting } from '@/lib/utils/repo/company.repo';
+import { FileFolder } from '@/constants/file';
+import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
 
 describe('Admin Repository Tests', () => {
   const testAdminId = 1000;
@@ -105,7 +107,7 @@ describe('Admin Repository Tests', () => {
     it("should update an admin's details", async () => {
       const status = false;
       const admin = await updateAdminById(testAdminId, status);
-      await updateAdminById(testAdminId, admins[0].status, testRoleId); // Reset
+      await updateAdminById(testAdminId, admins[0].status, testRoleId); // Info: (20240704 - Jacky) Reset
       expect(admin).toBeDefined();
       expect(admin.id).toBe(testAdminId);
       expect(admin.status).toBe(status);
@@ -142,9 +144,22 @@ describe('Admin Repository Tests', () => {
       const code = `TESTCODE-${Date.now()}`;
       const name = 'Test Company';
       const regional = 'Test Regional';
-      const companyRole = await createCompanyAndRole(testUserId, code, name, regional);
+      const testFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      if (!testFile) {
+        throw new Error('Failed to create a test file');
+      }
+      const companyRole = await createCompanyAndRole(testUserId, code, name, regional, testFile.id);
       await deleteAdminListByCompanyIdForTesting(companyRole.company.id);
       await deleteCompanyByIdForTesting(companyRole.company.id);
+      await deleteFileByIdForTesting(testFile.id); // Clean up after test
       expect(companyRole).toBeDefined();
       expect(companyRole.company.code).toBe(code);
       expect(companyRole.company.name).toBe(name);

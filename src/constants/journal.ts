@@ -2,15 +2,15 @@ import { EventType } from '@/constants/account';
 import { SortOrder } from '@/constants/sort';
 
 export enum JOURNAL_EVENT {
-  UPLOADED = 'JOURNAL.UPLOADED',
-  UPCOMING = 'JOURNAL.UPCOMING',
+  UPLOADED = 'journal:JOURNAL.UPLOADED',
+  UPCOMING = 'journal:JOURNAL.UPCOMING',
 }
 
 export enum JOURNAL_TYPE {
-  ALL = 'JOURNAL_TYPES.ALL',
-  PAYMENT = 'JOURNAL_TYPES.PAYMENT',
-  RECEIVING = 'JOURNAL_TYPES.RECEIVING',
-  TRANSFER = 'JOURNAL_TYPES.TRANSFER',
+  ALL = 'journal:JOURNAL_TYPES.ALL',
+  PAYMENT = 'journal:JOURNAL_TYPES.PAYMENT',
+  RECEIVING = 'journal:JOURNAL_TYPES.RECEIVING',
+  TRANSFER = 'journal:JOURNAL_TYPES.TRANSFER',
 }
 
 export const toEventType = (type: JOURNAL_TYPE): EventType | undefined => {
@@ -29,10 +29,10 @@ export const toEventType = (type: JOURNAL_TYPE): EventType | undefined => {
 };
 
 export enum SORTING_OPTION {
-  NEWEST = 'SORTING.NEWEST',
-  OLDEST = 'SORTING.OLDEST',
-  HIGHEST_PAYMENT_PRICE = 'SORTING.HIGHEST_PAYMENT_PRICE',
-  LOWEST_PAYMENT_PRICE = 'SORTING.LOWEST_PAYMENT_PRICE',
+  NEWEST = 'common:SORTING.NEWEST',
+  OLDEST = 'common:SORTING.OLDEST',
+  HIGHEST_PAYMENT_PRICE = 'common:SORTING.HIGHEST_PAYMENT_PRICE',
+  LOWEST_PAYMENT_PRICE = 'common:SORTING.LOWEST_PAYMENT_PRICE',
 }
 
 export enum SortBy {

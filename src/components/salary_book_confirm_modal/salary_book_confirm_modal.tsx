@@ -2,6 +2,7 @@ import { numberWithCommas, timestampToString } from '@/lib/utils/common';
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface ISalaryBookConfirmModal {
   isModalVisible: boolean;
@@ -15,7 +16,8 @@ const SalaryBookConfirmModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: ISalaryBookConfirmModal) => {
-  // ToDo: (20240716 - Julian) Replace with real data
+  const { t } = useTranslation(['common', 'salary']);
+  // ToDo: (20240716 - Julian) [Beta] Replace with real data
   const type = 'Salary Bookkeeping';
   const dateTimestamp = 1705646390;
   const employeeName = 'John Doe';
@@ -26,16 +28,15 @@ const SalaryBookConfirmModal = ({
   const paymentStatus = 'Paid';
 
   const confirmHandler = () => {
-    // ToDo: (20240716 - Julian) Add confirm handler
+    // ToDo: (20240716 - Julian) [Beta] Add confirm handler
 
     modalVisibilityHandler();
   };
-
   const isDisplayedModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 py-16px font-barlow">
         {/* Info: (20240716 - Julian) title */}
-        <div className="flex items-center gap-6px px-20px font-bold text-navyBlue2">
+        <div className="flex items-center gap-6px px-20px font-bold text-card-text-primary">
           <Image src="/icons/files.svg" width={20} height={20} alt="files_icon" />
           {/* Info: (20240716 - Julian) desktop title */}
           <h1 className="hidden whitespace-nowrap text-xl md:block">
@@ -48,7 +49,7 @@ const SalaryBookConfirmModal = ({
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-20px top-20px text-lightGray5"
+          className="absolute right-20px top-20px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>
@@ -56,49 +57,50 @@ const SalaryBookConfirmModal = ({
         <div className="my-20px flex flex-col gap-y-16px bg-surface-neutral-main-background p-20px text-xs md:bg-transparent md:text-base">
           {/* Info: (20240716 - Julian) type */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Type</p>
+            <p className="text-text-neutral-secondary">{t('common:COMMON.TYPE')}</p>
             <p className="font-semibold text-text-brand-primary-lv2">{type}</p>
           </div>
           {/* Info: (20240716 - Julian) date */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Date</p>
+            <p className="text-text-neutral-secondary">{t('common:DATE_PICKER.DATE')}</p>
             <p className="font-semibold text-text-neutral-primary">
               {timestampToString(dateTimestamp).date}
             </p>
           </div>
           {/* Info: (20240716 - Julian) Employee */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Employee</p>
+            <p className="text-text-neutral-secondary">{t('common:COMMON.EMPLOYEE')}</p>
             <p className="font-semibold text-text-neutral-primary">{employeeName}</p>
           </div>
           {/* Info: (20240716 - Julian) Description */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Description</p>
+            <p className="text-text-neutral-secondary">{t('common:COMMON.DESCRIPTION')}</p>
             <p className="font-semibold text-text-neutral-primary">{description}</p>
           </div>
           {/* Info: (20240716 - Julian) Total Price */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Total Price</p>
+            <p className="text-text-neutral-secondary">{t('common:COMMON.TOTAL_PRICE')}</p>
             <p className="font-semibold text-text-neutral-primary">
-              {numberWithCommas(totalPrice)} <span className="text-text-neutral-tertiary">TWD</span>
+              {numberWithCommas(totalPrice)}{' '}
+              <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
             </p>
           </div>
           {/* Info: (20240716 - Julian) Working hours */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Working hours for the period</p>
+            <p className="text-text-neutral-secondary">{t('salary:SALARY.WORKING_HOURS')}</p>
             <p className="font-semibold text-text-neutral-primary">{workingHours}</p>
           </div>
           {/* Info: (20240716 - Julian) Insurance Payments */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Insurance Payments</p>
+            <p className="text-text-neutral-secondary">{t('salary:SALARY.INSURANCE_PAYMENTS')}</p>
             <p className="font-semibold text-text-neutral-primary">
               {numberWithCommas(insurancePayments)}{' '}
-              <span className="text-text-neutral-tertiary">TWD</span>
+              <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
             </p>
           </div>
           {/* Info: (20240716 - Julian) Payment Status */}
           <div className="flex w-full items-center justify-between">
-            <p className="text-text-neutral-secondary">Payment Status</p>
+            <p className="text-text-neutral-secondary">{t('common:COMMON.PAYMENT_STATUS')}</p>
             <p className="font-semibold text-text-neutral-primary">{paymentStatus}</p>
           </div>
         </div>
@@ -110,7 +112,7 @@ const SalaryBookConfirmModal = ({
             variant={null}
             onClick={modalVisibilityHandler}
           >
-            Cancel
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             id="salary-bookkeeping-confirm"
@@ -118,7 +120,7 @@ const SalaryBookConfirmModal = ({
             variant="tertiary"
             onClick={confirmHandler}
           >
-            Confirm
+            {t('common:COMMON.CONFIRM')}
           </Button>
         </div>
       </div>

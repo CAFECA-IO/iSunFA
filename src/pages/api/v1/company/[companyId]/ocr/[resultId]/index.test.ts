@@ -3,8 +3,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import * as common from '@/lib/utils/common';
+import logger from '@/lib/utils/logger_back';
 
-// Info (20240806 - Murky): Temporary not use
+// Info: (20240806 - Murky) Temporary not use
 // let res: jest.Mocked<NextApiResponse>;
 
 global.fetch = jest.fn();
@@ -15,12 +16,11 @@ jest.mock('../../../../../../../lib/utils/common', () => ({
 }));
 
 beforeEach(() => {
-
-  // Info (20240806 - Murky): Temporary not use
-  // res = {
-  //   status: jest.fn().mockReturnThis(),
-  //   json: jest.fn(),
-  // } as unknown as jest.Mocked<NextApiResponse>;
+  // Info: (20240902 - Murky) Logger mock so that it doesn't log during tests
+  jest.spyOn(logger, 'error').mockImplementation(jest.fn());
+  jest.spyOn(logger, 'warn').mockImplementation(jest.fn());
+  jest.spyOn(logger, 'info').mockImplementation(jest.fn());
+  jest.spyOn(logger, 'debug').mockImplementation(jest.fn());
 });
 
 afterEach(() => {
@@ -111,9 +111,9 @@ describe('setOCRResultJournalId', () => {
     } as IInvoice;
     const journalId = 123;
 
-    module.setOCRResultJournalId(ocrResult, journalId);
+    const newOcrResult = module.setOCRResultJournalId(ocrResult, journalId);
 
-    expect(ocrResult?.journalId).toEqual(journalId);
+    expect(newOcrResult?.journalId).toEqual(journalId);
   });
 });
 
@@ -124,9 +124,9 @@ describe('formatOCRResultDate', () => {
       date: mockSeconds * 1000,
     } as IInvoice;
 
-    module.formatOCRResultDate(ocrResult);
+    const newOcrResult = module.formatOCRResultDate(ocrResult);
 
-    expect(ocrResult?.date).toEqual(mockSeconds);
+    expect(newOcrResult?.date).toEqual(mockSeconds);
   });
 
   it('should not format the date in OCR result if date is already in seconds', () => {

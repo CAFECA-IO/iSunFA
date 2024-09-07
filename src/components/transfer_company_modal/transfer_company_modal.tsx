@@ -18,13 +18,13 @@ const TransferCompanyModal = ({
   isModalVisible,
   modalVisibilityHandler,
 }: ITransferCompanyModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { selectedCompany } = useUserCtx();
 
-  // API Handler
+  // Info: (20240729 - Liz) API Handler
   const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER);
 
   const handleSubmit = (newOwnerId: string) => {
@@ -39,9 +39,9 @@ const TransferCompanyModal = ({
         if (res.data?.length ?? 0) {
           messageModalDataHandler({
             messageType: MessageType.SUCCESS,
-            title: 'Transfer Owner',
-            content: 'Transfer owner successfully',
-            submitBtnStr: t('PROJECT.OK'),
+            title: t('kyc:KYC.TRANSFER_OWNER'),
+            content: t('kyc:KYC.TRANSFER_OWNER_SUCCESSFULLY'),
+            submitBtnStr: t('common:COMMON.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               // Info: (20240729 - Liz) reload this page to get the latest data and hide the UI
@@ -51,9 +51,9 @@ const TransferCompanyModal = ({
         } else {
           messageModalDataHandler({
             messageType: MessageType.ERROR,
-            title: 'Transfer Owner',
-            content: 'Transfer owner failed',
-            submitBtnStr: t('PROJECT.OK'),
+            title: t('kyc:KYC.TRANSFER_OWNER'),
+            content: t('kyc:KYC.TRANSFER_OWNER_FAILED'),
+            submitBtnStr: t('common:COMMON.OK'),
             hideCloseBtn: true,
             submitBtnFunction: () => {
               messageModalVisibilityHandler();
@@ -65,9 +65,9 @@ const TransferCompanyModal = ({
       .catch(() => {
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: 'Transfer Owner',
-          content: 'Transfer owner failed',
-          submitBtnStr: t('PROJECT.OK'),
+          title: t('kyc:KYC.TRANSFER_OWNER'),
+          content: t('kyc:KYC.TRANSFER_OWNER_FAILED'),
+          submitBtnStr: t('common:COMMON.OK'),
           hideCloseBtn: true,
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
@@ -79,7 +79,7 @@ const TransferCompanyModal = ({
 
   const saveClickHandler = async () => {
     if (inputRef.current) {
-      // TODO: send API request (20240717 - Shirley)
+      // TODO: (20240717 - Shirley) [Beta] send API request
       if (inputRef.current.value === '') {
         modalVisibilityHandler();
         return;
@@ -88,22 +88,21 @@ const TransferCompanyModal = ({
       const newOwnerId = inputRef.current.value;
       modalVisibilityHandler();
 
-      // TODO: validate the userId (20240717 - Shirley)
-      // TODO: show message modal (20240717 - Shirley)
+      // TODO: (20240717 - Shirley) [Beta] validate the userId
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: 'Transfer company',
+        title: t('kyc:KYC.TRANSFER_COMPANY'),
         content: (
           <div className="flex w-full flex-col gap-2">
             <p className="text-text-neutral-secondary">
-              Are you sure you want to transfer the administration to
+              {t('kyc:KYC.TRANSFER_THE_ADMINISTRATION_TO')}
             </p>
             <p className="text-text-neutral-primary">{inputRef.current.value}</p>
           </div>
-        ), // TODO: message color (20240717 - Shirley)
-        // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`, // TODO: message color (20240717 - Shirley)
-        backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
-        submitBtnStr: t('JOURNAL.TRANSFER'),
+        ), // TODO: (20240717 - Shirley) [Beta] message color
+        // content: `Are you sure you want to transfer the company to \n\n${inputRef.current.value}.`,
+        backBtnStr: t('common:COMMON.CANCEL'),
+        submitBtnStr: t('common:COMMON.TRANSFER'),
         submitBtnFunction: () => handleSubmit(newOwnerId),
       });
 
@@ -126,12 +125,10 @@ const TransferCompanyModal = ({
 
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-white px-0 pb-5 pt-2 shadow-lg shadow-black/80 sm:px-3 lg:w-500px">
-        <div className="flex gap-2.5 bg-white py-4 pl-10 pr-5">
-          <div className="flex w-full flex-1 flex-col justify-center text-center">
-            <div className="px-0">
-              <div className="text-xl font-bold text-card-text-primary">Transfer Company</div>
-            </div>
+      <div className="relative mx-auto flex w-320px flex-col items-center rounded-md bg-card-surface-primary px-0 pb-5 pt-2 shadow-lg shadow-black/80 lg:w-500px">
+        <div className="flex gap-2.5 py-4 pl-10 pr-5">
+          <div className="w-full text-center text-xl font-bold text-card-text-primary">
+            {t('kyc:KYC.TRANSFER_COMPANY')}
           </div>
           <div className="absolute right-3 top-3">
             <Button
@@ -161,40 +158,39 @@ const TransferCompanyModal = ({
                 ></path>
               </svg>
             </Button>
-          </div>{' '}
+          </div>
         </div>
 
-        <div className="w-full border-t pb-4"></div>
+        <div className="w-full border-t border-stroke-neutral-quaternary pb-4"></div>
 
-        <div className="flex w-full flex-col justify-center bg-white px-5 py-2.5">
+        <div className="flex w-full flex-col justify-center px-8 py-2.5">
           <div className="flex flex-col justify-start gap-2">
             <div className="text-divider-text-lv-1">
-              <p>Transfer company to ...</p>
+              <p>{t('kyc:KYC.TRANSFER_COMPANY_TO')}</p>
             </div>
-            <div className="flex gap-0 rounded-sm border border-solid border-lightGray3 bg-white shadow-sm">
+            <div className="flex gap-0 rounded-sm border border-solid border-input-stroke-input shadow-sm">
               <div className="flex flex-1">
                 <input
                   ref={inputRef}
                   type="text"
-                  className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-navyBlue2 placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder="User ID"
+                  className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
+                  placeholder={t('kyc:KYC.USER_ID')}
                 />
               </div>
             </div>
           </div>
         </div>
-        <div className="flex w-full items-end justify-end bg-white px-5 py-4 text-sm font-medium">
+        <div className="flex w-full items-end justify-end px-8 py-4 text-sm font-medium">
           <div className="flex w-full gap-3">
-            {/* TODO: button component (20240409 - Shirley) */}
             <Button
               variant={'secondaryOutline'}
               onClick={modalVisibilityHandler}
               className="flex-1 rounded-xs"
             >
-              Cancel
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button variant={'tertiary'} onClick={saveClickHandler} className="flex-1 rounded-xs">
-              Transfer
+              {t('kyc:KYC.TRANSFER')}
             </Button>
           </div>
         </div>

@@ -1,12 +1,13 @@
 import prisma from '@/client';
 import { ReportSheetType, ReportStatusType, ReportType } from '@/constants/report';
-// import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+// import { IAccountReadyForFrontend } from '@/interfaces/accounting_account'; // Info: (20240729 - Murky)
 import { Prisma, Report } from '@prisma/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IReportIncludeCompanyProject } from '@/interfaces/report';
+import { SortOrder } from '@/constants/sort';
 
 export async function findFirstReportByFromTo(
   companyId: number,
@@ -26,22 +27,19 @@ export async function findFirstReportByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report;
 }
 
-export async function findUniqueReportById(companyId: number, reportId: number) {
+export async function findUniqueReportById(reportId: number) {
   let report: IReportIncludeCompanyProject | null = null;
 
   try {
     report = await prisma.report.findUnique({
       where: {
         id: reportId,
-        companyId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
@@ -51,9 +49,7 @@ export async function findUniqueReportById(companyId: number, reportId: number) 
     });
   } catch (error) {
     report = null;
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report;
@@ -80,9 +76,7 @@ export async function getReportIdByFromTo(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging perpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report?.id;
@@ -119,9 +113,7 @@ export async function createReport(
       },
     });
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return report;
@@ -133,7 +125,7 @@ export async function findManyReports(
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   sortBy: 'createdAt' | 'name' | 'type' | 'reportType' | 'status' = 'createdAt',
-  sortOrder: 'asc' | 'desc' = 'desc',
+  sortOrder: SortOrder.ASC | SortOrder.DESC = SortOrder.DESC,
   startDateInSecond?: number,
   endDateInSecond?: number,
   searchQuery?: string
@@ -146,7 +138,7 @@ export async function findManyReports(
     companyId,
     status,
     AND: [
-      // { from: { gte: startDateInSecond } },
+      // { from: { gte: startDateInSecond } }, // Info: (20240719 - Jacky)
       { to: { lte: endDateInSecond } },
       { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       {
@@ -173,9 +165,7 @@ export async function findManyReports(
   try {
     reports = await prisma.report.findMany(findManyArgs);
   } catch (error) {
-    // Deprecate: (20240710 - Murky) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const filteredReports = reports.filter((report) => {

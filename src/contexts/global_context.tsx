@@ -1,24 +1,20 @@
-/* eslint-disable */
 import React, { useState, useContext, createContext, useMemo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
-import {
-  DUMMY_FILTER_OPTIONS,
-  FilterOptionsModalType,
-  IFilterOptions,
-  RegisterFormModalProps,
-} from '@/interfaces/modals';
+import { DUMMY_FILTER_OPTIONS, FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
-import RegisterFormModal from '@/components/register_form_modal/register_form_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import { IMessageModal, dummyMessageModalData } from '@/interfaces/message_modal';
+// eslint-disable-next-line import/no-cycle
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
 import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
+// eslint-disable-next-line import/no-cycle
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
+// eslint-disable-next-line import/no-cycle
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {
   IPreviewInvoiceModal,
@@ -27,32 +23,38 @@ import {
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
 import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
+// eslint-disable-next-line import/no-cycle
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
+// eslint-disable-next-line import/no-cycle
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
+// eslint-disable-next-line import/no-cycle
 import AddProjectModal from '@/components/add_project_modal/add_project_modal';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { AllReportTypesKey } from '@/interfaces/report_type';
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import { ProjectStage } from '@/constants/project';
+// eslint-disable-next-line import/no-cycle
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
+// eslint-disable-next-line import/no-cycle
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
+// eslint-disable-next-line import/no-cycle
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
+// eslint-disable-next-line import/no-cycle
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
+// eslint-disable-next-line import/no-cycle
 import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
+// eslint-disable-next-line import/no-cycle
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal';
 import { UploadType } from '@/constants/file';
+import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 
 interface IGlobalContext {
   width: number;
@@ -61,11 +63,6 @@ interface IGlobalContext {
 
   isPasskeySupportModalVisible: boolean;
   passKeySupportModalVisibilityHandler: () => void;
-
-  isRegisterModalVisible: boolean;
-  registerModalVisibilityHandler: () => void;
-  registerModalData: RegisterFormModalProps;
-  registerModalDataHandler: (data: RegisterFormModalProps) => void;
 
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
@@ -140,6 +137,8 @@ interface IGlobalContext {
 
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
+
+  agreeWithInfomationConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
 
 export interface IGlobalProvider {
@@ -149,20 +148,17 @@ export interface IGlobalProvider {
 const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn, selectedCompany } = useUserCtx();
+  const { signedIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
+    useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
   const windowSize = useWindowSize();
   const [isPasskeySupportModalVisible, setIsPasskeySupportModalVisible] = useState(false);
-  const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
-  const [registerModalData, setRegisterModalData] = useState<RegisterFormModalProps>({
-    invitation: '',
-  });
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
 
@@ -223,6 +219,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
+  const [isAgreeWithInfomationConfirmModalVisible, setIsAgreeWithInfomationConfirmModalVisible] =
+    useState(false);
+
+  const [isTOSNPrivacyPolicyConfirmModalVisible, setIsTOSNPrivacyPolicyConfirmModalVisible] =
+    useState(false);
+
   const { width, height } = windowSize;
 
   const layoutAssertion = useMemo(() => {
@@ -231,14 +233,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const passKeySupportModalVisibilityHandler = () => {
     setIsPasskeySupportModalVisible(!isPasskeySupportModalVisible);
-  };
-
-  const registerModalVisibilityHandler = () => {
-    setIsRegisterModalVisible(!isRegisterModalVisible);
-  };
-
-  const registerModalDataHandler = (data: RegisterFormModalProps) => {
-    setRegisterModalData(data);
   };
 
   const addBookmarkModalVisibilityHandler = () => {
@@ -370,16 +364,32 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setFilterOptionsForContract(options);
   };
 
+  const agreeWithInfomationConfirmModalVisibilityHandler = (visibility: boolean) => {
+    setIsAgreeWithInfomationConfirmModalVisible(visibility);
+  };
+
+  const TOSNPrivacyPolicyConfirmModalVisibilityHandler = (visibility: boolean) => {
+    setIsTOSNPrivacyPolicyConfirmModalVisible(visibility);
+  };
+
   // Info: (20240509 - Julian) toast handler
   const toastHandler = useCallback((props: IToastify) => {
     const {
+      // eslint-disable-next-line react/prop-types
       id,
+      // eslint-disable-next-line react/prop-types
       type,
+      // eslint-disable-next-line react/prop-types
       content,
+      // eslint-disable-next-line react/prop-types
       closeable,
+      // eslint-disable-next-line react/prop-types
       autoClose: isAutoClose,
+      // eslint-disable-next-line react/prop-types
       position: toastPosition,
+      // eslint-disable-next-line react/prop-types
       onClose = () => {},
+      // eslint-disable-next-line react/prop-types
       onOpen = () => {},
     } = props;
 
@@ -397,7 +407,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     const closeButton = closeable
       ? () => (
           <div className="h-20px w-20px">
-            <RxCross2 size={16} className="text-secondaryBlue" />
+            <RxCross2 size={16} className="text-button-text-secondary" />
           </div>
         )
       : false;
@@ -406,7 +416,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.SUCCESS:
         toastify.success(content, {
           icon: <Image src="/icons/success.svg" alt="success" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-successGreen3`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-success`,
           toastId,
           position,
           autoClose,
@@ -420,7 +430,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.ERROR:
         toastify.error(content, {
           icon: <Image src="/icons/error.svg" alt="error" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-errorRed3`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-error`,
           toastId,
           position,
           autoClose,
@@ -434,7 +444,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.WARNING:
         toastify.warning(content, {
           icon: <Image src="/icons/warning.svg" alt="warning" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-warningYellow`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-warning`,
           toastId,
           position,
           autoClose,
@@ -448,7 +458,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       case ToastType.INFO:
         toastify.info(content, {
           icon: <Image src="/icons/info.svg" alt="info" width={24} height={24} />,
-          className: `${bodyStyle} before:bg-navyBlue2`,
+          className: `${bodyStyle} before:bg-alert-surface-surface-info`,
           toastId,
           position,
           autoClose,
@@ -476,11 +486,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   useEffect(() => {
     if (!signedIn) return;
 
-    if (!pathname.includes('users')) {
-      eliminateToast();
-      return;
-    }
-
     if (reportGeneratedStatus) {
       toastHandler({
         type: ToastType.SUCCESS,
@@ -488,12 +493,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         closeable: true,
         content: (
           <div className="flex items-center space-x-5">
-            <p>{t('AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
+            <p>{t('report_401:AUDIT_REPORT.YOUR_REPORT_IS_DONE')}</p>
             <Link
               href={ISUNFA_ROUTE.USERS_MY_REPORTS}
               className="font-semibold text-link-text-success hover:opacity-70"
             >
-              {t('AUDIT_REPORT.GO_CHECK_IT')}
+              {t('common:COMMON.GO_CHECK_IT')}
             </Link>
           </div>
         ),
@@ -505,7 +510,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       });
     }
 
-    // TODO: Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented (2024-05-29 - Shirley)
+    // TODO: (20240529 - Shirley) [Beta] Consistent toast will cloak the bottom menu, which should be fixed before the following is uncommented
     // if (reportPendingStatus) {
     //   toastHandler({
     //     type: ToastType.INFO,
@@ -525,107 +530,206 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   useEffect(() => {
     if (signedIn) {
-      if (
-        router.pathname.startsWith('/users') &&
-        !router.pathname.includes(ISUNFA_ROUTE.LOGIN) &&
-        !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
-      ) {
-        // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
-        if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
-          // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
-          toastHandler({
-            id: ToastId.TRIAL,
-            type: ToastType.INFO,
-            closeable: false,
-            content: (
-              <div className="flex items-center justify-between">
-                <p className="text-sm">{t('COMMON.ISUNFA_TRIAL_VERSION')}</p>
-                <Link
-                  href={ISUNFA_ROUTE.SELECT_COMPANY}
-                  className="text-base font-semibold text-darkBlue"
-                >
-                  {t('COMMON.END_OF_TRIAL')}
-                </Link>
-              </div>
-            ),
-          });
+      if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
+        if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
+        if (!isAgreeInfoCollection) agreeWithInfomationConfirmModalVisibilityHandler(true);
+        if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
+          TOSNPrivacyPolicyConfirmModalVisibilityHandler(true);
+        }
+      } else {
+        agreeWithInfomationConfirmModalVisibilityHandler(false);
+        TOSNPrivacyPolicyConfirmModalVisibilityHandler(false);
+      }
+    }
+  }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
+
+  useEffect(() => {
+    if (signedIn) {
+      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
+        if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
+          // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
+          if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
+            // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
+            toastHandler({
+              id: ToastId.TRIAL,
+              type: ToastType.INFO,
+              closeable: false,
+              content: (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm">{t('common:COMMON.ISUNFA_TRIAL_VERSION')}</p>
+                  <Link
+                    href={ISUNFA_ROUTE.SELECT_COMPANY}
+                    className="text-base font-semibold text-link-text-primary"
+                  >
+                    {t('common:COMMON.END_OF_TRIAL')}
+                  </Link>
+                </div>
+              ),
+            });
+          }
         } else {
           eliminateToast(ToastId.TRIAL);
         }
       }
+    } else {
+      eliminateToast();
+      if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+        toastHandler({
+          id: ToastId.ALPHA_TEST_REMINDER,
+          type: ToastType.INFO,
+          closeable: true,
+          autoClose: false,
+          content: (
+            <div className="flex items-center justify-between">
+              <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
+            </div>
+          ),
+        });
+      } else {
+        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
+      }
     }
-  }, [pathname]);
+  }, [pathname, signedIn]);
 
-  /* eslint-disable react/jsx-no-constructed-context-values */
-  const value = {
-    width,
-    height,
-    layoutAssertion,
-    isPasskeySupportModalVisible,
-    passKeySupportModalVisibilityHandler,
-    isRegisterModalVisible,
-    registerModalVisibilityHandler,
-    registerModalData,
-    registerModalDataHandler,
-    isAddBookmarkModalVisible,
-    addBookmarkModalVisibilityHandler,
-    isMessageModalVisible,
-    messageModalVisibilityHandler,
-    messageModalData,
-    messageModalDataHandler,
-    isConfirmModalVisible,
-    confirmModalVisibilityHandler,
-    confirmModalData,
-    confirmModalDataHandler,
-    isAddAssetModalVisible,
-    addAssetModalVisibilityHandler,
-    isCameraScannerVisible,
-    cameraScannerVisibilityHandler,
-    isPreviewInvoiceModalVisible,
-    previewInvoiceModalVisibilityHandler,
-    previewInvoiceModalDataHandler,
-    isEmbedCodeModalVisible,
-    embedCodeModalVisibilityHandler,
-    isCompanyInvitationModalVisible,
-    companyInvitationModalVisibilityHandler,
-    isCreateCompanyModalVisible,
-    createCompanyModalVisibilityHandler,
-    isLoadingModalVisible,
-    loadingModalVisibilityHandler,
-    isSalaryBookConfirmModalVisible,
-    salaryBookConfirmModalVisibilityHandler,
-    isAddAccountTitleModalVisible,
-    addAccountTitleModalVisibilityHandler,
-    addAccountTitleDataHandler,
-    isEditAccountTitleModalVisible,
-    editAccountTitleModalVisibilityHandler,
-    editAccountTitleDataHandler,
-    toastHandler,
-    eliminateToast,
+  // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 
-    filterOptionsForHistory,
-    filterOptionsForPending,
-    filterOptionsForContract,
-    getFilterOptionsForHistory,
-    getFilterOptionsForPending,
-    getFilterOptionsForContract,
-    isFilterOptionsModalForHistoryVisible,
-    isFilterOptionsModalForPendingVisible,
-    isFilterOptionsModalForContractVisible,
-    filterOptionsModalVisibilityHandler,
-    isAddProjectModalVisible,
-    addProjectModalVisibilityHandler,
-    addProjectModalDataHandler,
-    profileUploadModalVisible,
-    profileUploadModalVisibilityHandler,
-    profileUploadModalDataHandler,
+  const value = useMemo(
+    () => ({
+      width,
+      height,
+      layoutAssertion,
+      isPasskeySupportModalVisible,
+      passKeySupportModalVisibilityHandler,
+      isAddBookmarkModalVisible,
+      addBookmarkModalVisibilityHandler,
+      isMessageModalVisible,
+      messageModalVisibilityHandler,
+      messageModalData,
+      messageModalDataHandler,
+      isConfirmModalVisible,
+      confirmModalVisibilityHandler,
+      confirmModalData,
+      confirmModalDataHandler,
+      isAddAssetModalVisible,
+      addAssetModalVisibilityHandler,
+      isCameraScannerVisible,
+      cameraScannerVisibilityHandler,
+      isPreviewInvoiceModalVisible,
+      previewInvoiceModalVisibilityHandler,
+      previewInvoiceModalDataHandler,
+      isEmbedCodeModalVisible,
+      embedCodeModalVisibilityHandler,
+      isCompanyInvitationModalVisible,
+      companyInvitationModalVisibilityHandler,
+      isCreateCompanyModalVisible,
+      createCompanyModalVisibilityHandler,
+      isLoadingModalVisible,
+      loadingModalVisibilityHandler,
+      isSalaryBookConfirmModalVisible,
+      salaryBookConfirmModalVisibilityHandler,
+      isAddAccountTitleModalVisible,
+      addAccountTitleModalVisibilityHandler,
+      addAccountTitleDataHandler,
+      isEditAccountTitleModalVisible,
+      editAccountTitleModalVisibilityHandler,
+      editAccountTitleDataHandler,
+      toastHandler,
+      eliminateToast,
 
-    isTeamSettingModalVisible,
-    teamSettingModalVisibilityHandler,
+      filterOptionsForHistory,
+      filterOptionsForPending,
+      filterOptionsForContract,
+      getFilterOptionsForHistory,
+      getFilterOptionsForPending,
+      getFilterOptionsForContract,
+      isFilterOptionsModalForHistoryVisible,
+      isFilterOptionsModalForPendingVisible,
+      isFilterOptionsModalForContractVisible,
+      filterOptionsModalVisibilityHandler,
+      isAddProjectModalVisible,
+      addProjectModalVisibilityHandler,
+      addProjectModalDataHandler,
+      profileUploadModalVisible,
+      profileUploadModalVisibilityHandler,
+      profileUploadModalDataHandler,
 
-    isTransferCompanyModalVisible,
-    transferCompanyModalVisibilityHandler,
-  };
+      isTeamSettingModalVisible,
+      teamSettingModalVisibilityHandler,
+
+      isTransferCompanyModalVisible,
+      transferCompanyModalVisibilityHandler,
+
+      agreeWithInfomationConfirmModalVisibilityHandler,
+    }),
+    [
+      width,
+      height,
+      layoutAssertion,
+      isPasskeySupportModalVisible,
+      passKeySupportModalVisibilityHandler,
+      isAddBookmarkModalVisible,
+      addBookmarkModalVisibilityHandler,
+      isMessageModalVisible,
+      messageModalVisibilityHandler,
+      messageModalData,
+      messageModalDataHandler,
+      isConfirmModalVisible,
+      confirmModalVisibilityHandler,
+      confirmModalData,
+      confirmModalDataHandler,
+      isAddAssetModalVisible,
+      addAssetModalVisibilityHandler,
+      isCameraScannerVisible,
+      cameraScannerVisibilityHandler,
+      isPreviewInvoiceModalVisible,
+      previewInvoiceModalVisibilityHandler,
+      previewInvoiceModalDataHandler,
+      isEmbedCodeModalVisible,
+      embedCodeModalVisibilityHandler,
+      isCompanyInvitationModalVisible,
+      companyInvitationModalVisibilityHandler,
+      isCreateCompanyModalVisible,
+      createCompanyModalVisibilityHandler,
+      isLoadingModalVisible,
+      loadingModalVisibilityHandler,
+      isSalaryBookConfirmModalVisible,
+      salaryBookConfirmModalVisibilityHandler,
+      isAddAccountTitleModalVisible,
+      addAccountTitleModalVisibilityHandler,
+      addAccountTitleDataHandler,
+      isEditAccountTitleModalVisible,
+      editAccountTitleModalVisibilityHandler,
+      editAccountTitleDataHandler,
+      toastHandler,
+      eliminateToast,
+
+      filterOptionsForHistory,
+      filterOptionsForPending,
+      filterOptionsForContract,
+      getFilterOptionsForHistory,
+      getFilterOptionsForPending,
+      getFilterOptionsForContract,
+      isFilterOptionsModalForHistoryVisible,
+      isFilterOptionsModalForPendingVisible,
+      isFilterOptionsModalForContractVisible,
+      filterOptionsModalVisibilityHandler,
+      isAddProjectModalVisible,
+      addProjectModalVisibilityHandler,
+      addProjectModalDataHandler,
+      profileUploadModalVisible,
+      profileUploadModalVisibilityHandler,
+      profileUploadModalDataHandler,
+
+      isTeamSettingModalVisible,
+      teamSettingModalVisibilityHandler,
+
+      isTransferCompanyModalVisible,
+      transferCompanyModalVisibilityHandler,
+
+      agreeWithInfomationConfirmModalVisibilityHandler,
+    ]
+  );
 
   return (
     <GlobalContext.Provider value={value}>
@@ -633,13 +737,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isPasskeySupportModalVisible}
         modalVisibilityHandler={passKeySupportModalVisibilityHandler}
       />
-
-      <RegisterFormModal
-        isModalVisible={isRegisterModalVisible}
-        modalVisibilityHandler={registerModalVisibilityHandler}
-        data={registerModalData}
-      />
-
+      {/* Todo: (20240829 - Anna) 修改循環引用問題 */}
       <EditBookmarkModal
         isModalVisible={isAddBookmarkModalVisible}
         modalVisibilityHandler={addBookmarkModalVisibilityHandler}
@@ -754,6 +852,28 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
+      <LoginConfirmModal
+        id="agree-with-information"
+        isModalVisible={isAgreeWithInfomationConfirmModalVisible}
+        modalData={{
+          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          content: 'info_collection_statement',
+          buttonText: t('common:COMMON.AGREE_WITH_INFORMATION_COLLECTION_STATEMENT'),
+        }}
+        infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
+        tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
+      />
+      <LoginConfirmModal
+        id="tos-n-privacy-policy"
+        isModalVisible={isTOSNPrivacyPolicyConfirmModalVisible}
+        modalData={{
+          title: t('common:COMMON.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          content: 'term_n_privacy',
+          buttonText: t('common:COMMON.AGREE_WITH_TOS_N_PP'),
+        }}
+        infoModalVisibilityHandler={agreeWithInfomationConfirmModalVisibilityHandler}
+        tosModalVisibilityHandler={TOSNPrivacyPolicyConfirmModalVisibilityHandler}
+      />
       {children}
     </GlobalContext.Provider>
   );
@@ -764,18 +884,5 @@ export const useGlobalCtx = () => {
   if (!context) {
     throw new Error('useGlobalContext must be used within a GlobalProvider');
   }
-
-  // Deprecated: Debug tool [to be removed](20231120 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const g: any =
-    typeof globalThis === 'object'
-      ? globalThis
-      : typeof window === 'object'
-        ? window
-        : typeof global === 'object'
-          ? global
-          : null; // Info: Causes an error on the next line
-
-  g.globalContext = context;
   return context;
 };

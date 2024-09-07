@@ -27,9 +27,9 @@ const UploadArea = ({
 }: {
   loacalStorageFilesKey: string;
   type: UploadDocumentKeys;
-  onChange: (key: UploadDocumentKeys, id: string | undefined) => void;
+  onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
@@ -41,7 +41,7 @@ const UploadArea = ({
   const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
   const { trigger: deleteFileAPI } = APIHandler<IFile>(APIName.FILE_DELETE);
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
-  const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(undefined);
+  const [uploadedFileId, setUploadedFileId] = useState<number | undefined>(undefined);
   const {
     trigger: getFile,
     data: getData,
@@ -56,7 +56,7 @@ const UploadArea = ({
         title,
         content,
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -64,7 +64,7 @@ const UploadArea = ({
     [messageModalDataHandler, messageModalVisibilityHandler]
   );
 
-  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: string) => {
+  const updateFileIdInLocalStorage = (fileType: UploadDocumentKeys, fileId: number) => {
     const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
     const data = currentData;
 
@@ -90,11 +90,12 @@ const UploadArea = ({
       body: formData,
     });
     if (success === false) {
-      handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.FILE_UPLOAD_ERROR', { code }));
+      handleError(t('kyc:KYC.UPLOAD_FILE_FAILED'), t('kyc:KYC.FILE_UPLOAD_ERROR', { code }));
       onChange(type, undefined);
       setStatus(ProgressStatus.SYSTEM_ERROR);
     }
     if (success && data) {
+      // Info: (20240830 - Murky) To Emily and Jacky To Emily and Jacky, File update down below
       onChange(type, data.id);
       setUploadedFileId(data.id);
       updateFileIdInLocalStorage(type, data.id);
@@ -106,8 +107,8 @@ const UploadArea = ({
     async (file: File) => {
       if (file.size > MAX_SIZE_IN_BYTES) {
         handleError(
-          t('KYC.UPLOAD_FILE_FAILED'),
-          t('KYC.FILE_SIZE_EXCEEDS_LIMIT', { size: `${MAX_FILE_SIZE_IN_MB}MB` })
+          t('kyc:KYC.UPLOAD_FILE_FAILED'),
+          t('kyc:KYC.FILE_SIZE_EXCEEDS_LIMIT', { size: `${MAX_FILE_SIZE_IN_MB}MB` })
         );
         return;
       }
@@ -138,20 +139,13 @@ const UploadArea = ({
             },
           };
           localStorage.setItem(loacalStorageFilesKey, JSON.stringify(newData));
-          // eslint-disable-next-line no-console
-          console.log(
-            `onloadend filename: ${file.name}, file:`,
-            file,
-            `newData in localStorage:`,
-            newData
-          );
           setUploadedFile(file);
 
           await handleFileUpload(file);
         }
 
         reader.onerror = () => {
-          handleError(t('KYC.READ_FILE_FAILED'), t('KYC.FILE_READ_ERROR'));
+          handleError(t('kyc:KYC.READ_FILE_FAILED'), t('kyc:KYC.FILE_READ_ERROR'));
           onChange(type, undefined);
         };
       };
@@ -170,7 +164,7 @@ const UploadArea = ({
       if (validTypes.includes(file.type)) {
         saveFileToLocalStorage(file);
       } else {
-        handleError(t('KYC.UPLOAD_FILE_FAILED'), t('KYC.ONLY_PDF_JPEG_PNG_SUPPORTED'));
+        handleError(t('kyc:KYC.UPLOAD_FILE_FAILED'), t('kyc:KYC.ONLY_PDF_JPEG_PNG_SUPPORTED'));
       }
     }
   };
@@ -225,7 +219,10 @@ const UploadArea = ({
       });
       success = result.success && result.data?.existed === false;
       if (!success) {
-        handleError(t('KYC.DELETE_FILE_FAILED'), t('KYC.FILE_DELETE_ERROR', { code: result.code }));
+        handleError(
+          t('kyc:KYC.DELETE_FILE_FAILED'),
+          t('kyc:KYC.FILE_DELETE_ERROR', { code: result.code })
+        );
       }
     }
     if (success) {
@@ -243,7 +240,7 @@ const UploadArea = ({
     try {
       const { id, file } = loadFileFromLocalStorage(type, loacalStorageFilesKey);
       setUploadedFile(file);
-      setUploadedFileId(id);
+      setUploadedFileId(Number(id));
       setUploadProgress(100);
       if (id && file) {
         getFile({
@@ -256,7 +253,7 @@ const UploadArea = ({
         handleFileUpload(file);
       }
     } catch (error) {
-      handleError(t('KYC.READ_FILE_FAILED'), t('KYC.FILE_READ_ERROR'));
+      handleError(t('kyc:KYC.READ_FILE_FAILED'), t('kyc:KYC.FILE_READ_ERROR'));
     }
   }, []);
 
@@ -269,7 +266,7 @@ const UploadArea = ({
     if (getSuccess === false) {
       toastHandler({
         id: `getFile-${getCode}`,
-        content: `Failed to list uploaded files: ${getCode}`,
+        content: t('kyc:KYC.FAILED_TO_LIST_UPLOADED_FILES', { getCode }),
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -284,7 +281,7 @@ const UploadArea = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-200px w-300px rounded-lg bg-white md:h-240px md:w-full`}
+      className={`h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-full`}
     >
       {uploadedFile ? (
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed p-24px md:p-48px">
@@ -348,11 +345,13 @@ const UploadArea = ({
           } items-center justify-center p-24px hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover md:p-48px`}
         >
           <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-          <p className="mt-20px font-semibold text-navyBlue2">
-            {t('UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
-            <span className="text-darkBlue">{t('UPLOAD_AREA.BROWSE')}</span>
+          <p className="mt-20px font-semibold text-drag-n-drop-text-primary">
+            {t('common:UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}{' '}
+            <span className="text-link-text-primary">{t('common:UPLOAD_AREA.BROWSE')}</span>
           </p>
-          <p className="text-center text-lightGray4">{t('UPLOAD_AREA.MAXIMUM_SIZE')}</p>
+          <p className="text-center text-drag-n-drop-text-note">
+            {t('common:UPLOAD_AREA.MAXIMUM_SIZE')}
+          </p>
 
           <input
             id={type}

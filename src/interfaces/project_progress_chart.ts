@@ -40,5 +40,5 @@ export function generateRandomData(): IProjectProgressChartData {
   };
 }
 
-// Info: 註冊日期或第一個專案的日期 (20240513 - Shirley)
+// Info: (20240513 - Shirley) 註冊日期或第一個專案的日期
 export const DUMMY_START_DATE = '2024/02/12';

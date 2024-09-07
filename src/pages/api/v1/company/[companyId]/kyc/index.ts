@@ -1,48 +1,82 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ICompanyKYC, ICompanyKYCForm } from '@/interfaces/company_kyc';
-import { IResponseData } from '@/interfaces/response_data';
+import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { formatApiResponse } from '@/lib/utils/common';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 import { isCompanyKYC, isCompanyKYCForm } from '@/lib/utils/type_guard/company_kyc';
-import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-export default async function handler(
+async function handlePostRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ICompanyKYC>>
 ) {
-  try {
-    // Info: (20240419 - Jacky) K012001 - POST /kyc/entity
-    if (req.method === 'POST') {
-      const session = await getSession(req, res);
-      const { userId, companyId } = session;
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-      if (!isAuth) {
-        throw new Error(STATUS_MESSAGE.FORBIDDEN);
-      }
-      const companyKYCForm: ICompanyKYCForm = req.body;
-      const bodyType = isCompanyKYCForm(companyKYCForm);
-      if (!bodyType) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-      const companyKYC = await createCompanyKYC(companyId, companyKYCForm);
-      const payloadType = isCompanyKYC(companyKYC);
-      if (!payloadType) {
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-      }
-      const { httpCode, result } = formatApiResponse<ICompanyKYC>(
-        STATUS_MESSAGE.CREATED,
-        companyKYC
-      );
-      res.status(httpCode).json(result);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ICompanyKYC | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      const companyKYCForm: ICompanyKYCForm = req.body;
+      if (!isCompanyKYCForm(companyKYCForm)) {
+        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+      } else {
+        try {
+          const companyKYC = await createCompanyKYC(companyId, companyKYCForm);
+          if (!isCompanyKYC(companyKYC)) {
+            statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+          } else {
+            payload = companyKYC;
+            statusMessage = STATUS_MESSAGE.CREATED;
+          }
+        } catch (error) {
+          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        }
+      }
+    }
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse<IResponseData<ICompanyKYC>>
+  ) => Promise<{ statusMessage: string; payload: ICompanyKYC | null }>;
+} = {
+  POST: handlePostRequest,
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ICompanyKYC | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ICompanyKYC | null = null;
+
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ICompanyKYC>(error.message, {} as ICompanyKYC);
+    // ToDo: (20240828 - Jacky) Log error message
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<ICompanyKYC | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

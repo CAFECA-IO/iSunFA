@@ -31,23 +31,22 @@ const DashboardOverview = () => {
     hasCompanyId
   );
 
-  // TODO: i18n (20240620 - Shirley)
   const displayedProfitChangeRate =
     dashboardOverview.emptyProfitChange ||
     (!dashboardOverview.profitChange && dashboardOverview.profitChange !== 0)
-      ? t('PROJECT.NO_DATA')
+      ? t('common:COMMON.NO_DATA')
       : `${dashboardOverview.profitChange > 0 ? `+${dashboardOverview.profitChange.toFixed(0)}` : dashboardOverview.profitChange.toFixed(0)}`;
 
   const displayedTopProjectRoi =
     dashboardOverview.emptyTopProjectRoi ||
     (!dashboardOverview.topProjectRoi && dashboardOverview.topProjectRoi !== 0)
-      ? t('PROJECT.NO_DATA')
+      ? t('common:COMMON.NO_DATA')
       : `${dashboardOverview.topProjectRoi > 0 ? `+${dashboardOverview.topProjectRoi.toFixed(0)}` : dashboardOverview.topProjectRoi.toFixed(0)}`;
 
   const displayedPreLaunchProjects =
     dashboardOverview.emptyPreLaunchProject ||
     (!dashboardOverview.preLaunchProject && dashboardOverview.preLaunchProject !== 0)
-      ? t('PROJECT.NO_DATA')
+      ? t('common:COMMON.NO_DATA')
       : dashboardOverview.preLaunchProject;
 
   React.useEffect(() => {
@@ -63,7 +62,7 @@ const DashboardOverview = () => {
     } else if (getSuccess === false) {
       toastHandler({
         id: `profit_insight-${getCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_INSIGHT')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -72,7 +71,7 @@ const DashboardOverview = () => {
 
   return (
     <div className="grid grid-cols-3 gap-5 px-0 max-md:max-w-full max-md:grid-cols-1 max-md:gap-0">
-      {/* Info: 區塊一 (20240523 - Shirley) */}
+      {/* Info: (20240523 - Shirley) 區塊一 */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
         <div className="flex max-h-70px justify-between gap-2 rounded-3xl bg-surface-support-soft-maple py-4 pl-5 pr-2 max-md:mt-4 md:max-h-84px lg:min-h-180px lg:flex-col lg:space-x-2 lg:px-5">
           <div className="flex items-center gap-2">
@@ -93,7 +92,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('DASHBOARD.PROFIT_CHANGE')}
+              {t('common:DASHBOARD.PROFIT_CHANGE')}
             </div>
           </div>
           <div
@@ -123,7 +122,7 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Info: 區塊二 (20240523 - Shirley) */}
+      {/* Info: (20240523 - Shirley) 區塊二 */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
         <div className="flex max-h-70px justify-between gap-2 rounded-3xl bg-surface-support-soft-rose py-4 pl-5 pr-2 max-md:mt-4 md:max-h-84px lg:min-h-180px lg:flex-col lg:space-x-2 lg:px-5">
           <div className="flex items-center gap-2 lg:items-center">
@@ -146,7 +145,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('DASHBOARD.TOP_PROJECT_ROI')}
+              {t('common:DASHBOARD.TOP_PROJECT_ROI')}
             </div>
           </div>
           <div
@@ -176,7 +175,7 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Info: 區塊三 (20240523 - Shirley) */}
+      {/* Info: (20240523 - Shirley) 區塊三 */}
       <div className="flex flex-col max-md:ml-0 max-md:w-full">
         <div className="flex max-h-70px justify-between gap-2 rounded-3xl bg-surface-support-soft-indigo px-5 py-4 max-md:mt-4 md:max-h-84px lg:min-h-180px lg:flex-col lg:space-x-2">
           <div className="flex items-center gap-1 lg:items-center">
@@ -199,7 +198,7 @@ const DashboardOverview = () => {
               ></path>
             </svg>
             <div className="text-base font-semibold leading-6 tracking-normal text-text-neutral-solid-dark">
-              {t('DASHBOARD.PRE_LAUNCH_PROJECTS')}
+              {t('common:DASHBOARD.PRE_LAUNCH_PROJECTS')}
             </div>
           </div>
           <div

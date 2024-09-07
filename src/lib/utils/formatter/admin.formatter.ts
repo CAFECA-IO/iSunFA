@@ -1,12 +1,16 @@
 import { IAdmin } from '@/interfaces/admin';
-import { Admin, Company, CompanyKYC, Role, User } from '@prisma/client';
+import { Admin, Company, CompanyKYC, Role, User, UserAgreement, File } from '@prisma/client';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
 
 export async function formatAdminList(
-  listedAdmin: (Admin & { company: Company; user: User; role: Role })[]
+  listedAdmin: (Admin & {
+    company: Company & { imageFile: File | null };
+    user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
+    role: Role;
+  })[]
 ): Promise<IAdmin[]> {
   let adminList: IAdmin[] = [];
   if (listedAdmin.length > 0) {
@@ -27,7 +31,11 @@ export async function formatAdminList(
 }
 
 export async function formatAdmin(
-  admin: Admin & { company: Company; user: User; role: Role }
+  admin: Admin & {
+    company: Company & { imageFile: File | null };
+    user: User & { userAgreements: UserAgreement[]; imageFile: File | null };
+    role: Role;
+  }
 ): Promise<IAdmin> {
   const formattedUser = await formatUser(admin.user);
   const formattedCompany = await formatCompany(admin.company);
@@ -41,7 +49,7 @@ export async function formatAdmin(
 }
 
 export async function formatCompanyAndRoleList(
-  listedCompanyAndRole: Array<{ company: Company; role: Role }>
+  listedCompanyAndRole: Array<{ company: Company & { imageFile: File | null }; role: Role }>
 ): Promise<Array<{ company: ICompany; role: IRole }>> {
   const formatPromises = listedCompanyAndRole.map(async (companyAndRole) => {
     const formattedCompany = await formatCompany(companyAndRole.company);
@@ -53,11 +61,11 @@ export async function formatCompanyAndRoleList(
   return formattedCompanyAndRoleList;
 }
 
-export async function formatCompanyAndRole(companyAndRole: {
-  company: Company;
+export function formatCompanyAndRole(companyAndRole: {
+  company: Company & { imageFile: File | null };
   role: Role;
-}): Promise<{ company: ICompany; role: IRole }> {
-  const formattedCompany = await formatCompany(companyAndRole.company);
+}): { company: ICompany; role: IRole } {
+  const formattedCompany = formatCompany(companyAndRole.company);
   const formattedRole = companyAndRole.role;
   return { company: formattedCompany, role: formattedRole };
 }
@@ -66,6 +74,7 @@ export function formatCompanyDetailAndRole(companyDetailAndRole: {
   company: Company & {
     admins: Admin[];
     companyKYCs: CompanyKYC[];
+    imageFile: File | null;
   };
   role: Role;
 }): ICompanyAndRole {

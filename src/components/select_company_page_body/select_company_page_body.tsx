@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
 
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
@@ -47,7 +47,7 @@ const SelectCompanyPageBody = () => {
   >([]);
 
   const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
-  const selectedCompanyName = selectedCompany?.name ?? t('SELECT_COMPANY.SELECT_AN_COMPANY');
+  const selectedCompanyName = selectedCompany?.name ?? t('kyc:SELECT_COMPANY.SELECT_AN_COMPANY');
 
   const menuOpenHandler = () => {
     listCompany({
@@ -89,14 +89,12 @@ const SelectCompanyPageBody = () => {
     }
   }, [companyAndRoleListSuccess, companyAndRoleList]);
 
+  // Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解，所以加上prettier-ignore，請Prettier不要格式化
   useEffect(() => {
+    // prettier-ignore
     if (searchValue !== '') {
-      const filteredList = companyList.filter(
-        (companyAndRole) =>
-          // eslint-disable-next-line implicit-arrow-linebreak
-          companyAndRole.company.name.toLowerCase().includes(searchValue.toLowerCase())
-        // eslint-disable-next-line implicit-arrow-linebreak
-      );
+      const filteredList = companyList.filter((companyAndRole) =>
+        companyAndRole.company.name.toLowerCase().includes(searchValue.toLowerCase()));
       setFilteredCompanyList(filteredList);
     } else {
       setFilteredCompanyList(companyList);
@@ -114,7 +112,7 @@ const SelectCompanyPageBody = () => {
           key={companyAndRole.company.id}
           onClick={companyClickHandler}
           type="button"
-          className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-primaryYellow3 disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50 disabled:hover:bg-white`}
+          className={`flex w-full items-end gap-3 rounded-sm px-12px py-8px text-dropdown-text-primary hover:cursor-pointer enabled:hover:bg-dropdown-surface-item-hover disabled:cursor-not-allowed disabled:text-dropdown-text-primary disabled:opacity-50`}
         >
           <div className="my-auto flex h-20px w-20px flex-col justify-center overflow-hidden rounded-full">
             <Image
@@ -127,31 +125,31 @@ const SelectCompanyPageBody = () => {
           <p className="justify-center text-sm font-medium leading-5 tracking-normal">
             {companyAndRole.company.name}
           </p>
-          <p className="text-xs text-lightGray5">
-            {t(`ROLE.${companyAndRole.role.name.toUpperCase().replace(/ /g, '_')}`)}
+          <p className="text-xs text-dropdown-text-secondary">
+            {t(`common:ROLE.${companyAndRole.role.name.toUpperCase().replace(/ /g, '_')}`)}
           </p>
         </button>
       );
     })
   ) : (
-    <div>{t('MY_REPORTS_SECTION.LOADING')}</div>
+    <div>{t('common:COMMON.LOADING')}</div>
   );
 
   const displayCompanyMenu = (
     <div
       ref={companyMenuRef}
-      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-white px-5 py-2.5 ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
+      className={`absolute top-90px grid w-full grid-cols-1 overflow-hidden rounded-sm border bg-dropdown-surface-menu-background-primary px-5 py-2.5 ${isCompanyMenuOpen ? 'grid-rows-1 opacity-100 shadow-dropmenu' : 'grid-rows-0 opacity-0'} transition-all duration-300 ease-in-out`}
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240514 - Julian) search bar */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>
@@ -163,11 +161,11 @@ const SelectCompanyPageBody = () => {
         <button
           type="button"
           onClick={companyInvitationModalVisibilityHandler}
-          // Info: disabled for now (20240809 - Shirley)
-          className="hidden w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-lightGray5"
+          // Info: (20240809 - Shirley) disabled for now
+          className="hidden w-full items-center justify-start gap-3 border-t px-12px py-8px text-xs text-dropdown-text-secondary"
         >
           <Image src="/icons/invitation.svg" width={16} height={16} alt="invitation_icon" />
-          <p>{t('SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
+          <p>{t('kyc:SELECT_COMPANY.ENTER_INVITATION_CODE')}</p>
         </button>
       </div>
     </div>
@@ -178,12 +176,12 @@ const SelectCompanyPageBody = () => {
       <div className="mx-16px flex grow flex-col items-center justify-center pb-20 max-lg:mt-20">
         {/* Info: (20240513 - Julian) title & description */}
         <div className="flex flex-col items-center justify-center self-stretch">
-          <div className="text-48px font-bold text-tertiaryBlue max-lg:text-4xl">
-            {t('SELECT_COMPANY.WELCOME_BACK')}
-            <span className="text-amber-400">{userName}</span>!
+          <div className="text-48px font-bold text-text-brand-secondary-lv2 max-lg:text-4xl">
+            {t('kyc:SELECT_COMPANY.WELCOME_BACK')}
+            <span className="text-text-brand-primary-lv3">{userName}</span>!
           </div>
-          <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-slate-600">
-            {t('SELECT_COMPANY.YOUR_COMPANY')}
+          <div className="mt-2 text-center text-base font-medium leading-6 tracking-normal text-text-brand-secondary-lv2">
+            {t('kyc:SELECT_COMPANY.YOUR_COMPANY')}
           </div>
         </div>
         {/* Info: (20240513 - Julian) company selection */}
@@ -223,26 +221,27 @@ const SelectCompanyPageBody = () => {
 
           {/* Info: (20240513 - Julian) company selection */}
           <div className="relative inline-flex w-full flex-col items-start justify-start gap-2">
-            <p className="text-sm font-semibold leading-tight tracking-tight text-slate-700">
-              {t('SELECT_COMPANY.MY_COMPANY_LIST')}
+            <p className="text-sm font-semibold leading-tight tracking-tight text-input-text-primary">
+              {t('kyc:SELECT_COMPANY.MY_COMPANY_LIST')}
             </p>
-            <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-slate-300 bg-white shadow">
+            <div className="inline-flex items-center justify-start self-stretch rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow">
               <button
                 type="button"
                 onClick={menuOpenHandler}
                 className="flex shrink grow items-center justify-between px-16px py-8px text-center text-base font-medium leading-normal tracking-tight"
               >
-                <p className="text-lightGray4">{selectedCompanyName}</p>
+                <p className="text-input-text-input-placeholder">{selectedCompanyName}</p>
                 <FaChevronDown
                   size={16}
-                  className={`text-darkBlue2 ${isCompanyMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+                  className={`${isCompanyMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
                 />
               </button>
-              <div className="w-px self-stretch bg-slate-300" />
-              <button
+              <div className="w-px self-stretch bg-input-stroke-input" />
+              <Button
                 type="button"
                 disabled={selectedCompany === null}
-                className="inline-flex flex-col items-center justify-center p-4 hover:text-primaryYellow disabled:cursor-not-allowed disabled:text-lightGray4"
+                variant="secondaryBorderless"
+                className="p-4"
                 onClick={selectCompanyClickHandler}
               >
                 <svg
@@ -260,7 +259,7 @@ const SelectCompanyPageBody = () => {
                     fill="#314362"
                   />
                 </svg>
-              </button>
+              </Button>
 
               {/* Info: (20240514 - Julian) dropdown menu */}
               {displayCompanyMenu}
@@ -271,7 +270,7 @@ const SelectCompanyPageBody = () => {
             <Button
               type="button"
               onClick={createCompanyModalVisibilityHandler}
-              variant={'tertiary'}
+              variant="tertiary"
               className="mx-auto flex h-44px items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal"
             >
               <svg
@@ -288,15 +287,15 @@ const SelectCompanyPageBody = () => {
                   fill="#FCFDFF"
                 />
               </svg>
-              <p>{t('SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
+              <p>{t('kyc:SELECT_COMPANY.CREATE_MY_COMPANY')}</p>
               <FaArrowRight />
             </Button>
             <Button
               onClick={() => selectCompany(null, true)}
               variant={'tertiaryOutline'}
-              className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal text-secondaryBlue"
+              className="mx-auto flex h-44px w-full items-center gap-4px px-16px py-8px text-sm font-medium leading-7 tracking-normal"
             >
-              <p>{t('SELECT_COMPANY.TRY_IT_OUT')}</p>
+              <p>{t('kyc:SELECT_COMPANY.TRY_IT_OUT')}</p>
               <FaArrowRight />
             </Button>
           </div>

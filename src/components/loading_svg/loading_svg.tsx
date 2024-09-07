@@ -20,7 +20,7 @@ export const LoadingSVG = () => {
           fill="currentFill"
         />
       </svg>
-      <span className="sr-only">{t('MY_REPORTS_SECTION.LOADING')}</span>
+      <span className="sr-only">{t('common:COMMON.LOADING')}</span>
     </div>
   );
 };

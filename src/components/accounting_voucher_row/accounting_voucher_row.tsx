@@ -153,7 +153,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
     filteredAccountList.length > 0 ? (
       filteredAccountList.map((accountItem: IAccount) => {
         const title = generateAccountTitle(accountItem);
-        const displayTitle = t(accountTitleMap[title]) || t(title); // ToDo: (20240712 - Julian) Translate account title
+        const displayTitle = t(accountTitleMap[title]) || t(title);
         // Info: (20240430 - Julian) 點擊選單選項
         const clickHandler = () => {
           setSelectAccount(accountItem);
@@ -166,21 +166,21 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
             key={title}
             id={`accounting-menu-item-${id}`}
             onClick={clickHandler}
-            className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+            className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
           >
             {displayTitle}
           </div>
         );
       })
     ) : (
-      <div className="text-navyBlue2">{'co result'}</div>
+      <div className="text-dropdown-text-primary">{'no result'}</div>
     );
 
   const displayAccounting = (
     <div
       id={`accounting-menu-${id}`}
       onClick={accountingMenuHandler}
-      className={`group relative flex h-46px w-9/10 cursor-pointer ${isAccountingMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'border-lightGray3 text-navyBlue2'} items-center justify-between rounded-xs border bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow`}
+      className={`group relative flex h-46px w-9/10 cursor-pointer ${isAccountingMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-xs border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
     >
       <div className="line-clamp-2 w-9/10">{t(accountTitle)}</div>
       <PiBookOpen size={20} />
@@ -189,19 +189,19 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
         className={`absolute left-0 top-50px z-10 flex w-full flex-col items-stretch bg-dropdown-surface-menu-background-primary p-8px ${isAccountingMenuOpen ? 'h-250px border-dropdown-stroke-menu opacity-100 shadow-dropmenu' : 'h-0 border-transparent opacity-0'} overflow-hidden rounded-xs border transition-all duration-300 ease-in-out`}
       >
         {/* Info: (20240806 - Julian) search */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="search-accounting"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={searchValue}
             onChange={changeSearchHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px uppercase text-dropdown-text-head">
-          {t('SETTING.ASSETS')}
+          {t('common:COMMON.ASSETS')}
         </div>
         <div
           ref={accountingRef}
@@ -219,7 +219,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       type="text"
       value={particulars ?? ''}
       onChange={changeParticularHandler}
-      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none`}
+      className={`h-46px w-9/10 rounded-xs border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none`}
     />
   );
 
@@ -233,7 +233,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       onBlur={handleDebitBlur}
       disabled={voucherRowType === VoucherRowType.CREDIT} // Info: (20240430 - Julian) 如果是借方，則不能輸入 credit
       onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
-      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+      className={`h-46px w-9/10 rounded-xs border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none transition-all duration-300 ease-in-out disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
     />
   );
 
@@ -247,7 +247,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
       onBlur={handleCreditBlur}
       disabled={voucherRowType === VoucherRowType.DEBIT} // Info: (20240430 - Julian) 如果是貸方，則不能輸入 debit
       onWheel={(e) => e.currentTarget.blur()} // Info: (20240503 - Julian) 防止滾輪滾動
-      className={`h-46px w-9/10 rounded-xs border border-lightGray3 bg-white p-10px text-navyBlue2 outline-none transition-all duration-300 ease-in-out disabled:bg-lightGray6 disabled:text-lightGray4`}
+      className={`h-46px w-9/10 rounded-xs border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none transition-all duration-300 ease-in-out disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable`}
     />
   );
 

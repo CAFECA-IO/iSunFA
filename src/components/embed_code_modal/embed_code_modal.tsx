@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -6,6 +5,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useTranslation } from 'next-i18next';
+import { RxCross2 } from 'react-icons/rx';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -13,7 +13,7 @@ interface IEmbedCodeModal {
 }
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const balanceSheetRef = useRef<HTMLInputElement>(null);
   const incomeStatementRef = useRef<HTMLInputElement>(null);
   const cashFlowStatementRef = useRef<HTMLInputElement>(null);
@@ -70,13 +70,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const copyClickHandler = () => {
     navigator.clipboard.writeText(generatedCode);
-    window.alert(t('EMBED_CODE_MODAL.CODE_COPIED_TO_CLIPBOARD'));
+    window.alert(t('report_401:EMBED_CODE_MODAL.CODE_COPIED_TO_CLIPBOARD'));
   };
 
   const generateClickHandler = () => {
     setStep(1);
 
-    // TODO: dummy data (20240507 - Shirley)
+    // TODO: (20240507 - Shirley) [Beta] dummy data
     const balanceLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/balance`;
     const comprehensiveIncomeLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/comprehensive-income`;
     const cashFlowLink = `https://baifa.io/en/app/chains/8017/evidence/505c1ddbd5d6cb47fc769577d6afaa0410f5c1090000000000000000000000000000000000000007/cash-flow`;
@@ -130,7 +130,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   useEffect(() => {
-    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    // Info: (20240509 - Shirley) 每次展開 menu 之前都要清空 searchQuery
     if (isProjectMenuOpen) {
       setSearchQuery('');
     }
@@ -139,7 +139,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const displayedProjectMenu = (
     <div ref={projectMenuRef} className="relative flex w-full">
       <div
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-2 ${
           isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
       >
@@ -148,7 +148,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -158,51 +158,49 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         </div>
 
         <button
-          className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
+          type="button"
+          className={`flex w-full items-center justify-between bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {/* {selectedProjectName} */}
-            {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
+            {selectedProjectName === 'Overall' ? t('common:COMMON.OVERALL') : selectedProjectName}
           </div>
 
-          <div className="my-auto flex flex-col justify-center px-0 py-0">
-            <div className="flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill="#314362"
-                  fillRule="evenodd"
-                  d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-            </div>
+          <div className="my-auto flex flex-col justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill="#314362"
+                fillRule="evenodd"
+                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
           </div>
         </button>
       </div>
 
-      {/* Info: Project Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Project Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-slate-300 bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal shadow-sm">
             <input
               type="text"
-              placeholder={t('AUDIT_REPORT.SEARCH')}
+              placeholder={t('common:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border-none focus:outline-none"
+              className="w-full border-none text-input-text-input-filled focus:outline-none"
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -225,20 +223,19 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               ></path>
             </svg>
           </div>
-
+          {/* Info: (20240830 - Anna) 為了解決Unexpected newline before '}'錯誤，請prettier不要格式化 */}
+          {/* prettier-ignore */}
           <div className="mt-2 max-h-60 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
               .filter((project) =>
                 DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase()))
               .map((project) => (
                 <li
                   key={project}
                   onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                  }
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)}
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">
@@ -253,10 +250,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('PROJECT.OVERALL')
+                        ? t('common:COMMON.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -271,10 +267,11 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-white px-3 py-2.5 max-md:max-w-full ${
+        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-selected px-3 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
+        type="button"
       >
         <Image
           width={20}
@@ -285,39 +282,37 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
           {selectedLanguage?.name}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
-          <div className="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-          </div>
+        <div className="my-auto flex flex-col justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="none"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fill="#314362"
+              fillRule="evenodd"
+              d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
         </div>
       </button>
-      {/* Info: Language Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-56px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
         }`}
       >
-        <ul className="z-10 flex w-full flex-col items-start bg-white p-2">
+        <ul className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-2">
           {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
@@ -330,13 +325,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const displayedConfigSection = (
     <>
-      <div className="flex w-full flex-col justify-center bg-white px-4 py-2.5 max-md:max-w-full">
+      <div className="flex w-full flex-col justify-center px-4 py-2.5 max-md:max-w-full">
         <div className="flex flex-col max-md:max-w-full">
           <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
             <div className="flex flex-col justify-center max-md:max-w-full">
               <div className="flex flex-col gap-3 max-md:max-w-full">
                 <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-                  {t('REPORTS_HISTORY_LIST.PROJECT')}
+                  {t('common:COMMON.PROJECT')}
                 </div>
 
                 {displayedProjectMenu}
@@ -344,7 +339,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             </div>
 
             <div className="mt-10 font-semibold text-input-text-input-filled max-md:max-w-full">
-              {t('EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
+              {t('report_401:EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
             </div>
             <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
               <div
@@ -355,9 +350,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   type="checkbox"
                   checked={isBalanceSheetChecked}
                   readOnly
-                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('PLUGIN.BALANCE_SHEET')}</button>
+                <button type="button">{t('common:PLUGIN.BALANCE_SHEET')}</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
@@ -367,9 +362,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   type="checkbox"
                   checked={isIncomeStatementChecked}
                   readOnly
-                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</button>
+                <button type="button">{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</button>
               </div>
               <div
                 className="flex gap-2 py-2.5"
@@ -379,30 +374,27 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                   type="checkbox"
                   checked={isCashFlowStatementChecked}
                   readOnly
-                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+                  className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
                 />
-                <button type="button">{t('PLUGIN.CASH_FLOW_STATEMENT')}</button>
+                <button type="button">{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</button>
               </div>
             </div>
           </div>
           <div className="mt-10 flex flex-col justify-center max-md:max-w-full">
             <div className="flex flex-col space-y-3 max-md:max-w-full">
               <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-input-filled max-md:max-w-full">
-                {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+                {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
               </div>
               {displayedLanguageMenu}
             </div>
           </div>
         </div>
       </div>
-      <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
+      <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <div className="flex gap-3">
-          <button
-            onClick={cancelClickHandler}
-            className="rounded-sm px-4 py-2 text-secondaryBlue hover:text-primaryYellow"
-          >
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
-          </button>
+          <Button type="button" onClick={cancelClickHandler} variant="tertiaryBorderless">
+            {t('common:COMMON.CANCEL')}
+          </Button>
           <Button
             disabled={
               !isBalanceSheetChecked && !isIncomeStatementChecked && !isCashFlowStatementChecked
@@ -410,7 +402,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             variant={'tertiary'}
             onClick={generateClickHandler}
           >
-            {t('EMBED_CODE_MODAL.GENERATE')}
+            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </Button>
         </div>
       </div>
@@ -419,9 +411,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const displayedEmbedCode = (
     <>
-      <div className="flex w-full flex-col justify-center bg-white px-4 py-2.5">
+      <div className="flex w-full flex-col justify-center px-4 py-2.5">
         <div className="flex flex-col">
-          <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-gray-300 bg-gray-100 px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
+          <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-stroke-neutral-quaternary bg-surface-neutral-main-background px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
             {generatedCode}
           </div>
 
@@ -429,24 +421,25 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             <div className="flex space-x-3 text-input-text-primary">
               <Image src={'/icons/rocket.svg'} width={20} height={20} alt="rocket_icon" />
               <p className="text-input-text-primary">
-                {/* {selectedProjectName} */}
                 {t(
-                  `PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
+                  `project:PROJECT.${DUMMY_PROJECTS_MAP[selectedProjectName].name.toUpperCase().replace(/ /g, '_')}`
                 )}
               </p>
             </div>
-            <ol className=" max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
-              {isBalanceSheetChecked && <li>{t('PLUGIN.BALANCE_SHEET')}</li>}
-              {isIncomeStatementChecked && <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>}
-              <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
-              {isCashFlowStatementChecked && <li>{t('PLUGIN.CASH_FLOW_STATEMENT')}</li>}
+            <ol className="max-w-md list-disc space-y-2 pl-5 text-base tracking-normal md:max-w-xl lg:max-w-2xl lg:text-base">
+              {isBalanceSheetChecked && <li>{t('common:PLUGIN.BALANCE_SHEET')}</li>}
+              {isIncomeStatementChecked && (
+                <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+              )}
+              <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+              {isCashFlowStatementChecked && <li>{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</li>}
               {!isBalanceSheetChecked &&
                 !isIncomeStatementChecked &&
                 !isCashFlowStatementChecked && (
                   <>
-                    <li>{t('PLUGIN.BALANCE_SHEET')}</li>
-                    <li>{t('PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
-                    <li>{t('PLUGIN.CASH_FLOW_STATEMENT')}</li>
+                    <li>{t('common:PLUGIN.BALANCE_SHEET')}</li>
+                    <li>{t('common:PLUGIN.COMPREHENSIVE_INCOME_STATEMENT')}</li>
+                    <li>{t('common:PLUGIN.CASH_FLOW_STATEMENT')}</li>
                   </>
                 )}
             </ol>
@@ -454,7 +447,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         </div>
       </div>
 
-      <div className="flex w-full flex-col items-end justify-center whitespace-nowrap bg-white px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
+      <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <Button variant={'tertiary'} onClick={copyClickHandler}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -470,48 +463,30 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               clipRule="evenodd"
             ></path>
           </svg>
-          <p>{t('EMBED_CODE_MODAL.COPY')}</p>
+          <p>{t('report_401:EMBED_CODE_MODAL.COPY')}</p>
         </Button>
       </div>
     </>
   );
 
   const isDisplayedEmbedCodeModal = isModalVisible ? (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black bg-opacity-50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-center rounded-md bg-white p-6 shadow-lg shadow-black/80 sm:max-w-[511px] sm:px-3">
-        <div className="flex w-full gap-2.5 bg-white pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
+      <div className="relative mx-auto flex flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
+        <div className="flex w-full gap-2.5 pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 pb-10 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
-              {t('EMBED_CODE_MODAL.EMBED_CODE')}
+              {t('report_401:EMBED_CODE_MODAL.EMBED_CODE')}
             </div>
             <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
-              {t('EMBED_CODE_MODAL.THE_LATEST_REPORT')}
+              {t('report_401:EMBED_CODE_MODAL.THE_LATEST_REPORT')}
             </div>
           </div>
           <button
             onClick={cancelClickHandler}
+            type="button"
             className="-mr-3 flex items-center justify-center self-start"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M6.223 6.22a.75.75 0 011.06 0l10.5 10.5a.75.75 0 01-1.06 1.061l-10.5-10.5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M17.783 6.22a.75.75 0 010 1.061l-10.5 10.5a.75.75 0 11-1.06-1.06l10.5-10.5a.75.75 0 011.06 0z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
+            <RxCross2 size={20} />
           </button>
         </div>
         {step === 0 ? displayedConfigSection : displayedEmbedCode}
@@ -519,7 +494,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     </div>
   ) : null;
 
-  return <>{isDisplayedEmbedCodeModal}</>;
+  return isDisplayedEmbedCodeModal;
 };
 
 export default EmbedCodeModal;

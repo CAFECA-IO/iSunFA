@@ -5,7 +5,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 
 const SalarySidebar = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'salary']);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -16,7 +16,7 @@ const SalarySidebar = () => {
       <div
         onMouseEnter={sidebarEnterHandler}
         onMouseLeave={sidebarLeaveHandler}
-        className={`fixed z-10 hidden h-screen flex-col items-center md:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-white px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
+        className={`fixed z-10 hidden h-screen flex-col items-center md:flex ${isExpanded ? 'w-240px' : 'w-70px'} bg-surface-neutral-surface-lv2 px-12px pb-40px pt-120px transition-all duration-300 ease-in-out`}
       >
         {/* Main icon */}
         <div className="flex flex-col items-center pt-20px">
@@ -28,16 +28,16 @@ const SalarySidebar = () => {
             className={`${isExpanded ? 'scale-150' : 'scale-100'} transition-all duration-300 ease-in-out`}
           />
           <p
-            className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-secondaryBlue transition-all duration-300 ease-in-out`}
+            className={`${isExpanded ? 'visible opacity-100' : 'invisible opacity-0'} mt-20px text-sm font-semibold text-text-neutral-primary transition-all duration-300 ease-in-out`}
           >
-            {t('SALARY.SALARY')}
+            {t('salary:SALARY.SALARY')}
           </p>
         </div>
 
         <div className="my-16px flex w-full flex-col items-center text-lg">
           {/* Divider */}
           <div
-            className={`${isExpanded ? 'h-10px' : 'h-20px'} w-full border-b border-lightGray6 transition-all duration-300 ease-in-out`}
+            className={`${isExpanded ? 'h-10px' : 'h-20px'} w-full border-b border-divider-stroke-lv-4 transition-all duration-300 ease-in-out`}
           ></div>
 
           {/* Menu */}
@@ -65,7 +65,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.EMPLOYEES_LIST')}
+                {t('salary:SALARY.EMPLOYEES_LIST')}
               </p>
             </Link>
 
@@ -75,9 +75,8 @@ const SalarySidebar = () => {
             > */}
             <button
               type="button"
-              // ToDo: (20240802 - Julian) Not released yet
-              // eslint-disable-next-line react/jsx-boolean-value
-              disabled={true}
+              // ToDo: (20240802 - Julian) [Beta] Not released yet
+              disabled
               className="flex w-full items-center gap-8px py-8px pl-10px text-tabs-text-default disabled:opacity-50"
             >
               <svg
@@ -99,7 +98,7 @@ const SalarySidebar = () => {
               <p
                 className={`${isExpanded ? 'w-8/10' : 'w-0'} overflow-hidden whitespace-nowrap text-left transition-all duration-300 ease-in-out`}
               >
-                {t('SALARY.SALARY_LIST')}
+                {t('salary:SALARY.SALARY_LIST')}
               </p>
             </button>
             {/* </Link> */}
@@ -108,8 +107,8 @@ const SalarySidebar = () => {
       </div>
 
       {/* Mobile sidebar */}
-      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-white px-16px py-8px shadow-sidebarMobile md:hidden">
-        <Link href={ISUNFA_ROUTE.SALARY} className="mx-auto p-16px text-primaryYellow">
+      <div className="fixed bottom-0 z-10 grid h-72px w-screen grid-cols-3 bg-surface-neutral-surface-lv2 px-16px py-8px shadow-sidebarMobile md:hidden">
+        <Link href={ISUNFA_ROUTE.SALARY} className="mx-auto p-16px text-tabs-text-active">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -127,9 +126,15 @@ const SalarySidebar = () => {
             />
           </svg>
         </Link>
-        <Link
+        {/* <Link
           href={ISUNFA_ROUTE.SALARY_BOOKKEEPING}
-          className="mx-auto p-16px text-secondaryBlue hover:text-primaryYellow"
+          className="mx-auto p-16px text-tabs-text-default hover:text-tabs-text-active"
+        > */}
+        <button
+          type="button"
+          // ToDo: (20240802 - Julian) [Beta] Not released yet
+          disabled
+          className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -147,7 +152,8 @@ const SalarySidebar = () => {
               className="stroke-current"
             />
           </svg>
-        </Link>
+        </button>
+        {/* </Link> */}
       </div>
     </>
   );

@@ -59,7 +59,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     stroke: {
       show: true,
       width: layoutAssertion === LayoutAssertion.MOBILE ? 5 : 2,
-      colors: ['transparent'], // Info: 讓每一個欄位裡面的 column 有空隙的方式 (20240419 - Shirley)
+      colors: ['transparent'], // Info: (20240419 - Shirley) 讓每一個欄位裡面的 column 有空隙的方式
     },
 
     colors: ['#4BD394B2', '#FB5C5CB2'],
@@ -76,7 +76,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
     },
     yaxis: {
       title: {
-        // text: 'Values (units)',
+        // text: 'Values (units)', // Info: (20240419 - Shirley)
       },
       labels: {
         style: {
@@ -101,6 +101,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       },
       showForSingleSeries: true,
 
+      // Info: (20240419 - Shirley)
       // customLegendItems: [
       //   {
       //     text: 'income',
@@ -163,7 +164,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getPeriodOfThisMonthInSec();
 
 const ProjectRoiComparisonChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler, layoutAssertion } = useGlobalCtx();
@@ -238,7 +239,7 @@ const ProjectRoiComparisonChart = () => {
     if (listSuccess === false) {
       toastHandler({
         id: `profit_comparison-${listCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROFIT_COMPARISON')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -304,13 +305,12 @@ const ProjectRoiComparisonChart = () => {
       {displayedYear}{' '}
       <span className="text-sm font-semibold leading-5 tracking-normal text-text-brand-secondary-lv1">
         {displayedDate}
-      </span>{' '}
+      </span>
     </div>
   );
 
   const displayedChart = isNoData ? (
     <div className="mt-28 lg:mt-40">
-      {' '}
       <section className="flex flex-col items-center">
         <div>
           <svg
@@ -367,7 +367,7 @@ const ProjectRoiComparisonChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('MY_REPORTS_SECTION.EMPTY')}
+          {t('common:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -380,60 +380,58 @@ const ProjectRoiComparisonChart = () => {
   const displayedDataSection = (
     <div
       className={cn(
-        'flex flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-580px',
+        'flex flex-col rounded-2xl bg-surface-neutral-surface-lv2 px-5 pb-9 pt-5 max-md:max-w-full md:h-580px',
         isNoData ? 'h-580px' : 'h-580px'
       )}
     >
-      <div>
-        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
-          <div className="lg:flex-1">
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#FFA502"
-                  fillRule="evenodd"
-                  d="M17.138.378c.368-.369.922-.48 1.404-.28l3.647 1.513c.653.27.965 1.018.698 1.673l-1.488 3.647a1.286 1.286 0 01-2.377.01l-.589-1.407-14.807 6.33a1.286 1.286 0 11-1.01-2.365L17.44 3.162l-.578-1.38a1.286 1.286 0 01.275-1.404z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  fill="#002462"
-                  fillRule="evenodd"
-                  d="M21.857 9.393a1.714 1.714 0 011.715 1.715v12a.857.857 0 01-.858.857H18.43a.857.857 0 01-.857-.857v-12a1.715 1.715 0 011.714-1.715h2.571zm-8.571 2.572A1.714 1.714 0 0115 13.679v9.429a.857.857 0 01-.857.857H9.857A.857.857 0 019 23.108v-9.429a1.714 1.714 0 011.714-1.714h2.572zm-7.36 3.073a1.714 1.714 0 00-1.212-.502H2.143a1.714 1.714 0 00-1.714 1.715v6.857c0 .473.383.857.857.857h4.286a.857.857 0 00.857-.857V16.25c0-.455-.18-.891-.502-1.213z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-              <p className="text-base lg:text-sm xl:text-base">
-                {t('PROJECT.PROJECT_WISE')} <br className="lg:hidden" />
-                <span className="lg:hidden">{t('PROJECT.INCOME_VS_EXPENSE')}</span>
-                <span className="hidden lg:inline">
-                  {t('PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
-                </span>
-              </p>
-            </div>
+      <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+        <div className="lg:flex-1">
+          <div className="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="#FFA502"
+                fillRule="evenodd"
+                d="M17.138.378c.368-.369.922-.48 1.404-.28l3.647 1.513c.653.27.965 1.018.698 1.673l-1.488 3.647a1.286 1.286 0 01-2.377.01l-.589-1.407-14.807 6.33a1.286 1.286 0 11-1.01-2.365L17.44 3.162l-.578-1.38a1.286 1.286 0 01.275-1.404z"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#002462"
+                fillRule="evenodd"
+                d="M21.857 9.393a1.714 1.714 0 011.715 1.715v12a.857.857 0 01-.858.857H18.43a.857.857 0 01-.857-.857v-12a1.715 1.715 0 011.714-1.715h2.571zm-8.571 2.572A1.714 1.714 0 0115 13.679v9.429a.857.857 0 01-.857.857H9.857A.857.857 0 019 23.108v-9.429a1.714 1.714 0 011.714-1.714h2.572zm-7.36 3.073a1.714 1.714 0 00-1.212-.502H2.143a1.714 1.714 0 00-1.714 1.715v6.857c0 .473.383.857.857.857h4.286a.857.857 0 00.857-.857V16.25c0-.455-.18-.891-.502-1.213z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+            <p className="text-base lg:text-sm xl:text-base">
+              {t('project:PROJECT.PROJECT_WISE')} <br className="lg:hidden" />
+              <span className="lg:hidden">{t('project:PROJECT.INCOME_VS_EXPENSE')}</span>
+              <span className="hidden lg:inline">
+                {t('project:PROJECT.INCOME_VS_EXPENSE_COMPARISON_GRAPH')}
+              </span>
+            </p>
           </div>
+        </div>
 
-          <div className="hidden justify-end lg:flex">
-            <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
-            </Tooltip>
-          </div>
+        <div className="hidden justify-end lg:flex">
+          <Tooltip>
+            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+          </Tooltip>
         </div>
       </div>
 
       <div className="mt-5">
         <div className="flex w-full flex-col items-start justify-start lg:flex-row lg:items-center lg:space-x-4">
           <div className="flex w-full flex-row justify-center gap-5 lg:justify-start">
-            <div className="my-3 flex w-150px items-stretch text-xl font-bold leading-8 text-navyBlue2 md:mx-0 md:my-auto lg:w-fit">
+            <div className="my-3 flex w-150px items-stretch text-xl font-bold leading-8 text-text-neutral-primary md:mx-0 md:my-auto lg:w-fit">
               {displayedDateSection}
             </div>
 
-            {/* Info: ----- desktop version (20240419 - Shirley) ----- */}
+            {/* Info: (20240419 - Shirley) ----- desktop version ----- */}
             <div className="hidden lg:flex">
               <DatePicker
                 disabled={isNoData}
@@ -448,13 +446,13 @@ const ProjectRoiComparisonChart = () => {
             </div>
           </div>
 
-          {/* Info: prev and next button (20240419 - Shirley) */}
+          {/* Info: (20240419 - Shirley) prev and next button */}
           <div className="hidden flex-1 justify-end space-x-2 lg:flex">
             <Button
               disabled={currentPage === 1 || isNoData}
               onClick={goToPrevPage}
               variant={'tertiaryOutline'}
-              className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+              className="h-40px w-40px p-0"
             >
               <AiOutlineLeft size={15} />
             </Button>
@@ -463,46 +461,22 @@ const ProjectRoiComparisonChart = () => {
               disabled={currentPage === totalPages || isNoData}
               onClick={goToNextPage}
               variant={'tertiaryOutline'}
-              className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
+              className="h-40px w-40px p-0"
             >
               <AiOutlineRight size={15} />
             </Button>
           </div>
 
-          {/* Info: ----- mobile version (20240419 - Shirley) ----- */}
+          {/* Info: (20240419 - Shirley) ----- mobile version ----- */}
           <div className="flex w-full flex-row justify-between lg:hidden lg:w-0">
-            <div>
-              <DatePicker
-                disabled={isNoData}
-                type={DatePickerType.ICON_PERIOD}
-                minDate={minDate}
-                maxDate={maxDate}
-                period={period}
-                setFilteredPeriod={setPeriod}
-              />
-            </div>
-
-            {/* Info: prev and next button (20240419 - Shirley) */}
-            {/* Deprecated: No relevant function in the latest mockup (20240618 - Shirley) */}
-            <div className="flex flex-1 justify-end space-x-2">
-              <Button
-                disabled={currentPage === 1}
-                onClick={goToPrevPage}
-                variant={'tertiaryOutline'}
-                className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
-              >
-                <AiOutlineLeft size={15} />
-              </Button>
-
-              <Button
-                disabled={currentPage === totalPages}
-                onClick={goToNextPage}
-                variant={'tertiaryOutline'}
-                className="rounded-xs border border-secondaryBlue p-3 text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow disabled:border-lightGray disabled:text-lightGray disabled:hover:border-lightGray disabled:hover:text-lightGray"
-              >
-                <AiOutlineRight size={15} />
-              </Button>
-            </div>
+            <DatePicker
+              disabled={isNoData}
+              type={DatePickerType.ICON_PERIOD}
+              minDate={minDate}
+              maxDate={maxDate}
+              period={period}
+              setFilteredPeriod={setPeriod}
+            />
           </div>
         </div>
       </div>

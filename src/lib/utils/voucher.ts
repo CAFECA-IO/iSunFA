@@ -16,10 +16,6 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
     }
   });
 
-  // Deprecate: (20240808 Murky) total amount already includes tax and fee
-  // const paymentAmount =
-  // calculateTotalAmountAfterTax(payment.price, payment.taxPercentage) + payment.fee;
-
   const paymentAmount = payment.price;
 
   const isDebitCreditEqual = debitAmount === creditAmount;

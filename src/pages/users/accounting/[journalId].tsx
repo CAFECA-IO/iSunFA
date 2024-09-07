@@ -14,7 +14,7 @@ interface IJournalDetailPageProps {
 }
 
 const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -40,9 +40,8 @@ const JournalDetailPage = ({ journalId }: IJournalDetailPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (20240503 - Julian) i18n */}
         <title>
-          {t('JOURNAL.JOURNAL')} {journalId} - iSunFA
+          {t('journal:JOURNAL.JOURNAL')} {journalId} - iSunFA
         </title>
       </Head>
 
@@ -67,7 +66,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       journalId: params.journalId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

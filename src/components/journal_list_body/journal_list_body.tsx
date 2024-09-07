@@ -25,12 +25,13 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { cn } from '@/lib/utils/common';
+import { Button } from '@/components/button/button';
 
 // Info: (20240808 - Anna) Alpha版先隱藏(發票列表)
 // import Toggle from '@/components/toggle/toggle';
 
 const JournalListBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -145,7 +146,7 @@ const JournalListBody = () => {
           endDate: !(period ?? filteredPeriod).endTimeStamp
             ? undefined
             : (period ?? filteredPeriod).endTimeStamp,
-          searchQuery: !(searchString ?? search) ? undefined : (searchString ?? search),
+          searchQuery: !(searchString ?? search) ? undefined : searchString ?? search,
         },
       });
 
@@ -181,7 +182,7 @@ const JournalListBody = () => {
         type: ToastType.SUCCESS,
         content: (
           <div className="flex items-center justify-between">
-            <p>{t('JOURNAL.DELETED_SUCCESSFULLY')}</p>
+            <p>{t('journal:JOURNAL.DELETED_SUCCESSFULLY')}</p>
           </div>
         ),
         closeable: true,
@@ -189,11 +190,11 @@ const JournalListBody = () => {
       await getJournalList({});
     } else {
       messageModalDataHandler({
-        title: t('JOURNAL.FAILED_TO_DELETE'),
-        subMsg: t('JOURNAL.TRY_AGAIN_LATER'),
-        content: `Error code: ${deleteCode}`,
+        title: t('journal:JOURNAL.FAILED_TO_DELETE'),
+        subMsg: t('journal:JOURNAL.TRY_AGAIN_LATER'),
+        content: t('common:COMMON.ERROR_CODE', { code: deleteCode }),
         messageType: MessageType.ERROR,
-        submitBtnStr: t('COMMON.CLOSE'),
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => messageModalVisibilityHandler(),
       });
       messageModalVisibilityHandler();
@@ -218,26 +219,29 @@ const JournalListBody = () => {
     <div
       onClick={isJournalListLoading ? undefined : toggleTypeMenu}
       className={cn(
-        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-selected p-10px hover:border-input-stroke-input-hover hover:text-input-text-highlight',
         {
           'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
             isJournalListLoading,
-          'border-input-stroke-selected text-primaryYellow': isTypeMenuOpen,
+          'border-input-stroke-selected text-input-text-highlight': isTypeMenuOpen,
           'border-input-stroke-input text-input-text-input-placeholder': !isTypeMenuOpen,
         }
       )}
     >
       <p
-        className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isTypeMenuOpen ? 'text-primaryYellow' : isTypeSelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-input-text-highlight'} ${isTypeMenuOpen ? 'text-input-text-highlight' : isTypeSelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredJournalType)}
       </p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={typeMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
+        <ul
+          ref={typeMenuRef}
+          className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
+        >
           {types.map((type: JOURNAL_TYPE) => (
             <li
               key={t(type)}
@@ -246,7 +250,7 @@ const JournalListBody = () => {
                 setIsTypeMenuOpen(false);
                 setIsTypeSelected(true);
               }}
-              className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+              className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-input-text-highlight"
             >
               {t(type)}
             </li>
@@ -260,26 +264,29 @@ const JournalListBody = () => {
     <div
       onClick={isJournalListLoading ? undefined : toggleSortByMenu}
       className={cn(
-        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background bg-white p-10px hover:border-primaryYellow hover:text-primaryYellow',
+        'group relative flex h-44px w-200px cursor-pointer items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-selected p-10px hover:border-input-stroke-input-hover hover:text-input-text-highlight',
         {
           'cursor-not-allowed border-button-stroke-disable text-button-text-disable hover:border-button-stroke-disable hover:text-button-text-disable':
             isJournalListLoading,
-          'border-input-stroke-selected text-primaryYellow': isSortByMenuOpen,
+          'border-input-stroke-selected text-input-text-highlight': isSortByMenuOpen,
           'border-input-stroke-input text-input-text-input-placeholder': !isSortByMenuOpen,
         }
       )}
     >
       <p
-        className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-primaryYellow'} ${isSortByMenuOpen ? 'text-primaryYellow' : isSortBySelected ? '' : 'text-input-text-input-placeholder'}`}
+        className={`whitespace-nowrap ${isJournalListLoading ? 'group-hover:text-button-text-disable' : 'group-hover:text-input-text-highlight'} ${isSortByMenuOpen ? 'text-input-text-highlight' : isSortBySelected ? '' : 'text-input-text-input-placeholder'}`}
       >
         {t(filteredJournalSortBy)}
       </p>
       <FaChevronDown />
       {/* Info: (20240418 - Julian) Dropmenu */}
       <div
-        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isSortByMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
       >
-        <ul ref={sortByMenuRef} className="z-10 flex w-full flex-col items-start bg-white p-8px">
+        <ul
+          ref={sortByMenuRef}
+          className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
+        >
           {sortingOptions.map((sorting: SORTING_OPTION) => (
             <li
               key={t(sorting)}
@@ -288,7 +295,7 @@ const JournalListBody = () => {
                 setIsSortByMenuOpen(false);
                 setIsSortBySelected(true);
               }}
-              className="w-full cursor-pointer px-3 py-2 text-navyBlue2 hover:text-primaryYellow"
+              className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-input-text-highlight"
             >
               {t(sorting)}
             </li>
@@ -298,7 +305,6 @@ const JournalListBody = () => {
     </div>
   );
 
-  // ToDo: (20240419 - Julian) 邊框顏色與設計稿不一致，需要調整
   const displayedDatePicker = (
     <div className="hidden md:flex">
       <DatePicker
@@ -316,8 +322,8 @@ const JournalListBody = () => {
       <input
         disabled={isJournalListLoading}
         type="text"
-        placeholder={t('AUDIT_REPORT.SEARCH')}
-        className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-lightGray3 bg-white p-10px outline-none`}
+        placeholder={t('common:COMMON.SEARCH')}
+        className={`relative flex h-44px w-full items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none`}
         onChange={handleInputChange}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
@@ -337,11 +343,11 @@ const JournalListBody = () => {
     <>
       {/* Info: (20240418 - Julian) Divider */}
       <div className="my-5 flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/bill.svg" width={16} height={16} alt="bill_icon" />
-          <p>{t('JOURNAL.JOURNAL_LIST')}</p>
+          <p>{t('journal:JOURNAL.JOURNAL_LIST')}</p>
         </div>
-        <hr className="flex-1 border-lightGray4" />
+        <hr className="flex-1 border-divider-stroke-lv-3" />
       </div>
       <div className="flex items-center justify-between">
         {/* Info: (20240808 - Anna) Alpha版先隱藏(發票列表) */}
@@ -352,7 +358,7 @@ const JournalListBody = () => {
               getToggledState={invoiceListToggleHandler}
               toggleStateFromParent={invoiceListToggle}
             />
-            <p>{t('JOURNAL.INVOICE_LIST')}</p>
+            <p>{t('journal:JOURNAL.INVOICE_LIST')}</p>
           </div> */}
         {/* Info: (20240731 - Tzuhan) Toolbar */}
         <div className="flex items-center">
@@ -424,7 +430,7 @@ const JournalListBody = () => {
                   fill="#001840"
                 />
               </svg>
-              <p>{t('PENDING_REPORT_LIST.SELECT')}</p>
+              <p>{t('common:COMMON.SELECT')}</p>
             </button> */}
           </div>
         </div>
@@ -442,7 +448,8 @@ const JournalListBody = () => {
         <p
           className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPLOADED ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
-          {t('JOURNAL.UPLOADED')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
+          {t('journal:JOURNAL.UPLOADED')}{' '}
+          <span className="hidden md:block">{t('journal:JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
           {pagenatedJournalListItems
@@ -462,7 +469,8 @@ const JournalListBody = () => {
         <p
           className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${currentTab === JOURNAL_EVENT.UPCOMING ? 'text-tabs-text-default' : 'disabled:text-button-text-disable'}`}
         >
-          {t('JOURNAL.UPCOMING')} <span className="hidden md:block">{t('JOURNAL.EVENTS')}</span>
+          {t('journal:JOURNAL.UPCOMING')}{' '}
+          <span className="hidden md:block">{t('journal:JOURNAL.EVENTS')}</span>
         </p>
         <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
           {pagenatedJournalListItems
@@ -481,13 +489,13 @@ const JournalListBody = () => {
       <div className="my-10px flex items-center gap-24px text-sm md:items-end">
         {/* Info: (20240417 - Julian) Type */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.TYPE')}</p>
           {displayedTypeDropMenu}
         </div>
 
         {/* Info: (20240418 - Julian) Sort by */}
         <div className="hidden flex-col items-start gap-8px md:flex">
-          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedSortByDropMenu}
         </div>
 
@@ -498,9 +506,10 @@ const JournalListBody = () => {
         {displayedSearchBar}
 
         {/* Info: (20240517 - Julian) Filter button for mobile */}
-        <button
+        <Button
           type="button"
-          className="block rounded-xs border border-secondaryBlue p-10px text-secondaryBlue hover:border-primaryYellow hover:text-primaryYellow md:hidden"
+          variant="tertiaryOutline"
+          className="flex h-40px w-40px p-0 md:hidden"
         >
           <svg
             width="16"
@@ -517,7 +526,7 @@ const JournalListBody = () => {
               fill="#001840"
             />
           </svg>
-        </button>
+        </Button>
       </div>
       {/* Info: (20240418 - Julian) Toolbar */}
       {currentTab === JOURNAL_EVENT.UPLOADED && displayedToolbar}

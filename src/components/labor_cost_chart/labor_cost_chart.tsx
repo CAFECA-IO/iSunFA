@@ -28,7 +28,8 @@ interface PieChartProps {
 }
 
 const originalColors = ['#EBE9FE', '#FFEAD5', '#FFE4E8', '#E0EAFF', '#BDF0D5', '#FCE7F6'];
-// const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7']; // TODO: implement hover colors (20240523 - Shirley)
+// const hoverColors = ['#9B8AFB', '#FD853A', '#FD6F8E', '#8098F9', '#6CDEA0', '#F670C7'];
+// TODO: (20240523 - Shirley) [Beta] implement hover colors
 
 const PieChart = ({ data }: PieChartProps) => {
   const globalCtx = useGlobalCtx();
@@ -106,11 +107,11 @@ const PieChart = ({ data }: PieChartProps) => {
       offsetY,
       offsetX: -30,
       markers: {
-        // width: 20,
-        // height: 12,
-        // radius: 0,
+        // width: 20, // Info: (20240706 - Luphia)
+        // height: 12, // Info: (20240706 - Luphia)
+        // radius: 0, // Info: (20240722 - Shirley)
       },
-      width: space, // Info: 讓 legend 跟 pie chart 之間的距離拉開 (20240522 - Shirley)
+      width: space, // Info: (20240522 - Shirley) 讓 legend 跟 pie chart 之間的距離拉開
       height: 140,
     },
     tooltip: {
@@ -120,7 +121,7 @@ const PieChart = ({ data }: PieChartProps) => {
           return `${value.toString()}`;
         },
 
-        // Info: 自己去算百分比然後顯示在 tooltip 上 (20240523 - Shirley)
+        // Info: (20240523 - Shirley) 自己去算百分比然後顯示在 tooltip 上
         // formatter: (value: number, { seriesIndex, w }: { seriesIndex: number; w: any }) => {
         //   const total = data.series.reduce((a: number, b: number) => a + b, 0);
         //   const percent = Math.round((value / total) * 100);
@@ -194,10 +195,10 @@ const PieChart = ({ data }: PieChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const LaborCostChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'salary']);
   const { layoutAssertion } = useGlobalCtx();
 
-  // TODO: 改成 company startDate (20240618 - Shirley)
+  // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
@@ -259,7 +260,7 @@ const LaborCostChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `labor-cost-chart-${getCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_LABOR_COST')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -287,7 +288,7 @@ const LaborCostChart = () => {
     <div className="flex w-full flex-col items-center justify-between gap-5 font-barlow lg:flex-row lg:items-start lg:gap-0">
       <div className="mt-3 lg:mt-10">
         <p className="font-semibold text-text-brand-secondary-lv1">
-          {t('LABOR_COST_CHART.ONBOARDING_PROJECTS')}
+          {t('salary:LABOR_COST_CHART.ONBOARDING_PROJECTS')}
         </p>
       </div>
       <div className="lg:mr-10">
@@ -301,7 +302,7 @@ const LaborCostChart = () => {
         >
           <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
           <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle" fontFamily="">
-            {t('PROJECT.NO_DATA')}
+            {t('common:COMMON.NO_DATA')}
           </text>
         </svg>
       </div>
@@ -310,7 +311,7 @@ const LaborCostChart = () => {
     <div className="relative">
       {' '}
       <div className="absolute left-1/2 top-5 w-150px -translate-x-1/2 text-center font-semibold text-text-brand-secondary-lv1 md:left-0 md:translate-x-0">
-        {t('LABOR_COST_CHART.ONBOARDING_PROJECTS')}
+        {t('salary:LABOR_COST_CHART.ONBOARDING_PROJECTS')}
       </div>
       <div className="ml-0 flex pt-16 max-md:ml-0 md:pt-0 lg:pt-5">
         <PieChart data={data} />
@@ -360,13 +361,13 @@ const LaborCostChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>{t('LABOR_COST_CHART.LABOR_COST')}</p>
+              <p>{t('salary:LABOR_COST_CHART.LABOR_COST')}</p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

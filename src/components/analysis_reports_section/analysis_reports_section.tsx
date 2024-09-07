@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -13,7 +12,7 @@ import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useTranslation } from 'next-i18next';
 
 const AnalysisReportSection = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const [period, setPeriod] = useState(default30DayPeriodInSec);
   const [selectedProjectName, setSelectedProjectName] =
     useState<keyof typeof DUMMY_PROJECTS_MAP>('Overall');
@@ -73,11 +72,11 @@ const AnalysisReportSection = () => {
     setIsLanguageMenuOpen(false);
   };
 
-  // TODO: 這邊要改成申請 report 然後顯示成功 / 失敗的 modal (20240524 - Shirley)
+  // TODO: (20240524 - Shirley) [Beta] 這邊要改成申請 report 然後顯示成功 / 失敗的 modal
   const targetedReportViewLink = `${ISUNFA_ROUTE.USERS_ANALYSES_REPORTS_VIEW}/REPORT_ID?project=${DUMMY_PROJECTS_MAP[selectedProjectName].id}&report_type=${selectedReportType}&report_language=${selectedReportLanguage}&start_timestamp=${period.startTimeStamp}&end_timestamp=${period.endTimeStamp}`;
 
   useEffect(() => {
-    // Info: 每次展開 menu 之前都要清空 searchQuery (20240509 - Shirley)
+    // Info: (20240509 - Shirley) 每次展開 menu 之前都要清空 searchQuery
     if (isProjectMenuOpen) {
       setSearchQuery('');
     }
@@ -86,7 +85,7 @@ const AnalysisReportSection = () => {
   const displayedProjectMenu = (
     <div ref={projectMenuRef} className="relative flex w-full">
       <div
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-2 ${
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-2 ${
           isProjectMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
       >
@@ -95,7 +94,7 @@ const AnalysisReportSection = () => {
             className="text-center text-input-text-input-filled"
             style={{ whiteSpace: 'nowrap' }}
           >
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </div>
           <div
             className={`h-11 w-px ${
@@ -105,15 +104,16 @@ const AnalysisReportSection = () => {
         </div>
 
         <button
-          className={`flex w-full items-center justify-between gap-0 bg-input-surface-input-background px-3 py-2.5`}
+          type="button"
+          className={`flex w-full items-center justify-between bg-input-surface-input-background px-3 py-2.5`}
           onClick={projectMenuClickHandler}
         >
           <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-            {/* {selectedProjectName} */}
-            {selectedProjectName === 'Overall' ? t('PROJECT.OVERALL') : selectedProjectName}
+            {/* Info: (20240710 - Anna) {selectedProjectName} */}
+            {selectedProjectName === 'Overall' ? t('common:COMMON.OVERALL') : selectedProjectName}
           </div>
 
-          <div className="my-auto flex flex-col justify-center px-0 py-0">
+          <div className="my-auto flex flex-col justify-center">
             <div className="flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -134,19 +134,19 @@ const AnalysisReportSection = () => {
         </button>
       </div>
 
-      {/* Info: Project Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Project Menu  */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isProjectMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-input-surface-input-background p-2">
-          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-slate-500 shadow-sm">
+          <div className="flex w-full max-w-xl items-center justify-between gap-5 self-center whitespace-nowrap rounded-sm border border-solid border-dropdown-stroke-menu bg-input-surface-input-background px-3 py-2.5 text-base leading-6 tracking-normal text-input-text-input-filled shadow-sm">
             <input
               type="text"
-              placeholder={t('AUDIT_REPORT.SEARCH')}
+              placeholder={t('common:COMMON.SEARCH')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
@@ -172,20 +172,20 @@ const AnalysisReportSection = () => {
               ></path>
             </svg>
           </div>
-
+          {/* Info: (20240830 - Anna) 為了解決Unexpected newline before '}'錯誤，請prettier不要格式化 */}
+          {/* prettier-ignore */}
           <div className="mt-2 max-h-52 w-full overflow-y-auto">
             {Object.keys(DUMMY_PROJECTS_MAP)
-              .filter((project) =>
-                DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
+              .filter((project) => {
+                return DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name
                   .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              )
+                  .includes(searchQuery.toLowerCase());
+              })
               .map((project) => (
                 <li
                   key={project}
                   onClick={() =>
-                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)
-                  }
+                    projectOptionClickHandler(project as keyof typeof DUMMY_PROJECTS_MAP)}
                   className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
                 >
                   <div className="flex cursor-pointer items-center gap-2">
@@ -200,10 +200,10 @@ const AnalysisReportSection = () => {
                       </div>
                     ) : null}
                     <div className="text-base font-medium leading-6 tracking-normal">
-                      {/* {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
+                      {/* Info: (20240710 - Anna) {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name} */}
                       {DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name ===
                       'Overall'
-                        ? t('PROJECT.OVERALL')
+                        ? t('common:COMMON.OVERALL')
                         : DUMMY_PROJECTS_MAP[project as keyof typeof DUMMY_PROJECTS_MAP].name}
                     </div>
                   </div>
@@ -218,15 +218,16 @@ const AnalysisReportSection = () => {
   const displayedReportTypeMenu = (
     <div ref={typeMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
+        type="button"
+        className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-2.5 ${
           isTypeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={typeMenuClickHandler}
       >
         <div className="text-base font-medium leading-6 tracking-normal text-input-text-input-filled">
-          {t(`BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
+          {t(`common:BOOKMARK_LIST.${selectedReportName.toUpperCase().replace(/ /g, '_')}`)}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
+        <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -245,9 +246,9 @@ const AnalysisReportSection = () => {
           </div>
         </div>
       </button>
-      {/* Info: Report Type Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Report Type Menu  */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -260,8 +261,8 @@ const AnalysisReportSection = () => {
               onClick={() => menuOptionClickHandler(id as AnalysisReportTypesKey)}
               className="mt-1 w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
-              {/* {name} */}
-              {t(`BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
+              {/* Info: (20240710 - Anna) {name} */}
+              {t(`common:BOOKMARK_LIST.${name.toUpperCase().replace(/ /g, '_')}`)}
             </li>
           ))}
         </ul>
@@ -272,7 +273,8 @@ const AnalysisReportSection = () => {
   const displayedLanguageMenu = (
     <div ref={languageMenuRef} className="relative flex w-full">
       <button
-        className={`flex w-full items-center justify-between gap-0 space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
+        type="button"
+        className={`flex w-full items-center justify-between space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isLanguageMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={languageMenuClickHandler}
@@ -286,7 +288,7 @@ const AnalysisReportSection = () => {
         <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
           {selectedLanguage?.name}
         </div>
-        <div className="my-auto flex flex-col justify-center px-0 py-0">
+        <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -305,9 +307,9 @@ const AnalysisReportSection = () => {
           </div>
         </div>
       </button>
-      {/* Info: Language Menu (20240425 - Shirley) */}
+      {/* Info: (20240425 - Shirley) Language Menu */}
       <div
-        className={`absolute left-0 top-[3.5rem] z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-50px z-20 grid w-full grid-cols-1 overflow-hidden rounded-sm border transition-all duration-300 ease-in-out ${
           isLanguageMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
             : 'grid-rows-0 border-transparent'
@@ -318,7 +320,7 @@ const AnalysisReportSection = () => {
             <li
               key={id}
               onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-navyBlue2 hover:text-text-brand-primary-lv2"
+              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-3 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
             >
               <Image src={icon} alt={name} width={20} height={20} />
               <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
@@ -332,13 +334,13 @@ const AnalysisReportSection = () => {
   const displayedButtonOrLink =
     !period.endTimeStamp || !selectedLanguage.id || !selectedReportType ? (
       <Button
-        disabled={true}
-        className="mt-20 flex items-center justify-center rounded-sm px-4 py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        disabled
+        className="mt-20 flex items-center justify-center py-2 max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <Link href={targetedReportViewLink}>
           <div className="flex gap-1">
             <div className="text-sm font-medium leading-5 tracking-normal">
-              {t('EMBED_CODE_MODAL.GENERATE')}
+              {t('report_401:EMBED_CODE_MODAL.GENERATE')}
             </div>
             <div className="my-auto flex items-center justify-center">
               <svg
@@ -348,15 +350,13 @@ const AnalysisReportSection = () => {
                 fill="none"
                 viewBox="0 0 17 16"
               >
-                <g>
-                  <path
-                    className="fill-current"
-                    fill="none"
-                    fillRule="evenodd"
-                    d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  ></path>
-                </g>
+                <path
+                  className="fill-current"
+                  fill="none"
+                  fillRule="evenodd"
+                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                ></path>
               </svg>
             </div>
           </div>
@@ -365,11 +365,11 @@ const AnalysisReportSection = () => {
     ) : (
       <Link
         href={targetedReportViewLink}
-        className="mt-20 flex items-center justify-center rounded-sm bg-primaryYellow py-2 text-button-text-primary-solid disabled:text-lightGray2 max-md:mt-10 max-md:max-w-full max-md:px-5"
+        className="mt-20 flex items-center justify-center rounded-sm bg-button-surface-strong-primary py-2 text-button-text-primary-solid disabled:text-button-text-disable max-md:mt-10 max-md:max-w-full max-md:px-5"
       >
         <div className="flex gap-1">
           <div className="text-sm font-medium leading-5 tracking-normal">
-            {t('EMBED_CODE_MODAL.GENERATE')}
+            {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </div>
           <div className="my-auto flex items-center justify-center">
             <svg
@@ -379,15 +379,13 @@ const AnalysisReportSection = () => {
               fill="none"
               viewBox="0 0 17 16"
             >
-              <g>
-                <path
-                  className="fill-current"
-                  fill="none"
-                  fillRule="evenodd"
-                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </g>
+              <path
+                className="fill-current"
+                fill="none"
+                fillRule="evenodd"
+                d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              ></path>
             </svg>
           </div>
         </div>
@@ -395,44 +393,34 @@ const AnalysisReportSection = () => {
     );
 
   return (
-    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0">
-      <div className="flex gap-0 max-md:flex-wrap">
+    <div className="mt-20 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background">
+      <div className="flex max-md:flex-wrap">
         <div className="flex w-fit shrink-0 grow basis-0 flex-col pb-5 pt-16 max-md:max-w-full">
-          {/* Info: desktop heading (20240513 - Shirley) */}
-          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-slate-500 max-md:max-w-full max-md:pr-5 md:flex">
+          {/* Info: (20240513 - Shirley) desktop heading */}
+          <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
-              {t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+              {t('common:COMMON.ANALYSIS_REPORTS')}
             </div>
           </div>
-          {/* Info: mobile heading (20240513 - Shirley) */}
+          {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
-              <div>
-                <Image
-                  src={'/icons/report.svg'}
-                  width={30}
-                  height={30}
-                  alt="report_icon"
-                  className="aspect-square shrink-0"
-                />
-              </div>
-              <div className="mt-1.5">{t('REPORTS_SIDEBAR.ANALYSIS_REPORTS')}</div>
+              <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
+              <div className="mt-1.5">{t('common:COMMON.ANALYSIS_REPORTS')}</div>
             </div>
           </div>
 
           <div className="mt-4 flex flex-1 flex-col justify-center px-6 py-2.5 max-md:max-w-full md:px-28">
-            <div className="flex flex-col justify-center max-md:max-w-full">
-              <div className="h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full" />
-            </div>
+            <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-4 max-md:max-w-full" />
           </div>
         </div>
       </div>
-      {/* Info: options for generation (20240513 - Shirley) */}
+      {/* Info: (20240513 - Shirley) options for generation */}
       <div className="mt-3 flex w-600px max-w-full flex-col space-y-10 self-center px-5 lg:mt-16">
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('REPORTS_HISTORY_LIST.PROJECT')}
+              {t('common:COMMON.PROJECT')}
             </div>
 
             {displayedProjectMenu}
@@ -442,31 +430,30 @@ const AnalysisReportSection = () => {
         <div className="flex flex-col justify-center max-md:max-w-full">
           <div className="flex flex-col gap-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
+              {t('report_401:ANALYSIS_REPORTS_SECTION.REPORT_TYPE')}
             </div>
             {displayedReportTypeMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
+        <div className="flex flex-col justify-center max-md:mt-10 max-md:max-w-full">
           <div className="flex flex-col space-y-3 max-md:max-w-full">
             <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
-              {t('EMBED_CODE_MODAL.REPORT_LANGUAGE')}
+              {t('report_401:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
             </div>
             {displayedLanguageMenu}
           </div>
         </div>
-        <div className="mt-0 flex flex-col max-md:mt-10 max-md:max-w-full">
+        <div className="flex flex-col max-md:mt-10 max-md:max-w-full">
           <div className="flex gap-4 max-md:max-w-full max-md:flex-wrap">
-            {/* TODO: 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
-            {/* Info: 左橫線 (20240425 - Shirley) */}
+            {/* Info: (20240820 - Julian) 在螢幕寬度低於 md 時，新增右橫線，跟左橫線以及 Period 字串一起佔滿這個 div 的寬度 */}
+            {/* Info: (20240425 - Shirley) 左橫線 */}
             <div className="my-auto hidden max-md:flex max-md:flex-1 max-md:flex-col max-md:justify-center">
-              <div className="h-px shrink-0 border border-solid border-slate-800 bg-slate-800" />
+              <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1" />
             </div>
 
             <div className="flex gap-2">
               <div className="my-auto flex flex-col justify-center">
                 <div className="flex items-center justify-center">
-                  {' '}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -474,7 +461,7 @@ const AnalysisReportSection = () => {
                     fill="none"
                     viewBox="0 0 16 16"
                   >
-                    <g fillRule="evenodd" clipPath="url(#clip0_904_69620)" clipRule="evenodd">
+                    <g fillRule="evenodd" clipRule="evenodd">
                       <path
                         fill="#FFA502"
                         d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
@@ -484,27 +471,23 @@ const AnalysisReportSection = () => {
                         d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
                       ></path>
                     </g>
-                    <defs>
-                      <clipPath id="clip0_904_69620">
-                        <path fill="#fff" d="M0 0H16V16H0z"></path>
-                      </clipPath>
-                    </defs>
                   </svg>
                 </div>
               </div>
-              <div className="text-sm font-medium leading-5 tracking-normal text-slate-800">
-                {t('PENDING_REPORT_LIST.PERIOD')}
+              <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
+                {t('report_401:PENDING_REPORT_LIST.PERIOD')}
               </div>
             </div>
 
-            {/* Info: 右橫線 (20240425 - Shirley) */}
+            {/* Info: (20240425 - Shirley) 右橫線  */}
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 bg-divider-stroke-lv-1 max-md:max-w-full" />
             </div>
           </div>
           <div className="mt-6 flex flex-col justify-center">
             <DatePicker
-              // key={selectedReportType}  // Info: if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below (20240425 - Shirley)
+              // Info: (20240425 - Shirley) if we want to update the DatePicker whether the DatePickerType is changed or not, uncomment the below
+              // key={selectedReportType}
               type={DatePickerType.TEXT_PERIOD}
               period={period}
               setFilteredPeriod={setPeriod}
@@ -513,8 +496,8 @@ const AnalysisReportSection = () => {
           </div>
         </div>
 
-        <div className="my-10 flex flex-col justify-center">
-          <p>{t('ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
+        <div className="my-10 flex flex-col justify-center text-text-neutral-primary">
+          <p>{t('report_401:ANALYSIS_REPORTS_SECTION.ATTENTION')}</p>
         </div>
         {displayedButtonOrLink}
       </div>

@@ -9,7 +9,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 const ProjectMainPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
@@ -28,8 +28,7 @@ const ProjectMainPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
-        <title>{t('PROJECT.PROJECT_LIST_ISUNFA')}</title>
+        <title>{t('project:PROJECT.PROJECT_LIST_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -45,7 +44,16 @@ const ProjectMainPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

@@ -5,6 +5,7 @@ import { ReportSheetType } from '@/constants/report';
 import { IAccountQueryArgs, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { formatIPaginatedAccount } from '@/lib/utils/formatter/account.formatter';
+import { SortOrder } from '@/constants/sort';
 
 export abstract class AbstractAccountRetriever {
   protected companyId: number;
@@ -27,7 +28,7 @@ export abstract class AbstractAccountRetriever {
 
   protected sortBy: 'code' | 'createdAt' = 'code';
 
-  protected sortOrder: 'asc' | 'desc' = 'asc';
+  protected sortOrder: SortOrder.ASC | SortOrder.DESC = SortOrder.ASC;
 
   protected searchKey: string | undefined;
 
@@ -46,7 +47,7 @@ export abstract class AbstractAccountRetriever {
     sortBy,
     sortOrder,
     searchKey,
-    isDeleted
+    isDeleted,
   }: IAccountQueryArgs) {
     this.companyId = companyId;
     this.includeDefaultAccount = includeDefaultAccount;
@@ -77,7 +78,7 @@ export abstract class AbstractAccountRetriever {
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
       searchKey: this.searchKey,
-      isDeleted: this.isDeleted
+      isDeleted: this.isDeleted,
     });
 
     const paginatedAccount = formatIPaginatedAccount(accounts);

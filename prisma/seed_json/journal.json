@@ -40,5 +40,12 @@
     "createdAt": 1,
     "updatedAt": 1,
     "event": "JOURNAL.UPLOADED"
+  },
+  {
+    "id": 1006,
+    "companyId": 8867,
+    "createdAt": 1723188860,
+    "updatedAt": 1723188860,
+    "event": "JOURNAL.UPLOADED"
   }
 ]

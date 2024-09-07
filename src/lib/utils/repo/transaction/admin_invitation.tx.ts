@@ -32,8 +32,17 @@ export async function createAdminByInvitation(userId: number, invitation: IInvit
         updatedAt: nowTimestamp,
       },
       include: {
-        user: true,
-        company: true,
+        user: {
+          include: {
+            userAgreements: true,
+            imageFile: true,
+          },
+        },
+        company: {
+          include: {
+            imageFile: true,
+          },
+        },
         role: true,
       },
     });

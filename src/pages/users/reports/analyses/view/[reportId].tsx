@@ -24,7 +24,7 @@ interface IServerSideProps {
   endTimestamp: string;
 }
 
-// TODO: dummy data to be replaced (20240429 - Shirley)
+// TODO: (20240429 - Shirley) [Beta] dummy data to be replaced
 const ReportLink = {
   [AnalysisReportTypesKey.financial_performance]: ``,
   [AnalysisReportTypesKey.cost_analysis]: ``,
@@ -49,7 +49,7 @@ const ViewAnalysisReportPage = ({
     reportLink: ReportLink[reportType],
   });
 
-  // TODO: Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp` (20240429 - Shirley)
+  // TODO: (20240429 - Shirley) [Beta] Fetch report data with `reportType`, `reportLanguage` and `startTimestamp` and `endTimestamp`
   const {
     data: reportAnalysis,
     code: getARCode,
@@ -69,7 +69,7 @@ const ViewAnalysisReportPage = ({
     if (getARSuccess === false) {
       toastHandler({
         id: `getAR-${getARCode}}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET')} ${reportType}${t('DASHBOARD.REPORT')}${getARCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getARCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -100,15 +100,14 @@ const ViewAnalysisReportPage = ({
     </>
   );
 
-  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
+  // TODO: (20240517 - Shirley) [Beta] replace ALL dummy data after api calling
   return (
     <div>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{AnalysisReportTypesMap[reportType].name}- iSunFA</title>
+        <title>{`${AnalysisReportTypesMap[reportType].name} - iSunFA`}</title>
 
         <meta
           name="description"
@@ -138,33 +137,23 @@ const ViewAnalysisReportPage = ({
 export default ViewAnalysisReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  // const { report_type, report_language, start_timestamp, end_timestamp } = query;
-
-  // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
-
-  // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { reportId = '', report_type = '' } = query;
-  // if (!reportId || !report_type) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
+  // Info: (20240429 - Shirley) variable from URL query
+  const { reportId = '', report_type: reportType = '' } = query;
 
   return {
     props: {
       reportId: reportId as string,
-      reportType: report_type as string,
-      // reportLanguage: report_language as string,
-      // startTimestamp: start_timestamp as string,
-      // endTimestamp: end_timestamp as string,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      reportType: reportType as string,
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

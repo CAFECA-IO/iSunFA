@@ -6,8 +6,6 @@ import {
   ISalaryRecordWithProjectsAndHours,
 } from '@/interfaces/salary_record';
 import { timestampInSeconds, calculateWorkingHours } from '@/lib/utils/common';
-import { IInvoiceBeta } from '@/interfaces/invoice';
-import { EventType, InvoiceType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import { IFolder } from '@/interfaces/folder';
 import { JOURNAL_EVENT } from '@/constants/journal';
 
@@ -501,92 +499,6 @@ export async function updateSalaryRecordById(
       }
     : null;
   return formatUpdatedSalaryRecord;
-}
-
-// TODO: (20240807 - Jacky) Invoice is not exist in createSalaryRecord flow, need to delete in the future
-export async function generateInvoiceFromSalaryRecord(
-  companyId: number,
-  salaryRecordsIdsList: number[]
-): Promise<IInvoiceBeta> {
-  const now = Date.now();
-  const nowTimestamp = timestampInSeconds(now);
-  const salaryRecords = await prisma.salaryRecord.findMany({
-    where: {
-      id: {
-        in: salaryRecordsIdsList,
-      },
-      employee: {
-        companyId,
-      },
-    },
-    select: {
-      id: true,
-      employeeId: true,
-      employee: {
-        select: {
-          name: true,
-          department: {
-            select: {
-              name: true,
-            },
-          },
-          company: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-      salary: true,
-      insurancePayment: true,
-      bonus: true,
-      description: true,
-      startDate: true,
-      endDate: true,
-      workingHour: true,
-      confirmed: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  const totalSalary = salaryRecords.reduce((acc, record) => acc + record.salary, 0);
-  const totalInsurancePayment = salaryRecords.reduce(
-    (acc, record) => acc + record.insurancePayment,
-    0
-  );
-  const totalBonus = salaryRecords.reduce((acc, record) => acc + record.bonus, 0);
-  const invoice: IInvoiceBeta = {
-    number: now.toString(),
-    type: InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
-    vendorTaxId: 'temp fake id',
-    deductible: true,
-    journalId: null,
-    date: nowTimestamp,
-    eventType: EventType.PAYMENT,
-    paymentReason: 'Salary Payment',
-    description: salaryRecords[0].description,
-    vendorOrSupplier: salaryRecords[0].employee.company.name,
-    projectId: null,
-    project: null,
-    contractId: null,
-    contract: null,
-    payment: {
-      isRevenue: false,
-      price: totalSalary + totalInsurancePayment + totalBonus,
-      hasTax: false,
-      taxPercentage: 0,
-      taxPrice: 0,
-      hasFee: false,
-      fee: 0,
-      method: 'Bank Transfer',
-      period: PaymentPeriodType.AT_ONCE,
-      installmentPeriod: 0,
-      alreadyPaid: 0,
-      status: PaymentStatusType.UNPAID,
-      progress: 0,
-    },
-  };
-  return invoice;
 }
 
 export async function createSalaryRecordJournal(

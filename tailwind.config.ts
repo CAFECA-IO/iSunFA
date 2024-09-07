@@ -3,6 +3,9 @@ module.exports = {
   content: ['./src/**/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      height: {
+        '50vh': '50vh',
+      },
       scale: {
         80: '0.8',
         90: '0.9',
@@ -653,10 +656,10 @@ module.exports = {
         'switch-surface-base': 'var(--switch-surface-base)',
         'switch-surface-controller': 'var(--switch-surface-controller)',
         'switch-surface-disable': 'var(--switch-surface-disable)',
-        'switch-text-active': 'var(--switch-text-active)',
-        'switch-text-inactive': 'var(--switch-text-inactive)',
+        'switch-text-primary': 'var(--switch-text-primary)',
+        'switch-text-disable': 'var(--switch-text-disable)',
         'tabs-stroke-active': 'var(--tabs-stroke-active)',
-        'tabs-stroke-default': 'var(--tabs-stroke-default)',
+        'tabs-stroke-default': 'var(--tabs-stroke-tertiary)',
         'tabs-stroke-disable': 'var(--tabs-stroke-disable)',
         'tabs-stroke-hover': 'var(--tabs-stroke-hover)',
         'tabs-stroke-secondary': 'var(--tabs-stroke-secondary)',
@@ -675,82 +678,13 @@ module.exports = {
         'tree-stroke-divider': 'var(--tree-stroke-divider)',
         'tree-stroke-icon': 'var(--tree-stroke-icon)',
         'tree-text-primary': 'var(--tree-text-primary)',
-
-        darkPurple: '#24274A',
-        darkPurple2: '#2C315B',
-        darkPurple3: '#1F2243',
-        darkPurple4: '#3F497A',
-
-        lightWhite: '#FCFCFF',
-
-        lightGreen: '#2D7E58',
-
-        lightBlue: '#31D3F5',
-
-        lightRed: '#C84949',
-
-        lightOrange: '#F7931A',
-        darkOrange: '#FFA600',
-
-        lilac: '#ABA7BD',
-        lilac2: '#6857d733',
-        violet: '#6857D7',
-        violet2: '#9747FF',
-
-        bluePurple: '#627EEA',
-        primaryBlue: '#11FFF5',
-        'primaryBlue-500': 'rgba(17, 255, 245, 0.5)',
-        hoverWhite: '#F0F0F0',
-
-        primaryYellow: '#FFA502',
-        primaryYellow2: '#996301',
-        primaryYellow3: '#FFD892',
-        primaryYellow4: '#FFA600',
-        primaryYellow5: '#CC8401',
-        primaryYellow6: '#997C15',
-
-        secondaryBlue: '#001840',
-        tertiaryBlue: '#304872',
-        tertiaryBlue2: '#002462B2',
-
-        lightGray: '#CED1D7',
-        lightGray2: '#828998',
-        lightGray3: '#C1C9D5',
-        lightGray4: '#7F8A9D',
-        lightGray5: '#58667F',
-        lightGray6: '#CDD1D9',
-        lightGray7: '#F4F5F7',
-
-        navyBlue: '#002462',
-        navyBlue2: '#27354E',
-        darkBlue: '#1570EF',
-        darkBlue2: '#314362',
-
-        errorRed: '#963737',
-        errorRed2: '#FED7D7',
-        errorRed3: '#FB5C5C',
-
-        successGreen: '#1E543B',
-        successGreen2: '#D3F4E5',
-        successGreen3: '#4BD394',
-
-        warningYellow: '#FFCF24',
-
-        indigo: '#8098F9',
-        darkBlue3: '#0024620D',
       },
       backgroundImage: {
+        login_bg: "url('/images/login_bg.png')",
         customGradient: 'linear-gradient(180deg, rgba(0, 24, 64, 0) 10%, rgb(0, 24, 64) 85.5%)',
-        contact_bg: 'url("/elements/contact_bg.svg")',
 
         purpleLinear: 'linear-gradient(180deg, #3F497A 0%, #313866 100%)',
-        purpleLinear2:
-          'linear-gradient(315deg, rgba(104, 87, 215, 0.30) 0%, rgba(104, 87, 215, 0.10) 100%);',
 
-        101: 'url("/elements/101.png")',
-
-        bubbleAbove: 'url("/elements/bubble_above.svg")',
-        bubbleBelow: 'url("/elements/bubble_below.svg")',
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
 
         web: 'url("/elements/web.svg")',
@@ -764,20 +698,6 @@ module.exports = {
 
         green_light_left: 'url("/elements/green_light_left.svg")',
         green_light_right: 'url("/elements/green_light_right.svg")',
-
-        // mask: 'url("/elements/mask.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-        // blended_light: 'url("/elements/blended_light.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-
-        // shadow_01: 'url("/elements/shadow_01.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-        // background_pattern: 'url("/elements/background_pattern.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-
-        // pipe: 'url("/elements/pipe.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-        // neon: 'url("/animations/neon.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
-        // lightBalls: 'url("/elements/light_balls.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-        // lightBallsReverse: 'url("/elements/light_balls_reverse.svg")', // Deprecated: (20240805 - Liz) 沒有使用到
-        // reportCover: 'url("/documents/cover.svg")', // Deprecated: (20240801 - Liz) 沒有使用到
-        // contentBg: 'url("/documents/content_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
-        // headerBg: 'url("/documents/header_bg.svg"), linear-gradient(#F2F2F2,#F2F2F2)', // Deprecated: (20240801 - Liz) 沒有使用到
       },
       zIndex: {
         '-10': '-10',
@@ -815,6 +735,7 @@ module.exports = {
         '7xl': ['72px', 1],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
+        '8px': ['8px', '10px'],
 
         h1: '44px',
         h2: '36px',
@@ -1019,6 +940,7 @@ module.exports = {
         '150px': '150px',
         '160px': '160px',
         '170px': '170px',
+        '177px': '177px',
         '180px': '180px',
         '190px': '190px',
         '200px': '200px',
@@ -1188,6 +1110,8 @@ module.exports = {
         '10%': '10%',
         '11%': '11%',
         '14%': '14%',
+        '17.5%': '17.5%',
+        '28%': '28%',
         '30%': '30%',
         '35%': '35%',
         '44%': '44%',
@@ -1196,6 +1120,7 @@ module.exports = {
         '60%': '60%',
         '70%': '70%',
         '75%': '75%',
+        '82.5%': '82.5%',
         '83%': '83%',
         '100%': '100%',
         0.5: '50%',
@@ -1293,7 +1218,8 @@ module.exports = {
         '120%': '120%',
         '140%': '140%',
       },
-      borderWidths: {
+      borderWidth: {
+        '0.5px': '0.5px',
         '1px': 'var(--stroke-width-lv-1)',
         '2px': 'var(--stroke-width-lv-2)',
         '3px': 'var(--stroke-width-lv-3)',
@@ -1301,7 +1227,7 @@ module.exports = {
         '5px': 'var(--stroke-width-lv-5)',
         '6px': 'var(--stroke-width-lv-6)',
       },
-      // Info: 如果設定 `s`, `m`，會造成左上左下沒有圓弧角的問題，要設定 `sm`, `md` 才行 (20240424 - Shirley)
+      // Info: (20240424 - Shirley) 如果設定 `s`, `m`，會造成左上左下沒有圓弧角的問題，要設定 `sm`, `md` 才行
       borderRadius: {
         xxs: 'var(--radius-xxs)',
         xs: 'var(--radius-xs)',
@@ -1348,56 +1274,30 @@ module.exports = {
         xl: '0 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
         xlSide: '4px 0px 24px rgba(0, 0, 0, 0.40)',
-        purple: '0px 0px 6px 0px #AB50FF',
-        violet:
-          '0px 0px 12px 0px rgba(175, 80, 255, 0.30), 0px 0px 24px 0px rgba(175, 80, 255, 0.30) inset',
-
-        custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
-        custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',
-        custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
-        custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
-        custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
 
         dropmenu:
           '0px 166px 46px 0px var(--Shadow-Lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--Shadow-Lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--Shadow-Lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--Shadow-Lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--Shadow-Lv-5, rgba(49, 67, 98, 0.10));',
         tooltip:
           '0px 166px 46px 0px rgba(49, 67, 98, 0.00), 0px 106px 42px 0px rgba(49, 67, 98, 0.01), 0px 60px 36px 0px rgba(49, 67, 98, 0.05), 0px 27px 27px 0px rgba(49, 67, 98, 0.09), 0px 7px 15px 0px rgba(49, 67, 98, 0.10)',
-        1: 'var(--shadow-lv-1)',
-        2: 'var(--shadow-lv-2)',
-        3: 'var(--shadow-lv-3)',
-        4: 'var(--shadow-lv-4)',
-        5: 'var(--shadow-lv-5)',
 
         sidebarMobile:
           '0px -2px 5px 0px #3143621A, 0px -6px 10px 0px #31436217, 0px -11px 13px 0px #3143620D, 0px -28px 15px 0px #31436203, 0px -50px 17px 0px #31436200',
         navbar:
           '0px 2px 5px 0px #3143621A, 0px 6px 10px 0px #31436217, 0px 11px 13px 0px #3143620D, 0px 28px 15px 0px #31436203, 0px 50px 17px 0px #31436200',
 
-        revertBtn:
-          '0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
         scrollBtn:
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
-        customShadowSmall:
-          '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0px 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
         xlSide: '4px 0px 24px rgba(0, 0, 0, 0.40)',
-        purple: '0 2px 10px #AB50FF',
-
-        custom1: '0px 18px 39px 0px rgba(32, 22, 93, 0.1)',
-        custom2: '0px 71px 71px 0px rgba(32, 22, 93, 0.09)',
-        custom3: '0px 161px 96px 0px rgba(32, 22, 93, 0.05)',
-        custom4: '0px 286px 114px 0px rgba(32, 22, 93, 0.01)',
-        custom5: '0px 447px 125px 0px rgba(32, 22, 93, 0)',
 
         '3xl': '0 35px 35px rgba(0, 0, 0, 0.25)',
         '4xl': ['0 35px 35px rgba(0, 0, 0, 0.25)', '0 45px 65px rgba(0, 0, 0, 0.15)'],
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
       },
@@ -1436,11 +1336,6 @@ module.exports = {
         135: '135deg',
         40: '40deg',
       },
-      borderWidth: {
-        '0.5px': '0.5px',
-        '3px': '3px',
-        '5px': '5px',
-      },
       backgroundSize: {
         150: '150%',
         50: '50%',
@@ -1448,7 +1343,6 @@ module.exports = {
       backgroundPosition: {
         'top-4': 'center top -2.5rem',
         'top-10': 'center top -10rem right -2.5rm',
-        // 'right-4': 'right -2.5rem center',
       },
       keyframes: {
         slideBottomToTop: {
@@ -1474,9 +1368,6 @@ module.exports = {
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
-        slideLeftToRight: 'slideLeftToRight 1s ease-out forwards',
-        slideRightBottomToCenter: 'slideRightBottomToCenter 1s ease-out forwards',
-        slideRightToCenter: 'slideRightToCenter 1s ease-out forwards',
         spinFast: 'spin 1s linear infinite',
         loading: 'loading 1.5s infinite',
       },

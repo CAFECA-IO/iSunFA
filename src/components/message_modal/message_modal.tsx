@@ -15,6 +15,8 @@ const MessageModal = ({
   modalVisibilityHandler,
   messageModalData,
 }: IMessageModalProps) => {
+  let keyIndex = 0;
+
   const {
     title,
     subtitle,
@@ -61,21 +63,21 @@ const MessageModal = ({
 
   const borderColor =
     messageType === MessageType.WARNING
-      ? 'border-warningYellow'
+      ? 'border-alert-surface-surface-warning'
       : messageType === MessageType.SUCCESS
-        ? 'border-successGreen3'
+        ? 'border-alert-surface-surface-success'
         : messageType === MessageType.ERROR
-          ? 'border-errorRed3'
-          : 'border-navyBlue';
+          ? 'border-alert-surface-surface-error'
+          : 'border-alert-surface-surface-info';
 
   const titleColor =
     messageType === MessageType.WARNING
-      ? 'text-primaryYellow6'
+      ? 'text-text-state-warning'
       : messageType === MessageType.SUCCESS
-        ? 'text-lightGreen'
+        ? 'text-text-state-success'
         : messageType === MessageType.ERROR
-          ? 'text-lightRed'
-          : 'text-navyBlue2';
+          ? 'text-text-state-error'
+          : 'text-alert-text-title-info';
 
   const isBackBtn = backBtnStr ? (
     <Button
@@ -88,32 +90,38 @@ const MessageModal = ({
     </Button>
   ) : null;
 
-  // Info: 換行處理 (20240515 - Shirley)
-  const displayedSubtitles = subtitle?.split('\n').map((line, index) => (
-    // eslint-disable-next-line react/no-array-index-key
-    <div key={index}>
-      {line}
-      {index < subtitle.split('\n').length - 1 && <br />}
-    </div>
-  ));
+  // Info: (20240515 - Shirley) 換行處理
+  // Info: (20240830 - Anna) 把key由index改成keyIndex
+  const displayedSubtitles = subtitle?.split('\n').map((line, index) => {
+    keyIndex += 1;
+    return (
+      <div key={keyIndex}>
+        {line}
+        {index < subtitle.split('\n').length - 1 && <br />}
+      </div>
+    );
+  });
 
-  // Info: 換行處理 (20240515 - Shirley)
+  // Info: (20240515 - Shirley) 換行處理
+  // Info: (20240830 - Anna) 把key由index改成keyIndex
   const displayedContent =
     typeof content === 'string'
-      ? content.split('\n').map((line, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <div key={index} className="-mt-2">
-            {line}
-            {index < content.split('\n').length - 1}
-          </div>
-        ))
+      ? content.split('\n').map((line, index) => {
+          keyIndex += 1;
+          return (
+            <div key={keyIndex} className="-mt-2">
+              {line}
+              {index < content.split('\n').length - 1}
+            </div>
+          );
+        })
       : content;
 
   const isDisplayCross = !hideCloseBtn ? (
     <button
       type="button"
       onClick={modalVisibilityHandler}
-      className="absolute right-12px top-12px text-lightGray5"
+      className="absolute right-12px top-12px text-icon-surface-single-color-primary"
     >
       <RxCross2 size={20} />
     </button>
@@ -122,7 +130,7 @@ const MessageModal = ({
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 font-barlow">
       <div
-        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-white px-32px py-16px`}
+        className={`relative flex h-fit w-90vw flex-col gap-16px rounded-xs border-t-5px md:w-376px ${borderColor} bg-alert-surface-background px-32px py-16px`}
       >
         {isDisplayCross}
         <div className="mt-20px flex flex-col items-center gap-16px text-center">
@@ -133,7 +141,9 @@ const MessageModal = ({
           <p className="text-base text-text-state-error">{subMsg}</p>
           {/* Info: (20240425 - Julian) common message (gray color) */}
           <div className="space-y-1 text-sm text-text-neutral-primary">{displayedContent}</div>
-          <div className="text-sm font-semibold text-lightGray5">{notes}</div>
+          <div className="text-sm font-semibold text-accordion-surface-background-text-paragraph">
+            {notes}
+          </div>
         </div>
         <div className="flex items-center justify-center gap-24px">
           {isBackBtn}

@@ -7,113 +7,6 @@ export const SCROLL_END = 530;
 
 export const BOOKMARK_SCROLL_STEP = 200;
 
-/* Deprecated: (20240806 - Liz) massiveDataContent 沒有使用到 */
-export const massiveDataContent = [
-  {
-    icon: '/icons/wallet.svg',
-    text: 'LANDING_PAGE.MASSIVE_DATA_WALLET',
-    alt: 'wallet_icon',
-  },
-  {
-    icon: '/icons/blacklist.svg',
-    text: 'LANDING_PAGE.MASSIVE_DATA_BLACKLIST',
-    alt: 'blacklist_icon',
-  },
-  {
-    icon: '/icons/block.svg',
-    text: 'LANDING_PAGE.MASSIVE_DATA_BLOCK',
-    alt: 'block_icon',
-  },
-  {
-    icon: '/icons/transaction.svg',
-    text: 'LANDING_PAGE.MASSIVE_DATA_TRANSACTION',
-    alt: 'transaction_icon',
-  },
-  {
-    icon: '/icons/evidence.svg',
-    text: 'LANDING_PAGE.MASSIVE_DATA_EVIDENCE',
-    alt: 'evidence_icon',
-  },
-];
-
-// Deprecated: (20240806 - Liz) toolsContent 沒有使用到
-export const toolsContent = [
-  {
-    title: 'LANDING_PAGE.TOOL_INTRO_1_TITLE',
-    description: 'LANDING_PAGE.TOOL_INTRO_1_DESCRIPTION',
-    desktopImg: '/elements/tracing_tool_2.png',
-    mobileImg: '/elements/tracing_tool.png',
-    alt: 'tracing_tool',
-  },
-  {
-    title: 'LANDING_PAGE.TOOL_INTRO_2_TITLE',
-    description: 'LANDING_PAGE.TOOL_INTRO_2_DESCRIPTION',
-    desktopImg: '/elements/auditing_tool_1.png',
-    mobileImg: '/elements/auditing_tool.png',
-    alt: 'auditing_tool',
-  },
-  {
-    title: 'LANDING_PAGE.TOOL_INTRO_3_TITLE',
-    description: 'LANDING_PAGE.TOOL_INTRO_3_DESCRIPTION',
-    desktopImg: '/elements/document.png',
-    mobileImg: '/elements/document.png',
-    alt: 'generate_reports',
-  },
-];
-
-// Deprecated: (20240806 - Liz) servicesContent 沒有使用到
-export const servicesContent = [
-  {
-    image: '/elements/tracing.png',
-    alt: 'a screenshot of tracing tool',
-    description: 'LANDING_PAGE.SERVICES_DESCRIPTION_1',
-  },
-  {
-    image: '/elements/report.png',
-    alt: 'balance sheet',
-    description: 'LANDING_PAGE.SERVICES_DESCRIPTION_2',
-  },
-  {
-    image: '/elements/law.png',
-    alt: 'a weighing scale',
-    description: 'LANDING_PAGE.SERVICES_DESCRIPTION_3',
-  },
-  {
-    image: '/elements/safety_money.png',
-    alt: 'a shield check image',
-    description: 'LANDING_PAGE.SERVICES_DESCRIPTION_4',
-  },
-  {
-    image: '/elements/smart_contract_1.png',
-    alt: 'contracts image',
-    description: 'LANDING_PAGE.SERVICES_DESCRIPTION_5',
-  },
-];
-
-// Deprecated: (20240806 - Liz) whyUsContent 沒有使用到
-export const whyUsContent = [
-  {
-    image: '/icons/safety.png',
-    alt: 'safety icon',
-    description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_1',
-  },
-  {
-    image: '/icons/financial_report.png',
-    alt: 'financial report icon',
-    description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_2',
-  },
-  {
-    image: '/icons/compliance.png',
-    alt: 'compliance icon',
-    description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_3',
-  },
-  {
-    image: '/icons/accountant.png',
-    alt: 'accountant icon',
-    description: 'LANDING_PAGE.WHY_iSunFA_DESCRIPTION_4',
-  },
-];
-
 /* Info: (20230814 - Shirley) ----- Landing Footer ----- */
 export const iSunFAAddress = process.env.I_SUN_FA_ADDRESS_IN_ENGLISH;
 export const iSunFAAddressOnMap = process.env.I_SUN_FA_ADDRESS_ON_GOOGLE_MAP;
@@ -142,7 +35,7 @@ export const ALLOWED_ORIGINS = [
 
 export const FIDO2_USER_HANDLE = 'iSunFA-User';
 
-// 定義 Formidable 的 options
+// Info: (20240718 - Jacky) 定義 Formidable 的 options
 export const FORMIDABLE_OPTIONS: Partial<Options> = {
   encoding: 'utf-8',
   keepExtensions: true,
@@ -150,7 +43,7 @@ export const FORMIDABLE_OPTIONS: Partial<Options> = {
   maxFields: 1000,
   multiples: false,
 
-  // 過濾器例子，保留圖片類型
+  // Info: (20240718 - Jacky) 過濾器例子，保留圖片類型
   filter({ mimetype }) {
     return !!(mimetype && (mimetype.includes('image') || mimetype.includes('pdf')));
   },
@@ -199,3 +92,5 @@ export const NON_EXISTING_COMPANY_ID = -1;
 export const DOMAIN = 'https://isunfa.com';
 export const NON_EXISTING_REPORT_ID = -1;
 export const BUFFER_AMOUNT = 0.01; // Info: (20240806 - Shirley) 小於0.01來避免浮點數精度問題
+export const IV_LENGTH = 12;
+export const EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS = 259200; // Info: (20240827 - Shirley) 3 days

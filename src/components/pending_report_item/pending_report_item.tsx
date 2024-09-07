@@ -27,7 +27,7 @@ const PendingReportItem = ({
   onReportItemUpdate = () => {},
   onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
 
   const [reportItem, setReportItem] = useState(report);
@@ -48,12 +48,12 @@ const PendingReportItem = ({
 
   const pauseItem = () => {
     togglePausedStatus();
-    // TODO: send paused request (20240514 - Shirley)
+    // TODO: (20240514 - Shirley) [Beta] send paused request
   };
 
   const resumeItem = () => {
     togglePausedStatus();
-    // TODO: send resumed request (20240514 - Shirley)
+    // TODO: (20240514 - Shirley) [Beta] send resumed request
   };
 
   const pauseClickHandler = () => {
@@ -65,21 +65,19 @@ const PendingReportItem = ({
   };
 
   const deleteItem = () => {
-    // Info: 調用 onReportItemDelete 並傳入要刪除的報告 ID (20240515 - Shirley)
+    // Info: (20240515 - Shirley) 調用 onReportItemDelete 並傳入要刪除的報告 ID
     onReportItemDelete(report.id);
   };
 
   const deleteClickHandler = () => {
-    // TODO: show notification modal (20240514 - Shirley)
     messageModalDataHandler({
       title: '',
-      subtitle: 'Are you sure\n you want to delete the process?',
-      content: `It will take 30 - 40 minutes\n 
-      if you want to apply it again.`,
-      submitBtnStr: t('PENDING_REPORT_ITEM.YES_DELETE_IT'),
+      subtitle: t('report_401:MY_REPORTS_SECTION.DELETE_PROCESS'),
+      content: t('report_401:MY_REPORTS_SECTION.APPLY_AGAIN'),
+      submitBtnStr: t('report_401:PENDING_REPORT_ITEM.YES_DELETE_IT'),
       submitBtnFunction: deleteItem,
       messageType: MessageType.WARNING,
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'), // TODO: i18n (20240528 - Shirley)
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -109,12 +107,7 @@ const PendingReportItem = ({
   }, [isPaused]);
 
   const displayedPauseOrResumeButton = !isPaused ? (
-    <Button
-      onClick={pauseClickHandler}
-      variant={'tertiaryBorderless'}
-      className="my-auto mr-2 px-0 py-0"
-    >
-      {' '}
+    <Button onClick={pauseClickHandler} variant="tertiaryBorderless" className="my-auto mr-2 p-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -131,12 +124,7 @@ const PendingReportItem = ({
       </svg>
     </Button>
   ) : (
-    <Button
-      onClick={resumeClickHandler}
-      variant={'tertiaryBorderless'}
-      className="my-auto mr-2 px-0 py-0"
-    >
-      {' '}
+    <Button onClick={resumeClickHandler} variant="tertiaryBorderless" className="my-auto mr-2 p-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
@@ -159,14 +147,10 @@ const PendingReportItem = ({
   const displayedOperationsColumn =
     remainingTime > 0 ? (
       <div className="flex w-full grid-cols-3 lg:grid">
-        {/* Info: Pause / Resume (20240514 - Shirley) */}
+        {/* Info: (20240514 - Shirley) Pause / Resume */}
         {displayedPauseOrResumeButton}
-        {/* Info: Delete (20240514 - Shirley) */}
-        <Button
-          onClick={deleteClickHandler}
-          variant={'tertiaryBorderless'}
-          className="mr-2 px-0 py-0"
-        >
+        {/* Info: (20240514 - Shirley) Delete */}
+        <Button onClick={deleteClickHandler} variant={'tertiaryBorderless'} className="mr-2 p-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -182,7 +166,7 @@ const PendingReportItem = ({
             ></path>
           </svg>
         </Button>
-        {/* Info: Loading (20240514 - Shirley) */}
+        {/* Info: (20240514 - Shirley) Loading */}
         <div className="">{displayedSpinner}</div>
       </div>
     ) : null;
@@ -191,30 +175,42 @@ const PendingReportItem = ({
     +remainingData.days > 0 ? (
       <>
         <span className="text-text-neutral-primary">{remainingData.days}</span>
-        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.DAYS')}</span>
+        <span className="text-text-neutral-tertiary">
+          {t('report_401:PENDING_REPORT_ITEM.DAYS')}
+        </span>
         <span className="text-text-neutral-primary">{remainingData.hours}</span>
-        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.HOURS')}</span>
+        <span className="text-text-neutral-tertiary">
+          {t('report_401:PENDING_REPORT_ITEM.HOURS')}
+        </span>
       </>
     ) : +remainingData.hours > 0 ? (
       <>
         <span className="text-text-neutral-primary">{remainingData.hours}</span>
-        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.HOURS')}</span>
+        <span className="text-text-neutral-tertiary">
+          {t('report_401:PENDING_REPORT_ITEM.HOURS')}
+        </span>
         <span className="text-text-neutral-primary">{remainingData.minutes}</span>
-        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.MINUTES')}</span>
+        <span className="text-text-neutral-tertiary">
+          {t('report_401:PENDING_REPORT_ITEM.MINUTES')}
+        </span>
       </>
     ) : (
       <>
         <span className="text-text-neutral-primary">{remainingData.minutes}</span>
-        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.MINUTES')}</span>
+        <span className="text-text-neutral-tertiary">
+          {t('report_401:PENDING_REPORT_ITEM.MINUTES')}
+        </span>
         <span className="text-text-neutral-primary">{remainingData.seconds}</span>
-        <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.SECONDS')}</span>
+        <span className="text-text-neutral-tertiary">
+          {t('report_401:PENDING_REPORT_ITEM.SECONDS')}
+        </span>
       </>
     );
 
   return (
     <tr
       key={id}
-      className="h-20 border-b border-lightGray6 text-center align-middle text-lightGray4"
+      className="h-20 border-b border-stroke-neutral-quaternary text-center align-middle"
     >
       {/* Info: (20240514 - Shirley) checkboxes */}
       {isCheckboxVisible ? (
@@ -223,19 +219,19 @@ const PendingReportItem = ({
             checked={checked}
             onChange={onCheckChange}
             type="checkbox"
-            className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+            className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
           />
         </td>
       ) : null}
-      <td className="border-x border-lightGray6">
+      <td className="border-x border-stroke-neutral-quaternary">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
         <CalendarIcon timestamp={createdAt} />
       </td>
       <td className="pl-5 text-start text-base text-text-neutral-primary">
-        {/* Info: desktop (20240528 - Shirley) */}
+        {/* Info: (20240528 - Shirley) desktop */}
         <p className="hidden lg:flex">{name}</p>
 
-        {/* Info: mobile (20240528 - Shirley) */}
+        {/* Info: (20240528 - Shirley) mobile */}
         <div className="flex flex-col space-y-3 lg:hidden">
           <p className="text-ellipsis sm:hidden">{truncateString(name, 16)}</p>
           <p className="hidden text-ellipsis sm:flex">{name}</p>
@@ -245,26 +241,30 @@ const PendingReportItem = ({
       <td className="hidden px-16px text-left font-medium lg:table-cell">
         <span className="text-sm text-text-neutral-primary">
           {t(
-            `PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
+            `common:PLUGIN.${FinancialReportTypeName[report.reportType].toUpperCase().replace(/ /g, '_')}`
           )}
         </span>
       </td>
-      <td className="hidden min-w-220px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-220px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.FROM')}</span>
+          <span className="text-text-neutral-tertiary">
+            {t('report_401:REPORTS_HISTORY_ITEM.FROM')}
+          </span>
           <span className="text-text-neutral-primary">{startDate.date}</span>
-          <span className="text-text-neutral-tertiary">{t('REPORTS_HISTORY_ITEM.TO')}</span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TO')}</span>
           <span className="text-text-neutral-primary">{endDate.date}</span>
         </div>
       </td>
       {/* Info: (20240514 - Shirley) Remaining time */}
-      <td className="hidden min-w-150px px-16px text-left font-medium text-navyBlue2 lg:table-cell">
+      <td className="hidden min-w-150px px-16px text-left font-medium lg:table-cell">
         <div className="space-x-2 text-xs">
-          <span className="text-text-neutral-tertiary">{t('PENDING_REPORT_ITEM.ESTIMATED')}</span>
+          <span className="text-text-neutral-tertiary">
+            {t('report_401:PENDING_REPORT_ITEM.ESTIMATED')}
+          </span>
           {displayedEstimatedTime}
         </div>
       </td>
-      {/* Info: Desktop Operations (20240514 - Shirley) */}
+      {/* Info: (20240514 - Shirley) Desktop Operations */}
       <td className="hidden min-w-150px px-16px lg:table-cell">
         <div className="flex items-center">{displayedOperationsColumn}</div>
       </td>

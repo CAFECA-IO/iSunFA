@@ -11,19 +11,31 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
+import { APIName } from '@/constants/api_connection';
+import { IProject } from '@/interfaces/project';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface IProjectContractPageProps {
   projectId: string;
 }
 
 const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
-  const { t } = useTranslation('common');
-  // ToDo: (20240618 - Julian) replace with actual data
-  const projectName = 'BAIFA';
+  const { t } = useTranslation(['common', 'journal']);
+  const { isAuthLoading, selectedCompany } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  // Info: (20240821 - Julian) 取得專案資料
+  const { data: projectData } = APIHandler<IProject>(
+    APIName.GET_PROJECT_BY_ID,
+    {
+      params: { companyId: selectedCompany?.id, projectId },
+    },
+    hasCompanyId
+  );
+
+  const projectName = projectData?.name || '-';
 
   const backClickHandler = () => window.history.back();
-
-  const { isAuthLoading } = useUserCtx();
 
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center">
@@ -38,16 +50,17 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
             <div className="flex w-full items-center justify-between">
               {/* Info: (2024618 - Julian) Title */}
               <div className="flex items-center gap-24px">
-                <button
+                <Button
                   type="button"
+                  className="h-40px w-40px p-0"
+                  variant="tertiaryOutline"
                   onClick={backClickHandler}
-                  className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
                 >
                   <FaArrowLeft />
-                </button>
+                </Button>
 
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-                  {projectName} - {t('JOURNAL.CONTRACTS')}
+                  {projectName} - {t('journal:JOURNAL.CONTRACTS')}
                 </h1>
               </div>
               {/* Info: (20240618 - Julian) Add new contract button (desktop) */}
@@ -58,7 +71,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
                 className="hidden items-center gap-4px px-4 py-8px md:flex"
               >
                 <FiPlusCircle size={24} />
-                {t('JOURNAL.ADD_NEW_CONTRACT')}
+                {t('journal:JOURNAL.ADD_NEW_CONTRACT')}
               </Button>
               {/* Info: (20240619 - Julian) Add new contract button (mobile) */}
               <Button
@@ -85,8 +98,7 @@ const ProjectContractsPage = ({ projectId }: IProjectContractPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
-        <title>{t('JOURNAL.PROJECT_CONTRACT_ISUNFA')}</title>
+        <title>{t('journal:JOURNAL.PROJECT_CONTRACT_ISUNFA')}</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -110,7 +122,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

@@ -1,6 +1,5 @@
-// Info Murky (20240416):  this is mock api need to migrate to microservice
+// Info: (20240416 - Murky)  this is mock api need to migrate to microservice
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AICH_URI } from '@/constants/config';
 import { IResponseData } from '@/interfaces/response_data';
 import { IInvoice } from '@/interfaces/invoice';
 import {
@@ -17,8 +16,11 @@ import { ProgressStatus } from '@/constants/account';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { getAichUrl } from '@/lib/utils/aich';
+import { AICH_APIS_TYPES } from '@/constants/aich';
+// import logger from '@/lib/utils/logger';
 
-// Info (20240522 - Murky): This OCR now can only be used on Invoice
+// Info: (20240522 - Murky) This OCR now can only be used on Invoice
 
 export function isResultIdValid(resultId: string | string[] | undefined): resultId is string {
   if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
@@ -31,12 +33,20 @@ export async function fetchOCRResult(resultId: string) {
   let response: Response;
 
   try {
-    response = await fetch(`${AICH_URI}/api/v1/ocr/${resultId}/result`);
+    const fetchURL = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT, resultId);
+    response = await fetch(fetchURL);
   } catch (error) {
+    // logger.error(error, '[ocr/:resultId]: fetchOCRResult failed from get OCR from AICH');
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
   if (!response.ok) {
+    // logger.error(
+    //   {
+    //     aich_response: response,
+    //   },
+    //   '[ocr/:resultId]: fetchOCRResult failed from get OCR from AICH, response not ok'
+    // );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -60,30 +70,36 @@ export async function getPayloadFromResponseJSON(
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
+  // Info: (20240809 - Murky)
   // if (!json || !json.payload) {
   //   throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   // }
 
-  const result = json?.payload ? json.payload as IInvoice : null;
+  const result = json?.payload ? (json.payload as IInvoice) : null;
   return result;
 }
 
 export function setOCRResultJournalId(ocrResult: IInvoice, journalId: number | null) {
   // Info: (20240522 - Murky) This function is used to set journalId to the OCR result
-  // eslint-disable-next-line no-param-reassign
-  ocrResult.journalId = journalId;
+  const newOcrResult = {
+    ...ocrResult,
+    journalId,
+  };
+
+  return newOcrResult;
 }
 
 export function formatOCRResultDate(ocrResult: IInvoice) {
   // Info: (20240522 - Murky) This function is used to format the date in OCR result
-  // eslint-disable-next-line no-param-reassign
-  ocrResult.date = timestampInSeconds(ocrResult.date);
+  const date = timestampInSeconds(ocrResult.date);
+  const newOcrResult = {
+    ...ocrResult,
+    date,
+  };
+  return newOcrResult;
 }
 
-export async function handleGetRequest(
-  resultId: string,
-  type: string = 'invoice'
-) {
+export async function handleGetRequest(resultId: string, type: string = 'invoice') {
   let ocrResult: IInvoice | IContract | null = null;
 
   const isResultIdError = resultId && resultId.slice(0, 5) === 'error';
@@ -98,14 +114,15 @@ export async function handleGetRequest(
       case 'invoice': {
         ocrResult = await getPayloadFromResponseJSON(fetchResult);
         if (ocrResult) {
-          setOCRResultJournalId(ocrResult, null);
-          formatOCRResultDate(ocrResult);
+          let newOcr: IInvoice | null = setOCRResultJournalId(ocrResult, null);
+          newOcr = formatOCRResultDate(newOcr);
 
-          if (!isIInvoice(ocrResult)) {
-            // eslint-disable-next-line no-console
-            console.error("OCR From AICH is not an Invoice (wrong type)");
-            ocrResult = null;
+          if (!isIInvoice(newOcr)) {
+            // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+            newOcr = null;
           }
+
+          ocrResult = newOcr;
         }
 
         break;
@@ -118,18 +135,20 @@ export async function handleGetRequest(
 
   return ocrResult;
 }
-export async function handleDeleteRequest(
-  resultId: string,
-) {
+export async function handleDeleteRequest(resultId: string) {
   let payload: IOCR | null = null;
   const getOCR = await getOcrByResultId(resultId, false);
 
-  // (20240715 - Jacky): payload should add ad unify formatter @TinyMurky
+  // Info: (20240715 - Jacky) payload should add ad unify formatter @TinyMurky
   if (getOCR) {
     const deletedOCR = await deleteOcrByResultId(resultId);
-    const imageSize = transformBytesToFileSizeString(deletedOCR.imageSize);
+    const imageSize = transformBytesToFileSizeString(deletedOCR.imageFile.size);
     payload = {
-      ...deletedOCR,
+      id: deletedOCR.id,
+      aichResultId: deletedOCR.aichResultId,
+      imageName: deletedOCR.imageFile.name,
+      imageUrl: deletedOCR.imageFile.url,
+      createdAt: deletedOCR.createdAt,
       progress: 0,
       imageSize,
       status: deletedOCR.status as ProgressStatus,
@@ -148,11 +167,11 @@ export default async function handler(
   const { userId, companyId } = session;
   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
   let payload: APIReturnType = null;
-  let status:string = STATUS_MESSAGE.BAD_REQUEST;
+  let status: string = STATUS_MESSAGE.BAD_REQUEST;
 
+  const { resultId, type } = req.query;
   if (isAuth) {
     try {
-      const { resultId, type } = req.query;
       if (!isResultIdValid(resultId)) {
         throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       }
@@ -173,10 +192,7 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      const error = _error as Error;
-      // Deprecated: (20240522 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error(error);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

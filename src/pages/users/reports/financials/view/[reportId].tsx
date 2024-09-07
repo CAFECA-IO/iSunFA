@@ -31,9 +31,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { toastHandler } = useGlobalCtx();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  // TODO: refactor and delete it (20240723 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportData, setReportData] = React.useState<IReportOld>({
+  const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
     ] as { id: FinancialReportTypesKey; name: string },
@@ -53,20 +51,14 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     hasCompanyId
   );
 
-  // eslint-disable-next-line no-console
-  console.log('reportFinancial in reportId', reportFinancial);
-
   useEffect(() => {
     if (getFRSuccess === false) {
       toastHandler({
         id: `getFR-${getFRCode}_${reportId}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET')} ${reportType}${t('DASHBOARD.REPORT')}${getFRCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET')} ${reportType}${t('common:DASHBOARD.REPORT')}${getFRCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
-    }
-    if (getFRSuccess && reportFinancial) {
-      // setReportData(reportFinancial);
     }
   }, [getFRSuccess, getFRCode, reportFinancial]);
 
@@ -98,21 +90,15 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </div>
     );
 
-  // TODO: replace ALL dummy data after api calling (20240517 - Shirley)
   return (
     <div>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
         <title>
-          {
-            FinancialReportTypesMap[
-              BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
-            ].name
-          }
-          - iSunFA
+          {t(`common:PLUGIN.${reportData.reportTypesName?.name.toUpperCase().replace(/ /g, '_')}`)}-
+          iSunFA
         </title>
 
         <meta
@@ -143,33 +129,23 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
 export default ViewFinancialReportPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  // const { report_type, report_language, start_timestamp, end_timestamp } = query;
-
-  // if (!report_type || !report_language || !start_timestamp || !end_timestamp) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
-
-  // Info: variable from URL query (20240429 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { reportId = '', report_type = '' } = query;
-  // if (!report_id || !report_type) {
-  //   return {
-  //     notFound: true,
-  //   };
-  // }
+  // Info: (20240429 - Shirley) variable from URL query
+  const { reportId = '', report_type: reportType = '' } = query;
 
   return {
     props: {
       reportId: reportId as string,
-      reportType: report_type as string,
-      // reportLanguage: report_language as string,
-      // startTimestamp: start_timestamp as string,
-      // endTimestamp: end_timestamp as string,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      reportType: reportType as string,
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { FaRegStar, FaStar } from 'react-icons/fa';
 import { FaRegSquarePlus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
@@ -26,7 +24,7 @@ interface IAccountingTitleRowProps {
 }
 
 const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'setting']);
   const {
     addAccountTitleModalVisibilityHandler,
     addAccountTitleDataHandler,
@@ -39,15 +37,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   const { deleteOwnAccountTitle } = useAccountingCtx();
   const { id, code, name } = rowData;
 
-  // ToDo: (20240717 - Julian) favorite status from API
-  const [isFavorite, setIsFavorite] = useState(false);
-
   const codeAndName = `${code} - ${name}`;
-
-  // ToDo: (20240717 - Julian) call API to update favorite status
-  const handleFavorite = () => {
-    setIsFavorite(!isFavorite);
-  };
 
   const handleAddAccount = () => {
     addAccountTitleDataHandler(id);
@@ -62,39 +52,21 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
   const handleRemove = () => {
     if (!selectedCompany?.id) return;
     messageModalDataHandler({
-      title: t('SETTING.REMOVE_ACCOUNTING_TITLE'),
-      content: t('SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
+      title: t('setting:SETTING.REMOVE_ACCOUNTING_TITLE'),
+      content: t('setting:SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: name,
       messageType: MessageType.WARNING,
-      submitBtnStr: t('SETTING.REMOVE'),
+      submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: () => deleteOwnAccountTitle(selectedCompany.id, id),
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
-
-  const displayStar = isFavorite ? (
-    <FaStar className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
-  ) : (
-    <FaRegStar className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
-  );
 
   const actionsDesktop =
     actionType === ActionType.FAV_AND_ADD ? (
       // Info: (20240717 - Julian) Actions for Favorite and Add New Sub
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
-        {/* Info: (20240717 - Julian) Favorite button */}
-        {/* Info: (20240718 - Julian) 現階段不做 Favorite 功能 */}
-        <button
-          type="button"
-          className="group hidden items-center gap-4px"
-          onClick={handleFavorite}
-        >
-          {displayStar}
-          <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.FAVORITE')}
-          </p>
-        </button>
         {/* Info: (20240717 - Julian) Add New Sub button */}
         <button
           type="button"
@@ -103,7 +75,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <FaRegSquarePlus className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.ADD_NEW_SUB')}
+            {t('setting:SETTING.ADD_NEW_SUB')}
           </p>
         </button>
       </div>
@@ -118,7 +90,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <FiEdit className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.EDIT')}
+            {t('setting:SETTING.EDIT')}
           </p>
         </button>
         {/* Info: (20240717 - Julian) Remove button */}
@@ -129,7 +101,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
         >
           <RiDeleteBinLine className="text-icon-surface-single-color-primary group-hover:text-input-text-highlight" />
           <p className="text-checkbox-text-secondary group-hover:text-input-text-highlight">
-            {t('SETTING.REMOVE')}
+            {t('setting:SETTING.REMOVE')}
           </p>
         </button>
       </div>
@@ -139,15 +111,6 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     actionType === ActionType.FAV_AND_ADD ? (
       // Info: (20240717 - Julian) Actions for Favorite and Add New Sub
       <div className="flex items-center justify-center gap-x-8px px-4px text-sm font-normal">
-        {/* Info: (20240717 - Julian) Favorite button */}
-        {/* Info: (20240718 - Julian) 現階段不做 Favorite 功能 */}
-        <button
-          type="button"
-          className="hidden items-center gap-4px text-icon-surface-single-color-primary hover:text-input-text-highlight"
-          onClick={handleFavorite}
-        >
-          {displayStar}
-        </button>
         {/* Info: (20240717 - Julian) Add New Sub button */}
         <button
           type="button"
@@ -203,7 +166,7 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
 };
 
 const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTitleTableProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'setting']);
   const accountingTableBody = accountingTitleData.map((account) => (
     <AccountingRow key={account.id} rowData={account} actionType={actionType} />
   ));
@@ -214,14 +177,14 @@ const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTi
       <div className="table-header-group bg-stroke-brand-secondary-moderate text-lg text-text-neutral-invert">
         {/* Info: (20240717 - Julian) Desktop Table Header Row */}
         <div className="hidden lg:table-row">
-          <div className="table-cell w-1/10 py-12px">{t('SETTING.CODE')}</div>
-          <div className="table-cell w-6/10 py-12px">{t('SETTING.NAME')}</div>
-          <div className="table-cell w-3/10 py-12px">{t('REPORTS_HISTORY_LIST.OPERATIONS')}</div>
+          <div className="table-cell w-1/10 py-12px">{t('setting:SETTING.CODE')}</div>
+          <div className="table-cell w-6/10 py-12px">{t('setting:SETTING.NAME')}</div>
+          <div className="table-cell w-3/10 py-12px">{t('common:COMMON.OPERATIONS')}</div>
         </div>
         {/* Info: (20240717 - Julian) Mobile Table Header Row */}
         <div className="table-row lg:hidden">
-          <div className="table-cell py-12px">{t('SETTING.CODE_NAME')}</div>
-          <div className="table-cell py-12px">{t('SETTING.ACTION')}</div>
+          <div className="table-cell py-12px">{t('setting:SETTING.CODE_NAME')}</div>
+          <div className="table-cell py-12px">{t('setting:SETTING.ACTION')}</div>
         </div>
       </div>
       {/* Info: (20240717 - Julian) Table Body */}

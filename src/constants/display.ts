@@ -5,18 +5,18 @@ export const NO_DATA_FOR_DEMO = false;
 export const LAYOUT_BREAKPOINT = 1024;
 
 export const MONTH_LIST = [
-  'DATE_PICKER.JAN',
-  'DATE_PICKER.FEB',
-  'DATE_PICKER.MAR',
-  'DATE_PICKER.APR',
-  'DATE_PICKER.MAY',
-  'DATE_PICKER.JUN',
-  'DATE_PICKER.JUL',
-  'DATE_PICKER.AUG',
-  'DATE_PICKER.SEP',
-  'DATE_PICKER.OCT',
-  'DATE_PICKER.NOV',
-  'DATE_PICKER.DEC',
+  'common:DATE_PICKER.JAN',
+  'common:DATE_PICKER.FEB',
+  'common:DATE_PICKER.MAR',
+  'common:DATE_PICKER.APR',
+  'common:DATE_PICKER.MAY',
+  'common:DATE_PICKER.JUN',
+  'common:DATE_PICKER.JUL',
+  'common:DATE_PICKER.AUG',
+  'common:DATE_PICKER.SEP',
+  'common:DATE_PICKER.OCT',
+  'common:DATE_PICKER.NOV',
+  'common:DATE_PICKER.DEC',
 ];
 
 export const MONTH_FULL_LIST_SHORT = [
@@ -35,28 +35,28 @@ export const MONTH_FULL_LIST_SHORT = [
 ];
 
 export const MONTH_ABR_LIST = [
-  'DATE_PICKER.JAN_ABR',
-  'DATE_PICKER.FEB_ABR',
-  'DATE_PICKER.MAR_ABR',
-  'DATE_PICKER.APR_ABR',
-  'DATE_PICKER.MAY_ABR',
-  'DATE_PICKER.JUN_ABR',
-  'DATE_PICKER.JUL_ABR',
-  'DATE_PICKER.AUG_ABR',
-  'DATE_PICKER.SEP_ABR',
-  'DATE_PICKER.OCT_ABR',
-  'DATE_PICKER.NOV_ABR',
-  'DATE_PICKER.DEC_ABR',
+  'common:DATE_PICKER.JAN_ABR',
+  'common:DATE_PICKER.FEB_ABR',
+  'common:DATE_PICKER.MAR_ABR',
+  'common:DATE_PICKER.APR_ABR',
+  'common:DATE_PICKER.MAY_ABR',
+  'common:DATE_PICKER.JUN_ABR',
+  'common:DATE_PICKER.JUL_ABR',
+  'common:DATE_PICKER.AUG_ABR',
+  'common:DATE_PICKER.SEP_ABR',
+  'common:DATE_PICKER.OCT_ABR',
+  'common:DATE_PICKER.NOV_ABR',
+  'common:DATE_PICKER.DEC_ABR',
 ];
 
 export const WEEK_LIST = [
-  'DATE_PICKER.SUN',
-  'DATE_PICKER.MON',
-  'DATE_PICKER.TUE',
-  'DATE_PICKER.WED',
-  'DATE_PICKER.THU',
-  'DATE_PICKER.FRI',
-  'DATE_PICKER.SAT',
+  'common:DATE_PICKER.SUN',
+  'common:DATE_PICKER.MON',
+  'common:DATE_PICKER.TUE',
+  'common:DATE_PICKER.WED',
+  'common:DATE_PICKER.THU',
+  'common:DATE_PICKER.FRI',
+  'common:DATE_PICKER.SAT',
 ];
 
 export const default30DayPeriodInSec = {
@@ -68,17 +68,17 @@ export const MILLISECONDS_IN_A_SECOND = 1000;
 
 // Info: (20240429 - Julian) checkbox CSS style
 export const checkboxStyle =
-  'relative h-16px w-16px appearance-none rounded-xxs border border-navyBlue2 bg-white outline-none after:absolute after:top-0 after:-mt-3px after:ml-px after:hidden after:text-sm after:text-white after:content-checked checked:bg-navyBlue2 checked:after:block';
+  'relative h-16px w-16px appearance-none rounded-xxs border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:top-0 after:-mt-3px after:ml-px after:hidden after:text-sm after:text-checkbox-stroke-check-mark after:content-checked checked:bg-checkbox-surface-selected checked:after:block';
 
 // Info: (20240425 - Julian) radio button CSS style
 export const radioButtonStyle =
-  'relative h-16px w-16px appearance-none outline-none rounded-full border border-navyBlue2 bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-navyBlue2 checked:after:block';
+  'relative h-16px w-16px appearance-none outline-none rounded-full border border-checkbox-stroke-unselected bg-white after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block';
 
 export const ITEMS_PER_PAGE_ON_DASHBOARD = 6;
 
 export enum SortOptions {
-  newest = 'COMMON.NEWEST',
-  oldest = 'COMMON.OLDEST',
+  newest = 'common:COMMON.NEWEST',
+  oldest = 'common:COMMON.OLDEST',
 }
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 
-// ToDo: (20240614 - Julian) replace with actual data
+// ToDo: (20240614 - Julian) [Beta] replace with actual data
 const dummyEmployeeData = [
   {
     name: 'Emily',
@@ -36,7 +36,7 @@ const dummyEmployeeData = [
 ];
 
 const WorkingTimeRatioBlock = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'salary']);
   const displayEmployeeList = dummyEmployeeData.map((employee) => {
     return (
       <div
@@ -67,7 +67,9 @@ const WorkingTimeRatioBlock = () => {
           height={24}
           alt="working_time_ratio_icon"
         />
-        <p className="text-text-neutral-secondary">{t('LABOR_COST_CHART.WORKING_TIME_RATIO')}</p>
+        <p className="text-text-neutral-secondary">
+          {t('salary:LABOR_COST_CHART.WORKING_TIME_RATIO')}
+        </p>
       </div>
       <div className="flex w-full flex-col items-center gap-y-8px border-t py-8px">
         {displayEmployeeList}

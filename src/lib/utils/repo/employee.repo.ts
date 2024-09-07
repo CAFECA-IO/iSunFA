@@ -6,6 +6,8 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { getInsuranceInfo } from '@/lib/utils/insurance';
+import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function listEmployees(
   companyId: number,
@@ -229,6 +231,8 @@ export async function getEmployeeById(employeeIdNumber: number) {
       },
     },
   });
+  const logError = await loggerError(employeeIdNumber, 'getEmployeeById', 'Employee not found');
+  logError.error(logError);
   return employee;
 }
 
@@ -238,13 +242,11 @@ export async function getProjectsByEmployeeId(employeeIdNumber: number) {
       employeeId: employeeIdNumber,
       endDate: null,
     },
-    select: {
-      project: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+    include: {
+      project: true,
+    },
+    orderBy: {
+      startDate: SortOrder.ASC,
     },
   });
   return projects;

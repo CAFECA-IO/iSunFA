@@ -4,10 +4,8 @@ export interface IUser {
   fullName: string;
   email: string;
   phone: string;
-  credentialId: string;
-  publicKey: string;
-  algorithm: string;
   imageId: string;
+  agreementList: string[];
   createdAt: number;
   updatedAt: number;
 }

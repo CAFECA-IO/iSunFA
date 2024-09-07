@@ -15,7 +15,7 @@ export default class MailService {
     });
   }
 
-  // INSTANCE CREATE FOR MAIL
+  // Info: (20240516 - Jacky) INSTANCE CREATE FOR MAIL
   static getInstance() {
     if (!MailService.instance) {
       MailService.instance = new MailService();
@@ -23,7 +23,7 @@ export default class MailService {
     return MailService.instance;
   }
 
-  // SEND MAIL
+  // Info: (20240516 - Jacky) SEND MAIL
   async sendMail(options: SendMailOptions): Promise<boolean> {
     try {
       await this.transporter.sendMail(options);
@@ -33,12 +33,12 @@ export default class MailService {
     }
   }
 
-  // VERIFY CONNECTION
+  // Info: (20240516 - Jacky) VERIFY CONNECTION
   async verifyConnection() {
     return this.transporter.verify();
   }
 
-  // CREATE TRANSPORTER
+  // Info: (20240516 - Jacky) CREATE TRANSPORTER
   getTransporter() {
     return this.transporter;
   }

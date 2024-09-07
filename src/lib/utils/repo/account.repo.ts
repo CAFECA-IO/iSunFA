@@ -6,6 +6,7 @@ import { pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
+import { SortOrder } from '@/constants/sort';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -19,7 +20,7 @@ export async function findManyAccountsInPrisma({
   page = DEFAULT_PAGE_OFFSET,
   limit = DEFAULT_PAGE_LIMIT,
   sortBy = 'code',
-  sortOrder = 'asc',
+  sortOrder = SortOrder.ASC,
   searchKey,
 }: {
   companyId: number;
@@ -33,7 +34,7 @@ export async function findManyAccountsInPrisma({
   page: number;
   limit: number;
   sortBy: 'code' | 'createdAt';
-  sortOrder: 'asc' | 'desc';
+  sortOrder: SortOrder.ASC | SortOrder.DESC;
   searchKey?: string;
 }): Promise<{
   data: Account[];
@@ -43,7 +44,7 @@ export async function findManyAccountsInPrisma({
   totalCount: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: SortOrder.ASC | SortOrder.DESC;
   sortBy: 'code' | 'createdAt';
 }> {
   let accounts: Account[] = [];
@@ -89,9 +90,7 @@ export async function findManyAccountsInPrisma({
   try {
     totalCount = await prisma.account.count({ where });
   } catch (error) {
-    // Info (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const totalPage = Math.ceil(totalCount / limit);
@@ -110,9 +109,7 @@ export async function findManyAccountsInPrisma({
   try {
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
-    // Info (20240722 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   const hasNextPage = accounts.length > limit;
@@ -154,9 +151,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
       },
     });
   } catch (error) {
-    // Info (20240516 - Murky) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return account;
@@ -179,9 +174,7 @@ export async function updateAccountInPrisma(
       },
     });
   } catch (error) {
-    // Info (20240702 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
 
   return account;
@@ -202,16 +195,12 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
       },
     });
   } catch (error) {
-    // Info (20240702 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return account;
 }
 
-export async function findLatestSubAccountInPrisma(
-  parentAccount: Account
-) {
+export async function findLatestSubAccountInPrisma(parentAccount: Account) {
   let latestSubAccount: Account | null = null;
   try {
     latestSubAccount = await prisma.account.findFirst({
@@ -219,13 +208,11 @@ export async function findLatestSubAccountInPrisma(
         parentCode: parentAccount.code,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: SortOrder.DESC,
       },
     });
   } catch (error) {
-    // Info (20240703 - Gibbs) - Debugging error
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   }
   return latestSubAccount;
 }
@@ -247,5 +234,23 @@ export async function findUniqueAccountByCodeInPrisma(code: string, companyId?: 
       code,
     },
   });
+  return account;
+}
+
+export async function fuzzySearchAccountByName(name: string) {
+  let account: Account | null = null;
+
+  try {
+    const accounts: Account[] = await prisma.$queryRaw`
+      SELECT * FROM public."account"
+      WHERE for_user = true
+      ORDER BY SIMILARITY(name, ${name}) DESC
+      LIMIT 1;
+    `;
+    [account] = accounts;
+  } catch (error) {
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+  }
+
   return account;
 }

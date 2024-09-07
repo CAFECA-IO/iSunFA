@@ -15,11 +15,11 @@ const countryFlagMap: Record<CountryOptions, string> = {
 
 // Info: (20240719 - Liz) 翻譯對應的 country 選項
 const countryTranslationMap: { [key in CountryOptions]: string } = {
-  [CountryOptions.DEFAULT]: 'KYC.COUNTRY_DEFAULT',
-  [CountryOptions.TAIWAN]: 'KYC.COUNTRY_TAIWAN',
-  [CountryOptions.UNITED_STATES]: 'KYC.COUNTRY_UNITED_STATES',
-  [CountryOptions.CHINA]: 'KYC.COUNTRY_CHINA',
-  [CountryOptions.HONG_KONG]: 'KYC.COUNTRY_HONG_KONG',
+  [CountryOptions.DEFAULT]: 'kyc:KYC.COUNTRY_DEFAULT',
+  [CountryOptions.TAIWAN]: 'kyc:KYC.COUNTRY_TAIWAN',
+  [CountryOptions.UNITED_STATES]: 'kyc:KYC.COUNTRY_UNITED_STATES',
+  [CountryOptions.CHINA]: 'kyc:KYC.COUNTRY_CHINA',
+  [CountryOptions.HONG_KONG]: 'kyc:KYC.COUNTRY_HONG_KONG',
 };
 
 const BasicInfoForm = ({
@@ -29,7 +29,7 @@ const BasicInfoForm = ({
   data: IBasicInfo;
   onChange: (key: BasicInfoKeys, value: string) => void;
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   // Info: (20240719 - Liz) OuterClick Hook
   const {
     targetRef: countryFlagMenuRef,
@@ -51,7 +51,7 @@ const BasicInfoForm = ({
       <li
         key={country}
         onClick={selectionClickHandler}
-        className={`flex w-full cursor-pointer items-center gap-8px px-3 py-2 text-navyBlue2 hover:text-primaryYellow ${country === CountryOptions.DEFAULT ? 'hidden' : ''}`}
+        className={`flex w-full cursor-pointer items-center gap-8px px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover ${country === CountryOptions.DEFAULT ? 'hidden' : ''}`}
       >
         <Image
           src={countryFlagMap[country]}
@@ -88,14 +88,14 @@ const BasicInfoForm = ({
       {/* Legal Company Name */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.LEGAL_COMPANY_NAME')}
+          {t('kyc:KYC.LEGAL_COMPANY_NAME')}
         </h6>
         <input
           id="legal-company-name"
           type="text"
-          placeholder={t('KYC.EXAMPLE')}
+          placeholder={t('kyc:KYC.EXAMPLE')}
           required
-          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          className="w-full cursor-pointer rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={legalCompanyNameInputHandler}
           value={data[BasicInfoKeys.LEGAL_COMPANY_NAME]}
         />
@@ -106,15 +106,15 @@ const BasicInfoForm = ({
         {/*  Country & City  */}
         <div className="flex flex-1 flex-col gap-8px">
           <h6 className="text-sm font-semibold text-input-text-primary">
-            {t('KYC.COMPANY_ADDRESS')}
+            {t('kyc:KYC.COMPANY_ADDRESS')}
           </h6>
 
-          <div className="relative flex rounded-sm bg-white">
+          <div className="relative flex rounded-sm">
             {/* Country */}
             <div
               id="country-flag-menu"
               onClick={countryFlagMenuOpenHandler}
-              className={`group flex cursor-pointer items-center gap-8px rounded-l-sm border border-lightGray3 px-12px text-input-text-input-placeholder ${isCountryFlagMenuOpen ? 'border-primaryYellow text-primaryYellow' : 'text-navyBlue2'} items-center bg-white hover:text-primaryYellow`}
+              className={`group flex cursor-pointer items-center gap-8px rounded-l-sm border border-input-stroke-input px-12px text-input-text-input-placeholder ${isCountryFlagMenuOpen ? 'border-input-stroke-input-hover hover:text-input-text-highlight' : 'text-input-text-input-filled'} items-center bg-input-surface-input-background hover:text-input-text-highlight`}
             >
               {/* // Info: (20240719 - Liz) 不拿後端回傳的值，因為這裡 country 不傳給後端 */}
               <Image
@@ -142,11 +142,11 @@ const BasicInfoForm = ({
               </div>
               {/* Info: Dropmenu */}
               <div
-                className={`absolute left-0 top-50px grid w-fit grid-cols-1 shadow-dropmenu ${isCountryFlagMenuOpen ? 'grid-rows-1 border-lightGray3' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                className={`absolute left-0 top-50px grid w-fit grid-cols-1 shadow-dropmenu ${isCountryFlagMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
               >
                 <ul
                   ref={countryFlagMenuRef}
-                  className="z-10 flex w-full flex-col items-start bg-white p-8px"
+                  className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                 >
                   {countryFlagDropmenu}
                 </ul>
@@ -157,9 +157,9 @@ const BasicInfoForm = ({
             <input
               id="city"
               type="text"
-              placeholder={t('KYC.CITY')}
+              placeholder={t('kyc:KYC.CITY')}
               required
-              className="w-full cursor-pointer rounded-r-sm border border-l-0 border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+              className="w-full cursor-pointer rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-10px outline-none placeholder:text-input-text-input-placeholder"
               onChange={cityInputHandler}
               value={data[BasicInfoKeys.CITY]}
             />
@@ -168,13 +168,13 @@ const BasicInfoForm = ({
 
         {/* Zip Code */}
         <div className="flex flex-1 flex-col items-start gap-8px">
-          <h6 className="text-sm font-semibold text-input-text-primary">{t('KYC.ZIP_CODE')}</h6>
+          <h6 className="text-sm font-semibold text-input-text-primary">{t('kyc:KYC.ZIP_CODE')}</h6>
           <input
             id="zip-code"
             type="text"
-            placeholder={t('KYC.ZIP_CODE')}
+            placeholder={t('kyc:KYC.ZIP_CODE')}
             required
-            className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+            className="w-full cursor-pointer rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none placeholder:text-input-text-input-placeholder"
             onChange={zipCodeInputHandler}
             value={data[BasicInfoKeys.ZIP_CODE]}
           />
@@ -186,9 +186,9 @@ const BasicInfoForm = ({
         <input
           id="street"
           type="text"
-          placeholder={t('KYC.STREET_ADDRESS')}
+          placeholder={t('kyc:KYC.STREET_ADDRESS')}
           required
-          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          className="w-full cursor-pointer rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={addressInputHandler}
           value={data[BasicInfoKeys.ADDRESS]}
         />
@@ -197,14 +197,14 @@ const BasicInfoForm = ({
       {/* ===== Key Company Representative's Name ===== */}
       <div className="space-y-8px">
         <h6 className="text-sm font-semibold text-input-text-primary">
-          {t('KYC.KEY_COMPANY_REPRESENTATIVE_S_NAME')}
+          {t('kyc:KYC.KEY_COMPANY_REPRESENTATIVE_S_NAME')}
         </h6>
         <input
           id="key-company-representatives-name"
           type="text"
-          placeholder={t('KYC.EXAMPLE')}
+          placeholder={t('kyc:KYC.EXAMPLE')}
           required
-          className="w-full cursor-pointer rounded-sm border border-lightGray3 bg-white p-10px outline-none placeholder:text-input-text-input-placeholder"
+          className="w-full cursor-pointer rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none placeholder:text-input-text-input-placeholder"
           onChange={keyCompanyRepresentativesInputHandler}
           value={data[BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME]}
         />

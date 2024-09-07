@@ -9,10 +9,9 @@ interface IReportsHistoryListProps {
 }
 
 const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
-  const { t } = useTranslation('common');
-  // Info: 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來 (20240514 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reportItems, setReportItems] = useState<IReport[]>(reports);
+  const { t } = useTranslation(['common', 'report_401']);
+  // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
+  const [reportItems] = useState<IReport[]>(reports);
 
   const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
 
@@ -62,7 +61,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
     <div className="flex w-full items-center justify-end space-x-5">
       {isCheckboxVisible ? (
         <div className="flex space-x-5">
-          {/* Info: Print (20240514 - Shirley) */}
+          {/* Info: (20240514 - Shirley) Print */}
           <Button variant={'secondaryOutline'} className="px-2 py-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -79,7 +78,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
               ></path>
             </svg>
           </Button>
-          {/* Info: Share (20240514 - Shirley) */}
+          {/* Info: (20240514 - Shirley) Share */}
           <Button variant={'secondaryOutline'} className="px-2 py-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -98,14 +97,14 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
           </Button>
         </div>
       ) : null}
-      {/* Info: Select or Cancel (20240514 - Shirley) */}
+      {/* Info: (20240514 - Shirley) Select or Cancel */}
       <Button
         size={'extraSmall'}
         onClick={toggleCheckboxVisibility}
         variant={'secondaryBorderless'}
       >
         {isCheckboxVisible ? (
-          <p>{t('REPORTS_HISTORY_LIST.CANCEL')}</p>
+          <p>{t('common:COMMON.CANCEL')}</p>
         ) : (
           <>
             {/* Info: (20240808 - Anna) Alpha版先隱藏 */}
@@ -124,7 +123,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
               ></path>
             </svg> */}
             {/* Info: (20240808 - Anna) Alpha版先隱藏 */}
-            {/* <p>{t('PENDING_REPORT_LIST.SELECT')}</p> */}
+            {/* <p>{t('common:COMMON.SELECT')}</p> */}
           </>
         )}
       </Button>
@@ -137,7 +136,7 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
         checked={allChecked}
         onChange={allCheckboxClickHandler}
         type="checkbox"
-        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-white checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
+        className="my-auto h-4 w-4 shrink-0 appearance-none rounded-xxs border border-solid border-checkbox-surface-selected bg-checkbox-surface-unselected checked:border-checkbox-surface-selected checked:bg-checkbox-surface-selected checked:text-surface-neutral-main-background hover:cursor-pointer"
       />
     </th>
   ) : null;
@@ -145,19 +144,21 @@ const ReportsHistoryList = ({ reports }: IReportsHistoryListProps) => {
   return (
     <div className="">
       {displayedStatusButtons}
-      <table className="my-20px w-full shrink-0 border border-lightGray6 font-barlow">
+      <table className="my-20px w-full shrink-0 border border-stroke-neutral-quaternary font-barlow">
         {/* Info: (20240514 - Shirley) Header */}
         <thead>
-          <tr className="h-10 border border-lightGray6 bg-surface-neutral-main-background text-left text-sm text-lightGray4">
+          <tr className="h-10 border border-stroke-neutral-quaternary bg-surface-neutral-main-background text-left text-sm text-text-neutral-tertiary">
             {/* Info: (20240514 - Shirley) checkboxes */}
             {displayedCheckbox}
-            <th className="text-center">{t('REPORTS_HISTORY_LIST.DATE')}</th>
-            <th className="px-16px">{t('REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('JOURNAL.TYPE')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PERIOD')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.BLOCKCHAIN')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
-            <th className="hidden px-16px lg:table-cell">{t('REPORTS_HISTORY_LIST.OPERATIONS')}</th>
+            <th className="text-center">{t('report_401:REPORTS_HISTORY_LIST.DATE')}</th>
+            <th className="px-16px">{t('report_401:REPORTS_HISTORY_LIST.REPORT_NAME')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('common:COMMON.TYPE')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('common:COMMON.PERIOD')}</th>
+            <th className="hidden px-16px lg:table-cell">
+              {t('report_401:REPORTS_HISTORY_LIST.BLOCKCHAIN')}
+            </th>
+            <th className="hidden px-16px lg:table-cell">{t('common:COMMON.PROJECT')}</th>
+            <th className="hidden px-16px lg:table-cell">{t('common:COMMON.OPERATIONS')}</th>
           </tr>
         </thead>
 

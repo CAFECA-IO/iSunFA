@@ -21,13 +21,13 @@ import {
 } from '@/constants/kyc';
 import { ICompanyKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 
 const KYCForm = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -58,7 +58,7 @@ const KYCForm = () => {
     setStep(newStep);
   };
 
-  const handleDocumentChange = (key: UploadDocumentKeys, id: string | undefined) => {
+  const handleDocumentChange = (key: UploadDocumentKeys, id: number | undefined) => {
     setUploadDocuments((prev) => ({ ...prev, [key]: id }));
   };
 
@@ -81,12 +81,26 @@ const KYCForm = () => {
 
     if (!hasCompanyId) return;
     const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
+
+    // Info: (20240830 - Murky) To Emily and Jacky, File update down below
+    const intUploadDocuments = {
+      ...uploadDocuments,
+      [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: Number(
+        uploadDocuments[UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]
+      ),
+      [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: Number(
+        uploadDocuments[UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]
+      ),
+      [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: Number(
+        uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]
+      ),
+    };
     const companyKYCForm: ICompanyKYCForm = {
       ...basicInfoValues,
       ...registrationInfoValues,
       ...restContactInfoValues,
       [ContactInfoKeys.CONTACT_PHONE]: contactInfoValues.areaCode + contactInfoValues.contactNumber,
-      ...uploadDocuments,
+      ...intUploadDocuments,
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
     if (isComplete) {
@@ -99,10 +113,10 @@ const KYCForm = () => {
       if (success) {
         messageModalDataHandler({
           messageType: MessageType.SUCCESS,
-          title: t('KYC.SUBMIT_SUCCESS'),
-          content: t('KYC.SUBMIT_SUCCESS_MESSAGE'),
-          backBtnStr: t('KYC.CANCEL'),
-          submitBtnStr: t('KYC.CONFIRM'),
+          title: t('kyc:KYC.SUBMIT_SUCCESS'),
+          content: t('kyc:KYC.SUBMIT_SUCCESS_MESSAGE'),
+          backBtnStr: t('common:COMMON.CANCEL'),
+          submitBtnStr: t('kyc:KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             goCompanyInfo();
@@ -112,11 +126,11 @@ const KYCForm = () => {
       } else if (success === false) {
         messageModalDataHandler({
           messageType: MessageType.ERROR,
-          title: t('KYC.SUBMIT_FAILED'),
-          content: t('KYC.CONTACT_SERVICE_TEAM'),
-          subMsg: t('KYC.SUBMIT_FAILED_MESSAGE', code),
-          backBtnStr: t('KYC.CANCEL'),
-          submitBtnStr: t('KYC.CONFIRM'),
+          title: t('kyc:KYC.SUBMIT_FAILED'),
+          content: t('kyc:KYC.CONTACT_SERVICE_TEAM'),
+          subMsg: t('kyc:KYC.SUBMIT_FAILED_MESSAGE', code),
+          backBtnStr: t('common:COMMON.CANCEL'),
+          submitBtnStr: t('kyc:KYC.CONFIRM'),
           submitBtnFunction: () => {
             messageModalVisibilityHandler();
             goCompanyInfo();
@@ -126,11 +140,11 @@ const KYCForm = () => {
     } else {
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: t('KYC.INCOMPLETE_FORM'),
-        subMsg: t('KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
-        content: t('KYC.CONTACT_SERVICE_TEAM'),
-        submitBtnStr: t('KYC.CONFIRM'),
-        backBtnStr: t('KYC.CANCEL'),
+        title: t('kyc:KYC.INCOMPLETE_FORM'),
+        subMsg: t('kyc:KYC.INCOMPLETE_FORM_SUB_MESSAGE', { fields: missingFields.join(', ') }),
+        content: t('kyc:KYC.CONTACT_SERVICE_TEAM'),
+        submitBtnStr: t('kyc:KYC.CONFIRM'),
+        backBtnStr: t('common:COMMON.CANCEL'),
         submitBtnFunction: () => {
           messageModalVisibilityHandler();
           goCompanyInfo();
@@ -192,7 +206,7 @@ const KYCForm = () => {
                 onClick={handleNextButtonClick}
                 disabled={!isBasicInfoFormComplete}
               >
-                {t('KYC.NEXT')}
+                {t('kyc:KYC.NEXT')}
               </button>
             </div>
           </>
@@ -206,10 +220,10 @@ const KYCForm = () => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
+                className="rounded px-4 py-2 text-button-text-secondary"
                 onClick={handleBackButtonClick}
               >
-                {t('KYC.BACK')}
+                {t('kyc:KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -217,7 +231,7 @@ const KYCForm = () => {
                 onClick={handleNextButtonClick}
                 disabled={!isRegistrationInfoFormComplete}
               >
-                {t('KYC.NEXT')}
+                {t('kyc:KYC.NEXT')}
               </button>
             </div>
           </>
@@ -228,10 +242,10 @@ const KYCForm = () => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
+                className="rounded px-4 py-2 text-button-text-secondary"
                 onClick={handleBackButtonClick}
               >
-                {t('KYC.BACK')}
+                {t('kyc:KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -239,7 +253,7 @@ const KYCForm = () => {
                 onClick={handleNextButtonClick}
                 disabled={!isContactInfoFormComplete()}
               >
-                {t('KYC.NEXT')}
+                {t('kyc:KYC.NEXT')}
               </button>
             </div>
           </>
@@ -254,10 +268,10 @@ const KYCForm = () => {
             <div className="mt-40px flex justify-end gap-20px">
               <button
                 type="button"
-                className="rounded px-4 py-2 text-secondaryBlue"
+                className="rounded px-4 py-2 text-button-text-secondary"
                 onClick={handleBackButtonClick}
               >
-                {t('KYC.BACK')}
+                {t('kyc:KYC.BACK')}
               </button>
               <button
                 type="button"
@@ -265,7 +279,7 @@ const KYCForm = () => {
                 className={`rounded px-4 py-2 ${isDocumentUploadFormComplete ? enabledButtonStyle : disabledButtonStyle}`}
                 disabled={!isDocumentUploadFormComplete}
               >
-                {t('KYC.SUBMIT')}
+                {t('kyc:KYC.SUBMIT')}
               </button>
             </div>
           </>

@@ -9,7 +9,7 @@ import KYCForm from '@/components/kyc/kyc_form';
 const KYCIntro = () => {
   const { layoutAssertion } = useGlobalCtx();
   const isMobile = layoutAssertion === LayoutAssertion.MOBILE;
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
   const [step, setStep] = useState(0);
 
   const handleStepChange = (newStep: number) => {
@@ -35,7 +35,7 @@ const KYCIntro = () => {
           <h1
             className={`font-semibold text-text-neutral-secondary ${isMobile ? 'text-base' : 'text-36px'}`}
           >
-            {t('KYC.COMPANY_VERIFICATION')}
+            {t('kyc:KYC.COMPANY_VERIFICATION')}
           </h1>
         </div>
         {/* line */}

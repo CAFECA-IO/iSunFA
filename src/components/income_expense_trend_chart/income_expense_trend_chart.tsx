@@ -91,20 +91,20 @@ const LineChart = ({ data }: LineChartProps) => {
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // Info: (20240417 - Shirley) formatter: value => `${value}%`,
       },
     },
     yaxis: {
-      // min: -15, // Adjust according to your data range
-      // max: 65, // Adjust according to your data range
-      forceNiceScale: false, // Turn off nice scale to use exact min/max values
+      // min: -15, // Info: (20240521 - Shirley) Adjust according to your data range
+      // max: 65, // Info: (20240521 - Shirley) Adjust according to your data range
+      forceNiceScale: false, // Info: (20240417 - Shirley) Turn off nice scale to use exact min/max values
       labels: {
         style: {
           colors: '#919EB4',
           fontFamily: 'Barlow',
           fontSize: '12px',
         },
-        // formatter: value => `${value}%`,
+        // Info: (20240417 - Shirley) formatter: value => `${value}%`,
       },
     },
     legend: {
@@ -116,12 +116,13 @@ const LineChart = ({ data }: LineChartProps) => {
       fontWeight: 500,
       markers: {
         fillColors: ['#4BD394', '#FB5C5C', '#FFA502'],
-        // width: 20, // 標記的寬度
-        // height: 12, // 標記的高度
-        // radius: 0, // 標記的半徑（如果是圓形）
+        // width: 20, // Info: (20240706 - Luphia) 標記的寬度
+        // height: 12, // Info: (20240706 - Luphia) 標記的高度
+        // radius: 0, // Info: (20240722 - Shirley) 標記的半徑（如果是圓形）
       },
       showForSingleSeries: true,
 
+      // Info: (20240417 - Shirley)
       // customLegendItems: [
       //   {
       //     text: 'income',
@@ -158,8 +159,8 @@ const LineChart = ({ data }: LineChartProps) => {
         },
       },
       padding: {
-        // left: 50,
-        // right: 50,
+        // left: 50,  // Info: (20240417 - Shirley)
+        // right: 50, // Info: (20240417 - Shirley)
       },
     },
 
@@ -171,15 +172,14 @@ const LineChart = ({ data }: LineChartProps) => {
         highlightDataSeries: false,
       },
       x: {
-        show: false, // Info: 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值 (20240416 - Shirley)
+        show: false, // Info: (20240416 - Shirley) 在 hover 產生的 tooltip box 中，是否顯示 x 軸的值
         format: 'dd MMM',
-        // formatter: value => `${value}`,
+        // formatter: value => `${value}`, // Info: (20240417 - Shirley)
       },
       y: {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        formatter: (value, { series, seriesIndex, dataPointIndex }) => {
+        formatter: (value, { seriesIndex, dataPointIndex }) => {
           const absoluteValue = data.annotations[seriesIndex].data[dataPointIndex].absolute;
-          const formattedAbsoluteValue = absoluteValue.toLocaleString(); // 使用 toLocaleString() 方法加上千分位逗號
+          const formattedAbsoluteValue = absoluteValue.toLocaleString(); // Info: (20240521 - Shirley) 使用 toLocaleString() 方法加上千分位逗號
 
           return `${formattedAbsoluteValue}`;
         },
@@ -209,7 +209,7 @@ const LineChart = ({ data }: LineChartProps) => {
 };
 
 const IncomeExpenseTrendChart = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { toastHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -259,7 +259,7 @@ const IncomeExpenseTrendChart = () => {
     if (getSuccess === false) {
       toastHandler({
         id: `income_expense_trend-${getCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_INCOME_EXPENSE_TREND')} ${getCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -268,7 +268,6 @@ const IncomeExpenseTrendChart = () => {
 
   const displayedChart = isNoData ? (
     <div className="mt-20">
-      {' '}
       <section className="flex flex-col items-center">
         <div>
           <svg
@@ -325,7 +324,7 @@ const IncomeExpenseTrendChart = () => {
           </svg>
         </div>
         <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-          {t('MY_REPORTS_SECTION.EMPTY')}
+          {t('common:COMMON.EMPTY')}
         </div>
       </section>
     </div>
@@ -338,52 +337,50 @@ const IncomeExpenseTrendChart = () => {
   const displayedDataSection = (
     <div
       className={cn(
-        'flex flex-col rounded-2xl bg-white px-5 pb-9 pt-5 max-md:max-w-full md:h-400px',
+        'flex flex-col rounded-2xl px-5 pb-9 pt-5 max-md:max-w-full md:h-400px',
         isNoData ? 'h-400px' : 'h-500px'
       )}
     >
-      <div>
-        <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
-          <div className="lg:flex-1">
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#002462"
-                  fillRule="evenodd"
-                  d="M9.568 10.293a1.286 1.286 0 011.817-.064l2.786 2.599a1.286 1.286 0 01-1.754 1.88L9.631 12.11a1.286 1.286 0 01-.063-1.817zM19.413 6.265c.667.243 1.01.98.768 1.648l-2.01 5.518a1.286 1.286 0 11-2.415-.88l2.009-5.518a1.286 1.286 0 011.648-.768z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  fill="#002462"
-                  fillRule="evenodd"
-                  d="M2.571 1.286a1.286 1.286 0 00-2.571 0v21.428C0 23.424.576 24 1.286 24h21.428a1.286 1.286 0 000-2.571H2.571v-4.95l3.998-4.268a1.286 1.286 0 10-1.877-1.758l-2.12 2.264V1.287z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  fill="#FFA502"
-                  fillRule="evenodd"
-                  d="M4.429 9.652a3.424 3.424 0 106.848 0 3.424 3.424 0 00-6.848 0zM16.427 4.563a3.426 3.426 0 106.852 0 3.426 3.426 0 00-6.852 0zM12.192 15.74a3.429 3.429 0 106.857 0 3.429 3.429 0 00-6.857 0z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
-              <p>
-                {t('PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
-                {t('PROJECT.INCOME_VS_EXPENDITURE')})
-              </p>
-            </div>
+      <div className="flex w-full justify-center gap-2 text-base leading-8 text-text-neutral-secondary max-md:max-w-full max-md:flex-wrap lg:justify-between lg:border-b lg:border-stroke-neutral-secondary lg:pb-2">
+        <div className="lg:flex-1">
+          <div className="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="#002462"
+                fillRule="evenodd"
+                d="M9.568 10.293a1.286 1.286 0 011.817-.064l2.786 2.599a1.286 1.286 0 01-1.754 1.88L9.631 12.11a1.286 1.286 0 01-.063-1.817zM19.413 6.265c.667.243 1.01.98.768 1.648l-2.01 5.518a1.286 1.286 0 11-2.415-.88l2.009-5.518a1.286 1.286 0 011.648-.768z"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#002462"
+                fillRule="evenodd"
+                d="M2.571 1.286a1.286 1.286 0 00-2.571 0v21.428C0 23.424.576 24 1.286 24h21.428a1.286 1.286 0 000-2.571H2.571v-4.95l3.998-4.268a1.286 1.286 0 10-1.877-1.758l-2.12 2.264V1.287z"
+                clipRule="evenodd"
+              ></path>
+              <path
+                fill="#FFA502"
+                fillRule="evenodd"
+                d="M4.429 9.652a3.424 3.424 0 106.848 0 3.424 3.424 0 00-6.848 0zM16.427 4.563a3.426 3.426 0 106.852 0 3.426 3.426 0 00-6.852 0zM12.192 15.74a3.429 3.429 0 106.857 0 3.429 3.429 0 00-6.857 0z"
+                clipRule="evenodd"
+              ></path>
+            </svg>
+            <p>
+              {t('project:PROJECT.FINANCIAL_OVERVIEW')} <br className="flex lg:hidden" />(
+              {t('project:PROJECT.INCOME_VS_EXPENDITURE')})
+            </p>
           </div>
+        </div>
 
-          <div className="hidden justify-end lg:flex">
-            <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
-            </Tooltip>
-          </div>
+        <div className="hidden justify-end lg:flex">
+          <Tooltip>
+            <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
+          </Tooltip>
         </div>
       </div>
 
@@ -400,15 +397,15 @@ const IncomeExpenseTrendChart = () => {
                 className={cn(
                   'disabled:border-button-text-disable disabled:bg-transparent disabled:text-button-text-disable',
                   selectedPeriod === Period.MONTH
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.MONTH)}
               >
                 <p>
-                  <span className="lg:hidden">{t('COMMON.M')}</span>
-                  <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.MONTH')}</span>{' '}
+                  <span className="lg:hidden">{t('common:COMMON.M')}</span>
+                  <span className="hidden lg:inline">{t('common:COMMON.MONTH')}</span>
                 </p>
               </Button>
             </div>
@@ -419,15 +416,15 @@ const IncomeExpenseTrendChart = () => {
                 className={cn(
                   'disabled:border-button-text-disable disabled:bg-transparent disabled:text-button-text-disable',
                   selectedPeriod === Period.YEAR
-                    ? 'bg-tertiaryBlue text-white hover:border-tertiaryBlue hover:bg-tertiaryBlue/80 hover:text-white'
+                    ? 'bg-button-surface-strong-secondary text-button-text-invert hover:border-button-stroke-secondary hover:bg-button-surface-strong-secondary-hover hover:text-button-text-invert'
                     : ''
                 )}
                 size={'medium'}
                 onClick={() => periodChangeHandler(Period.YEAR)}
               >
                 <p>
-                  <span className="lg:hidden">{t('COMMON.Y')}</span>
-                  <span className="hidden lg:inline">{t('ADD_ASSET_MODAL.YEAR')}</span>{' '}
+                  <span className="lg:hidden">{t('common:COMMON.Y')}</span>
+                  <span className="hidden lg:inline">{t('common:COMMON.YEAR')}</span>
                 </p>
               </Button>
             </div>

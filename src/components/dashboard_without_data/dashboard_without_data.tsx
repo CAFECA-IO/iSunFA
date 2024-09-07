@@ -4,7 +4,7 @@ const DashboardWithoutData = () => {
   const { t } = useTranslation('common');
   const displayedPageBody = (
     <div>
-      {/* Info: empty icon section (20240415 - Shirley) */}
+      {/* Info: (20240415 - Shirley) empty icon section */}
       <div className="flex h-screen w-full items-center justify-center">
         {' '}
         <section className="flex flex-col items-center">
@@ -63,7 +63,7 @@ const DashboardWithoutData = () => {
             </svg>
           </div>
           <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-            {t('MY_REPORTS_SECTION.EMPTY')}
+            {t('common:COMMON.EMPTY')}
           </div>
         </section>
       </div>

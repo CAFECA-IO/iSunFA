@@ -8,7 +8,7 @@ interface ISalaryPageBodyProps {
 }
 
 const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'salary']);
 
   return (
     <div>
@@ -29,7 +29,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
               {/* Page Title */}
               <section className="flex flex-col gap-16px pb-20px pt-60px">
                 <div className="text-h2 font-semibold leading-h2 text-text-neutral-secondary">
-                  {t('SALARY.EMPLOYEES_LIST')}
+                  {t('salary:SALARY.EMPLOYEES_LIST')}
                 </div>
                 {/* line */}
                 <div className="my-10px grow bg-divider-stroke-lv-4">
@@ -71,7 +71,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                     </svg>
                   </div>
                   <p className="text-base font-medium text-inherit">
-                    {t('SALARY.ADD_NEW_EMPLOYEE')}
+                    {t('salary:SALARY.ADD_NEW_EMPLOYEE')}
                   </p>
                 </div>
                 <div className="flex cursor-pointer items-center gap-8px rounded-xs border border-button-stroke-secondary px-24px py-10px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover">
@@ -92,7 +92,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                     </svg>
                   </div>
                   <p className="text-base font-medium text-inherit">
-                    {t('SALARY.ONE_CLICK_REMOVAL')}
+                    {t('salary:SALARY.ONE_CLICK_REMOVAL')}
                   </p>
                 </div>
               </section>
@@ -124,7 +124,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                     </svg>
                   </div>
                   <div className="text-sm font-medium text-divider-text-lv-1">
-                    {t('SALARY.EMPLOYEES_LIST')}
+                    {t('salary:SALARY.EMPLOYEES_LIST')}
                   </div>
                 </div>
                 {/* line */}
@@ -152,7 +152,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 <div className="grow">
                   <input
                     type="text"
-                    placeholder={t('AUDIT_REPORT.SEARCH')}
+                    placeholder={t('common:COMMON.SEARCH')}
                     className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
                   />
                 </div>
@@ -230,7 +230,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                   </svg>
                 </div>
                 <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-                  {t('SALARY.EMPTY')}
+                  {t('salary:SALARY.EMPTY')}
                 </div>
               </section>
             </div>
@@ -244,7 +244,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
               <div className="flex items-center justify-between gap-24px">
                 {/* title */}
                 <div className="text-base font-semibold text-text-neutral-secondary">
-                  {t('SALARY.EMPLOYEES_LIST')}
+                  {t('salary:SALARY.EMPLOYEES_LIST')}
                 </div>
                 {/* buttons */}
                 <div className="flex gap-12px">
@@ -310,7 +310,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 <div className="grow">
                   <input
                     type="text"
-                    placeholder={t('AUDIT_REPORT.SEARCH')}
+                    placeholder={t('common:COMMON.SEARCH')}
                     className="w-full bg-transparent text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
                   />
                 </div>
@@ -378,7 +378,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                   </svg>
                 </div>
                 <div className="text-sm font-medium text-divider-text-lv-1">
-                  {t('SALARY.EMPLOYEES_LIST')}
+                  {t('salary:SALARY.EMPLOYEES_LIST')}
                 </div>
               </div>
               {/* line */}
@@ -459,7 +459,7 @@ const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
                 </svg>
               </div>
               <div className="text-h6 font-semibold leading-h6 text-text-neutral-tertiary">
-                {t('SALARY.EMPTY')}
+                {t('salary:SALARY.EMPTY')}
               </div>
             </section>
           </main>

@@ -7,8 +7,8 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 const useAPIWorker = <Data>(
   apiConfig: IAPIConfig,
   options: IAPIInput,
-  cancel?: boolean,
-  triggerImmediately: boolean = true
+  triggerImmediately: boolean = false,
+  cancel?: boolean
 ): IAPIResponse<Data> => {
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [code, setCode] = useState<string | undefined>(undefined);
@@ -74,7 +74,7 @@ const useAPIWorker = <Data>(
             data: event.data.data.payload as Data,
             code: event.data.data.code,
             error: null,
-          }); // Resolve the promise with the data
+          }); // Info: (20240710 - Tzuhan) Resolve the promise with the data
           worker.removeEventListener(Action.MESSAGE, handleMessage);
           worker.terminate();
         };
@@ -90,7 +90,7 @@ const useAPIWorker = <Data>(
             data: null,
             code: STATUS_CODE[STATUS_MESSAGE.INTERNAL_SERVICE_ERROR],
             error: e instanceof Error ? e : new Error('An error occurred'),
-          }); // Resolve the promise with null
+          }); // Info: (20240710 - Tzuhan) Resolve the promise with null
           worker.terminate();
         };
       });

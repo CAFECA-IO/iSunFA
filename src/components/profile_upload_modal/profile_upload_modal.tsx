@@ -25,7 +25,7 @@ const ProfileUploadModal = ({
   modalVisibilityHandler,
   uploadType,
 }: IProfileUploadModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
@@ -42,19 +42,17 @@ const ProfileUploadModal = ({
 
   const modalTitle =
     uploadType === UploadType.USER
-      ? t('PROFILE_UPLOAD_MODAL.PROFILE_PIC')
+      ? t('common:PROFILE_UPLOAD_MODAL.PROFILE_PIC')
       : uploadType === UploadType.COMPANY
-        ? // ToDo: (20240801 - Julian) i18n
-          'Company Image'
-        : 'Project Image';
+        ? t('common:PROFILE_UPLOAD_MODAL.COMPANY_IMAGE')
+        : t('common:PROFILE_UPLOAD_MODAL.PROJECT_IMAGE');
 
   const modalDescription =
     uploadType === UploadType.USER
-      ? t('PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
+      ? t('common:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROFILE_PICTURE')
       : uploadType === UploadType.COMPANY
-        ? // ToDo: (20240801 - Julian) i18n
-          'Please upload your company image'
-        : 'Please upload your project image';
+        ? t('common:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_COMPANY_PICTURE')
+        : t('common:PROFILE_UPLOAD_MODAL.PLEASE_UPLOAD_YOUR_PROJECT_PICTURE');
 
   const cancelHandler = () => {
     setUploadedImage(null);
@@ -89,10 +87,9 @@ const ProfileUploadModal = ({
   const uploadedError = () => {
     messageModalDataHandler({
       messageType: MessageType.ERROR,
-      // ToDo: (20240801 - Julian) i18n
-      title: 'Upload Failed',
-      content: `Please try again later. Error code: ${code}`,
-      submitBtnStr: t('PROJECT.OK'),
+      title: t('common:PROFILE_UPLOAD_MODAL.UPLOAD_FAILED'),
+      content: `${t('common:PROFILE_UPLOAD_MODAL.PLEASE_TRY_LATER')} ${code}`,
+      submitBtnStr: t('common:COMMON.OK'),
       submitBtnFunction: messageModalVisibilityHandler,
     });
     messageModalVisibilityHandler();
@@ -128,7 +125,7 @@ const ProfileUploadModal = ({
       }
       // Info: (20240801 - Julian) 上傳專案圖片
       case UploadType.PROJECT: {
-        targetId = '-1'; // ToDo: (20240801 - Julian) get project id
+        targetId = '-1'; // ToDo: (20240801 - Julian) [Beta] get project id
 
         formData.append('file', uploadedImage as File);
         break;
@@ -172,8 +169,8 @@ const ProfileUploadModal = ({
   }, [success, code]);
 
   const uploadArea = (
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
     <label
+      htmlFor="file"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -187,11 +184,11 @@ const ProfileUploadModal = ({
         onChange={(event) => printImage(event)}
       />
       <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload_file" />
-      <p className="mt-20px font-semibold text-navyBlue2">
-        {t('PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
-        <span className="text-darkBlue">{t('JOURNAL.BROWSE')}</span>
+      <p className="mt-20px font-semibold text-drag-n-drop-text-primary">
+        {t('common:PROFILE_UPLOAD_MODAL.DROP_YOUR_FILES_HERE_OR')}{' '}
+        <span className="text-link-text-primary">{t('journal:JOURNAL.BROWSE')}</span>
       </p>
-      <p className="text-center text-lightGray4">{t('JOURNAL.MAXIMUM_SIZE')}</p>
+      <p className="text-center text-drag-n-drop-text-note">{t('journal:JOURNAL.MAXIMUM_SIZE')}</p>
     </label>
   );
 
@@ -211,10 +208,10 @@ const ProfileUploadModal = ({
       {/* Info: (20240618 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-12px px-20px py-16px text-button-text-secondary">
         <Button type="button" variant="secondaryBorderless" onClick={cancelHandler}>
-          {t('REPORTS_HISTORY_LIST.CANCEL')}
+          {t('common:COMMON.CANCEL')}
         </Button>
         <Button type="button" className="w-full" variant="tertiary" onClick={saveImage}>
-          <p>{t('EDIT_BOOKMARK_MODAL.SAVE')}</p>
+          <p>{t('common:EDIT_BOOKMARK_MODAL.SAVE')}</p>
           <svg
             width="20"
             height="20"
@@ -243,7 +240,7 @@ const ProfileUploadModal = ({
         <button
           type="button"
           onClick={modalVisibilityHandler}
-          className="absolute right-12px top-12px text-lightGray5"
+          className="absolute right-12px top-12px text-icon-surface-single-color-primary"
         >
           <RxCross2 size={20} />
         </button>

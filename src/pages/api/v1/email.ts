@@ -1,28 +1,78 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import SendMail from '@/lib/utils/email';
+import MailService from '@/lib/utils/mail_service';
+import { SendMailOptions } from 'nodemailer';
+import { IResponseData } from '@/interfaces/response_data';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 
-// TODO: temp solution (20240115 - Shirley)
-// eslint-disable-next-line @typescript-eslint/naming-convention
-type emailConfig = {
-  googleClientID: string;
-  googleClientPassword: string;
-  receiverEmail: string;
+// Info: (20240823 - Julian) Handle POST request for sending email
+export async function handlePostRequest(
+  req: NextApiRequest
+): Promise<{ statusMessage: string; payload: boolean | null }> {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: boolean | null = null;
+
+  try {
+    // Info: (20240823 - Julian) 設置郵件內容
+    const mailOptions: SendMailOptions = {
+      from: process.env.MAIL_CLIENT_ID,
+      to: process.env.MAIL_CLIENT_ID,
+      subject: 'iSunFA Contact Form',
+      text: req.body.comment, // Info: (20240823 - Julian) 純文字
+      html: `<p>${req.body.comment}</p>`, // Info: (20240823 - Julian) HTML
+    };
+
+    // Info: (20240823 - Julian) 發送郵件
+    const mailServiceInstance = MailService.getInstance();
+    const success = await mailServiceInstance.sendMail(mailOptions);
+
+    if (success) {
+      // Info: (20240823 - Julian) 回應成功
+      statusMessage = 'Email sent successfully';
+      payload = true;
+    } else {
+      // Info: (20240823 - Julian) 回應失敗
+      statusMessage = 'Email sent failed';
+      payload = false;
+    }
+  } catch (error) {
+    // Info: (20240823 - Julian) 回應失敗
+    statusMessage = 'Email sent failed';
+    payload = false;
+  }
+
+  return { statusMessage, payload };
+}
+
+// Info: (20240823 - Julian) Define method handlers
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: boolean | null }>;
+} = {
+  POST: handlePostRequest,
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  /* Info: (20230324 - Shirley) read config */
-  const config = {
-    googleClientID: process.env.MAIL_CLIENT_ID,
-    googleClientPassword: process.env.MAIL_CLIENT_PASSWORD,
-    receiverEmail: process.env.REACT_APP_RECEPIENT_EMAIL,
-  };
+// Info: (20240823 - Julian) Main handler function
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<boolean | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: boolean | null = null;
 
-  /* Info: (20230324 - Shirley) send email */
-  const { sendMail } = SendMail;
-  const sender = sendMail(config as emailConfig, await req.body.comment);
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    }
+  } catch (error) {
+    statusMessage = (error as Error).message;
+  }
 
-  /* Info: (20230324 - Shirley) return result */
-  const result = await sender;
-
-  res.status(200).json(result);
+  const { httpCode, result } = formatApiResponse<boolean | null>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

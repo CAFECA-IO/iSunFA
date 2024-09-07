@@ -17,8 +17,6 @@ export interface IVoucherMetaData {
   payment: IPayment;
 }
 
-// Deprecate: (20240524 - Murky) To Emily, To Julian IVoucher only contains lineItems
-// I use IVoucherDataForSavingToDB
 export interface IVoucher {
   voucherIndex: string;
   invoiceIndex: string; // 改在這裡
@@ -49,9 +47,19 @@ export interface IVoucherDataForSavingToDB {
   lineItems: ILineItem[];
 }
 
-export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
+export type IVoucherFromPrismaIncludeJournalLineItems = Prisma.VoucherGetPayload<{
   include: {
     journal: true;
+    lineItems: {
+      include: {
+        account: true;
+      };
+    };
+  };
+}>;
+
+export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
+  include: {
     lineItems: {
       include: {
         account: true;

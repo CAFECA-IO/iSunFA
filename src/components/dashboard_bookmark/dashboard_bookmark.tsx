@@ -14,19 +14,19 @@ interface BookmarkNameMap {
 }
 
 const bookmarkNameMap: BookmarkNameMap = {
-  'Add New Contract': 'BOOKMARK_LIST.ADD_NEW_CONTRACT',
-  'Add New KYC': 'BOOKMARK_LIST.ADD_NEW_KYC',
-  'Add New Employees': 'BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
-  'Add New Payroll': 'BOOKMARK_LIST.ADD_NEW_PAYROLL',
-  'Add New Journal': 'BOOKMARK_LIST.ADD_NEW_JOURNAL',
-  'Camera Scanner': 'BOOKMARK_LIST.CAMERA_SCANNER',
-  'Balance Sheet': 'BOOKMARK_LIST.BALANCE_SHEET',
-  'Income Statement': 'BOOKMARK_LIST.INCOME_STATEMENT',
-  'Cash Flow Statement': 'BOOKMARK_LIST.CASH_FLOW_STATEMENT',
-  'Financial Performance': 'BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
-  'Cost Analysis': 'BOOKMARK_LIST.COST_ANALYSIS',
-  'HR Utilization': 'BOOKMARK_LIST.HR_UTILIZATION',
-  'Forecast Report': 'BOOKMARK_LIST.FORECAST_REPORT',
+  'Add New Contract': 'common:BOOKMARK_LIST.ADD_NEW_CONTRACT',
+  'Add New KYC': 'common:BOOKMARK_LIST.ADD_NEW_KYC',
+  'Add New Employees': 'common:BOOKMARK_LIST.ADD_NEW_EMPLOYEES',
+  'Add New Payroll': 'common:BOOKMARK_LIST.ADD_NEW_PAYROLL',
+  'Add New Journal': 'common:BOOKMARK_LIST.ADD_NEW_JOURNAL',
+  'Camera Scanner': 'common:BOOKMARK_LIST.CAMERA_SCANNER',
+  'Balance Sheet': 'common:BOOKMARK_LIST.BALANCE_SHEET',
+  'Income Statement': 'common:BOOKMARK_LIST.INCOME_STATEMENT',
+  'Cash Flow Statement': 'common:BOOKMARK_LIST.CASH_FLOW_STATEMENT',
+  'Financial Performance': 'common:BOOKMARK_LIST.FINANCIAL_PERFORMANCE',
+  'Cost Analysis': 'common:BOOKMARK_LIST.COST_ANALYSIS',
+  'HR Utilization': 'common:BOOKMARK_LIST.HR_UTILIZATION',
+  'Forecast Report': 'common:BOOKMARK_LIST.FORECAST_REPORT',
 };
 
 const DashboardBookmark = () => {
@@ -65,7 +65,7 @@ const DashboardBookmark = () => {
   };
 
   useEffect(() => {
-    // Info: 如果書籤不夠多，就不需要顯示往右滑的按鈕 (20240603 - Shirley)
+    // Info: (20240603 - Shirley) 如果書籤不夠多，就不需要顯示往右滑的按鈕
     if (
       containerRef.current &&
       containerRef.current.scrollWidth - containerRef.current.scrollLeft <=
@@ -85,7 +85,7 @@ const DashboardBookmark = () => {
     currentContainerRef?.addEventListener('scroll', handleScroll);
 
     return () => currentContainerRef?.removeEventListener('scroll', handleScroll);
-  }, [bookmarkList]); // Info: 如果書籤不夠多，就不需要顯示往右滑的按鈕 (20240603 - Shirley)
+  }, [bookmarkList]); // Info: (20240603 - Shirley) 如果書籤不夠多，就不需要顯示往右滑的按鈕
 
   const slideLeft = () => slide(-BOOKMARK_SCROLL_STEP);
   const slideRight = () => slide(BOOKMARK_SCROLL_STEP);
@@ -103,7 +103,8 @@ const DashboardBookmark = () => {
           <Button
             key={key}
             type="button"
-            className={`flex justify-center gap-2 rounded-full border border-transparent bg-tertiaryBlue px-3 py-3 text-white hover:bg-tertiaryBlue2 lg:px-8 lg:py-2`}
+            variant="tertiary"
+            className={`flex justify-center gap-2 rounded-full p-3 lg:px-8 lg:py-2`}
           >
             <div className="my-auto flex items-center justify-center">
               {bookmarkList[key].iconOnSection}
@@ -159,7 +160,7 @@ const DashboardBookmark = () => {
             type="button"
             onClick={slideLeft}
             disabled={isAtScrollStart}
-            className="absolute left-20px rounded-full bg-surface-neutral-solid-light p-10px shadow-scrollBtn hover:text-primaryYellow disabled:hidden"
+            className="absolute left-20px rounded-full bg-surface-neutral-solid-light p-10px text-button-text-secondary shadow-scrollBtn hover:text-button-text-primary-hover disabled:hidden"
           >
             <FaChevronLeft size={16} />
           </button>
@@ -167,13 +168,13 @@ const DashboardBookmark = () => {
             type="button"
             onClick={slideRight}
             disabled={isAtScrollEnd}
-            className="absolute right-20px rounded-full bg-surface-neutral-solid-light p-10px shadow-scrollBtn hover:text-primaryYellow disabled:hidden"
+            className="absolute right-20px rounded-full bg-surface-neutral-solid-light p-10px text-button-text-secondary shadow-scrollBtn hover:text-button-text-primary-hover disabled:hidden"
           >
             <FaChevronRight size={16} />
           </button>
         </div>
         {/* Info: (20240808 - Anna) Alpha版先隱藏(編輯書籤列) */}
-        {/* Info: remove or add button (20240411 - Shirley) */}
+        {/* Info: (20240411 - Shirley) remove or add button */}
         {/* <div className="rounded-r-full border-l border-stroke-neutral-quaternary bg-white p-20px lg:w-100px">
           {displayedRemoveOrAddButton}
         </div> */}

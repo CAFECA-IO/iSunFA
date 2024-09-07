@@ -19,7 +19,7 @@ import { ReportStatusType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, MOCK_REPORTS } from '@/interfaces/report';
 
 const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { toastHandler } = useGlobalCtx();
@@ -44,7 +44,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
     useState<IDatePeriod>(default30DayPeriodInSec);
   const [historySearch, setHistorySearch] = useState<string>('');
 
-  // ToDo: (20240624 - Julian) Replace with api data
+  // ToDo: (20240624 - Julian) [Beta] Replace with api data
   const pendingTotalPages = 5;
   const historyTotalPages = 5;
 
@@ -59,7 +59,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       query: {
         status: ReportStatusType.PENDING,
         projectId,
-      }, // ToDo: (20240701 - Julian) Add query for filtering
+      }, // ToDo: (20240701 - Julian) [Beta] Add query for filtering
     },
     hasCompanyId
   );
@@ -75,7 +75,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       query: {
         status: ReportStatusType.GENERATED,
         projectId,
-      }, //  ToDo: (20240701 - Julian) Add query for filtering
+      }, //  ToDo: (20240701 - Julian) [Beta] Add query for filtering
     },
     hasCompanyId
   );
@@ -87,7 +87,9 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       toastHandler({
         id: `listPendingReportsFailed${listPendingCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch pending reports. Error code: ${listPendingCode}. USING DUMMY DATA`,
+        content: t('report_401:PENDING_REPORT_LIST.FAILED_TO_FETCH_PENDING_REPORTS', {
+          code: listPendingCode,
+        }),
         closeable: true,
       });
       setPendingData(MOCK_REPORTS);
@@ -101,7 +103,9 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       toastHandler({
         id: `listGeneratedReportsFailed${listGeneratedCode}_${(Math.random() * 100000).toFixed(5)}`,
         type: ToastType.ERROR,
-        content: `Failed to fetch generated reports. Error code: ${listGeneratedCode}. USING DUMMY DATA`,
+        content: t('report_401:MY_REPORTS_SECTION.FAILED_TO_FETCH_GENERATED_REPORTS', {
+          code: listGeneratedCode,
+        }),
         closeable: true,
       });
       setHistoryData(MOCK_REPORTS);
@@ -262,12 +266,12 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedPendingSortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.TYPE')}</p>
           {displayedPendingTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -283,10 +287,10 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="pendingReportSearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={pendingSearch}
             onChange={pendingSearchChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={20} />
         </div>
@@ -298,9 +302,9 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/hour_glass.svg'} alt="pending_icon" width={16} height={16} />
-            <p>{t('MY_REPORTS_SECTION.PENDING')}</p>
+            <p>{t('report_401:MY_REPORTS_SECTION.PENDING')}</p>
           </div>
-          <hr className="flex-1 border-lightGray4" />
+          <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
 
         <PendingReportList reports={pendingData} />
@@ -318,12 +322,12 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
       <div className="flex items-end gap-x-24px">
         {/* Info: (20240624 - Julian) Sort */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           {displayedHistorySortDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Type */}
         <div className="flex w-1/5 flex-col gap-y-8px">
-          <p className="font-semibold text-navyBlue2">{t('JOURNAL.TYPE')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.TYPE')}</p>
           {displayedHistoryTypeDropMenu}
         </div>
         {/* Info: (20240624 - Julian) Date Picker */}
@@ -339,10 +343,10 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
           <input
             id="historyReportSearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={historySearch}
             onChange={historySearchChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={20} />
         </div>
@@ -354,9 +358,9 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
         <div className="my-5 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Image src={'/icons/file.svg'} alt="history_icon" width={16} height={16} />
-            <p>{t('MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
+            <p>{t('report_401:MY_REPORTS_SECTION.REPORTS_HISTORY')}</p>
           </div>
-          <hr className="flex-1 border-lightGray4" />
+          <hr className="flex-1 border-divider-stroke-lv-3" />
         </div>
 
         <ReportsHistoryList reports={historyData} />

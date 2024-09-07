@@ -16,14 +16,11 @@ interface IFinancialsReportsPageProps {
 }
 
 const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
-  // eslint-disable-next-line no-console
-  console.log(
-    'reportType on FinancialsReportsPage',
-    reportType,
-    FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey]
-  );
+  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+  // ('reportType on FinancialsReportsPage',reportType,
+  //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey])
 
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -46,7 +43,7 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
+        <title>{t('report_401:REPORTS_SIDEBAR.FINANCIAL_REPORT')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -73,11 +70,20 @@ const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
-  const { report_type } = query;
+  const { report_type: reportType } = query;
   return {
     props: {
-      reportType: report_type,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      reportType,
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

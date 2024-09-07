@@ -1,10 +1,8 @@
-/* eslint-disable */
 import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
-import FinancialReportSection from '@/components/financial_report_section/financial_report_section';
 import { ILocale } from '@/interfaces/locale';
 import AnalysisReportSection from '@/components/analysis_reports_section/analysis_reports_section';
 import { SkeletonList } from '@/components/skeleton/skeleton';
@@ -13,7 +11,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 
 const AnalysesReportsPage = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
     <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
@@ -37,8 +35,7 @@ const AnalysesReportsPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: i18n (20240409 - Shirley) */}
-        <title>{t('REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA</title>
+        <title>{t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORT')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -66,7 +63,16 @@ const AnalysesReportsPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

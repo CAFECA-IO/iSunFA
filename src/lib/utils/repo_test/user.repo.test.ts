@@ -1,12 +1,13 @@
 import {
   listUser,
   getUserById,
-  getUserByCredential,
   createUser,
   updateUserById,
   deleteUserByIdForTesting,
 } from '@/lib/utils/repo/user.repo';
 import users from '@/seed_json/user.json';
+import { FileFolder } from '@/constants/file';
+import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
 
 describe('User Repository', () => {
   describe('listUser', () => {
@@ -17,7 +18,6 @@ describe('User Repository', () => {
       expect(userList.length).toBeGreaterThan(0);
       expect(userList[0].id).toBe(users[0].id);
       expect(userList[0].name).toContain(users[0].name);
-      expect(userList[0].credentialId).toBe(users[0].credentialId);
     });
   });
 
@@ -32,48 +32,39 @@ describe('User Repository', () => {
     });
 
     it('should return null if the user is not found', async () => {
-      const userId = -1; // Assuming -1 is an invalid ID
+      const userId = -1; // Info: (20240704 - Jacky) Assuming -1 is an invalid ID
       const user = await getUserById(userId);
-      expect(user).toBeNull();
-    });
-  });
-
-  describe('getUserByCredential', () => {
-    it('should return a user by their credential ID', async () => {
-      const { credentialId } = users[0];
-      const user = await getUserByCredential(credentialId);
-      expect(user).toBeDefined();
-      expect(user).toBeTruthy();
-      expect(user!.credentialId).toBe(credentialId);
-    });
-
-    it('should return null if the user is not found', async () => {
-      const credentialId = 'invalid_credential_id';
-      const user = await getUserByCredential(credentialId);
       expect(user).toBeNull();
     });
   });
 
   describe('createUser', () => {
     it('should create a new user', async () => {
+      const testFile = await createFile({
+        name: 'test',
+        size: 100,
+        mimeType: 'image/png',
+        type: FileFolder.TMP,
+        url: 'https://test.com',
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
       const newUser = {
         name: 'Test User new',
-        credentialId: 'test_credential_id_new',
-        publicKey: 'test_public_key_new',
-        algorithm: 'test_algorithm_new',
-        imageUrl: 'test_image_url_new',
+        fullName: 'test_credential_id_new',
+        email: 'test_public_key_new',
+        phone: 'test_algorithm_new',
+        imageId: testFile?.id ?? 0,
       };
-      const user = await createUser(
-        newUser.name,
-        newUser.credentialId,
-        newUser.publicKey,
-        newUser.algorithm,
-        newUser.imageUrl
-      );
-      await deleteUserByIdForTesting(user.id); // Clean up after test
+      if (!testFile) {
+        throw new Error('Failed to create a test file');
+      }
+      const user = await createUser(newUser);
+      await deleteUserByIdForTesting(user.id); // Info: (20240723 - Murky) Clean up after test
+      await deleteFileByIdForTesting(testFile.id);
       expect(user).toBeDefined();
       expect(user.name).toBe(newUser.name);
-      expect(user.credentialId).toBe(newUser.credentialId);
+      expect(user.email).toBe(newUser.email);
     });
   });
 
@@ -85,21 +76,6 @@ describe('User Repository', () => {
       expect(user).toBeDefined();
       expect(user.id).toBe(userId);
       expect(user.name).toBe(newName);
-    });
-  });
-
-  describe('deleteUserByIdForTesting', () => {
-    it('should delete a user by their ID', async () => {
-      const newUser = await createUser(
-        'Delete Test User',
-        'delete_test_credential_id',
-        'delete_test_public_key',
-        'delete_test_algorithm',
-        'delete_test_image_url'
-      );
-      const deletedUser = await deleteUserByIdForTesting(newUser.id);
-      expect(deletedUser).toBeDefined();
-      expect(deletedUser.id).toBe(newUser.id);
     });
   });
 });

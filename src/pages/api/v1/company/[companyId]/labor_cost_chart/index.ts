@@ -45,21 +45,15 @@ async function calculateProjectCosts(
     },
     {} as Record<string, typeof workRates>
   );
-  // Deprecated: using console.log to debug (20240619 - Gibbs)
-  // eslint-disable-next-line no-console
-  // console.log("groupedWorkRates", groupedWorkRates);
+  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   // Info: (20240618 - Gibbs) 遍歷每一組 workRates
   Object.values(groupedWorkRates).forEach((group) => {
     const { createdAt } = group[0];
     const { employeeId } = group[0].employeeProject;
-    // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
-    // console.log("employeeId", employeeId);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     // Info: (20240618 - Gibbs) 計算該員工在該日期的總工作時數
     const totalHours = group.reduce((sum, current) => sum + current.actualHours, 0);
-    // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
-    // console.log("totalHours", totalHours);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     // Info: (20240618 - Gibbs) 找到該員工在該日期的薪資記錄
     const salaryRecordList = salaryRecords.filter(
       (sr) => sr.employee_id === employeeId && sr.created_at === createdAt
@@ -72,15 +66,11 @@ async function calculateProjectCosts(
       },
       { total_payment: 0 }
     );
-    // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
-    // console.log("salaryRecord", salaryRecord);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     if (!salaryRecord) return; // Info: (20240618 - Gibbs) 如果沒有找到薪資記錄，則跳過
     // Info: (20240618 - Gibbs) 計算每小時薪資
     const hourlyWage = salaryRecord.total_payment / totalHours;
-    // Deprecated: using console.log to debug (20240619 - Gibbs)
-    // eslint-disable-next-line no-console
-    // console.log("hourlyWage", hourlyWage);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     // Info: (20240618 - Gibbs) 根據每個專案的工作時數比例分配薪資
     group.forEach((employeeWorkRate) => {
       const projectName = employeeWorkRate.employeeProject.project.name;
@@ -90,9 +80,7 @@ async function calculateProjectCosts(
       projectCosts[projectName] += hourlyWage * employeeWorkRate.actualHours;
     });
   });
-  // Deprecated: using console.log to debug (20240619 - Gibbs)
-  // eslint-disable-next-line no-console
-  // console.log("projectCosts", projectCosts);
+  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   return projectCosts;
 }
 
@@ -100,54 +88,90 @@ async function checkEmpty(projectCosts: Record<string, number>) {
   return Object.keys(projectCosts).length === 0;
 }
 
-export default async function handler(
+function formatDateQuery(req: NextApiRequest) {
+  const { date } = req.query;
+  if (date && isDateFormatYYYYMMDD(date as string)) {
+    const dateTimestamp = convertDateToTimestamp(date as string);
+    const dateTimestampInSeconds = timestampInSeconds(dateTimestamp);
+    return { date: dateTimestampInSeconds };
+  }
+  return { date: null };
+}
+
+async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ILaborCostChartData>>
 ) {
-  try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ILaborCostChartData | null = null;
+
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (!isAuth) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+    } else {
+      const { date } = formatDateQuery(req);
+      if (date) {
+        try {
+          const workRates = await getWorkRatesByCompanyId(companyId, date);
+          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+          const salaryRecords = await getSalaryRecords(date);
+          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+          const projectCosts = await calculateProjectCosts(workRates, salaryRecords);
+          const isEmpty = await checkEmpty(projectCosts);
+          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+          payload = {
+            date,
+            categories: Object.keys(projectCosts),
+            series: Object.values(projectCosts),
+            empty: isEmpty,
+          };
+          statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+        } catch (error) {
+          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        }
+      }
     }
-    if (req.method !== 'GET') {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
-    }
-    const { date } = req.query;
-    if (date && isDateFormatYYYYMMDD(date as string)) {
-      const dateTimestamp = convertDateToTimestamp(date as string);
-      const dateTimestampInSeconds = timestampInSeconds(dateTimestamp);
-      const workRates = await getWorkRatesByCompanyId(companyId, dateTimestampInSeconds);
-      // Deprecated: using console.log to debug (20240619 - Gibbs)
-      // eslint-disable-next-line no-console
-      // console.log("workRates", workRates);
-      const salaryRecords = await getSalaryRecords(dateTimestampInSeconds);
-      // Deprecated: using console.log to debug (20240619 - Gibbs)
-      // eslint-disable-next-line no-console
-      // console.log("salaryRecords", salaryRecords);
-      const projectCosts = await calculateProjectCosts(workRates, salaryRecords);
-      const isEmpty = await checkEmpty(projectCosts);
-      // Deprecated: using console.log to debug (20240619 - Gibbs)
-      // eslint-disable-next-line no-console
-      // console.log("isEmpty", isEmpty);
-      const responseData = {
-        date: dateTimestampInSeconds,
-        categories: Object.keys(projectCosts),
-        series: Object.values(projectCosts),
-        empty: isEmpty,
-      };
-      const { httpCode, result } = formatApiResponse<ILaborCostChartData>(
-        STATUS_MESSAGE.SUCCESS_GET,
-        responseData
-      );
-      res.status(httpCode).json(result);
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse<IResponseData<ILaborCostChartData>>
+  ) => Promise<{ statusMessage: string; payload: ILaborCostChartData | null }>;
+} = {
+  GET: handleGetRequest,
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<ILaborCostChartData | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ILaborCostChartData | null = null;
+
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
-    const { httpCode, result } = formatApiResponse<ILaborCostChartData>(
-      error.message,
-      {} as ILaborCostChartData
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<ILaborCostChartData | null>(
+      statusMessage,
+      payload
     );
     res.status(httpCode).json(result);
   }

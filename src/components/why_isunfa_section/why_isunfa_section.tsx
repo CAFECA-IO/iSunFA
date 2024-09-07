@@ -76,7 +76,7 @@ const WhyISunFASection = () => {
                 ref={animeRef51}
                 className={`overflow-x-hidden ${isAnimeRef51Visible ? `translate-x-0` : `md:-translate-x-140%`} flex w-full justify-center pt-2 text-h6 font-semibold leading-h6 tracking-tighter text-white duration-1000 max-md:max-w-full md:justify-start md:text-5xl md:leading-h1`}
               >
-                {t('LANDING_PAGE.WHY_ISUNFA_SECTION_TITLE')}
+                {t('common:LANDING_PAGE.WHY_ISUNFA_SECTION_TITLE')}
               </div>
 
               <div className="mt-10 flex flex-col space-y-5 max-md:max-w-full">
@@ -106,7 +106,7 @@ const WhyISunFASection = () => {
                     </div>
 
                     <div className="w-fit grow justify-center pl-5 text-xs tracking-normal text-white max-md:max-w-full md:text-base md:font-medium md:leading-6">
-                      {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_1')}
+                      {t('common:LANDING_PAGE.WHY_ISUNFA_CONTENT_1')}
                     </div>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ const WhyISunFASection = () => {
                     </div>
 
                     <div className="w-fit grow justify-center pl-5 text-xs tracking-normal text-white max-md:max-w-full md:text-base md:font-medium md:leading-6">
-                      {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_2')}
+                      {t('common:LANDING_PAGE.WHY_ISUNFA_CONTENT_2')}
                     </div>
                   </div>
                 </div>
@@ -168,7 +168,7 @@ const WhyISunFASection = () => {
                     </div>
 
                     <div className="w-fit grow justify-center pl-5 text-xs tracking-normal text-white max-md:max-w-full md:text-base md:font-medium md:leading-6">
-                      {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_3')}
+                      {t('common:LANDING_PAGE.WHY_ISUNFA_CONTENT_3')}
                     </div>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ const WhyISunFASection = () => {
                     </div>
 
                     <div className="w-fit grow justify-center pl-5 text-xs tracking-normal text-white max-md:max-w-full md:text-base md:font-medium md:leading-6">
-                      {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_4')}
+                      {t('common:LANDING_PAGE.WHY_ISUNFA_CONTENT_4')}
                     </div>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ const WhyISunFASection = () => {
                     </div>
 
                     <div className="w-fit grow justify-center pl-5 text-xs tracking-normal text-white max-md:max-w-full md:text-base md:font-medium md:leading-6">
-                      {t('LANDING_PAGE.WHY_ISUNFA_CONTENT_5')}
+                      {t('common:LANDING_PAGE.WHY_ISUNFA_CONTENT_5')}
                     </div>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ const WhyISunFASection = () => {
             </div>
           </div>
 
-          {/* Info: mac img for 1440 px and above (20240321- Shirley) */}
+          {/* Info: (20240321- Shirley) mac img for 1440 px and above */}
           <div className={`hidden flex-col max-lg:ml-0 xl:flex`}>
             <Image
               alt="partial mac"
@@ -249,7 +249,7 @@ const WhyISunFASection = () => {
             />
           </div>
 
-          {/* Info: mac img for width below 1440 px but above 744 px (20240321- Shirley) */}
+          {/* Info: (20240321- Shirley) mac img for width below 1440 px but above 744 px */}
           <div className="hidden md:flex xl:hidden">
             <Image
               alt="partial mac"
@@ -260,7 +260,7 @@ const WhyISunFASection = () => {
             />
           </div>
 
-          {/* Info: mac img for width below 744 px (20240321- Shirley) */}
+          {/* Info: (20240321- Shirley) mac img for width below 744 px */}
           <div className="flex h-420px md:hidden">
             <Image
               alt="partial mac"

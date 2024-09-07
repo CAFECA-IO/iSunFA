@@ -5,7 +5,7 @@
     "code": "TEST123",
     "regional": "United States",
     "kycStatus": true,
-    "imageId": null,
+    "imageFileId": 1000,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006
@@ -16,18 +16,18 @@
     "code": "TRIAL123",
     "regional": "United States",
     "kycStatus": true,
-    "imageId": null,
+    "imageFileId": 1001,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006
   },
   {
-    "id":1002,
+    "id": 1002,
     "name": "Public_Company",
     "code": "1",
     "regional": "Taiwan",
     "kycStatus": false,
-    "imageId": null,
+    "imageFileId": 1002,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006
@@ -38,7 +38,7 @@
     "code": "202406111752",
     "regional": "Taiwan",
     "kycStatus": false,
-    "imageId": null,
+    "imageFileId": 1003,
     "startDate": 1717751006,
     "createdAt": 1717751006,
     "updatedAt": 1717751006

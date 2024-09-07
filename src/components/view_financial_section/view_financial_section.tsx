@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -14,12 +13,13 @@ import {
   CashFlowStatementReport,
   FinancialReport,
   IncomeStatementReport,
+  // TaxReport401,
 } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
 import { ReportSheetType, ReportSheetTypeDisplayMap } from '@/constants/report';
 import Skeleton from '@/components/skeleton/skeleton';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
 
@@ -31,12 +31,22 @@ interface IViewReportSectionProps {
   reportLink: string;
   reportId: string;
 }
-
+// Info: (20240815 - Anna)增加類型保護函數
+function isTaxReport401(report: FinancialReport): boolean {
+  return (
+    'basicInfo' in report &&
+    'sales' in report &&
+    'purchases' in report &&
+    'taxCalculation' in report &&
+    'imports' in report &&
+    'bondedAreaSalesToTaxArea' in report
+  );
+}
 const generateThumbnails = (count: number) => {
   return Array.from({ length: count }, (_, index) => ({
     number: index + 1,
     active: index === 0,
-    src: `/elements/placeholder.png`,
+    src: `${count}`,
     alt: `${count}`,
   }));
 };
@@ -44,11 +54,15 @@ const generateThumbnails = (count: number) => {
 const balanceReportThumbnails = generateThumbnails(12);
 const incomeReportThumbnails = generateThumbnails(9);
 const cashFlowReportThumbnails = generateThumbnails(11);
+// Info: (20240815 - Anna)增加401報表的縮圖
+const report401Thumbnails = generateThumbnails(1);
 
 enum TotalPages {
   BALANCE_SHEET = 12,
   INCOME_STATEMENT = 9,
   CASH_FLOW_STATEMENT = 11,
+  // Info: (20240815 - Anna)增加401報表的頁數
+  REPORT_401 = 1,
 }
 
 function isValidIncomeStatementReport(report: IncomeStatementReport): boolean {
@@ -84,7 +98,17 @@ function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolea
     report.otherInfo.freeCash
   );
 }
-
+// Info: (20240815 - Anna)增加401報表的判斷函數
+// function isValidReport401(report: TaxReport401): boolean {
+//   return !!(
+//     report.basicInfo &&
+//     report.sales &&
+//     report.purchases &&
+//     report.taxCalculation &&
+//     report.imports &&
+//     report.bondedAreaSalesToTaxArea !== undefined
+//   );
+// }
 const ViewFinancialSection = ({
   reportId,
 
@@ -96,6 +120,7 @@ const ViewFinancialSection = ({
   const { t } = useTranslation('common');
   const router = useRouter();
 
+  // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -107,9 +132,8 @@ const ViewFinancialSection = ({
   const [reportThumbnails, setReportThumbnails] = useState<
     { number: number; alt: string; active: boolean; src: string }[]
   >([]);
-  // TODO: download PDF file (20240802 - Shirley)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pdfFile, setPdfFile] = useState<null | string>(null);
+  // TODO: (20240802 - Shirley) [Beta] download PDF file
+  // const [pdfFile, setPdfFile] = useState<null | string>(null);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -135,12 +159,16 @@ const ViewFinancialSection = ({
         return !isValidBalanceSheetReport(reportFinancial as BalanceSheetReport);
       case ReportSheetType.CASH_FLOW_STATEMENT:
         return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
+      // Info:(20240815 - Anna) 新增定義 isValidReport401 函數
+      case ReportSheetType.REPORT_401:
+        // Info:(20240815 - Anna)使用 isTaxReport401 進行類型檢查
+        return !isTaxReport401(reportFinancial);
       default:
         return true;
     }
   }, [reportFinancial]);
 
-  // Info: iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間 (20240729 - Shirley)
+  // Info: (20240729 - Shirley) iframe 為在 users/ 底下的 reports ，偵查 session 登入狀態並根據登入狀態轉址需要時間
   const handleIframeLoad = () => {
     setTimeout(() => {
       setIsLoading(false);
@@ -174,7 +202,7 @@ const ViewFinancialSection = ({
       }
     }
   };
-  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+  // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContract = () => {
   //   navigator.clipboard.writeText(tokenContract);
 
@@ -186,7 +214,8 @@ const ViewFinancialSection = ({
   //     autoClose: 500,
   //   });
   // };
-  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏
   // const copyTokenId = () => {
   //   navigator.clipboard.writeText(tokenId);
 
@@ -198,17 +227,19 @@ const ViewFinancialSection = ({
   //     autoClose: 500,
   //   });
   // };
-  //* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContractClickHandler = () => {
   //   copyTokenContract();
   // };
-  //* Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏 */
+
+  // Info: (20240807 - Anna) 還沒有Token ID資訊，先隱藏
   // const copyTokenIdClickHandler = () => {
   //   copyTokenId();
   // };
 
   const backClickHandler = () => {
-    // Info: 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面 (20240729 - Shirley)
+    // Info: (20240729 - Shirley) 返回我的報表頁面，因為使用 iframe ，所以不能使用 window.history.back()，這樣會讓 iframe 的內容跳轉到登入畫面
     router.push(ISUNFA_ROUTE.USERS_MY_REPORTS);
   };
 
@@ -216,20 +247,20 @@ const ViewFinancialSection = ({
     if (reportLink) {
       printPDF();
     }
-    // TODO: get PDF file (20240802 - Shirley)
+    // TODO: (20240802 - Shirley) [Beta] get PDF file
     // if (pdfFile) {
     //   window.open(pdfFile, '_blank');
     // }
   };
 
-  // TODO: get PDF file (20240802 - Shirley)
+  // TODO: (20240802 - Shirley) [Beta] get PDF file
   // const fetchPDF = async () => {
   //   try {
   //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
 
   //     const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
 
-  //     // TODO: use API service (20240502 - Shirley)
+  //     // TODO: (20240502 - Shirley) use API service
   //     const response = await fetch(apiUrl, {
   //       method: 'GET',
   //     });
@@ -239,8 +270,7 @@ const ViewFinancialSection = ({
 
   //     setPdfFile(pdfUrl);
   //   } catch (error) {
-  //     // TODO: error handling (20240502 - Shirley)
-  //     // eslint-disable-next-line no-console
+  //     // TODO: (20240502 - Shirley) error handling
   //     console.error(error);
   //   }
   // };
@@ -259,11 +289,17 @@ const ViewFinancialSection = ({
         setReportThumbnails(cashFlowReportThumbnails);
         setNumPages(TotalPages.CASH_FLOW_STATEMENT);
         break;
+      // Info:(20240815 - Anna) 創建401
+      case FinancialReportTypesKey.report_401:
+        setReportThumbnails(report401Thumbnails);
+        setNumPages(TotalPages.REPORT_401);
+        break;
       default:
         setReportThumbnails([]);
     }
   }, []);
 
+  /* Info: (20240729 - Shirley)
   // useEffect(() => {
   //   if (reportLink) {
   //     fetchPDF();
@@ -276,6 +312,7 @@ const ViewFinancialSection = ({
   //     import.meta.url
   //   ).toString();
   // }, []);
+  */
 
   const displayedReportType = getReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
@@ -283,12 +320,14 @@ const ViewFinancialSection = ({
     <p>{ReportSheetTypeDisplayMap[reportFinancial?.reportType ?? ReportSheetType.BALANCE_SHEET]}</p>
   );
 
-  // Info:創建一個新的變數來儲存翻譯後的字串 (20240730 - Anna)
+  // Info: (20240730 - Anna) 創建一個新的變數來儲存翻譯後的字串
   const reportTypeString =
     !getReportFinancialIsLoading && typeof displayedReportType.props.children === 'string'
       ? displayedReportType.props.children
       : '';
-  const translatedReportType = t(`PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`);
+  const translatedReportType = t(
+    `common:PLUGIN.${reportTypeString.toUpperCase().replace(/ /g, '_')}`
+  );
 
   const renderedThumbnail = (
     thumbnail: { number: number; active: boolean; alt: string; src: string },
@@ -302,28 +341,33 @@ const ViewFinancialSection = ({
             : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
         }`}
       >
-        <div className="flex items-center justify-center border border-solid border-blue-950">
-          <Image width={100} height={142} src={thumbnail.src} alt={thumbnail.alt} />
-        </div>
         <div
+          className={`flex h-80px w-120px items-center justify-center border border-solid border-stroke-brand-secondary text-3xl font-bold ${
+            thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
+          }`}
+        >
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        </div>
+        {/* Info: (20240830 - Shirley) 等實作報告縮圖之後，將報告頁數 uncomment */}
+        {/* <div
           className={`mt-2.5 self-center text-sm font-medium leading-5 tracking-normal ${
             thumbnail.active ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'
           }`}
         >
-          {index + 1 < 10 ? `0${index + 1}` : index + 1}
-        </div>
+          {thumbnail.number < 10 ? `0${thumbnail.number}` : thumbnail.number}
+        </div> */}
       </div>
     </button>
   );
 
   const displayedReport = (
     <div className="mt-12 flex h-850px w-full bg-surface-neutral-main-background px-5 pb-2 md:px-0 lg:px-40">
-      {/* Info: Sidebar (20240426 - Shirley) */}
-      <div className="hidden w-1/4 overflow-y-scroll bg-white pl-0 lg:flex">
+      {/* Info: (20240426 - Shirley) Sidebar */}
+      <div className="hidden w-1/4 overflow-y-scroll bg-surface-neutral-surface-lv2 lg:flex">
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading ? (
-              <p>{t('MY_REPORTS_SECTION.LOADING')}</p>
+              <p>{t('common:COMMON.LOADING')}</p>
             ) : isInvalidReport ? null : (
               reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
             )}
@@ -335,7 +379,7 @@ const ViewFinancialSection = ({
         <iframe
           ref={iframeRef}
           src={`${reportLink}#${pageNumber}`}
-          className={`h-full w-full origin-top-left scale-90 overflow-x-auto border-none bg-white transition-transform duration-300 md:scale-100`}
+          className={`h-full w-full origin-top-left scale-90 overflow-x-auto border-none bg-surface-neutral-depth transition-transform duration-300 md:scale-100`}
           title="Financial Report"
           onLoad={handleIframeLoad}
         />
@@ -343,11 +387,10 @@ const ViewFinancialSection = ({
     </div>
   );
 
-  // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
-    <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background px-0 pb-0 pt-32">
-      {/* Info: financial title, print button and share button (20240426 - Shirley) */}
-      <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
+    <div className="flex w-full shrink-0 grow basis-0 flex-col overflow-hidden bg-surface-neutral-main-background pt-32">
+      {/* Info: (20240426 - Shirley) financial title, print button and share button */}
+      <div className="mx-10 flex items-center gap-5 border-b border-divider-stroke-lv-4 px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
           onClick={backClickHandler}
           variant={'tertiaryOutline'}
@@ -371,10 +414,11 @@ const ViewFinancialSection = ({
             </svg>
           </div>
         </Button>
+        {/* Info: (20240723 - Shirley) */}
         {/* <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
           {displayedReportType}
         </div> */}
-        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
+        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full lg:text-4xl">
           {getReportFinancialIsLoading ? (
             <Skeleton width={200} height={40} />
           ) : (
@@ -385,7 +429,7 @@ const ViewFinancialSection = ({
           <div className="flex gap-3">
             <Button
               disabled={!reportLink || isLoading || isInvalidReport}
-              // disabled={isLoading || pdfFile === null} // TODO: PDF file (20240729 - Shirley)
+              // disabled={isLoading || pdfFile === null} // TODO: (20240729 - Shirley) PDF file
               onClick={downloadClickHandler}
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -408,7 +452,7 @@ const ViewFinancialSection = ({
               </div>
             </Button>
             <Button
-              // TODO: yet to dev (20240507 - Shirley)
+              // TODO: (20240507 - Shirley) [Beta] yet to dev
               disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
@@ -434,14 +478,14 @@ const ViewFinancialSection = ({
         </div>
       </div>
 
-      {/* Info: token contract and token id info (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) token contract and token id info */}
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
             {/* Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏 */}
             {/* <div className="text-text-neutral-tertiary">Token Contract </div> */}
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
@@ -477,7 +521,7 @@ const ViewFinancialSection = ({
             {/* <div className="text-text-neutral-tertiary">Token ID </div> */}
 
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenId}
               </Link> */}
@@ -547,7 +591,6 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -588,7 +631,6 @@ const ViewFinancialSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>
             </div>
@@ -597,7 +639,7 @@ const ViewFinancialSection = ({
       </div>
 
       <div className="pointer-events-auto z-0 flex lg:hidden">
-        {/* Info: prev button (20240529 - Shirley) */}
+        {/* Info: (20240529 - Shirley) prev button */}
         <Button
           variant={'secondaryBorderless'}
           size={'extraSmall'}
@@ -620,7 +662,7 @@ const ViewFinancialSection = ({
           </svg>
         </Button>
 
-        {/* Info: next button (20240529 - Shirley) */}
+        {/* Info: (20240529 - Shirley) next button */}
         <Button
           variant={'secondaryBorderless'}
           size={'extraSmall'}
@@ -644,7 +686,7 @@ const ViewFinancialSection = ({
         </Button>
       </div>
 
-      {/* Info: financial report content (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) financial report content */}
       {displayedReport}
     </div>
   );

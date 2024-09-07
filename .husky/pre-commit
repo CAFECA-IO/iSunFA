@@ -1,0 +1,10 @@
+# Info: (20240829 - Jacky) - Make sure NVM is loaded before running the tests
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Info: (20240830 - Shirley) 檢查 stage files，有不符合規定就會阻止 commit
+npx lint-staged
+
+# Info: (20240830 - Shirley) 測試和版本更新
+npm run test
+npm run update-version

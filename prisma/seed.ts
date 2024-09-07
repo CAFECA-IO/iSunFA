@@ -27,8 +27,34 @@ import clients from '@/seed_json/client.json';
 import journals from '@/seed_json/journal.json';
 import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
+import salaryRecords from '@/seed_json/salary_record.json';
+import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
+import file from '@/seed_json/file.json';
 
 const prisma = new PrismaClient();
+
+async function createFile() {
+  const files = file.map((f) => {
+    return {
+      ...f,
+      iv: Buffer.from('1'),
+    };
+  });
+  await prisma.file.createMany({
+    data: files,
+  });
+}
+async function createSalaryRecord() {
+  await prisma.salaryRecord.createMany({
+    data: salaryRecords,
+  });
+}
+
+async function createVoucherSalaryRecordFolder() {
+  await prisma.voucherSalaryRecordFolder.createMany({
+    data: voucherSalaryRecordFolder,
+  });
+}
 
 async function createMilestones() {
   await prisma.milestone.createMany({
@@ -226,10 +252,17 @@ async function createLineItems() {
 }
 
 async function main() {
-  // Todo: Murky will modify createAccount seed data and uncomment related codes (20240611 - Gibbs)
-  await createRole();
-  await createUser();
+  await createFile();
   await createCompany();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3000);
+  });
+  await createUser();
+
+  await createRole();
   await createCompanyKYC();
   await createClient();
   await createAccount();
@@ -275,16 +308,17 @@ async function main() {
     setTimeout(resolve, 3000);
   });
   await createLineItems();
+  await createSalaryRecord();
+  await createVoucherSalaryRecordFolder();
 }
 
 main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async (e) => {
-    // Info (20240316 - Murky) - Log error and disconnect prisma
-    // eslint-disable-next-line no-console
-    console.error(e);
+  .catch(async () => {
+    // Info (20240316 - Murky) - disconnect prisma
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     await prisma.$disconnect();
     process.exit(1);
   });

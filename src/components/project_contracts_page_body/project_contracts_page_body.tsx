@@ -16,7 +16,7 @@ import { FilterOptionsModalType } from '@/interfaces/modals';
 import { useTranslation } from 'next-i18next';
 
 const ProjectContractsPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const { filterOptionsModalVisibilityHandler, filterOptionsForContract } = useGlobalCtx();
 
   const statusList = Object.values(ContractStatus);
@@ -81,7 +81,7 @@ const ProjectContractsPageBody = () => {
     }
   }, [periodFromFilterModal, sortFromFilterModal, statusFromFilterModal]);
 
-  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: (20240620 - Julian) Replace with actual data
+  const totalPages = Math.ceil(newDummyContracts.length / 10); // ToDo: (20240620 - Julian) [Beta] Replace with actual data
 
   const {
     targetRef: statusRef,
@@ -113,9 +113,7 @@ const ProjectContractsPageBody = () => {
 
   const statusDropdown = (
     <div
-      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-      ${statusVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-      z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${statusVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       {statusListWithAll.map((status) => {
         const clickHandler = () => {
@@ -138,9 +136,7 @@ const ProjectContractsPageBody = () => {
 
   const sortDropdown = (
     <div
-      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background
-      ${sortVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} 
-      z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 top-50px w-full rounded-xs border border-input-stroke-input bg-input-surface-input-background ${sortVisible ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-10 opacity-0'} z-10 px-12px py-8px text-sm shadow-md transition-all duration-300 ease-in-out`}
     >
       <button
         type="button"
@@ -181,13 +177,11 @@ const ProjectContractsPageBody = () => {
       <div className="hidden w-full items-end gap-x-24px gap-y-40px md:flex">
         {/* Info: (20240618 - Julian) Status filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('PROJECT.STATUS')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.STATUS')}</p>
           <div
             ref={statusRef}
             onClick={statusClickHandler}
-            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input 
-            ${statusVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-            bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input ${statusVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
             <p className="text-text-neutral-primary">{filterStatus}</p>
             <FaChevronDown size={16} />
@@ -197,18 +191,13 @@ const ProjectContractsPageBody = () => {
         </div>
         {/* Info: (20240618 - Julian) Sort filter */}
         <div className="flex flex-col items-start gap-y-8px">
-          <p className="font-semibold text-input-text-primary">{t('SORTING.SORT_BY')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:SORTING.SORT_BY')}</p>
           <div
             ref={sortRef}
             onClick={sortClickHandler}
-            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input 
-            ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} 
-            bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
+            className={`relative flex w-130px items-center justify-between rounded-xs border border-input-stroke-input ${sortVisible ? 'border-input-stroke-input-hover' : 'border-input-stroke-input'} bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover`}
           >
-            <p className="text-text-neutral-primary">
-              {/* {sorting} */}
-              {t(sorting)}
-            </p>
+            <p className="text-text-neutral-primary">{t(sorting)}</p>
             <FaChevronDown size={16} />
             {/* Info: (20240618 - Julian) Status dropdown */}
             {sortDropdown}
@@ -229,7 +218,7 @@ const ProjectContractsPageBody = () => {
             type="text"
             onChange={searchHandler}
             className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-            placeholder={t('CONTRACT.SEARCH_CONTRACT')}
+            placeholder={t('journal:CONTRACT.SEARCH_CONTRACT')}
           />
           <FiSearch size={20} />
         </div>
@@ -255,7 +244,7 @@ const ProjectContractsPageBody = () => {
               type="text"
               onChange={searchHandler}
               className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-              placeholder={t('CONTRACT.SEARCH_CONTRACT')}
+              placeholder={t('journal:CONTRACT.SEARCH_CONTRACT')}
             />
             <FiSearch size={20} />
           </div>

@@ -1,6 +1,7 @@
 it('should pass', () => {
   expect(true).toBe(true);
 });
+// Info: (20240723 - Murky)
 // import { NextApiRequest, NextApiResponse } from 'next';
 // import * as module from '@/pages/api/v1/company/[companyId]/account/index';
 // import prisma from '@/client';
@@ -22,7 +23,6 @@ it('should pass', () => {
 // const session = {
 //   companyId,
 //   // Info (20240516 - Murky) - Mocking session
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 // } as any;
 // const mockAccountsInDB: Account[] = [
 //   {

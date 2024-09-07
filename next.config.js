@@ -1,11 +1,29 @@
 /** @type {import('next').NextConfig} */
 
 // Info: (20240531 - Murky) - Use "lodash-es" for esm support, but eslint doesn't support it, so disable the rule
-// eslint-disable-next-line import/no-extraneous-dependencies
 const cloneDeep = require('lodash/cloneDeep');
 const { i18n } = require('./next-i18next.config');
 
+/**
+ * echo -n "window['dataLayer'] = window['dataLayer'] || []; function gtag(){window['dataLayer'].push(arguments);} gtag('js', new Date()); gtag('config', 'G-ZNVVW7JP0N');" | openssl dgst -sha256 -binary | openssl base64
+ */
+
+// const cspHeader = `
+//   default-src 'self';
+//   script-src 'self' 'sha256-AWYvreN84Mjp/63ULk+PPMBA9Sgj2Z4oZJASFhXoUJw=' https://www.googletagmanager.com;
+//   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+//   img-src 'self' blob: data: https://isunfa.com https://*.googleusercontent.com https://storage.googleapis.com  www.googletagmanager.com;
+//   font-src 'self' https://fonts.gstatic.com;
+//   object-src 'none';
+//   base-uri 'self';
+//   form-action 'self';
+//   frame-ancestors 'none';
+//   upgrade-insecure-requests;
+//   connect-src 'self' www.googletagmanager.com http://localhost:3000;
+//   `;
+
 const nextConfig = {
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -21,6 +39,15 @@ const nextConfig = {
           },
         ],
       },
+      // {
+      //   source: '/(.*)',
+      //   headers: [
+      //     {
+      //       key: 'Content-Security-Policy',
+      //       value: cspHeader.replace(/\n/g, ' ').trim(),
+      //     },
+      //   ],
+      // },
     ];
   },
   reactStrictMode: true,
@@ -36,17 +63,19 @@ const nextConfig = {
   },
   images: {
     loader: 'custom',
-    loaderFile: '/src/lib/utils/image-loader.js',
+    loaderFile: '/src/lib/utils/image_loader.js',
   },
   webpack: (config) => {
     const newConfig = cloneDeep(config);
-    // Info: do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf) (20240502 - Shirley)
-    // eslint-disable-next-line no-param-reassign
+    // Info: (20240502 - Shirley) do as `react-pdf` doc says (https://github.com/wojtekmaj/react-pdf)
     newConfig.resolve.alias.canvas = false;
 
-    // Fixes npm packages that depend on `fs` module
+    // Info: (20240531 - Murky) Fixes npm packages that depend on `fs` module
     newConfig.resolve.fallback = { fs: false };
     return newConfig;
+  },
+  experimental: {
+    instrumentationHook: true, // Info: (20240812 - Murky) this is for function run before server start
   },
 };
 

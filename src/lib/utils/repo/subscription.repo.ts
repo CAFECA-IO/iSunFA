@@ -1,19 +1,21 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
+import { SubscriptionPeriod } from '@/constants/subscription';
 import { ONE_DAY_IN_S } from '@/constants/time';
 import { ISubscription } from '@/interfaces/subscription';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma } from '@prisma/client';
 
-// Create
+// Info: (20240620 - Jacky) Create
 export async function createSubscription(
   companyId: number,
   planId: number,
-  status: boolean
+  status: boolean,
+  subscriptionPeriod: SubscriptionPeriod
 ): Promise<ISubscription> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  // TODO (20240617 - Jacky): Need to get plan details to calculate expired date
-  const expiredDate = nowTimestamp + 30 * ONE_DAY_IN_S;
+  const expiredDate = nowTimestamp + subscriptionPeriod * ONE_DAY_IN_S;
   const newSubscription = await prisma.subscription.create({
     data: {
       companyId,
@@ -28,7 +30,7 @@ export async function createSubscription(
   return newSubscription;
 }
 
-// Read
+// Info: (20240620 - Jacky) Read
 export async function getSubscriptionById(id: number): Promise<ISubscription | null> {
   const subscription = await prisma.subscription.findUnique({
     where: {
@@ -39,7 +41,7 @@ export async function getSubscriptionById(id: number): Promise<ISubscription | n
   return subscription;
 }
 
-// Update
+// Info: (20240620 - Jacky) Update
 export async function updateSubscription(
   id: number,
   subscription: Partial<ISubscription>
@@ -53,7 +55,7 @@ export async function updateSubscription(
   return updatedSubscription;
 }
 
-// Delete
+// Info: (20240620 - Jacky) Delete
 export async function deleteSubscription(id: number): Promise<ISubscription> {
   const nowInSecond = getTimestampNow();
 
@@ -76,14 +78,14 @@ export async function deleteSubscription(id: number): Promise<ISubscription> {
   return deletedSubscription;
 }
 
-// List
+// Info: (20240620 - Jacky) List
 export async function listSubscriptions(companyId: number): Promise<ISubscription[]> {
   const subscriptions = await prisma.subscription.findMany({
     where: {
       companyId,
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
   });
   return subscriptions;

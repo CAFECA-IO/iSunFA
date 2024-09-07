@@ -16,13 +16,13 @@ import { timestampToString } from '@/lib/utils/common';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { FiEdit } from 'react-icons/fi';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';
 
 const CompanyInfoPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'kyc']);
 
   const router = useRouter();
   const { isAuthLoading, selectedCompany, selectCompany } = useUserCtx();
@@ -103,11 +103,10 @@ const CompanyInfoPageBody = () => {
     if (!company) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: 'Delete company',
-      content:
-        'Are you sure you want to delete the company?\n\nPlease know that you can not undo this.',
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
-      submitBtnStr: t('COMPANY_BASIC_INFO.DELETE'),
+      title: t('kyc:COMPANY_BASIC_INFO.DELETE_COMPANY'),
+      content: t('kyc:KYC.DELETE_COMPANY_CHECK'),
+      backBtnStr: t('common:COMMON.CANCEL'),
+      submitBtnStr: t('kyc:COMPANY_BASIC_INFO.DELETE'),
       submitBtnFunction: procedureOfDelete,
     });
     messageModalVisibilityHandler();
@@ -153,7 +152,7 @@ const CompanyInfoPageBody = () => {
               clipRule="evenodd"
             ></path>
           </svg>
-          <p>{t('COMPANY_BASIC_INFO.DELETE_COMPANY')}</p>
+          <p>{t('kyc:COMPANY_BASIC_INFO.DELETE_COMPANY')}</p>
         </Button>
       </div>
       <div className="">
@@ -176,7 +175,7 @@ const CompanyInfoPageBody = () => {
               clipRule="evenodd"
             ></path>
           </svg>
-          <p>{t('COMPANY_BASIC_INFO.TRANSFER_ADMINISTRATION')}</p>
+          <p>{t('kyc:COMPANY_BASIC_INFO.TRANSFER_ADMINISTRATION')}</p>
         </Button>
       </div>
     </>
@@ -205,7 +204,7 @@ const CompanyInfoPageBody = () => {
                 ></path>
               </svg>
             </div>
-            <div>{t('COMPANY_BASIC_INFO.KYC')}</div>
+            <div>{t('kyc:COMPANY_BASIC_INFO.KYC')}</div>
           </div>
           <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
             <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
@@ -218,7 +217,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -228,7 +227,7 @@ const CompanyInfoPageBody = () => {
                   />
                   <div className="absolute left-4 top-6">
                     <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                      {t('COMPANY_BASIC_INFO.KYC')}
+                      {t('kyc:COMPANY_BASIC_INFO.KYC')}
                     </p>
                   </div>
                 </div>
@@ -236,7 +235,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -247,7 +246,7 @@ const CompanyInfoPageBody = () => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                        {t('COMPANY_BASIC_INFO.KYC')}
+                        {t('kyc:COMPANY_BASIC_INFO.KYC')}
                       </p>
                     </div>
                   </div>
@@ -261,15 +260,15 @@ const CompanyInfoPageBody = () => {
                       <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                            {t('kyc:COMPANY_BASIC_INFO.UNLOCK')}
                           </span>
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                            {t('kyc:COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
                           </span>
                           <br />
                           <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                            {t('kyc:COMPANY_BASIC_INFO.ON_ISUNFA')}
                           </span>
                         </div>
                       </div>
@@ -282,9 +281,9 @@ const CompanyInfoPageBody = () => {
                       <div className="flex w-100% flex-col gap-16px max-lg:items-center">
                         <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
                           <ul className="list-disc pl-0 lg:pl-5">
-                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
                           </ul>
                         </div>
                       </div>
@@ -308,7 +307,7 @@ const CompanyInfoPageBody = () => {
                 variant={'secondaryOutline'}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
+                <p>{t('kyc:COMPANY_BASIC_INFO.GO_KYC')}</p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -341,7 +340,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -351,7 +350,7 @@ const CompanyInfoPageBody = () => {
                   />
                   <div className="absolute left-4 top-6">
                     <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                      {t('COMPANY_BASIC_INFO.KYC')}
+                      {t('kyc:COMPANY_BASIC_INFO.KYC')}
                     </p>
                   </div>
                 </div>
@@ -359,7 +358,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -370,7 +369,7 @@ const CompanyInfoPageBody = () => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                        {t('COMPANY_BASIC_INFO.KYC')}
+                        {t('kyc:COMPANY_BASIC_INFO.KYC')}
                       </p>
                     </div>
                   </div>
@@ -384,15 +383,15 @@ const CompanyInfoPageBody = () => {
                       <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                            {t('kyc:COMPANY_BASIC_INFO.UNLOCK')}
                           </span>
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                            {t('kyc:COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
                           </span>
                           <br />
                           <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                            {t('kyc:COMPANY_BASIC_INFO.ON_ISUNFA')}
                           </span>
                         </div>
                       </div>
@@ -405,14 +404,14 @@ const CompanyInfoPageBody = () => {
                       <div className="flex w-100% flex-col gap-16px max-lg:items-center">
                         <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
                           <ul className="list-disc pl-0 lg:pl-5">
-                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
                           </ul>
                         </div>
                         {/* Status Tag // Info: (20240802 - Liz)  */}
                         <p className="w-fit rounded-full bg-badge-surface-soft-primary px-10px py-8px text-xs text-badge-text-primary-solid">
-                          {t('COMPANY_BASIC_INFO.PENDING')}
+                          {t('kyc:COMPANY_BASIC_INFO.PENDING')}
                         </p>
                       </div>
                       <div className="hidden w-full justify-end lg:relative lg:flex">
@@ -436,7 +435,7 @@ const CompanyInfoPageBody = () => {
                 disabled // Info: (20240802 - Liz) Pending 狀態不可點擊
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <p>{t('COMPANY_BASIC_INFO.UNDER_REVIEW')}</p>
+                <p>{t('kyc:COMPANY_BASIC_INFO.UNDER_REVIEW')}</p>
               </Button>
             </div>
           </div>
@@ -449,7 +448,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -459,7 +458,7 @@ const CompanyInfoPageBody = () => {
                   />
                   <div className="absolute left-4 top-6">
                     <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                      {t('COMPANY_BASIC_INFO.KYC')}
+                      {t('kyc:COMPANY_BASIC_INFO.KYC')}
                     </p>
                   </div>
                 </div>
@@ -467,7 +466,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -478,7 +477,7 @@ const CompanyInfoPageBody = () => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                        {t('COMPANY_BASIC_INFO.KYC')}
+                        {t('kyc:COMPANY_BASIC_INFO.KYC')}
                       </p>
                     </div>
                   </div>
@@ -492,15 +491,15 @@ const CompanyInfoPageBody = () => {
                       <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                            {t('kyc:COMPANY_BASIC_INFO.UNLOCK')}
                           </span>
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                            {t('kyc:COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
                           </span>
                           <br />
                           <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                            {t('kyc:COMPANY_BASIC_INFO.ON_ISUNFA')}
                           </span>
                         </div>
                       </div>
@@ -513,14 +512,14 @@ const CompanyInfoPageBody = () => {
                       <div className="flex w-100% flex-col gap-16px max-lg:items-center">
                         <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
                           <ul className="list-disc pl-0 lg:pl-5">
-                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
                           </ul>
                         </div>
                         {/* Status Tag // Info: (20240802 - Liz)  */}
                         <p className="w-fit rounded-full bg-badge-surface-soft-success px-10px py-8px text-xs text-badge-text-success-solid">
-                          {t('COMPANY_BASIC_INFO.COMPLETE_KYC')}
+                          {t('kyc:COMPANY_BASIC_INFO.COMPLETE_KYC')}
                         </p>
                       </div>
                       <div className="hidden w-full justify-end lg:relative lg:flex">
@@ -544,7 +543,7 @@ const CompanyInfoPageBody = () => {
                 disabled // Info: (20240802 - Liz) 已通過 KYC 不可點擊
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <p>{t('COMPANY_BASIC_INFO.VERIFIED')}</p>
+                <p>{t('kyc:COMPANY_BASIC_INFO.VERIFIED')}</p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -571,7 +570,7 @@ const CompanyInfoPageBody = () => {
             <div className="max-md:max-w-full">
               <div className="hidden w-100px min-w-100px lg:absolute lg:block">
                 <div className="relative">
-                  {/* Info: desktop 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) desktop 圓形 */}
                   <Image
                     src="/elements/ellipse_16.png"
                     width={100}
@@ -581,7 +580,7 @@ const CompanyInfoPageBody = () => {
                   />
                   <div className="absolute left-4 top-6">
                     <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                      {t('COMPANY_BASIC_INFO.KYC')}
+                      {t('kyc:COMPANY_BASIC_INFO.KYC')}
                     </p>
                   </div>
                 </div>
@@ -589,7 +588,7 @@ const CompanyInfoPageBody = () => {
 
               <div className="flex w-full justify-center lg:hidden">
                 <div className="flex items-center justify-center">
-                  {/* Info: mobile 圓形 (20240716 - Shirley) */}
+                  {/* Info: (20240716 - Shirley) mobile 圓形 */}
                   <div className="relative">
                     <Image
                       src="/elements/ellipse_16_mobile.png"
@@ -600,7 +599,7 @@ const CompanyInfoPageBody = () => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <p className="text-3xl font-bold text-text-brand-primary-lv2">
-                        {t('COMPANY_BASIC_INFO.KYC')}
+                        {t('kyc:COMPANY_BASIC_INFO.KYC')}
                       </p>
                     </div>
                   </div>
@@ -614,15 +613,15 @@ const CompanyInfoPageBody = () => {
                       <div className="ml-0 flex w-100% flex-col max-md:ml-0 max-md:w-full">
                         <div className="mt-24 text-center text-3xl font-bold leading-10 text-text-brand-secondary-lv1 max-lg:mt-10">
                           <span className="text-3xl leading-9 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.UNLOCK')}
+                            {t('kyc:COMPANY_BASIC_INFO.UNLOCK')}
                           </span>
                           <br />
                           <span className="text-5xl leading-52px text-text-brand-primary-lv2">
-                            {t('COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
+                            {t('kyc:COMPANY_BASIC_INFO.ALL_FUNCTIONS')}
                           </span>
                           <br />
                           <span className="text-xl leading-8 text-text-brand-secondary-lv1">
-                            {t('COMPANY_BASIC_INFO.ON_ISUNFA')}
+                            {t('kyc:COMPANY_BASIC_INFO.ON_ISUNFA')}
                           </span>
                         </div>
                       </div>
@@ -635,14 +634,14 @@ const CompanyInfoPageBody = () => {
                       <div className="flex w-100% flex-col gap-16px max-lg:items-center">
                         <div className="mt-5 text-lg font-semibold leading-7 tracking-normal text-text-neutral-primary lg:mt-24">
                           <ul className="list-disc pl-0 lg:pl-5">
-                            <li>{t('COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
-                            <li>{t('COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.AI_AUDIT_REPORT')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.HIGHER_SECURITY')}</li>
+                            <li>{t('kyc:COMPANY_BASIC_INFO.CHANGE_TO_OFFICIAL_ACCOUNT')}</li>
                           </ul>
                         </div>
                         {/* Status Tag // Info: (20240802 - Liz)  */}
                         <p className="w-fit rounded-full bg-badge-surface-soft-error px-10px py-8px text-xs text-badge-text-error-solid">
-                          {t('COMPANY_BASIC_INFO.VERIFICATION_FAILED_PLEASE_RE_UPLOAD')}
+                          {t('kyc:COMPANY_BASIC_INFO.VERIFICATION_FAILED_PLEASE_RE_UPLOAD')}
                         </p>
                       </div>
                       <div className="hidden w-full justify-end lg:relative lg:flex">
@@ -665,7 +664,7 @@ const CompanyInfoPageBody = () => {
                 variant={'secondaryOutline'}
                 className="px-8 py-3.5 text-lg font-medium leading-7 tracking-normal max-md:px-5"
               >
-                <p>{t('COMPANY_BASIC_INFO.GO_KYC')}</p>
+                <p>{t('kyc:COMPANY_BASIC_INFO.GO_KYC')}</p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -698,7 +697,7 @@ const CompanyInfoPageBody = () => {
       <div className="mt-28 flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-10 pb-0">
         <div className="mx-0 text-base font-semibold leading-10 text-text-neutral-tertiary max-md:max-w-full lg:mx-0 lg:text-4xl">
           <span className="font-bold text-text-brand-primary-lv2">{company?.name ?? '-'}</span>{' '}
-          {t('COMPANY_BASIC_INFO.BASIC_INFO')}
+          {t('kyc:COMPANY_BASIC_INFO.BASIC_INFO')}
         </div>
         <div className="mt-3 h-px shrink-0 border border-solid border-gray-300 bg-gray-300 max-md:max-w-full lg:mx-0 lg:mt-6" />
         <div className="mt-7 flex flex-col rounded-lg py-5 max-md:max-w-full lg:px-10">
@@ -721,7 +720,7 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>{t('COMPANY_BASIC_INFO.COMPANY_INFO')}</div>
+              <div>{t('kyc:COMPANY_BASIC_INFO.COMPANY_INFO')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />
@@ -749,7 +748,7 @@ const CompanyInfoPageBody = () => {
               </button>
               <div className="my-auto flex flex-col flex-wrap content-center self-stretch lg:hidden">
                 <div className="self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:self-start lg:font-semibold">
-                  {t('COMPANY_BASIC_INFO.COMPANY_INFO')}{' '}
+                  {t('kyc:COMPANY_BASIC_INFO.COMPANY_INFO')}{' '}
                 </div>
                 <div className="flex gap-0 text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:text-3xl">
                   <div>{company?.name ?? '-'} </div>
@@ -781,7 +780,7 @@ const CompanyInfoPageBody = () => {
 
             <div className="my-auto flex flex-col flex-wrap content-center self-stretch">
               <div className="hidden self-end text-sm leading-5 tracking-normal text-text-neutral-tertiary lg:flex lg:self-start lg:font-semibold">
-                {t('COMPANY_BASIC_INFO.COMPANY_NAME')}{' '}
+                {t('kyc:COMPANY_BASIC_INFO.COMPANY_NAME')}{' '}
               </div>
               <div className="hidden gap-1 self-end text-xl font-bold leading-9 text-text-brand-secondary-lv2 lg:mt-4 lg:flex lg:self-center lg:text-3xl">
                 <div>{company?.name ?? '-'}</div>
@@ -811,7 +810,7 @@ const CompanyInfoPageBody = () => {
 
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                {t('COMPANY_BASIC_INFO.TAX_ID_NUMBER')}{' '}
+                {t('kyc:COMPANY_BASIC_INFO.TAX_ID_NUMBER')}{' '}
               </div>
               <div className="text-xl font-bold leading-8 text-text-brand-secondary-lv1 lg:mt-4">
                 {company?.code ?? '-'}
@@ -819,14 +818,14 @@ const CompanyInfoPageBody = () => {
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                {t('COMPANY_BASIC_INFO.ADMIN_ACCOUNT_ID')}{' '}
+                {t('kyc:COMPANY_BASIC_INFO.ADMIN_ACCOUNT_ID')}{' '}
               </div>
 
               {displayedOwnerId}
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">
               <div className="text-sm font-semibold leading-5 tracking-normal text-text-neutral-tertiary">
-                {t('COMPANY_BASIC_INFO.CREATED_DATE')}{' '}
+                {t('kyc:COMPANY_BASIC_INFO.CREATED_DATE')}{' '}
               </div>
               <div className="text-xl font-bold leading-8 text-text-neutral-primary lg:mt-5">
                 {timestampToString(company?.createdAt, '/').date}
@@ -868,7 +867,7 @@ const CompanyInfoPageBody = () => {
                   ></path>
                 </svg>
               </div>
-              <div>{t('COMPANY_BASIC_INFO.ACCOUNT')}</div>
+              <div>{t('kyc:COMPANY_BASIC_INFO.ACCOUNT')}</div>
             </div>
             <div className="my-auto flex flex-1 flex-col justify-center max-md:max-w-full">
               <div className="h-px shrink-0 border border-solid border-divider-stroke-lv-1 max-md:max-w-full" />

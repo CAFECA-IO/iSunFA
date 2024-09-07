@@ -1,5 +1,5 @@
-// Info: this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition (20240416 - Murky)
-// Info: type (20240416 - Murky)
+// Info: (20240416 - Murky) this file contains the interfaces, type guards, type cleaner for OCR and Voucher LLM recognition
+// Info: (20240416 - Murky) type
 export enum ProgressStatus {
   SUCCESS = 'success',
   IN_PROGRESS = 'inProgress',
@@ -10,33 +10,13 @@ export enum ProgressStatus {
   SYSTEM_ERROR = 'systemError',
   PAUSED = 'paused',
   HAS_BEEN_USED = 'hasBeenUsed',
+  WAITING_FOR_UPLOAD = 'waitingForUpload',
 }
 
 export enum EventType {
   PAYMENT = 'payment',
   INCOME = 'income',
   TRANSFER = 'transfer',
-}
-
-export enum InvoiceType {
-  PURCHASE_TRIPLICATE_AND_ELECTRONIC = 'PurchaseTriplicateAndElectronic', // 進項三聯式、電子計算機統一發票
-  PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER = 'PurchaseDuplicateCashRegisterAndOther', // 進項二聯式收銀機統一發票、載有稅額之其他憑證
-  PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC = 'PurchaseReturnsTriplicateAndElectronic', // 三聯式、電子計算機、三聯式收銀機統一發票及一般稅額計算之電子發票之進貨退出或折讓證明單
-  PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER = 'PurchaseReturnsDuplicateCashRegisterAndOther', // 二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單
-  PURCHASE_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC = 'PurchaseTriplicateCashRegisterAndElectronic', // 進項三聯式收銀機統一發票及一般稅額計算之電子發票，每張稅額五百元以下之進項三聯式收銀機統一發票及一般稅額計算之電子發票
-  PURCHASE_UTILITY_ELECTRONIC_INVOICE = 'PurchaseUtilityElectronicInvoice', // 進項公用事業電子發票字軌號碼得以公用事業產製抬頭為一百零五年一月以後已繳納之繳費通知單或已繳費憑證之載具流水號替代登錄
-  PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC = 'PurchaseSummarizedTriplicateAndElectronic', // 彙總登錄每張稅額五百元以下之進項三聯式、電子計算機統一發票
-  PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER = 'PurchaseSummarizedDuplicateCashRegisterAndOther', // 彙總登錄每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證
-  PURCHASE_CUSTOMS_DUTY_PAYMENT = 'PurchaseCustomsDutyPayment', // 進項海關代徵營業稅繳納證
-  PURCHASE_CUSTOMS_DUTY_REFUND = 'PurchaseCustomsDutyRefund', // 進項海關退還溢繳營業稅申報單
-  SALES_TRIPLICATE_INVOICE = 'SalesTriplicateInvoice', // 銷項三聯式統一發票
-  SALES_DUPLICATE_CASH_REGISTER_INVOICE = 'SalesDuplicateCashRegisterInvoice', // 銷項二聯式、二聯式收銀機統一發票
-  SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC = 'SalesReturnsTriplicateAndElectronic', // 三聯式、電子計算機、三聯式收銀機統一發票及一般稅額計算之電子發票之銷貨退回或折讓證明單
-  SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM = 'SalesReturnsDuplicateAndNonUniform', // 二聯式、二聯式收銀機統一發票及銷項免用統一發票之銷貨退回或折讓證明單
-  SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC = 'SalesTriplicateCashRegisterAndElectronic', // 銷項三聯式收銀機統一發票及一般稅額計算之電子發票
-  SALES_NON_UNIFORM_INVOICE = 'SalesNonUniformInvoice', // 銷項免用統一發票
-  SPECIAL_TAX_CALCULATION = 'SpecialTaxCalculation', // 銷項憑證、特種稅額計算之電子發票
-  SPECIAL_TAX_RETURNS = 'SpecialTaxReturns', // 銷貨退回或折讓證明單
 }
 
 export enum AccountType {
@@ -50,7 +30,7 @@ export enum AccountType {
   GAIN_OR_LOSS = 'gainOrLoss',
   OTHER_COMPREHENSIVE_INCOME = 'otherComprehensiveIncome',
   CASH_FLOW = 'cashFlow',
-  //  CHANGE_IN_EQUITY = 'changeInEquity', // ToDo: (20240802 - Julian) change in equity statement is not released yet
+  //  CHANGE_IN_EQUITY = 'changeInEquity', // ToDo: (20240802 - Julian) [Beta] change in equity statement is not released yet
   OTHER = 'other',
 }
 
@@ -372,6 +352,18 @@ export const SPECIAL_ACCOUNTS: {
     parentCode: '3XXX',
     rootCode: '3XXX',
     level: 0,
+  },
+  FIXED_ASSET: {
+    system: 'IFRS',
+    type: AccountType.ASSET,
+    debit: true,
+    liquidity: false,
+    code: '1600',
+    name: '不動產、廠房及設備',
+    forUser: false,
+    parentCode: '15XX',
+    rootCode: '1600',
+    level: 2,
   },
   LIABILITY_AND_EQUITY_TOTAL: {
     system: 'IFRS',

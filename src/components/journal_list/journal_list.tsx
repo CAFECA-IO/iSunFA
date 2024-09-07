@@ -34,7 +34,7 @@ const JournalList = ({
 }) => {
   const { journals, isLoading, success, code } = journalsProps;
   const { currentPage, setCurrentPage, totalPages } = paginationProps;
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   // Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊)
   // const [checkedItems, setCheckedItems] = useState<string[]>([]);
   // const [isCheckAll, setIsCheckAll] = useState<boolean>(false);
@@ -91,7 +91,7 @@ const JournalList = ({
 
   return success === false && code ? (
     <>
-      <p>{t('JOURNAL.FAILED_TO_FETCH_DATA')}</p>
+      <p>{t('journal:JOURNAL.FAILED_TO_FETCH_DATA')}</p>
       <p>{code}</p>
     </>
   ) : isLoading === true ? (
@@ -100,18 +100,18 @@ const JournalList = ({
     </div>
   ) : journals.length < 1 ? (
     // Info: (20240419 - Julian) No data
-    <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-lightGray4">
+    <div className="flex h-full w-full flex-1 flex-col items-center justify-center text-xl font-semibold text-text-neutral-tertiary">
       <Image src={'/icons/empty.svg'} width={48} height={70} alt="empty_icon" />
-      <p>{t('MY_REPORTS_SECTION.EMPTY')}</p>
+      <p>{t('common:COMMON.EMPTY')}</p>
     </div>
   ) : (
     <>
       {/* Info: (20240517 - Julian) Desktop */}
       <div className="hidden lg:block">
-        <table className="my-20px w-full border border-lightGray6">
+        <table className="my-20px w-full border border-stroke-neutral-quaternary">
           {/* Info: (20240418 - Julian) Header */}
           <thead>
-            <tr className="bg-white text-left text-sm text-lightGray4">
+            <tr className="border border-stroke-neutral-quaternary text-left text-sm text-text-neutral-tertiary">
               {/* Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊) */}
               {/* Info: (20240419 - Julian) 全選 */}
               {/* <th className="flex justify-center py-8px">
@@ -122,17 +122,21 @@ const JournalList = ({
                   onChange={checkAllHandler}
                 />
               </th> */}
-              <th className="whitespace-nowrap text-center">{t('DATE_PICKER.DATE')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.TYPE')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.PARTICULARS')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.FROM_TO')}</th>
-              <th className="whitespace-nowrap px-16px">{t('JOURNAL.AMOUNT')}</th>
-              <th className="whitespace-nowrap px-16px">{t('REPORTS_HISTORY_LIST.PROJECT')}</th>
+              <th className="whitespace-nowrap text-center">{t('common:DATE_PICKER.DATE')}</th>
+              <th className="whitespace-nowrap px-16px">{t('common:COMMON.TYPE')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.PARTICULARS')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.FROM_TO')}</th>
+              <th className="whitespace-nowrap px-16px">{t('journal:JOURNAL.AMOUNT')}</th>
+              <th className="whitespace-nowrap px-16px">{t('common:COMMON.PROJECT')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.VOUCHER_NO')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.VOUCHER_NO')}
+                </th>
               )}
               {event === JOURNAL_EVENT.UPCOMING && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.OPERATIONS')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.OPERATIONS')}
+                </th>
               )}
             </tr>
           </thead>
@@ -143,10 +147,10 @@ const JournalList = ({
       </div>
       {/* Info: (20240517 - Julian) Mobile */}
       <div className="block lg:hidden">
-        <table className="my-20px w-full border border-lightGray6">
+        <table className="my-20px w-full border border-stroke-neutral-quaternary">
           {/* Info: (20240418 - Julian) Header */}
           <thead>
-            <tr className="bg-white text-left text-sm text-lightGray4">
+            <tr className="border border-stroke-neutral-quaternary text-left text-sm text-text-neutral-tertiary">
               {/* Info: (20240808 - Anna) Alpha版先隱藏(日記帳頁面的選取方塊) */}
               {/* Info: (20240419 - Julian) 全選 */}
               {/* <th className="flex justify-center py-8px md:w-50px">
@@ -157,13 +161,17 @@ const JournalList = ({
                   className="relative h-4 w-4 border border-tertiaryBlue bg-white accent-tertiaryBlue"
                 />
               </th> */}
-              <th className="whitespace-nowrap text-center">{t('DATE_PICKER.DATE')}</th>
-              <th className="whitespace-nowrap text-center">{t('JOURNAL.INFO')}</th>
+              <th className="whitespace-nowrap text-center">{t('common:DATE_PICKER.DATE')}</th>
+              <th className="whitespace-nowrap text-center">{t('journal:JOURNAL.INFO')}</th>
               {event === JOURNAL_EVENT.UPLOADED && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.VOUCHER_NO')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.VOUCHER_NO')}
+                </th>
               )}
               {event === JOURNAL_EVENT.UPCOMING && (
-                <th className="whitespace-nowrap px-16px text-right">{t('JOURNAL.OPERATIONS')}</th>
+                <th className="whitespace-nowrap px-16px text-right">
+                  {t('journal:JOURNAL.OPERATIONS')}
+                </th>
               )}
             </tr>
           </thead>

@@ -27,7 +27,7 @@ const EditAccountTitleModal = ({
   modalVisibilityHandler,
   modalData,
 }: IEditAccountTitleModalProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'setting']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
@@ -81,14 +81,14 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.SUCCESS,
-        content: `Successfully updated account: ${updateResult.name}`,
+        content: `${t('setting:SETTING.SUCCESSFULLY_UPDATED_ACCOUNT')} ${updateResult.name}`,
         closeable: true,
       });
     } else if (updateSuccess === false) {
       toastHandler({
         id: `updateAccount-${updateCode}`,
         type: ToastType.ERROR,
-        content: 'Failed to update account, please try again later.',
+        content: t('setting:SETTING.FAILED_TO_UPDATE_ACCOUNT'),
         closeable: true,
       });
     }
@@ -108,7 +108,7 @@ const EditAccountTitleModal = ({
       toastHandler({
         id: `getAccount-${errorCode}`,
         type: ToastType.ERROR,
-        content: 'Failed to get account data, please try again later.',
+        content: t('setting:SETTING.FAILED_TO_GET_ACCOUNT_DATA'),
         closeable: true,
       });
     }
@@ -134,17 +134,17 @@ const EditAccountTitleModal = ({
 
   const handleRemove = () => {
     messageModalDataHandler({
-      title: t('SETTING.REMOVE_ACCOUNTING_TITLE'),
-      content: t('SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
+      title: t('setting:SETTING.REMOVE_ACCOUNTING_TITLE'),
+      content: t('setting:SETTING.REMOVE_THIS_ACCOUNTING_TITLE_CHECK'),
       notes: nameValue,
       messageType: MessageType.WARNING,
-      submitBtnStr: t('SETTING.REMOVE'),
+      submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: () => {
         if (!hasCompanyId) return;
         deleteOwnAccountTitle(selectedCompany?.id, accountId);
         modalVisibilityHandler();
       },
-      backBtnStr: t('REPORTS_HISTORY_LIST.CANCEL'),
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -155,8 +155,10 @@ const EditAccountTitleModal = ({
     <input
       id="input-accounting-type"
       type="text"
-      // value={accountingType}
-      value={t(`SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
+      // Info: (20240805 - Anna) value={accountingType}
+      value={t(
+        `setting:SETTING.${accountingType.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+      )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -168,8 +170,10 @@ const EditAccountTitleModal = ({
     <input
       id="input-liquidity"
       type="text"
-      // value={liquidityText}
-      value={t(`SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`)}
+      // Info: (20240805 - Anna) value={liquidityText}
+      value={t(
+        `setting:SETTING.${liquidityText.toUpperCase().replace(/ /g, '_').replace(/-/g, '_')}`
+      )}
       disabled
       className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
     />
@@ -194,7 +198,7 @@ const EditAccountTitleModal = ({
       >
         {/* Info: (20240717 - Julian) Title */}
         <div className="relative flex items-center justify-center py-16px text-xl font-bold text-card-text-primary">
-          <h1>{t('SETTING.EDIT_MY_NEW_ACCOUNTING_TITLE')}</h1>
+          <h1>{t('setting:SETTING.EDIT_MY_NEW_ACCOUNTING_TITLE')}</h1>
           <button
             type="button"
             onClick={modalVisibilityHandler}
@@ -207,31 +211,34 @@ const EditAccountTitleModal = ({
         <div className="grid grid-flow-row grid-cols-2 gap-x-20px gap-y-16px px-40px py-20px">
           {/* Info: (20240717 - Julian) Accounting Type */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">{t('SETTING.ACCOUNTING_TYPE')}</p>
+            <p className="font-semibold text-input-text-primary">
+              {t('setting:SETTING.ACCOUNTING_TYPE')}
+            </p>
             {displayType}
           </div>
           {/* Info: (20240717 - Julian) Liquidity */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">{t('SETTING.LIQUIDITY')}</p>
+            <p className="font-semibold text-input-text-primary">
+              {t('setting:SETTING.LIQUIDITY')}
+            </p>
             {displayLiquidity}
           </div>
           {/* Info: (20240717 - Julian) Current Liquidity */}
           <div className="col-span-2 flex flex-col gap-y-8px">
             <p className="font-semibold text-input-text-primary">
-              {t('SETTING.CURRENT_LIQUIDITY')}
+              {t('setting:SETTING.CURRENT_LIQUIDITY')}
             </p>
             {displayCurrentAsset}
           </div>
           {/* Info: (20240717 - Julian) Name */}
           <div className="flex flex-col gap-y-8px">
-            <p className="font-semibold text-input-text-primary">{t('SETTING.NAME')}</p>
+            <p className="font-semibold text-input-text-primary">{t('setting:SETTING.NAME')}</p>
             <input
               id="input-name"
               type="text"
               value={nameValue}
               onChange={handleNameChange}
-              // placeholder="Enter name"
-              placeholder={t('SETTING.ENTER_NAME')}
+              placeholder={t('setting:SETTING.ENTER_NAME')}
               className="rounded-md border border-input-stroke-input bg-transparent px-12px py-10px text-input-text-input-filled outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
             />
           </div>
@@ -243,14 +250,14 @@ const EditAccountTitleModal = ({
               variant="secondaryOutline"
               onClick={handleRemove}
             >
-              <RiDeleteBinLine /> <p>{t('SETTING.REMOVE_ACCOUNTING_TITLE')}</p>
+              <RiDeleteBinLine /> <p>{t('setting:SETTING.REMOVE_ACCOUNTING_TITLE')}</p>
             </Button>
           </div>
         </div>
         {/* Info: (20240717 - Julian) Buttons */}
         <div className="flex items-center justify-end gap-12px px-20px py-16px text-sm">
           <Button id="cancel-button" type="button" variant={null} onClick={modalVisibilityHandler}>
-            {t('REPORTS_HISTORY_LIST.CANCEL')}
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             id="save-accounting-title-button"
@@ -259,7 +266,7 @@ const EditAccountTitleModal = ({
             disabled={disableSubmit}
             onClick={handleSave}
           >
-            {t('EDIT_BOOKMARK_MODAL.SAVE')}
+            {t('common:EDIT_BOOKMARK_MODAL.SAVE')}
           </Button>
         </div>
       </div>

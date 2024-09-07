@@ -16,8 +16,7 @@ export interface IJournal {
   voucher: IVoucherDataForSavingToDB;
 }
 
-// ToDo: (20240528 - Julian) 根據 Murky 寫在 src/pages/api/v1/company/[companyId]/journal/index.ts
-// 用於 journal list 的 dummy interface，之後會被取代
+// ToDo: (20240528 - Julian) [Beta] 用於 journal list 的 dummy interface，之後會被取代
 export interface IJournalListItem {
   id: number;
   date: number;
@@ -42,10 +41,15 @@ export interface IJournalListItem {
 export type IJournalFromPrismaIncludeProjectContractInvoiceVoucher = Prisma.JournalGetPayload<{
   include: {
     contract: true;
-    project: true;
+    project: {
+      include: {
+        imageFile: true;
+      };
+    };
     invoice: {
       include: {
         payment: true;
+        imageFile: true;
       };
     };
     voucher: {
@@ -67,5 +71,12 @@ export type IJournalFromPrismaIncludeInvoicePayment = Prisma.JournalGetPayload<{
         payment: true;
       };
     };
+  };
+}>;
+
+export type IJournalIncludeVoucherLineItemsInvoicePayment = Prisma.JournalGetPayload<{
+  include: {
+    invoice: { include: { payment: true } };
+    voucher: { include: { lineItems: { include: { account: true } } } };
   };
 }>;

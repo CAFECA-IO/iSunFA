@@ -24,6 +24,7 @@ module.exports = {
       parser: '@typescript-eslint/parser',
       plugins: ['@typescript-eslint'],
       rules: {
+        camelcase: ['error', { properties: 'never' }],
         'object-curly-newline': 'off',
         'react/jsx-props-no-spreading': 'off',
         'no-console': 'error',
@@ -65,7 +66,10 @@ module.exports = {
         'react/jsx-tag-spacing': 'off',
         'react/jsx-wrap-multilines': 'off',
         'no-else-return': 'off',
-        'import/no-extraneous-dependencies': 'off',
+        'import/no-extraneous-dependencies': [
+          'error',
+          { devDependencies: false, optionalDependencies: false, peerDependencies: false },
+        ],
         'no-nested-ternary': 'off',
         'react/require-default-props': 'off',
         '@typescript-eslint/naming-convention': [
@@ -89,6 +93,7 @@ module.exports = {
     'plugin:react/recommended',
   ],
   rules: {
+    camelcase: ['error', { properties: 'never' }],
     'object-curly-newline': 'off',
     'react/jsx-props-no-spreading': 'off',
     'no-console': 'error',
@@ -131,6 +136,8 @@ module.exports = {
     'react/jsx-wrap-multilines': 'off',
     'no-nested-ternary': 'off',
     'react/require-default-props': 'off',
+    'no-eval': 'error',
+    'no-new-func': 'error',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題

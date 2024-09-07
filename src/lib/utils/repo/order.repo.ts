@@ -1,4 +1,5 @@
 import prisma from '@/client';
+import { SortOrder } from '@/constants/sort';
 import { IOrder } from '@/interfaces/order';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Plan, Prisma } from '@prisma/client';
@@ -10,7 +11,7 @@ export async function listOrder(companyId: number): Promise<IOrder[]> {
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
-      id: 'asc',
+      id: SortOrder.ASC,
     },
   });
   return listedOrder;
@@ -35,7 +36,7 @@ export async function createOrder(
   return newOrder;
 }
 
-// Read
+// Info: (20240620 - Jacky) Read
 export async function getOrderById(id: number): Promise<IOrder | null> {
   let order = null;
   if (id > 0) {
@@ -65,7 +66,7 @@ export async function getOrderDetailById(id: number): Promise<(IOrder & { plan: 
   return order;
 }
 
-// Update
+// Info: (20240620 - Jacky) Update
 export async function updateOrder(id: number, status: string): Promise<IOrder> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);

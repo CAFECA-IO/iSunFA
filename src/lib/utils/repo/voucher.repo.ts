@@ -7,8 +7,9 @@ import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
   IVoucherDataForSavingToDB,
-  IVoucherFromPrismaIncludeLineItems,
+  IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
+import { SortOrder } from '@/constants/sort';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -29,9 +30,7 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
 
     return result;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -49,9 +48,7 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
 
     return result?.id || null;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -78,15 +75,13 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 
     return result;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
 
 export async function findUniqueVoucherInPrisma(voucherId: number) {
-  let voucherData: IVoucherFromPrismaIncludeLineItems | null = null;
+  let voucherData: IVoucherFromPrismaIncludeJournalLineItems | null = null;
   try {
     voucherData = await prisma.voucher.findUnique({
       where: {
@@ -102,9 +97,7 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
       },
     });
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return voucherData;
@@ -116,22 +109,8 @@ export async function createLineItemInPrisma(
   companyId: number
 ) {
   try {
-    // Deprecated: (20240527 - Murky) LineItem has accountId
-    // let accountId = await findFirstAccountInPrisma(lineItem.account);
-
-    // Deprecated: (20240527 - Murky) LineItem has accountId
-    // if (!accountId) {
-    //   accountId = await findFirstAccountInPrisma('其他費用');
-    //   if (!accountId) {
-    //     accountId = await createFakeAccountInPrisma(companyId);
-    //   }
-    // }
-
-    // Deprecated: (20240619 - Murky) LineItem has accountId, no need to check
     if (!lineItem.accountId) {
-      // Deprecated: (20240527 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`LineItem ${lineItem.account} does not have accountId`);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
@@ -141,9 +120,7 @@ export async function createLineItemInPrisma(
     );
 
     if (!accountBelongsToCompany) {
-      // Deprecated: (20240527 - Murky) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`LineItem ${lineItem.account} does not belong to company ${companyId}`);
+      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
@@ -174,9 +151,7 @@ export async function createLineItemInPrisma(
 
     return result.id;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -190,7 +165,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
         },
       },
       orderBy: {
-        no: 'desc',
+        no: SortOrder.DESC,
       },
       select: {
         no: true,
@@ -212,9 +187,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
 
     return `${localTodayNo}${newVoucherNo}`;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -242,9 +215,7 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
 
     return voucherData;
   } catch (error) {
-    // Info: （ 20240522 - Murky）I want to log the error message
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -289,9 +260,7 @@ export async function findManyVoucherWithCashInPrisma(
 
     return vouchers;
   } catch (error) {
-    // Info: （ 20240710 - Murky）Debugging purpose
-    // eslint-disable-next-line no-console
-    console.log(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }

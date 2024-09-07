@@ -27,22 +27,22 @@ interface StageNameMap {
 }
 
 const stageNameMap: StageNameMap = {
-  Designing: 'STAGE_NAME_MAP.DESIGNING',
-  Developing: 'STAGE_NAME_MAP.DEVELOPING',
-  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
-  Selling: 'STAGE_NAME_MAP.SELLING',
-  Sold: 'STAGE_NAME_MAP.SOLD',
-  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+  Designing: 'project:STAGE_NAME_MAP.DESIGNING',
+  Developing: 'project:STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'project:STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'project:STAGE_NAME_MAP.SELLING',
+  Sold: 'project:STAGE_NAME_MAP.SOLD',
+  Archived: 'project:STAGE_NAME_MAP.ARCHIVED',
 };
 interface IProjectSettingPageProps {
   projectId: string;
 }
 
 const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading } = useUserCtx();
 
-  // ToDo: (20240617 - Julian) Replace with real data
+  // ToDo: (20240617 - Julian) [Beta] Replace with real data
   const projectName = 'BAIFA';
   const projectImageSrc = DEFAULT_COMPANY_IMAGE_URL;
   const projectStage = stageList[0];
@@ -99,7 +99,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
     profileUploadModalVisibilityHandler();
   };
 
-  // ToDo: (20240612 - Julian) get member list from API
+  // ToDo: (20240612 - Julian) [Beta] get member list from API
   const filteredMemberList = dummyMemberList.filter((member) => {
     return (
       // Info: (20240611 - Julian) 搜尋條件：名字或職稱
@@ -127,7 +127,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
       })
     ) : (
       <p className="text-left text-input-text-input-placeholder">
-        {t('PROJECT.CHOOSE_TEAM_MEMBERS')}
+        {t('project:PROJECT.CHOOSE_TEAM_MEMBERS')}
       </p>
     );
 
@@ -195,19 +195,19 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
     >
       <div className="flex flex-col items-start">
         {/* Info: (20240611 - Julian) search bar */}
-        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-darkBlue2">
+        <div className="my-8px flex w-full items-center justify-between rounded-sm border px-12px py-8px text-icon-surface-single-color-primary">
           <input
             id="companySearchBar"
             type="text"
-            placeholder={t('AUDIT_REPORT.SEARCH')}
+            placeholder={t('common:COMMON.SEARCH')}
             value={searchMemberValue}
             onChange={searchMemberChangeHandler}
-            className="w-full outline-none placeholder:text-lightGray4"
+            className="w-full outline-none placeholder:text-input-text-input-placeholder"
           />
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-          {t('PROJECT.DEVELOPMENT_DEPARTMENT')}
+          {t('project:PROJECT.DEVELOPMENT_DEPARTMENT')}
         </div>
         {/* Info: (20240611 - Julian) member list */}
         <div className="flex max-h-50px w-full flex-col items-start overflow-y-auto overflow-x-hidden md:max-h-100px">
@@ -229,16 +229,17 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
           <div className="flex flex-col px-16px md:px-60px">
             {/* Info: (20240611 - Julian) Title */}
             <div className="flex items-center gap-24px">
-              <button
+              <Button
                 type="button"
+                variant="tertiaryOutline"
                 onClick={backClickHandler}
-                className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
+                className="h-40px w-40px p-0"
               >
                 <FaArrowLeft />
-              </button>
-              {/* ToDo: (20240611 - Julian) Project Name */}
+              </Button>
+              {/* Info: (20240611 - Julian) Project Name */}
               <h1 className="text-4xl font-semibold text-text-neutral-secondary">
-                {projectName} - {t('NAV_BAR.SETTING')}
+                {projectName} - {t('common:NAV_BAR.SETTING')}
               </h1>
             </div>
             {/* Info: (20240617 - Julian) Divider */}
@@ -249,7 +250,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
               className="flex flex-1 flex-col gap-y-36px py-40px text-input-text-primary"
             >
               <div className="flex flex-col items-center gap-40px md:flex-row">
-                {/* ToDo: (20240617 - Julian) open profile update modal */}
+                {/* Info: (20240617 - Julian) open profile update modal */}
                 <button
                   type="button"
                   onClick={profileUploadClickHandler}
@@ -262,17 +263,20 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                     height={150}
                     className="group-hover:brightness-50"
                   />
-                  <FiEdit className="absolute hidden text-white group-hover:block" size={40} />
+                  <FiEdit
+                    className="absolute hidden text-surface-neutral-solid-light group-hover:block"
+                    size={40}
+                  />
                 </button>
                 <div className="grid w-full flex-1 grid-cols-1 gap-x-40px gap-y-36px md:grid-cols-2">
                   {/* Info: (20240617 - Julian) Project Name */}
                   <div className="flex w-full flex-col items-start gap-y-8px">
-                    <p className="font-semibold">{t('PROJECT.PROJECT_NAME')}</p>
+                    <p className="font-semibold">{t('project:PROJECT.PROJECT_NAME')}</p>
                     <input
                       id="changedProjectName"
                       type="text"
                       className="h-44px w-full rounded-sm border border-input-stroke-input px-12px outline-none"
-                      placeholder={t('PROJECT.ENTER_NEW_PROJECT_NAME')}
+                      placeholder={t('project:PROJECT.ENTER_NEW_PROJECT_NAME')}
                       value={changedProjectName}
                       onChange={nameChangeHandler}
                       required
@@ -280,7 +284,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                   </div>
                   {/* Info: (20240617 - Julian) Stage */}
                   <div className="flex w-full flex-col items-start gap-y-8px">
-                    <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+                    <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
                     <div
                       onClick={stageMenuClickHandler}
                       className={`relative flex h-44px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer`}
@@ -294,7 +298,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
                   <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
                     <div className="flex w-full flex-col items-start gap-y-8px">
                       <div className="flex w-full items-end justify-between">
-                        <p className="font-semibold">{t('PROJECT.TEAM_MEMBERS')}</p>
+                        <p className="font-semibold">{t('project:PROJECT.TEAM_MEMBERS')}</p>
                         {/* Info: (20240611 - Julian) amount of selected members */}
                         <p className="text-sm text-input-text-secondary">{membersAmount}</p>
                       </div>
@@ -350,8 +354,7 @@ const ProjectSettingPage = ({ projectId }: IProjectSettingPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
-        <title>{t('PROJECT.PROJECT_SETTING')} - iSunFA</title>
+        <title>{t('project:PROJECT.PROJECT_SETTING')} - iSunFA</title>
       </Head>
 
       <div className="h-screen font-barlow">
@@ -375,7 +378,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

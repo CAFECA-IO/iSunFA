@@ -1,4 +1,3 @@
-import { promises as fs } from 'fs';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
@@ -7,8 +6,7 @@ import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/co
 import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
-import path from 'path';
-import { BASE_STORAGE_FOLDER, VERCEL_STORAGE_FOLDER } from '@/constants/file';
+import { FileFolder } from '@/constants/file';
 import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 import { ROCDate } from '@/interfaces/locale';
 
@@ -24,7 +22,7 @@ export const numberWithCommas = (x: number | string) => {
   return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 };
 
-// Info: truncate the string to the given length (20240416 - Shirley)
+// Info: (20240416 - Shirley) truncate the string to the given length
 export const truncateString = (str: string, length: number) => {
   const result = str.length > length ? str.slice(0, length) + '...' : str;
   return result;
@@ -52,7 +50,7 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   }
 
   const date = new Date(timestamp * 1000);
-  // 設定時區
+  // Info: (20240417 - Jacky) 設定時區
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -124,7 +122,7 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   };
 };
 
-/** Info: 回傳這個月第一天跟今天的 timestamp in seconds (20240419 - Shirley)
+/** Info: (20240419 - Shirley) 回傳這個月第一天跟今天的 timestamp in seconds
  *
  * @returns {startTimeStamp: number, endTimeStamp: number} - The start and present time of the current month in seconds
  */
@@ -133,11 +131,11 @@ export const getPeriodOfThisMonthInSec = (): { startTimeStamp: number; endTimeSt
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
 
-  // Info: 取得當前月份第一天的 00:00:00 (20240419 - Shirley)
+  // Info: (20240419 - Shirley) 取得當前月份第一天的 00:00:00
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   const startTimeStamp = Math.floor(firstDayOfMonth.getTime() / MILLISECONDS_IN_A_SECOND);
 
-  // Info: 取得今天的 23:59:59 (20240419 - Shirley)
+  // Info: (20240419 - Shirley) 取得今天的 23:59:59
   const endOfToday = new Date(currentYear, currentMonth, today.getDate(), 23, 59, 59);
   const endTimeStamp = Math.floor(endOfToday.getTime() / MILLISECONDS_IN_A_SECOND);
 
@@ -320,8 +318,7 @@ export function eventTypeToVoucherType(eventType: EventType): VoucherType {
 }
 
 // Info Murky (20240505): type guards can input any type and return a boolean
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isStringNumber(value: any): value is string {
+export function isStringNumber(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Number(value));
 }
 
@@ -334,11 +331,11 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
 }
 
 export function transformOCRImageIDToURL(
-  documentType: string,
+  fileFolder: FileFolder,
   companyId: number,
-  imageID: string
+  imageId: string
 ): string {
-  return `/api/v1/company/${companyId}/${documentType}/${imageID}/image`;
+  return `/api/v1/company/${companyId}/image/${imageId}?fileType=${fileFolder}`;
 }
 
 export function transformBytesToFileSizeString(bytes: number): string {
@@ -348,6 +345,30 @@ export function transformBytesToFileSizeString(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const size = parseFloat((bytes / k ** i).toFixed(2));
   return `${size} ${sizes[i]}`;
+}
+
+/**
+ * Info: (20240816 Murky): Transform file size string to bytes, file size string format should be like '1.00 MB'
+ * @param sizeString
+ * @returns
+ */
+export function transformFileSizeStringToBytes(sizeString: string): number {
+  const regex = /^\d+(\.\d+)? (Bytes|KB|MB|GB|TB|PB|EB|ZB|YB)$/;
+
+  let bytes = 0;
+  if (regex.test(sizeString)) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const [size, unit] = sizeString.split(' ');
+
+    const sizeIndex = sizes.indexOf(unit);
+    if (sizeIndex === -1) {
+      throw new Error('Invalid file size unit');
+    }
+
+    bytes = parseFloat(size) * 1024 ** sizeIndex;
+  }
+
+  return Math.round(bytes);
 }
 
 // page, limit to offset
@@ -372,18 +393,6 @@ export const getTodayPeriodInSec = () => {
   );
   return { startTimeStamp, endTimeStamp };
 };
-
-// Info Murky (20240531): This function can only be used in the server side
-export async function mkUploadFolder(subDir: string) {
-  const uploadDir =
-    process.env.VERCEL === '1' ? VERCEL_STORAGE_FOLDER : path.join(BASE_STORAGE_FOLDER, subDir);
-
-  try {
-    await fs.mkdir(uploadDir, { recursive: false });
-  } catch (error) {
-    // Info: (20240329) Murky: Do nothing if /tmp already exist
-  }
-}
 
 export function isParamNumeric(param: string | string[] | undefined): param is string {
   if (!param || Array.isArray(param)) {
@@ -466,12 +475,15 @@ export function getTimestampOfSameDateOfLastYear(todayInSecond: number) {
 }
 
 export function getTimestampOfLastSecondOfDate(date: Date | number) {
+  let dateObject: Date;
   if (typeof date === 'number') {
-    // eslint-disable-next-line no-param-reassign
-    date = new Date(timestampInMilliSeconds(date));
+    // Info: (20230829 - Anna) 移除no-param-reassign註解，改將參數date的處理結果存在新變數，而不是直接重新賦值給date
+    dateObject = new Date(timestampInMilliSeconds(date));
+  } else {
+    dateObject = date;
   }
 
-  const timestamp = date.setHours(23, 59, 59, 999);
+  const timestamp = dateObject.setHours(23, 59, 59, 999);
   return timestampInSeconds(timestamp);
 }
 
@@ -512,8 +524,6 @@ export const loadFileFromLocalStorage = (
 ) => {
   try {
     const data = JSON.parse(localStorage.getItem(localStorageFilesKey) || '{}');
-    // eslint-disable-next-line no-console
-    console.log('Loaded from localStorage:', data);
 
     let fileObject: {
       id: string | undefined;
@@ -554,8 +564,6 @@ export const loadFileFromLocalStorage = (
 
     return fileObject;
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error loading file from localStorage:', error);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 };
@@ -563,7 +571,7 @@ export const loadFileFromLocalStorage = (
 export const deleteFileFromLocalStorage = (
   fileType: UploadDocumentKeys,
   loacalStorageFilesKey: string = KYCFiles,
-  fileId?: string
+  fileId?: number
 ) => {
   const currentData = JSON.parse(localStorage.getItem(loacalStorageFilesKey) || '{}');
   const data = currentData;
@@ -603,8 +611,10 @@ export function getEnumValue<T extends object>(enumObj: T, value: string): T[key
 }
 
 // Info: (20240808 - Shirley) 節流函數
-// eslint-disable-next-line function-paren-newline
-export function throttle<F extends (...args: unknown[]) => unknown>(
+// Info: (20240830 - Anna) 為了拿掉next-line function-paren-newline註解所以改寫，再加上prettier-ignore，請Prettier不要格式化
+// prettier-ignore
+export function throttle<F extends (
+...args: unknown[]) => unknown>(
   func: F,
   limit: number
 ): (...args: Parameters<F>) => void {
@@ -612,7 +622,6 @@ export function throttle<F extends (...args: unknown[]) => unknown>(
   let lastRan: number | null = null;
 
   function returnFunc(this: unknown, ...args: Parameters<F>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const context = this as unknown as F;
     if (lastRan === null) {
       func.apply(context, args);
@@ -635,5 +644,6 @@ export function throttle<F extends (...args: unknown[]) => unknown>(
 }
 
 export function generateUUID(): string {
-  return Math.random().toString(36).substring(2, 12);
+  const randomUUID = Math.random().toString(36).substring(2, 12);
+  return randomUUID;
 }

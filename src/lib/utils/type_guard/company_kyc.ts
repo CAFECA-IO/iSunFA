@@ -29,14 +29,14 @@ export function isCompanyKYC(data: CompanyKYC): data is ICompanyKYC {
     typeof data.contactPerson === 'string' &&
     typeof data.contactPhone === 'string' &&
     typeof data.contactEmail === 'string' &&
-    // (typeof data.website === 'string' || data.website === undefined) && Info: this field shouble be optional, but db schema is not nullable (20240719 - Tzuhan)
+    // (typeof data.website === 'string' || data.website === undefined) && Info: (20240719 - Tzuhan) this field should be optional, but db schema is not nullable
     typeof data.website === 'string' &&
     Object.values(RepresentativeIDType).includes(
       data.representativeIdType as RepresentativeIDType
     ) &&
-    typeof data.registrationCertificateId === 'string' &&
-    typeof data.taxCertificateId === 'string' &&
-    typeof data.representativeIdCardId === 'string' &&
+    typeof data.registrationCertificateFileId === 'number' &&
+    typeof data.taxCertificateFileId === 'number' &&
+    typeof data.representativeIdCardFileId === 'number' &&
     typeof data.createdAt === 'number' &&
     typeof data.updatedAt === 'number' &&
     (typeof data.deletedAt === 'number' || data.deletedAt === null)
@@ -71,9 +71,9 @@ export function isCompanyKYCForm(obj: ICompanyKYCForm): obj is ICompanyKYCForm {
     typeof obj[ContactInfoKeys.EMAIL_ADDRESS] === 'string' &&
     typeof obj[ContactInfoKeys.COMPANY_WEBSITE] === 'string' &&
     typeof obj[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE] === 'string' &&
-    typeof obj.registrationCertificateId === 'string' &&
-    typeof obj.taxCertificateId === 'string' &&
-    typeof obj.representativeIdCardId === 'string'
+    typeof obj.registrationCertificateFileId === 'number' &&
+    typeof obj.taxCertificateFileId === 'number' &&
+    typeof obj.representativeIdCardFileId === 'number'
   );
 }
 
@@ -113,24 +113,24 @@ export function isKYCFormComplete(data: ICompanyKYCForm): {
   if (typeof data.contactEmail !== 'string' || !data.contactEmail) {
     missingFields.push('contactEmail');
   }
-  // Deprecated: (20240801 - Liz) Don't need to check website field
-  // if (typeof data.website !== 'string' || !data.website) {
-  //   missingFields.push('website');
-  // } // Info: this field should be optional, but db schema is not nullable (20240719 - Tzuhan)}
+  // Info: (20240719 - Tzuhan) this field should be optional, but db schema is not nullable}
   if (
     !Object.values(RepresentativeIDType).includes(data.representativeIdType) ||
     !data.representativeIdType
   ) {
     missingFields.push('representativeIdType');
   }
-  if (typeof data.registrationCertificateId !== 'string' || !data.registrationCertificateId) {
-    missingFields.push('registrationCertificateId');
+  if (
+    typeof data.registrationCertificateFileId !== 'number' ||
+    !data.registrationCertificateFileId
+  ) {
+    missingFields.push('registrationCertificateFileId');
   }
-  if (typeof data.taxCertificateId !== 'string' || !data.taxCertificateId) {
-    missingFields.push('taxCertificateId');
+  if (typeof data.taxCertificateFileId !== 'number' || !data.taxCertificateFileId) {
+    missingFields.push('taxCertificateFileId');
   }
-  if (typeof data.representativeIdCardId !== 'string' || !data.representativeIdCardId) {
-    missingFields.push('representativeIdCardId');
+  if (typeof data.representativeIdCardFileId !== 'number' || !data.representativeIdCardFileId) {
+    missingFields.push('representativeIdCardFileId');
   }
   return {
     isComplete: missingFields.length === 0,

@@ -18,14 +18,14 @@ function LandingPage({ locale }: ILandingPageProps) {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('META.TITLE')}</title>
-        <meta name="description" content={t('META.DESCRIPTION')} />
+        <title>{t('common:META.TITLE')}</title>
+        <meta name="description" content={t('common:META.DESCRIPTION')} />
         <meta name="author" content="CAFECA" />
-        <meta name="keywords" content={t('META.KEYWORDS')} />
+        <meta name="keywords" content={t('common:META.KEYWORDS')} />
 
         <meta property="og:title" content="iSunFA" />
-        <meta property="og:description" content={t('META.DESCRIPTION')} />
-        {/* TODO: i18n for image (20240807 - Shirley) */}
+        <meta property="og:description" content={t('common:META.DESCRIPTION')} />
+        {/* TODO: (20240807 - Shirley) [Beta] i18n for image */}
         <meta property="og:image" content={`https://isunfa.com/meta/isunfa_preview.png`} />
         <meta property="og:url" content={`https://isunfa.com/${locale}`} />
         <meta property="og:type" content="website" />
@@ -45,7 +45,16 @@ function LandingPage({ locale }: ILandingPageProps) {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
     locale,
   },
 });

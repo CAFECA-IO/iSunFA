@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -15,12 +16,16 @@ import ProjectMilestoneBlock from '@/components/project_milestone_block/project_
 import WorkingTimeRatioBlock from '@/components/working_time_ratio_block/working_time_ratio_block';
 import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/project_monthly_sales_block';
 import { useUserCtx } from '@/contexts/user_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import { APIName } from '@/constants/api_connection';
 import { IProject } from '@/interfaces/project';
 import APIHandler from '@/lib/utils/api_handler';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
 
 // Info: (2024704 - Anna) For list
 // Info: (2024704 - Anna) 定義階段名稱到翻譯鍵值的映射
@@ -29,21 +34,26 @@ interface StageNameMap {
 }
 
 const stageNameMap: StageNameMap = {
-  Designing: 'STAGE_NAME_MAP.DESIGNING',
-  Developing: 'STAGE_NAME_MAP.DEVELOPING',
-  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
-  Selling: 'STAGE_NAME_MAP.SELLING',
-  Sold: 'STAGE_NAME_MAP.SOLD',
-  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+  Designing: 'project:STAGE_NAME_MAP.DESIGNING',
+  Developing: 'project:STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'project:STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'project:STAGE_NAME_MAP.SELLING',
+  Sold: 'project:STAGE_NAME_MAP.SOLD',
+  Archived: 'project:STAGE_NAME_MAP.ARCHIVED',
 };
 interface IProjectDashboardPageProps {
   projectId: string;
 }
 
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
+  const { toastHandler } = useGlobalCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  const [stageHolder, setStageHolder] = useState('-');
+
+  // Info: (20240821 - Julian) 取得專案資料
   const { data: projectData } = APIHandler<IProject>(
     APIName.GET_PROJECT_BY_ID,
     {
@@ -52,8 +62,44 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
     hasCompanyId
   );
 
+  // Info: (20240821 - Julian) 更新專案資料
+  const {
+    trigger: updateProject,
+    data: updateResult,
+    success: updateSuccess,
+    code: updateCode,
+  } = APIHandler<IProject>(APIName.UPDATE_PROJECT_BY_ID);
+
+  useEffect(() => {
+    if (projectData) {
+      setStageHolder(projectData.stage);
+    }
+  }, [projectData]);
+
+  useEffect(() => {
+    if (updateSuccess && updateResult) {
+      // Info: (20240821 - Julian) 顯示 stage 更新成功的訊息
+      toastHandler({
+        id: ToastId.PROJECT_STAGE_UPDATE,
+        type: ToastType.SUCCESS,
+        content: 'update success',
+        closeable: true,
+      });
+    } else if (updateSuccess === false && updateCode) {
+      // Info: (20240821 - Julian) 顯示 stage 更新失敗的訊息
+      toastHandler({
+        id: ToastId.PROJECT_STAGE_UPDATE,
+        type: ToastType.ERROR,
+        content: 'update failed',
+        closeable: true,
+      });
+    }
+  }, [updateResult, updateSuccess, updateCode]);
+
   const projectName = projectData?.name ?? '-';
   const currentStage = projectData?.stage ?? '-';
+  const memberList = projectData?.members ?? [];
+  const imageId = projectData?.imageId ?? '';
 
   const {
     targetRef: stageOptionsRef,
@@ -70,7 +116,18 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
     >
       {stageList.map((stage) => {
         const clickHandler = () => {
-          // ToDo: (20240612 - Julian) update stage api call
+          // Info: (20240821 - Julian) update stage api call
+          updateProject({
+            params: { companyId: hasCompanyId, projectId },
+            body: {
+              name: projectName,
+              stage,
+              memberIdList: memberList,
+              imageId,
+            },
+          });
+          // Info: (20240821 - Julian) update stage holder && close menu
+          setStageHolder(stage);
           setStageOptionsVisible(false);
         };
         return (
@@ -100,25 +157,23 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             <div className="flex w-full items-center justify-between">
               {/* Info: (20240611 - Julian) Title */}
               <div className="flex items-center gap-24px">
-                <Link
-                  href={ISUNFA_ROUTE.PROJECT_LIST}
-                  className="rounded border border-navyBlue p-12px text-navyBlue hover:border-primaryYellow hover:text-primaryYellow"
-                >
-                  <FaArrowLeft />
-                </Link>
-
+                <Button type="button" className="h-40px w-40px p-0" variant="tertiaryOutline">
+                  <Link href={ISUNFA_ROUTE.PROJECT_LIST}>
+                    <FaArrowLeft />
+                  </Link>
+                </Button>
                 <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
                   {projectName}
                 </h1>
               </div>
               {/* Info: (20240612 - Julian) stage selection (desktop) */}
               <div className="hidden flex-col items-start gap-y-8px md:flex">
-                <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+                <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
                 <div
                   onClick={stageMenuClickHandler}
                   className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
                 >
-                  {t(stageNameMap[currentStage])}
+                  {t(stageNameMap[stageHolder])}
                   <FaChevronDown />
                   {displayedStageOptions}
                 </div>
@@ -128,7 +183,7 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
             <hr className="my-24px border border-divider-stroke-lv-4" />
             {/* Info: (20240612 - Julian) stage selection (mobile) */}
             <div className="my-24px flex flex-col items-start gap-y-8px md:hidden">
-              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+              <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-46px w-full items-center justify-between rounded-sm border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
@@ -173,9 +228,8 @@ const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        {/* TODO: (2024606 - Julian) i18n */}
         <title>
-          {projectName} {t('NAV_BAR.DASHBOARD')} - iSunFA
+          {projectName} {t('common:NAV_BAR.DASHBOARD')} - iSunFA
         </title>
       </Head>
 
@@ -200,7 +254,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       projectId: params.projectId,
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+      ])),
     },
   };
 };

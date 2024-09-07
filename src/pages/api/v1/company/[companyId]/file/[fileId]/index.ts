@@ -1,83 +1,114 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import path from 'path';
 import { promises as fs } from 'fs';
-import { BASE_STORAGE_FOLDER, FileFolder } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { getSession } from '@/lib/utils/session';
-import { findFileByName } from '@/lib/utils/parse_image_form';
-import { formatApiResponse } from '@/lib/utils/common';
-import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
+import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { deleteFileById, findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
+import { File } from '@prisma/client';
 
-async function checkAuth(userId: number, companyId: number): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
-  return !!admin;
-}
-
-async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleGetRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IFile | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
-  try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    const isAuth = await checkAuth(userId, companyId);
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const { fileId } = req.query;
-      const fileIdStr = String(fileId);
-      const companyIdStr = companyId.toString();
-      const filename = `${companyIdStr}-${fileIdStr}`;
-      const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
-      const filePath = await findFileByName(tmpFolder, filename);
+      try {
+        const { fileId } = req.query;
+        const fileName = String(fileId);
 
-      if (filePath) {
-        await fs.access(filePath);
-        const stat = await fs.stat(filePath);
-        payload = { id: fileIdStr, size: stat.size, existed: true };
-      } else {
-        payload = { id: fileIdStr, size: 0, existed: false };
+        let file: File | null;
+
+        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
+        if (isStringNumber(fileName)) {
+          const fileIdInt = Number(fileName);
+          file = await findFileById(fileIdInt);
+        } else {
+          file = await findFileInDBByName(fileName);
+        }
+
+        if (file) {
+          const filePath = file.url;
+          const stat = await fs.stat(filePath);
+          payload = { id: file.id, name: file.name, size: stat.size, existed: true };
+        } else {
+          payload = { id: -1, name: 'not found', size: 0, existed: false };
+        }
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      } catch (error) {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
-      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     }
-  } catch (error) {
-    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
   return { statusMessage, payload };
 }
 
-async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
+async function handleDeleteRequest(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IFile | null>>
+) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFile | null = null;
 
-  try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    const isAuth = await checkAuth(userId, companyId);
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+  } else {
+    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const { fileId } = req.query;
-      const fileIdStr = fileId as string;
-      const companyIdStr = companyId.toString();
-      const filename = `${companyIdStr}-${fileIdStr}`;
-      const tmpFolder = path.join(BASE_STORAGE_FOLDER, FileFolder.TMP);
-      const filePath = await findFileByName(tmpFolder, filename);
-      if (filePath) {
-        const stat = await fs.stat(filePath);
-        await fs.unlink(filePath); // 删除文件
-        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-        payload = { id: fileIdStr, size: stat.size, existed: false };
-      } else {
-        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-        payload = { id: fileIdStr, size: 0, existed: false };
+      try {
+        const { fileId } = req.query;
+        const fileName = fileId as string;
+
+        let file: File | null = null;
+
+        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
+        if (isStringNumber(fileName)) {
+          const fileIdInt = Number(fileName);
+          file = await deleteFileById(fileIdInt);
+        } else {
+          const fileForDelete = await findFileInDBByName(fileName);
+          if (fileForDelete) {
+            file = await deleteFileById(fileForDelete.id);
+          }
+        }
+
+        if (file) {
+          const stat = await fs.stat(file.url);
+          await fs.unlink(file.url);
+
+          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+          payload = { id: file.id, name: file.name, size: stat.size, existed: false };
+        } else {
+          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+          payload = { id: -1, name: 'not found', size: 0, existed: false };
+        }
+      } catch (error) {
+        // ToDo: (20240828 - Jacky) Log error message
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
     }
-  } catch (error) {
-    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
   return { statusMessage, payload };
@@ -86,8 +117,8 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
-    res: NextApiResponse<IResponseData<IFile | string | null>>
-  ) => Promise<{ statusMessage: string; payload: IFile | string | null }>;
+    res: NextApiResponse<IResponseData<IFile | null>>
+  ) => Promise<{ statusMessage: string; payload: IFile | null }>;
 } = {
   GET: handleGetRequest,
   DELETE: handleDeleteRequest,
@@ -95,18 +126,23 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | string | null>>
+  res: NextApiResponse<IResponseData<IFile | null>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-  let payload: IFile | string | null = null;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IFile | null = null;
 
-  const handleRequest = methodHandlers[req.method || ''];
-  if (handleRequest) {
-    ({ statusMessage, payload } = await handleRequest(req, res));
-  } else {
-    statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IFile | null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-
-  const { httpCode, result } = formatApiResponse<IFile | string | null>(statusMessage, payload);
-  res.status(httpCode).json(result);
 }

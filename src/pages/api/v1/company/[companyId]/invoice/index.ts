@@ -11,25 +11,23 @@ import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { InvoiceType } from '@/constants/account';
+import { InvoiceType } from '@/constants/invoice';
 
 export interface IPostApiResponseType {
   journalId: number;
   resultStatus: IAccountResultStatus;
 }
 
-// Info Murky (20240416): Utils
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isCompanyIdValid(companyId: any): companyId is number {
+// Info: (20240416 - Murky) Utils
+function isCompanyIdValid(companyId: unknown): companyId is number {
   return typeof companyId === 'number';
 }
 
-// Info Murky (20240416): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Info: (20240416 - Murky) Body傳進來會是any
 function formatInvoice(invoice: IInvoice) {
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
-  const now = Date.now(); // Info (20240807 - Jacky): for fake unique invoice number
-  const invoiceTypeValues = Object.values(InvoiceType); // Info (20240807 - Jacky): for fake invoice type
+  const now = Date.now(); // Info: (20240807 - Jacky) for fake unique invoice number
+  const invoiceTypeValues = Object.values(InvoiceType); // Info: (20240807 - Jacky) for fake invoice type
   const randomIndex = Math.floor(Math.random() * invoiceTypeValues.length);
   const formattedInvoice = {
     ...invoice,
@@ -42,21 +40,19 @@ function formatInvoice(invoice: IInvoice) {
     project: invoice.project ? invoice.project : null,
     contract: invoice.contract ? invoice.contract : null,
   };
-  // Info Murky (20240416): Check if invoices is array and is Invoice type
+  // Info: (20240416 - Murky) Check if invoices is array and is Invoice type
   if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
   return formattedInvoice;
 }
 
-// Info Murky (20240612): Body傳進來會是any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatOcrId(ocrId: any): number | undefined {
+// Info: (20240612 - Murky) Body傳進來會是any
+function formatOcrId(ocrId: unknown): number | undefined {
   if (!ocrId) {
     return undefined;
   }
 
-  // ToDo (20240618 - Murky) Need to use type guard instead
   if (typeof ocrId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -75,12 +71,10 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([invoiceData]), // ToDo: Murky 這邊之後要改成單一一個
+      body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -105,9 +99,7 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -170,6 +162,9 @@ export default async function handler(
   try {
     const session = await getSession(req, res);
     const { userId, companyId } = session;
+    if (!userId) {
+      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    }
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
     if (!isAuth) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -188,9 +183,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
 
-    // Deprecate ( 20240522 - Murky ) Debugging purpose
-    // eslint-disable-next-line no-console
-    console.error(error);
+    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     handleErrorResponse(res, error.message);
   }
 }

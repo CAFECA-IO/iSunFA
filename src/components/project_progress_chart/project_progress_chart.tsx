@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
-// import { TranslateFunction } from '@/interfaces/locale';
+// import { TranslateFunction } from '@/interfaces/locale'; // Info: (20240524 - Tzuhan)
 import Tooltip from '@/components/tooltip/tooltip';
 import { getTodayPeriodInSec } from '@/lib/utils/common';
 import {
@@ -91,7 +91,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 
     yaxis: {
       title: {
-        // text: 'Units',
+        // text: 'Units', // Info: (20240418 - Shirley)
       },
       labels: {
         style: {
@@ -101,7 +101,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
         },
       },
     },
-    // Info: 顯示圖例 (20240522 - Shirley)
+    // Info: (20240522 - Shirley) 顯示圖例
     // legend: {
     //   show: true,
     //   position: 'bottom',
@@ -129,6 +129,7 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
       marker: {
         show: false,
       },
+      // Info: (20240418 - Shirley)
       // y: {
       //   formatter: function (val: number) {
       //     return val + ' units';
@@ -170,10 +171,9 @@ const ProjectProgressChart = () => {
   const { toastHandler, layoutAssertion } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
 
-  // const { t }: { t: TranslateFunction } = useTranslation('common');
-  // TODO: 改成 company startDate (20240618 - Shirley)
+  // TODO: (20240618 - Shirley) [Beta] 改成 company startDate
   const minDate = new Date(DUMMY_START_DATE);
   const maxDate = new Date();
 
@@ -239,7 +239,7 @@ const ProjectProgressChart = () => {
       setCategories(DUMMY_CATEGORIES);
       toastHandler({
         id: `project-progress-chart-${listCode}`,
-        content: `${t('DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
+        content: `${t('common:DASHBOARD.FAILED_TO_GET_PROJECT_PROGRESS_DATA')} ${listCode}`,
         type: ToastType.ERROR,
         closeable: true,
       });
@@ -276,7 +276,7 @@ const ProjectProgressChart = () => {
     <div className="relative -ml-3 mt-5 md:mt-5 lg:mt-0">
       <ColumnChart data={data} />
       <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-        <p className="text-xl font-bold text-text-neutral-mute">{t('PROJECT.NO_DATA')}</p>
+        <p className="text-xl font-bold text-text-neutral-mute">{t('common:COMMON.NO_DATA')}</p>
       </div>
     </div>
   ) : (
@@ -311,13 +311,13 @@ const ProjectProgressChart = () => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              <p>{t('PROJECT.PROJECT_STAGE_CHART')}</p>
+              <p>{t('project:PROJECT.PROJECT_STAGE_CHART')}</p>
             </div>
           </div>
 
           <div className="hidden justify-end lg:flex">
             <Tooltip>
-              <p>{t('PROJECT.TOOLTIP_MESSAGE')}</p>
+              <p>{t('common:COMMON.TOOLTIP_MESSAGE')}</p>
             </Tooltip>
           </div>
         </div>

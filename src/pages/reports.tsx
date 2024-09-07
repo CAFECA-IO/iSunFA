@@ -9,6 +9,9 @@ import ToggleButton from '@/components/toggle_button/toggle_button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { SortOrder } from '@/constants/sort';
+
+const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
 
 // Info: (20240424 - Liz) Define table data interface
 interface ITableData {
@@ -127,18 +130,20 @@ const initialData: ITableData[] = [
   },
 ];
 
-const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
-
 const AuditReport = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const [data, setData] = React.useState<ITableData[]>(initialData);
   const [sortBy, setSortBy] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortDirection, setSortDirection] = useState<SortOrder.ASC | SortOrder.DESC>(SortOrder.ASC);
   const [checked, setChecked] = useState(false);
 
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
-  const compareCreditRatings = (a: string, b: string, direction: 'asc' | 'desc') => {
+  const compareCreditRatings = (
+    a: string,
+    b: string,
+    direction: SortOrder.ASC | SortOrder.DESC
+  ) => {
     const ratingOrder: { [key: string]: number } = {
       AAA: 1,
       AA: 2,
@@ -153,18 +158,19 @@ const AuditReport = () => {
     };
     const aRating = ratingOrder[a] || Number.MAX_SAFE_INTEGER;
     const bRating = ratingOrder[b] || Number.MAX_SAFE_INTEGER;
-    return direction === 'asc' ? aRating - bRating : bRating - aRating;
+    return direction === SortOrder.ASC ? aRating - bRating : bRating - aRating;
   };
 
   const handleSort = (column: string) => {
-    const direction = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    const direction =
+      sortBy === column && sortDirection === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
     setSortBy(column);
     setSortDirection(direction);
     const sortedData = data.sort((a, b) => {
       if (column === 'creditRating') {
         return compareCreditRatings(a[column], b[column], direction);
       } else {
-        return direction === 'asc'
+        return direction === SortOrder.ASC
           ? a[column].localeCompare(b[column])
           : b[column].localeCompare(a[column]);
       }
@@ -226,14 +232,15 @@ const AuditReport = () => {
     </div>
   ));
 
-  // Info: (20240424 - Liz) desktop ver
+  // Info: (20240424 - Liz) Desktop ver
   const desktopVer = (
     <div className="hidden flex-col px-80px py-120px lg:flex">
-      {/* Title */}
+      {/*  Info: (20240424 - Liz) ===== Title ===== */}
       <section className="mb-14 text-center text-h1 font-bold leading-h1 text-navy-blue-25">
-        {t('AUDIT_REPORT.AUDIT_REPORT')}
+        {t('report_401:AUDIT_REPORT.AUDIT_REPORT')}
       </section>
-      {/* Conditional Filters */}
+
+      {/*  Info: (20240424 - Liz) ===== Conditional Filters ===== */}
       <section id="conditional-filters" className="mb-10 flex items-center gap-24px px-4px">
         {/* Date Picker */}
         <div>
@@ -244,12 +251,13 @@ const AuditReport = () => {
             btnClassName="w-360px items-center text-left"
           />
         </div>
+
         {/* Search */}
-        <div className="flex grow items-center justify-between rounded-sm border border-lightGray3 bg-input-surface-input-background">
+        <div className="flex grow items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background">
           <div className="grow">
             <input
               type="text"
-              placeholder={t('AUDIT_REPORT.SEARCH')}
+              placeholder={t('common:COMMON.SEARCH')}
               className="w-full rounded-sm bg-input-surface-input-background px-3 py-2.5 text-base font-medium placeholder:text-input-text-input-placeholder focus:outline-none"
             />
           </div>
@@ -258,38 +266,40 @@ const AuditReport = () => {
           </div>
         </div>
       </section>
-      {/* Audit Report List */}
+
+      {/*  Info: (20240424 - Liz) ===== Audit Report List ===== */}
       <section id="audit-report-list" className="flex flex-col gap-5">
         {/* Filter Display List */}
         <div className="flex items-center gap-5 px-4px">
           <div className="text-lg font-semibold text-navy-blue-25">
-            {t('AUDIT_REPORT.SHOW_DESIGNATED_REGIONAL_COMPANIES')}
+            {t('report_401:AUDIT_REPORT.SHOW_DESIGNATED_REGIONAL_COMPANIES')}
           </div>
           <form className="flex gap-5 text-sm font-semibold text-text-brand-primary-lv2">
             <label htmlFor="us" className="flex cursor-pointer gap-2">
               <input type="checkbox" id="us" name="country" value="US" className="cursor-pointer" />{' '}
-              {t('AUDIT_REPORT.US')}
+              {t('report_401:AUDIT_REPORT.US')}
             </label>
             <label htmlFor="hk" className="flex cursor-pointer gap-2">
               <input type="checkbox" id="hk" name="country" value="HK" className="cursor-pointer" />{' '}
-              {t('AUDIT_REPORT.HK')}
+              {t('report_401:AUDIT_REPORT.HK')}
             </label>
             <label htmlFor="tw" className="flex cursor-pointer gap-2">
               <input type="checkbox" id="tw" name="country" value="TW" className="cursor-pointer" />{' '}
-              {t('AUDIT_REPORT.TW')}
+              {t('report_401:AUDIT_REPORT.TW')}
             </label>
           </form>
         </div>
+
         {/* Table */}
         <div className="">
           <table className="w-full border-separate border-spacing-x-1 text-center">
             <thead className="bg-stroke-brand-primary-moderate text-h6 font-bold leading-8 text-text-brand-secondary-lv1">
               <tr className="">
-                <th className="px-8px py-12px">{t('AUDIT_REPORT.CODE')}</th>
-                <th className="px-8px py-12px">{t('AUDIT_REPORT.REGIONAL')}</th>
-                <th className="px-8px py-12px">{t('AUDIT_REPORT.COMPANY')}</th>
+                <th className="px-8px py-12px">{t('report_401:AUDIT_REPORT.CODE')}</th>
+                <th className="px-8px py-12px">{t('report_401:AUDIT_REPORT.REGIONAL')}</th>
+                <th className="px-8px py-12px">{t('report_401:AUDIT_REPORT.COMPANY')}</th>
                 <th className="flex items-center justify-center gap-1 px-8px py-12px">
-                  <div>{t('AUDIT_REPORT.INFORMATION_YEAR')}</div>
+                  <div>{t('report_401:AUDIT_REPORT.INFORMATION_YEAR')}</div>
                   <div onClick={() => handleSort('informationYear')} className="cursor-pointer">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -305,9 +315,11 @@ const AuditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-8px py-12px">{t('AUDIT_REPORT.DETAILED_INFORMATION')}</th>
+                <th className="px-8px py-12px">
+                  {t('report_401:AUDIT_REPORT.DETAILED_INFORMATION')}
+                </th>
                 <th className="flex items-center justify-center gap-1 px-8px py-12px">
-                  <div>{t('AUDIT_REPORT.CREDIT_RATING')}</div>
+                  <div>{t('report_401:AUDIT_REPORT.CREDIT_RATING')}</div>
                   <div onClick={() => handleSort('creditRating')} className="cursor-pointer">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -323,8 +335,8 @@ const AuditReport = () => {
                     </svg>
                   </div>
                 </th>
-                <th className="px-8px py-12px">{t('AUDIT_REPORT.DATE_OF_UPLOAD')}</th>
-                <th className="px-8px py-12px">{t('AUDIT_REPORT.LINK')}</th>
+                <th className="px-8px py-12px">{t('report_401:AUDIT_REPORT.DATE_OF_UPLOAD')}</th>
+                <th className="px-8px py-12px">{t('report_401:AUDIT_REPORT.LINK')}</th>
               </tr>
             </thead>
             <tbody className="text-lg font-medium text-text-brand-secondary-lv1">
@@ -333,6 +345,7 @@ const AuditReport = () => {
             </tbody>
           </table>
         </div>
+
         {/* Checkbox : no-daily-reports */}
         <div className="self-end px-4px">
           <form className="">
@@ -347,14 +360,15 @@ const AuditReport = () => {
                 value="no-daily-reports"
                 className="cursor-pointer"
               />
-              {t('AUDIT_REPORT.DON_T_SHOW_DAILY_REPORTS')}
+              {t('report_401:AUDIT_REPORT.DON_T_SHOW_DAILY_REPORTS')}
             </label>
           </form>
         </div>
+
         {/* Pagination */}
         <div className="flex flex-col items-center">
           <div className="flex gap-10px">
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/first_page_icon.svg"
                 width={20}
@@ -362,7 +376,7 @@ const AuditReport = () => {
                 alt="first_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/previous_page_icon.svg"
                 width={20}
@@ -373,7 +387,7 @@ const AuditReport = () => {
             <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
               1
             </div>
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/next_page_icon.svg"
                 width={20}
@@ -381,7 +395,7 @@ const AuditReport = () => {
                 alt="next_page_icon"
               />
             </div>
-            <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3">
+            <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3">
               <Image
                 src="/elements/last_page_icon.svg"
                 width={20}
@@ -390,7 +404,7 @@ const AuditReport = () => {
               />
             </div>
           </div>
-          <div>{t('AUDIT_REPORT.OF_100')}</div>
+          <div>{t('report_401:AUDIT_REPORT.OF_100')}</div>
         </div>
       </section>
     </div>
@@ -399,22 +413,23 @@ const AuditReport = () => {
   // Info: (20240424 - Liz) Mobile ver
   const mobileVer = (
     <div className="flex flex-col px-5 lg:hidden">
-      {/* Title */}
+      {/* Info: (20240424 - Liz) ===== Title ===== */}
       <section className="pb-20px pt-90px text-center text-h4 font-bold leading-9 text-navy-blue-25">
-        {t('AUDIT_REPORT.AUDIT_REPORT')}
+        {t('report_401:AUDIT_REPORT.AUDIT_REPORT')}
       </section>
-      {/* Conditional Filters */}
+
+      {/* Info: (20240424 - Liz) ===== Conditional Filters ===== */}
       <section className="flex items-end gap-1">
         {/* Search */}
         <div className="flex grow flex-col gap-2">
           <div className="text-sm font-semibold text-navy-blue-25">
-            {t('AUDIT_REPORT.COMPANY_CODE_OR ABBREVIATION')}{' '}
+            {t('report_401:AUDIT_REPORT.COMPANY_CODE_OR ABBREVIATION')}{' '}
           </div>
           <div className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background focus-within:border-stroke-brand-primary focus-within:bg-input-surface-input-selected focus:border">
             <div className="grow rounded-sm px-3">
               <input
                 type="text"
-                placeholder={t('AUDIT_REPORT.SEARCH')}
+                placeholder={t('common:COMMON.SEARCH')}
                 className="w-full rounded-sm bg-transparent py-2.5 text-xs font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder focus:outline-none"
               />
             </div>
@@ -431,7 +446,7 @@ const AuditReport = () => {
             setFilteredPeriod={setDatePeriod}
             calenderClassName="right-0"
             btnClassName="rounded-xs border border-stroke-neutral-solid-light bg-inherit p-2.5 text-neutral-white"
-            buttonStyleAfterDateSelected="border-stroke-neutral-solid-light text-primaryYellow"
+            buttonStyleAfterDateSelected="border-stroke-neutral-solid-light"
           />
         </div>
         {/* Sort */}
@@ -452,10 +467,13 @@ const AuditReport = () => {
           </svg>
         </div>
       </section>
-      {/* Region & Switch daily reports */}
+
+      {/* Info: (20240424 - Liz) ===== Region & Switch daily reports ===== */}
       <section className="flex justify-between pt-5">
         <div className="flex cursor-pointer items-center gap-1 rounded-xs border border-stroke-neutral-solid-light px-4 py-2">
-          <div className="text-sm font-medium text-navy-blue-25">{t('AUDIT_REPORT.REGION')}</div>
+          <div className="text-sm font-medium text-navy-blue-25">
+            {t('report_401:AUDIT_REPORT.REGION')}
+          </div>
           <div className="text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -476,34 +494,35 @@ const AuditReport = () => {
         {/* Switch daily reports  */}
         <div className="flex items-center gap-16px">
           <div
-            className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-inactive'}`}
+            className={`text-xs ${checked ? 'text-stroke-neutral-invert' : 'text-switch-text-disable'}`}
           >
-            {t('AUDIT_REPORT.SHOW_DAILY_REPORTS')}
+            {t('report_401:AUDIT_REPORT.SHOW_DAILY_REPORTS')}
           </div>
           <ToggleButton checked={checked} onChange={() => setChecked(!checked)} />
         </div>
       </section>
-      {/* Divider */}
+
+      {/* Info: (20240424 - Liz) ===== Divider ===== */}
       <div className="flex items-center gap-16px pt-6">
         <div className="flex items-center gap-8px">
-          <div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                d="M14 8.00004L6 8.00004M14 4.00004L6 4.00004M14 12L6 12M3.33333 8.00004C3.33333 8.36823 3.03486 8.66671 2.66667 8.66671C2.29848 8.66671 2 8.36823 2 8.00004C2 7.63185 2.29848 7.33337 2.66667 7.33337C3.03486 7.33337 3.33333 7.63185 3.33333 8.00004ZM3.33333 4.00004C3.33333 4.36823 3.03486 4.66671 2.66667 4.66671C2.29848 4.66671 2 4.36823 2 4.00004C2 3.63185 2.29848 3.33337 2.66667 3.33337C3.03486 3.33337 3.33333 3.63185 3.33333 4.00004ZM3.33333 12C3.33333 12.3682 3.03486 12.6667 2.66667 12.6667C2.29848 12.6667 2 12.3682 2 12C2 11.6319 2.29848 11.3334 2.66667 11.3334C3.03486 11.3334 3.33333 11.6319 3.33333 12Z"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+          >
+            <path
+              d="M14 8.00004L6 8.00004M14 4.00004L6 4.00004M14 12L6 12M3.33333 8.00004C3.33333 8.36823 3.03486 8.66671 2.66667 8.66671C2.29848 8.66671 2 8.36823 2 8.00004C2 7.63185 2.29848 7.33337 2.66667 7.33337C3.03486 7.33337 3.33333 7.63185 3.33333 8.00004ZM3.33333 4.00004C3.33333 4.36823 3.03486 4.66671 2.66667 4.66671C2.29848 4.66671 2 4.36823 2 4.00004C2 3.63185 2.29848 3.33337 2.66667 3.33337C3.03486 3.33337 3.33333 3.63185 3.33333 4.00004ZM3.33333 12C3.33333 12.3682 3.03486 12.6667 2.66667 12.6667C2.29848 12.6667 2 12.3682 2 12C2 11.6319 2.29848 11.3334 2.66667 11.3334C3.03486 11.3334 3.33333 11.6319 3.33333 12Z"
+              stroke="white"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div className="whitespace-nowrap text-navy-blue-25">
+            {t('report_401:AUDIT_REPORT.CARD_LIST')}
           </div>
-          <div className="whitespace-nowrap text-navy-blue-25">{t('AUDIT_REPORT.CARD_LIST')}</div>
         </div>
         {/* line */}
         <div className="grow bg-stroke-neutral-solid-light">
@@ -525,12 +544,14 @@ const AuditReport = () => {
           </svg>
         </div>
       </div>
-      {/* Audit Report List */}
+
+      {/* Info: (20240424 - Liz) ===== Audit Report List ===== */}
       <section className="flex flex-col gap-8px pt-15px">{displayCards}</section>
-      {/* Pagination */}
+
+      {/* Info: (20240424 - Liz) ===== Pagination ===== */}
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -552,7 +573,7 @@ const AuditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -571,7 +592,7 @@ const AuditReport = () => {
           <div className="flex w-11 items-center justify-center rounded-xs border border-stroke-brand-primary p-3 text-text-brand-primary-lv2">
             1
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -587,7 +608,7 @@ const AuditReport = () => {
               />
             </svg>
           </div>
-          <div className="flex items-center justify-center rounded-xs border border-lightWhite p-3 text-navy-blue-25">
+          <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -610,7 +631,7 @@ const AuditReport = () => {
             </svg>
           </div>
         </div>
-        <div>{t('AUDIT_REPORT.OF_100')}</div>
+        <div>{t('report_401:AUDIT_REPORT.OF_100')}</div>
       </section>
     </div>
   );
@@ -619,19 +640,21 @@ const AuditReport = () => {
     <>
       <Head>
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('AUDIT_REPORT.ISUNFA_AUDIT_REPORT')}</title>
+        <title>{t('report_401:AUDIT_REPORT.ISUNFA_AUDIT_REPORT')}</title>
       </Head>
-      {/* Navbar */}
+
+      {/* Info: (20240424 - Liz) Navbar */}
       <nav className="">
         <LandingNavBar />
       </nav>
 
       <main className="w-screen overflow-hidden">
+        {/*  Info: (20240424 - Liz) disable this page manually */}
         {isAuditReportDisabled ? (
           <div className="min-h-screen bg-navy-blue-600 font-barlow">
             <div className="mx-auto w-fit pt-300px">
               <h1 className="text-lg font-bold text-gray-300 md:text-40px">
-                {t('NAV_BAR.LINK_NOT_OPEN')}
+                {t('common:NAV_BAR.LINK_NOT_OPEN')}
               </h1>
             </div>
           </div>
@@ -648,7 +671,16 @@ const AuditReport = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+    ])),
   },
 });
 

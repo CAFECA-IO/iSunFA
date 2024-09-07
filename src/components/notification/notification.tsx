@@ -40,27 +40,23 @@
 //   const markAsRead = (id: string) => {
 //     setNotifications(
 //       (prevNotifications) =>
-//         // Info: prettier 排版 (20240606 - Shirley)
-//         // eslint-disable-next-line implicit-arrow-linebreak
+//         // Info: (20240606 - Shirley) prettier 排版
 //         prevNotifications.map((notification) => {
 //           return notification.id === id ? { ...notification, isRead: true } : notification;
 //         })
-//       // Info: prettier 排版 (20240606 - Shirley)
-//       // eslint-disable-next-line function-paren-newline
+//       // Info: (20240606 - Shirley) prettier 排版
 //     );
 //   };
 
 //   const markAllAsRead = () => {
 //     setNotifications(
 //       (prevNotifications) =>
-//         // Info: prettier 排版 (20240606 - Shirley)
-//         // eslint-disable-next-line implicit-arrow-linebreak
+//         // Info: (20240606 - Shirley) prettier 排版
 //         prevNotifications.map((notification) => ({
 //           ...notification,
 //           isRead: true,
 //         }))
-//       // Info: prettier 排版 (20240606 - Shirley)
-//       // eslint-disable-next-line function-paren-newline
+//       // Info: (20240606 - Shirley) prettier 排版
 //     );
 //   };
 
@@ -93,7 +89,7 @@
 //                 ></path>
 //               </svg>
 //             </div>
-//             <div className="">{t('NAV_BAR.MARK_ALL_AS_READ')}</div>
+//             <div className="">{t('common:NAV_BAR.MARK_ALL_AS_READ')}</div>
 //           </Button>
 //         </div>
 
@@ -120,14 +116,14 @@
 //             variant={'secondaryBorderless'}
 //             className="mx-2 my-2 flex w-fit self-end px-2 py-1 text-text-neutral-link hover:text-text-neutral-link hover:opacity-70"
 //           >
-//             {t('NAV_BAR.READ_MORE')}
+//             {t('common:NAV_BAR.READ_MORE')}
 //           </Button>
 //         </div>
 //       </div>
 //     </div>
 //   );
 
-//   // TODO: ongoing development of mobile menu (20240606 - Shirley)
+//   // TODO: (20240606 - Shirley) [Beta] ongoing development of mobile menu
 //   const displayedMobileMenu = (
 //     <div
 //       className={`transition-all duration-300 ${
@@ -180,7 +176,7 @@
 //                 ></path>
 //               </svg>
 //             </div>
-//             <div className="">{t('NAV_BAR.MARK_ALL_AS_READ')}</div>
+//             <div className="">{t('common:NAV_BAR.MARK_ALL_AS_READ')}</div>
 //           </Button>
 //         </div>
 
@@ -207,7 +203,7 @@
 //             variant={'secondaryBorderless'}
 //             className="mx-2 my-2 flex w-fit self-end px-2 py-1 text-text-neutral-link hover:text-text-neutral-link hover:opacity-70"
 //           >
-//             {t('NAV_BAR.READ_MORE')}
+//             {t('common:NAV_BAR.READ_MORE')}
 //           </Button>
 //         </div>
 //       </div>
@@ -241,7 +237,7 @@
 //               clipRule="evenodd"
 //             ></path>
 //           </svg>
-//           <p>{t('NAV_BAR.NOTIFICATION')}</p>
+//           <p>{t('common:NAV_BAR.NOTIFICATION')}</p>
 //         </div>
 
 //         <svg

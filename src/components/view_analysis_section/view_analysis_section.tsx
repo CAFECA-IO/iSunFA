@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from 'react';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
@@ -16,7 +15,7 @@ const ViewAnalysisSection = ({
   tokenId,
   reportLink,
 }: IViewAnalysisSectionProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
     window.alert(`Token contract ${tokenContract} copied to clipboard!`);
@@ -39,11 +38,12 @@ const ViewAnalysisSection = ({
     window.history.back();
   };
 
-  // TODO: no `map` and `conditional rendering` in return (20240502 - Shirley)
   return (
-    <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background px-0 pb-0 pt-32">
-      {/* Info: financial title, print button and share button (20240426 - Shirley) */}
-      <div className="mx-10 flex items-center gap-5 border-b border-lightGray px-px pb-6 max-md:flex-wrap lg:mx-40">
+    <div className="flex w-full shrink-0 grow basis-0 flex-col bg-surface-neutral-main-background pt-32">
+      {/* Info: (20240830 - Anna) 因為實作分析報告時會用到reportLink，為了保留它及解決現在reportLink' is defined but never used的錯誤 */}
+      {reportLink && <div style={{ display: 'none' }}>{reportLink}</div>}
+      {/* Info: (20240426 - Shirley) financial title, print button and share button */}
+      <div className="mx-10 flex items-center gap-5 border-b border-divider-stroke-lv-4 px-px pb-6 max-md:flex-wrap lg:mx-40">
         <Button
           onClick={backClickHandler}
           variant={'tertiaryOutline'}
@@ -67,14 +67,14 @@ const ViewAnalysisSection = ({
             </svg>
           </div>
         </Button>
-        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-slate-500 max-md:max-w-full lg:text-4xl">
-          {t(`BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
+        <div className="flex-1 justify-center self-stretch text-lg font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full lg:text-4xl">
+          {t(`common:BOOKMARK_LIST.${reportTypesName.name.toUpperCase().replace(/ /g, '_')}`)}
         </div>
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              // TODO: yet to dev (20240507 - Shirley)
-              disabled={true}
+              // TODO: (20240507 - Shirley) [Beta] yet to dev
+              disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -96,8 +96,8 @@ const ViewAnalysisSection = ({
               </div>
             </Button>
             <Button
-              // TODO: yet to dev (20240507 - Shirley)
-              disabled={true}
+              // TODO: (20240507 - Shirley) [Beta] yet to dev
+              disabled
               variant={'tertiary'}
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
@@ -121,21 +121,19 @@ const ViewAnalysisSection = ({
           </div>
         </div>
       </div>
-
-      {/* Info: token contract and token id info (20240426 - Shirley) */}
+      {/* Info: (20240426 - Shirley) token contract and token id info */}
       <div className="mx-10 mt-5 flex items-center gap-5 px-px text-sm max-md:flex-wrap lg:mx-40">
         <div className="hidden w-full flex-col justify-start gap-4 lg:flex lg:flex-row lg:space-x-2">
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_CONTRACT')} </div>
+            <div className="text-text-neutral-tertiary">{t('journal:JOURNAL.TOKEN_CONTRACT')} </div>
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenContract}{' '}
               </Link> */}
               <div className="font-semibold text-link-text-primary">{tokenContract} </div>
 
               <button onClick={copyTokenContractClickHandler} type="button">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -154,10 +152,10 @@ const ViewAnalysisSection = ({
             </div>
           </div>
           <div className="flex space-x-5">
-            <div className="text-text-neutral-tertiary">{t('JOURNAL.TOKEN_ID')}</div>
+            <div className="text-text-neutral-tertiary">{t('journal:JOURNAL.TOKEN_ID')}</div>
 
             <div className="flex items-center space-x-3">
-              {/* TODO: link (20240507 - Shirley) */}
+              {/* TODO: (20240507 - Shirley) [Beta] link */}
               {/* <Link href={''} className="font-semibold text-link-text-primary">
                 {tokenId}
               </Link> */}
@@ -165,7 +163,6 @@ const ViewAnalysisSection = ({
               <div className="font-semibold text-link-text-primary">{tokenId} </div>
 
               <button onClick={copyTokenIdClickHandler} type="button">
-                {' '}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -185,16 +182,15 @@ const ViewAnalysisSection = ({
           </div>
         </div>
 
-        <div className="mt-0 flex flex-col lg:hidden">
+        <div className="flex flex-col lg:hidden">
           <div className="flex flex-col pr-2">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                {t('JOURNAL.TOKEN_CONTRACT')}
+              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-text-neutral-secondary">
+                {t('journal:JOURNAL.TOKEN_CONTRACT')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
                   <button onClick={copyTokenContractClickHandler} type="button">
-                    {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -213,7 +209,7 @@ const ViewAnalysisSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
+            {/* TODO: (20240507 - Shirley) [Beta] link */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-xs font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenContract}</div>
@@ -221,13 +217,12 @@ const ViewAnalysisSection = ({
           </div>
           <div className="mt-4 flex flex-col">
             <div className="flex gap-0">
-              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-slate-500">
-                {t('JOURNAL.Token ID')}
+              <div className="my-auto text-sm font-medium leading-5 tracking-normal text-text-neutral-tertiary">
+                {t('journal:JOURNAL.Token ID')}
               </div>
               <div className="flex flex-col justify-center rounded-md p-2.5">
                 <div className="flex flex-col items-start justify-center">
                   <button onClick={copyTokenIdClickHandler} type="button">
-                    {' '}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -246,7 +241,7 @@ const ViewAnalysisSection = ({
                 </div>
               </div>
             </div>
-            {/* TODO: link (20240507 - Shirley) */}
+            {/* TODO: (20240507 - Shirley) [Beta] link */}
 
             <div className="flex flex-col justify-center whitespace-nowrap text-sm font-semibold leading-5 tracking-normal text-link-text-primary">
               <div className="justify-center rounded-md">{tokenId}</div>

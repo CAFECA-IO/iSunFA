@@ -17,7 +17,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
     // Info: (20240509 - Julian) 如果有找到 style element，則更新 style element 的內容
     if (styleElement) {
       // Info: (20240509 - Julian) 將進度條的背景色設定為線性漸層，並根據進度比例設定顏色
-      styleElement.innerHTML = `
+      styleElement.textContent = `
         .sliderProgress::-webkit-slider-runnable-track {
           background: linear-gradient(90deg, #FFA502 ${progressRate}%, #cdd1d9 ${progressRate}%);
         }
@@ -26,7 +26,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
       // Info: (20240509 - Julian) 如果沒有找到 style element，則建立一個新的 style element
       const newStyleElement = document.createElement('style');
       newStyleElement.id = 'sliderStyle';
-      newStyleElement.innerHTML = `
+      newStyleElement.textContent = `
         .sliderProgress::-webkit-slider-runnable-track {
           background: linear-gradient(90deg, #FFA502 ${progressRate}%, #cdd1d9 ${progressRate}%);
         }
@@ -49,7 +49,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
 
   return (
     <div className="flex w-full flex-col items-start gap-8px">
-      <p className="text-sm font-semibold text-navyBlue2">{t('COMMON.PROGRESS')}</p>
+      <p className="text-sm font-semibold text-input-text-primary">{t('common:COMMON.PROGRESS')}</p>
       <div className="flex w-full flex-col gap-x-20px gap-y-10px md:flex-row">
         {/* Info: (20240502 - Julian) Progress Bar */}
         <input
@@ -65,7 +65,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
         />
         {/* Info: (20240502 - Julian) Progress Rate Input */}
         <div
-          className={`flex h-46px w-full items-center justify-between divide-x divide-lightGray3 rounded-sm border border-lightGray3 bg-white transition-all duration-300 ease-in-out`}
+          className={`flex h-46px w-full items-center justify-between divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background transition-all duration-300 ease-in-out`}
         >
           <NumericInput
             id="input-progress-rate"
@@ -77,7 +77,7 @@ const ProgressBar = ({ progressRate, setProgressRate }: IProgressBarProps) => {
             max={100}
             className="flex-1 bg-transparent px-10px outline-none"
           />
-          <div className="flex items-center gap-4px p-12px text-sm text-lightGray4">
+          <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
             <p>%</p>
           </div>
         </div>

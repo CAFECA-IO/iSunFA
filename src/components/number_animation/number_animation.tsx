@@ -36,13 +36,13 @@ const NumberAnimation = ({ targetNumber, interval }: NumberAnimationProps) => {
   );
 
   const startAnimation = useCallback(() => {
-    if (isAnimatingRef.current) return; // Info: 如果已經在動畫中，不要重新開始 (20240722 - Shirley)
+    if (isAnimatingRef.current) return; // Info: (20240722 - Shirley) 如果已經在動畫中，不要重新開始
 
     isAnimatingRef.current = true;
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     startTimeRef.current = undefined;
 
-    // Info: 從當前數字開始，而不是從 0 開始 (20240722 - Shirley)
+    // Info: (20240722 - Shirley) 從當前數字開始，而不是從 0 開始
     const startNumber = currentNumberRef.current;
     const remainingNumber = targetNumber - startNumber;
     const adjustedStartTime = performance.now() - (startNumber / targetNumber) * interval;
@@ -75,13 +75,13 @@ const NumberAnimation = ({ targetNumber, interval }: NumberAnimationProps) => {
       animationRef.current = undefined;
     }
     isAnimatingRef.current = false;
-    // Info: 不重置 currentNumberRef，保持當前值 (20240722 - Shirley)
+    // Info: (20240722 - Shirley) 不重置 currentNumberRef，保持當前值
   }, []);
 
   const scrollHandler = useCallback(() => {
     const now = Date.now();
     if (now - lastScrollTime.current > DEFAULT_THROTTLE_TIME) {
-      // Info: 100ms throttle (20240722 - Shirley)
+      // Info: (20240722 - Shirley) 100ms throttle
       lastScrollTime.current = now;
 
       if (numberRef.current) {
@@ -105,14 +105,14 @@ const NumberAnimation = ({ targetNumber, interval }: NumberAnimationProps) => {
     };
   }, [scrollHandler]);
 
-  // Info: 初始化顯示 (20240722 - Shirley)
+  // Info: (20240722 - Shirley) 初始化顯示
   useEffect(() => {
     if (numberRef.current) {
       numberRef.current.textContent = '0';
     }
   }, []);
 
-  return <div ref={numberRef} className="text-h2 font-bold leading-h2 text-primaryYellow" />;
+  return <div ref={numberRef} className="text-h2 font-bold leading-h2 text-orange-400" />;
 };
 
 export default NumberAnimation;

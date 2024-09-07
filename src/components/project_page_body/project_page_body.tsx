@@ -20,27 +20,28 @@ interface StageNameMap {
 }
 
 const stageNameMap: StageNameMap = {
-  All: 'STAGE_NAME_MAP.ALL',
-  Designing: 'STAGE_NAME_MAP.DESIGNING',
-  Developing: 'STAGE_NAME_MAP.DEVELOPING',
-  'Beta Testing': 'STAGE_NAME_MAP.BETA_TESTING',
-  Selling: 'STAGE_NAME_MAP.SELLING',
-  Sold: 'STAGE_NAME_MAP.SOLD',
-  Archived: 'STAGE_NAME_MAP.ARCHIVED',
+  All: 'project:STAGE_NAME_MAP.ALL',
+  Designing: 'project:STAGE_NAME_MAP.DESIGNING',
+  Developing: 'project:STAGE_NAME_MAP.DEVELOPING',
+  'Beta Testing': 'project:STAGE_NAME_MAP.BETA_TESTING',
+  Selling: 'project:STAGE_NAME_MAP.SELLING',
+  Sold: 'project:STAGE_NAME_MAP.SOLD',
+  Archived: 'project:STAGE_NAME_MAP.ARCHIVED',
 };
 
 const ProjectPageBody = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'project']);
 
   const { addProjectModalVisibilityHandler } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
 
   const [search, setSearch] = useState<string>('');
-  const [filteredStage, setFilteredStage] = useState<string>(t('STAGE_NAME_MAP.ALL')); // Info: (2024704 - Anna) For list
+  const [filteredStage, setFilteredStage] = useState<string>(t('project:STAGE_NAME_MAP.ALL')); // Info: (2024704 - Anna) For list
   const [currentStage, setCurrentStage] = useState<ProjectStage>(ProjectStage.SELLING); // Info: (2024607 - Julian) For grid
   const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.LIST);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = 10; // ToDo: (2024606 - Julian) Get total page from API
+  const totalPages = 10;
+  // ToDo: (20240606 - Julian) [Beta] Get total page from API
 
   const { trigger: getProjectList, data: projectList } = APIHandler<IProject[]>(
     APIName.PROJECT_LIST
@@ -77,7 +78,7 @@ const ProjectPageBody = () => {
     if (currentStageIndex < stageList.length - 1) {
       setCurrentStage(stageList[currentStageIndex + 1]);
     } else {
-      // Info: (2024607 - Julian) 如果是最後一個 Stage，則跳到第一個 Stage
+      // Info: (20240607 - Julian) 如果是最後一個 Stage，則跳到第一個 Stage
       setCurrentStage(stageList[0]);
     }
   };
@@ -90,7 +91,7 @@ const ProjectPageBody = () => {
     }
 
     if (currentLayout === Layout.LIST) {
-      setFilteredStage(t('STAGE_NAME_MAP.ALL'));
+      setFilteredStage(t('project:STAGE_NAME_MAP.ALL'));
     }
   }, [currentLayout]);
 
@@ -104,13 +105,13 @@ const ProjectPageBody = () => {
 
   // Info: (2024704 - Anna) 反向映射，用於從翻譯值回到原始名稱，以比對專案目前進行階段
   const stageNameMapReverse: { [key: string]: string } = {
-    [t('STAGE_NAME_MAP.ALL')]: 'All',
-    [t('STAGE_NAME_MAP.DESIGNING')]: 'Designing',
-    [t('STAGE_NAME_MAP.DEVELOPING')]: 'Developing',
-    [t('STAGE_NAME_MAP.BETA_TESTING')]: 'Beta Testing',
-    [t('STAGE_NAME_MAP.SELLING')]: 'Selling',
-    [t('STAGE_NAME_MAP.SOLD')]: 'Sold',
-    [t('STAGE_NAME_MAP.ARCHIVED')]: 'Archived',
+    [t('project:STAGE_NAME_MAP.ALL')]: 'All',
+    [t('project:STAGE_NAME_MAP.DESIGNING')]: 'Designing',
+    [t('project:STAGE_NAME_MAP.DEVELOPING')]: 'Developing',
+    [t('project:STAGE_NAME_MAP.BETA_TESTING')]: 'Beta Testing',
+    [t('project:STAGE_NAME_MAP.SELLING')]: 'Selling',
+    [t('project:STAGE_NAME_MAP.SOLD')]: 'Sold',
+    [t('project:STAGE_NAME_MAP.ARCHIVED')]: 'Archived',
   };
 
   const displayedStageOptions = (
@@ -135,7 +136,7 @@ const ProjectPageBody = () => {
     ? projectList
         .filter((project) => {
           // Info: (2024607 - Julian) 如果選擇 All，則顯示所有 Project
-          if (filteredStage === t('STAGE_NAME_MAP.ALL')) return true;
+          if (filteredStage === t('project:STAGE_NAME_MAP.ALL')) return true;
           return project.stage === stageNameMapReverse[filteredStage]; // Info: (2024704 - Anna) 使用反向映射來比較階段名稱
         })
         .filter((project) => {
@@ -233,7 +234,7 @@ const ProjectPageBody = () => {
         {/* Info: (2024606 - Julian) Title */}
         <div className="flex items-center justify-between">
           <h1 className="text-base font-semibold text-text-neutral-secondary md:text-4xl">
-            {t('REPORTS_HISTORY_LIST.PROJECT')}
+            {t('common:COMMON.PROJECT')}
           </h1>
           <Button
             type="button"
@@ -242,7 +243,7 @@ const ProjectPageBody = () => {
             onClick={addProjectModalVisibilityHandler}
           >
             <FiPlusCircle size={24} />
-            {t('PROJECT.ADD_PROJECT')}
+            {t('project:PROJECT.ADD_PROJECT')}
           </Button>
           <Button
             type="button"
@@ -263,7 +264,7 @@ const ProjectPageBody = () => {
             <div
               className={`w-full flex-col items-start gap-8px ${currentLayout === Layout.LIST ? 'flex' : 'hidden'} text-input-text-primary md:w-auto`}
             >
-              <p className="font-semibold">{t('PROJECT.STAGE')}</p>
+              <p className="font-semibold">{t('project:PROJECT.STAGE')}</p>
               <div
                 onClick={stageMenuClickHandler}
                 className={`relative flex h-44px w-full items-center justify-between rounded-xs border bg-input-surface-input-background ${isStageOptionsVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px hover:cursor-pointer md:w-200px`}
@@ -280,7 +281,7 @@ const ProjectPageBody = () => {
                 type="text"
                 onChange={searchHandler}
                 className="h-44px flex-1 outline-none placeholder:text-input-text-input-placeholder"
-                placeholder={t('PROJECT.SEARCH_PROJECT')}
+                placeholder={t('project:PROJECT.SEARCH_PROJECT')}
               />
               <FiSearch size={20} />
             </div>
