@@ -7,6 +7,7 @@ import { RoleName } from '@/constants/role_name';
 import { UploadType } from '@/constants/file';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { MessageType } from '@/interfaces/message_modal';
@@ -29,12 +30,11 @@ const CompanyInfoPageBody = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     teamSettingModalVisibilityHandler,
-    messageModalVisibilityHandler,
-    messageModalDataHandler,
     transferCompanyModalVisibilityHandler,
     profileUploadModalVisibilityHandler,
     profileUploadModalDataHandler,
   } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   const [company, setCompany] = useState<ICompany | null>(selectedCompany);
   const [ownerId, setOwnerId] = useState<number | null>(null);

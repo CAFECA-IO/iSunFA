@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString, truncateString } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
@@ -28,7 +28,7 @@ const PendingReportItem = ({
   onReportItemDelete = () => {},
 }: IPendingReportItemProps) => {
   const { t } = useTranslation(['common', 'report_401']);
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   const [reportItem, setReportItem] = useState(report);
   const { id, createdAt, name, from, to, remainingSeconds, paused } = reportItem;

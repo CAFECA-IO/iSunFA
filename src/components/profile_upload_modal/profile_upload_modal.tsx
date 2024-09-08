@@ -6,8 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID, NON_EXISTING_COMPANY_ID } from '@/constants/config';
 import { MessageType } from '@/interfaces/message_modal';
@@ -31,7 +30,7 @@ const ProfileUploadModal = ({
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
   const { selectedCompany, userAuth } = useUserCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   // Info: (20240801 - Julian) 上傳圖片 API
   const {

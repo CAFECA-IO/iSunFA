@@ -8,11 +8,11 @@ import { AccountingStep } from '@/interfaces/stepper_string';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useTranslation } from 'next-i18next';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 
 const AddJournalBody = () => {
   const { t } = useTranslation(['common', 'journal']);
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   const {
     selectedOCR,

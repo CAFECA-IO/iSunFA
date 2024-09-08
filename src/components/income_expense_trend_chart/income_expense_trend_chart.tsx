@@ -5,6 +5,7 @@ import Tooltip from '@/components/tooltip/tooltip';
 import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils/common';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { Period } from '@/interfaces/chart_unit';
 import {
   DUMMY_INCOME_EXPENSE_TREND_CHART_DATA,
@@ -210,7 +211,7 @@ const LineChart = ({ data }: LineChartProps) => {
 
 const IncomeExpenseTrendChart = () => {
   const { t } = useTranslation(['common', 'project']);
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const originalDataRef = React.useRef(DUMMY_INCOME_EXPENSE_TREND_CHART_DATA);
