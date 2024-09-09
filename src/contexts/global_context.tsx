@@ -1,22 +1,10 @@
-import React, {
-  useState,
-  useContext,
-  createContext,
-  useMemo,
-  /* useCallback, */ useEffect,
-} from 'react';
-// Anna
-// import Image from 'next/image';
-// import { toast as toastify } from 'react-toastify';
-// import { RxCross2 } from 'react-icons/rx';
+import React, { useState, useContext, createContext, useMemo, useEffect } from 'react';
 import { DUMMY_FILTER_OPTIONS, FilterOptionsModalType, IFilterOptions } from '@/interfaces/modals';
 import PasskeySupportModal from '@/components/passkey_support_modal/passkey_support_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
-// Anna
-// import { IMessageModal  , dummyMessageModalData } from '@/interfaces/message_modal';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
 import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
 // eslint-disable-next-line import/no-cycle
@@ -29,8 +17,7 @@ import {
 } from '@/interfaces/preview_invoice_modal';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
 import Toast from '@/components/toast/toast';
-// Anna
-import { /* IToastify,  */ ToastPosition, ToastType } from '@/interfaces/toastify';
+import { ToastPosition, ToastType } from '@/interfaces/toastify';
 // eslint-disable-next-line import/no-cycle
 import CreateCompanyModal from '@/components/create_company_modal/create_company_modal';
 // eslint-disable-next-line import/no-cycle
@@ -76,7 +63,7 @@ interface IGlobalContext {
   isAddBookmarkModalVisible: boolean;
   addBookmarkModalVisibilityHandler: () => void;
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   // isMessageModalVisible: boolean;
   // messageModalVisibilityHandler: () => void;
   // messageModalData: IMessageModal;
@@ -127,7 +114,7 @@ interface IGlobalContext {
   editAccountTitleModalVisibilityHandler: () => void;
   editAccountTitleDataHandler: (id: number) => void;
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   // toastHandler: (props: IToastify) => void;
   // eliminateToast: (id?: string) => void;
 
@@ -167,7 +154,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部沒問題時，再將這個註解拿掉
   const {
     toastHandler,
     eliminateToast,
@@ -183,11 +170,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   // const [isMessageModalVisible, setIsMessageModalVisible] = useState(false);
   // const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
-
-  // Anna
   // const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
@@ -262,7 +247,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAddBookmarkModalVisible(!isAddBookmarkModalVisible);
   };
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   // const messageModalVisibilityHandler = () => {
   //   setIsMessageModalVisible(!isMessageModalVisible);
   // };
@@ -271,7 +256,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   //   setMessageModalData(data);
   // };
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   // const confirmModalVisibilityHandler = () => {
   //   setIsConfirmModalVisible(!isConfirmModalVisible);
   // };
@@ -397,7 +382,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsTOSNPrivacyPolicyConfirmModalVisible(visibility);
   };
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   // Info: (20240509 - Julian) toast handler
   // const toastHandler = useCallback((props: IToastify) => {
   //   const {
@@ -620,7 +605,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 
-  // Anna
+  // Todo: (20240909 - Anna) 代碼正在搬動到src/contexts/modal_context.tsx當中，確定全部搬完時，再將這段代碼刪除
   const value = useMemo(
     () => ({
       width,
