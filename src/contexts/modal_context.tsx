@@ -37,6 +37,7 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   };
   const toastHandler = useCallback((props: IToastify) => {
     const {
+      // Info: (20240909 - Anna) TypeScript 本身已經有型別檢查系統。因此 ESLint 不需要針對 TypeScript 檔案強制使用 prop-types。因此這裡的ESLint註解不做移除。
       // eslint-disable-next-line react/prop-types
       id,
       // eslint-disable-next-line react/prop-types
