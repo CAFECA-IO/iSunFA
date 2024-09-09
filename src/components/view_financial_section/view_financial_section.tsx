@@ -1,3 +1,4 @@
+import html2canvas from 'html2canvas';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/button/button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
@@ -22,6 +23,7 @@ import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -119,6 +121,7 @@ const ViewFinancialSection = ({
 }: IViewReportSectionProps) => {
   const { t } = useTranslation('common');
   const router = useRouter();
+  let intervalId: NodeJS.Timeout;
 
   // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
@@ -126,6 +129,7 @@ const ViewFinancialSection = ({
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]); // Info: (20240909 - tzuhan)  保存縮略圖的 URL
 
   const [numPages, setNumPages] = useState<number>(1);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -314,6 +318,55 @@ const ViewFinancialSection = ({
   // }, []);
   */
 
+  const generateCanvas = async () => {
+    if (!isLoading && iframeRef.current) {
+      const iframeWindow = iframeRef.current.contentWindow;
+      const iframeDoc = iframeWindow?.document;
+
+      if (iframeDoc && iframeWindow) {
+        // Info: (20240909 - tzuhan) 使用 setInterval 定時輪詢檢查，直到找到第1頁的元素
+        intervalId = setInterval(() => {
+          const firstPageElement = iframeDoc.getElementById('1'); // Info: (20240909 - tzuhan) 檢查 id 為 '1' 的元素是否存在
+
+          if (firstPageElement) {
+            // Info: (20240909 - tzuhan) 當找到第1頁的元素後，清除輪詢並開始生成縮略圖
+            clearInterval(intervalId);
+
+            // Info: (20240909 - tzuhan) 創建 Promise 列表，生成所有頁面的縮略圖
+            const canvasPromises = Array.from({ length: numPages }, async (_, i) => {
+              const pageElement = iframeDoc.getElementById(`${i + 1}`); // Info: (20240909 - tzuhan) 依序查找每頁的元素
+              if (pageElement) {
+                const canvas = await html2canvas(pageElement, {
+                  scale: 0.2, // Info: (20240909 - tzuhan) 縮小比例，減少圖片大小
+                  useCORS: true, // Info: (20240909 - tzuhan) 允許跨域圖片
+                  logging: false, // Info: (20240909 - tzuhan) 關閉日誌以提升性能
+                });
+                return canvas.toDataURL('image/jpeg', 0.5); // Info: (20240909 - tzuhan) 生成 JPEG 縮略圖
+              }
+              return null;
+            });
+
+            // Info: (20240909 - tzuhan) 等待所有縮略圖生成完成，並更新縮略圖的狀態
+            Promise.all(canvasPromises).then((thumbnails) => {
+              const validThumbnails = thumbnails.filter(Boolean) as string[]; // Info: (20240909 - tzuhan) 過濾掉 null 結果
+              setThumbnailUrls(validThumbnails); // Info: (20240909 - tzuhan) 更新縮略圖狀態
+            });
+          }
+        }, 1000); // Info: (20240909 - tzuhan) 每秒檢查一次，直到找到目標元素
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Info: (20240909 - tzuhan) 在 isLoading 為 false 且 iframe 引用存在時開始檢查
+    if (!isLoading && iframeRef.current) {
+      generateCanvas();
+    }
+
+    // Info: (20240909 - tzuhan)  在組件卸載時清除 setInterval，防止內存洩漏
+    return () => clearInterval(intervalId);
+  }, [isLoading, numPages]);
+
   const displayedReportType = getReportFinancialIsLoading ? (
     <Skeleton width={200} height={40} />
   ) : (
@@ -366,9 +419,32 @@ const ViewFinancialSection = ({
       <div className="hidden w-1/4 overflow-y-scroll bg-surface-neutral-surface-lv2 lg:flex">
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
-            {isLoading ? (
-              <p>{t('common:COMMON.LOADING')}</p>
-            ) : isInvalidReport ? null : (
+            {isLoading || thumbnailUrls.length === 0 ? (
+              <p>{t('report_401:MY_REPORTS_SECTION.LOADING')}</p>
+            ) : isInvalidReport ? null : thumbnailUrls.length > 0 ? (
+              thumbnailUrls.map((thumbnailUrl, index) => (
+                <div
+                  key={`thumbnail-${index + 1}`}
+                  className={`m-6 mb-0 self-center rounded-sm p-6 tracking-normal ${
+                    index === activeIndex
+                      ? 'bg-surface-brand-primary-soft'
+                      : 'bg-surface-neutral-surface-lv2 hover:bg-surface-neutral-main-background'
+                  }`}
+                  onClick={() => thumbnailClickHandler(index)}
+                >
+                  <Image
+                    src={thumbnailUrl}
+                    alt="Report Thumbnail"
+                    className="border border-stroke-brand-secondary"
+                  />
+                  <p
+                    className={`mt-2 text-center ${index === activeIndex ? 'text-text-neutral-solid-dark' : 'text-text-neutral-primary'}`}
+                  >
+                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                  </p>
+                </div>
+              ))
+            ) : (
               reportThumbnails.map((thumbnail, index) => renderedThumbnail(thumbnail, index))
             )}
           </div>
