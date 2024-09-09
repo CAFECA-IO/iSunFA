@@ -16,7 +16,7 @@ import ProjectMilestoneBlock from '@/components/project_milestone_block/project_
 import WorkingTimeRatioBlock from '@/components/working_time_ratio_block/working_time_ratio_block';
 import ProjectMonthlySalesBlock from '@/components/project_monthly_sales_block/project_monthly_sales_block';
 import { useUserCtx } from '@/contexts/user_context';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
@@ -48,7 +48,7 @@ interface IProjectDashboardPageProps {
 const ProjectDashboardPage = ({ projectId }: IProjectDashboardPageProps) => {
   const { t } = useTranslation(['common', 'project']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   const [stageHolder, setStageHolder] = useState('-');

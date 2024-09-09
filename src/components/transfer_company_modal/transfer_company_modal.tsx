@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -19,7 +18,7 @@ const TransferCompanyModal = ({
   modalVisibilityHandler,
 }: ITransferCompanyModal) => {
   const { t } = useTranslation(['common', 'kyc']);
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { selectedCompany } = useUserCtx();

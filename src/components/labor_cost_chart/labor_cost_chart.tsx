@@ -4,6 +4,7 @@ import { ApexOptions } from 'apexcharts';
 import Tooltip from '@/components/tooltip/tooltip';
 import { ILaborCostChartData } from '@/interfaces/labor_cost_chart';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import useStateRef from 'react-usestateref';
 import { DUMMY_START_DATE } from '@/interfaces/project_progress_chart';
 import { DatePickerAlign, MILLISECONDS_IN_A_SECOND } from '@/constants/display';
@@ -204,7 +205,7 @@ const LaborCostChart = () => {
   const [period, setPeriod] = useState(defaultSelectedPeriodInSec);
   const [series, setSeries] = useState<number[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {

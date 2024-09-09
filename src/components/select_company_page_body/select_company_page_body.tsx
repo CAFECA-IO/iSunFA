@@ -6,6 +6,7 @@ import { ICompany } from '@/interfaces/company';
 import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
@@ -20,11 +21,9 @@ const SelectCompanyPageBody = () => {
 
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
-  const {
-    toastHandler,
-    companyInvitationModalVisibilityHandler,
-    createCompanyModalVisibilityHandler,
-  } = useGlobalCtx();
+  const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
+    useGlobalCtx();
+  const { toastHandler } = useModalContext();
 
   const {
     targetRef: companyMenuRef,

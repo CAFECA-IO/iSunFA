@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useEffect } from 'react';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import SelectCompanyPageBody from '@/components/select_company_page_body/select_company_page_body';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ToastId } from '@/constants/toast_id';
@@ -14,7 +14,7 @@ import { useTranslation } from 'next-i18next';
 const SelectCompanyPage = () => {
   const { t } = useTranslation(['common', 'kyc']);
   const { isAuthLoading } = useUserCtx();
-  const { eliminateToast } = useGlobalCtx();
+  const { eliminateToast } = useModalContext();
 
   useEffect(() => {
     // Info: (20240513 - Julian) 回到選擇公司頁面時，要把提醒試用版的 Toast 關掉

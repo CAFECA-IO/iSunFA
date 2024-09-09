@@ -3,8 +3,7 @@ import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
 import { IToastify, ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -35,7 +34,7 @@ const CompanyInvitationModal = ({
     success,
   } = APIHandler<IAdmin>(APIName.COMPANY_ADD_BY_INVITATION_CODE);
 
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   useEffect(() => {
     if (success && adminData) {

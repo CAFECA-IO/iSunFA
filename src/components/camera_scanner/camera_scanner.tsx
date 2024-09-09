@@ -4,10 +4,7 @@ import { FiRotateCw, FiCrop } from 'react-icons/fi';
 import { PiCameraLight } from 'react-icons/pi';
 import { GrLinkNext } from 'react-icons/gr';
 import { TbArrowBackUp } from 'react-icons/tb';
-
-// ToDo: (20240523 - Luphia) fix loop import issue
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -34,7 +31,7 @@ enum ScannerStep {
 
 const CameraScanner = ({ isModalVisible, modalVisibilityHandler }: ICameraScannerProps) => {
   const { t } = useTranslation(['common', 'journal']);
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const { setInvoiceIdHandler } = useAccountingCtx();
   const {
