@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
 // Info: (20240808 - Anna) Alpha版先隱藏(編輯書籤列)
-// import { useGlobalCtx } from '@/contexts/global_context';
+// import { useModalContext } from '@/contexts/modal_context';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 import { BOOKMARK_SCROLL_STEP } from '@/constants/config';
@@ -32,7 +32,7 @@ const bookmarkNameMap: BookmarkNameMap = {
 const DashboardBookmark = () => {
   const { t } = useTranslation('common');
   // Info: (20240808 - Anna) Alpha版先隱藏(編輯書籤列)
-  // const { addBookmarkModalVisibilityHandler } = useGlobalCtx();
+  // const { addBookmarkModalVisibilityHandler } = useModalContext();
   const { bookmarkList } = useDashboardCtx();
   const [isAtScrollStart, setIsAtScrollStart] = useState(true);
   const [isAtScrollEnd, setIsAtScrollEnd] = useState(false);
