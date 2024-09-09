@@ -12,7 +12,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useRouter } from 'next/router';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 
 interface IJournalItemProps {
@@ -38,7 +38,7 @@ const Operations = ({
   const router = useRouter();
   const { t } = useTranslation(['common', 'journal']);
   const { selectJournalHandler } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
 
   const editJournalHandler = async () => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PendingReportItem from '@/components/pending_report_item/pending_report_item';
 import { Button } from '@/components/button/button';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
 import { IReport } from '@/interfaces/report';
@@ -11,7 +11,7 @@ interface IReportListProps {
 }
 const PendingReportList = ({ reports }: IReportListProps) => {
   const { t } = useTranslation(['common', 'report_401']);
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
   // Info: (20240514 - Shirley) 使用 reportItems(useState) 取代 reports 作為渲染畫面的資料，才能在 child component 更改狀態的時候及時更新畫面，也能實現 optimistic updates 的功能；如果之後串上 API，每次更改狀態會重新拿資料，也許可以再改回來
   const [reportItems, setReportItems] = useState<IReport[]>(reports);
 

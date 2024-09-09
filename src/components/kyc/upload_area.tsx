@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ProgressStatus } from '@/constants/account';
 import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
@@ -32,7 +32,8 @@ const UploadArea = ({
   const { t } = useTranslation(['common', 'kyc']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
+    useModalContext();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isError, setIsError] = useState<boolean>(false);

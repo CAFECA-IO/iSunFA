@@ -3,6 +3,7 @@ import Image from 'next/image';
 // Info: (20240808 - Anna) Alpha版先隱藏(事件描述)
 // import { FiSend } from 'react-icons/fi';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { IOCR } from '@/interfaces/ocr';
@@ -33,7 +34,8 @@ import { APIName } from '@/constants/api_connection';
 // }) =>
 const StepOneTab = () => {
   const { t } = useTranslation(['common', 'journal']);
-  const { cameraScannerVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { cameraScannerVisibilityHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const {
     OCRList,

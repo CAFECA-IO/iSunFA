@@ -5,8 +5,7 @@ import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IAccount } from '@/interfaces/accounting_account';
@@ -28,7 +27,7 @@ const AddAccountTitleModal = ({
 }: IAddAccountTitleModalProps) => {
   const { t } = useTranslation(['common', 'setting']);
   const { selectedCompany } = useUserCtx();
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const { getAccountListHandler } = useAccountingCtx();
 
   const { accountId } = modalData;

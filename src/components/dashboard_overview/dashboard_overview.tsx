@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { IProfitInsight } from '@/interfaces/project_insight';
@@ -13,7 +13,7 @@ const DashboardOverview = () => {
   const [dashboardOverview, setDashboardOverview] = React.useState<IProfitInsight>(
     {} as IProfitInsight
   );
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
