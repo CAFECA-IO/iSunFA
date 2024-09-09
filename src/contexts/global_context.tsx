@@ -425,21 +425,22 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       }
     } else {
       eliminateToast();
-      if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        toastHandler({
-          id: ToastId.ALPHA_TEST_REMINDER,
-          type: ToastType.INFO,
-          closeable: true,
-          autoClose: false,
-          content: (
-            <div className="flex items-center justify-between">
-              <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
-            </div>
-          ),
-        });
-      } else {
-        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
-      }
+      // Info: (20240909 - Anna) 為了不顯示「Alpha 版本的資料只用於測試」這個彈窗，所以先註解掉，未來需要用到時再解開
+      // if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      //   toastHandler({
+      //     id: ToastId.ALPHA_TEST_REMINDER,
+      //     type: ToastType.INFO,
+      //     closeable: true,
+      //     autoClose: false,
+      //     content: (
+      //       <div className="flex items-center justify-between">
+      //         <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
+      //       </div>
+      //     ),
+      //   });
+      // } else {
+      //   eliminateToast(ToastId.ALPHA_TEST_REMINDER);
+      // }
     }
   }, [pathname, signedIn]);
 
