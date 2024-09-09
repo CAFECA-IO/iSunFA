@@ -81,6 +81,7 @@ export enum APIName {
   GET_PROJECT_BY_ID = 'GET_PROJECT_BY_ID',
   UPDATE_PROJECT_BY_ID = 'UPDATE_PROJECT_BY_ID',
   PUBLIC_KEY_GET = 'PUBLIC_KEY_GET',
+  ZOD_EXAMPLE = 'ZOD_EXAMPLE', // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
 }
 
 export enum APIPath {
@@ -145,6 +146,7 @@ export enum APIPath {
   GET_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
   UPDATE_PROJECT_BY_ID = `${apiPrefix}/company/:companyId/project/:projectId`,
   PUBLIC_KEY_GET = `${apiPrefix}/company/:companyId/public_key`,
+  ZOD_EXAMPLE = `${apiPrefix}/company/zod`, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
 }
 const createConfig = ({
   name,
