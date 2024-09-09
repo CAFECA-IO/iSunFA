@@ -14,6 +14,8 @@ interface ModalContextType {
   messageModalDataHandler: (data: IMessageModal) => void;
   toastHandler: (props: IToastify) => void;
   eliminateToast: (id?: string) => void;
+  isAddBookmarkModalVisible: boolean;
+  addBookmarkModalVisibilityHandler: () => void;
 }
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 interface ModalProviderProps {
@@ -23,6 +25,7 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [isMessageModalVisible, setIsMessageModalVisible] = useState(false);
   const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
+  const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
   const confirmModalVisibilityHandler = () => {
     setIsConfirmModalVisible(!isConfirmModalVisible);
   };
@@ -140,6 +143,9 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       toastify.dismiss(); // Info:(20240513 - Julian) dismiss all toasts
     }
   };
+  const addBookmarkModalVisibilityHandler = () => {
+    setIsAddBookmarkModalVisible(!isAddBookmarkModalVisible);
+  };
   const value = useMemo(
     () => ({
       isConfirmModalVisible,
@@ -150,6 +156,8 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       messageModalData,
       toastHandler,
       eliminateToast,
+      isAddBookmarkModalVisible,
+      addBookmarkModalVisibilityHandler,
     }),
     [
       isConfirmModalVisible,
@@ -160,6 +168,8 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       messageModalData,
       toastHandler,
       eliminateToast,
+      isAddBookmarkModalVisible,
+      addBookmarkModalVisibilityHandler,
     ]
   );
   return <ModalContext.Provider value={value}>{children}</ModalContext.Provider>;
