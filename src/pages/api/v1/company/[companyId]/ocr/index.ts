@@ -25,7 +25,7 @@ import { FileFolder, getFileFolder } from '@/constants/file';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
-import logger from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { bufferToBlob, findFileByName, readFile } from '@/lib/utils/parse_image_form';
 import { findFileById } from '@/lib/utils/repo/file.repo';
 import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
@@ -38,7 +38,7 @@ export async function readImageFromFilePath(
   const filePath = await findFileByName(fileFolder, fileName);
 
   if (!filePath) {
-    logger.info(
+    loggerBack.info(
       {
         fileName,
       },
@@ -50,7 +50,7 @@ export async function readImageFromFilePath(
   const fileBuffer = await readFile(filePath);
 
   if (!fileBuffer) {
-    logger.info(
+    loggerBack.info(
       {
         fileName,
       },
@@ -84,17 +84,12 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
       body: formData,
     });
   } catch (error) {
-    // logger.error(error, 'Ocr uploadImageToAICH error, happen when POST AICH API');
+    const logError = loggerError(0, 'upload image to AICH failed', error as Error);
+    logError.error('Ocr uploadImageToAICH error, happen when POST AICH API');
   }
 
   if (!response || !response.ok) {
-    logger.info(
-      {
-        aich_response: response,
-      },
-      'Ocr uploadImageToAICH response is not ok'
-    );
-    logger.error(
+    loggerBack.info(
       {
         aich_response: response,
       },
@@ -110,12 +105,12 @@ export async function getPayloadFromResponseJSON(
   responseJSON: Promise<{ payload?: unknown } | null>
 ) {
   if (!responseJSON) {
-    // logger.info(
-    //   {
-    //     responseJSON,
-    //   },
-    //   'Ocr getPayloadFromResponseJSON responseJSON is null'
-    // );
+    loggerBack.info(
+      {
+        responseJSON,
+      },
+      'Ocr getPayloadFromResponseJSON responseJSON is null'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -126,20 +121,20 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // logger.error(
-    //   error,
-    //   'Ocr getPayloadFromResponseJSON error, happen when parse responseJSON from AICH API'
-    // );
+    const logError = loggerError(0, 'get payload from response JSON failed', error as Error);
+    logError.error(
+      'Ocr getPayloadFromResponseJSON error, happen when await responseJSON from AICH API'
+    );
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
   if (!json || !json.payload) {
-    // logger.info(
-    //   {
-    //     aich_response: json,
-    //   },
-    //   'Ocr getPayloadFromResponseJSON response is not json, or json do not have payload'
-    // );
+    loggerBack.info(
+      {
+        aich_response: json,
+      },
+      'Ocr getPayloadFromResponseJSON response is not json, or json do not have payload'
+    );
     throw new Error(STATUS_MESSAGE.AICH_SUCCESSFUL_RETURN_BUT_RESULT_IS_NULL);
   }
 
@@ -151,7 +146,7 @@ async function readFileFromLocalUrl(url: string): Promise<Buffer> {
 
   const fileBuffer = await readFile(filePath);
   if (!fileBuffer) {
-    logger.info(
+    loggerBack.info(
       `Error in reading image file from local url in OCR (but image existed), Url : ${url}`
     );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
@@ -208,10 +203,12 @@ export async function postImageToAICH(
       type: 'invoice',
       uploadIdentifier,
     };
-    logger.info(result, `Ocr postImageToAICH result, field: ${fileId}`);
+    loggerBack.info(result, `Ocr postImageToAICH result, field: ${fileId}`);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    logger.error(error, 'Ocr postImageToAICH error, happen when POST Image to AICH API');
+    const logError = loggerError(0, 'postImageToAICH failed', error as Error);
+    logError.error(
+      'Ocr postImageToAICH error, happen when POST Image to AICH API, in postImageToAICH in ocr/index.ts'
+    );
   }
 
   resultJson.push(result);
@@ -285,7 +282,7 @@ function formatFormBody(req: NextApiRequest) {
     iv = (body.iv as string).split(',');
     imageType = body.imageType as string;
   } else {
-    logger.info(body, 'ocr body is not valid');
+    loggerBack.info(body, 'ocr body is not valid');
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
     /* eslint-enable no-console */
   }
@@ -311,7 +308,7 @@ export async function fetchStatus(aichResultId: string) {
       const result = await fetch(fetchUrl);
 
       if (!result.ok) {
-        logger.info(
+        loggerBack.info(
           {
             aich_response: result,
           },
@@ -322,8 +319,10 @@ export async function fetchStatus(aichResultId: string) {
 
       status = (await result.json()).payload;
     } catch (error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-      // logger.error(error, 'Ocr fetchStatus error, happen when fetch AICH API');
+      const logError = loggerError(0, 'fetchStatus failed', error as Error);
+      logError.error(
+        'Ocr fetchStatus error, happen when fetch AICH API in fetchStatus in ocr/index.ts'
+      );
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
     }
   }
@@ -419,8 +418,10 @@ export async function createOcrFromAichResults(
       })
     );
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    // logger.error(error, 'Ocr createOcrFromAichResults error, happen when create Ocr in Prisma');
+    const logError = loggerError(0, 'createOcrFromAichResults failed', error as Error);
+    logError.error(
+      'Ocr createOcrFromAichResults error, happen when create Ocr in Prisma in ocr/index.ts'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -436,7 +437,8 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
     resultJson = await createOcrFromAichResults(companyId, aichResults);
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
-    logger.error(error, 'Ocr handlePostRequest error, happen when POST Image to AICH API');
+    const logError = loggerError(0, 'handlePostRequest failed', error as Error);
+    logError.error('Ocr handlePostRequest error, happen when POST Image to AICH API');
   }
 
   return {
@@ -454,11 +456,14 @@ export async function handleGetRequest(companyId: number, req: NextApiRequest) {
   try {
     ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    // logger.error(
-    //   error,
-    //   'Ocr handleGetRequest error, happen when findManyOCRByCompanyIdWithoutUsedInPrisma'
-    // );
+    const logError = loggerError(
+      0,
+      'findManyOCRByCompanyIdWithoutUsedInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Ocr handleGetRequest error, happen when findManyOCRByCompanyIdWithoutUsedInPrisma in ocr/index.ts'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
@@ -496,29 +501,29 @@ export default async function handler(
           break;
         }
         default: {
-          // logger.info(
-          //   {
-          //     method: req.method,
-          //   },
-          //   'Ocr handler method is not allowed'
-          // );
+          loggerBack.info(
+            {
+              method: req.method,
+            },
+            'Ocr handler method is not allowed'
+          );
           throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
         }
       }
     } catch (_error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-      // logger.error(_error, 'Ocr handler error');
+      const logError = loggerError(userId, 'handle OCR request failed', _error as Error);
+      logError.error('handle OCR request failed in handler function in ocr/index.ts');
     }
   } else {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-    // logger.info(
-    //   {
-    //     userId,
-    //     companyId,
-    //     isAuth,
-    //   },
-    //   'Ocr handler is not authorized'
-    // );
+    loggerBack.info(
+      {
+        userId,
+        companyId,
+        isAuth,
+      },
+      'Ocr handler is not authorized'
+    );
   }
 
   const { httpCode, result } = formatApiResponse<ApiReturnType>(statusMessage, payload);

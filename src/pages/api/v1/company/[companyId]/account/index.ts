@@ -183,18 +183,16 @@ export async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IPaginatedAccount | null>>
 ) {
-  const { companyId } = await getSession(req, res);
+  const { companyId, userId } = await getSession(req, res);
   const formattedQuery = formatGetQuery(companyId, req);
-
   const accountRetriever = AccountRetrieverFactory.createRetriever(formattedQuery);
   let paginatedAccount: IPaginatedAccount | null = null;
-
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(userId, 'Failed to retrieve accounts', error as Error);
+    logError.error('Prisma related error');
   }
-
   return paginatedAccount;
 }
 
@@ -285,7 +283,8 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'handle account request failed', error);
+    logError.error('handle account request failed in handler function in account/index.ts');
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

@@ -7,6 +7,7 @@ import {
 } from '@/interfaces/voucher';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma, Voucher } from '@prisma/client';
+import { loggerError } from '@/lib/utils/logger_back';
 
 /**
  * This function can get the latest voucher no
@@ -42,7 +43,14 @@ export async function getLatestVoucherNo(companyId: number) {
   try {
     voucher = await prisma.voucher.findFirst(findFirstArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'get latest voucher no in getLatestVoucherNo failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related findFirst voucher in getLatestVoucherNo in voucher.beta.repo.ts failed'
+    );
   }
 
   const localToday = new Date();
@@ -91,7 +99,14 @@ export async function findUniqueVoucherById(voucherId: number) {
   try {
     voucherData = await prisma.voucher.findUnique(findUniqueArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique voucher in findUniqueVoucherById failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique voucher in findUniqueVoucherById in voucher.beta.repo.ts failed'
+    );
   }
   return voucherData;
 }
@@ -127,7 +142,14 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
   try {
     voucherData = await prisma.voucher.create(voucherCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create voucher in createVoucherInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create voucher in createVoucherInPrisma in voucher.beta.repo.ts failed'
+    );
   }
 
   return voucherData;
@@ -184,7 +206,14 @@ export async function findManyVoucherWithCashInPrisma(
   try {
     vouchers = await prisma.voucher.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find many voucher in findManyVoucherWithCashInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find many voucher in findManyVoucherWithCashInPrisma in voucher.beta.repo.ts failed'
+    );
   }
 
   return vouchers;

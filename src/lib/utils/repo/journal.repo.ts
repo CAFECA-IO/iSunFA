@@ -10,6 +10,7 @@ import { Prisma } from '@prisma/client';
 import { calculateTotalPages, getTimestampNow } from '@/lib/utils/common';
 import { JOURNAL_EVENT, SortBy } from '@/constants/journal';
 import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function findManyJournalsInPrisma(
   companyId: number,
@@ -89,7 +90,12 @@ export async function findManyJournalsInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find many journals in findManyJournalsInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma find many journals in journal.repo.ts failed');
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journals;
@@ -193,7 +199,8 @@ export async function listJournal(
 
     return paginatedJournalList;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'List journal in listJournal failed', error as Error);
+    logError.error('Func. listJournal in journal.repo.ts failed');
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -237,7 +244,14 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
 
     journal = await prisma.journal.findUnique(findUniqueArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find unique journal in findUniqueJournalInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma find unique journal in findUniqueJournalInPrisma in journal.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -254,7 +268,12 @@ export async function deleteJournalInPrisma(
   try {
     journalExists = await findUniqueJournalInPrisma(journalId, companyId);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find unique journal in deleteJournalInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma find unique journal in deleteJournalInPrisma in journal.repo.ts failed');
   }
 
   if (journalExists) {
@@ -344,7 +363,14 @@ export async function deleteJournalInPrisma(
         });
       });
     } catch (error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(
+        0,
+        'Soft delete journal in deleteJournalInPrisma failed',
+        error as Error
+      );
+      logError.error(
+        'Prisma soft delete journal in deleteJournalInPrisma in journal.repo.ts failed'
+      );
     }
   }
   return journal;

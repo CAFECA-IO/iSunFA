@@ -8,6 +8,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IReportIncludeCompanyProject } from '@/interfaces/report';
 import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function findFirstReportByFromTo(
   companyId: number,
@@ -27,7 +28,14 @@ export async function findFirstReportByFromTo(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find first report by from to in findFirstReportByFromTo failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find first report by from to in findFirstReportByFromTo in report.repo.ts failed'
+    );
   }
 
   return report;
@@ -49,7 +57,14 @@ export async function findUniqueReportById(reportId: number) {
     });
   } catch (error) {
     report = null;
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique report by id in findUniqueReportById failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique report by id in findUniqueReportById in report.repo.ts failed'
+    );
   }
 
   return report;
@@ -76,7 +91,14 @@ export async function getReportIdByFromTo(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'get report id by from to in getReportIdByFromTo failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find first report id by from to in getReportIdByFromTo in report.repo.ts failed'
+    );
   }
 
   return report?.id;
@@ -113,7 +135,8 @@ export async function createReport(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'create report in createReport failed', error as Error);
+    logError.error('Prisma related create report in createReport in report.repo.ts failed');
   }
 
   return report;
@@ -165,7 +188,8 @@ export async function findManyReports(
   try {
     reports = await prisma.report.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'find many reports in findManyReports failed', error as Error);
+    logError.error('Prisma related find many reports in findManyReports in report.repo.ts failed');
   }
 
   const filteredReports = reports.filter((report) => {

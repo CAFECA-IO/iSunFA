@@ -16,16 +16,16 @@ import {
   decryptFile,
   getPrivateKeyByCompany,
 } from '@/lib/utils/crypto';
-import logger from '@/lib/utils/logger_back';
+import logger, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
     try {
       await fs.mkdir(folder, { recursive: true });
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     } catch (error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(0, 'createFileFoldersIfNotExists failed', error as Error);
+      logError.error('Func. createFileFoldersIfNotExists in file.ts failed');
     }
   });
   CRYPTO_FOLDER_PATH.map(async (folder) => {

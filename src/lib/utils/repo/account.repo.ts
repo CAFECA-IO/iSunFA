@@ -7,6 +7,7 @@ import { Account, Prisma } from '@prisma/client';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ReportSheetAccountTypeMap, ReportSheetType } from '@/constants/report';
 import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function findManyAccountsInPrisma({
   companyId,
@@ -90,7 +91,12 @@ export async function findManyAccountsInPrisma({
   try {
     totalCount = await prisma.account.count({ where });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Count tototal count of account in findManyAccountsInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma count account in account.repo.ts failed');
   }
 
   const totalPage = Math.ceil(totalCount / limit);
@@ -109,7 +115,12 @@ export async function findManyAccountsInPrisma({
   try {
     accounts = await prisma.account.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find many accounts in findManyAccountsInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma find many accounts in account.repo.ts failed');
   }
 
   const hasNextPage = accounts.length > limit;
@@ -151,7 +162,12 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find first account in findFirstAccountInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma find first account in account.repo.ts failed');
   }
 
   return account;
@@ -174,7 +190,12 @@ export async function updateAccountInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Update account in updateAccountInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma update account in account.repo.ts failed');
   }
 
   return account;
@@ -195,7 +216,12 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Soft delete account in softDeleteAccountInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma soft delete account in account.repo.ts failed');
   }
   return account;
 }
@@ -212,7 +238,12 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find latest sub account in findLatestSubAccountInPrisma failed',
+      error as Error
+    );
+    logError.error('Prisma find latest sub account in account.repo.ts failed');
   }
   return latestSubAccount;
 }
@@ -249,7 +280,12 @@ export async function fuzzySearchAccountByName(name: string) {
     `;
     [account] = accounts;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Fuzzy search account by name in fuzzySearchAccountByName failed',
+      error as Error
+    );
+    logError.error('Prisma fuzzy search account by name in account.repo.ts failed');
   }
 
   return account;

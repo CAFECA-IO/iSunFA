@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { loggerError } from '@/lib/utils/logger_back';
 
 // Info: (20240701 - Jacky) Function to get the last committed version of package.json
 function getLastCommittedVersion(): string | null {
@@ -28,7 +29,8 @@ try {
   packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
   packageJson = JSON.parse(packageJsonContent);
 } catch (error) {
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+  const logError = loggerError(0, 'Package.json parsed failed', error as Error);
+  logError.error('Retreive packageJson in update_version.ts failed');
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }
 
@@ -62,8 +64,7 @@ try {
   // Info:(20240730 - Jacky) - Add last line to prevent EOF error
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 } catch (error) {
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+  const logError = loggerError(0, 'Package.json write failed', error as Error);
+  logError.error('Update(Write) packageJson into packageJsonPath in update_version.ts failed');
   process.exit(1); // Info: (20240701 - Jacky) Exit the process with an error code
 }
-
-// Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger

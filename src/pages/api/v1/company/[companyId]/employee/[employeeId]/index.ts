@@ -13,6 +13,7 @@ import {
   updateEmployeeById,
 } from '@/lib/utils/repo/employee.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
+import { loggerError } from '@/lib/utils/logger_back';
 
 function getTargetTime(): number {
   const nowTime = new Date().getTime();
@@ -66,7 +67,10 @@ async function deleteEmployee(employeeIdNumber: number): Promise<void> {
   try {
     await updateEndDateByEmployeeId(employeeIdNumber, targetTime);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'delete employee in deleteEmployee failed', error as Error);
+    logError.error(
+      'Prisma related updateEndDateByEmployeeId in deleteEmployee in employee/employeeId/index.ts failed'
+    );
   }
 }
 
@@ -92,7 +96,10 @@ async function updateEmployee(
     );
     await updateEmployeeProject(employeeIdNumber, projectIdsNames, targetTime);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'update employee in updateEmployee failed', error as Error);
+    logError.error(
+      'Prisma related updateEmployeeById or updateEmployeeProject in updateEmployee in employee/employeeId/index.ts failed'
+    );
   }
   const employee = await getEmployeeById(employeeIdNumber);
   const projects = await getProjectsByEmployeeId(employeeIdNumber);
