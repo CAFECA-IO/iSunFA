@@ -6,7 +6,7 @@ import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 import { FileFolder } from '@/constants/file';
 import { File } from '@prisma/client';
 import { findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
@@ -55,7 +55,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
     const { userId, companyId } = session;
     const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
     if (!isAuth) {
-      logger.info(`Unauthorized access in image/[imageId] by user: ${userId}`);
+      loggerBack.info(`Unauthorized access in image/[imageId] by user: ${userId}`);
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
@@ -64,7 +64,7 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
     const file = await getFileFromDB(imageId);
 
     if (!file) {
-      logger.info(`Image file not found in DB in image/[imageId]: ${imageId}`);
+      loggerBack.info(`Image file not found in DB in image/[imageId]: ${imageId}`);
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
@@ -72,14 +72,16 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
 
     const fileBuffer = await readFile(filePath);
     if (!fileBuffer) {
-      logger.info(`Error in reading image file in image/[imageId] (but image existed): ${imageId}`);
+      loggerBack.info(
+        `Error in reading image file in image/[imageId] (but image existed): ${imageId}`
+      );
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
     payload = await decryptImageFile({ imageBuffer: fileBuffer, file, companyId });
   } catch (_error) {
     const error = _error as Error;
-    logger.error(error, `Error in GET image/[imageId]:`);
+    loggerBack.error(error, `Error in GET image/[imageId]:`);
     statusMessage = error.message;
   }
 

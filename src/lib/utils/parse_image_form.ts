@@ -4,7 +4,7 @@ import path from 'path';
 import { NextApiRequest } from 'next';
 import { FORMIDABLE_OPTIONS } from '@/constants/config';
 import { FileFolder, getFileFolder } from '@/constants/file';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 
 export const parseForm = async (
   req: NextApiRequest,
@@ -59,7 +59,7 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
   try {
     fileBuffer = await fs.readFile(filePath);
   } catch (error) {
-    logger.error(error, `Error in readFile: ${filePath}`);
+    loggerBack.error(error, `Error in readFile: ${filePath}`);
   }
   return fileBuffer;
 }

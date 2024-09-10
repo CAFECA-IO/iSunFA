@@ -13,6 +13,7 @@ import {
   getProjectsIncomeExpense,
   getPreLaunchProjectCount,
 } from '@/lib/utils/repo/profit_insight.repo';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function getProfitChange(targetTime: number, companyId: number) {
   // Info: (20240607 - Gibbs) startDayTimestampOfTargetTime, endDayTimestampOfTargetTime, startPreviousDayTimestampOfTargetTime, endPreviousDayTimestampOfTargetTime
@@ -110,8 +111,12 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      // ToDo: (20240823 - Murky) please used logger to print error
-      // const error = _error as Error;
+      const logError = loggerError(
+        userId,
+        'request handler in profit_insight/index.ts failed',
+        _error as Error
+      );
+      logError.error('request handler in profit_insight/index.ts failed');
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

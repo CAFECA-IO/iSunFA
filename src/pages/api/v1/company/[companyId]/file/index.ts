@@ -14,7 +14,7 @@ import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import formidable from 'formidable';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
@@ -144,7 +144,7 @@ function formatPostQuery(req: NextApiRequest) {
   // Info: (20240829 - Murky) Check if type is upload type
   const isTypeValid = isEnumValue(UploadType, type);
   if (!isTypeValid) {
-    logger.info(`API POST File: Invalid type: ${type}`);
+    loggerBack.info(`API POST File: Invalid type: ${type}`);
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
 
@@ -198,7 +198,7 @@ async function handlePostRequest(
 
         if (!file) {
           statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
-          logger.info(`API POST File: No file uploaded`);
+          loggerBack.info(`API POST File: No file uploaded`);
         } else {
           const { fileId, fileName } = await handleFileUpload(
             type,
@@ -213,7 +213,7 @@ async function handlePostRequest(
         }
       } catch (_error) {
         const error = _error as Error;
-        logger.error(error, `API POST File: ${error.message}`);
+        loggerBack.error(error, `API POST File: ${error.message}`);
         statusMessage = error.message;
       }
     }

@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { FileDatabaseConnectionType, FileFolder } from '@/constants/file';
 import { Prisma, File } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 
 /**
  * Info: (20240830 - Murky)
@@ -61,7 +61,7 @@ export async function createFile({
       data: fileData,
     });
   } catch (error) {
-    logger.error(error, 'Error happened in createFile in file.repo.ts');
+    loggerBack.error(error, 'Error happened in createFile in file.repo.ts');
   }
   return file;
 }
@@ -97,7 +97,7 @@ export async function connectFileById(
       data: connectData,
     });
   } catch (error) {
-    logger.error(error, 'Error happened in connectFileById in file.repo.ts');
+    loggerBack.error(error, 'Error happened in connectFileById in file.repo.ts');
   }
   return file;
 }
@@ -112,7 +112,7 @@ export async function findFileById(fileId: number): Promise<File | null> {
       },
     });
   } catch (error) {
-    logger.error(error, 'Error happened in findFileById in file.repo.ts');
+    loggerBack.error(error, 'Error happened in findFileById in file.repo.ts');
   }
   return file;
 }
@@ -127,7 +127,7 @@ export async function findFileInDBByName(name: string): Promise<File | null> {
       },
     });
   } catch (error) {
-    logger.error(error, 'Error happened in findFileByName in file.repo.ts');
+    loggerBack.error(error, 'Error happened in findFileByName in file.repo.ts');
   }
   return file;
 }
@@ -151,7 +151,7 @@ export async function deleteFileById(fileId: number) {
       data,
     });
   } catch (error) {
-    logger.error(error, 'Error happened in deleteFileById in file.repo.ts');
+    loggerBack.error(error, 'Error happened in deleteFileById in file.repo.ts');
   }
 
   return file;
@@ -177,7 +177,7 @@ export async function deleteFileByName(name: string) {
       data,
     });
   } catch (error) {
-    logger.error(error, 'Error happened in deleteFileByName in file.repo.ts');
+    loggerBack.error(error, 'Error happened in deleteFileByName in file.repo.ts');
   }
 
   return file;
@@ -194,7 +194,7 @@ export async function deleteFileByIdForTesting(fileId: number) {
       where,
     });
   } catch (error) {
-    logger.error(error, 'Error happened in deleteFileByIdForTest in file.repo.ts');
+    loggerBack.error(error, 'Error happened in deleteFileByIdForTest in file.repo.ts');
   }
 
   return file;

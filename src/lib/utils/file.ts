@@ -16,7 +16,7 @@ import {
   decryptFile,
   getPrivateKeyByCompany,
 } from '@/lib/utils/crypto';
-import logger, { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
@@ -84,7 +84,7 @@ export async function decryptImageFile({
     const privateKey = await getPrivateKeyByCompany(companyId);
 
     if (!privateKey) {
-      logger.error(`Private key not found in decryptImageFile in image/[imageId]: ${file.id}`);
+      loggerBack.error(`Private key not found in decryptImageFile in image/[imageId]: ${file.id}`);
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
     const ivUint8Array = bufferToUint8Array(iv);
