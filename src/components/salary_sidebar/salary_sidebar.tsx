@@ -5,16 +5,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useTranslation } from 'next-i18next';
 
 const SalarySidebar = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'salary']);
   const [isExpanded, setIsExpanded] = useState(false);
   const sidebarEnterHandler = () => setIsExpanded(true);
   const sidebarLeaveHandler = () => setIsExpanded(false);
@@ -142,8 +133,7 @@ const SalarySidebar = () => {
         <button
           type="button"
           // ToDo: (20240802 - Julian) [Beta] Not released yet
-          // eslint-disable-next-line react/jsx-boolean-value
-          disabled={true}
+          disabled
           className="mx-auto p-16px text-tabs-text-default disabled:opacity-50"
         >
           <svg

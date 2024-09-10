@@ -399,14 +399,14 @@ const AnalysisReportSection = () => {
           {/* Info: (20240513 - Shirley) desktop heading */}
           <div className="hidden flex-col justify-center text-4xl font-semibold leading-10 text-text-neutral-secondary max-md:max-w-full max-md:pr-5 md:flex">
             <div className="w-full justify-center px-10 md:px-28">
-              {t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}
+              {t('common:COMMON.ANALYSIS_REPORTS')}
             </div>
           </div>
           {/* Info: (20240513 - Shirley) mobile heading */}
           <div className="flex w-600px max-w-full flex-1 md:hidden">
             <div className="mx-4 flex space-x-2">
               <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
-              <div className="mt-1.5">{t('report_401:REPORTS_SIDEBAR.ANALYSIS_REPORTS')}</div>
+              <div className="mt-1.5">{t('common:COMMON.ANALYSIS_REPORTS')}</div>
             </div>
           </div>
 

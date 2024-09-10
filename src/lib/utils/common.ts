@@ -587,6 +587,7 @@ export const deleteFileFromLocalStorage = (
       },
     };
   } else {
+    // Info: (20240909 - Anna) 在這裡使用 for...in 遍歷物件的所有屬性是必要的，因此保留 no-restricted-syntax 註解來避免 ESLint 報錯。
     // eslint-disable-next-line no-restricted-syntax
     for (const key in data) {
       if (data[key].id === fileId) {

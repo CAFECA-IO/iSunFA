@@ -11,7 +11,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FinancialReportTypesKey, FinancialReportTypesMap } from '@/interfaces/report_type';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
 import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { LoadingSVG } from '@/components/loading_svg/loading_svg';
 import { useUserCtx } from '@/contexts/user_context';
@@ -29,7 +29,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
   // Info: (20240807 - Anna) 初始化 useRouter
   const router = useRouter();
   const { t } = useTranslation(['common', 'report_401']);
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const {
     trigger: generateFinancialReport,

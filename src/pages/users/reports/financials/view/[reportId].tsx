@@ -12,7 +12,7 @@ import Head from 'next/head';
 import React, { useEffect } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
@@ -27,17 +27,8 @@ interface IServerSideProps {
 }
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
-  const { toastHandler } = useGlobalCtx();
+  const { t } = useTranslation('common');
+  const { toastHandler } = useModalContext();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [reportData] = React.useState<IReportOld>({

@@ -17,18 +17,8 @@ enum Department {
   BACKEND = 'Backend',
 }
 
-// ToDo: (20240715 - Julian) [Beta] i18n
 const SalaryRecordForm = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'salary']);
   const { salaryBookConfirmModalVisibilityHandler } = useGlobalCtx();
 
   const [datePeriod, setDatePeriod] = useState<IDatePeriod>(default30DayPeriodInSec);

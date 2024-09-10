@@ -15,7 +15,6 @@
     "MILESTONE": "Milestone",
     "MONTHLY_SALES": "Monthly Sales",
     "REMAINING": "Remaining",
-    "COMPLETED": "Completed",
     "PROJECT_STAGE_CHART": "Project Stage Chart",
     "NO_DATA": "No Data",
     "INCOME_VS_EXPENSE": "Income vs. Expense",
@@ -37,7 +36,6 @@
     "PROJECT_LIST_ISUNFA": "Project List - iSunFA",
     "NAME_YOUR_PROJECT": "Name your project",
     "ENTER_NEW_PROJECT_NAME": "Enter New Project Name",
-    "OK": "OK",
     "CREATE_PROJECT_FAILED": "Create project failed, please try again later."
   },
   "STAGE_NAME_MAP": {

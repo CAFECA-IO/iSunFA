@@ -132,7 +132,9 @@
     "UPDATE_INVOICE_FAILED": "更新发票失败",
     "UPDATE_INVOICE_FAILED_CODE": "更新发票失败: {{updateCode}}",
     "DOWNLOAD_SELECTED_VOUCHER": "下载传票",
-    "DOWNLOAD_SELECTED_ITEMS": "您确定要下载所选项目吗？"
+    "DOWNLOAD_SELECTED_ITEMS": "您确定要下载所选项目吗？",
+    "GET_OCR_RESULT_FAILED": "获取 OCR 结果失败",
+    "GET_OCR_RESULT_FAILED_CODE": "获取 OCR 结果失败: {{getCode}}"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -168,7 +170,6 @@
     "DOUBLE_DECLINING": "双倍余额递减法",
     "UNITS_OF_PRODUCTION": "工作量法",
     "ESTIMATED_USEFUL_LIFE": "预计使用寿命",
-    "DAY": "日",
     "NAME_YOUR_ASSET": "为您的资产命名",
     "ADD_NOTE": "添加备注"
   },

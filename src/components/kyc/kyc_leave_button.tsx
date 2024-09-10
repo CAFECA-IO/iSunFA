@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -7,7 +7,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 const LeaveButton = () => {
   const { t } = useTranslation(['common', 'kyc']);
   const router = useRouter();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const handleBack = () => {
     router.push(ISUNFA_ROUTE.COMPANY_INFO);

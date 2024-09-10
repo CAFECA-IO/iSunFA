@@ -132,7 +132,9 @@
     "UPDATE_INVOICE_FAILED": "更新發票失敗",
     "UPDATE_INVOICE_FAILED_CODE": "更新發票失敗: {{updateCode}}",
     "DOWNLOAD_SELECTED_VOUCHER": "下載傳票",
-    "DOWNLOAD_SELECTED_ITEMS": "您確定要下載所選項目嗎？"
+    "DOWNLOAD_SELECTED_ITEMS": "您確定要下載所選項目嗎？",
+    "GET_OCR_RESULT_FAILED": "取得 OCR 結果失敗",
+    "GET_OCR_RESULT_FAILED_CODE": "取得 OCR 結果失敗: {{getCode}}"
   },
   "JOURNAL_TYPES": {
     "ALL": "全部",
@@ -168,7 +170,6 @@
     "DOUBLE_DECLINING": "雙倍餘額遞減法",
     "UNITS_OF_PRODUCTION": "工作量法",
     "ESTIMATED_USEFUL_LIFE": "預計使用壽命",
-    "DAY": "日",
     "NAME_YOUR_ASSET": "為您的資產命名",
     "ADD_NOTE": "新增備註"
   },

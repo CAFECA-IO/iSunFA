@@ -261,7 +261,15 @@
     "YEAR": "Year",
     "SELECT": "Select",
     "NO_DATA": "No Data",
-    "TOOLTIP_MESSAGE": "A message which appears when a cursor is positioned over an icon, image, hyperlink, or other element in a graphical user interface."
+    "TOOLTIP_MESSAGE": "A message which appears when a cursor is positioned over an icon, image, hyperlink, or other element in a graphical user interface.",
+    "PERIOD": "Period",
+    "OK": "OK",
+    "TO": "to",
+    "ANALYSIS_REPORTS": "Analysis Reports",
+    "TRANSFER": "Transfer",
+    "LOADING": "Loading...",
+    "COMPLETED": "Completed",
+    "DAY": "Day"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",

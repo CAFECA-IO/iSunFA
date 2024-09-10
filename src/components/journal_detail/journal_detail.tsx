@@ -4,6 +4,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import { IJournal } from '@/interfaces/journal';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { timestampToString } from '@/lib/utils/common';
@@ -38,12 +39,8 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
   const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const {
-    previewInvoiceModalDataHandler,
-    previewInvoiceModalVisibilityHandler,
-    messageModalDataHandler,
-    messageModalVisibilityHandler,
-  } = useGlobalCtx();
+  const { previewInvoiceModalDataHandler, previewInvoiceModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const {
     data: journalDetail,
     isLoading,
@@ -232,7 +229,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
             fill="#002462"
           />
         </svg>
-        <p>{t('journal:JOURNAL.TRANSFER')}</p>
+        <p>{t('common:COMMON.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -267,7 +264,7 @@ const JournalDetail = ({ journalId }: IJournalDetailProps) => {
     <div className="flex flex-col items-end">
       <p>
         <span className="font-semibold text-text-neutral-primary">{totalPrice}</span>{' '}
-        {t('journal:JOURNAL.TWD')}
+        {t('common:COMMON.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-text-neutral-primary">{tax}%</span>{' '}

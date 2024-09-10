@@ -132,7 +132,9 @@
     "UPDATE_INVOICE_FAILED": "Update Invoice Failed",
     "UPDATE_INVOICE_FAILED_CODE": "Update Invoice failed: {{updateCode}}",
     "DOWNLOAD_SELECTED_VOUCHER": "Download Selected Voucher",
-    "DOWNLOAD_SELECTED_ITEMS": "Are you sure you want to download the selected items?"
+    "DOWNLOAD_SELECTED_ITEMS": "Are you sure you want to download the selected items?",
+    "GET_OCR_RESULT_FAILED": "Get OCR result Failed",
+    "GET_OCR_RESULT_FAILED_CODE": "Get OCR result failed: {{getCode}}"
   },
   "JOURNAL_TYPES": {
     "ALL": "All",
@@ -168,7 +170,6 @@
     "DOUBLE_DECLINING": "Double Declining",
     "UNITS_OF_PRODUCTION": "Units of Production",
     "ESTIMATED_USEFUL_LIFE": "Estimated useful life",
-    "DAY": "Day",
     "NAME_YOUR_ASSET": "Name your asset",
     "ADD_NOTE": "Add note"
   },

@@ -8,16 +8,7 @@ interface ISalaryPageBodyProps {
 }
 
 const SalaryPageBody = ({ isAuthLoading }: ISalaryPageBodyProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'salary']);
 
   return (
     <div>

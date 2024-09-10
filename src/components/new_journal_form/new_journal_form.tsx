@@ -9,6 +9,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
@@ -23,7 +24,7 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 const eventTypeMap: { [key in EventType]: string } = {
   [EventType.PAYMENT]: 'journal:JOURNAL.PAYMENT',
   [EventType.INCOME]: 'project:PROJECT.INCOME',
-  [EventType.TRANSFER]: 'journal:JOURNAL.TRANSFER',
+  [EventType.TRANSFER]: 'common:COMMON.TRANSFER',
 };
 const taxRateSelection: number[] = [0, 5, 20, 25];
 
@@ -77,27 +78,14 @@ const getIdAndName = (id: number | null, array: { id: number | null; name: strin
 };
 
 const NewJournalForm = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
-  const {
-    messageModalVisibilityHandler,
-    messageModalDataHandler,
-    confirmModalVisibilityHandler,
-    addAssetModalVisibilityHandler,
-    confirmModalDataHandler,
-  } = useGlobalCtx();
+  const { addAssetModalVisibilityHandler, confirmModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler, confirmModalVisibilityHandler } =
+    useModalContext();
   const {
     selectedOCR,
     selectOCRHandler,
@@ -266,8 +254,8 @@ const NewJournalForm = () => {
     if (getSuccess === false) {
       messageModalDataHandler({
         messageType: MessageType.ERROR,
-        title: 'Get OCR result Failed',
-        content: `Get OCR result failed: ${getCode}`,
+        title: t('journal:JOURNAL.GET_OCR_RESULT_FAILED'),
+        content: t('journal:JOURNAL.GET_OCR_RESULT_FAILED_CODE', { getCode }),
         submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: messageModalVisibilityHandler,
       });
@@ -872,7 +860,7 @@ const NewJournalForm = () => {
                   alt="twd_icon"
                   className="rounded-full"
                 />
-                <p>{t('journal:JOURNAL.TWD')}</p>
+                <p>{t('common:COMMON.TWD')}</p>
               </div>
             </div>
             {/* Info: (20240723 - Julian) Hint */}
@@ -955,7 +943,7 @@ const NewJournalForm = () => {
                   alt="twd_icon"
                   className="rounded-full"
                 />
-                <p>{t('journal:JOURNAL.TWD')}</p>
+                <p>{t('common:COMMON.TWD')}</p>
               </div>
             </div>
             {feeToggle && !isFeeValid && (
@@ -1044,7 +1032,7 @@ const NewJournalForm = () => {
           {/* Info: (20240424 - Julian) Payment Period */}
           <div className="flex w-full flex-col items-start gap-8px md:w-fit">
             <p className="text-sm font-semibold text-input-text-primary">
-              {t('report_401:REPORTS_HISTORY_LIST.PERIOD')}
+              {t('common:COMMON.PERIOD')}
             </p>
             {/* Info: (20240424 - Julian) radio buttons */}
             <div className="flex w-full flex-col items-start gap-x-60px gap-y-16px md:flex-row md:items-baseline">
@@ -1172,7 +1160,7 @@ const NewJournalForm = () => {
                         alt="twd_icon"
                         className="rounded-full"
                       />
-                      <p>{t('journal:JOURNAL.TWD')}</p>
+                      <p>{t('common:COMMON.TWD')}</p>
                     </div>
                   </div>
                 </div>
@@ -1230,7 +1218,7 @@ const NewJournalForm = () => {
   //             alt="twd_icon"
   //             className="rounded-full"
   //           />
-  //           <p>{t('journal:JOURNAL.TWD')}</p>
+  //           <p>{t('common:COMMON.TWD')}</p>
   //         </div>
   //       </div>
   //     </div>

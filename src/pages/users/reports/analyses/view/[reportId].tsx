@@ -7,7 +7,7 @@ import Head from 'next/head';
 import React, { useEffect } from 'react';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import ViewAnalysisSection from '@/components/view_analysis_section/view_analysis_section';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
@@ -38,17 +38,8 @@ const ViewAnalysisReportPage = ({
   startTimestamp,
   endTimestamp,
 }: IServerSideProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
-  const { toastHandler } = useGlobalCtx();
+  const { t } = useTranslation('common');
+  const { toastHandler } = useModalContext();
   const { selectedCompany, isAuthLoading } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [reportData, setReportData] = React.useState<IReportOld>({

@@ -12,7 +12,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useRouter } from 'next/router';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 
 interface IJournalItemProps {
@@ -38,7 +38,7 @@ const Operations = ({
   const router = useRouter();
   const { t } = useTranslation(['common', 'journal']);
   const { selectJournalHandler } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
 
   const editJournalHandler = async () => {
@@ -213,7 +213,7 @@ const JournalItem = ({
             fill="#002462"
           />
         </svg>
-        <p className="whitespace-nowrap">{t('journal:JOURNAL.TRANSFER')}</p>
+        <p className="whitespace-nowrap">{t('common:COMMON.TRANSFER')}</p>
       </div>
     ) : null;
 
@@ -229,7 +229,7 @@ const JournalItem = ({
         </p>
         <p className="whitespace-nowrap text-text-neutral-primary">
           {debit.amount}{' '}
-          <span className="text-text-neutral-tertiary">{t('journal:JOURNAL.TWD')}</span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
         </p>
       </div>
       <div className="flex items-center gap-6px">
@@ -242,7 +242,7 @@ const JournalItem = ({
         </p>
         <p className="whitespace-nowrap text-text-neutral-primary">
           {credit.amount}{' '}
-          <span className="text-text-neutral-tertiary">{t('journal:JOURNAL.TWD')}</span>
+          <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
         </p>
       </div>
     </div>
@@ -417,7 +417,7 @@ export const JournalItemMobile = ({
             {/* Info: (20240517 - Julian) 金額 */}
             <p>
               {numberWithCommas(price)}{' '}
-              <span className="text-text-neutral-tertiary">{t('journal:JOURNAL.TWD')}</span>
+              <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
             </p>
           </div>
         </div>

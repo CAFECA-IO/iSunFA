@@ -13,16 +13,7 @@ interface IProjectListProps {
 }
 
 const ProjectList = ({ projects, currentPage, setCurrentPage, totalPages }: IProjectListProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const displayedProjectList =
     projects.length > 0 ? (
       <div className="flex w-full flex-col items-center gap-y-16px">

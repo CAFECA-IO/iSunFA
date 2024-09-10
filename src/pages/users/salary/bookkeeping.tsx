@@ -8,16 +8,7 @@ import SalaryRecordForm from '@/components/salary_record_form/salary_record_form
 import SalaryStepper from '@/components/salary_stepper/salary_stepper';
 
 const SalaryBookkeepingPage = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'salary']);
 
   return (
     <>

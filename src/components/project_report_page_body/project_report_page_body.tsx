@@ -13,7 +13,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { ToastType } from '@/interfaces/toastify';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useTranslation } from 'next-i18next';
 import { ReportStatusType, ReportType } from '@/constants/report';
 import { IPaginatedReport, IReport, MOCK_REPORTS } from '@/interfaces/report';
@@ -22,7 +22,7 @@ const ProjectReportPageBody = ({ projectId }: { projectId: string }) => {
   const { t } = useTranslation(['common', 'report_401']);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { toastHandler } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
 
   const typeOptions = ['All', ReportType.FINANCIAL, ReportType.FINANCIAL];
 

@@ -6,6 +6,7 @@ import { ICompany } from '@/interfaces/company';
 import { DEFAULT_COMPANY_IMAGE_URL, DEFAULT_DISPLAYED_USER_NAME } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
@@ -16,24 +17,13 @@ import { cn } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 const SelectCompanyPageBody = () => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'kyc']);
 
   const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
-  const {
-    toastHandler,
-    companyInvitationModalVisibilityHandler,
-    createCompanyModalVisibilityHandler,
-  } = useGlobalCtx();
+  const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
+    useGlobalCtx();
+  const { toastHandler } = useModalContext();
 
   const {
     targetRef: companyMenuRef,
@@ -141,7 +131,7 @@ const SelectCompanyPageBody = () => {
       );
     })
   ) : (
-    <div>{t('report_401:MY_REPORTS_SECTION.LOADING')}</div>
+    <div>{t('common:COMMON.LOADING')}</div>
   );
 
   const displayCompanyMenu = (

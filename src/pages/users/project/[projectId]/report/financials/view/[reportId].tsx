@@ -14,16 +14,7 @@ const ProjectFinancialsReportDetailPage = ({
   projectId,
   reportId,
 }: IProjectFinancialsReportDetailPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'project']);
   return (
     <>
       <Head>

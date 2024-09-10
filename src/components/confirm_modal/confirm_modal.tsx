@@ -15,9 +15,7 @@ import { ILineItem } from '@/interfaces/line_item';
 import AccountingVoucherRow from '@/components/accounting_voucher_row/accounting_voucher_row';
 import AccountingVoucherRowMobile from '@/components/accounting_voucher_row/accounting_voucher_row_mobile';
 import { Button } from '@/components/button/button';
-// ToDo: (20240527 - Luphia) Fix me
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IJournal } from '@/interfaces/journal';
@@ -67,7 +65,8 @@ const ConfirmModal = ({
   //   return '';
   // };
 
-  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
+    useModalContext();
 
   const { journalId, askAIId } = confirmData;
 
@@ -397,7 +396,7 @@ const ConfirmModal = ({
     <div className="flex flex-col items-end">
       <p>
         <span className="font-semibold text-text-neutral-primary">{totalPrice}</span>{' '}
-        {t('journal:JOURNAL.TWD')}
+        {t('common:COMMON.TWD')}
       </p>
       <p>
         (<span className="font-semibold text-text-neutral-primary">{taxPercentage}%</span>{' '}

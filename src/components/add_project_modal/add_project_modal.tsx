@@ -10,8 +10,7 @@ import { FiSearch } from 'react-icons/fi';
 import { IMember, dummyMemberList } from '@/interfaces/member';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { MessageType } from '@/interfaces/message_modal';
@@ -54,7 +53,7 @@ const AddProjectModal = ({
 }: IAddProjectModalProps) => {
   const { t } = useTranslation(['common', 'project']);
   const { selectedCompany } = useUserCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const {
     trigger: createProject,
@@ -138,7 +137,7 @@ const AddProjectModal = ({
         content: t('project:PROJECT.CREATE_PROJECT_FAILED'),
         subMsg: t('common:COMMON.ERROR_CODE', { code }),
         submitBtnFunction: messageModalVisibilityHandler,
-        submitBtnStr: t('project:PROJECT.OK'),
+        submitBtnStr: t('common:COMMON.OK'),
       });
     }
   }, [createSuccess, data]);

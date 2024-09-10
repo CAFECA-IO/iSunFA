@@ -152,7 +152,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('journal:JOURNAL.TWD')}</p>
+                  <p>{t('common:COMMON.TWD')}</p>
                 </div>
               </div>
             </div>
@@ -198,7 +198,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('journal:JOURNAL.TWD')}</p>
+                  <p>{t('common:COMMON.TWD')}</p>
                 </div>
               </div>
             </div>
@@ -288,7 +288,7 @@ const AddAssetModal = ({ isModalVisible, modalVisibilityHandler }: IAddAssetModa
                 >
                   <option value="year">{t('common:COMMON.YEAR')}</option>
                   <option value="month">{t('common:COMMON.MONTH')}</option>
-                  <option value="day">{t('journal:ADD_ASSET_MODAL.DAY')}</option>
+                  <option value="day">{t('common:COMMON.DAY')}</option>
                 </select>
               </div>
             </div>

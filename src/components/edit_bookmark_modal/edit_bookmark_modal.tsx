@@ -3,8 +3,7 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useTranslation } from 'next-i18next';
 // import logger from '@/lib/utils/logger';
 
@@ -36,7 +35,7 @@ const bookmarkNameMap: BookmarkNameMap = {
 const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
   const { t } = useTranslation('common');
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
-  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
+  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useModalContext();
 
   const [selectedBookmark, setSelectedBookmark, selectedBookmarkRef] = useStateRef<string[]>([]);
 

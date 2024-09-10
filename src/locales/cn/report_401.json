@@ -134,7 +134,6 @@
     "MY_REPORTS": "我的报告"
   },
   "MY_REPORTS_SECTION": {
-    "LOADING": "加载中...",
     "SORT_BY": "排序方式",
     "MY_REPORTS": "我的报告",
     "PENDING": "生成中",
@@ -147,13 +146,11 @@
     "APPLY_AGAIN": "如果您再次申请，则需要30到40分钟。"
   },
   "REPORTS_HISTORY_ITEM": {
-    "FROM": "从",
-    "TO": "至"
+    "FROM": "从"
   },
   "REPORTS_HISTORY_LIST": {
     "DATE": "日期",
     "REPORT_NAME": "报告名称",
-    "PERIOD": "期间",
     "BLOCKCHAIN": "区块链"
   },
   "PENDING_REPORT_LIST": {

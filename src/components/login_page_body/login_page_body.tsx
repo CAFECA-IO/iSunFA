@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import Image from 'next/image';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import AvatarSVG from '@/components/avater_svg/avater_svg';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
@@ -56,17 +56,8 @@ const Loader = React.memo(() => {
 });
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
-  const { toastHandler } = useGlobalCtx();
+  const { t } = useTranslation('common');
+  const { toastHandler } = useModalContext();
   const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
 
   useEffect(() => {

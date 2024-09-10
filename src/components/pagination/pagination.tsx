@@ -28,16 +28,7 @@ const Pagination = ({
   pagePrefix = 'page',
   paginationHandler,
 }: IPaginationProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const [, /* targetPage */ setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
   const router = useRouter();
 

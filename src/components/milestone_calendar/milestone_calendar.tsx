@@ -25,16 +25,7 @@ const MilestoneCalendar = ({
   sellingPeriod,
   soldPeriod,
 }: ICalendarProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
   const weekdayTitle = [
     t('common:DATE_PICKER.SUN'),
     t('common:DATE_PICKER.MON'),

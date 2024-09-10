@@ -8,16 +8,7 @@ import { useTranslation } from 'next-i18next';
 import { ILoginPageProps } from '@/interfaces/page_props';
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation('common');
 
   const displayedBody = (
     <div className="pt-60px">

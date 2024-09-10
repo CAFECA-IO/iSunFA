@@ -14,6 +14,7 @@ import {
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useUserCtx } from '@/contexts/user_context';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
@@ -168,7 +169,8 @@ const ColumnChart = ({ data }: ColumnChartProps) => {
 const defaultSelectedPeriodInSec = getTodayPeriodInSec();
 
 const ProjectProgressChart = () => {
-  const { toastHandler, layoutAssertion } = useGlobalCtx();
+  const { layoutAssertion } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const { t } = useTranslation(['common', 'project']);

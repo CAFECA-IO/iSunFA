@@ -12,16 +12,7 @@ interface IProjectJournalPageProps {
 }
 
 const ProjectJournalDetailPage = ({ projectId, journalId }: IProjectJournalPageProps) => {
-  const { t } = useTranslation([
-    'common',
-    'project',
-    'journal',
-    'kyc',
-    'report_401',
-    'salary',
-    'setting',
-    'terms',
-  ]);
+  const { t } = useTranslation(['common', 'journal']);
   return (
     <>
       <Head>
