@@ -31,6 +31,7 @@ export type IAPIName =
   | 'OCR_LIST'
   | 'INVOICE_CREATE'
   | 'INVOICE_UPDATE'
+  | 'INVOICE_GET_BY_ID'
   | 'AI_ASK_STATUS'
   | 'AI_ASK_RESULT'
   | 'VOUCHER_CREATE'

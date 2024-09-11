@@ -1,5 +1,10 @@
 import { APIName } from '@/constants/api_connection';
 import {
+  invoiceCreateValidator,
+  invoiceGetByIdValidator,
+  invoiceUpdateValidator,
+} from '@/lib/utils/zod_schema/invoice';
+import {
   ocrDeleteValidator,
   ocrListValidator,
   ocrResultGetByIdValidator,
@@ -24,4 +29,7 @@ export const API_ZOD_SCHEMA = {
   [APIName.OCR_UPLOAD]: ocrUploadValidator,
   [APIName.OCR_RESULT_GET_BY_ID]: ocrResultGetByIdValidator,
   [APIName.OCR_DELETE]: ocrDeleteValidator,
+  [APIName.INVOICE_CREATE]: invoiceCreateValidator,
+  [APIName.INVOICE_UPDATE]: invoiceUpdateValidator,
+  [APIName.INVOICE_GET_BY_ID]: invoiceGetByIdValidator,
 };
