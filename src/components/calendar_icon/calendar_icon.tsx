@@ -18,6 +18,7 @@ const CalendarIcon = ({ timestamp }: ICalendarIconProps) => {
 
   return (
     <div className="scale-75 md:scale-100">
+      {/* // ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
       <svg
         width="64"
         height="64"

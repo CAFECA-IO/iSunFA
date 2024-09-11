@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { useModalContext } from '@/contexts/modal_context';
-import AvatarSVG from '@/components/avater_svg/avater_svg';
+import AvatarSVG from '@/components/avatar_svg/avatar_svg';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
 import { useUserCtx } from '@/contexts/user_context';

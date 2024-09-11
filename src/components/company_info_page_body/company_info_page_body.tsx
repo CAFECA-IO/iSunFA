@@ -1,7 +1,6 @@
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
-
 import { DEFAULT_COMPANY_IMAGE_URL } from '@/constants/display';
 import { RoleName } from '@/constants/role_name';
 import { UploadType } from '@/constants/file';
@@ -18,9 +17,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { FiEdit } from 'react-icons/fi';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { KYCStatus } from '@/constants/kyc';
+import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { LuArrowLeftRight } from 'react-icons/lu';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation(['common', 'kyc']);
@@ -138,20 +138,7 @@ const CompanyInfoPageBody = () => {
           variant={'secondaryOutline'}
           className="max-md:w-220px"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <path
-              className="fill-current"
-              fillRule="evenodd"
-              d="M9.307.918H10.7c.44 0 .817 0 1.125.025.325.026.64.084.942.238.455.232.824.602 1.056 1.056.153.302.212.617.238.942.024.296.025.654.025 1.072h3.417a.75.75 0 010 1.5h-.917v8.615c0 .673 0 1.224-.036 1.672-.038.463-.119.881-.318 1.272a3.25 3.25 0 01-1.42 1.42c-.391.2-.81.28-1.273.318-.447.036-.998.036-1.671.036h-3.73c-.673 0-1.224 0-1.671-.036-.464-.038-.882-.119-1.273-.318a3.25 3.25 0 01-1.42-1.42c-.2-.39-.28-.81-.318-1.272-.036-.448-.036-.999-.036-1.672V5.75h-.917a.75.75 0 010-1.5H5.92c0-.418 0-.776.025-1.072.026-.325.084-.64.238-.942a2.417 2.417 0 011.056-1.056c.302-.154.617-.212.942-.238.308-.025.684-.025 1.126-.025zM6.67 5.75H4.92v8.583c0 .713 0 1.202.031 1.581.03.37.086.57.16.714.167.33.435.597.764.765l-.34.668.34-.668c.144.073.343.129.714.159.379.03.868.031 1.58.031h3.667c.713 0 1.202 0 1.581-.031.37-.03.57-.086.714-.16a1.75 1.75 0 00.764-.764c.074-.144.13-.343.16-.714.03-.379.031-.868.031-1.58V5.75H6.67zm5.916-1.5H7.42c0-.433.001-.724.02-.95.019-.232.052-.328.08-.383a.917.917 0 01.4-.4c.055-.028.151-.061.383-.08.24-.02.554-.02 1.033-.02h1.334c.479 0 .793 0 1.033.02.232.019.328.052.383.08a.917.917 0 01.4.4c.028.055.061.151.08.383.018.226.02.517.02.95zm-4.25 4.583a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75zm3.334 0a.75.75 0 01.75.75v4.167a.75.75 0 01-1.5 0V9.584a.75.75 0 01.75-.75z"
-              clipRule="evenodd"
-            ></path>
-          </svg>
+          <FiTrash2 size={20} />
           <p>{t('kyc:COMPANY_BASIC_INFO.DELETE_COMPANY')}</p>
         </Button>
       </div>
@@ -161,20 +148,7 @@ const CompanyInfoPageBody = () => {
           variant={'secondaryOutline'}
           className="max-md:w-220px"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <path
-              className="fill-current"
-              fillRule="evenodd"
-              d="M7.2 1.97a.75.75 0 010 1.061L5.147 5.084h11.522a.75.75 0 010 1.5H5.147L7.2 8.637a.75.75 0 01-1.061 1.061L2.806 6.365a.75.75 0 010-1.06L6.139 1.97a.75.75 0 011.06 0zm5.606 8.334a.75.75 0 011.06 0l3.334 3.333a.75.75 0 010 1.061l-3.334 3.333a.75.75 0 01-1.06-1.06l2.053-2.053H3.336a.75.75 0 010-1.5h11.523l-2.053-2.053a.75.75 0 010-1.06z"
-              clipRule="evenodd"
-            ></path>
-          </svg>
+          <LuArrowLeftRight size={20} />
           <p>{t('kyc:COMPANY_BASIC_INFO.TRANSFER_ADMINISTRATION')}</p>
         </Button>
       </div>
