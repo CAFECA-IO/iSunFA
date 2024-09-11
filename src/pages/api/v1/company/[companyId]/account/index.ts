@@ -22,6 +22,7 @@ import { getSession } from '@/lib/utils/session';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 function formatCompanyIdAccountId(companyId: unknown, accountId: string | string[] | undefined) {
   const isCompanyIdValid = !Number.isNaN(Number(companyId));
@@ -182,18 +183,16 @@ export async function handleGetRequest(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IPaginatedAccount | null>>
 ) {
-  const { companyId } = await getSession(req, res);
+  const { companyId, userId } = await getSession(req, res);
   const formattedQuery = formatGetQuery(companyId, req);
-
   const accountRetriever = AccountRetrieverFactory.createRetriever(formattedQuery);
   let paginatedAccount: IPaginatedAccount | null = null;
-
   try {
     paginatedAccount = await accountRetriever.getAccounts();
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(userId, 'Failed to retrieve accounts', error as Error);
+    logError.error('Prisma related error');
   }
-
   return paginatedAccount;
 }
 
@@ -251,9 +250,15 @@ export async function handlePostRequest(
     updatedAt: timeInSeconds,
     level: parentAccount.level + 1,
   };
-  const savedNewOwnAccount = await prisma.account.create({
-    data: newOwnAccount,
-  });
+  let savedNewOwnAccount: IAccount | null = null;
+  try {
+    savedNewOwnAccount = await prisma.account.create({
+      data: newOwnAccount,
+    });
+  } catch (error) {
+    const logError = loggerError(userId, 'Failed to create new own account', error as Error);
+    logError.error('Prisma related error');
+  }
   return savedNewOwnAccount;
 }
 
@@ -278,7 +283,8 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'handle account request failed', error);
+    logError.error('handle account request failed in handler function in account/index.ts');
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<IAccount | IPaginatedAccount | null>(

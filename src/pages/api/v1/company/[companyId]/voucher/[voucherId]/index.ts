@@ -12,6 +12,7 @@ import {
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
+import { loggerError } from '@/lib/utils/logger_back';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -73,7 +74,10 @@ async function handleVoucherUpdatePrismaLogic(
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'handleVoucherUpdatePrismaLogic failed', error);
+    logError.error(
+      'Prisma related func. in handleVoucherUpdatePrismaLogic in voucher/voucherId/index.ts failed'
+    );
     switch (error.message) {
       case STATUS_MESSAGE.RESOURCE_NOT_FOUND:
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -104,7 +108,14 @@ async function handlePutRequest(companyId: number, req: NextApiRequest) {
       voucherUpdated = voucherUpdatedData.voucherUpdated;
       statusMessage = voucherUpdatedData.statusMessage;
     } catch (error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(
+        0,
+        'handleVoucherUpdatePrismaLogic in handlePutRequest failed',
+        error as Error
+      );
+      logError.error(
+        'Prisma related func. in handlePutRequest in voucher/voucherId/index.ts failed'
+      );
     }
   }
 
@@ -140,7 +151,10 @@ export default async function handler(
       }
     } catch (_error) {
       const error = _error as Error;
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(userId, 'handle voucherId request failed', error);
+      logError.error(
+        'handle voucher request failed in handler function in voucher/voucherId/index.ts'
+      );
       statusMessage = error.message;
     }
   }

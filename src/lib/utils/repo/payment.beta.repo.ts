@@ -2,6 +2,7 @@ import { IPaymentBeta } from '@/interfaces/payment';
 import prisma from '@/client';
 import { Prisma, Payment } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
+import { loggerError } from '@/lib/utils/logger_back';
 
 /**
  * Create a payment record by IPaymentBeta
@@ -26,7 +27,8 @@ export async function createPayment(payment: IPaymentBeta) {
   try {
     result = await prisma.payment.create(paymentCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'create payment in createPayment failed', error as Error);
+    logError.error('Prisma related create payment in createPayment in payment.beta.repo.ts failed');
   }
 
   return result;
@@ -59,7 +61,8 @@ export async function updatePayment(paymentId: number, payment: IPaymentBeta) {
   try {
     result = await prisma.payment.update(paymentUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'update payment in updatePayment failed', error as Error);
+    logError.error('Prisma related update payment in updatePayment in payment.beta.repo.ts failed');
   }
 
   return result;

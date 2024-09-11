@@ -6,7 +6,7 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { exportPublicKey, getPublicKeyByCompany } from '@/lib/utils/crypto';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 
 async function handleGetRequest(
   req: NextApiRequest,
@@ -34,7 +34,7 @@ async function handleGetRequest(
           statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
         }
       } catch (error) {
-        logger.error(error);
+        loggerBack.error(error);
       }
     }
   }
@@ -68,7 +68,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    logger.error(error);
+    loggerBack.error(error);
   } finally {
     const { httpCode, result } = formatApiResponse<JsonWebKey | null>(statusMessage, payload);
     res.status(httpCode).json(result);

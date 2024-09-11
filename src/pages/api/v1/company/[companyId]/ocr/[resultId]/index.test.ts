@@ -3,7 +3,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
 import * as common from '@/lib/utils/common';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 
 // Info: (20240806 - Murky) Temporary not use
 // let res: jest.Mocked<NextApiResponse>;
@@ -17,10 +17,10 @@ jest.mock('../../../../../../../lib/utils/common', () => ({
 
 beforeEach(() => {
   // Info: (20240902 - Murky) Logger mock so that it doesn't log during tests
-  jest.spyOn(logger, 'error').mockImplementation(jest.fn());
-  jest.spyOn(logger, 'warn').mockImplementation(jest.fn());
-  jest.spyOn(logger, 'info').mockImplementation(jest.fn());
-  jest.spyOn(logger, 'debug').mockImplementation(jest.fn());
+  jest.spyOn(loggerBack, 'error').mockImplementation(jest.fn());
+  jest.spyOn(loggerBack, 'warn').mockImplementation(jest.fn());
+  jest.spyOn(loggerBack, 'info').mockImplementation(jest.fn());
+  jest.spyOn(loggerBack, 'debug').mockImplementation(jest.fn());
 });
 
 afterEach(() => {

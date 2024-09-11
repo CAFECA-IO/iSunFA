@@ -8,6 +8,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getWorkRatesByCompanyId, getSalaryRecords } from '@/lib/utils/repo/labor_cost_chart.repo';
+import { loggerError } from '@/lib/utils/logger_back';
 
 async function calculateProjectCosts(
   workRates: {
@@ -45,15 +46,12 @@ async function calculateProjectCosts(
     },
     {} as Record<string, typeof workRates>
   );
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   // Info: (20240618 - Gibbs) 遍歷每一組 workRates
   Object.values(groupedWorkRates).forEach((group) => {
     const { createdAt } = group[0];
     const { employeeId } = group[0].employeeProject;
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     // Info: (20240618 - Gibbs) 計算該員工在該日期的總工作時數
     const totalHours = group.reduce((sum, current) => sum + current.actualHours, 0);
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     // Info: (20240618 - Gibbs) 找到該員工在該日期的薪資記錄
     const salaryRecordList = salaryRecords.filter(
       (sr) => sr.employee_id === employeeId && sr.created_at === createdAt
@@ -66,11 +64,9 @@ async function calculateProjectCosts(
       },
       { total_payment: 0 }
     );
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     if (!salaryRecord) return; // Info: (20240618 - Gibbs) 如果沒有找到薪資記錄，則跳過
     // Info: (20240618 - Gibbs) 計算每小時薪資
     const hourlyWage = salaryRecord.total_payment / totalHours;
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
     // Info: (20240618 - Gibbs) 根據每個專案的工作時數比例分配薪資
     group.forEach((employeeWorkRate) => {
       const projectName = employeeWorkRate.employeeProject.project.name;
@@ -80,7 +76,6 @@ async function calculateProjectCosts(
       projectCosts[projectName] += hourlyWage * employeeWorkRate.actualHours;
     });
   });
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
   return projectCosts;
 }
 
@@ -119,12 +114,9 @@ async function handleGetRequest(
       if (date) {
         try {
           const workRates = await getWorkRatesByCompanyId(companyId, date);
-          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
           const salaryRecords = await getSalaryRecords(date);
-          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
           const projectCosts = await calculateProjectCosts(workRates, salaryRecords);
           const isEmpty = await checkEmpty(projectCosts);
-          // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
           payload = {
             date,
             categories: Object.keys(projectCosts),
@@ -133,6 +125,10 @@ async function handleGetRequest(
           };
           statusMessage = STATUS_MESSAGE.SUCCESS_GET;
         } catch (error) {
+          const logError = loggerError(userId, 'handleGetRequest failed', error as Error);
+          logError.error(
+            'Prisma related func. in handleGetRequest in labor_cost_chart/index.ts failed'
+          );
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
         }
       }

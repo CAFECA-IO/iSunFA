@@ -324,7 +324,7 @@ const NavBar = () => {
         </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
+            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
           </div>
           {/* Info: (20240809 - Shirley) edit name button */}
           <button

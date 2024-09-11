@@ -12,6 +12,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { InvoiceType } from '@/constants/invoice';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export interface IPostApiResponseType {
   journalId: number;
@@ -74,7 +75,10 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'upload invoice to AICH failed', error as Error);
+    logError.error(
+      'upload invoice to AICH failed when fetch in uploadInvoiceToAICH in invoice/index.ts'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -99,7 +103,10 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'get payload from response JSON failed', error as Error);
+    logError.error(
+      'get payload from response JSON failed when await responseJSON in getPayloadFromResponseJSON in invoice/index.ts'
+    );
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -182,8 +189,8 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'handler request failed', error);
+    logError.error('handle invoice request failed in handler in invoice/index.ts');
     handleErrorResponse(res, error.message);
   }
 }

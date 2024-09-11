@@ -18,7 +18,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
-// import logger from '@/lib/utils/logger';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 
 // Info: (20240522 - Murky) This OCR now can only be used on Invoice
 
@@ -118,7 +118,7 @@ export async function handleGetRequest(resultId: string, type: string = 'invoice
           newOcr = formatOCRResultDate(newOcr);
 
           if (!isIInvoice(newOcr)) {
-            // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+            loggerBack.info('ocr/[resultId]: OCR result(newOcr) is not an invoice type');
             newOcr = null;
           }
 
@@ -192,7 +192,8 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(userId, 'handle OCR request failed', _error as Error);
+      logError.error('handle OCR request failed in handler function in ocr/[resultId]/index.ts');
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
