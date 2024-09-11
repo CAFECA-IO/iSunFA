@@ -1,4 +1,16 @@
 import { APIName } from '@/constants/api_connection';
+import {
+  invoiceCreateValidator,
+  invoiceGetByIdValidator,
+  invoiceUpdateValidator,
+} from '@/lib/utils/zod_schema/invoice';
+import {
+  ocrDeleteValidator,
+  ocrListValidator,
+  ocrResultGetByIdValidator,
+  ocrUploadValidator,
+} from '@/lib/utils/zod_schema/ocr';
+import { voucherCreateValidator, voucherUpdateValidator } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 
 /*
@@ -14,4 +26,13 @@ import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 
 export const API_ZOD_SCHEMA = {
   [APIName.ZOD_EXAMPLE]: zodExampleValidator,
+  [APIName.OCR_LIST]: ocrListValidator,
+  [APIName.OCR_UPLOAD]: ocrUploadValidator,
+  [APIName.OCR_RESULT_GET_BY_ID]: ocrResultGetByIdValidator,
+  [APIName.OCR_DELETE]: ocrDeleteValidator,
+  [APIName.INVOICE_CREATE]: invoiceCreateValidator,
+  [APIName.INVOICE_UPDATE]: invoiceUpdateValidator,
+  [APIName.INVOICE_GET_BY_ID]: invoiceGetByIdValidator,
+  [APIName.VOUCHER_CREATE]: voucherCreateValidator,
+  [APIName.VOUCHER_UPDATE]: voucherUpdateValidator,
 };

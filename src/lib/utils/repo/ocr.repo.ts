@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
+import { ocrTypes } from '@/constants/ocr';
 import { SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
@@ -39,7 +40,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
 
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   companyId: number,
-  ocrType: string = 'invoice'
+  ocrType: ocrTypes = ocrTypes.INVOICE
 ): Promise<ocrIncludeFile[]> {
   let ocrData: ocrIncludeFile[] = [];
 

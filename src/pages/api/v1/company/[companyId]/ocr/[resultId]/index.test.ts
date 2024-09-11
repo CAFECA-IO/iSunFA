@@ -27,26 +27,6 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('isResultIdValid', () => {
-  it('should return true if resultId is valid', () => {
-    const resultId = 'validResultId';
-    const result = module.isResultIdValid(resultId);
-    expect(result).toBe(true);
-  });
-
-  it('should return false if resultId is undefined', () => {
-    const resultId = undefined;
-    const result = module.isResultIdValid(resultId);
-    expect(result).toBe(false);
-  });
-
-  it('should return false if resultId is an array', () => {
-    const resultId = ['validResultId'];
-    const result = module.isResultIdValid(resultId);
-    expect(result).toBe(false);
-  });
-});
-
 describe('fetchOCRResult', () => {
   it('should fetch OCR result with GET', async () => {
     const resultId = 'validResultId';

@@ -23,6 +23,8 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { IJournalFromPrismaIncludeInvoicePayment } from '@/interfaces/journal';
 import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 import { loggerError } from '@/lib/utils/logger_back';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -96,9 +98,12 @@ function isVoucherValid(
   return true;
 }
 
-export async function handlePostRequest(req: NextApiRequest, companyId: number) {
-  const { voucher } = req.body;
-
+export async function handlePostRequest(
+  companyId: number,
+  voucher: IVoucherDataForSavingToDB & {
+    journalId: number;
+  }
+) {
   // Info: （ 20240522 - Murky）body need to provide LineItems and journalId
   if (!isVoucherValid(voucher)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -123,9 +128,17 @@ export default async function handler(
   if (isAuth) {
     try {
       if (req.method === 'POST') {
-        const { updatedVoucher, statusMessage: message } = await handlePostRequest(req, companyId);
-        payload = updatedVoucher;
-        statusMessage = message;
+        const { body } = validateRequest(APIName.VOUCHER_CREATE, req, userId);
+
+        if (body) {
+          const { voucher } = body;
+          const { updatedVoucher, statusMessage: message } = await handlePostRequest(
+            companyId,
+            voucher
+          );
+          payload = updatedVoucher;
+          statusMessage = message;
+        }
       } else {
         throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
       }

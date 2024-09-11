@@ -3,7 +3,6 @@ import { IVoucherDataForAPIResponse, IVoucherDataForSavingToDB } from '@/interfa
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import { isIVoucherDataForSavingToDB } from '@/lib/utils/type_guard/voucher';
 import { getSession } from '@/lib/utils/session';
 import {
   updateVoucherByJournalIdInPrisma,
@@ -13,45 +12,10 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 import { loggerError } from '@/lib/utils/logger_back';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
-
-function isVoucherValid(
-  voucher: IVoucherDataForSavingToDB
-): voucher is IVoucherDataForSavingToDB & { journalId: number } {
-  if (
-    !voucher ||
-    !isIVoucherDataForSavingToDB(voucher) ||
-    !voucher.journalId ||
-    typeof voucher.journalId !== 'number'
-  ) {
-    return false;
-  }
-  return true;
-}
-
-// Info: (20240613 - Murky) Temporary not use
-// function formatVoucherId(voucherId: unknown): number {
-//   let voucherIdInNumber = -1;
-//   if (typeof voucherId === 'string') {
-//     voucherIdInNumber = parseInt(voucherId, 10);
-//   }
-//   return voucherIdInNumber;
-// }
-
-function formatVoucherBody(voucher: IVoucherDataForSavingToDB) {
-  let voucherData: IVoucherDataForSavingToDB | null = null;
-  if (isVoucherValid(voucher)) {
-    voucherData = voucher;
-  }
-  return voucherData;
-}
-
-function formatPutBody(req: NextApiRequest) {
-  const { voucher } = req.body;
-  const voucherData = formatVoucherBody(voucher as IVoucherDataForSavingToDB);
-  return { voucherData };
-}
 
 async function handleVoucherUpdatePrismaLogic(
   voucher: IVoucherDataForSavingToDB,
@@ -96,27 +60,25 @@ async function handleVoucherUpdatePrismaLogic(
   };
 }
 
-async function handlePutRequest(companyId: number, req: NextApiRequest) {
+async function handlePutRequest(
+  companyId: number,
+  voucher: IVoucherDataForSavingToDB & { journalId: number }
+) {
   // Info: (20240613 - Murky) Temporary not use
   // const { voucherIdInNumber } = formatGetQuery(req);
-  const { voucherData } = formatPutBody(req);
   let voucherUpdated: ApiResponseType = null;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-  if (voucherData) {
-    try {
-      const voucherUpdatedData = await handleVoucherUpdatePrismaLogic(voucherData, companyId);
-      voucherUpdated = voucherUpdatedData.voucherUpdated;
-      statusMessage = voucherUpdatedData.statusMessage;
-    } catch (error) {
-      const logError = loggerError(
-        0,
-        'handleVoucherUpdatePrismaLogic in handlePutRequest failed',
-        error as Error
-      );
-      logError.error(
-        'Prisma related func. in handlePutRequest in voucher/voucherId/index.ts failed'
-      );
-    }
+  try {
+    const voucherUpdatedData = await handleVoucherUpdatePrismaLogic(voucher, companyId);
+    voucherUpdated = voucherUpdatedData.voucherUpdated;
+    statusMessage = voucherUpdatedData.statusMessage;
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'handleVoucherUpdatePrismaLogic in handlePutRequest failed',
+      error as Error
+    );
+    logError.error('Prisma related func. in handlePutRequest in voucher/voucherId/index.ts failed');
   }
 
   return {
@@ -140,9 +102,16 @@ export default async function handler(
     try {
       switch (req.method) {
         case 'PUT': {
-          const { voucherUpdated, statusMessage: message } = await handlePutRequest(companyId, req);
-          payload = voucherUpdated;
-          statusMessage = message;
+          const { body } = validateRequest(APIName.VOUCHER_UPDATE, req, userId);
+          if (body) {
+            const { voucher } = body;
+            const { voucherUpdated, statusMessage: message } = await handlePutRequest(
+              companyId,
+              voucher
+            );
+            payload = voucherUpdated;
+            statusMessage = message;
+          }
           break;
         }
         default: {
