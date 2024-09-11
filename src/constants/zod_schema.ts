@@ -10,6 +10,7 @@ import {
   ocrResultGetByIdValidator,
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
+import { voucherCreateValidator, voucherUpdateValidator } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 
 /*
@@ -32,4 +33,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.INVOICE_CREATE]: invoiceCreateValidator,
   [APIName.INVOICE_UPDATE]: invoiceUpdateValidator,
   [APIName.INVOICE_GET_BY_ID]: invoiceGetByIdValidator,
+  [APIName.VOUCHER_CREATE]: voucherCreateValidator,
+  [APIName.VOUCHER_UPDATE]: voucherUpdateValidator,
 };
