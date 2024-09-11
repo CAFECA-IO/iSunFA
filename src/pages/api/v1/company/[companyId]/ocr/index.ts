@@ -24,11 +24,13 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { FileFolder, getFileFolder } from '@/constants/file';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
-import { AVERAGE_OCR_PROCESSING_TIME } from '@/constants/ocr';
+import { AVERAGE_OCR_PROCESSING_TIME, ocrTypes } from '@/constants/ocr';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { bufferToBlob, findFileByName, readFile } from '@/lib/utils/parse_image_form';
 import { findFileById } from '@/lib/utils/repo/file.repo';
 import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 export async function readImageFromFilePath(
   fileName: string,
@@ -247,58 +249,6 @@ export function extractDataFromFields(fields: formidable.Fields) {
   return imageFieldsArray;
 }
 
-function formatFormBody(req: NextApiRequest) {
-  const { body } = req;
-
-  let fileId: number;
-  let imageName: string;
-  let imageSizeNum: number; // Info: (20240829 - Murky) it's like 32 MB
-  let uploadIdentifier: string;
-  let encryptedSymmetricKey: string;
-  let publicKey: JsonWebKey;
-  let iv: string[];
-  let imageType: string;
-
-  if (
-    body.fileId &&
-    body.imageName &&
-    body.imageSize &&
-    body.uploadIdentifier &&
-    body.encryptedSymmetricKey &&
-    body.publicKey &&
-    body.iv
-  ) {
-    fileId = body.fileId;
-    imageName = body.imageName;
-    const imageSize = body.imageSize as string;
-
-    imageSizeNum = transformFileSizeStringToBytes(imageSize);
-
-    uploadIdentifier = body.uploadIdentifier;
-    encryptedSymmetricKey = body.encryptedSymmetricKey;
-    // publicKey = JSON.parse(body.publicKey) as JsonWebKey;
-
-    publicKey = {} as JsonWebKey;
-    iv = (body.iv as string).split(',');
-    imageType = body.imageType as string;
-  } else {
-    loggerBack.info(body, 'ocr body is not valid');
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
-    /* eslint-enable no-console */
-  }
-
-  return {
-    fileId,
-    imageName,
-    imageSize: imageSizeNum,
-    uploadIdentifier,
-    encryptedSymmetricKey,
-    publicKey,
-    iv,
-    imageType,
-  };
-}
-
 export async function fetchStatus(aichResultId: string) {
   let status: ProgressStatus = ProgressStatus.SYSTEM_ERROR;
 
@@ -428,11 +378,18 @@ export async function createOcrFromAichResults(
   return resultJson;
 }
 
-export async function handlePostRequest(companyId: number, req: NextApiRequest) {
+export async function handlePostRequest({
+  companyId,
+  fileId,
+  uploadIdentifier,
+}: {
+  companyId: number;
+  fileId: number;
+  uploadIdentifier: string;
+}) {
   let resultJson: IOCR[] = [];
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   try {
-    const { fileId, uploadIdentifier } = formatFormBody(req);
     const aichResults = await postImageToAICH(companyId, fileId, uploadIdentifier);
     resultJson = await createOcrFromAichResults(companyId, aichResults);
     statusMessage = STATUS_MESSAGE.CREATED;
@@ -447,14 +404,12 @@ export async function handlePostRequest(companyId: number, req: NextApiRequest) 
   };
 }
 
-export async function handleGetRequest(companyId: number, req: NextApiRequest) {
+export async function handleGetRequest(companyId: number, ocrType?: ocrTypes) {
   // Info Murky (20240416): Check if companyId is string
-  const { ocrType } = req.query;
-
   let ocrData: ocrIncludeFile[];
 
   try {
-    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType as string);
+    ocrData = await findManyOCRByCompanyIdWithoutUsedInPrisma(companyId, ocrType);
   } catch (error) {
     const logError = loggerError(
       0,
@@ -489,15 +444,24 @@ export default async function handler(
     try {
       switch (req.method) {
         case 'GET': {
-          payload = await handleGetRequest(companyId, req);
-          statusMessage = STATUS_MESSAGE.SUCCESS;
+          const { query } = validateRequest(APIName.OCR_LIST, req, userId);
+
+          if (query) {
+            const { ocrType } = query;
+            payload = await handleGetRequest(companyId, ocrType);
+            statusMessage = STATUS_MESSAGE.SUCCESS;
+          }
           break;
         }
         case 'POST': {
-          const result = await handlePostRequest(companyId, req);
+          const { body } = validateRequest(APIName.OCR_UPLOAD, req, userId);
+          if (body) {
+            const { fileId, uploadIdentifier } = body;
+            const result = await handlePostRequest({ companyId, fileId, uploadIdentifier });
 
-          payload = result.resultJson;
-          statusMessage = result.statusMessage;
+            payload = result.resultJson;
+            statusMessage = result.statusMessage;
+          }
           break;
         }
         default: {
