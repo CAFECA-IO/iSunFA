@@ -32,6 +32,10 @@ const NavBar = () => {
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
 
+  const companyName = selectedCompany?.name.split(' ')[0] ?? '';
+  const abbreviateCompanyName =
+    companyName.length > 10 ? companyName.slice(0, 5) + '...' : companyName;
+
   const [langIsOpen, setLangIsOpen] = useState(false);
   // Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺)
   // const [notificationIsOpen, setNotificationIsOpen] = useState(false);
@@ -480,7 +484,7 @@ const NavBar = () => {
           className="rounded-full"
         />
         {/* ToDo: (20240521 - Julian) [Beta] company name abbreviation */}
-        <p className="text-sm">{selectedCompany?.name.split(' ')[0]}</p>
+        <p className="text-sm">{abbreviateCompanyName}</p>
         <GoArrowSwitch size={14} />
       </button>
     ) : null;

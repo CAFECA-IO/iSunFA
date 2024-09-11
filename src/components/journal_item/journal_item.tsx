@@ -321,10 +321,14 @@ export const JournalItemMobile = ({
   onDelete,
 }: IJournalItemProps) => {
   const { t } = useTranslation(['common', 'journal']);
-  const { id, date, type: eventType, particulars: description, voucherNo } = journal;
+  const {
+    id,
+    date: createdTimestamp,
+    type: eventType,
+    particulars: description,
+    voucherNo,
+  } = journal;
   const price = 0; // ToDo: (20240528 - Julian) [Beta] Interface lacks price
-
-  const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
   const displayedTypeMobile =
     // Info: (20240517 - Julian) 費用
