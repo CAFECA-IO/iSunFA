@@ -31,3 +31,32 @@ export const ocrUploadValidator: IZodValidator<
   query: ocrUploadQueryValidator,
   body: ocrUploadBodyValidator,
 };
+
+const ocrResultGetByIdQueryValidator = z.object({
+  resultId: z.string(),
+  ocrType: z.nativeEnum(ocrTypes).or(z.undefined()),
+});
+
+const ocrResultGetByIdBodyValidator = z.object({});
+
+export const ocrResultGetByIdValidator: IZodValidator<
+  (typeof ocrResultGetByIdQueryValidator)['shape'],
+  (typeof ocrResultGetByIdBodyValidator)['shape']
+> = {
+  query: ocrResultGetByIdQueryValidator,
+  body: ocrResultGetByIdBodyValidator,
+};
+
+const ocrDeleteQueryValidator = z.object({
+  resultId: z.string(),
+});
+
+const ocrDeleteBodyValidator = z.object({});
+
+export const ocrDeleteValidator: IZodValidator<
+  (typeof ocrDeleteQueryValidator)['shape'],
+  (typeof ocrDeleteBodyValidator)['shape']
+> = {
+  query: ocrDeleteQueryValidator,
+  body: ocrDeleteBodyValidator,
+};
