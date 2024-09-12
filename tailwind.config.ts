@@ -769,6 +769,10 @@ module.exports = {
         md: '768px', // tablet
         lg: '1024px', // desktop
         xl: '1440px',
+
+        tablet: '768px',
+        laptop: '1024px',
+        desktop: '1440px',
       },
       container: {
         center: true,
@@ -1300,6 +1304,7 @@ module.exports = {
       fontFamily: {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
+        poppins: ['Poppins', 'sans-serif'],
       },
       width: {
         'full-available': '-webkit-fill-available',

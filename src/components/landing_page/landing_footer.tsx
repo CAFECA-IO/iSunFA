@@ -1,71 +1,81 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BiLogoGithub } from 'react-icons/bi';
-import { BsTelephone } from 'react-icons/bs';
-import { FiMapPin } from 'react-icons/fi';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import {
-  copyright,
-  iSunFAAddress,
-  iSunFAAddressOnMap,
-  iSunFAPhone,
-  githubLink,
-} from '@/constants/config';
+import { copyright } from '@/constants/config';
+import { GrLocation } from 'react-icons/gr';
+import { BiPhoneCall, BiLogoFacebookSquare } from 'react-icons/bi';
+import { LuAlarmClock } from 'react-icons/lu';
+import { IoLogoGithub } from 'react-icons/io';
+import { TiSocialYoutubeCircular } from 'react-icons/ti';
+import { useTranslation } from 'next-i18next';
+
+const CONTACT_PHONE_NUMBER = '+886-2-2700-1979';
+const GITHUB_LINK = 'https://github.com/CAFECA-IO';
+const FACEBOOK_LINK = 'https://www.facebook.com/profile.php?id=61555435381112';
+const YOUTUBE_LINK = 'https://www.youtube.com/@isunfa';
 
 function LandingFooter() {
-  return (
-    <div className="flex flex-col space-y-12 bg-navy-blue-700 px-4 py-12 font-roboto drop-shadow-xlReverse lg:px-28">
-      <div className="flex w-full flex-col items-center space-y-6 lg:flex-row lg:space-x-20 lg:space-y-0">
-        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-          {/* Info:(20230711 - Shirley) Desktop Logo */}
-          <Image
-            className="hidden lg:block"
-            src="/logo/isunfa_logo_small.svg"
-            alt="iSunFA_logo"
-            width={88}
-            height={68}
-          />
-          {/* Info:(20230711 - Shirley) Mobile Logo */}
-          <Image
-            className="block lg:hidden"
-            src="/logo/isunfa_logo_small.svg"
-            alt="iSunFA_logo"
-            width={88}
-            height={68}
-          />
-        </Link>
+  const { t } = useTranslation(['common']);
 
-        <div className="flex flex-1 flex-col items-center space-y-6 text-sm lg:flex-row lg:space-x-6 lg:space-y-0 lg:divide-x lg:divide-navy-blue-25">
-          <div className="flex flex-col items-start space-y-4">
-            <Link
-              href={iSunFAAddressOnMap ?? ''}
-              target="_blank"
-              className="flex items-center space-x-2"
-            >
-              <FiMapPin className="text-2xl" />
-              <p className="w-280px lg:w-auto">{iSunFAAddress}</p>
-            </Link>
-            <Link href={`tel:${iSunFAPhone}`} className="flex items-center space-x-2">
-              <BsTelephone className="text-2xl" />
-              <p>{iSunFAPhone}</p>
-            </Link>
+  return (
+    <footer className="space-y-24px bg-navy-blue-700 px-20px py-48px text-text-neutral-invert tablet:px-80px">
+      <section className="flex items-center gap-26px">
+        <Image src="/logo/isunfa_logo.svg" alt="iSunFA Logo" width={147} height={30}></Image>
+        <p className="text-lg font-semibold">/ Intelligent Accounting</p>
+      </section>
+
+      <section className="flex flex-col justify-between gap-20px laptop:flex-row">
+        <div className="flex flex-col gap-40px tablet:flex-row">
+          <div className="space-y-20px text-lg font-medium">
+            <h5>{t('common:LANDING_FOOTER.QUICK_LINKS')}</h5>
+            <div className="flex flex-col gap-8px">
+              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>‣ {t('common:LANDING_FOOTER.HOME')}</Link>
+              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+                ‣ {t('common:LANDING_FOOTER.INFO_COLLECTION_STATEMENT')}
+              </Link>
+              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+                ‣ {t('common:LANDING_FOOTER.TERMS_OF_SERVICE_PRIVACY_POLICY')}
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-20px">
+            <h5 className="text-lg font-medium">{t('common:LANDING_FOOTER.CONTACT_US')}</h5>
+            <ul className="flex flex-col gap-16px font-poppins text-sm">
+              <li className="flex items-center gap-8px">
+                <GrLocation size={20} />
+                <p>{t('common:LANDING_FOOTER.CONTACT_ADDRESS')}</p>
+              </li>
+              <li className="flex items-center gap-8px">
+                <BiPhoneCall size={20} />
+                <p>{CONTACT_PHONE_NUMBER}</p>
+              </li>
+              <li className="flex items-center gap-8px">
+                <LuAlarmClock size={20} />
+                <p>
+                  {t('common:LANDING_FOOTER.SERVICE_HOURS')} : <br />
+                  {t('common:LANDING_FOOTER.MON_TO_FRI_9AM_6PM')}
+                </p>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="flex w-full flex-1 justify-center border-t border-navy-blue-25 lg:justify-end lg:border-t-0">
-          <Link
-            href={githubLink ?? ''}
-            target="_blank"
-            className="px-6 py-4 lg:border-l lg:border-navy-blue-25"
-          >
-            <BiLogoGithub className="text-40px" />
+        <div className="flex justify-end gap-20px laptop:justify-start">
+          <Link href={FACEBOOK_LINK}>
+            <BiLogoFacebookSquare size={40} />
+          </Link>
+          <Link href={GITHUB_LINK}>
+            <IoLogoGithub size={40} />
+          </Link>
+          <Link href={YOUTUBE_LINK}>
+            <TiSocialYoutubeCircular size={40} />
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* Info:(20230711 - Shirley) Copyright */}
-      <div className="flex justify-center text-sm lg:justify-end">{copyright}</div>
-    </div>
+      <section className="text-end font-poppins">{copyright}</section>
+    </footer>
   );
 }
 

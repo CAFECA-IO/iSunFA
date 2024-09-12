@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import LandingFooter from '@/components/landing_page/landing_footer';
 import HowWeWork from '@/components/how_we_work/how_we_work';
 import CTASection from '@/components/cta_section/cta_section';
 import NumberAnimationSection from '@/components/number_animation_section/number_animation_section';
@@ -123,11 +122,6 @@ function LandingPageBody() {
 
       {/* Info: (20240318 - Shirley) ----- Contact form section ----- */}
       <ContactFormSection />
-
-      {/* Info: (20230711 - Shirley) Footer */}
-      <div className="">
-        <LandingFooter />
-      </div>
     </div>
   );
 }

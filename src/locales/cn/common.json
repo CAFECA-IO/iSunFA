@@ -115,6 +115,16 @@
     "DOWNLOAD_TITLE": "下载应用程式",
     "DOWNLOAD_SUBTITLE": "让最实用的工具与您随行"
   },
+  "LANDING_FOOTER": {
+    "QUICK_LINKS": "快速连结",
+    "CONTACT_US": "联络我们",
+    "SERVICE_HOURS": "服务时间",
+    "MON_TO_FRI_9AM_6PM": "周一至周五，上午 09:00 - 下午 06:00",
+    "HOME": "首页",
+    "INFO_COLLECTION_STATEMENT": "资讯收集声明",
+    "TERMS_OF_SERVICE_PRIVACY_POLICY": "服务条款与隐私政策",
+    "CONTACT_ADDRESS": "(110416)台湾台北市信义区信义路五段150巷2号13楼之6"
+  },
   "COMING_SOON_PAGE": {
     "TITLE": "Coming Soon",
     "SUBTITLE": "我们的秘密计划即将揭晓！敬请期待！"

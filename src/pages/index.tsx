@@ -5,6 +5,7 @@ import LandingNavBar from '@/components/landing_page/landing_nav_bar';
 import { ILocale } from '@/interfaces/locale';
 import LandingPageBody from '@/components/landing_page/landing_page_body';
 import { useTranslation } from 'next-i18next';
+import LandingFooter from '@/components/landing_page/landing_footer';
 
 interface ILandingPageProps {
   locale: string;
@@ -31,14 +32,19 @@ function LandingPage({ locale }: ILandingPageProps) {
         <meta property="og:type" content="website" />
       </Head>
 
-      {/*  Info: (20230712 - Shirley) Navbar */}
-      <nav className="">
+      {/* Info: (20230712 - Shirley) Navbar */}
+      <nav>
         <LandingNavBar transparentInitially />
       </nav>
 
       <main className="w-screen overflow-hidden text-white">
         <LandingPageBody />
       </main>
+
+      {/* Info: (20240912 - Liz) Footer */}
+      <div>
+        <LandingFooter />
+      </div>
     </>
   );
 }
