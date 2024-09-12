@@ -8,26 +8,8 @@ import { formatIJournal } from '@/lib/utils/formatter/journal.formatter';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-
-function formatJournalIdFromQuery(journalId: unknown): number {
-  let formattedJournalId: number = -1;
-  if (typeof journalId === 'string') {
-    formattedJournalId = Number(journalId);
-  }
-  return formattedJournalId;
-}
-
-function formatGetQuery(req: NextApiRequest) {
-  const { journalId } = req.query;
-  const formattedJournalId = formatJournalIdFromQuery(journalId);
-  return { journalId: formattedJournalId };
-}
-
-function formatDeleteQuery(req: NextApiRequest) {
-  const { journalId } = req.query;
-  const formattedJournalId = formatJournalIdFromQuery(journalId);
-  return { journalId: formattedJournalId };
-}
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 async function handleGetRequest(
   req: NextApiRequest,
@@ -46,8 +28,9 @@ async function handleGetRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const { journalId } = formatGetQuery(req);
-      if (journalId > 0) {
+      const { query } = validateRequest(APIName.JOURNAL_GET_BY_ID, req, userId);
+      if (query) {
+        const { journalId } = query;
         try {
           const journalData = await findUniqueJournalInPrisma(journalId, companyId);
           if (journalData) {
@@ -83,8 +66,9 @@ async function handleDeleteRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const { journalId } = formatDeleteQuery(req);
-      if (journalId > 0) {
+      const { query } = validateRequest(APIName.JOURNAL_DELETE, req, userId);
+      if (query) {
+        const { journalId } = query;
         try {
           const journalData = await deleteJournalInPrisma(journalId, companyId);
           if (journalData) {

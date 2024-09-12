@@ -1,80 +1,84 @@
 import {
-  BasicInfoKeys,
-  ContactInfoKeys,
   CountryOptions,
   IndustryOptions,
   LegalStructureOptions,
-  RegistrationInfoKeys,
   RepresentativeIDType,
-  UploadDocumentKeys,
 } from '@/constants/kyc';
 import { ICompanyKYC, ICompanyKYCForm } from '@/interfaces/company_kyc';
-import { getEnumValue } from '@/lib/utils/common';
-import { CompanyKYC } from '@prisma/client';
+import { iCompanyKYCFormValidator, iCompanyKYCValidator } from '@/lib/utils/zod_schema/kyc';
 
-export function isCompanyKYC(data: CompanyKYC): data is ICompanyKYC {
-  return (
-    typeof data.id === 'number' &&
-    typeof data.companyId === 'number' &&
-    typeof data.legalName === 'string' &&
-    Object.values(CountryOptions).includes(data.country as CountryOptions) &&
-    typeof data.city === 'string' &&
-    typeof data.address === 'string' &&
-    typeof data.zipCode === 'string' &&
-    typeof data.representativeName === 'string' &&
-    Object.values(LegalStructureOptions).includes(data.structure as LegalStructureOptions) &&
-    typeof data.registrationNumber === 'string' &&
-    typeof data.registrationDate === 'string' &&
-    Object.values(IndustryOptions).includes(data.industry as IndustryOptions) &&
-    typeof data.contactPerson === 'string' &&
-    typeof data.contactPhone === 'string' &&
-    typeof data.contactEmail === 'string' &&
-    // (typeof data.website === 'string' || data.website === undefined) && Info: (20240719 - Tzuhan) this field should be optional, but db schema is not nullable
-    typeof data.website === 'string' &&
-    Object.values(RepresentativeIDType).includes(
-      data.representativeIdType as RepresentativeIDType
-    ) &&
-    typeof data.registrationCertificateFileId === 'number' &&
-    typeof data.taxCertificateFileId === 'number' &&
-    typeof data.representativeIdCardFileId === 'number' &&
-    typeof data.createdAt === 'number' &&
-    typeof data.updatedAt === 'number' &&
-    (typeof data.deletedAt === 'number' || data.deletedAt === null)
-  );
+export function isCompanyKYC(data: unknown): data is ICompanyKYC {
+  // Deprecated: (20240912 - Murky) Use zod validator instead
+  // return (
+  //   typeof data.id === 'number' &&
+  //   typeof data.companyId === 'number' &&
+  //   typeof data.legalName === 'string' &&
+  //   Object.values(CountryOptions).includes(data.country as CountryOptions) &&
+  //   typeof data.city === 'string' &&
+  //   typeof data.address === 'string' &&
+  //   typeof data.zipCode === 'string' &&
+  //   typeof data.representativeName === 'string' &&
+  //   Object.values(LegalStructureOptions).includes(data.structure as LegalStructureOptions) &&
+  //   typeof data.registrationNumber === 'string' &&
+  //   typeof data.registrationDate === 'string' &&
+  //   Object.values(IndustryOptions).includes(data.industry as IndustryOptions) &&
+  //   typeof data.contactPerson === 'string' &&
+  //   typeof data.contactPhone === 'string' &&
+  //   typeof data.contactEmail === 'string' &&
+  //   // (typeof data.website === 'string' || data.website === undefined) && Info: (20240719 - Tzuhan) this field should be optional, but db schema is not nullable
+  //   typeof data.website === 'string' &&
+  //   Object.values(RepresentativeIDType).includes(
+  //     data.representativeIdType as RepresentativeIDType
+  //   ) &&
+  //   typeof data.registrationCertificateFileId === 'number' &&
+  //   typeof data.taxCertificateFileId === 'number' &&
+  //   typeof data.representativeIdCardFileId === 'number' &&
+  //   typeof data.createdAt === 'number' &&
+  //   typeof data.updatedAt === 'number' &&
+  //   (typeof data.deletedAt === 'number' || data.deletedAt === null)
+  // );
+
+  const isValid = iCompanyKYCValidator.safeParse(data);
+
+  return isValid.success;
 }
 
-export function isCompanyKYCForm(obj: ICompanyKYCForm): obj is ICompanyKYCForm {
-  const countryEnumValue = getEnumValue(CountryOptions, obj.country);
-  const structureEnumValue = getEnumValue(LegalStructureOptions, obj.structure);
-  const industryEnumValue = getEnumValue(IndustryOptions, obj.industry);
-  const representativeIdTypeEnumValue = getEnumValue(
-    RepresentativeIDType,
-    obj.representativeIdType
-  );
-  return (
-    typeof obj === 'object' &&
-    !!countryEnumValue &&
-    !!structureEnumValue &&
-    !!industryEnumValue &&
-    !!representativeIdTypeEnumValue &&
-    typeof obj[BasicInfoKeys.LEGAL_COMPANY_NAME] === 'string' &&
-    typeof obj[BasicInfoKeys.CITY] === 'string' &&
-    typeof obj[BasicInfoKeys.ZIP_CODE] === 'string' &&
-    typeof obj[BasicInfoKeys.ADDRESS] === 'string' &&
-    typeof obj[BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME] === 'string' &&
-    typeof obj[RegistrationInfoKeys.LEGAL_STRUCTURE] === 'string' &&
-    typeof obj[RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER] === 'string' &&
-    typeof obj[RegistrationInfoKeys.REGISTRATION_DATE] === 'string' &&
-    typeof obj[RegistrationInfoKeys.INDUSTRY] === 'string' &&
-    typeof obj[ContactInfoKeys.KEY_CONTACT_PERSON] === 'string' &&
-    typeof obj[ContactInfoKeys.CONTACT_PHONE] === 'string' &&
-    typeof obj[ContactInfoKeys.EMAIL_ADDRESS] === 'string' &&
-    typeof obj[ContactInfoKeys.COMPANY_WEBSITE] === 'string' &&
-    typeof obj[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE] === 'string' &&
-    typeof obj.registrationCertificateFileId === 'number' &&
-    typeof obj.taxCertificateFileId === 'number' &&
-    typeof obj.representativeIdCardFileId === 'number'
-  );
+export function isCompanyKYCForm(obj: unknown): obj is ICompanyKYCForm {
+  // Deprecated: (20240912 - Murky) Use zod validator instead
+  // const countryEnumValue = getEnumValue(CountryOptions, obj.country);
+  // const structureEnumValue = getEnumValue(LegalStructureOptions, obj.structure);
+  // const industryEnumValue = getEnumValue(IndustryOptions, obj.industry);
+  // const representativeIdTypeEnumValue = getEnumValue(
+  //   RepresentativeIDType,
+  //   obj.representativeIdType
+  // );
+  // return (
+  //   typeof obj === 'object' &&
+  //   !!countryEnumValue &&
+  //   !!structureEnumValue &&
+  //   !!industryEnumValue &&
+  //   !!representativeIdTypeEnumValue &&
+  //   typeof obj[BasicInfoKeys.LEGAL_COMPANY_NAME] === 'string' &&
+  //   typeof obj[BasicInfoKeys.CITY] === 'string' &&
+  //   typeof obj[BasicInfoKeys.ZIP_CODE] === 'string' &&
+  //   typeof obj[BasicInfoKeys.ADDRESS] === 'string' &&
+  //   typeof obj[BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME] === 'string' &&
+  //   typeof obj[RegistrationInfoKeys.LEGAL_STRUCTURE] === 'string' &&
+  //   typeof obj[RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER] === 'string' &&
+  //   typeof obj[RegistrationInfoKeys.REGISTRATION_DATE] === 'string' &&
+  //   typeof obj[RegistrationInfoKeys.INDUSTRY] === 'string' &&
+  //   typeof obj[ContactInfoKeys.KEY_CONTACT_PERSON] === 'string' &&
+  //   typeof obj[ContactInfoKeys.CONTACT_PHONE] === 'string' &&
+  //   typeof obj[ContactInfoKeys.EMAIL_ADDRESS] === 'string' &&
+  //   typeof obj[ContactInfoKeys.COMPANY_WEBSITE] === 'string' &&
+  //   typeof obj[UploadDocumentKeys.REPRESENTATIVE_ID_TYPE] === 'string' &&
+  //   typeof obj.registrationCertificateFileId === 'number' &&
+  //   typeof obj.taxCertificateFileId === 'number' &&
+  //   typeof obj.representativeIdCardFileId === 'number'
+  // );
+
+  const isValid = iCompanyKYCFormValidator.safeParse(obj);
+  return isValid.success;
 }
 
 export function isKYCFormComplete(data: ICompanyKYCForm): {
