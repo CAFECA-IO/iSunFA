@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import LandingFooter from '@/components/landing_footer/landing_footer';
+import LandingFooter from '@/components/landing_page/landing_footer';
 import HowWeWork from '@/components/how_we_work/how_we_work';
 import CTASection from '@/components/cta_section/cta_section';
 import NumberAnimationSection from '@/components/number_animation_section/number_animation_section';

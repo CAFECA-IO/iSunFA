@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { ILocale } from '@/interfaces/locale';
-import LandingNavBar from '@/components/landing_nav_bar/landing_nav_bar';
+import LandingNavBar from '@/components/landing_page/landing_nav_bar';
 import ToggleButton from '@/components/toggle_button/toggle_button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
