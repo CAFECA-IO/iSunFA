@@ -9,6 +9,7 @@ import {
   journalGetByIdValidator,
   journalListValidator,
 } from '@/lib/utils/zod_schema/journal';
+import { kycUploadValidator } from '@/lib/utils/zod_schema/kyc';
 import {
   ocrDeleteValidator,
   ocrListValidator,
@@ -43,4 +44,5 @@ export const API_ZOD_SCHEMA = {
   [APIName.JOURNAL_LIST]: journalListValidator,
   [APIName.JOURNAL_GET_BY_ID]: journalGetByIdValidator,
   [APIName.JOURNAL_DELETE]: journalDeleteValidator,
+  [APIName.KYC_UPLOAD]: kycUploadValidator,
 };
