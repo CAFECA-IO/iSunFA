@@ -1,8 +1,10 @@
-import { EventType, PaymentPeriodType, PaymentStatusType } from '@/constants/account';
+import { EventType } from '@/constants/account';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z } from 'zod';
+import { iPaymentValidator } from '@/lib/utils/zod_schema/payment';
+import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
-const invoiceZod = z.object({
+const iInvoiceValidator = z.object({
   journalId: z.number().nullable(),
   date: z.number(), // Info: (20240522 - Murky) timestamp
   eventType: z.nativeEnum(EventType),
@@ -13,27 +15,14 @@ const invoiceZod = z.object({
   project: z.string().nullable(),
   contractId: z.number().nullable(),
   contract: z.string().nullable(),
-  payment: z.object({
-    isRevenue: z.boolean(),
-    price: z.number(),
-    hasTax: z.boolean(),
-    taxPercentage: z.number(),
-    hasFee: z.boolean(),
-    fee: z.number(),
-    method: z.string(),
-    period: z.nativeEnum(PaymentPeriodType),
-    installmentPeriod: z.number(),
-    alreadyPaid: z.number(),
-    status: z.nativeEnum(PaymentStatusType),
-    progress: z.number(),
-  }),
+  payment: iPaymentValidator,
 });
 
 const invoiceCreateQueryValidator = z.object({});
 
 const invoiceCreateBodyValidator = z.object({
   ocrId: z.number().optional(),
-  invoice: invoiceZod,
+  invoice: iInvoiceValidator,
 });
 
 export const invoiceCreateValidator: IZodValidator<
@@ -47,7 +36,7 @@ export const invoiceCreateValidator: IZodValidator<
 
 const invoiceUpdateQueryValidator = z.object({});
 const invoiceUpdateBodyValidator = z.object({
-  invoice: invoiceZod,
+  invoice: iInvoiceValidator,
 });
 
 export const invoiceUpdateValidator: IZodValidator<
@@ -59,7 +48,7 @@ export const invoiceUpdateValidator: IZodValidator<
 };
 
 const invoiceGetByIdQueryValidator = z.object({
-  invoiceId: z.string().regex(/^\d+$/).transform(Number),
+  invoiceId: zodStringToNumber,
 });
 
 const invoiceGetByIdBodyValidator = z.object({});

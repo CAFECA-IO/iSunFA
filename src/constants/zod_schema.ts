@@ -5,6 +5,11 @@ import {
   invoiceUpdateValidator,
 } from '@/lib/utils/zod_schema/invoice';
 import {
+  journalDeleteValidator,
+  journalGetByIdValidator,
+  journalListValidator,
+} from '@/lib/utils/zod_schema/journal';
+import {
   ocrDeleteValidator,
   ocrListValidator,
   ocrResultGetByIdValidator,
@@ -35,4 +40,7 @@ export const API_ZOD_SCHEMA = {
   [APIName.INVOICE_GET_BY_ID]: invoiceGetByIdValidator,
   [APIName.VOUCHER_CREATE]: voucherCreateValidator,
   [APIName.VOUCHER_UPDATE]: voucherUpdateValidator,
+  [APIName.JOURNAL_LIST]: journalListValidator,
+  [APIName.JOURNAL_GET_BY_ID]: journalGetByIdValidator,
+  [APIName.JOURNAL_DELETE]: journalDeleteValidator,
 };
