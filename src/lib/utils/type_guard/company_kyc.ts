@@ -39,6 +39,7 @@ export function isCompanyKYC(data: unknown): data is ICompanyKYC {
   // );
 
   const isValid = iCompanyKYCValidator.safeParse(data);
+
   return isValid.success;
 }
 

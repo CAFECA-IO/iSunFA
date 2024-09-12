@@ -10,7 +10,7 @@ import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 import { isCompanyKYC, isCompanyKYCForm } from '@/lib/utils/type_guard/company_kyc';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { loggerError } from '@/lib/utils/logger_back';
 
 async function handlePostRequest(
   req: NextApiRequest,
@@ -30,7 +30,6 @@ async function handlePostRequest(
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
       const { body: companyKYCForm } = validateRequest(APIName.KYC_UPLOAD, req, userId);
-      loggerBack.info({ userId, companyId, companyKYCForm });
       if (!isCompanyKYCForm(companyKYCForm)) {
         statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       } else {

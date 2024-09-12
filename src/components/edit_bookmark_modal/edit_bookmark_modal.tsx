@@ -63,7 +63,6 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
-    // console.log('selectedBookmark', selectedBookmarkRef.current);
     setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
         return prevSelected.filter((item) => item !== name);
