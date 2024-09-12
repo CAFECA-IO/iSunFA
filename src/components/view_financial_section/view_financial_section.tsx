@@ -14,6 +14,7 @@ import {
   CashFlowStatementReport,
   FinancialReport,
   IncomeStatementReport,
+  TaxReport401Content,
   // TaxReport401,
 } from '@/interfaces/report';
 import { useUserCtx } from '@/contexts/user_context';
@@ -34,14 +35,23 @@ interface IViewReportSectionProps {
   reportId: string;
 }
 // Info: (20240815 - Anna)增加類型保護函數
-function isTaxReport401(report: FinancialReport): boolean {
-  return (
-    'basicInfo' in report &&
-    'sales' in report &&
-    'purchases' in report &&
-    'taxCalculation' in report &&
-    'imports' in report &&
-    'bondedAreaSalesToTaxArea' in report
+function isTaxReport401(report: TaxReport401Content): boolean {
+  // Info: (20240912 - Anna) 將回傳的值檢查是否是0，如果是0就轉換成字串"0"
+  // Info: (20240912 - Anna) 轉換為字串"0"，為了避免回傳0時，判斷報表為無效，導致列印按鈕一直是禁用狀態
+  const basicInfo = report.content.basicInfo ? report.content.basicInfo : '0';
+  const sales = report.content.sales ? report.content.sales : '0';
+  const purchases = report.content.purchases ? report.content.purchases : '0';
+  const taxCalculation = report.content.taxCalculation ? report.content.taxCalculation : '0';
+  const imports = report.content.imports ? report.content.imports : '0';
+  const bondedAreaSalesToTaxArea =
+    report.content.bondedAreaSalesToTaxArea === 0 ? '0' : report.content.bondedAreaSalesToTaxArea;
+  return !!(
+    basicInfo &&
+    sales &&
+    purchases &&
+    taxCalculation &&
+    imports &&
+    bondedAreaSalesToTaxArea
   );
 }
 const generateThumbnails = (count: number) => {
@@ -165,8 +175,8 @@ const ViewFinancialSection = ({
         return !isValidCashFlowStatementReport(reportFinancial as CashFlowStatementReport);
       // Info:(20240815 - Anna) 新增定義 isValidReport401 函數
       case ReportSheetType.REPORT_401:
-        // Info:(20240815 - Anna)使用 isTaxReport401 進行類型檢查
-        return !isTaxReport401(reportFinancial);
+        // Info:(20240912 - Anna) 將 reportFinancial 轉換為 TaxReport401Content 類型
+        return !isTaxReport401(reportFinancial as unknown as TaxReport401Content);
       default:
         return true;
     }
@@ -420,7 +430,7 @@ const ViewFinancialSection = ({
         <div className="mt-9 flex w-full flex-col items-center justify-center">
           <div className="flex h-850px flex-col gap-3">
             {isLoading || thumbnailUrls.length === 0 ? (
-              <p>{t('report_401:MY_REPORTS_SECTION.LOADING')}</p>
+              <p>{t('common:COMMON.LOADING')}</p>
             ) : isInvalidReport ? null : thumbnailUrls.length > 0 ? (
               thumbnailUrls.map((thumbnailUrl, index) => (
                 <div
