@@ -4,6 +4,7 @@
  */
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z } from 'zod';
+import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 enum testEnum {
   A = 'A',
@@ -18,7 +19,7 @@ const queryValidator = z.object({
    * There is plenty of ways to validate numeric string,
    * Check: https://github.com/colinhacks/zod/discussions/330
    */
-  age: z.string().regex(/^\d+$/).transform(Number),
+  age: zodStringToNumber,
   email: z.string().email(),
   password: z.string().min(6),
   testEnum: z.nativeEnum(testEnum),

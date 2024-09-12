@@ -1,23 +1,16 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z } from 'zod';
+import { iLineItemValidator } from '@/lib/utils/zod_schema/lineItem';
+import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
-const lineItemZod = z.object({
-  lineItemIndex: z.string(),
-  account: z.string(),
-  description: z.string(),
-  debit: z.boolean(),
-  amount: z.number(),
-  accountId: z.number(),
-});
-
-const voucherZod = z.object({
+const iVoucherValidator = z.object({
   journalId: z.number(),
-  lineItems: z.array(lineItemZod),
+  lineItems: z.array(iLineItemValidator),
 });
 
 const voucherCreateQueryValidator = z.object({});
 const voucherCreateBodyValidator = z.object({
-  voucher: voucherZod,
+  voucher: iVoucherValidator,
 });
 
 export const voucherCreateValidator: IZodValidator<
@@ -29,7 +22,7 @@ export const voucherCreateValidator: IZodValidator<
 };
 
 const voucherUpdateQueryValidator = z.object({
-  voucherId: z.string().regex(/^\d+$/).transform(Number),
+  voucherId: zodStringToNumber,
 });
 
 export const voucherUpdateValidator: IZodValidator<

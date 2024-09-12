@@ -81,6 +81,7 @@ module.exports = {
           },
         ],
         'implicit-arrow-linebreak': 'off',
+        'react/no-is-mounted': 'off',
       },
     },
   ],
