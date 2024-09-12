@@ -139,6 +139,7 @@ module.exports = {
     'react/require-default-props': 'off',
     'no-eval': 'error',
     'no-new-func': 'error',
+    'react/no-is-mounted': 'off',
   },
 
   // 整合 prettier 和解決 prettier 衝突問題
