@@ -30,11 +30,9 @@ function LandingFooter() {
             <h5>{t('common:LANDING_FOOTER.QUICK_LINKS')}</h5>
             <div className="flex flex-col gap-8px">
               <Link href={ISUNFA_ROUTE.LANDING_PAGE}>‣ {t('common:LANDING_FOOTER.HOME')}</Link>
+              <Link href={ISUNFA_ROUTE.USER_TERMS}>‣ {t('common:LANDING_FOOTER.USER_TERMS')}</Link>
               <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-                ‣ {t('common:LANDING_FOOTER.INFO_COLLECTION_STATEMENT')}
-              </Link>
-              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-                ‣ {t('common:LANDING_FOOTER.TERMS_OF_SERVICE_PRIVACY_POLICY')}
+                ‣ {t('common:LANDING_FOOTER.PRIVACY_POLICY')}
               </Link>
             </div>
           </div>
@@ -62,13 +60,13 @@ function LandingFooter() {
         </div>
 
         <div className="flex justify-end gap-20px laptop:justify-start">
-          <Link href={FACEBOOK_LINK}>
+          <Link href={FACEBOOK_LINK} target="_blank">
             <BiLogoFacebookSquare size={40} />
           </Link>
-          <Link href={GITHUB_LINK}>
+          <Link href={GITHUB_LINK} target="_blank">
             <IoLogoGithub size={40} />
           </Link>
-          <Link href={YOUTUBE_LINK}>
+          <Link href={YOUTUBE_LINK} target="_blank">
             <TiSocialYoutubeCircular size={40} />
           </Link>
         </div>

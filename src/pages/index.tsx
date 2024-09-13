@@ -1,10 +1,10 @@
 import Head from 'next/head';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import React from 'react';
-import LandingNavBar from '@/components/landing_page/landing_nav_bar';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import LandingPageBody from '@/components/landing_page/landing_page_body';
 import { useTranslation } from 'next-i18next';
+import LandingNavBar from '@/components/landing_page/landing_nav_bar';
+import LandingPageBody from '@/components/landing_page/landing_page_body';
 import LandingFooter from '@/components/landing_page/landing_footer';
 
 interface ILandingPageProps {
