@@ -5,7 +5,7 @@ import { IoHomeOutline } from 'react-icons/io5';
 import { IoIosArrowForward } from 'react-icons/io';
 
 const Breadcrumb = () => {
-  const { t } = useTranslation(['common', 'terms']);
+  const { t } = useTranslation(['common']);
 
   return (
     <div className="flex items-center">

@@ -31,7 +31,7 @@ function LandingFooter() {
             <div className="flex flex-col gap-8px">
               <Link href={ISUNFA_ROUTE.LANDING_PAGE}>‣ {t('common:LANDING_FOOTER.HOME')}</Link>
               <Link href={ISUNFA_ROUTE.USER_TERMS}>‣ {t('common:LANDING_FOOTER.USER_TERMS')}</Link>
-              <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
+              <Link href={ISUNFA_ROUTE.PRIVACY_POLICY}>
                 ‣ {t('common:LANDING_FOOTER.PRIVACY_POLICY')}
               </Link>
             </div>

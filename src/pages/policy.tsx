@@ -5,9 +5,9 @@ import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import LandingNavBar from '@/components/landing_page/landing_nav_bar';
 import LandingFooter from '@/components/landing_page/landing_footer';
-import UserTermsPageBody from '@/components/landing_page/terms_body';
+import PrivacyPolicyPageBody from '@/components/landing_page/policy_body';
 
-const UserTerms = () => {
+const PrivacyPolicy = () => {
   const { t } = useTranslation(['common']);
 
   return (
@@ -24,7 +24,7 @@ const UserTerms = () => {
       </nav>
 
       <main className="w-screen overflow-hidden bg-navy-blue-600 pt-100px text-text-neutral-invert">
-        <UserTermsPageBody />
+        <PrivacyPolicyPageBody />
       </main>
 
       <LandingFooter />
@@ -49,4 +49,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default UserTerms;
+export default PrivacyPolicy;
