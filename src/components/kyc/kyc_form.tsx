@@ -103,6 +103,7 @@ const KYCForm = () => {
       ...intUploadDocuments,
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
+
     if (isComplete) {
       const { success, code } = await triggerUpload({
         params: {

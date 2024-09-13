@@ -12,11 +12,11 @@ import {
 } from '@/interfaces/report';
 import { getCompanyKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { listJournalFor401 } from '@/lib/utils/repo/journal.repo';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { IJournalIncludeVoucherLineItemsInvoicePayment } from '@/interfaces/journal';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
+import { CompanyKYC } from '@prisma/client';
 
 export default class Report401Generator extends ReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
@@ -198,20 +198,21 @@ export default class Report401Generator extends ReportGenerator {
     from: number,
     to: number
   ): Promise<TaxReport401> {
-    const companyKYC = await getCompanyKYCByCompanyId(companyId);
+    const companyKYC: CompanyKYC | null = await getCompanyKYCByCompanyId(companyId);
     if (!companyKYC) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      // Info: (20240912 - Murky) temporary allow to generate report without KYC
+      // throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
     const ROCStartDate = convertTimestampToROCDate(from);
     const ROCEndDate = convertTimestampToROCDate(to);
     // 1. 獲取所有發票
     const journalList = await listJournalFor401(companyId, from, to);
     const basicInfo = {
-      uniformNumber: companyKYC.registrationNumber,
-      businessName: companyKYC.legalName,
-      personInCharge: companyKYC.representativeName,
+      uniformNumber: companyKYC?.registrationNumber ?? '',
+      businessName: companyKYC?.legalName ?? '',
+      personInCharge: companyKYC?.representativeName ?? '',
       taxSerialNumber: 'ABC123', // TODO (20240808 - Jacky): Implement this field in next sprint
-      businessAddress: companyKYC.address,
+      businessAddress: companyKYC?.address ?? '',
       currentYear: ROCStartDate.year.toString(),
       startMonth: ROCStartDate.month.toString(),
       endMonth: ROCEndDate.month.toString(),

@@ -48,7 +48,7 @@ export interface ICompanyKYCForm {
   [RegistrationInfoKeys.COUNTRY]: CountryOptions;
   [RegistrationInfoKeys.LEGAL_STRUCTURE]: LegalStructureOptions;
   [RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]: string;
-  [RegistrationInfoKeys.REGISTRATION_DATE]: string;
+  [RegistrationInfoKeys.REGISTRATION_DATE]: string; // Info: (20240912 - Murky) Maybe this suppose to be number?
   [RegistrationInfoKeys.INDUSTRY]: IndustryOptions;
   [ContactInfoKeys.KEY_CONTACT_PERSON]: string;
   [ContactInfoKeys.CONTACT_PHONE]: string;

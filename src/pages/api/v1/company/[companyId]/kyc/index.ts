@@ -2,12 +2,15 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompanyKYC, ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { ICompanyKYC } from '@/interfaces/company_kyc';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 import { isCompanyKYC, isCompanyKYCForm } from '@/lib/utils/type_guard/company_kyc';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
+import { loggerError } from '@/lib/utils/logger_back';
 
 async function handlePostRequest(
   req: NextApiRequest,
@@ -26,7 +29,7 @@ async function handlePostRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const companyKYCForm: ICompanyKYCForm = req.body;
+      const { body: companyKYCForm } = validateRequest(APIName.KYC_UPLOAD, req, userId);
       if (!isCompanyKYCForm(companyKYCForm)) {
         statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       } else {
@@ -39,6 +42,12 @@ async function handlePostRequest(
             statusMessage = STATUS_MESSAGE.CREATED;
           }
         } catch (error) {
+          const logger = loggerError(
+            userId,
+            'post /api/v1/company/[companyId]/kyc',
+            'Failed to create company KYC'
+          );
+          logger.error(error);
           statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
         }
       }
