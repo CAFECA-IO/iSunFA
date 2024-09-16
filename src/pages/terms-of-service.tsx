@@ -5,9 +5,9 @@ import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import LandingNavBar from '@/components/landing_page/landing_nav_bar';
 import LandingFooter from '@/components/landing_page/landing_footer';
-import PrivacyPolicyPageBody from '@/components/landing_page/policy_body';
+import TermsOfServicePageBody from '@/components/landing_page/terms_body';
 
-const PrivacyPolicy = () => {
+const TermsOfService = () => {
   const { t } = useTranslation(['common']);
 
   return (
@@ -16,7 +16,7 @@ const PrivacyPolicy = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LANDING_FOOTER.USER_TERMS')}</title>
+        <title>{t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}</title>
       </Head>
 
       <nav>
@@ -24,7 +24,7 @@ const PrivacyPolicy = () => {
       </nav>
 
       <main className="w-screen overflow-hidden bg-navy-blue-600 pt-100px text-text-neutral-invert">
-        <PrivacyPolicyPageBody />
+        <TermsOfServicePageBody />
       </main>
 
       <LandingFooter />
@@ -49,4 +49,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default PrivacyPolicy;
+export default TermsOfService;

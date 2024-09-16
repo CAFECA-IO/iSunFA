@@ -10,7 +10,7 @@ import { TiSocialYoutubeCircular } from 'react-icons/ti';
 import { useTranslation } from 'next-i18next';
 
 const CONTACT_PHONE_NUMBER = '+886-2-2700-1979';
-const GITHUB_LINK = 'https://github.com/CAFECA-IO';
+const GITHUB_LINK = 'https://github.com/CAFECA-IO/iSunFA';
 const FACEBOOK_LINK = 'https://www.facebook.com/profile.php?id=61555435381112';
 const YOUTUBE_LINK = 'https://www.youtube.com/@isunfa';
 
@@ -30,7 +30,9 @@ function LandingFooter() {
             <h5>{t('common:LANDING_FOOTER.QUICK_LINKS')}</h5>
             <div className="flex flex-col gap-8px">
               <Link href={ISUNFA_ROUTE.LANDING_PAGE}>‣ {t('common:LANDING_FOOTER.HOME')}</Link>
-              <Link href={ISUNFA_ROUTE.USER_TERMS}>‣ {t('common:LANDING_FOOTER.USER_TERMS')}</Link>
+              <Link href={ISUNFA_ROUTE.TERMS_OF_SERVICE}>
+                ‣ {t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}
+              </Link>
               <Link href={ISUNFA_ROUTE.PRIVACY_POLICY}>
                 ‣ {t('common:LANDING_FOOTER.PRIVACY_POLICY')}
               </Link>
