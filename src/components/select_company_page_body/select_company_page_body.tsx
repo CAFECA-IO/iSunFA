@@ -121,7 +121,7 @@ const SelectCompanyPageBody = () => {
               height={20}
             />
           </div>
-          <p className="justify-center text-sm font-medium leading-5 tracking-normal">
+          <p className="justify-center break-all text-sm font-medium leading-5 tracking-normal">
             {companyAndRole.company.name}
           </p>
           <p className="text-xs text-dropdown-text-secondary">
