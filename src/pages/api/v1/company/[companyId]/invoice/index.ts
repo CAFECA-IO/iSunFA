@@ -15,17 +15,22 @@ import { InvoiceType } from '@/constants/invoice';
 import { loggerError, loggerRequest } from '@/lib/utils/logger_back';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { validateRequest } from '@/lib/utils/request_validator';
+import { EventType } from '@/constants/account';
 
 // Info: (20240416 - Murky) Body傳進來會是any
 function formatInvoice(invoice: IInvoice) {
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   const now = Date.now(); // Info: (20240807 - Jacky) for fake unique invoice number
-  const invoiceTypeValues = Object.values(InvoiceType); // Info: (20240807 - Jacky) for fake invoice type
-  const randomIndex = Math.floor(Math.random() * invoiceTypeValues.length);
+  // Info: (20240916 - Jacky) default invoice type is PURCHASE_TRIPLICATE_AND_ELECTRONIC
+  let invoiceType = InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC;
+  // Info: (20240916 - Jacky) if eventType is INCOME, then invoice type is SALES_TRIPLICATE_INVOICE
+  if (invoice.eventType === EventType.INCOME) {
+    invoiceType = InvoiceType.SALES_TRIPLICATE_INVOICE;
+  }
   const formattedInvoice = {
     ...invoice,
-    number: now.toString(),
-    type: invoiceTypeValues[randomIndex],
+    number: now.toString() + invoice.journalId,
+    type: invoiceType,
     vendorTaxId: 'temp fake id',
     deductible: true,
     projectId: invoice.projectId ? invoice.projectId : null,

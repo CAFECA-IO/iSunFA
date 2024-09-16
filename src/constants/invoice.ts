@@ -2,7 +2,7 @@ export enum InvoiceType {
   // Info: (20240718 - Jacky) 進項三聯式、電子計算機統一發票
   PURCHASE_TRIPLICATE_AND_ELECTRONIC = 'PurchaseTriplicateAndElectronic',
 
-  // Info: (20240718 - Jacky) 銷項二聯式、二聯式收銀機統一發票
+  // Info: (20240718 - Jacky) 進項二聯式、二聯式收銀機統一發票
   PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER = 'PurchaseDuplicateCashRegisterAndOther',
 
   // Info: (20240718 - Jacky) 三聯式、電子計算機及三聯式收銀機統一發票及一般稅額計算之電子發票之銷貨退回或折讓證明單
