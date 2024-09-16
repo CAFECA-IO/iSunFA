@@ -18,12 +18,12 @@ const Breadcrumb = () => {
         <IoIosArrowForward size={20} />
       </Link>
 
-      <h5 className="text-input-text-highlight">{t('common:LANDING_FOOTER.USER_TERMS')}</h5>
+      <h5 className="text-input-text-highlight">{t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}</h5>
     </div>
   );
 };
 
-const UserTermsPageBody = () => {
+const TermsOfServicePageBody = () => {
   const { t } = useTranslation(['common', 'terms']);
 
   return (
@@ -32,28 +32,28 @@ const UserTermsPageBody = () => {
 
       <main className="mb-240px mt-120px flex flex-col gap-20px px-160px text-lg font-semibold">
         <h1 className="mb-20px text-44px font-bold text-text-brand-primary-lv3">
-          {t('common:LANDING_FOOTER.USER_TERMS')}
+          {t('common:LANDING_FOOTER.TERMS_OF_SERVICE')}
         </h1>
 
-        <p>{t('terms:USER_TERMS.TEXT_01')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_02')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_03')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_04')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_05')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_06')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_07')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_08')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_09')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_10')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_11')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_12')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_13')}</p>
-        <p>{t('terms:USER_TERMS.TEXT_14')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_01')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_02')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_03')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_04')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_05')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_06')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_07')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_08')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_09')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_10')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_11')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_12')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_13')}</p>
+        <p>{t('terms:TERMS_OF_SERVICE.TEXT_14')}</p>
         <p>
-          {t('terms:USER_TERMS.TEXT_15')}
+          {t('terms:TERMS_OF_SERVICE.TEXT_15')}
           <ul className="list-inside list-disc indent-6">
-            <li>{t('terms:USER_TERMS.TEXT_15_01')}</li>
-            <li>{t('terms:USER_TERMS.TEXT_15_02')}</li>
+            <li>{t('terms:TERMS_OF_SERVICE.TEXT_15_01')}</li>
+            <li>{t('terms:TERMS_OF_SERVICE.TEXT_15_02')}</li>
           </ul>
         </p>
       </main>
@@ -61,4 +61,4 @@ const UserTermsPageBody = () => {
   );
 };
 
-export default UserTermsPageBody;
+export default TermsOfServicePageBody;
