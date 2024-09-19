@@ -6,6 +6,9 @@ import { Button } from '@/components/button/button';
 import { DUMMY_PROJECTS_MAP } from '@/interfaces/report_project';
 import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
+import { IoIosArrowDown } from 'react-icons/io';
+import { FiSearch } from 'react-icons/fi';
+import { PiCopySimple } from 'react-icons/pi';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -166,7 +169,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           </div>
 
           <div className="my-auto flex flex-col justify-center">
-            <svg
+            <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
+            {/* // Deprecated: (20240918 - Liz) */}
+            {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
               height="20"
@@ -179,7 +184,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                 d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
                 clipRule="evenodd"
               ></path>
-            </svg>
+            </svg> */}
           </div>
         </button>
       </div>
@@ -201,7 +206,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none text-input-text-input-filled focus:outline-none"
             />
-            <svg
+            <FiSearch size={20} className="text-icon-surface-single-color-primary" />
+            {/* // Deprecated: (20240918 - Liz) */}
+            {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -220,7 +227,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
                 d="M10.22 10.219a.5.5 0 01.707 0l3.429 3.428a.5.5 0 01-.707.707l-3.429-3.428a.5.5 0 010-.707z"
                 clipRule="evenodd"
               ></path>
-            </svg>
+            </svg> */}
           </div>
           {/* Info: (20240830 - Anna) 為了解決Unexpected newline before '}'錯誤，請prettier不要格式化 */}
           {/* prettier-ignore */}
@@ -282,7 +289,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           {selectedLanguage?.name}
         </div>
         <div className="my-auto flex flex-col justify-center">
-          <svg
+          <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
+          {/* // Deprecated: (20240918 - Liz) */}
+          {/* <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"
@@ -295,7 +304,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
               clipRule="evenodd"
             ></path>
-          </svg>
+          </svg> */}
         </div>
       </button>
       {/* Info: (20240425 - Shirley) Language Menu */}
@@ -448,7 +457,9 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
       <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <Button variant={'tertiary'} onClick={copyClickHandler}>
-          <svg
+          <PiCopySimple size={16} />
+          {/* // Deprecated: (20240918 - Liz) */}
+          {/* <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
             height="16"
@@ -461,7 +472,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               d="M11.426 2.786c-.407-.033-.932-.034-1.69-.034H5.001a.75.75 0 110-1.5h4.765c.72 0 1.306 0 1.78.039.492.04.93.125 1.34.333.642.328 1.165.85 1.493 1.493.208.41.293.848.333 1.34.039.474.039 1.06.039 1.78v4.765a.75.75 0 01-1.5 0V6.269c0-.76 0-1.284-.034-1.69-.032-.4-.092-.619-.175-.78a1.917 1.917 0 00-.838-.838c-.161-.083-.381-.143-.78-.175zm-7.319.8H9.563c.35 0 .656 0 .91.02.268.022.542.07.808.206.392.2.71.519.91.91.136.267.185.541.207.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908a2.12 2.12 0 01-.206.81c-.2.391-.519.71-.91.91a2.12 2.12 0 01-.81.206c-.253.021-.56.021-.909.021H4.107c-.35 0-.655 0-.909-.02a2.12 2.12 0 01-.809-.207c-.392-.2-.71-.519-.91-.91a2.118 2.118 0 01-.206-.81c-.021-.253-.021-.559-.021-.908V6.44c0-.349 0-.655.02-.908.023-.269.072-.543.207-.81.2-.391.518-.71.91-.91.266-.135.54-.184.81-.206.253-.02.559-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25a11.28 11.28 0 00-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.055.11.145.2.254.255.02.01.075.034.25.048.185.015.43.016.815.016h5.4c.386 0 .63 0 .815-.016.176-.014.23-.038.25-.048a.583.583 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386-.001-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.02-.01-.074-.034-.25-.048a11.28 11.28 0 00-.815-.016h-5.4c-.385 0-.63 0-.814.016z"
               clipRule="evenodd"
             ></path>
-          </svg>
+          </svg> */}
           <p>{t('report_401:EMBED_CODE_MODAL.COPY')}</p>
         </Button>
       </div>
