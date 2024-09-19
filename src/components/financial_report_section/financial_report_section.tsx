@@ -20,6 +20,10 @@ import { FinancialReportTypesKeyReportSheetTypeMapping, ReportType } from '@/con
 // Info: (20240807 - Anna) 用來處理路由的 hook
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { GrPowerReset } from 'react-icons/gr';
+import { IoIosArrowDown } from 'react-icons/io';
+import { FiSearch } from 'react-icons/fi';
+import { FaArrowRight } from 'react-icons/fa6';
 
 interface IFinancialReportSectionProps {
   reportType?: FinancialReportTypesKey;
@@ -174,22 +178,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
           },
           messageType: MessageType.ERROR,
           submitBtnVariant: 'tertiaryBorderless',
-          submitBtnIcon: (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="none"
-              viewBox="0 0 16 16"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                d="M1.252 8.002a6.75 6.75 0 0111.525-4.771c.377.377.777.832 1.142 1.27V2.668a.75.75 0 011.5 0v4a.75.75 0 01-.75.75h-4a.75.75 0 010-1.5h2.473c-.44-.548-.963-1.165-1.426-1.628a5.25 5.25 0 101.331 5.17.75.75 0 111.441.416A6.75 6.75 0 011.252 8.002z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
-          ),
+          submitBtnIcon: <GrPowerReset size={16} />,
         });
         messageModalVisibilityHandler();
       }
@@ -230,20 +219,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
 
           <div className="my-auto flex flex-col justify-center">
             <div className="flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill="#314362"
-                  fillRule="evenodd"
-                  d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
+              <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
             </div>
           </div>
         </button>
@@ -266,26 +242,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full border-none focus:outline-none"
             />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 16 16"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M3.906 2.413a5.409 5.409 0 116.01 8.994 5.409 5.409 0 01-6.01-8.994zm3.005.088a4.409 4.409 0 104.41 4.41M6.91 2.5a4.41 4.41 0 014.41 4.41"
-                clipRule="evenodd"
-              ></path>
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M10.22 10.219a.5.5 0 01.707 0l3.429 3.428a.5.5 0 01-.707.707l-3.429-3.428a.5.5 0 010-.707z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
+            <FiSearch size={20} className="text-icon-surface-single-color-primary" />
           </div>
 
           <div className="mt-2 max-h-14rem w-full overflow-y-auto">
@@ -348,20 +305,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
+            <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
           </div>
         </div>
       </button>
@@ -409,20 +353,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
         </div>
         <div className="my-auto flex flex-col justify-center">
           <div className="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
+            <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
           </div>
         </div>
       </button>
@@ -466,23 +397,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             {t('report_401:EMBED_CODE_MODAL.GENERATE')}
           </div>
           <div className="my-auto flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="17"
-              height="16"
-              fill="none"
-              viewBox="0 0 17 16"
-            >
-              <g>
-                <path
-                  className="fill-current"
-                  fill="none"
-                  fillRule="evenodd"
-                  d="M9.128 3.294a1 1 0 011.415 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.415-1.414l2.293-2.293H3.17a1 1 0 110-2h8.252L9.128 4.708a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </g>
-            </svg>
+            <FaArrowRight size={16} />
           </div>
         </div>
       )}
@@ -549,22 +464,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
             <div className="flex gap-2">
               <div className="my-auto flex flex-col justify-center">
                 <div className="flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    viewBox="0 0 16 16"
-                  >
-                    <path
-                      fill="#FFA502"
-                      d="M12.286 0c.473 0 .857.384.857.857v2h2a.857.857 0 110 1.714h-2v2a.857.857 0 11-1.714 0v-2h-2a.857.857 0 010-1.714h2v-2c0-.473.383-.857.857-.857z"
-                    ></path>
-                    <path
-                      fill="#002462"
-                      d="M8.099 1.855a5.542 5.542 0 00-1.242-.141c-1.373 0-2.698.509-3.68 1.426-.985.918-1.545 2.172-1.545 3.488v4.314c0 .268-.114.532-.33.734-.25.233-.447.324-.73.324a.571.571 0 000 1.142h12.57a.571.571 0 100-1.142c-.282 0-.48-.09-.73-.324a1.004 1.004 0 01-.33-.734V8.848A2.286 2.286 0 0110 6.57V6h-.571a2.286 2.286 0 01-1.33-4.145zm-2.385 12.43a.857.857 0 000 1.715H8a.857.857 0 000-1.715H5.714z"
-                    ></path>
-                  </svg>
+                  <Image src="/icons/bell.svg" width={16} height={16} alt="calendar"></Image>
                 </div>
               </div>
               <div className="text-sm font-medium leading-5 tracking-normal text-divider-text-lv-1">
