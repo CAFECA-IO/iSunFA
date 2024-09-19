@@ -105,21 +105,6 @@ const FilterOptionsModal = ({
         {AllReportTypesOptions[selectedReportType as keyof typeof AllReportTypesOptions]}
       </p>
       <IoIosArrowDown size={20} />
-      {/* // Deprecated: (20240918 - Liz) */}
-      {/* <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        fill="none"
-        viewBox="0 0 20 20"
-      >
-        <path
-          className="fill-current"
-          fillRule="evenodd"
-          d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-          clipRule="evenodd"
-        ></path>
-      </svg> */}
 
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
@@ -155,21 +140,7 @@ const FilterOptionsModal = ({
         {ContractStatusWithAll[selectedStatus as keyof typeof ContractStatusWithAll]}
       </p>
       <IoIosArrowDown size={20} />
-      {/* // Deprecated: (20240918 - Liz) */}
-      {/* <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        fill="none"
-        viewBox="0 0 20 20"
-      >
-        <path
-          className="fill-current"
-          fillRule="evenodd"
-          d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-          clipRule="evenodd"
-        ></path>
-      </svg> */}
+
       {/* Info: (20240621 - Julian) Dropdown menu */}
       <div
         className={`absolute left-0 top-50px grid w-full grid-rows-0 overflow-hidden shadow-dropmenu ${isStatusMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} rounded-sm border transition-all duration-150 ease-in-out`}
@@ -203,21 +174,7 @@ const FilterOptionsModal = ({
         {t(sort)}
       </p>
       <IoIosArrowDown size={20} />
-      {/* // Deprecated: (20240918 - Liz) */}
-      {/* <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        fill="none"
-        viewBox="0 0 20 20"
-      >
-        <path
-          className="fill-current"
-          fillRule="evenodd"
-          d="M4.472 6.972a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.06l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-          clipRule="evenodd"
-        ></path>
-      </svg> */}
+
       {/* Info: (20240513 - Shirley) Dropdown menu */}
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isHistorySortMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-150 ease-in-out`}
@@ -270,27 +227,6 @@ const FilterOptionsModal = ({
             variant={'secondaryBorderless'}
           >
             <FaXmark size={24} />
-            {/* // Deprecated: (20240918 - Liz) */}
-            {/* <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                d="M6.223 6.22a.75.75 0 011.06 0l10.5 10.5a.75.75 0 11-1.06 1.061l-10.5-10.5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-              <path
-                className="fill-current"
-                fillRule="evenodd"
-                d="M17.783 6.22a.75.75 0 010 1.061l-10.5 10.5a.75.75 0 01-1.06-1.06l10.5-10.5a.75.75 0 011.06 0z"
-                clipRule="evenodd"
-              ></path>
-            </svg> */}
           </Button>
         </div>
         <div className="flex w-full flex-col space-y-5 px-5 pt-4 text-base font-medium leading-6 tracking-normal">

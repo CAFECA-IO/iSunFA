@@ -99,24 +99,9 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
         </div>
         <div className="flex items-center justify-center text-base lg:text-xl">
           <div
-            className={`text-base text-icon-surface-single-color-primary transition-transform duration-300 lg:text-xl ${isMenuOpen ? '' : ''}`} // Info: (20240425 - Shirley) be consistent with other dropdown menu, so remove `-rotate-180`
+            className={`text-base transition-transform duration-300 lg:text-xl ${isMenuOpen ? '' : ''}`} // Info: (20240425 - Shirley) be consistent with other dropdown menu, so remove `-rotate-180`
           >
-            <IoIosArrowDown size={20} />
-            {/* // Deprecated: (20240918 - Liz) */}
-            {/* <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-            </svg> */}
+            <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
           </div>
         </div>
       </button>
@@ -202,22 +187,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
               onClick={cancelBtnClickHandler}
               className="flex items-center justify-center"
             >
-              <FaXmark size={30} />
-              {/* // Deprecated: (20240918 - Liz) */}
-              {/* <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="30"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#314362"
-                  fillRule="evenodd"
-                  d="M6.296 6.294a1 1 0 011.414 0l4.293 4.293 4.293-4.293a1 1 0 111.414 1.414l-4.293 4.293 4.293 4.293a1 1 0 11-1.414 1.414l-4.293-4.293-4.293 4.293a1 1 0 01-1.414-1.414l4.293-4.293-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </svg> */}
+              <FaXmark size={30} className="text-icon-surface-single-color-primary" />
             </button>
           </div>
         </div>
