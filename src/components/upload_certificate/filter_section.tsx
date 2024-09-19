@@ -1,6 +1,6 @@
 import { IAPIName } from '@/interfaces/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface FilterSectionProps {
   apiName: IAPIName;
@@ -32,8 +32,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   const { trigger } = APIHandler<unknown[]>(apiName);
 
   // Info: (20240919 - tzuhan) 發送 API 請求
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
+      if (isLoading) return;
       setIsLoading(true);
       const { success, code, data } = await trigger({
         params,
@@ -59,7 +60,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting]);
 
   const onSearchClick = () => {
     setSearchQuery((document.getElementById('search') as HTMLInputElement)?.value);
@@ -67,32 +68,32 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {
-    if (!isLoading) fetchData();
-  }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting, isLoading]);
+    fetchData();
+  }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting]);
 
   return (
     <div
-      className="flex flex-wrap items-center justify-start space-x-4 rounded-lg bg-white p-4 shadow-md"
+      className="flex flex-wrap items-center justify-start space-x-4 rounded-lg bg-white p-4"
       style={{ maxWidth: '100%' }}
     >
       {/* Info: (20240919 - tzuhan) 類型篩選 */}
       {types.length > 0 && (
         <div className="flex min-w-150px flex-col">
           <label htmlFor="type" className="text-sm font-medium text-gray-500">
-            {selectedType || 'Type'}
+            <div>Type</div>
+            <select
+              id="type"
+              className="rounded-md border border-gray-300 p-2"
+              onChange={(e) => setSelectedType(e.target.value)}
+            >
+              <option value={undefined}>All</option>
+              {types.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </label>
-          <select
-            id="type"
-            className="rounded-md border border-gray-300 p-2"
-            onChange={(e) => setSelectedType(e.target.value)}
-          >
-            <option value={undefined}>All</option>
-            {types.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
         </div>
       )}
 
@@ -100,27 +101,27 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       {statuses.length > 0 && (
         <div className="flex min-w-150px flex-col">
           <label htmlFor="status" className="text-sm font-medium text-gray-500">
-            {selectedStatus || 'Status'}
+            <div>Status</div>
+            <select
+              id="status"
+              className="rounded-md border border-gray-300 p-2"
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value={undefined}>All</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
           </label>
-          <select
-            id="status"
-            className="rounded-md border border-gray-300 p-2"
-            onChange={(e) => setSelectedStatus(e.target.value)}
-          >
-            <option value={undefined}>All</option>
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
         </div>
       )}
 
       {/* Info: (20240919 - tzuhan) 時間區間篩選 */}
       <div className="flex min-w-250px flex-col">
         <label htmlFor="date-range" className="text-sm font-medium text-gray-500">
-          Period
+          <div>Period</div>
           <input
             type="text"
             id="date-range"
@@ -137,7 +138,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       {/* Info: (20240919 - tzuhan) 搜索欄 */}
       <div className="flex min-w-200px flex-col">
         <label htmlFor="search" className="text-sm font-medium text-gray-500">
-          Search
           <div className="flex items-center">
             <input
               type="text"

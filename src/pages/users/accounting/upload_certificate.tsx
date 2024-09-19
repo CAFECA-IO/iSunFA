@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
-import JournalUploadArea from '@/components/journal_upload_area/journal_upload_area';
+import UploadArea from '@/components/upload_certificate/upload_area';
 import Tabs from '@/components/upload_certificate/tabs';
 import FilterSection from '@/components/upload_certificate/filter_section';
 import CertificateTable from '@/components/upload_certificate/certificate_table';
@@ -33,9 +33,9 @@ const UploadCertificatePage: React.FC = () => {
         <Header />
 
         {/* Main Content */}
-        <div className="space-y-4 p-6">
+        <div className="space-y-4 overflow-scroll p-6">
           {/* Upload Area */}
-          <JournalUploadArea />
+          <UploadArea />
 
           {/* Tabs */}
           <Tabs
@@ -49,7 +49,6 @@ const UploadCertificatePage: React.FC = () => {
           <FilterSection
             apiName={APIName.CERTIFICATE_LIST}
             types={['Invoice', 'Receipt']}
-            statuses={['Pending', 'Completed']}
             sortingOptions={[
               'Date Ascending',
               'Date Descending',
