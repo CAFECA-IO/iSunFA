@@ -93,7 +93,7 @@ export function formatIJournal(
             lineItemIndex: lineItem.id.toString(),
             amount: lineItem.amount,
             debit: lineItem.debit,
-            account: lineItem.account.name,
+            account: `${lineItem.account.code} - ${lineItem.account.name}`,
             description: lineItem.description,
             accountId: lineItem.account.id,
           };
