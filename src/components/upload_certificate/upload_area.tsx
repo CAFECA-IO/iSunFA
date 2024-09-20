@@ -30,7 +30,7 @@ const UploadArea = () => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`h-200px w-300px rounded-lg bg-drag-n-drop-surface-primary md:h-240px md:w-full`}
+        className={`h-200px flex-1 rounded-lg bg-drag-n-drop-surface-primary md:h-240px`}
       >
         <label
           htmlFor="certificate-upload"
