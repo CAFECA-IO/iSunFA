@@ -1,8 +1,8 @@
 import React from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
-import InformationStatement from '@/components/login_confirm_modal/information_statement';
-import TermsOfServiceAndPrivacyPolicy from '@/components/login_confirm_modal/term_n_privacy';
+import TermsOfService from '@/components/login_confirm_modal/terms_of_service';
+import PrivacyPolicy from '@/components/login_confirm_modal/privacy_policy';
 import { useUserCtx } from '@/contexts/user_context';
 import { Hash } from '@/constants/hash';
 import { Button } from '@/components/button/button';
@@ -30,14 +30,14 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
   const { handleUserAgree, signOut } = useUserCtx();
 
   const onAgree = async () => {
-    if (id === 'agree-with-information') {
+    if (id === 'agree-to-our-terms-of-service') {
       infoModalVisibilityHandler(false);
-      await handleUserAgree(Hash.INFO_COLLECTION);
+      await handleUserAgree(Hash.HASH_FOR_TERMS_OF_SERVICE);
       tosModalVisibilityHandler(true);
     }
-    if (id === 'tos-n-privacy-policy') {
+    if (id === 'agree-to-our-privacy-policy') {
       tosModalVisibilityHandler(false);
-      await handleUserAgree(Hash.TOS_N_PP);
+      await handleUserAgree(Hash.HASH_FOR_PRIVACY_POLICY);
     }
   };
   const onCancel = () => {
@@ -60,8 +60,8 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
         </div>
         <hr className="absolute left-0 top-60px w-full max-w-xl border-divider-stroke-lv-4" />
         <div className="m-4 h-50vh overflow-y-auto rounded-xs border border-surface-brand-secondary bg-surface-neutral-main-background lg:p-4">
-          {modalData.content === 'info_collection_statement' && <InformationStatement />}
-          {modalData.content === 'term_n_privacy' && <TermsOfServiceAndPrivacyPolicy />}
+          {modalData.content === 'terms_of_service' && <TermsOfService />}
+          {modalData.content === 'privacy_policy' && <PrivacyPolicy />}
         </div>
         <div className="mx-4 flex justify-end space-x-4">
           <Button

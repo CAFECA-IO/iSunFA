@@ -24,6 +24,16 @@ export default class Report401Generator extends ReportGenerator {
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
   }
 
+  private static isInputTax(code: string): boolean {
+    const inputTaxCodeRegex = new RegExp(`^${SPECIAL_ACCOUNTS.INPUT_TAX.code}`);
+    return inputTaxCodeRegex.test(code);
+  }
+
+  private static isOutputTax(code: string): boolean {
+    const outputTaxCodeRegex = new RegExp(`^${SPECIAL_ACCOUNTS.OUTPUT_TAX.code}`);
+    return outputTaxCodeRegex.test(code);
+  }
+
   /** Info (20240814 - Jacky): 更新銷項資料
    * Updates the sales result based on the provided journal, category, and sales object.
    * If the journal's invoice payment has tax, the payment price is added to the specified category in the sales object.
@@ -43,10 +53,29 @@ export default class Report401Generator extends ReportGenerator {
       if (journal.invoice?.payment.taxPercentage === 0) {
         updatedSales.breakdown[category].zeroTax += journal.invoice?.payment.price ?? 0;
       } else {
-        updatedSales.breakdown[category].sales += journal.invoice?.payment.price ?? 0;
-        updatedSales.breakdown[category].tax += journal.invoice?.payment.taxPrice ?? 0;
-        updatedSales.breakdown.total.sales += journal.invoice?.payment.price ?? 0;
-        updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
+        let taxPrice = 0;
+        if (journal.voucher?.lineItems) {
+          journal.voucher?.lineItems.forEach((lineItem) => {
+            if (Report401Generator.isOutputTax(lineItem.account.code)) {
+              const tax = lineItem.debit ? -lineItem.amount : lineItem.amount;
+              taxPrice += tax;
+            }
+          });
+        }
+
+        // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
+
+        // updatedSales.breakdown[category].sales += journal.invoice?.payment.price ?? 0;
+        // updatedSales.breakdown.total.sales += journal.invoice?.payment.price ?? 0;
+        // updatedSales.breakdown[category].tax += journal.invoice?.payment.taxPrice ?? 0;
+        // updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
+
+        updatedSales.breakdown[category].sales +=
+          (journal.invoice?.payment.price ?? 0) - Math.abs(taxPrice);
+        updatedSales.breakdown.total.sales +=
+          (journal.invoice?.payment.price ?? 0) - Math.abs(taxPrice);
+        updatedSales.breakdown[category].tax += Math.abs(taxPrice);
+        updatedSales.breakdown.total.tax += Math.abs(taxPrice);
       }
     }
     if (journal.voucher?.lineItems) {
@@ -89,15 +118,29 @@ export default class Report401Generator extends ReportGenerator {
     };
     if (journal.voucher?.lineItems) {
       if (journal.invoice?.deductible) {
+        let inputTax = 0;
         journal.voucher?.lineItems.forEach((lineItem) => {
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
+            // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
             fixedAssets.amount += lineItem.amount;
             fixedAssets.tax += lineItem.amount * (journal.invoice?.payment.taxPercentage ?? 0.05);
           }
+
+          // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
+          if (Report401Generator.isInputTax(lineItem.account.code)) {
+            const tax = lineItem.debit ? lineItem.amount : -lineItem.amount;
+            inputTax += tax;
+          }
         });
+
+        // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
+        // generalPurchases = {
+        //   amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
+        //   tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
+        // };
         generalPurchases = {
-          amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
-          tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
+          amount: (journal.invoice?.payment.price ?? 0) - Math.abs(inputTax) - fixedAssets.amount,
+          tax: Math.abs(inputTax) - fixedAssets.tax,
         };
       } else {
         journal.voucher?.lineItems.forEach((lineItem) => {
