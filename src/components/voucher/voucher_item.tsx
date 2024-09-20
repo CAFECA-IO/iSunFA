@@ -71,7 +71,7 @@ const VoucherItem = () => {
   const displayedAccounting = (
     <div className="relative top-20px flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
       {accounting.map((account) => (
-        <p>{account}</p>
+        <p key={account}>{account}</p>
       ))}
     </div>
   );
@@ -81,11 +81,15 @@ const VoucherItem = () => {
       <div className="flex flex-col">
         {/* Info: (20240920 - Julian) credit */}
         {credit.map((cre) => (
-          <p className="text-text-neutral-primary">{numberWithCommas(cre)}</p>
+          <p key={cre} className="text-text-neutral-primary">
+            {numberWithCommas(cre)}
+          </p>
         ))}
         {/* Info: (20240920 - Julian) debit */}
-        {debit.map(() => (
-          <p className="text-text-neutral-tertiary">0</p>
+        {debit.map((d) => (
+          <p key={d} className="text-text-neutral-tertiary">
+            0
+          </p>
         ))}
       </div>
       <hr className="my-10px border-divider-stroke-lv-1" />
@@ -96,12 +100,16 @@ const VoucherItem = () => {
     <>
       <div className="flex flex-col">
         {/* Info: (20240920 - Julian) credit */}
-        {credit.map(() => (
-          <p className="text-text-neutral-tertiary">0</p>
+        {credit.map((c) => (
+          <p key={c} className="text-text-neutral-tertiary">
+            0
+          </p>
         ))}
         {/* Info: (20240920 - Julian) debit */}
         {debit.map((de) => (
-          <p className="text-text-neutral-primary">{numberWithCommas(de)}</p>
+          <p key={de} className="text-text-neutral-primary">
+            {numberWithCommas(de)}
+          </p>
         ))}
       </div>
       <hr className="my-10px border-divider-stroke-lv-1" />

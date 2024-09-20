@@ -70,6 +70,7 @@ const SortingButton = ({
 };
 
 const VoucherList = () => {
+  const [isSelecting, setIsSelecting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
@@ -82,6 +83,8 @@ const VoucherList = () => {
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
   const sideBorderStyles = 'border-r border-stroke-neutral-quaternary';
+
+  const selectToggleHandler = () => setIsSelecting((prev) => !prev);
 
   // Info: (20240920 - Julian) 日期排序按鈕
   const displayedIssuedDate = SortingButton({
@@ -104,6 +107,45 @@ const VoucherList = () => {
     setSortOrder: setDebitSort,
   });
 
+  const displayedSelectArea = (
+    <div className="ml-auto flex items-center gap-24px">
+      {/* Info: (20240920 - Julian) Export Voucher button */}
+      <Button type="button" variant="tertiaryOutline">
+        <MdOutlineFileDownload />
+        <p>Export Voucher</p>
+      </Button>
+      {/* Info: (20240920 - Julian) Delete button */}
+      <div className={isSelecting ? 'block' : 'hidden'}>
+        <Button type="button" variant="tertiary" className="h-44px w-44px p-0">
+          <FaRegTrashAlt />
+        </Button>
+      </div>
+      {/* Info: (20240920 - Julian) Select All & Cancel button */}
+      <button
+        type="button"
+        className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+      >
+        Select All
+      </button>
+      {/* Info: (20240920 - Julian) Cancel selecting button */}
+      <button
+        type="button"
+        onClick={selectToggleHandler}
+        className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+      >
+        Cancel
+      </button>
+      {/* Info: (20240920 - Julian) Select toggle button */}
+      <button
+        type="button"
+        onClick={selectToggleHandler}
+        className={`${isSelecting ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
+      >
+        Select
+      </button>
+    </div>
+  );
+
   const displayedVoucherList = Array.from({ length: 10 }, (_, i) => i + 1).map((i) => {
     return <VoucherItem key={i} />;
   });
@@ -111,21 +153,7 @@ const VoucherList = () => {
   return (
     <div className="flex flex-col gap-40px">
       {/* Info: (20240920 - Julian) export & select button */}
-      <div className="ml-auto flex items-center gap-24px">
-        <Button type="button" variant="tertiaryOutline">
-          <MdOutlineFileDownload />
-          <p>Export Voucher</p>
-        </Button>
-        <Button type="button" variant="tertiary" className="h-44px w-44px p-0">
-          <FaRegTrashAlt />
-        </Button>
-        <button type="button" className="font-semibold text-link-text-primary hover:opacity-70">
-          Select All
-        </button>
-        <button type="button" className="font-semibold text-link-text-primary hover:opacity-70">
-          Cancel
-        </button>
-      </div>
+      {displayedSelectArea}
 
       {/* Info: (20240920 - Julian) Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
