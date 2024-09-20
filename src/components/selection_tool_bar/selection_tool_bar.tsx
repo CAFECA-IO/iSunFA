@@ -107,16 +107,17 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             )}
 
             {/* Info: (20240920 - tzuhan) 右側選擇控制連結 */}
-
-            <button type="button" className="hover:underline" onClick={handleSelectAll}>
-              Select All
-            </button>
-            <button type="button" className="hover:underline" onClick={handleUnselectAll}>
-              Unselect All
-            </button>
-            <button type="button" className="hover:underline" onClick={handleCancel}>
-              Cancel
-            </button>
+            <div className="m-2.5 flex space-x-4">
+              <button type="button" className="hover:underline" onClick={handleSelectAll}>
+                Select All
+              </button>
+              <button type="button" className="hover:underline" onClick={handleUnselectAll}>
+                Unselect All
+              </button>
+              <button type="button" className="hover:underline" onClick={handleCancel}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       ) : (
