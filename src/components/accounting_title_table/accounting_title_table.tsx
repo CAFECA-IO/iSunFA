@@ -2,6 +2,7 @@ import { FaRegSquarePlus } from 'react-icons/fa6';
 import { FiEdit } from 'react-icons/fi';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { MessageType } from '@/interfaces/message_modal';
@@ -30,9 +31,8 @@ const AccountingRow = ({ rowData, actionType }: IAccountingTitleRowProps) => {
     addAccountTitleDataHandler,
     editAccountTitleModalVisibilityHandler,
     editAccountTitleDataHandler,
-    messageModalDataHandler,
-    messageModalVisibilityHandler,
   } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const { deleteOwnAccountTitle } = useAccountingCtx();
   const { id, code, name } = rowData;

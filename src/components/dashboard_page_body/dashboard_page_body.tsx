@@ -14,7 +14,7 @@ const DashboardPageBody = () => {
   const pageHeader = (
     <div className="my-auto flex-1 text-2xl font-semibold text-text-brand-secondary-lv2 max-md:max-w-full lg:text-5xl lg:leading-52px">
       {t('common:DASHBOARD.HELLO_WELCOME_TO')}
-      <span className="text-text-brand-primary-lv2">{companyName}</span>
+      <span className="break-all text-text-brand-primary-lv2">{companyName}</span>
     </div>
   );
   // TODO: (20240603 - Shirley) [Beta] Loading -> get data from API -> display data or no data

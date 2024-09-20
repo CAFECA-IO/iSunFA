@@ -115,6 +115,16 @@
     "DOWNLOAD_TITLE": "下载应用程式",
     "DOWNLOAD_SUBTITLE": "让最实用的工具与您随行"
   },
+  "LANDING_FOOTER": {
+    "QUICK_LINKS": "快速连结",
+    "CONTACT_US": "联络我们",
+    "SERVICE_HOURS": "服务时间",
+    "MON_TO_FRI_9AM_6PM": "周一至周五，上午 09:00 - 下午 06:00",
+    "HOME": "首页",
+    "TERMS_OF_SERVICE": "服务条款",
+    "PRIVACY_POLICY": "隐私权政策",
+    "CONTACT_ADDRESS": "(110416)台湾台北市信义区信义路五段150巷2号13楼之6"
+  },
   "COMING_SOON_PAGE": {
     "TITLE": "Coming Soon",
     "SUBTITLE": "我们的秘密计划即将揭晓！敬请期待！"
@@ -232,8 +242,8 @@
     "ERROR_CODE": "错误代码: {{code}}",
     "CANCEL": "取消",
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "第一次登录时，请阅读并同意",
-    "AGREE_WITH_INFORMATION_COLLECTION_STATEMENT": "同意信息收集声明",
-    "AGREE_WITH_TOS_N_PP": "同意服务条款和隐私政策",
+    "AGREE_TO_OUR_TERMS_OF_SERVICE": "同意我们的服务条款",
+    "AGREE_TO_OUR_PRIVACY_POLICY": "同意我们的隐私权政策",
     "ALPHA_TEST_REMINDER": "Alpha 版本的资料只用于测试",
     "TYPE": "类型",
     "EMPLOYEE": "员工",

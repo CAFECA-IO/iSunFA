@@ -12,6 +12,8 @@ export const ISUNFA_ROUTE = {
   FEATURES: '/#features',
   REPORTS: '/reports',
   CONTACT_US: '/#contact-us',
+  TERMS_OF_SERVICE: '/terms-of-service',
+  PRIVACY_POLICY: '/privacy-policy',
   LOGIN: '/users/login',
   DASHBOARD: '/users/dashboard',
   KYC: '/users/kyc',

@@ -1,11 +1,13 @@
 import prisma from '@/client';
 import { ProgressStatus } from '@/constants/account';
+import { ocrTypes } from '@/constants/ocr';
 import { SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { ocrIncludeFile } from '@/interfaces/ocr';
 import { getTimestampNow } from '@/lib/utils/common';
 import { File, Ocr, Prisma } from '@prisma/client';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export async function findUniqueCompanyInPrisma(companyId: number) {
   let company: {
@@ -18,7 +20,14 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique company in findUniqueCompanyInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique company in findUniqueCompanyInPrisma in ocr.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -31,7 +40,7 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
 
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
   companyId: number,
-  ocrType: string = 'invoice'
+  ocrType: ocrTypes = ocrTypes.INVOICE
 ): Promise<ocrIncludeFile[]> {
   let ocrData: ocrIncludeFile[] = [];
 
@@ -59,7 +68,14 @@ export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
       orderBy,
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find many ocr in findManyOCRByCompanyIdWithoutUsedInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find many ocr by company id without used in findManyOCRByCompanyIdWithoutUsedInPrisma in ocr.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -109,7 +125,8 @@ export async function createOcrInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'create ocr in createOcrInPrisma failed', error as Error);
+    logError.error('Prisma related create ocr in createOcrInPrisma in ocr.repo.ts failed');
   }
 
   return ocrData;

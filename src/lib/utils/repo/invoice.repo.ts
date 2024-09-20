@@ -8,6 +8,7 @@ import { IInvoice, IInvoiceBeta, IInvoiceIncludePaymentJournal } from '@/interfa
 import { IPayment, IPaymentBeta } from '@/interfaces/payment';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { Ocr, Prisma } from '@prisma/client';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 
 export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<{
   id: number;
@@ -33,7 +34,14 @@ export async function findUniqueOcrInPrisma(ocrId: number | undefined): Promise<
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique ocr in findUniqueOcrInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique ocr in findUniqueOcrInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -57,7 +65,14 @@ export async function updateOcrStatusInPrisma(ocrId: number, status: ProgressSta
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'update ocr status in updateOcrStatusInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related update ocr status in updateOcrStatusInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -75,7 +90,14 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
       select: { id: true },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique company in findUniqueCompanyInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique company in findUniqueCompanyInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
@@ -109,7 +131,14 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId?: n
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique journal in findUniqueJournalInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique journal in findUniqueJournalInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return journal;
@@ -134,7 +163,14 @@ export async function createPaymentInPrisma(paymentData: IPaymentBeta) {
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create payment in createPaymentInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create payment in createPaymentInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
   return payment;
@@ -185,10 +221,17 @@ export async function findUniqueInvoiceInPrisma(invoiceId: number, companyId?: n
     });
 
     if (!invoice) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      loggerBack.error('Invoice not found');
     }
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique invoice in findUniqueInvoiceInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique invoice in findUniqueInvoiceInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return invoice;
@@ -230,7 +273,14 @@ export async function createInvoiceInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create invoice in createInvoiceInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create invoice in createInvoiceInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -255,7 +305,14 @@ export async function createInvoiceAndPaymentInPrisma(
       return invoice.id;
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create invoice and payment in createInvoiceAndPaymentInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create invoice or payment in createInvoiceAndPaymentInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -295,7 +352,14 @@ export async function updateInvoiceInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'update invoice in updateInvoiceInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related update invoice in updateInvoiceInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -330,7 +394,14 @@ export async function updateInvoiceAndPaymentInPrisma(
 
     updatedInvoiceId = invoice.id;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'update invoice and payment in updateInvoiceAndPaymentInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related update invoice or payment in updateInvoiceAndPaymentInPrisma in invoice.repo.ts failed'
+    );
   }
   return updatedInvoiceId;
 }
@@ -384,7 +455,14 @@ export async function createJournalInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create journal in createJournalInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create journal in createJournalInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 
@@ -431,7 +509,14 @@ export async function updateJournalInPrisma(
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'update journal in updateJournalInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related update journal in updateJournalInPrisma in invoice.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 
@@ -473,12 +558,14 @@ export async function handlePrismaSavingLogic(
         await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
       }
     } catch (error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(0, 'handlePrismaSavingLogic failed', error as Error);
+      logError.error('Prisma related func. in handlePrismaSavingLogic in invoice.repo.ts failed');
     }
 
     return journalIdBeCreated;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'handlePrismaSavingLogic failed', error as Error);
+    logError.error('Prisma related func. in handlePrismaSavingLogic in invoice.repo.ts failed');
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -524,7 +611,8 @@ export async function handlePrismaUpdateLogic(
       contractId
     );
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'handlePrismaUpdateLogic failed', error as Error);
+    logError.error('Prisma related func. in handlePrismaUpdateLogic in invoice.repo.ts failed');
   }
 
   return journalIdBeUpdated;

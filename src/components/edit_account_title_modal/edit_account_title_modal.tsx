@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { RiDeleteBinLine } from 'react-icons/ri';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
@@ -28,7 +27,8 @@ const EditAccountTitleModal = ({
   modalData,
 }: IEditAccountTitleModalProps) => {
   const { t } = useTranslation(['common', 'setting']);
-  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
   const { getAccountListHandler, deleteOwnAccountTitle } = useAccountingCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;

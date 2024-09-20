@@ -1,57 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse, isParamNumeric } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { getSession } from '@/lib/utils/session';
 import { findUniqueInvoiceInPrisma, handlePrismaUpdateLogic } from '@/lib/utils/repo/invoice.repo';
 import { formatIInvoice } from '@/lib/utils/formatter/invoice.formatter';
-import { isIInvoice } from '@/lib/utils/type_guard/invoice';
+// import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { AICH_URI } from '@/constants/config';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-
-function formatInvoiceId(invoiceId: string | string[] | undefined): number {
-  let invoiceIdInNumber = -1;
-  if (isParamNumeric(invoiceId)) {
-    invoiceIdInNumber = Number(invoiceId);
-  }
-  return invoiceIdInNumber;
-}
-
-function formatGetQuery(req: NextApiRequest) {
-  const { invoiceId } = req.query;
-  const invoiceIdNumber = formatInvoiceId(invoiceId);
-  return invoiceIdNumber;
-}
-
-function formatInvoiceFromBody(invoice: unknown) {
-  if (typeof invoice !== 'object' || invoice === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
-  }
-
-  const formattedInvoice = {
-    ...invoice,
-    projectId: (invoice as { projectId?: unknown }).projectId
-      ? (invoice as { projectId?: unknown }).projectId
-      : null,
-    contractId: (invoice as { contractId?: unknown }).contractId
-      ? (invoice as { contractId?: unknown }).contractId
-      : null,
-    project: (invoice as { project?: unknown }).project
-      ? (invoice as { project?: unknown }).project
-      : null,
-    contract: (invoice as { contract?: unknown }).contract
-      ? (invoice as { contract?: unknown }).contract
-      : null,
-  };
-
-  if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice as IInvoice)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
-  }
-  return formattedInvoice as IInvoice;
-}
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
@@ -116,14 +77,17 @@ async function handleGetRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const invoiceIdNumber = formatGetQuery(req);
-      if (invoiceIdNumber > 0) {
-        const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceIdNumber, companyId);
-        if (invoiceFromDB) {
-          statusMessage = STATUS_MESSAGE.SUCCESS;
-          payload = formatIInvoice(invoiceFromDB);
-        } else {
-          statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      const { query } = validateRequest(APIName.INVOICE_GET_BY_ID, req, userId);
+      if (query) {
+        const { invoiceId } = query;
+        if (invoiceId > 0) {
+          const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceId, companyId);
+          if (invoiceFromDB) {
+            statusMessage = STATUS_MESSAGE.SUCCESS;
+            payload = formatIInvoice(invoiceFromDB);
+          } else {
+            statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+          }
         }
       }
     }
@@ -151,18 +115,21 @@ async function handlePutRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const { invoice: invoiceFromBody } = req.body;
-      const invoiceToUpdate = formatInvoiceFromBody(invoiceFromBody);
-      const fetchResult = uploadInvoiceToAICH(invoiceToUpdate);
+      const { body } = validateRequest(APIName.INVOICE_UPDATE, req, userId);
+      if (body) {
+        const { invoice } = body;
+        // const invoiceToUpdate = formatInvoiceFromBody(invoice);
+        const fetchResult = uploadInvoiceToAICH(invoice);
 
-      const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-      const journalIdBeUpdated = await handlePrismaUpdateLogic(
-        invoiceToUpdate,
-        resultStatus.resultId,
-        companyId
-      );
-      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-      payload = { journalId: journalIdBeUpdated, resultStatus };
+        const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
+        const journalIdBeUpdated = await handlePrismaUpdateLogic(
+          invoice,
+          resultStatus.resultId,
+          companyId
+        );
+        statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+        payload = { journalId: journalIdBeUpdated, resultStatus };
+      }
     }
   }
 

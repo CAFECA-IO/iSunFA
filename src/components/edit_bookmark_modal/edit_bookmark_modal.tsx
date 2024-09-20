@@ -3,10 +3,12 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-// eslint-disable-next-line import/no-cycle
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useTranslation } from 'next-i18next';
 // import logger from '@/lib/utils/logger';
+import { IoIosArrowDown } from 'react-icons/io';
+import { CiCircleCheck, CiCircleRemove, CiCirclePlus } from 'react-icons/ci';
+import { FaXmark } from 'react-icons/fa6';
 
 interface IAddBookmarkModal {
   isModalVisible: boolean;
@@ -36,7 +38,7 @@ const bookmarkNameMap: BookmarkNameMap = {
 const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookmarkModal) => {
   const { t } = useTranslation('common');
   const { bookmarkList, addSelectedBookmarks } = useDashboardCtx();
-  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useGlobalCtx();
+  const { isAddBookmarkModalVisible, addBookmarkModalVisibilityHandler } = useModalContext();
 
   const [selectedBookmark, setSelectedBookmark, selectedBookmarkRef] = useStateRef<string[]>([]);
 
@@ -64,7 +66,6 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
   }, [isAddBookmarkModalVisible]);
 
   const menuOptionClickHandler = (name: string) => {
-    // console.log('selectedBookmark', selectedBookmarkRef.current);
     setSelectedBookmark((prevSelected) => {
       if (prevSelected.includes(name)) {
         return prevSelected.filter((item) => item !== name);
@@ -100,20 +101,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
           <div
             className={`text-base transition-transform duration-300 lg:text-xl ${isMenuOpen ? '' : ''}`} // Info: (20240425 - Shirley) be consistent with other dropdown menu, so remove `-rotate-180`
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill="#314362"
-                fillRule="evenodd"
-                d="M4.472 6.97a.75.75 0 011.06 0l4.47 4.47 4.47-4.47a.75.75 0 011.06 1.061l-5 5a.75.75 0 01-1.06 0l-5-5a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
+            <IoIosArrowDown size={20} className="text-icon-surface-single-color-primary" />
           </div>
         </div>
       </button>
@@ -158,53 +146,11 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
 
                     <div className="flex flex-1 items-center justify-end">
                       {!bookmarkList[key].added && selectedBookmarkRef.current.includes(key) ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          fill="none"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            stroke="#314362"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M6.25 10l2.5 2.5 5-5m4.583 2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
-                          ></path>
-                        </svg>
+                        <CiCircleCheck size={20} />
                       ) : selectedBookmarkRef.current.includes(key) ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          fill="none"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            className="stroke-current"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M12.5 7.5l-5 5m0-5l5 5m5.833-2.5a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
-                          ></path>
-                        </svg>
+                        <CiCircleRemove size={20} />
                       ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          fill="none"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            className="stroke-current"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.5"
-                            d="M10 6.667v6.666M6.667 10h6.666m5 0a8.333 8.333 0 11-16.666 0 8.333 8.333 0 0116.666 0z"
-                          ></path>
-                        </svg>
+                        <CiCirclePlus size={20} />
                       )}
                     </div>
                   </button>
@@ -241,20 +187,7 @@ const EditBookmarkModal = ({ isModalVisible, modalVisibilityHandler }: IAddBookm
               onClick={cancelBtnClickHandler}
               className="flex items-center justify-center"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="30"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#314362"
-                  fillRule="evenodd"
-                  d="M6.296 6.294a1 1 0 011.414 0l4.293 4.293 4.293-4.293a1 1 0 111.414 1.414l-4.293 4.293 4.293 4.293a1 1 0 11-1.414 1.414l-4.293-4.293-4.293 4.293a1 1 0 01-1.414-1.414l4.293-4.293-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
+              <FaXmark size={30} className="text-icon-surface-single-color-primary" />
             </button>
           </div>
         </div>

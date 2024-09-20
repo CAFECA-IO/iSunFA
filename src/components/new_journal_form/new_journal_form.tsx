@@ -9,6 +9,7 @@ import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { PaymentPeriodType, PaymentStatusType, EventType } from '@/constants/account';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec, radioButtonStyle } from '@/constants/display';
@@ -82,13 +83,9 @@ const NewJournalForm = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const disabledAddNewAsset = true;
   // Info: (20240428 - Julian) get values from context
-  const {
-    messageModalVisibilityHandler,
-    messageModalDataHandler,
-    confirmModalVisibilityHandler,
-    addAssetModalVisibilityHandler,
-    confirmModalDataHandler,
-  } = useGlobalCtx();
+  const { addAssetModalVisibilityHandler, confirmModalDataHandler } = useGlobalCtx();
+  const { messageModalVisibilityHandler, messageModalDataHandler, confirmModalVisibilityHandler } =
+    useModalContext();
   const {
     selectedOCR,
     selectOCRHandler,

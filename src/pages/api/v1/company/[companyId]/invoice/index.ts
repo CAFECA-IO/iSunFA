@@ -12,27 +12,25 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { InvoiceType } from '@/constants/invoice';
-
-export interface IPostApiResponseType {
-  journalId: number;
-  resultStatus: IAccountResultStatus;
-}
-
-// Info: (20240416 - Murky) Utils
-function isCompanyIdValid(companyId: unknown): companyId is number {
-  return typeof companyId === 'number';
-}
+import { loggerError, loggerRequest } from '@/lib/utils/logger_back';
+import { APIName, APIPath } from '@/constants/api_connection';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { EventType } from '@/constants/account';
 
 // Info: (20240416 - Murky) Body傳進來會是any
 function formatInvoice(invoice: IInvoice) {
   // Deprecate ( 20240522 - Murky ) For demo purpose, AICH need to remove projectId and contractId
   const now = Date.now(); // Info: (20240807 - Jacky) for fake unique invoice number
-  const invoiceTypeValues = Object.values(InvoiceType); // Info: (20240807 - Jacky) for fake invoice type
-  const randomIndex = Math.floor(Math.random() * invoiceTypeValues.length);
+  // Info: (20240916 - Jacky) default invoice type is PURCHASE_TRIPLICATE_AND_ELECTRONIC
+  let invoiceType = InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC;
+  // Info: (20240916 - Jacky) if eventType is INCOME, then invoice type is SALES_TRIPLICATE_INVOICE
+  if (invoice.eventType === EventType.INCOME) {
+    invoiceType = InvoiceType.SALES_TRIPLICATE_INVOICE;
+  }
   const formattedInvoice = {
     ...invoice,
-    number: now.toString(),
-    type: invoiceTypeValues[randomIndex],
+    number: now.toString() + invoice.journalId,
+    type: invoiceType,
     vendorTaxId: 'temp fake id',
     deductible: true,
     projectId: invoice.projectId ? invoice.projectId : null,
@@ -45,19 +43,6 @@ function formatInvoice(invoice: IInvoice) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
   return formattedInvoice;
-}
-
-// Info: (20240612 - Murky) Body傳進來會是any
-function formatOcrId(ocrId: unknown): number | undefined {
-  if (!ocrId) {
-    return undefined;
-  }
-
-  if (typeof ocrId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-  const ocrIdNumber = Number(ocrId);
-  return ocrIdNumber;
 }
 
 export async function uploadInvoiceToAICH(invoice: IInvoice) {
@@ -74,7 +59,10 @@ export async function uploadInvoiceToAICH(invoice: IInvoice) {
       body: JSON.stringify([invoiceData]),
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'upload invoice to AICH failed', error as Error);
+    logError.error(
+      'upload invoice to AICH failed when fetch in uploadInvoiceToAICH in invoice/index.ts'
+    );
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR_AICH_FAILED);
   }
 
@@ -99,7 +87,10 @@ export async function getPayloadFromResponseJSON(
   try {
     json = await responseJSON;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'get payload from response JSON failed', error as Error);
+    logError.error(
+      'get payload from response JSON failed when await responseJSON in getPayloadFromResponseJSON in invoice/index.ts'
+    );
     throw new Error(STATUS_MESSAGE.PARSE_JSON_FAILED_ERROR);
   }
 
@@ -110,13 +101,18 @@ export async function getPayloadFromResponseJSON(
   return json.payload as IAccountResultStatus;
 }
 
-async function handlePostRequest(companyId: number, req: NextApiRequest) {
+async function handlePostRequest({
+  companyId,
+  invoice,
+  ocrId,
+}: {
+  companyId: number;
+  invoice: IInvoice;
+  ocrId?: number;
+}) {
   // Info (20240612 - Murky) ocrId is optional, if not provided, set it to undefined
-  const { invoice, ocrId } = req.body;
-
   // Deprecate ( 20240522 - Murky ) Need to use type guard instead
   const formattedInvoice = formatInvoice(invoice);
-  const formattedOcrId = formatOcrId(ocrId);
 
   // Post to AICH
   const fetchResult = uploadInvoiceToAICH(formattedInvoice);
@@ -134,56 +130,73 @@ async function handlePostRequest(companyId: number, req: NextApiRequest) {
     formattedInvoice,
     resultStatus.resultId,
     companyId,
-    formattedOcrId
+    ocrId
   );
 
-  const { httpCode, result } = formatApiResponse<IPostApiResponseType>(STATUS_MESSAGE.CREATED, {
+  const payload = {
     journalId,
     resultStatus,
-  });
+  };
+
+  const statusMessage = STATUS_MESSAGE.SUCCESS;
   return {
-    httpCode,
-    result,
+    payload,
+    statusMessage,
   };
 }
 
-function handleErrorResponse(res: NextApiResponse, message: string) {
-  const { httpCode, result } = formatApiResponse<IAccountResultStatus>(
-    message,
-    {} as IAccountResultStatus
-  );
-  res.status(httpCode).json(result);
-}
+type APIReturnType = {
+  journalId: number;
+  resultStatus: IAccountResultStatus;
+} | null;
+
+const methodHandlers: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: (arg: any) => Promise<{ statusMessage: string; payload: APIReturnType }>;
+} = {
+  POST: handlePostRequest,
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPostApiResponseType>>
+  res: NextApiResponse<IResponseData<APIReturnType>>
 ) {
-  try {
-    const session = await getSession(req, res);
-    const { userId, companyId } = session;
-    if (!userId) {
-      throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-    }
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    if (!isAuth) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
-    }
+  const session = await getSession(req, res);
+  const { userId, companyId } = session;
+  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+  let payload: APIReturnType = null;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
 
-    if (!isCompanyIdValid(companyId)) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-    if (req.method === 'POST') {
-      // Handle POST request to create a new invoice
-      const { httpCode, result } = await handlePostRequest(companyId, req);
-      res.status(httpCode).json(result);
+  if (isAuth) {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      const { body } = validateRequest(APIName.INVOICE_CREATE, req, userId);
+      if (body) {
+        ({ statusMessage, payload } = await handleRequest({
+          companyId,
+          invoice: body.invoice,
+          ocrId: body.ocrId,
+        }));
+      }
     } else {
-      throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
-  } catch (_error) {
-    const error = _error as Error;
+  } else {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
 
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-    handleErrorResponse(res, error.message);
+    const logger = loggerRequest(
+      userId,
+      APIPath[APIName.INVOICE_CREATE],
+      req.method || 'unknown',
+      401,
+      { message: 'Unauthorized access' },
+      req.headers['user-agent'] || 'unknown user-agent',
+      req.socket.remoteAddress || 'unknown ip'
+    );
+
+    logger.error('Request validation failed');
   }
+
+  const { httpCode, result } = formatApiResponse<APIReturnType>(statusMessage, payload);
+  res.status(httpCode).json(result);
 }

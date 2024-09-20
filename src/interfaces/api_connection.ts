@@ -31,6 +31,7 @@ export type IAPIName =
   | 'OCR_LIST'
   | 'INVOICE_CREATE'
   | 'INVOICE_UPDATE'
+  | 'INVOICE_GET_BY_ID'
   | 'AI_ASK_STATUS'
   | 'AI_ASK_RESULT'
   | 'VOUCHER_CREATE'
@@ -62,7 +63,8 @@ export type IAPIName =
   | 'CREATE_PROJECT'
   | 'GET_PROJECT_BY_ID'
   | 'UPDATE_PROJECT_BY_ID'
-  | 'PUBLIC_KEY_GET';
+  | 'PUBLIC_KEY_GET'
+  | 'CERTIFICATE_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

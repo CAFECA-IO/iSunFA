@@ -10,6 +10,7 @@ import {
   IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
 import { SortOrder } from '@/constants/sort';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -30,7 +31,14 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
 
     return result;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique journal involve invoice payment in findUniqueJournalInvolveInvoicePaymentInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique journal involve invoice payment in findUniqueJournalInvolveInvoicePaymentInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -48,7 +56,14 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
 
     return result?.id || null;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find first account by name in findFirstAccountByNameInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find first account by name in findFirstAccountByNameInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -75,7 +90,14 @@ export async function findFirstAccountBelongsToCompanyInPrisma(id: string, compa
 
     return result;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find first account belongs to company in findFirstAccountBelongsToCompanyInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find first account belongs to company in findFirstAccountBelongsToCompanyInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -97,7 +119,14 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
       },
     });
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find unique voucher in findUniqueVoucherInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find unique voucher in findUniqueVoucherInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
   return voucherData;
@@ -110,7 +139,9 @@ export async function createLineItemInPrisma(
 ) {
   try {
     if (!lineItem.accountId) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      loggerBack.error(
+        'lineItem.accountId is not provided in createLineItemInPrisma in voucher.repo.ts'
+      );
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
@@ -120,7 +151,9 @@ export async function createLineItemInPrisma(
     );
 
     if (!accountBelongsToCompany) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      loggerBack.error(
+        'Account does not belong to company in createLineItemInPrisma in voucher.repo.ts'
+      );
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
@@ -151,7 +184,14 @@ export async function createLineItemInPrisma(
 
     return result.id;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create line item in createLineItemInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create line item in createLineItemInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -187,7 +227,14 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
 
     return `${localTodayNo}${newVoucherNo}`;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'get latest voucher no in getLatestVoucherNoInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related get latest voucher no in getLatestVoucherNoInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }
@@ -215,7 +262,14 @@ export async function createVoucherInPrisma(newVoucherNo: string, journalId: num
 
     return voucherData;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'create voucher in createVoucherInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related create voucher in createVoucherInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
 }
@@ -260,7 +314,14 @@ export async function findManyVoucherWithCashInPrisma(
 
     return vouchers;
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'find many voucher with cash in findManyVoucherWithCashInPrisma failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find many voucher with cash in findManyVoucherWithCashInPrisma in voucher.repo.ts failed'
+    );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 }

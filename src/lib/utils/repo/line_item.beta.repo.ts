@@ -14,6 +14,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { ILineItem, ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { loggerError } from '@/lib/utils/logger_back';
 
 /**
  * list invoices, return paginated data
@@ -121,7 +122,8 @@ export async function listLineItems({
   try {
     lineItems = await prisma.lineItem.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'Find many line items in listLineItems failed', error as Error);
+    logError.error('Prisma find many line items in listLineItems in line_item.beta.repo.ts failed');
   }
 
   const hasNextPage = lineItems.length > pageSize;
@@ -199,7 +201,8 @@ export async function createLineItem({
   try {
     result = await prisma.lineItem.create(lineItemCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'Create line item in createLineItem failed', error as Error);
+    logError.error('Prisma create line item in createLineItem in line_item.beta.repo.ts failed');
   }
 
   return result;
@@ -262,7 +265,8 @@ export async function updateLineItem({
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'Update line item in updateLineItem failed', error as Error);
+    logError.error('Prisma update line item in updateLineItem in line_item.beta.repo.ts failed');
   }
 
   return result;
@@ -294,7 +298,14 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
   try {
     result = await prisma.lineItem.update(lineItemUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Soft delete line item in deleteLineItem failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma soft delete line item in deleteLineItem in line_item.beta.repo.ts failed'
+    );
   }
 
   return result;

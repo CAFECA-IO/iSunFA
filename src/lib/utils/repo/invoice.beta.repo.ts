@@ -13,6 +13,8 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy } from '@/constants/journal';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { SortOrder } from '@/constants/sort';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+
 /**
  * This function can find Unique Invoice by invoiceId, companyId is optional
  * @param {number} invoiceId you want to find
@@ -49,10 +51,15 @@ export async function findUniqueInvoiceById(
     });
 
     if (!invoice) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      loggerBack.info('No invoice found in findUniqueInvoiceById');
     }
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(
+      0,
+      'Find unique in invoice in findUniqueInvoiceById failed',
+      error as Error
+    );
+    logError.error('Prisma related func. findUniqueInvoiceById in invoice.beta.repo.ts failed');
   }
   return invoice;
 }
@@ -126,7 +133,8 @@ export async function createInvoice(
   try {
     invoiceBeCreated = await prisma.invoice.create(invoiceCreateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'Create invoice in createInvoice failed', error as Error);
+    logError.error('Prisma related invoice creation in invoice.beta.repo.ts failed');
   }
 
   return invoiceBeCreated;
@@ -210,7 +218,8 @@ export async function updateInvoice(
   try {
     invoiceBeUpdated = await prisma.invoice.update(invoiceUpdateArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'Update invoice in updateInvoice failed', error as Error);
+    logError.error('Prisma related invoice update in invoice.beta.repo.ts failed');
   }
 
   return invoiceBeUpdated;
@@ -308,7 +317,8 @@ export async function listInvoice({
   try {
     invoices = await prisma.invoice.findMany(findManyArgs);
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'Find many in invoice in listInvoice failed', error as Error);
+    logError.error('Prisma related func. findMany in listInvoice in invoice.beta.repo.ts failed');
   }
 
   const hasNextPage = invoices.length > pageSize;

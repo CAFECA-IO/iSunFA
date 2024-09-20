@@ -34,6 +34,7 @@ import {
 } from '@/lib/utils/type_guard/report';
 import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
 import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
 
 export function formatTargetPageFromQuery(targetPage: string | string[] | undefined) {
   let targetPageNumber = DEFAULT_PAGE_NUMBER;
@@ -244,7 +245,8 @@ async function generateReport(
 
     reportContent = await financialReportGenerator.generateReport();
   } catch (error) {
-    // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+    const logError = loggerError(0, 'generateReport failed', error as Error);
+    logError.error('Func. generateReport in company/companyId/report/index.ts failed');
   }
   return reportContent;
 }

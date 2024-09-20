@@ -18,16 +18,12 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
-// import logger from '@/lib/utils/logger';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { ocrTypes } from '@/constants/ocr';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 // Info: (20240522 - Murky) This OCR now can only be used on Invoice
-
-export function isResultIdValid(resultId: string | string[] | undefined): resultId is string {
-  if (Array.isArray(resultId) || !resultId || typeof resultId !== 'string') {
-    return false;
-  }
-  return true;
-}
 
 export async function fetchOCRResult(resultId: string) {
   let response: Response;
@@ -99,26 +95,26 @@ export function formatOCRResultDate(ocrResult: IInvoice) {
   return newOcrResult;
 }
 
-export async function handleGetRequest(resultId: string, type: string = 'invoice') {
+export async function handleGetRequest(resultId: string, ocrType: ocrTypes = ocrTypes.INVOICE) {
   let ocrResult: IInvoice | IContract | null = null;
 
   const isResultIdError = resultId && resultId.slice(0, 5) === 'error';
   if (resultId && resultId.length >= 0 && !isResultIdError) {
     const fetchResult = fetchOCRResult(resultId);
-    switch (type) {
-      case 'contract': {
+    switch (ocrType) {
+      case ocrTypes.CONTRACT: {
         ocrResult = {} as IContract;
 
         break;
       }
-      case 'invoice': {
+      case ocrTypes.INVOICE: {
         ocrResult = await getPayloadFromResponseJSON(fetchResult);
         if (ocrResult) {
           let newOcr: IInvoice | null = setOCRResultJournalId(ocrResult, null);
           newOcr = formatOCRResultDate(newOcr);
 
           if (!isIInvoice(newOcr)) {
-            // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+            loggerBack.info('ocr/[resultId]: OCR result(newOcr) is not an invoice type');
             newOcr = null;
           }
 
@@ -169,22 +165,26 @@ export default async function handler(
   let payload: APIReturnType = null;
   let status: string = STATUS_MESSAGE.BAD_REQUEST;
 
-  const { resultId, type } = req.query;
   if (isAuth) {
     try {
-      if (!isResultIdValid(resultId)) {
-        throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-      }
-
       switch (req.method) {
         case 'GET': {
-          payload = await handleGetRequest(resultId, type as string);
-          status = STATUS_MESSAGE.SUCCESS;
+          const { query } = validateRequest(APIName.OCR_RESULT_GET_BY_ID, req, userId);
+          if (query) {
+            const { resultId, ocrType } = query;
+            payload = await handleGetRequest(resultId, ocrType);
+            status = STATUS_MESSAGE.SUCCESS;
+          }
           break;
         }
         case 'DELETE': {
-          payload = await handleDeleteRequest(resultId);
-          status = STATUS_MESSAGE.SUCCESS_DELETE;
+          const { query } = validateRequest(APIName.OCR_DELETE, req, userId);
+
+          if (query) {
+            const { resultId } = query;
+            payload = await handleDeleteRequest(resultId);
+            status = STATUS_MESSAGE.SUCCESS_DELETE;
+          }
           break;
         }
         default: {
@@ -192,7 +192,8 @@ export default async function handler(
         }
       }
     } catch (_error) {
-      // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
+      const logError = loggerError(userId, 'handle OCR request failed', _error as Error);
+      logError.error('handle OCR request failed in handler function in ocr/[resultId]/index.ts');
       status = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

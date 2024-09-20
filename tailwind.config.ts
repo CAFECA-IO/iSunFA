@@ -730,6 +730,7 @@ module.exports = {
         '36px': ['36px', '44px'],
         '40px': ['40px', '44px'],
         '5xl': ['42px', 1],
+        '44px': ['44px', '52px'],
         '48px': ['48px', '52px'],
         '6xl': ['56px', '60px'],
         '7xl': ['72px', 1],
@@ -769,6 +770,10 @@ module.exports = {
         md: '768px', // tablet
         lg: '1024px', // desktop
         xl: '1440px',
+
+        tablet: '768px',
+        laptop: '1024px',
+        desktop: '1440px',
       },
       container: {
         center: true,
@@ -1300,6 +1305,7 @@ module.exports = {
       fontFamily: {
         roboto: ['Roboto', 'sans-serif', 'ui-sans-serif', 'system-ui'],
         barlow: ['Barlow', 'sans-serif', 'ui-sans-serif', 'system-ui'],
+        poppins: ['Poppins', 'sans-serif'],
       },
       width: {
         'full-available': '-webkit-fill-available',

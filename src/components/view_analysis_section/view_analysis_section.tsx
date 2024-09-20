@@ -18,12 +18,10 @@ const ViewAnalysisSection = ({
   const { t } = useTranslation(['common', 'journal']);
   const copyTokenContract = () => {
     navigator.clipboard.writeText(tokenContract);
-    window.alert(`Token contract ${tokenContract} copied to clipboard!`);
   };
 
   const copyTokenId = () => {
     navigator.clipboard.writeText(tokenId);
-    window.alert(`Token ID ${tokenId} copied to clipboard!`);
   };
 
   const copyTokenContractClickHandler = () => {

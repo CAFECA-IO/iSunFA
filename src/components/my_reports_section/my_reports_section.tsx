@@ -15,6 +15,7 @@ import Pagination from '@/components/pagination/pagination';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { useUserCtx } from '@/contexts/user_context';
@@ -38,12 +39,12 @@ const MyReportsSection = () => {
   // TODO: (20240528 - Shirley) [Beta] 區分 pending 跟 history 兩種 filter options
   // TODO: (20240528 - Shirley) [Beta] filterOptionsGotFromModal for API queries in mobile devices
   const {
-    toastHandler,
     filterOptionsModalVisibilityHandler,
     // TODO: (20240613 - Shirley) [Beta] get filter options and send to API queries
     // filterOptionsForHistory,
     // filterOptionsForPending,
   } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
 
   const { pending, history } = router.query;
 

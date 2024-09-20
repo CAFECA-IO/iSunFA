@@ -12,16 +12,26 @@ import {
 } from '@/interfaces/report';
 import { getCompanyKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
-import { STATUS_MESSAGE } from '@/constants/status_code';
 import { listJournalFor401 } from '@/lib/utils/repo/journal.repo';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { IJournalIncludeVoucherLineItemsInvoicePayment } from '@/interfaces/journal';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
+import { CompanyKYC } from '@prisma/client';
 
 export default class Report401Generator extends ReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.REPORT_401;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
+  }
+
+  private static isInputTax(code: string): boolean {
+    const inputTaxCodeRegex = new RegExp(`^${SPECIAL_ACCOUNTS.INPUT_TAX.code}`);
+    return inputTaxCodeRegex.test(code);
+  }
+
+  private static isOutputTax(code: string): boolean {
+    const outputTaxCodeRegex = new RegExp(`^${SPECIAL_ACCOUNTS.OUTPUT_TAX.code}`);
+    return outputTaxCodeRegex.test(code);
   }
 
   /** Info (20240814 - Jacky): 更新銷項資料
@@ -43,10 +53,29 @@ export default class Report401Generator extends ReportGenerator {
       if (journal.invoice?.payment.taxPercentage === 0) {
         updatedSales.breakdown[category].zeroTax += journal.invoice?.payment.price ?? 0;
       } else {
-        updatedSales.breakdown[category].sales += journal.invoice?.payment.price ?? 0;
-        updatedSales.breakdown[category].tax += journal.invoice?.payment.taxPrice ?? 0;
-        updatedSales.breakdown.total.sales += journal.invoice?.payment.price ?? 0;
-        updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
+        let taxPrice = 0;
+        if (journal.voucher?.lineItems) {
+          journal.voucher?.lineItems.forEach((lineItem) => {
+            if (Report401Generator.isOutputTax(lineItem.account.code)) {
+              const tax = lineItem.debit ? -lineItem.amount : lineItem.amount;
+              taxPrice += tax;
+            }
+          });
+        }
+
+        // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
+
+        // updatedSales.breakdown[category].sales += journal.invoice?.payment.price ?? 0;
+        // updatedSales.breakdown.total.sales += journal.invoice?.payment.price ?? 0;
+        // updatedSales.breakdown[category].tax += journal.invoice?.payment.taxPrice ?? 0;
+        // updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
+
+        updatedSales.breakdown[category].sales +=
+          (journal.invoice?.payment.price ?? 0) - Math.abs(taxPrice);
+        updatedSales.breakdown.total.sales +=
+          (journal.invoice?.payment.price ?? 0) - Math.abs(taxPrice);
+        updatedSales.breakdown[category].tax += Math.abs(taxPrice);
+        updatedSales.breakdown.total.tax += Math.abs(taxPrice);
       }
     }
     if (journal.voucher?.lineItems) {
@@ -89,15 +118,29 @@ export default class Report401Generator extends ReportGenerator {
     };
     if (journal.voucher?.lineItems) {
       if (journal.invoice?.deductible) {
+        let inputTax = 0;
         journal.voucher?.lineItems.forEach((lineItem) => {
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
+            // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
             fixedAssets.amount += lineItem.amount;
             fixedAssets.tax += lineItem.amount * (journal.invoice?.payment.taxPercentage ?? 0.05);
           }
+
+          // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
+          if (Report401Generator.isInputTax(lineItem.account.code)) {
+            const tax = lineItem.debit ? lineItem.amount : -lineItem.amount;
+            inputTax += tax;
+          }
         });
+
+        // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
+        // generalPurchases = {
+        //   amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
+        //   tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
+        // };
         generalPurchases = {
-          amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
-          tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
+          amount: (journal.invoice?.payment.price ?? 0) - Math.abs(inputTax) - fixedAssets.amount,
+          tax: Math.abs(inputTax) - fixedAssets.tax,
         };
       } else {
         journal.voucher?.lineItems.forEach((lineItem) => {
@@ -198,20 +241,21 @@ export default class Report401Generator extends ReportGenerator {
     from: number,
     to: number
   ): Promise<TaxReport401> {
-    const companyKYC = await getCompanyKYCByCompanyId(companyId);
+    const companyKYC: CompanyKYC | null = await getCompanyKYCByCompanyId(companyId);
     if (!companyKYC) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      // Info: (20240912 - Murky) temporary allow to generate report without KYC
+      // throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
     const ROCStartDate = convertTimestampToROCDate(from);
     const ROCEndDate = convertTimestampToROCDate(to);
     // 1. 獲取所有發票
     const journalList = await listJournalFor401(companyId, from, to);
     const basicInfo = {
-      uniformNumber: companyKYC.registrationNumber,
-      businessName: companyKYC.legalName,
-      personInCharge: companyKYC.representativeName,
+      uniformNumber: companyKYC?.registrationNumber ?? '',
+      businessName: companyKYC?.legalName ?? '',
+      personInCharge: companyKYC?.representativeName ?? '',
       taxSerialNumber: 'ABC123', // TODO (20240808 - Jacky): Implement this field in next sprint
-      businessAddress: companyKYC.address,
+      businessAddress: companyKYC?.address ?? '',
       currentYear: ROCStartDate.year.toString(),
       startMonth: ROCStartDate.month.toString(),
       endMonth: ROCEndDate.month.toString(),

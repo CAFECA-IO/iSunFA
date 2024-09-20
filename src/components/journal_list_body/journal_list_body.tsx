@@ -21,7 +21,7 @@ import {
 } from '@/constants/journal';
 import JournalList from '@/components/journal_list/journal_list';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { cn } from '@/lib/utils/common';
@@ -32,7 +32,8 @@ import { Button } from '@/components/button/button';
 
 const JournalListBody = () => {
   const { t } = useTranslation(['common', 'journal']);
-  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
+    useModalContext();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const [pagenatedJournalListItems, setPagenatedJournalListItems] = useState<{

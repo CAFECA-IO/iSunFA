@@ -4,7 +4,7 @@ import {
   generateSavePath,
   uploadFileToGoogleCloud,
 } from '@/lib/utils/google_image_upload';
-import logger from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 
 function isChinese(name: string): boolean {
   return /[\u3400-\u9FBF]/.test(name);
@@ -102,7 +102,7 @@ export async function generateIcon(name: string) {
     mimeType = mimeAndSize.mimeType;
     size = mimeAndSize.size;
   } catch (error) {
-    logger.error(error, 'Error happened in generateIcon in generate_user_icon.ts');
+    loggerBack.error(error, 'Error happened in generateIcon in generate_user_icon.ts');
   }
   return {
     iconUrl,

@@ -12,7 +12,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useRouter } from 'next/router';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 
 interface IJournalItemProps {
@@ -38,7 +38,7 @@ const Operations = ({
   const router = useRouter();
   const { t } = useTranslation(['common', 'journal']);
   const { selectJournalHandler } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
 
   const editJournalHandler = async () => {
@@ -142,7 +142,7 @@ const JournalItem = ({
   };
 
   const debitItem = lineItems
-    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
+    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -150,7 +150,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
+    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
     : defaultItem;
   const credit = {
     account: creditItem.account,
@@ -321,10 +321,14 @@ export const JournalItemMobile = ({
   onDelete,
 }: IJournalItemProps) => {
   const { t } = useTranslation(['common', 'journal']);
-  const { id, date, type: eventType, particulars: description, voucherNo } = journal;
+  const {
+    id,
+    date: createdTimestamp,
+    type: eventType,
+    particulars: description,
+    voucherNo,
+  } = journal;
   const price = 0; // ToDo: (20240528 - Julian) [Beta] Interface lacks price
-
-  const createdTimestamp = date / 1000; // Info: (20240517 - Julian) 需轉換成十位數的 timestamp
 
   const displayedTypeMobile =
     // Info: (20240517 - Julian) 費用

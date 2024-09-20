@@ -10,7 +10,7 @@ import DocumentUploadForm from '@/components/kyc/document_upload_form';
 import { initialUploadDocuments, IUploadDocuments } from '@/interfaces/kyc_document_upload';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import {
   RepresentativeIDType,
@@ -33,7 +33,7 @@ const KYCForm = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { trigger: triggerUpload } = APIHandler(APIName.KYC_UPLOAD);
   const [step, setStep] = useState(0);
   const [basicInfoValues, setBasicInfoValues] = useState<IBasicInfo>(initialBasicInfo);
@@ -103,6 +103,7 @@ const KYCForm = () => {
       ...intUploadDocuments,
     };
     const { isComplete, missingFields } = isKYCFormComplete(companyKYCForm);
+
     if (isComplete) {
       const { success, code } = await triggerUpload({
         params: {

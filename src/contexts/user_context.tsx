@@ -88,8 +88,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
-  const [, setIsAgreeInfoCollection, isAgreeInfoCollectionRef] = useStateRef(false);
-  const [, setIsAgreeTosNPrivacyPolicy, isAgreeTosNPrivacyPolicyRef] = useStateRef(false);
+  const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
+  const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false);
   const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
     success: boolean;
     data: null;
@@ -134,7 +134,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleSignInRoute = () => {
-    if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
+    if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     }
   };
@@ -176,7 +176,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleReturnUrl = () => {
-    if (isAgreeInfoCollectionRef.current && isAgreeTosNPrivacyPolicyRef.current) {
+    if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
       if (returnUrl) {
         const urlString = decodeURIComponent(returnUrl);
         setReturnUrl(null);
@@ -253,7 +253,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
    *     - 用戶需要閱讀並同意這些條款。
    * 13. 當用戶同意條款時：
    *     - 調用 `handleUserAgree` 函數，該函數會發送 API 請求（`agreementAPI`）來更新用戶的同意狀態。
-   *     - 如果 API 請求成功，更新本地 state 中的用戶同意狀態（`setIsAgreeInfoCollection` 和 `setIsAgreeTosNPrivacyPolicy`）。
+   *     - 如果 API 請求成功，更新本地 state 中的用戶同意狀態（`setIsAgreeTermsOfService` 和 `setIsAgreePrivacyPolicy`）。
    * 14. 當用戶同意所有必要的條款後：
    *     - 如果用戶尚未選擇公司，系統會將用戶重定向到選擇公司的頁面。
    *     - 如果用戶已經選擇了公司，系統會將用戶重定向到儀表板或之前嘗試訪問的頁面（如果有的話）。
@@ -291,15 +291,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           setIsSignInError(false);
           localStorage.setItem('userId', StatusInfo.user.id.toString());
           localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
-          if (StatusInfo.user.agreementList.includes(Hash.INFO_COLLECTION)) {
-            setIsAgreeInfoCollection(true);
+          if (StatusInfo.user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE)) {
+            setIsAgreeTermsOfService(true);
           } else {
-            setIsAgreeInfoCollection(false);
+            setIsAgreeTermsOfService(false);
           }
-          if (StatusInfo.user.agreementList.includes(Hash.TOS_N_PP)) {
-            setIsAgreeTosNPrivacyPolicy(true);
+          if (StatusInfo.user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY)) {
+            setIsAgreePrivacyPolicy(true);
           } else {
-            setIsAgreeTosNPrivacyPolicy(false);
+            setIsAgreePrivacyPolicy(false);
           }
           if (
             'company' in StatusInfo &&
@@ -346,11 +346,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
       setUserAgreeResponse(response);
       setIsAuthLoading(false);
-      if (hash === Hash.INFO_COLLECTION) {
-        setIsAgreeInfoCollection(true);
+      if (hash === Hash.HASH_FOR_TERMS_OF_SERVICE) {
+        setIsAgreeTermsOfService(true);
       }
-      if (hash === Hash.TOS_N_PP) {
-        setIsAgreeTosNPrivacyPolicy(true);
+      if (hash === Hash.HASH_FOR_PRIVACY_POLICY) {
+        setIsAgreePrivacyPolicy(true);
       }
     } catch (error) {
       setUserAgreeResponse({
@@ -368,6 +368,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await authSignIn(
         selectProvider,
         { redirect: false },
+        // Info: (20240909 - Anna) TypeScript 本身已經有型別檢查系統。因此 ESLint 不需要針對 TypeScript 檔案強制使用 prop-types。因此這裡的ESLint註解不做移除。
         // eslint-disable-next-line react/prop-types
         { invitation: props.invitation }
       );
@@ -405,7 +406,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const res = await selectCompanyAPI({
       params: {
-        companyId: !company && !isPublic ? -1 : company?.id ?? FREE_COMPANY_ID,
+        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
       },
     });
 
@@ -475,8 +476,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
-      isAgreeInfoCollection: isAgreeInfoCollectionRef.current,
-      isAgreeTosNPrivacyPolicy: isAgreeTosNPrivacyPolicyRef.current,
+      isAgreeInfoCollection: isAgreeTermsOfServiceRef.current,
+      isAgreeTosNPrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,

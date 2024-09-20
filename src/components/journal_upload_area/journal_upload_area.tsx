@@ -5,7 +5,7 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { ProgressStatus } from '@/constants/account';
 import { MessageType } from '@/interfaces/message_modal';
@@ -34,7 +34,8 @@ const JournalUploadArea = () => {
     deletePendingOCRHandler,
     pendingOCRListFromBrowser,
   } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } = useGlobalCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
 
   const { trigger: uploadInvoiceImgToLocal } = APIHandler<IFile>(APIName.FILE_UPLOAD);
 
