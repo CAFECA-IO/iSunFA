@@ -1,17 +1,33 @@
+import { ICertificate } from '@/interfaces/certificate';
 import React from 'react';
 
-const CertificateItem = () => {
+interface CertificateItemProps {
+  data: ICertificate; // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
+}
+
+const CertificateItem: React.FC<CertificateItemProps> = ({ data }) => {
+  const {
+    date,
+    invoiceName,
+    taxID,
+    businessTaxFormatCode,
+    deductible,
+    priceBeforeTax,
+    tax,
+    totalPrice,
+    voucherNo,
+  } = data;
   return (
     <tr>
-      <td className="p-2">2024/01/01</td>
-      <td className="p-2">Invoice 000001</td>
-      <td className="p-2">59373022</td>
-      <td className="p-2">23. Proof of Return or Discount for ...</td>
-      <td className="p-2">Yes</td>
-      <td className="p-2">1,785,000 NTD</td>
-      <td className="p-2">Taxable 5%</td>
-      <td className="p-2">1,785,000 NTD</td>
-      <td className="p-2">20240417-001</td>
+      <td className="p-2">{date}</td>
+      <td className="p-2">{invoiceName}</td>
+      <td className="p-2">{taxID}</td>
+      <td className="p-2">{businessTaxFormatCode}</td>
+      <td className="p-2">{deductible}</td>
+      <td className="p-2">{priceBeforeTax}</td>
+      <td className="p-2">{tax}</td>
+      <td className="p-2">{totalPrice}</td>
+      <td className="p-2">{voucherNo}</td>
     </tr>
   );
 };

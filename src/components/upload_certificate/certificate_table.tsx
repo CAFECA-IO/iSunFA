@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import CertificateItem from '@/components/upload_certificate/certificate_item';
 import Pagination from '@/components/upload_certificate/pagination'; // 引入 Pagination 組件
+import { ICertificate } from '@/interfaces/certificate';
 
 interface CertificateTableProps {
-  data: unknown[]; // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
+  data: ICertificate[]; // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
 }
 
 // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const CertificateTable: React.FC<CertificateTableProps> = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Info: (20240919 - tzuhan) 每頁顯示的項目數
@@ -33,8 +34,8 @@ const CertificateTable: React.FC<CertificateTableProps> = ({ data }) => {
           </thead>
           <tbody>
             {/* Deprecated: (20240919 - tzuhan) Example of dynamic rows, should map actual data here */}
-            {[...Array(10)].map((_, index) => (
-              <CertificateItem key={`certificate-item-${index + 1}`} />
+            {data.map((certificate, index) => (
+              <CertificateItem data={certificate} key={`certificate-item-${index + 1}`} />
             ))}
           </tbody>
         </table>
