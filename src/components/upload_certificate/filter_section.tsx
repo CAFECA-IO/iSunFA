@@ -157,7 +157,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         </label>
       </div>
 
-      {/* 排序選項 */}
+      {/* Info: (20240919 - tzuhan) 排序選項 */}
       {sortingOptions.length > 0 && (
         <div className="flex min-w-150px flex-col">
           <label htmlFor="sort" className="text-sm font-medium text-gray-500">
@@ -178,7 +178,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         </div>
       )}
 
-      {/* 顯示風格切換 */}
+      {/* Info: (20240919 - tzuhan) 顯示風格切換 */}
       <div className="flex min-w-150px items-center space-x-2">
         <button
           type="button"

@@ -15,7 +15,7 @@ const UploadCertificatePage: React.FC = () => {
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
 
   const handleApiResponse = (resData: unknown[]) => {
-    setData(resData); // 假設 API 回應中有 data 屬性
+    setData(resData); // Info: (20240919 - tzuhan) 假設 API 回應中有 data 屬性
   };
 
   return (
@@ -24,20 +24,20 @@ const UploadCertificatePage: React.FC = () => {
         <title>Upload Certificate</title>
       </Head>
 
-      {/* Side Menu */}
+      {/* Info: (20240919 - tzuhan) Side Menu */}
       <SideMenu />
 
-      {/* Main Content Area */}
+      {/* Info: (20240919 - tzuhan) Main Content Area */}
       <div className="flex flex-1 flex-col bg-gray-100">
-        {/* Header */}
+        {/* Info: (20240919 - tzuhan) Header */}
         <Header />
 
-        {/* Main Content */}
+        {/* Info: (20240919 - tzuhan) Main Content */}
         <div className="space-y-4 overflow-scroll p-6">
-          {/* Upload Area */}
+          {/* Info: (20240919 - tzuhan) Upload Area */}
           <UploadArea />
 
-          {/* Tabs */}
+          {/* Info: (20240919 - tzuhan) Tabs */}
           <Tabs
             tabs={['Certificates Pending Voucher', 'Certificates with Issued Voucher']}
             activeTab={activeTab}
@@ -45,7 +45,7 @@ const UploadCertificatePage: React.FC = () => {
             counts={[0, 1]}
           />
 
-          {/* Filter Section */}
+          {/* Info: (20240919 - tzuhan) Filter Section */}
           <FilterSection
             apiName={APIName.CERTIFICATE_LIST}
             types={['Invoice', 'Receipt']}
@@ -60,12 +60,12 @@ const UploadCertificatePage: React.FC = () => {
             viewToggleHandler={setViewType}
           />
 
-          {/* Certificate Table */}
+          {/* Info: (20240919 - tzuhan) Certificate Table */}
           <CertificateTable data={data} />
         </div>
       </div>
 
-      {/* Floating Upload Popup */}
+      {/* Info: (20240919 - tzuhan) Floating Upload Popup */}
       <FloatingUploadPopup />
     </div>
   );
