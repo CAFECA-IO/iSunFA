@@ -3,6 +3,7 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
+import { checkboxStyle } from '@/constants/display';
 
 enum VoucherType {
   RECEIVED = 'Received',
@@ -34,6 +35,12 @@ const VoucherItem = () => {
 
   // Info: (20240920 - Julian) 借貸總和
   const total = credit.reduce((acc, cur) => acc + cur, 0);
+
+  const displayedCheckbox = (
+    <div className="relative top-20px px-8px">
+      <input type="checkbox" className={checkboxStyle} />
+    </div>
+  );
 
   const displayedDate = (
     <div className="relative top-10px">
@@ -119,6 +126,8 @@ const VoucherItem = () => {
 
   return (
     <div className="table-row font-medium">
+      {/* Info: (20240920 - Julian) Select */}
+      <div className="table-cell text-center">{displayedCheckbox}</div>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}

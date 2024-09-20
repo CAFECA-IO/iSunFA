@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { BsFillTriangleFill } from 'react-icons/bs';
 import { MdOutlineFileDownload } from 'react-icons/md';
+import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
+import Pagination from '@/components/pagination/pagination';
+import { checkboxStyle } from '@/constants/display';
 
 enum SortOrder {
   ASC = 'asc',
@@ -67,9 +70,14 @@ const SortingButton = ({
 };
 
 const VoucherList = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
+
+  // ToDo: (20240920 - Julian) dummy data
+  const totalPage = 10;
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
@@ -101,23 +109,32 @@ const VoucherList = () => {
   });
 
   return (
-    <div className="flex flex-col gap-16px">
+    <div className="flex flex-col gap-40px">
       {/* Info: (20240920 - Julian) export & select button */}
       <div className="ml-auto flex items-center gap-24px">
         <Button type="button" variant="tertiaryOutline">
           <MdOutlineFileDownload />
           <p>Export Voucher</p>
         </Button>
+        <Button type="button" variant="tertiary" className="h-44px w-44px p-0">
+          <FaRegTrashAlt />
+        </Button>
         <button type="button" className="font-semibold text-link-text-primary hover:opacity-70">
-          Select
+          Select All
+        </button>
+        <button type="button" className="font-semibold text-link-text-primary hover:opacity-70">
+          Cancel
         </button>
       </div>
 
       {/* Info: (20240920 - Julian) Table */}
-      <div className="table overflow-hidden rounded-t-lg bg-surface-neutral-surface-lv2">
+      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group h-60px border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              <input type="checkbox" className={checkboxStyle} />
+            </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>Voucher No.</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>Note</div>
@@ -131,6 +148,18 @@ const VoucherList = () => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedVoucherList}</div>
+
+        {/* Info: (20240920 - Julian) ---------------- Table Footer(排版用) ---------------- */}
+        <div className="table-footer-group h-40px"></div>
+      </div>
+
+      {/* Info: (20240920 - Julian) Pagination */}
+      <div className="mx-auto">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPage}
+          setCurrentPage={setCurrentPage}
+        />
       </div>
     </div>
   );
