@@ -213,36 +213,38 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
       companyId,
     };
 
-    const include = {
-      project: {
-        include: {
-          imageFile: true,
+    journal = await prisma.journal.findUnique({
+      where,
+      include: {
+        project: {
+          include: {
+            imageFile: true,
+          },
         },
-      },
-      contract: true,
-      invoice: {
-        include: {
-          payment: true,
-          imageFile: true,
+        contract: true,
+        invoice: {
+          include: {
+            payment: true,
+            imageFile: true,
+          },
         },
-      },
-      voucher: {
-        include: {
-          lineItems: {
-            include: {
-              account: true,
+        voucher: {
+          include: {
+            lineItems: {
+              include: {
+                account: true,
+              },
+              orderBy: {
+                account: {
+                  debit: 'desc',
+                },
+                id: 'asc',
+              },
             },
           },
         },
       },
-    };
-
-    const findUniqueArgs = {
-      where,
-      include,
-    };
-
-    journal = await prisma.journal.findUnique(findUniqueArgs);
+    });
   } catch (error) {
     const logError = loggerError(
       0,

@@ -1,5 +1,9 @@
 import { APIName } from '@/constants/api_connection';
 import {
+  certificateGetOneValidator,
+  certificateListValidator,
+} from '@/lib/utils/zod_schema/certificate';
+import {
   invoiceCreateValidator,
   invoiceGetByIdValidator,
   invoiceUpdateValidator,
@@ -45,4 +49,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.JOURNAL_GET_BY_ID]: journalGetByIdValidator,
   [APIName.JOURNAL_DELETE]: journalDeleteValidator,
   [APIName.KYC_UPLOAD]: kycUploadValidator,
+
+  // Info: (20240924 - Murky) V2 Down below
+  [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
+  [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
 };
