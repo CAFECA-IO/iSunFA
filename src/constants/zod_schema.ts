@@ -3,6 +3,7 @@ import {
   certificateGetOneValidator,
   certificateListValidator,
   certificatePostValidator,
+  certificatePutValidator,
 } from '@/lib/utils/zod_schema/certificate';
 import {
   invoiceCreateValidator,
@@ -55,4 +56,5 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
+  [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
 };

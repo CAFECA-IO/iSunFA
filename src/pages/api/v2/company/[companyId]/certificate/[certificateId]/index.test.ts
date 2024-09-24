@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { handleGetRequest } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/index';
+import {
+  handleGetRequest,
+  handlePutRequest,
+} from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { certificateReturnValidator } from '@/lib/utils/zod_schema/certificate';
 
@@ -44,7 +47,7 @@ afterEach(() => {
 });
 
 describe('company/[companyId]/certificate/[certificateId]', () => {
-  describe('GET Certificate List', () => {
+  describe('GET Certificate One', () => {
     it('should match patter', async () => {
       req.query = {
         certificateId: '1',
@@ -56,6 +59,36 @@ describe('company/[companyId]/certificate/[certificateId]', () => {
       const parseData = certificateReturnValidator.safeParse(payload);
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_LIST);
+      expect(parseData.success).toBe(true);
+    });
+  });
+
+  describe('PUT Certificate One', () => {
+    it('should match patter', async () => {
+      req.query = {
+        certificateId: '1',
+      };
+      req.body = {
+        inputOrOutput: 'input',
+        certificateDate: 10000001,
+        certificateNo: 'AB-12345678',
+        currencyAlias: 'TWD',
+        priceBeforeTax: 4000,
+        taxRatio: 5,
+        taxPrice: 200,
+        totalPrice: 4200,
+        counterPartyId: 1,
+        invoiceType: 'triplicate_uniform_invoice',
+        deductible: true,
+        connectToId: null,
+        fileId: 1,
+      };
+
+      const { payload, statusMessage } = await handlePutRequest(req, res);
+
+      const parseData = certificateReturnValidator.safeParse(payload);
+
+      expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_UPDATE);
       expect(parseData.success).toBe(true);
     });
   });
