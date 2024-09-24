@@ -4,12 +4,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
-
-enum VoucherType {
-  RECEIVED = 'Received',
-  PAYMENT = 'Payment',
-  TRANSFER = 'Transfer',
-}
+import { VoucherType } from '@/constants/voucher';
 
 const VoucherItem = ({ isSelecting }: { isSelecting: boolean }) => {
   // ToDo: (20240920 - Julian) dummy data
