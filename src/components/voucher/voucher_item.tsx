@@ -11,7 +11,7 @@ enum VoucherType {
   TRANSFER = 'Transfer',
 }
 
-const VoucherItem = () => {
+const VoucherItem = ({ isSelecting }: { isSelecting: boolean }) => {
   // ToDo: (20240920 - Julian) dummy data
   const date: number = new Date().getTime() / 1000;
   const voucherNo: string = '20240920-0001';
@@ -135,7 +135,9 @@ const VoucherItem = () => {
   return (
     <div className="table-row font-medium">
       {/* Info: (20240920 - Julian) Select */}
-      <div className="table-cell text-center">{displayedCheckbox}</div>
+      <div className={`${isSelecting ? 'table-cell' : 'hidden'} text-center`}>
+        {displayedCheckbox}
+      </div>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
