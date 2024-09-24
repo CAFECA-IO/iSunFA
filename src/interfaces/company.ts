@@ -12,6 +12,18 @@ export interface ICompany {
   updatedAt: number;
 }
 
+export interface ICompanyBeta {
+  id: number;
+  taxId: string;
+  imageId: string;
+  name: string;
+  regional: string;
+  tag: string;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface ICompanyDetail extends ICompany {
   ownerId: number;
   kycStatusDetail: string;

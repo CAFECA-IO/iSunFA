@@ -2,6 +2,10 @@ import { IAPIConfig, IAPIInput, IAPIName, IAPIOutput } from '@/interfaces/api_co
 
 const apiVersion = 'v1';
 const apiPrefix = `/api/${apiVersion}`;
+
+const apiVersionV2 = 'v2';
+const apiPrefixV2 = `/api/${apiVersionV2}`;
+
 const initialInput: IAPIInput = {
   header: {},
   body: {},
@@ -32,6 +36,11 @@ export enum APIName {
   COMPANY_ADD = 'COMPANY_ADD',
   COMPANY_ADD_BY_INVITATION_CODE = 'COMPANY_ADD_BY_INVITATION_CODE',
   COMPANY_SELECT = 'COMPANY_SELECT',
+  CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
+  CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
+  CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
+  CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
+  CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
   PROFIT_GET_INSIGHT = 'PROFIT_GET_INSIGHT',
   INCOME_EXPENSE_GET_TREND_IN_PERIOD = 'INCOME_EXPENSE_GET_TREND_IN_PERIOD',
   LABOR_COST_CHART = 'LABOR_COST_CHART',
@@ -100,6 +109,11 @@ export enum APIPath {
   COMPANY_ADD = `${apiPrefix}/company`,
   COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
   COMPANY_SELECT = `${apiPrefix}/company/:companyId/select`,
+  CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
+  CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
+  CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   PROFIT_GET_INSIGHT = `${apiPrefix}/company/:companyId/profit_insight`,
   INCOME_EXPENSE_GET_TREND_IN_PERIOD = `${apiPrefix}/company/:companyId/income_expense_trend`,
   LABOR_COST_CHART = `${apiPrefix}/company/:companyId/labor_cost_chart`,
