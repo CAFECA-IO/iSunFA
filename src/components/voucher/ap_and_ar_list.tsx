@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import SortingButton from '@/components/voucher/sorting_button';
 import APandARItem from '@/components/voucher/ap_and_ar_item';
 import Pagination from '@/components/pagination/pagination';
@@ -10,6 +11,8 @@ enum ListType {
 }
 
 const APandARList = () => {
+  const { t } = useTranslation('common');
+
   // ToDo: (20240924 - Julian) tabs 切換
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [listType, setListType] = useState<ListType>(ListType.RECEIVABLE);
@@ -31,28 +34,34 @@ const APandARList = () => {
 
   // Info: (20240924 - Julian) 日期排序按鈕
   const displayedIssuedDate = SortingButton({
-    string: 'Issued Date',
+    string: t('journal:VOUCHER.ISSUED_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
 
   // Info: (20240924 - Julian) Receivable / Payable Amount 排序按鈕
   const displayedReceivableAmount = SortingButton({
-    string: listType === ListType.RECEIVABLE ? 'Receivable Amount' : 'Payable Amount',
+    string:
+      listType === ListType.RECEIVABLE
+        ? t('journal:VOUCHER.RECEIVABLE_AMOUNT')
+        : t('journal:VOUCHER.PAYABLE_AMOUNT'),
     sortOrder: receivableAmountSort,
     setSortOrder: setReceivableAmountSort,
   });
 
   // Info: (20240924 - Julian) Received / Paid Amount 排序按鈕
   const displayedReceivedAmount = SortingButton({
-    string: listType === ListType.RECEIVABLE ? 'Received Amount' : 'Paid Amount',
+    string:
+      listType === ListType.RECEIVABLE
+        ? t('journal:VOUCHER.RECEIVED_AMOUNT')
+        : t('journal:VOUCHER.PAID_AMOUNT'),
     sortOrder: receivedAmountSort,
     setSortOrder: setReceivedAmountSort,
   });
 
   // Info: (20240924 - Julian) Remain Amount 排序按鈕
   const displayedRemainAmount = SortingButton({
-    string: 'Remain Amount',
+    string: t('journal:VOUCHER.REMAIN_AMOUNT'),
     sortOrder: remainAmountSort,
     setSortOrder: setRemainAmountSort,
   });
@@ -69,9 +78,15 @@ const APandARList = () => {
         <div className="table-header-group h-60px border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Voucher No.</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Counterparty</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Issuer</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.VOUCHER_NO')}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.COUNTRYPARTY')}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.ISSUER')}
+            </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {displayedReceivableAmount}
             </div>
@@ -79,7 +94,7 @@ const APandARList = () => {
               {displayedReceivedAmount}
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedRemainAmount}</div>
-            <div className={`${tableCellStyles}`}>Reverse</div>
+            <div className={`${tableCellStyles}`}>{t('journal:VOUCHER.REVERSE')}</div>
           </div>
         </div>
 

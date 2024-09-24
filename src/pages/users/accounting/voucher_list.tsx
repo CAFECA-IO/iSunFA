@@ -1,16 +1,19 @@
 import Head from 'next/head';
+import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import VoucherPageBody from '@/components/voucher/voucher_page_body';
 
 const VoucherListPage = () => {
+  const { t } = useTranslation('common');
+
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>Voucher List - iSunFA</title>
+        <title>{t('journal:VOUCHER.VOUCHER_LIST_PAGE_TITLE')} - iSunFA</title>
       </Head>
 
       <div className="ml-280px bg-text-neutral-secondary p-20px text-center text-white">

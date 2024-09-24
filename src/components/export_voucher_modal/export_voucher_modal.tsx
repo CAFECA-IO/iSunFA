@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -12,6 +13,8 @@ interface IExportVoucherModal {
 }
 
 const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportVoucherModal) => {
+  const { t } = useTranslation('common');
+
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [fromNumber, setFromNumber] = useState<string>('');
   const [toNumber, setToNumber] = useState<string>('');
@@ -52,14 +55,16 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
         </button>
         {/* Info: (20240924 - Julian) Title */}
         <div className="flex flex-col items-center">
-          <h1 className="text-xl font-bold text-card-text-primary">Export Voucher</h1>
+          <h1 className="text-xl font-bold text-card-text-primary">
+            {t('journal:VOUCHER.EXPORT_VOUCHER_MODAL_TITLE')}
+          </h1>
           <p className="text-xs text-card-text-secondary">
-            Please select the vouchers you want to export
+            {t('journal:VOUCHER.EXPORT_VOUCHER_MODAL_SUBTITLE')}
           </p>
         </div>
         {/* Info: (20240924 - Julian) Date picker */}
         <div className="flex w-full flex-col items-start gap-8px">
-          <p className="text-sm font-bold text-input-text-primary">Period</p>
+          <p className="text-sm font-bold text-input-text-primary">{t('common:COMMON.PERIOD')}</p>
           <DatePicker
             type={DatePickerType.TEXT_PERIOD}
             period={selectedPeriod}
@@ -69,16 +74,18 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
           />
         </div>
         {/* Info: (20240924 - Julian) or */}
-        <p className="text-xl font-semibold text-text-neutral-tertiary">or</p>
+        <p className="text-xl font-semibold text-text-neutral-tertiary">{t('common:COMMON.OR')}</p>
         {/* Info: (20240924 - Julian) Voucher number */}
         <div className="flex w-full flex-col items-start gap-8px">
-          <p className="text-sm font-bold text-input-text-primary">Voucher Number</p>
+          <p className="text-sm font-bold text-input-text-primary">
+            {t('journal:VOUCHER.VOUCHER_NUMBER')}
+          </p>
           <div className="flex w-full items-center gap-8px">
             <input
               type="text"
               value={fromNumber}
               onChange={changeFromNumber}
-              placeholder="From"
+              placeholder={t('journal:VOUCHER.FROM_PLACEHOLDER')}
               className="w-full rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:placeholder:text-input-text-disable"
               disabled={voucherNumberDisabled}
             />
@@ -87,7 +94,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
               type="text"
               value={toNumber}
               onChange={changeToNumber}
-              placeholder="To"
+              placeholder={t('journal:VOUCHER.TO_PLACEHOLDER')}
               className="w-full rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:placeholder:text-input-text-disable"
               disabled={voucherNumberDisabled}
             />
@@ -96,11 +103,11 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
         {/* Info: (20240924 - Julian) buttons */}
         <div className="ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryOutline" onClick={modalVisibilityHandler}>
-            Cancel
+            {t('common:COMMON.CANCEL')}
           </Button>
           {/* ToDo: (20240924 - Julian) Implement export function */}
           <Button type="button" disabled={exportBtnDisabled}>
-            <p>Export</p>
+            <p>{t('journal:VOUCHER.EXPORT_BTN')}</p>
             <MdOutlineFileDownload size={20} />
           </Button>
         </div>

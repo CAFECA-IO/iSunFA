@@ -64,9 +64,10 @@ const VoucherItem = ({ isSelecting }: { isSelecting: boolean }) => {
   const displayedNote = <p className="relative top-20px">{note}</p>;
 
   const displayedAccounting = (
-    <div className="relative top-20px flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
-      {accounting.map((account) => (
-        <p key={account}>{account}</p>
+    <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
+      {accounting.map((account, index) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <p key={index}>{account}</p>
       ))}
     </div>
   );

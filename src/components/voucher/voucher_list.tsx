@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
@@ -10,6 +11,7 @@ import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
 
 const VoucherList = () => {
+  const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   const [isSelecting, setIsSelecting] = useState(false);
@@ -31,21 +33,21 @@ const VoucherList = () => {
 
   // Info: (20240920 - Julian) 日期排序按鈕
   const displayedIssuedDate = SortingButton({
-    string: 'Issued Date',
+    string: t('journal:VOUCHER.ISSUED_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
 
   // Info: (20240920 - Julian) credit 排序按鈕
   const displayedCredit = SortingButton({
-    string: 'Credit',
+    string: t('journal:VOUCHER.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
   });
 
   // Info: (20240920 - Julian) debit 排序按鈕
   const displayedDebit = SortingButton({
-    string: 'Debit',
+    string: t('journal:VOUCHER.DEBIT'),
     sortOrder: debitSort,
     setSortOrder: setDebitSort,
   });
@@ -55,7 +57,7 @@ const VoucherList = () => {
       {/* Info: (20240920 - Julian) Export Voucher button */}
       <Button type="button" variant="tertiaryOutline" onClick={exportVoucherModalVisibilityHandler}>
         <MdOutlineFileDownload />
-        <p>Export Voucher</p>
+        <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
       </Button>
       {/* Info: (20240920 - Julian) Delete button */}
       <div className={isSelecting ? 'block' : 'hidden'}>
@@ -68,7 +70,7 @@ const VoucherList = () => {
         type="button"
         className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
       >
-        Select All
+        {t('common:COMMON.SELECT_ALL')}
       </button>
       {/* Info: (20240920 - Julian) Cancel selecting button */}
       <button
@@ -76,7 +78,7 @@ const VoucherList = () => {
         onClick={selectToggleHandler}
         className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
       >
-        Cancel
+        {t('common:COMMON.CANCEL')}
       </button>
       {/* Info: (20240920 - Julian) Select toggle button */}
       <button
@@ -84,7 +86,7 @@ const VoucherList = () => {
         onClick={selectToggleHandler}
         className={`${isSelecting ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
       >
-        Select
+        {t('common:COMMON.SELECT')}
       </button>
     </div>
   );
@@ -107,13 +109,21 @@ const VoucherList = () => {
               <input type="checkbox" className={checkboxStyle} />
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Voucher No.</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Note</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Accounting</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.VOUCHER_NO')}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.NOTE')}
+            </div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.ACCOUNTING')}
+            </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDebit}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>Counterparty</div>
-            <div className={`${tableCellStyles}`}>Issuer</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER.COUNTRYPARTY')}
+            </div>
+            <div className={`${tableCellStyles}`}>{t('journal:VOUCHER.ISSUER')}</div>
           </div>
         </div>
 

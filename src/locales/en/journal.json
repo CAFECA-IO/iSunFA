@@ -194,5 +194,31 @@
     "CASH": "Cash",
     "TRANSFER": "Transfer",
     "CREDIT_CARD": "Credit Card"
+  },
+  "VOUCHER": {
+    "VOUCHER_LIST_PAGE_TITLE": "Voucher List",
+    "AP_AND_AR_PAGE_TITLE": "Payable/Receivable List",
+    "ADD_NEW_VOUCHER": "Add New Voucher",
+    "EXPORT_VOUCHER": "Export Voucher",
+    "ISSUED_DATE": "Issued Date",
+    "VOUCHER_NO": "Voucher No.",
+    "NOTE": "Note",
+    "ACCOUNTING": "Accounting",
+    "CREDIT": "Credit",
+    "DEBIT": "Debit",
+    "COUNTRYPARTY": "Country Party",
+    "ISSUER": "Issuer",
+    "RECEIVABLE_AMOUNT": "Receivable Amount",
+    "PAYABLE_AMOUNT": "Payable Amount",
+    "RECEIVED_AMOUNT": "Received Amount",
+    "PAID_AMOUNT": "Paid Amount",
+    "REMAIN_AMOUNT": "Remain Amount",
+    "REVERSE": "Reverse",
+    "EXPORT_VOUCHER_MODAL_TITLE": "Export Voucher",
+    "EXPORT_VOUCHER_MODAL_SUBTITLE": "Please select the vouchers you want to export",
+    "VOUCHER_NUMBER": "Voucher Number",
+    "EXPORT_BTN": "Export",
+    "FROM_PLACEHOLDER": "From",
+    "TO_PLACEHOLDER": "To"
   }
 }
