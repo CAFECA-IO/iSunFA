@@ -1,63 +1,54 @@
-import handler from '@/pages/api/v2/gig/[gigId]';
+import { handleGetRequest } from '@/pages/api/v2/gig/[gigId]';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 
 describe('Gig Detail API', () => {
   let req: NextApiRequest;
   let res: NextApiResponse;
 
   beforeEach(() => {
-    req = {} as NextApiRequest;
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    } as unknown as NextApiResponse;
+    req = {
+      query: {},
+    } as NextApiRequest;
+    res = {} as NextApiResponse;
   });
 
   it('should retrieve gig details with GET', async () => {
-    req.method = 'GET';
     req.query = { gigId: '1' };
 
-    await handler(req, res);
+    const result = await handleGetRequest(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v2.0.0+1',
-      success: true,
-      code: '200',
-      message: 'Successfully retrieved gig details',
-      payload: expect.any(Object),
-    });
+    expect(result.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
+    expect(result.payload).toEqual(
+      expect.objectContaining({
+        id: 1,
+        companyName: 'A 公司',
+        companyLogo: 'https://example.com/company-a-logo.png',
+        issueType: '記帳',
+        publicationDate: 1692489600,
+        estimatedWorkingHours: {
+          start: 1693008000,
+          end: 1695600000,
+        },
+        deadline: 1696032000,
+        hourlyWage: 500,
+        caseDescription: '上傳相關憑證，徵求記帳士開立傳票',
+        targetCandidates: '具有3年以上記帳經驗的記帳士',
+        remarks: '需要熟悉國際會計準則',
+        applicationsCount: 5,
+        isMatched: false,
+        createdAt: 1692489600,
+        updatedAt: 1692489600,
+      })
+    );
   });
 
-  it('should return 404 if gig not found', async () => {
-    req.method = 'GET';
+  it('should return NOT_FOUND if gig not found', async () => {
     req.query = { gigId: '999' };
 
-    await handler(req, res);
+    const result = await handleGetRequest(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v2.0.0+1',
-      success: false,
-      code: '404',
-      message: 'Gig not found',
-      payload: {},
-    });
-  });
-
-  it('should return 405 for non-GET methods', async () => {
-    req.method = 'POST';
-    req.query = { gigId: '1' };
-
-    await handler(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.json).toHaveBeenCalledWith({
-      powerby: 'iSunFA v2.0.0+1',
-      success: false,
-      code: '405',
-      message: 'Method not allowed',
-      payload: {},
-    });
+    expect(result.statusMessage).toBe(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    expect(result.payload).toBeNull();
   });
 });

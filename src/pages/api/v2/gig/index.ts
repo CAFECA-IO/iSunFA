@@ -1,6 +1,34 @@
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { z } from 'zod';
 
-const gigs = [
+const gigSchema = z.object({
+  id: z.number(),
+  companyName: z.string(),
+  companyLogo: z.string(),
+  issueType: z.string(),
+  publicationDate: z.number(),
+  estimatedWorkingHours: z.object({
+    start: z.number(),
+    end: z.number(),
+  }),
+  deadline: z.number(),
+  hourlyWage: z.number(),
+  caseDescription: z.string(),
+  targetCandidates: z.string(),
+  remarks: z.string(),
+  applicationsCount: z.number(),
+  isMatched: z.boolean(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+type IGig = z.infer<typeof gigSchema>;
+
+const gigs: IGig[] = [
   {
     id: 1,
     companyName: 'A 公司',
@@ -43,75 +71,111 @@ const gigs = [
   },
 ];
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'GET') {
-    const {
-      page = 1,
-      pageSize = 10,
-      sortBy = 'publicationDate',
-      sortOrder = 'desc',
-      startDate,
-      endDate,
-      searchQuery,
-      isMatched,
-    } = req.query;
+export async function handleGetRequest(
+  req: NextApiRequest,
+  // ToDo: implement the logic to get the gig data from the database (20240924 - Shirley)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  res: NextApiResponse<IResponseData<IPaginatedData<IGig[]> | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IPaginatedData<IGig[]> | null = null;
 
-    let filteredGigs = gigs;
+  const {
+    page = 1,
+    pageSize = 10,
+    sortBy = 'publicationDate',
+    sortOrder = 'desc',
+    startDate,
+    endDate,
+    searchQuery,
+    isMatched,
+  } = req.query;
 
-    if (startDate) {
-      filteredGigs = filteredGigs.filter((gig) => gig.publicationDate >= Number(startDate));
-    }
+  let filteredGigs = gigs;
 
-    if (endDate) {
-      filteredGigs = filteredGigs.filter((gig) => gig.publicationDate <= Number(endDate));
-    }
+  if (startDate) {
+    filteredGigs = filteredGigs.filter((gig) => gig.publicationDate >= Number(startDate));
+  }
 
-    if (searchQuery) {
-      filteredGigs = filteredGigs.filter(
-        (gig) =>
-          gig.companyName.includes(searchQuery as string) ||
-          gig.caseDescription.includes(searchQuery as string)
-      );
-    }
+  if (endDate) {
+    filteredGigs = filteredGigs.filter((gig) => gig.publicationDate <= Number(endDate));
+  }
 
-    if (isMatched !== undefined) {
-      filteredGigs = filteredGigs.filter((gig) => gig.isMatched === (isMatched === 'true'));
-    }
-
-    filteredGigs = filteredGigs.sort((a, b) => {
-      if (sortOrder === 'asc') {
-        return a[sortBy as keyof (typeof gigs)[0]] > b[sortBy as keyof (typeof gigs)[0]] ? 1 : -1;
-      } else {
-        return a[sortBy as keyof (typeof gigs)[0]] < b[sortBy as keyof (typeof gigs)[0]] ? 1 : -1;
-      }
-    });
-
-    const totalItems = filteredGigs.length;
-    const totalPages = Math.ceil(totalItems / Number(pageSize));
-    const currentPage = Number(page);
-    const paginatedGigs = filteredGigs.slice(
-      (currentPage - 1) * Number(pageSize),
-      currentPage * Number(pageSize)
+  if (searchQuery) {
+    filteredGigs = filteredGigs.filter(
+      (gig) =>
+        gig.companyName.includes(searchQuery as string) ||
+        gig.caseDescription.includes(searchQuery as string)
     );
+  }
 
-    res.status(200).json({
-      powerby: 'iSunFA v2.0.0+1',
-      success: true,
-      code: '200',
-      message: 'Successfully listed all gigs',
-      payload: {
-        totalPages,
-        currentPage,
-        gigs: paginatedGigs,
-      },
-    });
-  } else {
-    res.status(405).json({
-      powerby: 'iSunFA v2.0.0+1',
-      success: false,
-      code: '405',
-      message: 'Method not allowed',
-      payload: {},
-    });
+  if (isMatched !== undefined) {
+    filteredGigs = filteredGigs.filter((gig) => gig.isMatched === (isMatched === 'true'));
+  }
+
+  filteredGigs = filteredGigs.sort((a, b) => {
+    if (sortOrder === 'asc') {
+      return a[sortBy as keyof IGig] > b[sortBy as keyof IGig] ? 1 : -1;
+    } else {
+      return a[sortBy as keyof IGig] < b[sortBy as keyof IGig] ? 1 : -1;
+    }
+  });
+
+  const totalCount = filteredGigs.length;
+  const totalPages = Math.ceil(totalCount / Number(pageSize));
+  const currentPage = Number(page);
+  const paginatedGigs = filteredGigs.slice(
+    (currentPage - 1) * Number(pageSize),
+    currentPage * Number(pageSize)
+  );
+
+  payload = {
+    data: paginatedGigs,
+    page: currentPage,
+    totalPages,
+    totalCount,
+    pageSize: Number(pageSize),
+    hasNextPage: currentPage < totalPages,
+    hasPreviousPage: currentPage > 1,
+    sort: [{ sortBy: sortBy as string, sortOrder: sortOrder as string }],
+  };
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IPaginatedData<IGig[]> | null }>;
+} = {
+  GET: handleGetRequest,
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IPaginatedData<IGig[]> | null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IPaginatedData<IGig[]> | null = null;
+
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IPaginatedData<IGig[]> | null>(
+      statusMessage,
+      payload
+    );
+    res.status(httpCode).json(result);
   }
 }
