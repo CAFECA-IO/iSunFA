@@ -7,8 +7,11 @@ import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 const VoucherList = () => {
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+
   const [isSelecting, setIsSelecting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
@@ -50,7 +53,7 @@ const VoucherList = () => {
   const displayedSelectArea = (
     <div className="ml-auto flex items-center gap-24px">
       {/* Info: (20240920 - Julian) Export Voucher button */}
-      <Button type="button" variant="tertiaryOutline">
+      <Button type="button" variant="tertiaryOutline" onClick={exportVoucherModalVisibilityHandler}>
         <MdOutlineFileDownload />
         <p>Export Voucher</p>
       </Button>
