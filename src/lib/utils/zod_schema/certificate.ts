@@ -25,7 +25,7 @@ const certificateListBodyValidator = z.object({});
 
 export const certificateReturnValidator = z.object({
   id: z.number(),
-  inputOrOutput: z.string(),
+  inputOrOutput: z.enum(['input', 'output']),
   certificateDate: z.number(),
   certificateNo: z.string(),
   currencyAlias: z.string(),
@@ -72,4 +72,29 @@ export const certificateGetOneValidator: IZodValidator<
 > = {
   query: certificateGetOneQueryValidator,
   body: certificateGetOneBodyValidator,
+};
+
+const certificatePostQueryValidator = z.object({});
+
+const certificatePostBodyValidator = z.object({
+  inputOrOutput: z.enum(['input', 'output']),
+  certificateDate: z.number(),
+  certificateNo: z.string(),
+  currencyAlias: z.string(),
+  priceBeforeTax: z.number(),
+  taxRatio: z.number(),
+  taxPrice: z.number(),
+  totalPrice: z.number(),
+  counterPartyId: z.number(),
+  invoiceType: z.string(),
+  deductible: z.boolean(),
+  fileId: z.number(),
+});
+
+export const certificatePostValidator: IZodValidator<
+  (typeof certificatePostQueryValidator)['shape'],
+  (typeof certificatePostBodyValidator)['shape']
+> = {
+  query: certificatePostQueryValidator,
+  body: certificatePostBodyValidator,
 };

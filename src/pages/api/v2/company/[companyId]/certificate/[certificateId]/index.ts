@@ -5,7 +5,7 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { mockCertificateList } from '@/pages/api/v2/company/certificate/service';
+import { mockCertificateList } from '@/pages/api/v2/company/[companyId]/certificate/service';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
 
