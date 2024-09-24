@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import {
   handleGetRequest,
   handlePutRequest,
+  handleDeleteRequest,
 } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { certificateReturnValidator } from '@/lib/utils/zod_schema/certificate';
@@ -89,6 +90,22 @@ describe('company/[companyId]/certificate/[certificateId]', () => {
       const parseData = certificateReturnValidator.safeParse(payload);
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_UPDATE);
+      expect(parseData.success).toBe(true);
+    });
+  });
+
+  describe('GET Certificate One', () => {
+    it('should match patter', async () => {
+      req.query = {
+        certificateId: '1',
+      };
+      req.body = {};
+
+      const { payload, statusMessage } = await handleDeleteRequest(req, res);
+
+      const parseData = certificateReturnValidator.safeParse(payload);
+
+      expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_DELETE);
       expect(parseData.success).toBe(true);
     });
   });

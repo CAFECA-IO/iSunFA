@@ -1,5 +1,6 @@
 import { APIName } from '@/constants/api_connection';
 import {
+  certificateDeleteValidator,
   certificateGetOneValidator,
   certificateListValidator,
   certificatePostValidator,
@@ -57,4 +58,5 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
+  [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
 };

@@ -110,3 +110,17 @@ export const certificatePutValidator: IZodValidator<
   query: certificatePutQueryValidator,
   body: certificatePostBodyValidator,
 };
+
+const certificateDeleteQueryValidator = z.object({
+  certificateId: zodStringToNumber,
+});
+
+const certificateDeleteBodyValidator = z.object({});
+
+export const certificateDeleteValidator: IZodValidator<
+  (typeof certificateDeleteQueryValidator)['shape'],
+  (typeof certificateDeleteBodyValidator)['shape']
+> = {
+  query: certificateDeleteQueryValidator,
+  body: certificateDeleteBodyValidator,
+};

@@ -63,6 +63,32 @@ export async function handlePutRequest(req: NextApiRequest, res: NextApiResponse
   };
 }
 
+export async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: object | null = null;
+
+  const session = await getSession(req, res);
+  const { userId } = session;
+  // ToDo: (20240924 - Murky) Remember to check auth
+  //   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+
+  //   if (isAuth) {
+  const { query, body } = validateRequest(APIName.CERTIFICATE_DELETE_V2, req, userId);
+
+  if (query && body) {
+    // Info: (20240924 - Murky) Use certificateId to get id
+    //   const { certificateId } = query;
+    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+    [payload] = mockCertificateList;
+  }
+  //   }
+
+  return {
+    statusMessage,
+    payload,
+  };
+}
+
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -70,6 +96,8 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: APIResponse }>;
 } = {
   GET: handleGetRequest,
+  PUT: handlePutRequest,
+  DELETE: handleDeleteRequest,
 };
 
 export default async function handler(
