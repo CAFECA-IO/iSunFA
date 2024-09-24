@@ -1,8 +1,8 @@
-import { handleGetRequest } from '@/pages/api/v2/gig/[gigId]';
+import { handleGetRequest } from '@/pages/api/v2/job/[jobId]';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
-describe('Gig Detail API', () => {
+describe('Job Detail API', () => {
   let req: NextApiRequest;
   let res: NextApiResponse;
 
@@ -13,8 +13,8 @@ describe('Gig Detail API', () => {
     res = {} as NextApiResponse;
   });
 
-  it('should retrieve gig details with GET', async () => {
-    req.query = { gigId: '1' };
+  it('should retrieve job details with GET', async () => {
+    req.query = { jobId: '1' };
 
     const result = await handleGetRequest(req, res);
 
@@ -43,8 +43,8 @@ describe('Gig Detail API', () => {
     );
   });
 
-  it('should return NOT_FOUND if gig not found', async () => {
-    req.query = { gigId: '999' };
+  it('should return NOT_FOUND if job not found', async () => {
+    req.query = { jobId: '999' };
 
     const result = await handleGetRequest(req, res);
 

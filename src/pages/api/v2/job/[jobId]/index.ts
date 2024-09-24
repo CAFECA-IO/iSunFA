@@ -1,11 +1,10 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IPaginatedData } from '@/interfaces/pagination';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 
-const gigSchema = z.object({
+const jobSchema = z.object({
   id: z.number(),
   companyName: z.string(),
   companyLogo: z.string(),
@@ -26,9 +25,9 @@ const gigSchema = z.object({
   updatedAt: z.number(),
 });
 
-type IGig = z.infer<typeof gigSchema>;
+type IJob = z.infer<typeof jobSchema>;
 
-const gigs: IGig[] = [
+const jobs: IJob[] = [
   {
     id: 1,
     companyName: 'A 公司',
@@ -73,73 +72,22 @@ const gigs: IGig[] = [
 
 export async function handleGetRequest(
   req: NextApiRequest,
-  // ToDo: implement the logic to get the gig data from the database (20240924 - Shirley)
+  // ToDo: implement the logic to get the job data from the database (20240924 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  res: NextApiResponse<IResponseData<IPaginatedData<IGig[]> | null>>
+  res: NextApiResponse<IResponseData<IJob | null>>
 ) {
+  const { jobId } = req.query;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IGig[]> | null = null;
+  let payload: IJob | null = null;
 
-  const {
-    page = 1,
-    pageSize = 10,
-    sortBy = 'publicationDate',
-    sortOrder = 'desc',
-    startDate,
-    endDate,
-    searchQuery,
-    isMatched,
-  } = req.query;
-
-  let filteredGigs = gigs;
-
-  if (startDate) {
-    filteredGigs = filteredGigs.filter((gig) => gig.publicationDate >= Number(startDate));
+  const job = jobs.find((g) => g.id === parseInt(jobId as string, 10));
+  if (job) {
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+    payload = job;
+  } else {
+    // ToDo: check error message (20240924 - Shirley)
+    statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
   }
-
-  if (endDate) {
-    filteredGigs = filteredGigs.filter((gig) => gig.publicationDate <= Number(endDate));
-  }
-
-  if (searchQuery) {
-    filteredGigs = filteredGigs.filter(
-      (gig) =>
-        gig.companyName.includes(searchQuery as string) ||
-        gig.caseDescription.includes(searchQuery as string)
-    );
-  }
-
-  if (isMatched !== undefined) {
-    filteredGigs = filteredGigs.filter((gig) => gig.isMatched === (isMatched === 'true'));
-  }
-
-  filteredGigs = filteredGigs.sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a[sortBy as keyof IGig] > b[sortBy as keyof IGig] ? 1 : -1;
-    } else {
-      return a[sortBy as keyof IGig] < b[sortBy as keyof IGig] ? 1 : -1;
-    }
-  });
-
-  const totalCount = filteredGigs.length;
-  const totalPages = Math.ceil(totalCount / Number(pageSize));
-  const currentPage = Number(page);
-  const paginatedGigs = filteredGigs.slice(
-    (currentPage - 1) * Number(pageSize),
-    currentPage * Number(pageSize)
-  );
-
-  payload = {
-    data: paginatedGigs,
-    page: currentPage,
-    totalPages,
-    totalCount,
-    pageSize: Number(pageSize),
-    hasNextPage: currentPage < totalPages,
-    hasPreviousPage: currentPage > 1,
-    sort: [{ sortBy: sortBy as string, sortOrder: sortOrder as string }],
-  };
-  statusMessage = STATUS_MESSAGE.SUCCESS;
 
   return { statusMessage, payload };
 }
@@ -148,17 +96,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IPaginatedData<IGig[]> | null }>;
+  ) => Promise<{ statusMessage: string; payload: IJob | null }>;
 } = {
   GET: handleGetRequest,
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<IGig[]> | null>>
+  res: NextApiResponse<IResponseData<IJob | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IGig[]> | null = null;
+  let payload: IJob | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -172,10 +120,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IPaginatedData<IGig[]> | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IJob | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

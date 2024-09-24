@@ -7,7 +7,7 @@ import { z } from 'zod';
 const applicationSchema = z.object({
   id: z.number(),
   bookkeeperId: z.number(),
-  gigId: z.number(),
+  jobId: z.number(),
   content: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
@@ -19,7 +19,7 @@ const applicationsOutput: IApplication[] = [
   {
     id: 1,
     bookkeeperId: 1000,
-    gigId: 1,
+    jobId: 1,
     content: '我有3年以上的記帳經驗，熟悉國際會計準則。',
     createdAt: 1692489600,
     updatedAt: 1692489600,
@@ -27,7 +27,7 @@ const applicationsOutput: IApplication[] = [
   {
     id: 2,
     bookkeeperId: 1001,
-    gigId: 2,
+    jobId: 2,
     content: '我是有執照的會計師，有豐富的稅務申報經驗。',
     createdAt: 1692499600,
     updatedAt: 1692499600,
@@ -40,7 +40,7 @@ export async function handlePostRequest(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   res: NextApiResponse<IResponseData<IApplication | null>>
 ) {
-  const { gigId } = req.query;
+  const { jobId } = req.query;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IApplication | null = null;
 
@@ -49,7 +49,7 @@ export async function handlePostRequest(
     const newApplication: IApplication = {
       id: applicationsOutput.length + 1,
       bookkeeperId: 1000,
-      gigId: parseInt(gigId as string, 10),
+      jobId: parseInt(jobId as string, 10),
       content: result.data.content,
       createdAt: Date.now(),
       updatedAt: Date.now(),

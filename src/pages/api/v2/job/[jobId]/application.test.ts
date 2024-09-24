@@ -1,8 +1,8 @@
-import { handlePostRequest } from '@/pages/api/v2/gig/[gigId]/application';
+import { handlePostRequest } from '@/pages/api/v2/job/[jobId]/application';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
-describe('Gig Application API', () => {
+describe('Job Application API', () => {
   let req: NextApiRequest;
   let res: NextApiResponse;
 
@@ -15,7 +15,7 @@ describe('Gig Application API', () => {
   });
 
   it('should create an application with POST', async () => {
-    req.query = { gigId: '1' };
+    req.query = { jobId: '1' };
     req.body = { content: 'application content' };
 
     const result = await handlePostRequest(req, res);
@@ -25,7 +25,7 @@ describe('Gig Application API', () => {
       expect.objectContaining({
         id: expect.any(Number),
         bookkeeperId: expect.any(Number),
-        gigId: 1,
+        jobId: 1,
         content: 'application content',
         createdAt: expect.any(Number),
         updatedAt: expect.any(Number),
@@ -34,7 +34,7 @@ describe('Gig Application API', () => {
   });
 
   it('should return INVALID_INPUT for invalid input', async () => {
-    req.query = { gigId: '1' };
+    req.query = { jobId: '1' };
     req.body = { invalidField: 'invalid content' };
 
     const result = await handlePostRequest(req, res);

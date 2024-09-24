@@ -1,8 +1,8 @@
-import { handleGetRequest } from '@/pages/api/v2/gig';
+import { handleGetRequest } from '@/pages/api/v2/job';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
-describe('Gig API', () => {
+describe('Job API', () => {
   let req: NextApiRequest;
   let res: NextApiResponse;
 
@@ -13,7 +13,7 @@ describe('Gig API', () => {
     res = {} as NextApiResponse;
   });
 
-  it('should list all gigs with GET', async () => {
+  it('should list all jobs with GET', async () => {
     req.query = { page: '1', pageSize: '10' };
 
     const result = await handleGetRequest(req, res);
@@ -38,7 +38,7 @@ describe('Gig API', () => {
     );
   });
 
-  it('should filter gigs by isMatched', async () => {
+  it('should filter jobs by isMatched', async () => {
     req.query = { isMatched: 'true', page: '1', pageSize: '10' };
 
     const result = await handleGetRequest(req, res);
@@ -49,7 +49,7 @@ describe('Gig API', () => {
     );
   });
 
-  it('should filter gigs by startDate and endDate', async () => {
+  it('should filter jobs by startDate and endDate', async () => {
     req.query = { startDate: '1692489600', endDate: '1692499600', page: '1', pageSize: '10' };
 
     const result = await handleGetRequest(req, res);
@@ -57,12 +57,12 @@ describe('Gig API', () => {
     expect(result.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
     expect(
       result.payload?.data.every(
-        (gig) => gig.publicationDate >= 1692489600 && gig.publicationDate <= 1692499600
+        (job) => job.publicationDate >= 1692489600 && job.publicationDate <= 1692499600
       )
     ).toBe(true);
   });
 
-  it('should filter gigs by searchQuery', async () => {
+  it('should filter jobs by searchQuery', async () => {
     req.query = { searchQuery: '記帳', page: '1', pageSize: '10' };
 
     const result = await handleGetRequest(req, res);
