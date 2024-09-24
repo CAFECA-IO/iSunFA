@@ -16,7 +16,9 @@ const APandARList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240924 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
+  // Info: (20240924 - Julian) Receivable / Payable Amount 排序狀態
   const [receivableAmountSort, setReceivableAmountSort] = useState<null | SortOrder>(null);
+  // Info: (20240924 - Julian) Received / Paid Amount 排序狀態
   const [receivedAmountSort, setReceivedAmountSort] = useState<null | SortOrder>(null);
   const [remainAmountSort, setRemainAmountSort] = useState<null | SortOrder>(null);
 
@@ -34,16 +36,16 @@ const APandARList = () => {
     setSortOrder: setDateSort,
   });
 
-  // Info: (20240924 - Julian) Receivable Amount 排序按鈕
+  // Info: (20240924 - Julian) Receivable / Payable Amount 排序按鈕
   const displayedReceivableAmount = SortingButton({
-    string: 'Receivable Amount',
+    string: listType === ListType.RECEIVABLE ? 'Receivable Amount' : 'Payable Amount',
     sortOrder: receivableAmountSort,
     setSortOrder: setReceivableAmountSort,
   });
 
-  // Info: (20240924 - Julian) Received Amount 排序按鈕
+  // Info: (20240924 - Julian) Received / Paid Amount 排序按鈕
   const displayedReceivedAmount = SortingButton({
-    string: 'Received Amount',
+    string: listType === ListType.RECEIVABLE ? 'Received Amount' : 'Paid Amount',
     sortOrder: receivedAmountSort,
     setSortOrder: setReceivedAmountSort,
   });
