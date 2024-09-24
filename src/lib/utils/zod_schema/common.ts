@@ -11,13 +11,13 @@ export function zodStringToNumberWithDefault(defaultValue: number) {
     .transform((val) => (val ? Number(val) : defaultValue));
 }
 
-export function zodTimestampInSeconds(canBeUndefined: boolean = false) {
+export function zodTimestampInSeconds(canBeUndefined: boolean = false, defaultValue?: number) {
   if (canBeUndefined) {
     return z
       .string()
       .regex(/^\d+$/)
       .optional()
-      .transform((val) => (val ? timestampInSeconds(Number(val)) : undefined));
+      .transform((val) => (val ? timestampInSeconds(Number(val)) : defaultValue));
   }
   return z
     .string()
