@@ -66,6 +66,7 @@ const VoucherItem = ({ isSelecting }: { isSelecting: boolean }) => {
   const displayedAccounting = (
     <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
       {accounting.map((account, index) => (
+        // Deprecated: (20240924 - Julian) array index as key
         // eslint-disable-next-line react/no-array-index-key
         <p key={index}>{account}</p>
       ))}
