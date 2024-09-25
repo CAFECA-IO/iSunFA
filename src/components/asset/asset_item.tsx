@@ -3,25 +3,53 @@ import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
 
+interface IAssetItem {
+  id: number;
+  acquisitionDate: number;
+  assetType: {
+    id: number;
+    title: string;
+  };
+  assetNumber: string;
+  assetName: string;
+  purchasePrice: number;
+  accumulatedDepreciation: number;
+  residualValue: number;
+  remainingTimestamp: number;
+  assetStatus: AssetStatus;
+}
+
+// ToDo: (20240925 - Julian) dummy data
+const dummyData: IAssetItem = {
+  id: 1,
+  acquisitionDate: 1632511200,
+  assetType: {
+    id: 123,
+    title: 'Machinery',
+  },
+  assetNumber: 'A-000010',
+  assetName: 'MackBook',
+  purchasePrice: 100000,
+  accumulatedDepreciation: 5000,
+  residualValue: 5000,
+  remainingTimestamp: 1761580800,
+  assetStatus: AssetStatus.NORMAL,
+};
+
 const AssetItem = () => {
   const { t } = useTranslation('common');
 
-  // ToDo: (20240925 - Julian) dummy data
-  const acquisitionDate: number = 1632511200;
-  const assetType: {
-    id: number;
-    title: string;
-  } = {
-    id: 123,
-    title: 'Machinery',
-  };
-  const assetNumber: string = 'A-000010';
-  const assetName: string = 'MackBook';
-  const purchasePrice: number = 100000;
-  const accumulatedDepreciation: number = 5000;
-  const residualValue: number = 5000;
-  const remainingTimestamp: number = 1632511200;
-  const assetStatus: AssetStatus = AssetStatus.NORMAL;
+  const {
+    acquisitionDate,
+    assetType,
+    assetNumber,
+    assetName,
+    purchasePrice,
+    accumulatedDepreciation,
+    residualValue,
+    remainingTimestamp,
+    assetStatus,
+  } = dummyData;
 
   // Info: (20240925 - Julian) 取得今天的 0 點的時間戳
   const twelveOClockOfToday = new Date().setHours(0, 0, 0, 0) / 1000;
