@@ -30,7 +30,7 @@ const APandARList = () => {
 
   // Info: (20240924 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
-  const sideBorderStyles = 'border-r border-stroke-neutral-quaternary';
+  const sideBorderStyles = 'border-r border-stroke-neutral-quaternary border-b';
 
   // Info: (20240924 - Julian) 日期排序按鈕
   const displayedIssuedDate = SortingButton({
@@ -75,7 +75,7 @@ const APandARList = () => {
       {/* Info: (20240924 - Julian) Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240924 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group h-60px border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-header-group h-60px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
@@ -94,7 +94,9 @@ const APandARList = () => {
               {displayedReceivedAmount}
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedRemainAmount}</div>
-            <div className={`${tableCellStyles}`}>{t('journal:VOUCHER.REVERSE')}</div>
+            <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
+              {t('journal:VOUCHER.REVERSE')}
+            </div>
           </div>
         </div>
 

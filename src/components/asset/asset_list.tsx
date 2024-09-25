@@ -6,6 +6,7 @@ import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
+import AssetItem from '@/components/asset/asset_item';
 
 const AssetList = () => {
   const { t } = useTranslation('common');
@@ -24,7 +25,7 @@ const AssetList = () => {
 
   // Info: (20240925 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
-  const sideBorderStyles = 'border-r border-stroke-neutral-quaternary';
+  const sideBorderStyles = 'border-r border-stroke-neutral-quaternary border-b';
 
   // Info: (20240925 - Julian) 日期排序按鈕
   const displayedIssuedDate = SortingButton({
@@ -62,7 +63,7 @@ const AssetList = () => {
   });
 
   const displayedAssetList = Array.from({ length: 10 }, (_, i) => i + 1).map((i) => {
-    return <div key={i} />;
+    return <AssetItem key={i} />;
   });
 
   return (
@@ -82,7 +83,7 @@ const AssetList = () => {
       {/* Info: (20240925 - Julian) Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240925 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group h-60px border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-header-group h-60px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{t('asset:ASSET.TYPE')}</div>
@@ -92,7 +93,9 @@ const AssetList = () => {
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedPrice}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDepreciation}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedResidual}</div>
-            <div className={`${tableCellStyles}`}>{displayedRemainingLife}</div>
+            <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
+              {displayedRemainingLife}
+            </div>
           </div>
         </div>
 
@@ -100,7 +103,7 @@ const AssetList = () => {
         <div className="table-row-group">{displayedAssetList}</div>
 
         {/* Info: (20240925 - Julian) ---------------- Table Footer(排版用) ---------------- */}
-        <div className="table-footer-group h-40px"></div>
+        <div className="table-footer-group h-10px"></div>
       </div>
 
       {/* Info: (20240925 - Julian) Pagination */}
