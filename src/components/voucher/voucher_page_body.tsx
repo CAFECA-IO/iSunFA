@@ -1,15 +1,18 @@
-import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 import { LuPlus } from 'react-icons/lu';
+import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 
 const VoucherPageBody = () => {
+  const { t } = useTranslation('common');
+
   return (
     <div className="relative flex flex-col items-center gap-40px px-40px py-40px">
       {/* Info: (20240920 - Julian) Add New Voucher button */}
       <div className="ml-auto">
         <Button type="button">
           <LuPlus />
-          <p>Add New Voucher</p>
+          <p>{t('journal:VOUCHER.ADD_NEW_VOUCHER')}</p>
         </Button>
       </div>
       {/* Info: (20240920 - Julian) Voucher List */}

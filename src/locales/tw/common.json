@@ -270,6 +270,7 @@
     "MONTH": "月",
     "YEAR": "年",
     "SELECT": "選擇",
+    "SELECT_ALL": "全選",
     "NO_DATA": "沒有數據",
     "TOOLTIP_MESSAGE": "當遊標位於圖形使用者介面中的圖示、圖像、超連結或其他元素上時出現的訊息。",
     "PERIOD": "期間",
