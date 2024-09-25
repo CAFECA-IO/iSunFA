@@ -3,7 +3,7 @@ import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 
-const VoucherPageBody = () => {
+const VoucherListPageBody = () => {
   const { t } = useTranslation('common');
 
   return (
@@ -32,4 +32,4 @@ const VoucherPageBody = () => {
   );
 };
 
-export default VoucherPageBody;
+export default VoucherListPageBody;
