@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { Button } from '@/components/button/button';
 import Pagination from '@/components/pagination/pagination';
-import SortingButton from '@/components/sorting_button/sorting_button';
+import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
 
