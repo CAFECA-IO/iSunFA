@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Pagination from '@/components/pagination/pagination'; // 引入 Pagination 組件
+import Pagination from '@/components/pagination/pagination';
 import { ICertificateUI, VIEW_TYPES } from '@/interfaces/certificate';
 import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from './certificate_grid';
