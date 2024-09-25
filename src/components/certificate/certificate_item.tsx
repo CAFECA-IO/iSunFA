@@ -18,7 +18,7 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
 }) => {
   return (
     <div
-      className={`relative table-cell min-h-72px border-b p-2 align-middle ${
+      className={`relative table-cell border-b p-2 align-middle ${
         isSelected
           ? 'border-stroke-brand-primary bg-surface-brand-primary-10'
           : 'border-stroke-neutral-quaternary'
@@ -37,7 +37,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 }) => {
   return (
     <div
-      className={`group table-row text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
+      className={`group table-row h-72px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
       onClick={
         activeSelection
           ? handleSelect.bind(null, [certificate.id], !certificate.isSelected)

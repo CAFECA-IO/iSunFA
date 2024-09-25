@@ -39,58 +39,60 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
   });
 
   return (
-    <div className="table h-full w-full overflow-x-scroll border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
-      <div className="table-header-group h-60px w-full bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-        <div className="table-row w-full">
-          {activeSelection && (
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-              <div
-                className={`relative h-16px w-16px rounded border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
-              >
-                {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
+    <div className="w-full flex-auto pb-4">
+      <div className="h-fit-content table w-full overflow-x-scroll border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
+        <div className="table-header-group h-60px w-full bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+          <div className="table-row w-full">
+            {activeSelection && (
+              <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+                <div
+                  className={`relative h-16px w-16px rounded border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+                >
+                  {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
+                </div>
               </div>
+            )}
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              {displayedIssuedDate}
             </div>
-          )}
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            {displayedIssuedDate}
-          </div>
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            <div>Invoice Name</div>
-            <div>Invoice No.</div>
-          </div>
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            Counterparty
-          </div>
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            Invoice Type
-          </div>
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            Tax
-          </div>
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            {displayedAmount}
-          </div>
-          <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-            Deductible
-          </div>
-          <div className="table-cell border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
-            <div>Uploader</div>
-            <div>Voucher No.</div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              <div>Invoice Name</div>
+              <div>Invoice No.</div>
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              Counterparty
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              Invoice Type
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              Tax
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              {displayedAmount}
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+              Deductible
+            </div>
+            <div className="table-cell border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
+              <div>Uploader</div>
+              <div>Voucher No.</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="table-row-group">
-        {/* Deprecated: (20240919 - tzuhan) Example of dynamic rows, should map actual data here */}
-        {data.map((certificate, index) => (
-          <CertificateItem
-            activeSelection={activeSelection}
-            handleSelect={handleSelect}
-            certificate={certificate}
-            key={`certificate-item-${index + 1}`}
-            onEdit={onEdit}
-          />
-        ))}
+        <div className="table-row-group">
+          {/* Deprecated: (20240919 - tzuhan) Example of dynamic rows, should map actual data here */}
+          {data.map((certificate, index) => (
+            <CertificateItem
+              activeSelection={activeSelection}
+              handleSelect={handleSelect}
+              certificate={certificate}
+              key={`certificate-item-${index + 1}`}
+              onEdit={onEdit}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
