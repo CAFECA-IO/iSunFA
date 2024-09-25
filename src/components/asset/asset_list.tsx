@@ -5,12 +5,10 @@ import { Button } from '@/components/button/button';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
-import { useGlobalCtx } from '@/contexts/global_context';
 import AssetItem from '@/components/asset/asset_item';
 
 const AssetList = () => {
   const { t } = useTranslation('common');
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240925 - Julian) 排序狀態
@@ -73,7 +71,7 @@ const AssetList = () => {
         <Button
           type="button"
           variant="tertiaryOutline"
-          onClick={exportVoucherModalVisibilityHandler}
+          // ToDo: (20240925 - Julian) Open asset export modal
         >
           <MdOutlineFileDownload />
           <p>{t('asset:ASSET.EXPORT_ASSET_LIST')}</p>
