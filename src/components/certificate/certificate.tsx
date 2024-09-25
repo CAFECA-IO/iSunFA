@@ -9,6 +9,7 @@ interface CertificateProps {
   viewType: VIEW_TYPES; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
+  isSelectedAll: boolean;
   onRemove: (id: number) => void;
   onDownload: (id: number) => void;
   onEdit: (id: number) => void;
@@ -21,6 +22,7 @@ const Certificate: React.FC<CertificateProps> = ({
   viewType,
   activeSelection,
   handleSelect,
+  isSelectedAll,
   onRemove,
   onDownload,
   onEdit,
@@ -37,6 +39,8 @@ const Certificate: React.FC<CertificateProps> = ({
           data={data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
+          isSelectedAll={isSelectedAll}
+          onEdit={onEdit}
         />
       )}
       {viewType === VIEW_TYPES.GRID && (
