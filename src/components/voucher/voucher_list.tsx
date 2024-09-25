@@ -5,7 +5,7 @@ import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
 import Pagination from '@/components/pagination/pagination';
-import SortingButton from '@/components/voucher/sorting_button';
+import SortingButton from '@/components/sorting_button/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';

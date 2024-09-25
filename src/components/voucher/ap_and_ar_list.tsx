@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import SortingButton from '@/components/voucher/sorting_button';
+import SortingButton from '@/components/sorting_button/sorting_button';
 import APandARItem from '@/components/voucher/ap_and_ar_item';
 import Pagination from '@/components/pagination/pagination';
 import { SortOrder } from '@/constants/sort';
