@@ -1,0 +1,28 @@
+{
+  "id": 10001063,
+  "amount": -1595,
+  "description": "本期損益",
+  "debit": false,
+  "accountId": 10001063,
+  "voucherId": -1,
+  "createdAt": 1,
+  "updatedAt": 1,
+  "deletedAt": null,
+  "account": {
+    "id": 10000018,
+    "companyId": 1002,
+    "system": "IFRS",
+    "type": "gainOrLoss",
+    "debit": true,
+    "liquidity": true,
+    "code": "3353",
+    "name": "本期淨利（淨損）",
+    "forUser": false,
+    "parentCode": "8200",
+    "rootCode": "8200",
+    "createdAt": 0,
+    "updatedAt": 0,
+    "level": 0,
+    "deletedAt": null
+  }
+}
