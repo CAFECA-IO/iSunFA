@@ -49,11 +49,14 @@ async function handleVoucherCreatePrismaLogic(
 
     const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
     const voucherData = await createVoucherInPrisma(newVoucherNo, journal.id);
-    await Promise.all(
-      voucher.lineItems.map(async (lineItem) => {
-        return createLineItemInPrisma(lineItem, voucherData.id, companyId);
-      })
-    );
+    // Info: (20240925 - Murky) I need to make sure lineitems is created in order
+    /* eslint-disable no-restricted-syntax */
+    for (const lineItem of voucher.lineItems) {
+      /* eslint-disable no-await-in-loop */
+      await createLineItemInPrisma(lineItem, voucherData.id, companyId);
+      /* eslint-enable no-await-in-loop */
+    }
+    /* eslint-enable no-restricted-syntax */
 
     // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
     updatedVoucher = await findUniqueVoucherInPrisma(voucherData.id);
