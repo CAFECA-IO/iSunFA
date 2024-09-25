@@ -270,6 +270,7 @@
     "MONTH": "Month",
     "YEAR": "Year",
     "SELECT": "Select",
+    "SELECT_ALL": "Select All",
     "NO_DATA": "No Data",
     "TOOLTIP_MESSAGE": "A message which appears when a cursor is positioned over an icon, image, hyperlink, or other element in a graphical user interface.",
     "PERIOD": "Period",
