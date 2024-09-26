@@ -1,0 +1,18 @@
+{
+  "ASSET": {
+    "ASSET_LIST_PAGE_TITLE": "资产清单",
+    "EXPORT_ASSET_LIST": "导出资产清单",
+    "ACQUISITION_DATE": "取得日期",
+    "TYPE": "类型",
+    "ASSET_NAME": "资产编号/名称",
+    "PURCHASE_PRICE": "购买价格",
+    "ACCUM_DEP": "累积折旧",
+    "RESIDUAL_VALUE": "残值",
+    "REMAINING_LIFE": "剩余使用年限",
+    "STATUS_SOLD": "已售出",
+    "STATUS_DONATED": "已捐赠",
+    "STATUS_SCRAPPED": "已报废",
+    "STATUS_MISSING": "已遗失",
+    "STATUS_NORMAL": "使用中"
+  }
+}

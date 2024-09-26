@@ -3,7 +3,7 @@ import React from 'react';
 
 const SideMenu = () => {
   return (
-    <aside className="w-64 border-r bg-gray-50 p-4">
+    <aside className="h-screen min-w-280px border-r bg-surface-neutral-surface-lv2 p-4">
       <nav className="flex flex-col space-y-4">
         {['會計記帳', '資產管理', '人事管理', '報表作業', '參數設定', '回到首頁'].map(
           (item, index) => (

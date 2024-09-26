@@ -7,7 +7,7 @@ import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
 import ViewToggle from '@/components/filter_section/view_toggle';
 import Image from 'next/image';
-import { generateRandomCertificates, ICertificate } from '@/interfaces/certificate';
+import { generateRandomCertificates, ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
 
 interface FilterSectionProps {
   apiName: IAPIName;
@@ -17,8 +17,8 @@ interface FilterSectionProps {
   sortingOptions?: string[];
   sortingByDate?: boolean;
   onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
-  viewType: 'grid' | 'list';
-  viewToggleHandler: (viewType: 'grid' | 'list') => void;
+  viewType: VIEW_TYPES;
+  viewToggleHandler: (viewType: VIEW_TYPES) => void;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
