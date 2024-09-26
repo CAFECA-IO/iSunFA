@@ -1381,6 +1381,9 @@ module.exports = {
       content: {
         checked: '"✔"',
       },
+      gridTemplateColumns: {
+        'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
+      },
     },
   },
   plugins: [],
