@@ -1,8 +1,8 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
-import { NextApiRequest, NextApiResponse } from 'next';
 import { IUserSetting } from '@/interfaces/user_setting';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 // ToDo: (20240924 - Jacky) Implement the logic to get the user settings data from the database
 async function handleGetRequest() {
@@ -19,14 +19,18 @@ async function handleGetRequest() {
     {
       id: 1,
       userId: 101,
-      firstName: 'John',
-      lastName: 'Doe',
-      country: 'USA',
-      phone: '1234567890',
-      language: 'English',
-      systemNotification: true,
-      updateAndSubscriptionNotification: false,
-      emailNotification: true,
+      personalInfo: {
+        firstName: 'John',
+        lastName: 'Doe',
+        country: 'USA',
+        phone: '1234567890',
+        language: 'English',
+      },
+      notificationSetting: {
+        systemNotification: true,
+        updateAndSubscriptionNotification: false,
+        emailNotification: true,
+      },
       createdAt: 1627847284,
       updatedAt: 1627847284,
       deletedAt: 0,
@@ -34,14 +38,18 @@ async function handleGetRequest() {
     {
       id: 2,
       userId: 102,
-      firstName: 'Jane',
-      lastName: 'Smith',
-      country: 'Canada',
-      phone: '0987654321',
-      language: 'French',
-      systemNotification: false,
-      updateAndSubscriptionNotification: true,
-      emailNotification: false,
+      personalInfo: {
+        firstName: 'Jane',
+        lastName: 'Smith',
+        country: 'Canada',
+        phone: '0987654321',
+        language: 'French',
+      },
+      notificationSetting: {
+        systemNotification: false,
+        updateAndSubscriptionNotification: true,
+        emailNotification: false,
+      },
       createdAt: 1627847284,
       updatedAt: 1627847284,
       deletedAt: 0,
@@ -64,19 +72,36 @@ async function handlePostRequest(req: NextApiRequest) {
   // ToDo: (20240924 - Jacky) Format the user settings data to the IUserSetting interface
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
+  const {
+    firstName,
+    lastName,
+    country,
+    phone,
+    language,
+    systemNotification,
+    updateAndSubscriptionNotification,
+    emailNotification,
+  } = req.body;
+
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
   const newIUserSetting: IUserSetting = {
     id: 3,
-    userId: req.body.userId,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    country: req.body.country,
-    phone: req.body.phone,
-    language: req.body.language,
-    systemNotification: req.body.systemNotification,
-    updateAndSubscriptionNotification: req.body.updateAndSubscriptionNotification,
-    emailNotification: req.body.emailNotification,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    userId: req.body.userId, // ToDo: (20240926 - Jacky) Get the user ID from the session
+    personalInfo: {
+      firstName,
+      lastName,
+      country,
+      phone,
+      language,
+    },
+    notificationSetting: {
+      systemNotification,
+      updateAndSubscriptionNotification,
+      emailNotification,
+    },
+    createdAt: nowTimestamp,
+    updatedAt: nowTimestamp,
     deletedAt: 0,
   };
 
