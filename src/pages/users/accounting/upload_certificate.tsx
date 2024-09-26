@@ -116,9 +116,9 @@ const UploadCertificatePage: React.FC = () => {
 
   const handleDelete = useCallback(() => {
     // Todo: (20240920 - tzuhan) Delete items
-    // Deprecated: (20240920 - tzuhan) debugging purpose
     Object.keys(data[activeTab]).forEach((id) => {
       if (data[activeTab][parseInt(id, 10)].isSelected) {
+        // Deprecated: (20240920 - tzuhan) debugging purpose
         // eslint-disable-next-line no-console
         console.log('Delete selected id:', id);
       }
@@ -135,9 +135,9 @@ const UploadCertificatePage: React.FC = () => {
   // Info: (20240923 - tzuhan) 下載選中項目
   const handleDownload = useCallback(() => {
     // TODO: (20240923 - tzuhan) 下載選中的項目
-    // Deprecated: (20240923 - tzuhan) debugging purpose
     Object.keys(data[activeTab]).forEach((id) => {
       if (data[activeTab][parseInt(id, 10)].isSelected) {
+        // Deprecated: (20240923 - tzuhan) debugging purpose
         // eslint-disable-next-line no-console
         console.log('Download selected id:', id);
       }
@@ -146,6 +146,7 @@ const UploadCertificatePage: React.FC = () => {
 
   const onEdit = useCallback(
     (id: number) => {
+      // Deprecated: (20240923 - tzuhan) debugging purpose
       // eslint-disable-next-line no-console
       console.log('Edit selected id:', id);
       if (id === editingId) {
@@ -158,6 +159,7 @@ const UploadCertificatePage: React.FC = () => {
   );
 
   const handleSave = useCallback((certificate: ICertificateUI) => {
+    // Deprecated: (20240923 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('Save selected id:', certificate);
   }, []);
