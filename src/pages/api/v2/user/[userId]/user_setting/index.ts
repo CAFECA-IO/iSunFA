@@ -39,19 +39,20 @@ async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
-// ToDo: (20240924 - Jacky) Implement the logic to create a new user setting in the database
-async function handlePostRequest(req: NextApiRequest) {
+// ToDo: (20240924 - Jacky) Implement the logic to update an existing user setting in the database
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IUserSetting | null = null;
 
   // ToDo: (20240924 - Jacky) Get session data from the request
   // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
   // ToDo: (20240924 - Jacky) Validate the request body
-  // ToDo: (20240924 - Jacky) Implement the logic to create a new user setting in the database
+  // ToDo: (20240924 - Jacky) Implement the logic to update an existing user setting in the database
   // ToDo: (20240924 - Jacky) Format the user settings data to the IUserSetting interface
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   const {
+    userId,
     firstName,
     lastName,
     country,
@@ -60,13 +61,15 @@ async function handlePostRequest(req: NextApiRequest) {
     systemNotification,
     updateAndSubscriptionNotification,
     emailNotification,
+    createdAt,
+    deletedAt,
   } = req.body;
 
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const newIUserSetting: IUserSetting = {
-    id: 3,
-    userId: req.body.userId, // ToDo: (20240926 - Jacky) Get the user ID from the session
+  const updatedIUserSetting: IUserSetting = {
+    id: 1,
+    userId,
     personalInfo: {
       firstName,
       lastName,
@@ -79,13 +82,13 @@ async function handlePostRequest(req: NextApiRequest) {
       updateAndSubscriptionNotification,
       emailNotification,
     },
-    createdAt: nowTimestamp,
+    createdAt,
     updatedAt: nowTimestamp,
-    deletedAt: 0,
+    deletedAt,
   };
 
-  payload = newIUserSetting;
-  statusMessage = STATUS_MESSAGE.CREATED;
+  payload = updatedIUserSetting;
+  statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
 
   return { statusMessage, payload };
 }
@@ -97,7 +100,7 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: IUserSetting | null }>;
 } = {
   GET: handleGetRequest,
-  POST: handlePostRequest,
+  PUT: handlePutRequest,
 };
 
 export default async function handler(
