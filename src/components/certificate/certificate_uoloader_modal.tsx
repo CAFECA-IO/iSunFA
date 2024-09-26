@@ -93,10 +93,10 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         </div>
         <div className="mb-4 h-60px rounded-b-lg border-b border-l border-r border-file-uploading-stroke-outline px-4 py-2">
           <CircularProgressBar
-            size={40} // 圓的直徑
-            progress={55} // 進度百分比
-            strokeWidth={2} // 線條寬度
-            remainingText="2 left" // 顯示的剩餘文字
+            size={40} // Info: (20240926 - tzuhan) 圓的直徑
+            progress={55} // Info: (20240926 - tzuhan) 進度百分比
+            strokeWidth={2} // Info: (20240926 - tzuhan) 線條寬度
+            remainingText="2 left" // Info: (20240926 - tzuhan) 顯示的剩餘文字
           />
         </div>
         <div className="flex items-center justify-end gap-2">
