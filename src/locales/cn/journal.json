@@ -200,7 +200,7 @@
     "AP_AND_AR_PAGE_TITLE": "应收/应付清单",
     "ADD_NEW_VOUCHER": "新增传票",
     "EXPORT_VOUCHER": "汇出传票",
-    "ISSUED_DATE": "发行日期",
+    "VOUCHER_DATE": "传票日期",
     "VOUCHER_NO": "传票号码",
     "NOTE": "备注",
     "ACCOUNTING": "会计科目",

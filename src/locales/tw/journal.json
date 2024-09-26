@@ -200,7 +200,7 @@
     "AP_AND_AR_PAGE_TITLE": "應收/應付清單",
     "ADD_NEW_VOUCHER": "新增傳票",
     "EXPORT_VOUCHER": "匯出傳票",
-    "ISSUED_DATE": "發行日期",
+    "VOUCHER_DATE": "傳票日期",
     "VOUCHER_NO": "傳票號碼",
     "NOTE": "備註",
     "ACCOUNTING": "會計科目",

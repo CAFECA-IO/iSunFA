@@ -2,13 +2,13 @@ import Image from 'next/image';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaDownload, FaUpload } from 'react-icons/fa';
-import { VoucherType } from '@/constants/voucher';
+import { VoucherType } from '@/constants/account';
 import { FiRepeat } from 'react-icons/fi';
 
 const APandARItem = () => {
   // ToDo: (20240924 - Julian) dummy data
   const date: number = new Date().getTime() / 1000;
-  const voucherType: VoucherType = VoucherType.PAYMENT;
+  const voucherType: VoucherType = VoucherType.EXPENSE;
   const voucherNo: string = '20240924-0001';
   const counterparty = {
     code: '59373022',
@@ -26,12 +26,12 @@ const APandARItem = () => {
   const displayedDate = <CalendarIcon timestamp={date} />;
 
   const displayedVoucherNo =
-    voucherType === VoucherType.PAYMENT ? (
+    voucherType === VoucherType.EXPENSE ? (
       <div className="mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-success-dark" />
         <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
       </div>
-    ) : voucherType === VoucherType.RECEIVED ? (
+    ) : voucherType === VoucherType.RECEIVE ? (
       <div className="mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-error-dark" />
         <p className="text-sm text-text-state-error-solid">{voucherNo}</p>

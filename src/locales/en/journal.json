@@ -200,7 +200,7 @@
     "AP_AND_AR_PAGE_TITLE": "Payable/Receivable List",
     "ADD_NEW_VOUCHER": "Add New Voucher",
     "EXPORT_VOUCHER": "Export Voucher",
-    "ISSUED_DATE": "Issued Date",
+    "VOUCHER_DATE": "Voucher Date",
     "VOUCHER_NO": "Voucher No.",
     "NOTE": "Note",
     "ACCOUNTING": "Accounting",
