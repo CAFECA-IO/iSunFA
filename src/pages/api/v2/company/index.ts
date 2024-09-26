@@ -7,11 +7,12 @@ import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { FileFolder } from '@/constants/file';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 // Info: (20240924 - Jacky) Implement the logic to get the company list data from the database
 async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyBeta[] | null = null;
+  let payload: IPaginatedData<ICompanyBeta[]> | null = null;
   // const session = await getSession(req, res);
   // const { userId } = session;
 
@@ -22,30 +23,42 @@ async function handleGetRequest() {
   //   if (!isAuth) {
   //     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   //   } else {
-  const companyList = [
-    {
-      id: 1,
-      taxId: '123456',
-      imageId: '123456',
-      name: 'Test Company',
-      regional: 'Test',
-      tag: 'Test',
-      startDate: 123456,
-      createdAt: 123456,
-      updatedAt: 123456,
-    },
-    {
-      id: 2,
-      taxId: '123456',
-      imageId: '123456',
-      name: 'Test Company',
-      regional: 'Test',
-      tag: 'Test',
-      startDate: 123456,
-      createdAt: 123456,
-      updatedAt: 123456,
-    },
-  ];
+  const companyList: IPaginatedData<ICompanyBeta[]> = {
+    data: [
+      {
+        id: 1,
+        taxId: '123456',
+        imageId: '123456',
+        name: 'Test Company',
+        tag: 'Test',
+        startDate: 123456,
+        createdAt: 123456,
+        updatedAt: 123456,
+      },
+      {
+        id: 2,
+        taxId: '123456',
+        imageId: '123456',
+        name: 'Test Company',
+        tag: 'Test',
+        startDate: 123456,
+        createdAt: 123456,
+        updatedAt: 123456,
+      },
+    ],
+    page: 1,
+    totalPages: 5,
+    totalCount: 23,
+    pageSize: 5,
+    hasNextPage: true,
+    hasPreviousPage: false,
+    sort: [
+      {
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      },
+    ],
+  };
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   payload = companyList;
   //   }
@@ -130,7 +143,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: ICompanyBeta | ICompanyBeta[] | null;
+    payload: ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null;
   }>;
 } = {
   GET: handleGetRequest,
@@ -139,10 +152,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompanyBeta | ICompanyBeta[] | null>>
+  res: NextApiResponse<IResponseData<ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyBeta | ICompanyBeta[] | null = null;
+  let payload: ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -156,10 +169,9 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ICompanyBeta | ICompanyBeta[] | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<
+      ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null
+    >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
