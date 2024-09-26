@@ -50,8 +50,10 @@ async function handleVoucherCreatePrismaLogic(
     const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
     const voucherData = await createVoucherInPrisma(newVoucherNo, journal.id);
     // Info: (20240925 - Murky) I need to make sure lineitems is created in order
+    // Deprecated: (20240926 - Murky) Need to find better way to sort line items
     /* eslint-disable no-restricted-syntax */
     for (const lineItem of voucher.lineItems) {
+      // Deprecated: (20240926 - Murky) Need to find better way to sort line items
       /* eslint-disable no-await-in-loop */
       await createLineItemInPrisma(lineItem, voucherData.id, companyId);
       /* eslint-enable no-await-in-loop */
