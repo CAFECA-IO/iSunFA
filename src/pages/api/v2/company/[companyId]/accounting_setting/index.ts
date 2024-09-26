@@ -16,6 +16,7 @@ async function handleGetRequest() {
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   payload = {
+    id: 1,
     companyId: 1,
     companyName: 'Company A',
     taxSettings: {
@@ -54,6 +55,7 @@ async function handlePostRequest(req: NextApiRequest) {
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   const newSetting: IAccountingSetting = {
+    id: 1,
     companyId: 2,
     companyName: req.body.companyName,
     taxSettings: req.body.taxSettings,

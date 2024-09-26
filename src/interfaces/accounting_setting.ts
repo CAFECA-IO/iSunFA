@@ -26,6 +26,7 @@ interface IShortcut {
 }
 
 export interface IAccountingSetting {
+  id: number;
   companyId: number;
   companyName: string;
   taxSettings: ITaxSetting;
