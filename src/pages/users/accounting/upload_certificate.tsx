@@ -109,35 +109,6 @@ const UploadCertificatePage: React.FC = () => {
   };
 
   const onEdit = (id: number) => {
-    // Deprecated: (20240920 - tzuhan) debugging purpose
-    Object.keys(data).forEach((id) => {
-      if (data[parseInt(id, 10)].isSelected) {
-        // eslint-disable-next-line no-console
-        console.log('Delete selected id:', id);
-      }
-    });
-  };
-
-  const onDownload = (id: number) => {
-    // TODO: (20240923 - tzuhan) 下載單個項目
-    // Deprecated: (20240923 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Download single id:', id);
-  };
-
-  // Info: (20240923 - tzuhan) 下載選中項目
-  const handleDownload = () => {
-    // TODO: (20240923 - tzuhan) 下載選中的項目
-    Object.keys(data).forEach((id) => {
-      if (data[parseInt(id, 10)].isSelected) {
-        // Deprecated: (20240923 - tzuhan) debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('Download selected id:', id);
-      }
-    });
-  };
-
-  const onEdit = (id: number) => {
     // Deprecated: (20240923 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('Edit selected id:', id);
