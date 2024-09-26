@@ -235,9 +235,6 @@ export async function findUniqueJournalInPrisma(journalId: number, companyId: nu
                 account: true,
               },
               orderBy: {
-                account: {
-                  debit: 'desc',
-                },
                 id: 'asc',
               },
             },

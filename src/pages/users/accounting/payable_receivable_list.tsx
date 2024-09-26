@@ -2,9 +2,9 @@ import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import VoucherPageBody from '@/components/voucher/voucher_page_body';
+import APandARPageBody from '@/components/voucher/ap_and_ar_page_body';
 
-const VoucherListPage = () => {
+const APandARListPage = () => {
   const { t } = useTranslation('common');
 
   return (
@@ -13,7 +13,7 @@ const VoucherListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('journal:VOUCHER.VOUCHER_LIST_PAGE_TITLE')} - iSunFA</title>
+        <title>{t('journal:VOUCHER.AP_AND_AR_PAGE_TITLE')} - iSunFA</title>
       </Head>
 
       <div className="ml-280px bg-text-neutral-secondary p-20px text-center text-white">
@@ -24,9 +24,9 @@ const VoucherListPage = () => {
         This is sidebar
       </div>
 
-      {/* Info: (20240920 - Julian) Body */}
+      {/* Info: (20240924 - Julian) Body */}
       <main className="flex w-screen flex-col overflow-y-auto bg-surface-neutral-main-background pl-280px font-barlow">
-        <VoucherPageBody />
+        <APandARPageBody />
       </main>
     </>
   );
@@ -50,4 +50,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default VoucherListPage;
+export default APandARListPage;
