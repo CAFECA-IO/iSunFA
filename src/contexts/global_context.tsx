@@ -382,8 +382,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   useEffect(() => {
     if (signedIn) {
       if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
-        if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
-        if (!isAgreeInfoCollection) termsOfServiceConfirmModalVisibilityHandler(true);
+        if (router.pathname !== ISUNFA_ROUTE.LOGIN) {
+          router.push(ISUNFA_ROUTE.LOGIN);
+        }
+        if (!isAgreeInfoCollection) {
+          termsOfServiceConfirmModalVisibilityHandler(true);
+        }
         if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
           privacyPolicyConfirmModalVisibilityHandler(true);
         }
