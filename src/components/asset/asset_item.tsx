@@ -6,10 +6,7 @@ import { AssetStatus } from '@/constants/asset';
 interface IAssetItem {
   id: number;
   acquisitionDate: number;
-  assetType: {
-    id: number;
-    title: string;
-  };
+  assetType: string;
   assetNumber: string;
   assetName: string;
   purchasePrice: number;
@@ -23,10 +20,7 @@ interface IAssetItem {
 const dummyData: IAssetItem = {
   id: 1,
   acquisitionDate: 1632511200,
-  assetType: {
-    id: 123,
-    title: 'Machinery',
-  },
+  assetType: '123 Machinery',
   assetNumber: 'A-000010',
   assetName: 'MackBook',
   purchasePrice: 100000,
@@ -51,15 +45,15 @@ const AssetItem = () => {
     assetStatus,
   } = dummyData;
 
-  // Info: (20240925 - Julian) 取得今天的 0 點的時間戳
-  const twelveOClockOfToday = new Date().setHours(0, 0, 0, 0) / 1000;
-
   const displayedDate = <CalendarIcon timestamp={acquisitionDate} />;
+
+  const assetTypeCode = assetType.split(' ')[0];
+  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
 
   const displayedAssetType = (
     <p className="text-text-neutral-primary">
-      {assetType.id}
-      <span className="text-text-neutral-tertiary"> {assetType.title}</span>
+      {assetTypeCode}
+      <span className="text-text-neutral-tertiary"> {assetTypeTitle}</span>
     </p>
   );
 
@@ -91,15 +85,12 @@ const AssetItem = () => {
     </p>
   );
 
-  // Info: (20240925 - Julian) 計算兩個時間戳之間的時間差
-  const calculatePeriod = (startTimestamp: number, endTimestamp: number) => {
-    const periodTimestamp =
-      endTimestamp > startTimestamp ? endTimestamp - startTimestamp : startTimestamp - endTimestamp;
-
-    const years = Math.floor(periodTimestamp / (60 * 60 * 24 * 365));
-    const months = Math.floor((periodTimestamp % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30));
+  // Info: (20240926 - Julian) 將時間戳轉換成年月日
+  const timestampToYMD = (timestamp: number) => {
+    const years = Math.floor(timestamp / (60 * 60 * 24 * 365));
+    const months = Math.floor((timestamp % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30));
     const days = Math.floor(
-      ((periodTimestamp % (60 * 60 * 24 * 365)) % (60 * 60 * 24 * 30)) / (60 * 60 * 24)
+      ((timestamp % (60 * 60 * 24 * 365)) % (60 * 60 * 24 * 30)) / (60 * 60 * 24)
     );
 
     return {
@@ -109,9 +100,9 @@ const AssetItem = () => {
     };
   };
 
-  const remainingYears = calculatePeriod(twelveOClockOfToday, remainingTimestamp).years;
-  const remainingMonths = calculatePeriod(twelveOClockOfToday, remainingTimestamp).months;
-  const remainingDays = calculatePeriod(twelveOClockOfToday, remainingTimestamp).days;
+  const remainingYears = timestampToYMD(remainingTimestamp).years;
+  const remainingMonths = timestampToYMD(remainingTimestamp).months;
+  const remainingDays = timestampToYMD(remainingTimestamp).days;
 
   const remainingProcessBar = (
     <div className="relative h-5px w-7/10 overflow-hidden rounded-full bg-surface-neutral-depth">
