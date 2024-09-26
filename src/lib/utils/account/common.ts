@@ -53,11 +53,6 @@ export function buildAccountForest(accounts: Account[]): IAccountNode[] {
 }
 
 function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<number, number>) {
-  /* eslint-disable no-console */
-  if (account.code === '3353') {
-    console.log(account);
-  }
-  /* eslint-enable no-console */
   let newAmount = lineItemsMap.get(account.id) || 0;
   const updatedChildren = account.children.map((child) => {
     const childAccount = updateAccountAmountsByDFS(child, lineItemsMap);
