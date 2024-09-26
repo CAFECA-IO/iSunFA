@@ -1,0 +1,70 @@
+import React, { useState } from 'react';
+import Head from 'next/head';
+import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { ILocale } from '@/interfaces/locale';
+import NewVoucherForm from '@/components/voucher/new_voucher_form';
+
+const AddNewVoucherPage = () => {
+  const { t } = useTranslation('common');
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+
+  return (
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon/favicon.ico" />
+        <title>{t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')} - iSunFA</title>
+      </Head>
+
+      <button
+        type="button"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="absolute top-0 bg-rose-300"
+      >
+        Sidebar Toggle
+      </button>
+
+      <div
+        className={`${isSidebarOpen ? 'ml-280px' : 'ml-0'} bg-text-neutral-secondary p-20px text-center text-white transition-all duration-300 ease-in-out`}
+      >
+        This is header
+      </div>
+      <div
+        className={`fixed flex h-screen overflow-hidden ${isSidebarOpen ? 'w-280px' : 'w-0'} z-50 flex-col items-center justify-center bg-surface-neutral-surface-lv2 transition-all duration-300 ease-in-out`}
+      >
+        This is sidebar
+      </div>
+
+      {/* Info: (20240925 - Julian) Body */}
+      <main
+        className={`${isSidebarOpen ? 'pl-280px' : 'pl-0'} flex w-screen flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out`}
+      >
+        <NewVoucherForm />
+      </main>
+    </>
+  );
+};
+
+const getStaticPropsFunction = async ({ locale }: ILocale) => ({
+  props: {
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+      'asset',
+    ])),
+    locale,
+  },
+});
+
+export const getStaticProps = getStaticPropsFunction;
+
+export default AddNewVoucherPage;
