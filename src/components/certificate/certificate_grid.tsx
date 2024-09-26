@@ -20,7 +20,7 @@ const CertificateGrid: React.FC<CertificateGridProps> = ({
   onEdit,
 }) => {
   return (
-    <div className="grid-cols-dynamic-fit grid place-items-center gap-4">
+    <div className="grid grid-cols-dynamic-fit place-items-center gap-4">
       {data.map((certificate) => (
         <CertificateThumbnail
           data={certificate}

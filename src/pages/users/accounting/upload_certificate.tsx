@@ -38,6 +38,7 @@ const UploadCertificatePage: React.FC = () => {
   };
 
   const handleSelect = (ids: number[], isSelected: boolean) => {
+    // Deprecated: (20240920 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('handleSelect', ids, isSelected);
     const updatedData = {
@@ -79,6 +80,35 @@ const UploadCertificatePage: React.FC = () => {
 
   const handleDelete = () => {
     // Todo: (20240920 - tzuhan) Delete items
+    Object.keys(data).forEach((id) => {
+      if (data[parseInt(id, 10)].isSelected) {
+        // Deprecated: (20240920 - tzuhan) debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('Delete selected id:', id);
+      }
+    });
+  };
+
+  const onDownload = (id: number) => {
+    // TODO: (20240923 - tzuhan) 下載單個項目
+    // Deprecated: (20240923 - tzuhan) debugging purpose
+    // eslint-disable-next-line no-console
+    console.log('Download single id:', id);
+  };
+
+  // Info: (20240923 - tzuhan) 下載選中項目
+  const handleDownload = () => {
+    // TODO: (20240923 - tzuhan) 下載選中的項目
+    Object.keys(data).forEach((id) => {
+      if (data[parseInt(id, 10)].isSelected) {
+        // Deprecated: (20240923 - tzuhan) debugging purpose
+        // eslint-disable-next-line no-console
+        console.log('Download selected id:', id);
+      }
+    });
+  };
+
+  const onEdit = (id: number) => {
     // Deprecated: (20240920 - tzuhan) debugging purpose
     Object.keys(data).forEach((id) => {
       if (data[parseInt(id, 10)].isSelected) {
@@ -98,9 +128,9 @@ const UploadCertificatePage: React.FC = () => {
   // Info: (20240923 - tzuhan) 下載選中項目
   const handleDownload = () => {
     // TODO: (20240923 - tzuhan) 下載選中的項目
-    // Deprecated: (20240923 - tzuhan) debugging purpose
     Object.keys(data).forEach((id) => {
       if (data[parseInt(id, 10)].isSelected) {
+        // Deprecated: (20240923 - tzuhan) debugging purpose
         // eslint-disable-next-line no-console
         console.log('Download selected id:', id);
       }
@@ -108,6 +138,7 @@ const UploadCertificatePage: React.FC = () => {
   };
 
   const onEdit = (id: number) => {
+    // Deprecated: (20240923 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('Edit selected id:', id);
     if (id === editingId) {
@@ -118,6 +149,7 @@ const UploadCertificatePage: React.FC = () => {
   };
 
   const handleSave = (certificate: ICertificateUI) => {
+    // Deprecated: (20240920 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('Save selected id:', certificate);
   };
