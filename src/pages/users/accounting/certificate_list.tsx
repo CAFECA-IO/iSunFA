@@ -4,10 +4,9 @@ import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
-import UploadArea from '@/components/upload_certificate/upload_area';
+import UploadArea from '@/components/upload_area/upload_area';
 import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
-import FloatingUploadPopup from '@/components/upload_certificate/floating_upload_popup';
 import { APIName } from '@/constants/api_connection';
 import SelectionToolbar from '@/components/selection_tool_bar/selection_tool_bar';
 import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
@@ -20,6 +19,10 @@ const UploadCertificatePage: React.FC = () => {
     0: {},
     1: {},
   });
+  const [sumPrice, setSumPrice] = useState<{ [tab: number]: number }>({
+    0: 0,
+    1: 0,
+  });
   const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
   const [viewType, setViewType] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -29,6 +32,10 @@ const UploadCertificatePage: React.FC = () => {
   });
 
   const handleApiResponse = useCallback((resData: ICertificate[]) => {
+    const sumInvoiceTotalPrice = {
+      0: 0,
+      1: 0,
+    };
     const certificates = resData.reduce(
       (acc, item) => {
         if (!item.voucherNo) {
@@ -40,6 +47,7 @@ const UploadCertificatePage: React.FC = () => {
               actions: [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE],
             },
           };
+          sumInvoiceTotalPrice[0] += item.totalPrice;
         } else {
           acc[1] = {
             ...acc[1],
@@ -49,12 +57,14 @@ const UploadCertificatePage: React.FC = () => {
               actions: [OPERATIONS.DOWNLOAD],
             },
           };
+          sumInvoiceTotalPrice[1] += item.totalPrice;
         }
         return acc;
       },
       {} as { [tab: number]: { [id: number]: ICertificateUI } }
     );
     setData(certificates); // Info: (20240919 - tzuhan) 假設 API 回應中有 data 屬性
+    setSumPrice(sumInvoiceTotalPrice);
   }, []);
 
   const handleSelect = useCallback(
@@ -197,7 +207,7 @@ const UploadCertificatePage: React.FC = () => {
 
             {/* Info: (20240919 - tzuhan) Tabs */}
             <Tabs
-              tabs={['Certificates Pending Voucher', 'Certificates with Issued Voucher']}
+              tabs={['Certificate Without Voucher', 'Certificate with Voucher']}
               activeTab={activeTab}
               onTabClick={(index: number) => setActiveTab(index)}
               counts={[Object.keys(data[0]).length, Object.keys(data[1]).length]}
@@ -221,12 +231,15 @@ const UploadCertificatePage: React.FC = () => {
 
             <SelectionToolbar
               active={activeSelection}
+              isSelectable={activeTab === 0}
               onActiveChange={setActiveSelection}
               items={Object.values(data[activeTab])}
+              itemType="Certificates"
+              subtitle={`Invoice Total Price: ${sumPrice} TWD`}
               selectedCount={filterSelectedIds().length}
               totalCount={Object.values(data[activeTab]).length || 0}
               handleSelect={handleSelect}
-              operations={activeTab === 0 ? [] : ['ADD_VOUCHER', 'ADD_ASSET', 'DELETE']}
+              operations={activeTab === 0 ? [] : ['ADD_VOUCHER', 'DELETE']}
               onAddVoucher={handleAddVoucher}
               onAddAsset={handleAddAsset}
               onDelete={handleDelete}
@@ -237,6 +250,7 @@ const UploadCertificatePage: React.FC = () => {
             <Certificate
               data={Object.values(data[activeTab])}
               viewType={viewType}
+              activeTab={activeTab}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
               isSelectedAll={isSelectedAll[activeTab]}
@@ -246,9 +260,6 @@ const UploadCertificatePage: React.FC = () => {
             />
           </div>
         </div>
-
-        {/* Info: (20240919 - tzuhan) Floating Upload Popup */}
-        <FloatingUploadPopup />
       </main>
     </>
   );

@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import UploadFileItem from '@/components/upload_certificate/upload_file_item';
+import UploadFileItem, { UploadFile } from '@/components/upload_certificate/upload_file_item';
 import { ProgressStatus } from '@/constants/account';
 import Image from 'next/image';
-
-interface UploadFile {
-  name: string;
-  size: number; // Info: (20240919 - tzuhan) 文件大小（KB）
-  progress: number; // Info: (20240919 - tzuhan) 上傳進度（0-100）
-  status: ProgressStatus; // Info: (20240919 - tzuhan) 是否暫停
-}
 
 const FloatingUploadPopup: React.FC = () => {
   const [files, setFiles] = useState<UploadFile[]>([
