@@ -109,7 +109,7 @@ const NewVoucherForm = () => {
           </p>
           <div
             onClick={typeToggleHandler}
-            className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer"
+            className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
           >
             <p className="text-base text-input-text-input-filled">{translateType(type)}</p>
             <FaChevronDown size={20} />

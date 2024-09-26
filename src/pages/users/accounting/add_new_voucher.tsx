@@ -33,7 +33,7 @@ const AddNewVoucherPage = () => {
         This is header
       </div>
       <div
-        className={`fixed flex h-screen overflow-hidden ${isSidebarOpen ? 'w-280px' : 'w-0'} z-50 flex-col items-center justify-center bg-surface-neutral-surface-lv2 transition-all duration-300 ease-in-out`}
+        className={`${isSidebarOpen ? 'w-280px' : 'w-0'} fixed z-50 flex h-screen flex-col items-center justify-center overflow-hidden bg-surface-neutral-surface-lv2 transition-all duration-300 ease-in-out`}
       >
         This is sidebar
       </div>
