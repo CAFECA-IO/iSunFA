@@ -3,12 +3,97 @@ import { useTranslation } from 'next-i18next';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
-import VoucherItem from '@/components/voucher/voucher_item';
+import VoucherItem, { IVoucherBeta } from '@/components/voucher/voucher_item';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { VoucherType } from '@/constants/account';
+
+const dummyVoucherList: IVoucherBeta[] = [
+  {
+    id: 1,
+    date: 1632511200,
+    voucherNo: '20240920-0001',
+    voucherType: VoucherType.RECEIVE,
+    note: 'Printer-0001',
+    accounting: [
+      '1141 Accounts receivable',
+      '1141 Accounts receivable',
+      '1141 Accounts receivable',
+    ],
+    credit: [100200],
+    debit: [100000, 200],
+    counterparty: {
+      code: '59373022',
+      name: 'PX Mart',
+    },
+    issuer: {
+      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
+      name: 'Julian',
+    },
+  },
+  {
+    id: 2,
+    date: 1662511200,
+    voucherNo: '20240922-0002',
+    voucherType: VoucherType.EXPENSE,
+    note: 'Printer-0002',
+    accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
+    credit: [10200],
+    debit: [10200],
+    counterparty: {
+      code: '59373022',
+      name: 'PX Mart',
+    },
+    issuer: {
+      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
+      name: 'Julian',
+    },
+  },
+  {
+    id: 3,
+    date: 1672592800,
+    voucherNo: '20240925-0001',
+    voucherType: VoucherType.RECEIVE,
+    note: 'Scanner-0001',
+    accounting: [
+      '1141 Accounts receivable',
+      '1141 Accounts receivable',
+      '1141 Accounts receivable',
+      '1141 Accounts receivable',
+    ],
+    credit: [100000, 200],
+    debit: [100000, 200],
+    counterparty: {
+      code: '59373022',
+      name: 'PX Mart',
+    },
+    issuer: {
+      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
+      name: 'Julian',
+    },
+  },
+  {
+    id: 4,
+    date: 1702511200,
+    voucherNo: '20240922-0002',
+    voucherType: VoucherType.TRANSFER,
+    note: 'Mouse-0001',
+    accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
+    credit: [300],
+    debit: [300],
+    counterparty: {
+      code: '59373022',
+      name: 'PX Mart',
+    },
+    issuer: {
+      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
+      name: 'Julian',
+    },
+  },
+];
 
 const VoucherList = () => {
   const { t } = useTranslation('common');
@@ -32,8 +117,8 @@ const VoucherList = () => {
   const selectToggleHandler = () => setIsSelecting((prev) => !prev);
 
   // Info: (20240920 - Julian) 日期排序按鈕
-  const displayedIssuedDate = SortingButton({
-    string: t('journal:VOUCHER.ISSUED_DATE'),
+  const displayedDate = SortingButton({
+    string: t('journal:VOUCHER.VOUCHER_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
@@ -91,8 +176,8 @@ const VoucherList = () => {
     </div>
   );
 
-  const displayedVoucherList = Array.from({ length: 10 }, (_, i) => i + 1).map((i) => {
-    return <VoucherItem key={i} isSelecting={isSelecting} />;
+  const displayedVoucherList = dummyVoucherList.map((voucher) => {
+    return <VoucherItem key={voucher.id} voucher={voucher} isSelecting={isSelecting} />;
   });
 
   return (
@@ -105,10 +190,10 @@ const VoucherList = () => {
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
-            <div className={checkStyle}>
+            <div className={`${checkStyle} border-b border-stroke-neutral-quaternary`}>
               <input type="checkbox" className={checkboxStyle} />
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
@@ -133,7 +218,7 @@ const VoucherList = () => {
         <div className="table-row-group">{displayedVoucherList}</div>
 
         {/* Info: (20240920 - Julian) ---------------- Table Footer(排版用) ---------------- */}
-        <div className="table-footer-group h-40px"></div>
+        <div className="table-footer-group h-20px"></div>
       </div>
 
       {/* Info: (20240920 - Julian) Pagination */}

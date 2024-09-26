@@ -71,7 +71,7 @@ const AssetList = () => {
         <Button
           type="button"
           variant="tertiaryOutline"
-          // ToDo: (20240925 - Julian) Open asset export modal
+          // ToDo: (20240925 - Julian) export to pdf
         >
           <MdOutlineFileDownload />
           <p>{t('asset:ASSET.EXPORT_ASSET_LIST')}</p>
