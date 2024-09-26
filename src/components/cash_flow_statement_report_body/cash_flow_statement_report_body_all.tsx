@@ -321,7 +321,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 0, 10)}
       </section>
@@ -345,7 +345,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 10, 19)}
         <div className="relative -z-10">
@@ -360,7 +360,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
 
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 3)}
 
@@ -394,7 +394,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 13)}
 
@@ -428,7 +428,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 13, 26)}
 
@@ -462,7 +462,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 26, 41)}
 
@@ -496,7 +496,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 41, 55)}
 
@@ -530,7 +530,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 55, 70)}
 
