@@ -7,7 +7,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 // ToDo: (20240924 - Jacky) Implement the logic to get the user settings data from the database
 async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUserSetting[] | null = null;
+  let payload: IUserSetting | null = null;
 
   // ToDo: (20240924 - Jacky) Get session data from the request
   // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
@@ -15,46 +15,25 @@ async function handleGetRequest() {
   // ToDo: (20240924 - Jacky) Format the user settings data to the IUserSetting interface
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
-  payload = [
-    {
-      id: 1,
-      userId: 101,
-      personalInfo: {
-        firstName: 'John',
-        lastName: 'Doe',
-        country: 'USA',
-        phone: '1234567890',
-        language: 'English',
-      },
-      notificationSetting: {
-        systemNotification: true,
-        updateAndSubscriptionNotification: false,
-        emailNotification: true,
-      },
-      createdAt: 1627847284,
-      updatedAt: 1627847284,
-      deletedAt: 0,
+  payload = {
+    id: 1,
+    userId: 101,
+    personalInfo: {
+      firstName: 'John',
+      lastName: 'Doe',
+      country: 'USA',
+      phone: '1234567890',
+      language: 'English',
     },
-    {
-      id: 2,
-      userId: 102,
-      personalInfo: {
-        firstName: 'Jane',
-        lastName: 'Smith',
-        country: 'Canada',
-        phone: '0987654321',
-        language: 'French',
-      },
-      notificationSetting: {
-        systemNotification: false,
-        updateAndSubscriptionNotification: true,
-        emailNotification: false,
-      },
-      createdAt: 1627847284,
-      updatedAt: 1627847284,
-      deletedAt: 0,
+    notificationSetting: {
+      systemNotification: true,
+      updateAndSubscriptionNotification: false,
+      emailNotification: true,
     },
-  ];
+    createdAt: 1627847284,
+    updatedAt: 1627847284,
+    deletedAt: 0,
+  };
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
   return { statusMessage, payload };
@@ -115,7 +94,7 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IUserSetting[] | IUserSetting | null }>;
+  ) => Promise<{ statusMessage: string; payload: IUserSetting | null }>;
 } = {
   GET: handleGetRequest,
   POST: handlePostRequest,
@@ -123,10 +102,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUserSetting[] | IUserSetting | null>>
+  res: NextApiResponse<IResponseData<IUserSetting | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUserSetting[] | IUserSetting | null = null;
+  let payload: IUserSetting | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -140,10 +119,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IUserSetting[] | IUserSetting | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IUserSetting | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

@@ -3,11 +3,12 @@ import { ICustomerVendor } from '@/interfaces/customer_vendor';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 // ToDo: (20240925 - Jacky) Implement the logic to get the customer/vendor data from the database
 async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICustomerVendor | ICustomerVendor[] | null = null;
+  let payload: IPaginatedData<ICustomerVendor[]> | null = null;
   // ToDo: (20240925 - Jacky) Get session data from the request
   // const session = await getSession(req, res);
   // const { userId, companyId } = session;
@@ -23,28 +24,42 @@ async function handleGetRequest() {
   //   if (!isAuth) {
   //     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   //   } else {
-  const customerVendorList: ICustomerVendor[] = [
-    {
-      id: 1,
-      companyId: 1,
-      name: 'Test Customer',
-      taxId: '123456',
-      type: 'Customer',
-      note: 'Test Note',
-      createdAt: 123456,
-      updatedAt: 123456,
-    },
-    {
-      id: 2,
-      companyId: 1,
-      name: 'Test Vendor',
-      taxId: '123456',
-      type: 'Vendor',
-      note: 'Test Note',
-      createdAt: 123456,
-      updatedAt: 123456,
-    },
-  ];
+  const customerVendorList: IPaginatedData<ICustomerVendor[]> = {
+    data: [
+      {
+        id: 1,
+        companyId: 1,
+        name: 'Test Customer',
+        taxId: '123456',
+        type: 'Customer',
+        note: 'Test Note',
+        createdAt: 123456,
+        updatedAt: 123456,
+      },
+      {
+        id: 2,
+        companyId: 1,
+        name: 'Test Vendor',
+        taxId: '123456',
+        type: 'Vendor',
+        note: 'Test Note',
+        createdAt: 123456,
+        updatedAt: 123456,
+      },
+    ],
+    page: 1,
+    totalPages: 5,
+    totalCount: 23,
+    pageSize: 5,
+    hasNextPage: true,
+    hasPreviousPage: false,
+    sort: [
+      {
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      },
+    ],
+  };
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   payload = customerVendorList;
   //   }
@@ -56,7 +71,7 @@ async function handleGetRequest() {
 // ToDo: (20240925 - Jacky) Implement the logic to create a new customer/vendor record in the database
 async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICustomerVendor | ICustomerVendor[] | null = null;
+  let payload: ICustomerVendor | null = null;
 
   const { name, taxId, type, note } = req.body;
   // ToDo: (20240925 - Jacky) Validate the request body
@@ -101,7 +116,10 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ICustomerVendor | ICustomerVendor[] | null }>;
+  ) => Promise<{
+    statusMessage: string;
+    payload: ICustomerVendor | IPaginatedData<ICustomerVendor[]> | null;
+  }>;
 } = {
   GET: handleGetRequest,
   POST: handlePostRequest,
@@ -109,10 +127,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICustomerVendor | ICustomerVendor[] | null>>
+  res: NextApiResponse<IResponseData<ICustomerVendor | IPaginatedData<ICustomerVendor[]> | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICustomerVendor | ICustomerVendor[] | null = null;
+  let payload: ICustomerVendor | IPaginatedData<ICustomerVendor[]> | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -126,10 +144,9 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<ICustomerVendor | ICustomerVendor[] | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<
+      ICustomerVendor | IPaginatedData<ICustomerVendor[]> | null
+    >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
