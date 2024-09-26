@@ -109,7 +109,7 @@ const UploadCertificatePage: React.FC = () => {
   };
 
   const onEdit = (id: number) => {
-    // Deprecated: (20240920 - tzuhan) debugging purpose
+    // Deprecated: (20240923 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('Edit selected id:', id);
     if (id === editingId) {
@@ -220,6 +220,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'salary',
       'setting',
       'terms',
+      'asset',
     ])),
   },
 });

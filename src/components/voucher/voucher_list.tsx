@@ -26,7 +26,7 @@ const VoucherList = () => {
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
-  const sideBorderStyles = 'border-r border-stroke-neutral-quaternary';
+  const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isSelecting ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
   const selectToggleHandler = () => setIsSelecting((prev) => !prev);
@@ -103,7 +103,7 @@ const VoucherList = () => {
       {/* Info: (20240920 - Julian) Table */}
       <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group h-60px border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={checkStyle}>
               <input type="checkbox" className={checkboxStyle} />
@@ -123,7 +123,9 @@ const VoucherList = () => {
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.COUNTRYPARTY')}
             </div>
-            <div className={`${tableCellStyles}`}>{t('journal:VOUCHER.ISSUER')}</div>
+            <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
+              {t('journal:VOUCHER.ISSUER')}
+            </div>
           </div>
         </div>
 

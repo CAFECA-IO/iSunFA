@@ -153,6 +153,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
         'setting',
         'terms',
         'salary',
+        'asset',
       ])),
     },
   };
