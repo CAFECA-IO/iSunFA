@@ -68,46 +68,66 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
     );
 
+    const netIncomeInEquity = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code
+    );
+
+    const otherEquityOther = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code
+    );
+
     closeAccount.push({
-      id: -1,
+      id: netIncomeInEquity?.id || -1,
       amount: curPeriod ? netIncome.curPeriodAmount : netIncome.prePeriodAmount,
-      description: SPECIAL_ACCOUNTS.NET_INCOME.name,
-      debit: SPECIAL_ACCOUNTS.NET_INCOME.debit,
-      accountId: netIncomeAccount?.id || -1,
+      description: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.name,
+      debit: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.debit,
+      accountId: netIncomeInEquity?.id || -1,
       voucherId: -1,
       createdAt: 1,
       updatedAt: 1,
       deletedAt: null,
-      account: netIncomeAccount || {
-        ...SPECIAL_ACCOUNTS.NET_INCOME,
-        id: -1,
-        companyId: this.companyId,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-      },
+      account: netIncomeAccount
+        ? {
+            ...netIncomeAccount,
+            code: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code,
+            debit: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.debit,
+          }
+        : {
+            ...SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY,
+            id: -1,
+            companyId: this.companyId,
+            createdAt: 1,
+            updatedAt: 1,
+            deletedAt: null,
+          },
     });
 
     closeAccount.push({
-      id: -1,
+      id: otherEquityOther?.id || -1,
       amount: curPeriod
         ? otherComprehensiveIncome.curPeriodAmount
         : otherComprehensiveIncome.prePeriodAmount,
-      description: SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.name,
-      debit: SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.debit,
-      accountId: otherComprehensiveIncomeAccount?.id || -1,
+      description: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.name,
+      debit: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.debit,
+      accountId: otherEquityOther?.id || -1,
       voucherId: -1,
       createdAt: 1,
       updatedAt: 1,
       deletedAt: null,
-      account: otherComprehensiveIncomeAccount || {
-        ...SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME,
-        id: -1,
-        companyId: this.companyId,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-      },
+      account: otherComprehensiveIncomeAccount
+        ? {
+            ...otherComprehensiveIncomeAccount,
+            code: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code,
+            debit: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.debit,
+          }
+        : {
+            ...SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER,
+            id: -1,
+            companyId: this.companyId,
+            createdAt: 1,
+            updatedAt: 1,
+            deletedAt: null,
+          },
     });
 
     return closeAccount;
@@ -118,12 +138,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     // Info: (20240801 - Murky) 暫時關閉本期損益和其他其他綜合損益權益
     const closeAccount = await this.closeAccountFromIncomeStatement(curPeriod);
+
     lineItemsFromDB = lineItemsFromDB.concat(closeAccount);
 
     const accountForest = await this.getAccountForestByReportSheet();
 
     const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
-
     const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
 
     return updatedAccountForest;
