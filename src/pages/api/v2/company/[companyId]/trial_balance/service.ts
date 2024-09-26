@@ -1,5 +1,3 @@
-import { trialBalanceReturnValidator } from '@/lib/utils/zod_schema/trial_balance';
-
 export const mockTrialBalanceList = [
   {
     id: 1,
@@ -45,8 +43,3 @@ export const mockTrialBalanceList = [
     subAccounts: [],
   },
 ];
-
-// Validate the mock data against the schema
-mockTrialBalanceList.forEach((item) => {
-  trialBalanceReturnValidator.parse(item);
-});
