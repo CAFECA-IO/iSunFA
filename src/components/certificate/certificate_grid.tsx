@@ -1,7 +1,7 @@
 import React from 'react';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateThumbnail from '@/components/certificate/certificate_thumbnail';
-import FloatingUploadPopup from '@/components/upload_certificate/floating_upload_popup';
+import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 
 interface CertificateGridProps {
   data: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表

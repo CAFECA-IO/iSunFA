@@ -4,7 +4,7 @@ import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
-import UploadArea from '@/components/upload_certificate/upload_area';
+import UploadArea from '@/components/upload_area/upload_area';
 import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
 import { APIName } from '@/constants/api_connection';
