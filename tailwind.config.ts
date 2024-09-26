@@ -981,6 +981,7 @@ module.exports = {
         '380px': '380px',
         '388px': '388px',
         '390px': '390px',
+        '392px': '392px',
         '400px': '400px',
         '410px': '410px',
         '420px': '420px',
@@ -1275,6 +1276,10 @@ module.exports = {
       },
 
       boxShadow: {
+        'inset-lg': '4px -4px 7px 2px var(--shadow-lv-5) inset',
+        'inset-md': '0px 2px 7px 2px var(--shadow-lv-5) inset',
+        'inset-sm': '4px -4px 4px 0px var(--shadow-lv-1) inset',
+
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
@@ -1341,6 +1346,7 @@ module.exports = {
       rotate: {
         135: '135deg',
         40: '40deg',
+        '-90': '-90deg',
       },
       backgroundSize: {
         150: '150%',
@@ -1380,6 +1386,9 @@ module.exports = {
 
       content: {
         checked: '"✔"',
+      },
+      gridTemplateColumns: {
+        'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
       },
     },
   },

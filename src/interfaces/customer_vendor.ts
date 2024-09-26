@@ -1,9 +1,10 @@
-export interface IClient {
+export interface ICustomerVendor {
   id: number;
   companyId: number;
   name: string;
   taxId: string;
-  favorite: boolean;
+  type: string;
+  note: string;
   createdAt: number;
   updatedAt: number;
 }

@@ -14,10 +14,9 @@ export interface ICompany {
 
 export interface ICompanyBeta {
   id: number;
-  taxId: string;
   imageId: string;
   name: string;
-  regional: string;
+  taxId: string;
   tag: string;
   startDate: number;
   createdAt: number;
