@@ -1,13 +1,13 @@
-import { CERTIFICATE_TYPES, ICertificateUI, INVOICE_TYPES } from '@/interfaces/certificate';
 import Image from 'next/image';
 import React, { useState } from 'react';
-import NumericInput from '@/components/numeric_input/numeric_input';
-import { RxCross1 } from 'react-icons/rx';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'react-i18next';
 import { IoIosArrowDown } from 'react-icons/io';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
+import Modal from '@/components/modal/modal';
 import { Button } from '@/components/button/button';
+import { CERTIFICATE_TYPES, ICertificateUI, INVOICE_TYPES } from '@/interfaces/certificate';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
@@ -74,20 +74,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-70 flex items-center justify-center bg-black/50"
-      onClick={onClose}
-    >
-      <div className="relative flex max-h-450px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
-        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
-        <button
-          type="button"
-          className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={onClose}
-        >
-          <RxCross1 size={32} />
-        </button>
-
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
         <h2 className="mb-4 flex justify-center gap-2 text-xl font-semibold">
           {certificate.invoiceName}
@@ -324,8 +312,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 };
 

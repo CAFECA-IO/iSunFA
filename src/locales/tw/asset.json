@@ -14,5 +14,11 @@
     "STATUS_SCRAPPED": "已報廢",
     "STATUS_MISSING": "已遺失",
     "STATUS_NORMAL": "使用中"
+  },
+  "STATUS_SETTING_MODAL": {
+    "TITLE": "狀態設定",
+    "SUBTITLE": "請輸入資產資訊",
+    "UPDATE_DATE": "更新日期",
+    "STATUS": "狀態"
   }
 }

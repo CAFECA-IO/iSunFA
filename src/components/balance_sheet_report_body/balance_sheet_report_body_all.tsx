@@ -627,7 +627,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="relative z-1 w-full border-collapse bg-white">
           <thead>
@@ -682,7 +682,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>一、項目彙總格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -728,7 +728,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
 
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -785,7 +785,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -842,7 +842,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -899,7 +899,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -956,7 +956,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1013,7 +1013,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1070,7 +1070,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1127,7 +1127,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>二、細項分類格式</p>
-          <p>單位：新台幣仟元</p>
+          <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>

@@ -17,8 +17,8 @@ interface FilterSectionProps {
   sortingOptions?: string[];
   sortingByDate?: boolean;
   onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
-  viewType: VIEW_TYPES;
-  viewToggleHandler: (viewType: VIEW_TYPES) => void;
+  viewType?: VIEW_TYPES;
+  viewToggleHandler?: (viewType: VIEW_TYPES) => void;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
@@ -143,7 +143,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       {/* Info: (20240919 - tzuhan) 顯示風格切換 */}
-      <ViewToggle viewType={viewType} onViewTypeChange={viewToggleHandler} />
+      {viewType && viewToggleHandler && (
+        <ViewToggle viewType={viewType} onViewTypeChange={viewToggleHandler} />
+      )}
 
       {/* Info: (20240919 - tzuhan) 排序選項 */}
       {sortingByDate ? (

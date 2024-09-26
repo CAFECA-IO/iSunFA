@@ -17,12 +17,14 @@ import {
   journalListValidator,
 } from '@/lib/utils/zod_schema/journal';
 import { kycUploadValidator } from '@/lib/utils/zod_schema/kyc';
+import { ledgerListValidator } from '@/lib/utils/zod_schema/ledger';
 import {
   ocrDeleteValidator,
   ocrListValidator,
   ocrResultGetByIdValidator,
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
+import { trialBalanceListValidator } from '@/lib/utils/zod_schema/trial_balance';
 import { voucherCreateValidator, voucherUpdateValidator } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 
@@ -59,4 +61,7 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
+
+  [APIName.TRIAL_BALANCE_LIST_V2]: trialBalanceListValidator,
+  [APIName.LEDGER_LIST_V2]: ledgerListValidator,
 };

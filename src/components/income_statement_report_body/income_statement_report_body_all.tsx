@@ -125,7 +125,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="relative z-1 w-full border-collapse bg-white">
           <thead>
@@ -216,7 +216,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -309,7 +309,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -452,7 +452,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">二、細項分類格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -543,7 +543,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">二、細項分類格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -634,7 +634,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">二、細項分類格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -725,7 +725,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">二、細項分類格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -818,7 +818,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="relative text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">二、細項分類格式</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
@@ -945,7 +945,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       <section className="relative text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">三、投入費用和成本，與收入的倍數關係</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
           <thead>
@@ -1101,7 +1101,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         )}
         <div className="mb-4 mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p className="text-xs font-bold leading-5">四、收入提撥至研發費用比例</p>
-          <p className="text-xs font-bold leading-5">單位：新台幣仟元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
           <thead>
