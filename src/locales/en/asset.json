@@ -1,0 +1,18 @@
+{
+  "ASSET": {
+    "ASSET_LIST_PAGE_TITLE": "Asset List",
+    "EXPORT_ASSET_LIST": "Export Asset List",
+    "ACQUISITION_DATE": "Acquisition Date",
+    "TYPE": "Type",
+    "ASSET_NAME": "Asset No./Name",
+    "PURCHASE_PRICE": "Purchase Price",
+    "ACCUM_DEP": "Accum. Dep.",
+    "RESIDUAL_VALUE": "Residual Value",
+    "REMAINING_LIFE": "Remaining Useful Life",
+    "STATUS_SOLD": "Sold",
+    "STATUS_DONATED": "Donated",
+    "STATUS_SCRAPPED": "Scrapped",
+    "STATUS_MISSING": "Missing",
+    "STATUS_NORMAL": "Normal"
+  }
+}

@@ -1,5 +1,7 @@
-import { BsFillTriangleFill } from 'react-icons/bs';
+// Info: (20240924 - tzuhan) To Julian, this component is seperated from your VourchList
+// Info: (20240920 - Julian) 排序按鈕
 import { SortOrder } from '@/constants/sort';
+import { BsFillTriangleFill } from 'react-icons/bs';
 
 const SortingButton = ({
   string,
