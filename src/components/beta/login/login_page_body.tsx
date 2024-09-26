@@ -4,6 +4,7 @@ import AvatarSVG from '@/components/avatar_svg/avatar_svg';
 import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 const isAuthLoading = false;
 
@@ -17,6 +18,18 @@ const Loader = () => {
 
 const LoginPageBody = () => {
   const { t } = useTranslation('common');
+  const { data: session, status } = useSession();
+
+  if (status === 'authenticated') {
+    return (
+      <div>
+        <p>已登入為 {session?.user?.email}</p>
+        <button type="button" onClick={() => signOut()}>
+          登出
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -44,6 +57,7 @@ const LoginPageBody = () => {
           <div className="flex w-360px flex-col gap-16px">
             <button
               type="button"
+              onClick={() => signIn('google')}
               className="flex items-center justify-center gap-15px rounded-sm bg-white p-15px"
             >
               <Image src="/icons/google_logo.svg" alt="google_logo" width="24" height="24"></Image>
@@ -52,6 +66,7 @@ const LoginPageBody = () => {
 
             <button
               type="button"
+              onClick={() => signIn('apple')}
               className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
             >
               <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
