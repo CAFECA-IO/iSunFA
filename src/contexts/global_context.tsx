@@ -40,6 +40,7 @@ import TransferCompanyModal from '@/components/transfer_company_modal/transfer_c
 import { UploadType } from '@/constants/file';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 import { useModalContext } from '@/contexts/modal_context';
+import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
 
 interface IGlobalContext {
   width: number;
@@ -109,6 +110,9 @@ interface IGlobalContext {
 
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
+
+  isExportVoucherModalVisible: boolean;
+  exportVoucherModalVisibilityHandler: () => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -202,6 +206,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
     useState(false);
+
+  const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -332,6 +338,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const privacyPolicyConfirmModalVisibilityHandler = (visibility: boolean) => {
     setIsPrivacyPolicyConfirmModalVisible(visibility);
+  };
+
+  const exportVoucherModalVisibilityHandler = () => {
+    setIsExportVoucherModalVisible(!isExportVoucherModalVisible);
   };
 
   useEffect(() => {
@@ -502,6 +512,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
 
+      isExportVoucherModalVisible,
+      exportVoucherModalVisibilityHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -558,6 +571,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
+
+      isExportVoucherModalVisible,
+      exportVoucherModalVisibilityHandler,
 
       termsOfServiceConfirmModalVisibilityHandler,
     ]
@@ -706,6 +722,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         infoModalVisibilityHandler={termsOfServiceConfirmModalVisibilityHandler}
         tosModalVisibilityHandler={privacyPolicyConfirmModalVisibilityHandler}
       />
+
+      <ExportVoucherModal
+        isModalVisible={isExportVoucherModalVisible}
+        modalVisibilityHandler={exportVoucherModalVisibilityHandler}
+      />
+
       {children}
     </GlobalContext.Provider>
   );

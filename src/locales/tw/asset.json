@@ -1,0 +1,18 @@
+{
+  "ASSET": {
+    "ASSET_LIST_PAGE_TITLE": "資產清單",
+    "EXPORT_ASSET_LIST": "匯出資產清單",
+    "ACQUISITION_DATE": "取得日期",
+    "TYPE": "類型",
+    "ASSET_NAME": "資產編號/名稱",
+    "PURCHASE_PRICE": "購買價格",
+    "ACCUM_DEP": "累積折舊",
+    "RESIDUAL_VALUE": "殘值",
+    "REMAINING_LIFE": "剩餘使用年限",
+    "STATUS_SOLD": "已售出",
+    "STATUS_DONATED": "已捐贈",
+    "STATUS_SCRAPPED": "已報廢",
+    "STATUS_MISSING": "已遺失",
+    "STATUS_NORMAL": "使用中"
+  }
+}

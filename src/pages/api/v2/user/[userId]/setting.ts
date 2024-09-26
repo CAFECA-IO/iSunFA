@@ -111,7 +111,6 @@ async function handlePostRequest(req: NextApiRequest) {
   return { statusMessage, payload };
 }
 
-// Define method handlers for different HTTP methods
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -122,7 +121,6 @@ const methodHandlers: {
   POST: handlePostRequest,
 };
 
-// Main handler function to route requests to the appropriate handler
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IUserSetting[] | IUserSetting | null>>
@@ -131,7 +129,6 @@ export default async function handler(
   let payload: IUserSetting[] | IUserSetting | null = null;
 
   try {
-    // Determine the appropriate handler based on the HTTP method
     const handleRequest = methodHandlers[req.method || ''];
     if (handleRequest) {
       ({ statusMessage, payload } = await handleRequest(req, res));
@@ -143,7 +140,6 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    // Format and send the response
     const { httpCode, result } = formatApiResponse<IUserSetting[] | IUserSetting | null>(
       statusMessage,
       payload

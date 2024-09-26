@@ -4,14 +4,9 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
+import { VoucherType } from '@/constants/voucher';
 
-enum VoucherType {
-  RECEIVED = 'Received',
-  PAYMENT = 'Payment',
-  TRANSFER = 'Transfer',
-}
-
-const VoucherItem = () => {
+const VoucherItem = ({ isSelecting }: { isSelecting: boolean }) => {
   // ToDo: (20240920 - Julian) dummy data
   const date: number = new Date().getTime() / 1000;
   const voucherNo: string = '20240920-0001';
@@ -69,9 +64,11 @@ const VoucherItem = () => {
   const displayedNote = <p className="relative top-20px">{note}</p>;
 
   const displayedAccounting = (
-    <div className="relative top-20px flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
-      {accounting.map((account) => (
-        <p key={account}>{account}</p>
+    <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
+      {accounting.map((account, index) => (
+        // Deprecated: (20240924 - Julian) array index as key
+        // eslint-disable-next-line react/no-array-index-key
+        <p key={index}>{account}</p>
       ))}
     </div>
   );
@@ -135,7 +132,9 @@ const VoucherItem = () => {
   return (
     <div className="table-row font-medium">
       {/* Info: (20240920 - Julian) Select */}
-      <div className="table-cell text-center">{displayedCheckbox}</div>
+      <div className={`${isSelecting ? 'table-cell' : 'hidden'} text-center`}>
+        {displayedCheckbox}
+      </div>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}

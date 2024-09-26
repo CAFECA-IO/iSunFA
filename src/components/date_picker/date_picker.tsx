@@ -398,7 +398,8 @@ const DatePicker = ({
           {
             [buttonStyleAfterDateSelected]: isDateSelected,
             'border-input-stroke-selected text-input-surface-input-selected': componentVisible,
-            'cursor-not-allowed border-button-stroke-disable text-button-text-disable': disabled,
+            'disabled:cursor-not-allowed disabled:border-button-stroke-disable disabled:bg-input-surface-input-disable disabled:text-button-text-disable':
+              disabled,
           }
         )}
       >
@@ -416,7 +417,8 @@ const DatePicker = ({
           {
             'border-button-stroke-primary-hover': componentVisible,
             [buttonStyleAfterDateSelected]: isDateSelected,
-            'cursor-not-allowed border-button-stroke-disable text-button-text-disable': disabled,
+            'disabled:border-button-stroke-disable disabled:bg-input-surface-input-disable disabled:text-button-text-disable disabled:hover:cursor-not-allowed':
+              disabled,
           }
         )}
       >

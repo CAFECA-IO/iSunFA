@@ -194,5 +194,31 @@
     "CASH": "現金",
     "TRANSFER": "轉帳",
     "CREDIT_CARD": "信用卡"
+  },
+  "VOUCHER": {
+    "VOUCHER_LIST_PAGE_TITLE": "傳票清單",
+    "AP_AND_AR_PAGE_TITLE": "應收/應付清單",
+    "ADD_NEW_VOUCHER": "新增傳票",
+    "EXPORT_VOUCHER": "匯出傳票",
+    "ISSUED_DATE": "發行日期",
+    "VOUCHER_NO": "傳票號碼",
+    "NOTE": "備註",
+    "ACCOUNTING": "會計科目",
+    "CREDIT": "貸方金額",
+    "DEBIT": "借方金額",
+    "COUNTRYPARTY": "交易對象",
+    "ISSUER": "發行人",
+    "RECEIVABLE_AMOUNT": "應收金額",
+    "PAYABLE_AMOUNT": "應付金額",
+    "RECEIVED_AMOUNT": "已收金額",
+    "PAID_AMOUNT": "已付金額",
+    "REMAIN_AMOUNT": "剩餘金額",
+    "REVERSE": "沖銷",
+    "EXPORT_VOUCHER_MODAL_TITLE": "匯出傳票",
+    "EXPORT_VOUCHER_MODAL_SUBTITLE": "請選擇您要匯出的傳票",
+    "VOUCHER_NUMBER": "傳票號碼",
+    "EXPORT_BTN": "匯出",
+    "FROM_PLACEHOLDER": "從",
+    "TO_PLACEHOLDER": "到"
   }
 }
