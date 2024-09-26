@@ -30,7 +30,7 @@ async function handleGetRequest() {
 }
 
 // ToDo: (20240924 - Jacky) Implement the logic to create a new company setting in the database
-async function handlePostRequest(req: NextApiRequest) {
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICompanySetting | null = null;
 
@@ -65,7 +65,7 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: ICompanySetting | null }>;
 } = {
   GET: handleGetRequest,
-  POST: handlePostRequest,
+  PUT: handlePutRequest,
 };
 
 // Main handler function to route requests to the appropriate handler
