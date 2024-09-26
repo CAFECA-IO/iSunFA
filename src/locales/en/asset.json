@@ -14,5 +14,11 @@
     "STATUS_SCRAPPED": "Scrapped",
     "STATUS_MISSING": "Missing",
     "STATUS_NORMAL": "Normal"
+  },
+  "STATUS_SETTING_MODAL": {
+    "TITLE": "Status Setting",
+    "SUBTITLE": "Please enter the information of asset",
+    "UPDATE_DATE": "Update Date",
+    "STATUS": "Status"
   }
 }

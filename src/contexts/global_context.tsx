@@ -41,6 +41,7 @@ import { UploadType } from '@/constants/file';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
+import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
 
 interface IGlobalContext {
   width: number;
@@ -113,6 +114,10 @@ interface IGlobalContext {
 
   isExportVoucherModalVisible: boolean;
   exportVoucherModalVisibilityHandler: () => void;
+
+  isAssetStatusSettingModalVisible: boolean;
+  assetStatusSettingModalVisibilityHandler: () => void;
+  assetStatusSettingModalDataHandler: (status: string) => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -208,6 +213,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState(false);
 
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
+
+  const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
+  const [defaultStatus, setDefaultStatus] = useState('');
 
   const { width, height } = windowSize;
 
@@ -342,6 +350,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const exportVoucherModalVisibilityHandler = () => {
     setIsExportVoucherModalVisible(!isExportVoucherModalVisible);
+  };
+
+  const assetStatusSettingModalVisibilityHandler = () => {
+    setIsAssetStatusSettingModalVisible(!isAssetStatusSettingModalVisible);
+  };
+
+  const assetStatusSettingModalDataHandler = (status: string) => {
+    setDefaultStatus(status);
   };
 
   useEffect(() => {
@@ -515,6 +531,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isExportVoucherModalVisible,
       exportVoucherModalVisibilityHandler,
 
+      isAssetStatusSettingModalVisible,
+      assetStatusSettingModalVisibilityHandler,
+      assetStatusSettingModalDataHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -574,6 +594,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isExportVoucherModalVisible,
       exportVoucherModalVisibilityHandler,
+
+      isAssetStatusSettingModalVisible,
+      assetStatusSettingModalVisibilityHandler,
+      assetStatusSettingModalDataHandler,
 
       termsOfServiceConfirmModalVisibilityHandler,
     ]
@@ -726,6 +750,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ExportVoucherModal
         isModalVisible={isExportVoucherModalVisible}
         modalVisibilityHandler={exportVoucherModalVisibilityHandler}
+      />
+
+      <AssetStatusSettingModal
+        isModalVisible={isAssetStatusSettingModalVisible}
+        modalVisibilityHandler={assetStatusSettingModalVisibilityHandler}
+        defaultStatus={defaultStatus}
       />
 
       {children}

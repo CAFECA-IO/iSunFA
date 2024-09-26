@@ -280,7 +280,8 @@
     "TRANSFER": "移转",
     "LOADING": "加载中...",
     "COMPLETED": "已完成",
-    "DAY": "日"
+    "DAY": "日",
+    "SAVE": "保存"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
