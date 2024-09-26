@@ -94,6 +94,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'salary',
       'setting',
       'terms',
+      'asset',
     ])),
   },
 });

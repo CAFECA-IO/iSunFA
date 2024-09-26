@@ -14,7 +14,6 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let payload: IUser | IUser[] | null = null;
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
