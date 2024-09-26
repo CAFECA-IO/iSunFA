@@ -23,7 +23,7 @@ export function formatSingleIJournalListItem(
   assertIsJournalEvent(journalFromPrisma.event);
   return {
     id: journalFromPrisma.id,
-    date: journalFromPrisma.createdAt,
+    date: journalFromPrisma.invoice?.date || journalFromPrisma.createdAt,
     type: journalFromPrisma.invoice?.eventType,
     particulars: journalFromPrisma.invoice?.description,
     fromTo: journalFromPrisma.invoice?.vendorOrSupplier,
