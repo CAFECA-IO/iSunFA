@@ -200,7 +200,7 @@
     "AP_AND_AR_PAGE_TITLE": "應收/應付清單",
     "ADD_NEW_VOUCHER": "新增傳票",
     "EXPORT_VOUCHER": "匯出傳票",
-    "ISSUED_DATE": "發行日期",
+    "VOUCHER_DATE": "傳票日期",
     "VOUCHER_NO": "傳票號碼",
     "NOTE": "備註",
     "ACCOUNTING": "會計科目",
@@ -220,5 +220,16 @@
     "EXPORT_BTN": "匯出",
     "FROM_PLACEHOLDER": "從",
     "TO_PLACEHOLDER": "到"
+  },
+  "ADD_NEW_VOUCHER": {
+    "PAGE_TITLE": "新增傳票",
+    "VOUCHER_DATE": "傳票日期",
+    "VOUCHER_TYPE": "傳票類型",
+    "TYPE_RECEIVE": "收入",
+    "TYPE_EXPENSE": "支付",
+    "TYPE_TRANSFER": "轉帳",
+    "NOTE": "備註",
+    "COUNTERPARTY": "交易對象",
+    "RECURRING_ENTRY": "週期性分錄"
   }
 }

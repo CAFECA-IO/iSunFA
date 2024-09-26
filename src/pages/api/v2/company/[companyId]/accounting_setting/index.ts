@@ -16,6 +16,7 @@ async function handleGetRequest() {
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   payload = {
+    id: 1,
     companyId: 1,
     companyName: 'Company A',
     taxSettings: {
@@ -41,29 +42,33 @@ async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
-// ToDo: (20240924 - Jacky) Implement the logic to create a new accounting setting in the database
-async function handlePostRequest(req: NextApiRequest) {
+// ToDo: (20240924 - Jacky) Implement the logic to update an existing accounting setting in the database
+async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountingSetting | null = null;
 
   // ToDo: (20240924 - Jacky) Get session data from the request
   // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
   // ToDo: (20240924 - Jacky) Validate the request body
-  // ToDo: (20240924 - Jacky) Implement the logic to create a new accounting setting in the database
+  // ToDo: (20240924 - Jacky) Implement the logic to update an existing accounting setting in the database
   // ToDo: (20240924 - Jacky) Format the accounting settings data to the IAccountingSetting interface
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
-  const newSetting: IAccountingSetting = {
-    companyId: 2,
-    companyName: req.body.companyName,
-    taxSettings: req.body.taxSettings,
-    currency: req.body.currency,
-    lastDayOfFiscalYear: req.body.lastDayOfFiscalYear,
-    shortcutList: req.body.shortcutList,
+  const { companyId, companyName, taxSettings, currency, lastDayOfFiscalYear, shortcutList } =
+    req.body;
+
+  const updatedAccountingSetting: IAccountingSetting = {
+    id: 123,
+    companyId,
+    companyName,
+    taxSettings,
+    currency,
+    lastDayOfFiscalYear,
+    shortcutList,
   };
 
-  payload = newSetting;
-  statusMessage = STATUS_MESSAGE.CREATED;
+  payload = updatedAccountingSetting;
+  statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
 
   return { statusMessage, payload };
 }
@@ -75,7 +80,7 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: IAccountingSetting | null }>;
 } = {
   GET: handleGetRequest,
-  POST: handlePostRequest,
+  PUT: handlePutRequest,
 };
 
 export default async function handler(

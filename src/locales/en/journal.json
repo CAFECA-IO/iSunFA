@@ -200,7 +200,7 @@
     "AP_AND_AR_PAGE_TITLE": "Payable/Receivable List",
     "ADD_NEW_VOUCHER": "Add New Voucher",
     "EXPORT_VOUCHER": "Export Voucher",
-    "ISSUED_DATE": "Issued Date",
+    "VOUCHER_DATE": "Voucher Date",
     "VOUCHER_NO": "Voucher No.",
     "NOTE": "Note",
     "ACCOUNTING": "Accounting",
@@ -220,5 +220,16 @@
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",
     "TO_PLACEHOLDER": "To"
+  },
+  "ADD_NEW_VOUCHER": {
+    "PAGE_TITLE": "Add New Voucher",
+    "VOUCHER_DATE": "Voucher Date",
+    "VOUCHER_TYPE": "Voucher Type",
+    "TYPE_RECEIVE": "Receiving",
+    "TYPE_EXPENSE": "Payment",
+    "TYPE_TRANSFER": "Transfer",
+    "NOTE": "Note",
+    "COUNTERPARTY": "Counterparty",
+    "RECURRING_ENTRY": "Recurring Entry"
   }
 }

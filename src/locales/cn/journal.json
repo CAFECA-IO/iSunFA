@@ -200,7 +200,7 @@
     "AP_AND_AR_PAGE_TITLE": "应收/应付清单",
     "ADD_NEW_VOUCHER": "新增传票",
     "EXPORT_VOUCHER": "汇出传票",
-    "ISSUED_DATE": "发行日期",
+    "VOUCHER_DATE": "传票日期",
     "VOUCHER_NO": "传票号码",
     "NOTE": "备注",
     "ACCOUNTING": "会计科目",
@@ -220,5 +220,16 @@
     "EXPORT_BTN": "汇出",
     "FROM_PLACEHOLDER": "从",
     "TO_PLACEHOLDER": "到"
+  },
+  "ADD_NEW_VOUCHER": {
+    "PAGE_TITLE": "新增传票",
+    "VOUCHER_DATE": "传票日期",
+    "VOUCHER_TYPE": "传票类型",
+    "TYPE_RECEIVE": "收入",
+    "TYPE_EXPENSE": "支付",
+    "TYPE_TRANSFER": "转帐",
+    "NOTE": "备注",
+    "COUNTERPARTY": "交易对象",
+    "RECURRING_ENTRY": "周期性分录"
   }
 }

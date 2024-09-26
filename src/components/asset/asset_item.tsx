@@ -12,7 +12,7 @@ interface IAssetItem {
   purchasePrice: number;
   accumulatedDepreciation: number;
   residualValue: number;
-  remainingTimestamp: number;
+  remainingLife: number;
   assetStatus: AssetStatus;
 }
 
@@ -26,7 +26,7 @@ const dummyData: IAssetItem = {
   purchasePrice: 100000,
   accumulatedDepreciation: 5000,
   residualValue: 5000,
-  remainingTimestamp: 1761580800,
+  remainingLife: 61580800,
   assetStatus: AssetStatus.NORMAL,
 };
 
@@ -41,7 +41,7 @@ const AssetItem = () => {
     purchasePrice,
     accumulatedDepreciation,
     residualValue,
-    remainingTimestamp,
+    remainingLife,
     assetStatus,
   } = dummyData;
 
@@ -100,9 +100,9 @@ const AssetItem = () => {
     };
   };
 
-  const remainingYears = timestampToYMD(remainingTimestamp).years;
-  const remainingMonths = timestampToYMD(remainingTimestamp).months;
-  const remainingDays = timestampToYMD(remainingTimestamp).days;
+  const remainingYears = timestampToYMD(remainingLife).years;
+  const remainingMonths = timestampToYMD(remainingLife).months;
+  const remainingDays = timestampToYMD(remainingLife).days;
 
   const remainingProcessBar = (
     <div className="relative h-5px w-7/10 overflow-hidden rounded-full bg-surface-neutral-depth">
@@ -124,7 +124,7 @@ const AssetItem = () => {
   const assetStatusString = t(`asset:ASSET.STATUS_${assetStatus.toUpperCase()}`);
 
   const displayedRemainingLife =
-    assetStatus === AssetStatus.NORMAL && remainingTimestamp > 0 ? (
+    assetStatus === AssetStatus.NORMAL && remainingLife > 0 ? (
       <div className="flex flex-col items-end">
         {/* Info: (20240925 - Julian) Remaining count */}
         <div className="flex items-center gap-4px">

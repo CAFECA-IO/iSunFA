@@ -33,8 +33,8 @@ const APandARList = () => {
   const sideBorderStyles = 'border-r border-stroke-neutral-quaternary border-b';
 
   // Info: (20240924 - Julian) 日期排序按鈕
-  const displayedIssuedDate = SortingButton({
-    string: t('journal:VOUCHER.ISSUED_DATE'),
+  const displayedDate = SortingButton({
+    string: t('journal:VOUCHER.VOUCHER_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
@@ -77,7 +77,7 @@ const APandARList = () => {
         {/* Info: (20240924 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group h-60px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedIssuedDate}</div>
+            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>

@@ -3,9 +3,9 @@ import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import VoucherListPageBody from '@/components/voucher/voucher_list_page_body';
+import NewVoucherForm from '@/components/voucher/new_voucher_form';
 
-const VoucherListPage = () => {
+const AddNewVoucherPage = () => {
   const { t } = useTranslation('common');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
@@ -16,7 +16,7 @@ const VoucherListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('journal:VOUCHER.VOUCHER_LIST_PAGE_TITLE')} - iSunFA</title>
+        <title>{t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')} - iSunFA</title>
       </Head>
 
       <button
@@ -38,11 +38,11 @@ const VoucherListPage = () => {
         This is sidebar
       </div>
 
-      {/* Info: (20240920 - Julian) Body */}
+      {/* Info: (20240925 - Julian) Body */}
       <main
         className={`${isSidebarOpen ? 'pl-280px' : 'pl-0'} flex w-screen flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out`}
       >
-        <VoucherListPageBody />
+        <NewVoucherForm />
       </main>
     </>
   );
@@ -67,4 +67,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default VoucherListPage;
+export default AddNewVoucherPage;

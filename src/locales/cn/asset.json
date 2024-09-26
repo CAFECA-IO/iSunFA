@@ -14,5 +14,11 @@
     "STATUS_SCRAPPED": "已报废",
     "STATUS_MISSING": "已遗失",
     "STATUS_NORMAL": "使用中"
+  },
+  "STATUS_SETTING_MODAL": {
+    "TITLE": "状态设定",
+    "SUBTITLE": "请输入资产信息",
+    "UPDATE_DATE": "更新日期",
+    "STATUS": "状态"
   }
 }

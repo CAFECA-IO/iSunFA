@@ -6,7 +6,7 @@ import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'react-i18next';
 
-interface UploadFile {
+export interface UploadFile {
   name: string;
   size: number; // Info: (20240919 - tzuhan) 文件大小（KB）
   progress: number; // Info: (20240919 - tzuhan) 上傳進度（0-100）
@@ -17,9 +17,17 @@ interface UploadFileItemProps {
   file: UploadFile;
   onPauseToggle: () => void;
   onDelete: () => void;
+  withoutImage?: boolean;
+  withoutBorder?: boolean;
 }
 
-const UploadFileItem: React.FC<UploadFileItemProps> = ({ file, onPauseToggle, onDelete }) => {
+const UploadFileItem: React.FC<UploadFileItemProps> = ({
+  file,
+  onPauseToggle,
+  onDelete,
+  withoutImage,
+  withoutBorder,
+}) => {
   const { t } = useTranslation(['common', 'journal']);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -45,11 +53,21 @@ const UploadFileItem: React.FC<UploadFileItemProps> = ({ file, onPauseToggle, on
     file.progress === 100 ? t('common:COMMON.COMPLETED') : `${file.progress}%`;
 
   return (
-    <div className="mb-2 flex items-center justify-between rounded-md border border-file-uploading-stroke-outline p-2">
+    <div
+      className={`mb-2 flex items-center justify-between rounded-md ${withoutBorder ? '' : 'border border-file-uploading-stroke-outline'} p-2`}
+    >
       <Image className="m-2" src="/elements/cloud_upload.svg" width={24} height={24} alt="clock" />
       <div className="flex grow flex-col">
         <div className="mb-4 flex grow">
-          <Image className="m-2" src="/elements/file_pdf.svg" width={32} height={32} alt="clock" />
+          {!withoutImage && (
+            <Image
+              className="m-2"
+              src="/elements/file_pdf.svg"
+              width={32}
+              height={32}
+              alt="clock"
+            />
+          )}
           <div className="flex grow flex-col">
             <p className="text-sm font-medium">{file.name}</p>
             <p className="text-xs text-gray-400"> {sizeFormatter(file.size)}</p>
