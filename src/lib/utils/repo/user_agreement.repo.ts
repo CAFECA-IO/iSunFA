@@ -21,7 +21,7 @@ export async function createUserAgreement(
   return createdUserAgreement;
 }
 
-export async function deleteUserAgreement(
+export async function deleteUserAgreementForTesting(
   userId: number,
   agreementHash: string
 ): Promise<UserAgreement> {
