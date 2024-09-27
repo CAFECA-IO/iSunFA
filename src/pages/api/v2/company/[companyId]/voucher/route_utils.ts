@@ -5,18 +5,18 @@
 export const mockVouchersReturn = [
   {
     id: 1001,
-    eventId: null, // will be null if not recurring, integer if recurring
+    eventId: null, // Info: (20240927 - Murky) will be null if not recurring, integer if recurring
     hasRead: true,
-    status: 'uploaded', // "uploaded" or "upcoming"
-    canBeEdit: true, // true or false
+    status: 'uploaded', // Info: (20240927 - Murky) "uploaded" or "upcoming"
+    canBeEdit: true, // Info: (20240927 - Murky) true or false
     voucherNo: '240417-001',
     voucherDate: 1000000,
-    type: 'payment', // or transfer or receiving
+    type: 'payment', // Info: (20240927 - Murky)  payment or transfer or receiving
     note: 'This is a note',
     createAt: 1000000,
     updateAt: 1000000,
-    deletedAt: null, // if have Number then it is deleted
-    reverseAt: 1727317, // if have Number then it is reversed
+    deletedAt: null, // Info: (20240927 - Murky) if have Number then it is deleted
+    reverseAt: 1727317, // Info: (20240927 - Murky) if have Number then it is reversed
     certificates: [
       {
         id: 1,
@@ -46,7 +46,7 @@ export const mockVouchersReturn = [
       },
     ],
     reverseVoucherIds: [
-      // 或是完整的voucher?
+      // Info: (20240927 - Murky) 或是完整的voucher?
       {
         id: 1111,
         voucherNo: '240817-001',
@@ -57,7 +57,7 @@ export const mockVouchersReturn = [
       },
     ],
     issuer: {
-      // IUser
+      // Info: (20240927 - Murky) IUser
       id: 1001,
       name: 'Murky',
       fullName: 'Tiny Murky',
@@ -69,7 +69,7 @@ export const mockVouchersReturn = [
       updatedAt: 1000000,
     },
     counterParty: {
-      // ICustomerVendor
+      // Info: (20240927 - Murky) ICustomerVendor
       id: 1001,
       companyId: 1001,
       name: 'Cool LLC',
@@ -80,7 +80,7 @@ export const mockVouchersReturn = [
       updatedAt: 1000000,
     },
     payableInfo: {
-      // payableInfo 如果存在，那麼receivingInfo就會都是0
+      // Info: (20240927 - Murky) payableInfo 如果存在，那麼receivingInfo就會都是0
       total: 1000,
       alreadyHappened: 400,
       remain: 600,
@@ -91,11 +91,11 @@ export const mockVouchersReturn = [
       remain: 600,
     },
     recurringInfo: {
-      type: 'month', // or year or week or atOnce
+      type: 'month', // Info: (20240927 - Murky) month or year or week or atOnce
       startDate: 1000000,
       endDate: 1000100,
-      daysOfWeek: [0, 1, 2], // 這邊是示範，如果type是week, 這個array才有東西, 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
-      daysOfMonth: [1, 15, 30], // 這邊是示範，如果type是month, 這個array才有東西
+      daysOfWeek: [0, 1, 2], // Info: (20240927 - Murky) 這邊是示範，如果type是week, 這個array才有東西, 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
+      daysOfMonth: [1, 15, 30], // Info: (20240927 - Murky) 這邊是示範，如果type是month, 這個array才有東西
       daysOfYears: [
         {
           month: 1,
@@ -105,10 +105,10 @@ export const mockVouchersReturn = [
           month: 12,
           day: 25,
         },
-      ], // 這邊是示範，如果type是year, 這個array才有東西
+      ], // Info: (20240927 - Murky) 這邊是示範，如果type是year, 這個array才有東西
     },
     assets: [
-      // IAssetItem
+      // Info: (20240927 - Murky) IAssetItem
       {
         id: 1,
         acquisitionDate: 1632511200,
@@ -119,7 +119,7 @@ export const mockVouchersReturn = [
         accumulatedDepreciation: 5000,
         residualValue: 5000,
         remainingTimestamp: 1761580800,
-        assetStatus: 'normal', // AssetStatus.NORMAL,
+        assetStatus: 'normal', // Info: (20240927 - Murky) AssetStatus.NORMAL,
       },
     ],
     lineItemsInfo: {
