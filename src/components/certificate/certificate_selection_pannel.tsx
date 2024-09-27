@@ -3,19 +3,19 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { FaPlus } from 'react-icons/fa6';
 
-interface SelectionPannlProps {
+interface CertificateSelectionPannelProps {
   certificates: ICertificateUI[];
   selectedIds: number[];
   handleSelect: (id: number) => void;
   openUploaderModal: () => void;
 }
 
-const SelectionPannl: React.FC<SelectionPannlProps> = ({
+const CertificateSelectionPannel: React.FC<CertificateSelectionPannelProps> = ({
   certificates,
   selectedIds,
   handleSelect,
   openUploaderModal,
-}: SelectionPannlProps) => {
+}: CertificateSelectionPannelProps) => {
   return (
     <div className="my-4 h-392px rounded-lg bg-surface-neutral-main-background px-8 py-4">
       <div className="h-full overflow-y-auto">
@@ -55,4 +55,4 @@ const SelectionPannl: React.FC<SelectionPannlProps> = ({
   );
 };
 
-export default SelectionPannl;
+export default CertificateSelectionPannel;
