@@ -20,7 +20,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   if (query) {
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     payload = {
-      page: 1, // current page
+      page: 1, // Info: (20240927 - Murky) current page
       totalUnRead: 99,
       totalPages: 3,
       totalCount: 30,
