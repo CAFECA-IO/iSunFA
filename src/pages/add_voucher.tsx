@@ -115,6 +115,7 @@ const AddVoucherPage: React.FC = () => {
               setOpenModal={handleOpenSelectorModal}
               isSelectable
               isDeletable
+              className="my-8"
             />
           </div>
         </div>

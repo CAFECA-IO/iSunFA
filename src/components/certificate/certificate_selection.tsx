@@ -1,16 +1,17 @@
-/* eslint-disable no-console */
 import { Button } from '@/components/button/button';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { FaPlus } from 'react-icons/fa6';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 interface CertificateSelectionProps {
   selectedCertificates: ICertificateUI[];
   isSelectable: boolean;
   isDeletable: boolean;
-  setOpenModal: () => void;
+  setOpenModal?: () => void;
+  className?: string;
 }
 
 const CertificateSelection: React.FC<CertificateSelectionProps> = ({
@@ -18,6 +19,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
   isSelectable,
   isDeletable,
   setOpenModal,
+  className = '',
 }: CertificateSelectionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -25,18 +27,17 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // 更新左右滾動按鈕狀態
+  // Info: (20240927 - tzuhan) 更新左右滾動按鈕狀態
   const updateScrollButtonsState = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      console.log(scrollLeft, scrollWidth, clientWidth);
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
     }
   };
 
   useEffect(() => {
-    // 使用 ResizeObserver 監聽容器大小變化
+    // Info: (20240927 - tzuhan) 使用 ResizeObserver 監聽容器大小變化
     const resizeObserver = new ResizeObserver((entries) => {
       entries.forEach((entry) => {
         setMaxWidth(entry.contentRect.width);
@@ -52,7 +53,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
       scrollContainerRef.current.addEventListener('scroll', updateScrollButtonsState);
     }
 
-    // 監聽滾動位置改變以決定按鈕的啟用狀態
+    // Info: (20240927 - tzuhan) 監聽滾動位置改變以決定按鈕的啟用狀態
     const handleScroll = () => {
       if (scrollContainerRef.current) {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
@@ -67,7 +68,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
 
     updateScrollButtonsState();
 
-    // 清除事件和 observer
+    // Info: (20240927 - tzuhan) 清除事件和 observer
     return () => {
       if (scrollContainerRef.current) {
         resizeObserver.unobserve(scrollContainerRef.current);
@@ -76,11 +77,11 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
     };
   }, [scrollContainerRef, containerRef, selectedCertificates]);
 
-  // 處理左右滾動
+  // Info: (20240927 - tzuhan) 處理左右滾動
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
       const { scrollLeft } = scrollContainerRef.current;
-      const scrollAmount = maxWidth - 64; // 每次滾動的距離
+      const scrollAmount = maxWidth - 64; // Info: (20240927 - tzuhan) 每次滾動的距離
       const newScrollPosition =
         direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
       scrollContainerRef.current.scrollTo({ left: newScrollPosition, behavior: 'smooth' });
@@ -88,24 +89,30 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
   };
 
   return (
-    <div className="my-8 w-full flex-col items-center" ref={containerRef}>
+    <div className={`${className} w-full flex-col items-center`} ref={containerRef}>
       <div
-        className="flex h-56 w-full flex-col justify-start overflow-hidden rounded-md border border-stroke-neutral-quaternary px-8 pt-6 shadow-inset-lg"
+        className={`flex h-56 w-full flex-col ${isSelectable ? 'justify-start' : 'justify-center'} overflow-hidden rounded-md border border-stroke-neutral-quaternary px-8 pt-5 shadow-inset-lg`}
         style={{
           maxWidth: `${maxWidth}px`,
         }}
       >
         <div className="flex h-full items-start overflow-x-auto" ref={scrollContainerRef}>
-          {selectedCertificates.map((certificate) => (
-            <CertificateSelectorThumbnail
-              key={certificate.id}
-              certificate={certificate}
-              handleSelect={() => {}}
-              isSelected={false}
-              isSelectable={false}
-              isDeletable={isDeletable}
-            />
-          ))}
+          {selectedCertificates.length > 0 ? (
+            selectedCertificates.map((certificate) => (
+              <CertificateSelectorThumbnail
+                key={certificate.id}
+                certificate={certificate}
+                isSelected={false}
+                isSelectable={false}
+                isDeletable={isDeletable}
+              />
+            ))
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center">
+              <Image src="/elements/empty_box.svg" alt="empty" width={32} height={32} />
+              <div className="text-sm text-text-neutral-mute">Empty</div>
+            </div>
+          )}
           {isSelectable && (
             <div>
               <button

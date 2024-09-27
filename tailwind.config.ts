@@ -502,6 +502,7 @@ module.exports = {
           'text-secondary': 'var(--card-text-secondary)',
           'text-tertiary': 'var(--card-text-tertiary)',
           'text-title': 'var(--card-text-title)',
+          'text-sub': 'var(--card-text-sub)',
           'text-white': 'var(--card-text-white)',
         },
 
@@ -979,6 +980,7 @@ module.exports = {
         '360px': '360px',
         '370px': '370px',
         '372px': '372px',
+        '375px': '375px',
         '376px': '376px',
         '380px': '380px',
         '388px': '388px',
@@ -1018,6 +1020,7 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '678px': '678px',
         '700px': '700px',
         '726px': '726px',
         '750px': '750px',
@@ -1167,6 +1170,7 @@ module.exports = {
         '80%': '80%',
         '95%': '95%',
 
+        '60vh': '60vh',
         '80vh': '80vh',
         '90vh': '90vh',
         '95vh': '95vh',
