@@ -25,7 +25,12 @@ import {
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
 import { trialBalanceListValidator } from '@/lib/utils/zod_schema/trial_balance';
-import { voucherCreateValidator, voucherUpdateValidator } from '@/lib/utils/zod_schema/voucher';
+import {
+  voucherCreateValidator,
+  voucherGetAllValidatorV2,
+  voucherPostValidatorV2,
+  voucherUpdateValidator,
+} from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 
 /*
@@ -61,6 +66,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
+  [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
+  [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
 
   [APIName.TRIAL_BALANCE_LIST_V2]: trialBalanceListValidator,
   [APIName.LEDGER_LIST_V2]: ledgerListValidator,
