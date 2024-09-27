@@ -21,6 +21,7 @@ const LoginPageBody = () => {
   const { data: session, status } = useSession();
 
   if (status === 'authenticated') {
+    // ToDo: (20240927 - Liz) 拿取使用者資料，檢查是否有同意服務條款，如果沒有就跳出同意服務條款的 modal
     return (
       <div>
         <p>已登入為 {session?.user?.email}</p>

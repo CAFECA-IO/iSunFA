@@ -21,7 +21,7 @@ interface UserContextType {
   signOut: () => void;
   userAuth: IUser | null;
   username: string | null;
-  signedIn: boolean;
+  isSignIn: boolean;
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
@@ -52,7 +52,7 @@ export const UserContext = createContext<UserContextType>({
   signOut: () => {},
   userAuth: null,
   username: null,
-  signedIn: false,
+  isSignIn: false,
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
@@ -76,7 +76,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
 
-  const [, setSignedIn, signedInRef] = useStateRef(false);
+  const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
@@ -116,7 +116,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setUserAuth(null);
     setUsername(null);
     setCredential(null);
-    setSignedIn(false);
+    setIsSignIn(false);
     setIsSignInError(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
@@ -287,7 +287,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
           setUserAuth(StatusInfo.user);
           setUsername(StatusInfo.user.name);
-          setSignedIn(true);
+          setIsSignIn(true);
           setIsSignInError(false);
           localStorage.setItem('userId', StatusInfo.user.id.toString());
           localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
@@ -475,7 +475,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
-      signedIn: signedInRef.current,
+      isSignIn: isSignInRef.current,
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
       isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,

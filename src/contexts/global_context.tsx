@@ -20,7 +20,7 @@ import CreateCompanyModal from '@/components/create_company_modal/create_company
 import CompanyInvitationModal from '@/components/company_invitation_modal/company_invitation_modal';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { useRouter } from 'next/router';
+// import { useRouter } from 'next/router'; // Deprecated: (20240927 - Liz)
 import LoadingModal from '@/components/loading_modal/loading_modal';
 import { IConfirmModal, dummyConfirmModalData } from '@/interfaces/confirm_modal';
 import FilterOptionsModal from '@/components/filter_options_modal/filter_options_modal';
@@ -31,7 +31,7 @@ import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
-import { ToastId } from '@/constants/toast_id';
+// import { ToastId } from '@/constants/toast_id'; // Deprecated: (20240927 - Liz)
 import { useTranslation } from 'next-i18next';
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
@@ -125,16 +125,15 @@ const GlobalContext = createContext<IGlobalContext | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const { t } = useTranslation(['common', 'report_401']);
-  const router = useRouter();
-  const { pathname } = router;
+  // const router = useRouter(); // Deprecated: (20240927 - Liz)
+  // const { pathname } = router; // Deprecated: (20240927 - Liz)
 
-  const { signedIn, selectedCompany, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
-  const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
-    useNotificationCtx();
+  const { isSignIn } = useUserCtx();
+  const { reportGeneratedStatus, reportGeneratedStatusHandler } = useNotificationCtx();
 
   const {
     toastHandler,
-    eliminateToast,
+    // eliminateToast, // Deprecated: (20240927 - Liz)
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
@@ -344,7 +343,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   };
 
   useEffect(() => {
-    if (!signedIn) return;
+    if (!isSignIn) return;
 
     if (reportGeneratedStatus) {
       toastHandler({
@@ -386,30 +385,33 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //     autoClose: false,
     //   });
     // }
-  }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
+  }, [reportGeneratedStatus, isSignIn]);
 
+  /*  // Deprecated: (20240927 - Liz)我要把這一段拔掉，改成在使用者按下「登入」才去檢查使用者是否有同意服務條款
   // Info: (20240927 - Liz) 當使用者登入時，若尚未同意服務條款或隱私權政策，則導向同意頁面
-  useEffect(() => {
-    if (signedIn) {
-      if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
-        if (router.pathname !== ISUNFA_ROUTE.LOGIN) {
-          router.push(ISUNFA_ROUTE.LOGIN);
-        }
-        if (!isAgreeTermsOfService) {
-          termsOfServiceConfirmModalVisibilityHandler(true);
-        }
-        if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
-          privacyPolicyConfirmModalVisibilityHandler(true);
-        }
-      } else {
-        termsOfServiceConfirmModalVisibilityHandler(false);
-        privacyPolicyConfirmModalVisibilityHandler(false);
-      }
-    }
-  }, [pathname, signedIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
+  // useEffect(() => {
+  //   if (isSignIn) {
+  //     if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
+  //       if (router.pathname !== ISUNFA_ROUTE.LOGIN) {
+  //         router.push(ISUNFA_ROUTE.LOGIN);
+  //       }
+  //       if (!isAgreeTermsOfService) {
+  //         termsOfServiceConfirmModalVisibilityHandler(true);
+  //       }
+  //       if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
+  //         privacyPolicyConfirmModalVisibilityHandler(true);
+  //       }
+  //     } else {
+  //       termsOfServiceConfirmModalVisibilityHandler(false);
+  //       privacyPolicyConfirmModalVisibilityHandler(false);
+  //     }
+  //   }
+  // }, [pathname, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
+   */
 
+  /*  // Deprecated: (20240927 - Liz) 這段登入邏輯和 Beta 的登入邏輯不同，所以先註解掉
   useEffect(() => {
-    if (signedIn) {
+    if (isSignIn) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
         eliminateToast(ToastId.ALPHA_TEST_REMINDER);
         if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
@@ -439,24 +441,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       }
     } else {
       eliminateToast();
-      // Info: (20240909 - Anna) 為了不顯示「Alpha 版本的資料只用於測試」這個彈窗，所以先註解掉，未來需要用到時再解開
-      // if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      //   toastHandler({
-      //     id: ToastId.ALPHA_TEST_REMINDER,
-      //     type: ToastType.INFO,
-      //     closeable: true,
-      //     autoClose: false,
-      //     content: (
-      //       <div className="flex items-center justify-between">
-      //         <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
-      //       </div>
-      //     ),
-      //   });
-      // } else {
-      //   eliminateToast(ToastId.ALPHA_TEST_REMINDER);
-      // }
     }
-  }, [pathname, signedIn]);
+  }, [pathname, isSignIn]);
+  */
 
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 
