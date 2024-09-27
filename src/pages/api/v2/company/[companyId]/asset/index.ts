@@ -34,7 +34,7 @@ export const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
 };
 
 // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
-async function handleGetRequest() {
+export async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetListPayload | null = null;
 
@@ -52,7 +52,7 @@ async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
-async function handlePostRequest() {
+export async function handlePostRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDetailedAssetV2 | null = null;
 
