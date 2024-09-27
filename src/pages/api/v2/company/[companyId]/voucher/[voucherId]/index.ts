@@ -68,7 +68,7 @@ export async function handleDeleteRequest(req: NextApiRequest, res: NextApiRespo
 
   // ToDo: (20240927 - Murky) Remember to add auth check
   if (query) {
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
     payload = mockDeleteVoucherId;
   }
 

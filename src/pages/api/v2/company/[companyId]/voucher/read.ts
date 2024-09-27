@@ -5,6 +5,8 @@ import { IResponseData } from '@/interfaces/response_data';
 import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
+import { validateRequest } from '@/lib/utils/request_validator';
+import { APIName } from '@/constants/api_connection';
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   /**
@@ -18,7 +20,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   let payload: string | null = null;
   const session = await getSession(req, res);
   const { userId } = session;
-  const { body } = session;
+  const { body } = validateRequest(APIName.VOUCHER_WAS_READ_V2, req, userId);
 
   if (body) {
     statusMessage = STATUS_MESSAGE.CREATED;

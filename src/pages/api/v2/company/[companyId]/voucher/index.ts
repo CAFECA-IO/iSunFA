@@ -58,7 +58,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
 
   // ToDo: (20240927 - Murky) Remember to add auth check
   if (body) {
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    statusMessage = STATUS_MESSAGE.CREATED;
     payload = mockPostedVoucherId;
   }
   return {

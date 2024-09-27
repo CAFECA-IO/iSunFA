@@ -112,7 +112,7 @@ export const voucherWasReadValidatorV2: IZodValidator<
 // Info: (20240927 - Murky) GET One Voucher v2
 
 const voucherGetOneQueryValidatorV2 = z.object({
-  voucherId: z.number().int(),
+  voucherId: zodStringToNumber,
 });
 
 const voucherGetOneBodyValidatorV2 = z.object({});
@@ -127,7 +127,7 @@ export const voucherGetOneValidatorV2: IZodValidator<
 
 // Info: (20240927 - Murky) PUT voucher v2 (body validator is same as Post)
 const voucherPutQueryValidatorV2 = z.object({
-  voucherId: z.number().int(),
+  voucherId: zodStringToNumber,
 });
 
 export const voucherPutValidatorV2: IZodValidator<
@@ -140,7 +140,7 @@ export const voucherPutValidatorV2: IZodValidator<
 
 // Info: (20240927 - Murky) DELETE voucher v2
 const voucherDeleteQueryValidatorV2 = z.object({
-  voucherId: z.number().int(),
+  voucherId: zodStringToNumber,
 });
 
 const voucherDeleteBodyValidatorV2 = z.object({});

@@ -20,5 +20,5 @@ export const iLineItemBodyValidatorV2 = z.object({
   description: z.string(),
   debit: z.boolean(),
   amount: z.number(),
-  accountId: z.number(),
+  accountId: z.number().int(),
 });
