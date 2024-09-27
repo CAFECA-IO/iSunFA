@@ -18,7 +18,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
 
   // ToDo: (20240927 - Murky) Remember to add auth check
   if (query) {
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     [payload] = mockVouchersReturn;
   }
   return {
@@ -27,25 +27,51 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
     userId,
   };
 }
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+
+export async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
   /**
    * Info: (20240927 - Murky)
-   * Post voucher has conditional situation when posting,
-   * it might have recurring event, asset connecting, reverse voucher connect
-   * if not that situation, front end can provide  undefined recurring event, or empty array for asset connecting, reverse voucher connect
+   * Put is not actually put, but add an reverse voucher and link to current voucher
+   * maybe non lineItem put can just put original voucher?? => flow chart is needed
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
   const session = await getSession(req, res);
   const { userId } = session;
-  const { body } = validateRequest(APIName.VOUCHER_POST_V2, req, userId);
-  const mockPostedVoucherId = 1002;
+  const { query, body } = validateRequest(APIName.VOUCHER_POST_V2, req, userId);
+  const mockPutVoucherId = 1002;
 
   // ToDo: (20240927 - Murky) Remember to add auth check
-  if (body) {
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    payload = mockPostedVoucherId;
+  if (query && body) {
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = mockPutVoucherId;
   }
+
+  return {
+    statusMessage,
+    payload,
+    userId,
+  };
+}
+
+export async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse) {
+  /**
+   * Info: (20240927 - Murky)
+   * Delete is not actually put, but add an reverse voucher and link to current voucher
+   */
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: number | null = null;
+  const session = await getSession(req, res);
+  const { userId } = session;
+  const { query } = validateRequest(APIName.VOUCHER_DELETE_V2, req, userId);
+  const mockDeleteVoucherId = 1002;
+
+  // ToDo: (20240927 - Murky) Remember to add auth check
+  if (query) {
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = mockDeleteVoucherId;
+  }
+
   return {
     statusMessage,
     payload,
@@ -66,7 +92,8 @@ const methodHandlers: {
   }>;
 } = {
   GET: handleGetRequest,
-  POST: handlePostRequest,
+  PUT: handlePutRequest,
+  DELETE: handleDeleteRequest,
 };
 
 export default async function handler(

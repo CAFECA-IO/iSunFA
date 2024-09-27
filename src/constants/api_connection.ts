@@ -65,7 +65,9 @@ export enum APIName {
   VOUCHER_LIST_V2 = 'VOUCHER_LIST_V2',
   VOUCHER_POST_V2 = 'VOUCHER_POST_V2',
   VOUCHER_GET_BY_ID_V2 = 'VOUCHER_GET_BY_ID_V2',
+  VOUCHER_DELETE_V2 = 'VOUCHER_DELETE_V2',
   VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
+  VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
   // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
@@ -143,6 +145,8 @@ export enum APIPath {
   VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,

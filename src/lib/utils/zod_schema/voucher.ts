@@ -124,3 +124,31 @@ export const voucherGetOneValidatorV2: IZodValidator<
   query: voucherGetOneQueryValidatorV2,
   body: voucherGetOneBodyValidatorV2,
 };
+
+// Info: (20240927 - Murky) PUT voucher v2 (body validator is same as Post)
+const voucherPutQueryValidatorV2 = z.object({
+  voucherId: z.number().int(),
+});
+
+export const voucherPutValidatorV2: IZodValidator<
+  (typeof voucherPutQueryValidatorV2)['shape'],
+  (typeof voucherPostBodyValidatorV2)['shape']
+> = {
+  query: voucherPutQueryValidatorV2,
+  body: voucherPostBodyValidatorV2,
+};
+
+// Info: (20240927 - Murky) DELETE voucher v2
+const voucherDeleteQueryValidatorV2 = z.object({
+  voucherId: z.number().int(),
+});
+
+const voucherDeleteBodyValidatorV2 = z.object({});
+
+export const voucherDeleteValidatorV2: IZodValidator<
+  (typeof voucherDeleteQueryValidatorV2)['shape'],
+  (typeof voucherDeleteBodyValidatorV2)['shape']
+> = {
+  query: voucherDeleteQueryValidatorV2,
+  body: voucherDeleteBodyValidatorV2,
+};

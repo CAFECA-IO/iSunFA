@@ -1,8 +1,12 @@
+/**
+ * Info: (20240927 - Murky)
+ * This file is not router, but all small function for voucher/index and voucher/read
+ */
 export const mockVouchersReturn = [
   {
     id: 1001,
     eventId: null, // will be null if not recurring, integer if recurring
-    hasReaded: true,
+    hasRead: true,
     status: 'uploaded', // "uploaded" or "upcoming"
     canBeEdit: true, // true or false
     voucherNo: '240417-001',
