@@ -4,22 +4,26 @@ import {
   handlePostRequest,
   MOCK_ASSET_LIST_PAYLOAD,
 } from '@/pages/api/v2/company/[companyId]/asset/index';
-import { mockDetailedAssetV2 } from '@/interfaces/asset';
+import { mockCreateAssetInputV2, mockDetailedAssetV2 } from '@/interfaces/asset';
+import { NextApiRequest } from 'next';
 
-describe('handleGetRequest', () => {
+describe('List assets', () => {
   it('should return correct asset list data', async () => {
     const { statusMessage, payload } = await handleGetRequest();
-
     expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_LIST);
     expect(payload).toEqual(MOCK_ASSET_LIST_PAYLOAD);
   });
 });
 
-describe('handlePostRequest', () => {
+describe('Create asset', () => {
   it('should return correct new asset data', async () => {
-    const { statusMessage, payload } = await handlePostRequest();
-
+    const mockRequest = {
+      body: mockCreateAssetInputV2,
+    } as NextApiRequest;
+    const { statusMessage, payload } = await handlePostRequest(mockRequest);
     expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
-    expect(payload).toEqual(mockDetailedAssetV2);
+    expect(payload).toEqual({
+      ...mockDetailedAssetV2,
+    });
   });
 });

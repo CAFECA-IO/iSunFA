@@ -5,6 +5,7 @@ import {
   IBriefAssetV2,
   mockBriefAssetV2,
   mockDetailedAssetV2,
+  ICreateAssetInputV2,
 } from '@/interfaces/asset';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -33,15 +34,15 @@ export const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
   ],
 };
 
-// ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
+// ToDo: (20240927 - Shirley) 從資料庫獲取資料的邏輯
 export async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetListPayload | null = null;
 
   // ToDo: (20240927 - Shirley) 從請求中獲取session資料
   // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
-  // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
-  // ToDo: (20240927 - Shirley) 將試算表資料格式化為TrialBalanceItem介面
+  // ToDo: (20240927 - Shirley) 從資料庫獲取資產數據
+  // ToDo: (20240927 - Shirley) 將資產數據格式化為資產介面
 
   // Deprecated: (20241010 - Shirley) 連接的模擬資料
   payload = MOCK_ASSET_LIST_PAYLOAD;
@@ -52,7 +53,7 @@ export async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
-export async function handlePostRequest() {
+export async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDetailedAssetV2 | null = null;
 
@@ -62,8 +63,46 @@ export async function handlePostRequest() {
   // ToDo: (20241010 - Shirley) 獲取並格式化創建後的資產數據
 
   // Deprecated: (20241010 - Shirley) 連接的模擬資料
-  payload = mockDetailedAssetV2;
-  statusMessage = STATUS_MESSAGE.CREATED;
+  try {
+    // ToDo: 從請求中獲取資產數據 (20240927 - Shirley)
+    const {
+      name,
+      acquireDate,
+      propertyNumber,
+      accountingSubject,
+      // amount,
+      depreciationMethod,
+      usefulLife,
+      purchasePrice,
+      currency,
+      note,
+    } = req.body as ICreateAssetInputV2;
+
+    // ToDo: (20240927 - Shirley) 驗證資產數據
+
+    // ToDo: (20240927 - Shirley) 在資料庫中創建資產數據
+    // const newAsset = await createAssetInDatabase(req.body);
+
+    // ToDo: (20240927 - Shirley) 獲取並格式化創建後的資產數據
+    // payload = formatAssetData(newAsset);
+
+    // Deprecated: (20241010 - Shirley) 暫時返回模擬數據
+    payload = {
+      ...mockDetailedAssetV2,
+      name,
+      acquireDate,
+      propertyNumber,
+      accountingSubject,
+      depreciationMethod,
+      usefulLife,
+      purchasePrice,
+      currency,
+      note,
+    };
+    statusMessage = STATUS_MESSAGE.CREATED;
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  }
 
   return { statusMessage, payload };
 }

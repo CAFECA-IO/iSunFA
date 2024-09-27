@@ -1,6 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IDetailedAssetV2, mockDetailedAssetV2 } from '@/interfaces/asset';
 
@@ -13,11 +13,11 @@ export async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDetailedAssetV2 | null = null;
 
-  // ToDo: 從請求中獲取assetId
+  // ToDo: (20240927 - Shirley) 從請求中獲取assetId
   // const { assetId } = req.query;
 
-  // ToDo: 從資料庫獲取指定資產的詳細信息
-  // ToDo: 格式化資產數據
+  // ToDo: (20240927 - Shirley) 從資料庫獲取指定資產的詳細信息
+  // ToDo: (20240927 - Shirley) 格式化資產數據
 
   // 暫時返回模擬數據
   payload = mockDetailedAssetV2;
@@ -26,20 +26,20 @@ export async function handleGetRequest() {
   return { statusMessage, payload };
 }
 
-export async function handlePutRequest() {
+export async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDetailedAssetV2 | null = null;
 
-  // ToDo: 從請求中獲取assetId和更新的資產數據
+  // ToDo: (20240927 - Shirley) 從請求中獲取assetId和更新的資產數據
   // const { assetId } = req.query;
-  // const updatedAssetData = req.body;
+  const updatedAssetData = req.body;
 
-  // ToDo: 驗證更新的資產數據
-  // ToDo: 在資料庫中更新資產數據
-  // ToDo: 獲取並格式化更新後的資產數據
+  // ToDo: (20240927 - Shirley) 驗證更新的資產數據
+  // ToDo: (20240927 - Shirley) 在資料庫中更新資產數據
+  // ToDo: (20240927 - Shirley) 獲取並格式化更新後的資產數據
 
   // 暫時返回模擬數據
-  payload = { ...mockDetailedAssetV2, note: 'Updated: Main office computer' };
+  payload = { ...mockDetailedAssetV2, ...updatedAssetData, note: 'Updated: Main office computer' };
   statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
 
   return { statusMessage, payload };
@@ -49,14 +49,16 @@ export async function handleDeleteRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IDetailedAssetV2 | null = null;
 
-  // ToDo: 從請求中獲取assetId
+  // ToDo: (20240927 - Shirley) 從請求中獲取assetId
   // const { assetId } = req.query;
 
-  // ToDo: 在資料庫中軟刪除資產
-  // ToDo: 獲取並格式化被刪除的資產數據
+  // ToDo: (20240927 - Shirley) 在資料庫中軟刪除資產
+  // ToDo: (20240927 - Shirley) 獲取並格式化被刪除的資產數據
+
+  const now = getTimestampNow();
 
   // 暫時返回模擬數據
-  payload = { ...mockDetailedAssetV2, deletedAt: 2233448564 };
+  payload = { ...mockDetailedAssetV2, deletedAt: now };
   statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
 
   return { statusMessage, payload };

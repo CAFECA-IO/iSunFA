@@ -86,12 +86,12 @@ export interface IDetailedAssetV2 {
   accumulatedDepreciation: number;
   residualValue: number;
   remainingLife: number;
-  note: string;
   relatedVouchers: IRelatedVoucherV2[];
   status: string;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
+  note?: string;
 }
 
 export interface ITotalV2 {
@@ -116,6 +116,7 @@ export interface ICreateAssetInputV2 {
   accountingSubject: string;
   acquireDate: number;
   depreciationStart: number;
+  amount: number;
   depreciationMethod: string;
   usefulLife: number;
   purchasePrice: number;
@@ -130,36 +131,50 @@ export interface IUpdateAssetInputV2 extends Partial<ICreateAssetInputV2> {
 export const mockBriefAssetV2: IBriefAssetV2 = {
   id: 1001,
   acquireDate: 1672531200,
-  type: '設備',
+  type: 'Equipment',
   propertyNumber: 'EQ-001',
-  name: '辦公電腦',
+  name: 'Main office computer',
   purchaseAmount: 50000,
   depreciation: 10000,
   residualValue: 40000,
   remainingDays: 1460,
-  status: '使用中',
+  status: 'normal',
+};
+
+export const mockCreateAssetInputV2: ICreateAssetInputV2 = {
+  name: 'Main office computer',
+  propertyNumber: 'EQ-001',
+  accountingSubject: 'Equipment',
+  acquireDate: 1672531200,
+  depreciationStart: 1672617600,
+  depreciationMethod: 'Straight Line',
+  usefulLife: 157680000,
+  purchasePrice: 50000,
+  amount: 50000,
+  currency: 'TWD',
+  note: 'Main office computer',
 };
 
 export const mockDetailedAssetV2: IDetailedAssetV2 = {
   id: 1001,
-  name: '辦公電腦',
+  name: 'Main office computer',
   propertyNumber: 'EQ-001',
-  accountingSubject: '設備',
+  accountingSubject: 'Equipment',
   acquireDate: 1672531200,
   depreciationStart: 1672617600,
-  depreciationMethod: '直線法',
+  depreciationMethod: 'Straight Line',
   usefulLife: 157680000,
   purchasePrice: 50000,
   currency: 'TWD',
   accumulatedDepreciation: 10000,
   residualValue: 40000,
   remainingLife: 126144000,
-  note: '主要辦公電腦',
+  note: 'Main office computer',
   relatedVouchers: [
     { id: 101, number: 'V-2023-001' },
     { id: 102, number: 'V-2023-002' },
   ],
-  status: '正常',
+  status: 'normal',
   createdAt: 1672531200,
   updatedAt: 1672617600,
   deletedAt: null,

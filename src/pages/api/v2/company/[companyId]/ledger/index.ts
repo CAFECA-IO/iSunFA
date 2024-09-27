@@ -65,7 +65,7 @@ export const MOCK_RESPONSE: IPayload = {
   totalCreditAmount: 800000,
 };
 
-// ToDo: (20240927 - Shirley) 從資料庫獲取總帳資料的邏輯
+// ToDo: (20240927 - Shirley) 從資料庫獲取分類帳資料的邏輯
 export async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPayload | null = null;
@@ -73,8 +73,8 @@ export async function handleGetRequest() {
   // ToDo: (20240927 - Shirley) 從請求中獲取session資料
   // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
   // ToDo: (20240927 - Shirley) 從請求參數中獲取startDate, endDate, startAccountNo, endAccountNo, labelType, page, pageSize
-  // ToDo: (20240927 - Shirley) 從資料庫獲取總帳資料的邏輯
-  // ToDo: (20240927 - Shirley) 將總帳資料格式化為ILedgerItem介面
+  // ToDo: (20240927 - Shirley) 從資料庫獲取分類帳資料的邏輯
+  // ToDo: (20240927 - Shirley) 將分類帳資料格式化為ILedgerItem介面
 
   // Deprecated: (20241010 - Shirley) 連接的模擬資料
   payload = MOCK_RESPONSE;
