@@ -9,6 +9,7 @@ import Toggle from '@/components/toggle/toggle';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
+import VoucherLineBlock from '@/components/voucher/voucher_line_block';
 
 const NewVoucherForm = () => {
   const { t } = useTranslation('common');
@@ -148,10 +149,8 @@ const NewVoucherForm = () => {
           <Toggle id="recurring-toggle" getToggledState={recurringToggleHandler} />
           <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
         </div>
-        {/* ToDo: (20240926 - Julian) voucher block */}
-        <div className="col-span-2 w-full bg-surface-brand-secondary-moderate p-40px text-center text-white">
-          This is voucher block
-        </div>
+        {/* Info: (20240926 - Julian) voucher line block */}
+        <VoucherLineBlock />
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryOutline">

@@ -1389,6 +1389,7 @@ module.exports = {
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
+        13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
       },
     },
   },
