@@ -99,7 +99,10 @@ const VoucherList = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  const [isSelecting, setIsSelecting] = useState(false);
+  // ToDo: (20240927 - Julian) data filter
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>(dummyVoucherList);
+  const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
@@ -112,9 +115,9 @@ const VoucherList = () => {
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
-  const checkStyle = `${isSelecting ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
+  const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
-  const selectToggleHandler = () => setIsSelecting((prev) => !prev);
+  const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
   // Info: (20240920 - Julian) 日期排序按鈕
   const displayedDate = SortingButton({
@@ -145,7 +148,7 @@ const VoucherList = () => {
         <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
       </Button>
       {/* Info: (20240920 - Julian) Delete button */}
-      <div className={isSelecting ? 'block' : 'hidden'}>
+      <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
         <Button type="button" variant="tertiary" className="h-44px w-44px p-0">
           <FaRegTrashAlt />
         </Button>
@@ -153,7 +156,7 @@ const VoucherList = () => {
       {/* Info: (20240920 - Julian) Select All & Cancel button */}
       <button
         type="button"
-        className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+        className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
       >
         {t('common:COMMON.SELECT_ALL')}
       </button>
@@ -161,7 +164,7 @@ const VoucherList = () => {
       <button
         type="button"
         onClick={selectToggleHandler}
-        className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+        className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
       >
         {t('common:COMMON.CANCEL')}
       </button>
@@ -169,15 +172,15 @@ const VoucherList = () => {
       <button
         type="button"
         onClick={selectToggleHandler}
-        className={`${isSelecting ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
+        className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
       >
         {t('common:COMMON.SELECT')}
       </button>
     </div>
   );
 
-  const displayedVoucherList = dummyVoucherList.map((voucher) => {
-    return <VoucherItem key={voucher.id} voucher={voucher} isSelecting={isSelecting} />;
+  const displayedVoucherList = voucherList.map((voucher) => {
+    return <VoucherItem key={voucher.id} voucher={voucher} isCheckBoxOpen={isCheckBoxOpen} />;
   });
 
   return (
@@ -216,9 +219,6 @@ const VoucherList = () => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedVoucherList}</div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Footer(排版用) ---------------- */}
-        <div className="table-footer-group h-20px"></div>
       </div>
 
       {/* Info: (20240920 - Julian) Pagination */}
