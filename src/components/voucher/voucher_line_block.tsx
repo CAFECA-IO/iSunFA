@@ -1,28 +1,55 @@
 import React, { useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
+import { FiBookOpen } from 'react-icons/fi';
 import { LuTrash2 } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import { numberWithCommas } from '@/lib/utils/common';
 
 const VoucherLineItem = () => {
+  // ToDo: (20240927 - Julian) Implement accounting
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [accounting, setAccounting] = useState<string>('');
+  const [particulars, setParticulars] = useState<string>('');
+  const [debit, setDebit] = useState<number>(0);
+  const [credit, setCredit] = useState<number>(0);
+
+  const particularsChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setParticulars(e.target.value);
+  };
+  const creditChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCredit(Number(e.target.value));
+  };
+  const debitChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDebit(Number(e.target.value));
+  };
+
   return (
     <>
       {/* Info: (20240927 - Julian) Accounting */}
-      <div className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px">
-        Accounting
+      <div className="col-span-3 flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none">
+        <p>Accounting</p>
+        <FiBookOpen size={20} />
       </div>
       {/* Info: (20240927 - Julian) Particulars */}
-      <div className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px">
-        Particulars
-      </div>
+      <input
+        value={particulars}
+        onChange={particularsChangeHandler}
+        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none"
+      />
       {/* Info: (20240927 - Julian) Debit */}
-      <div className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px">
-        Debit
-      </div>
+      <input
+        value={debit}
+        onChange={debitChangeHandler}
+        placeholder="0"
+        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-right text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+      />
       {/* Info: (20240927 - Julian) Credit */}
-      <div className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px">
-        Credit
-      </div>
+      <input
+        value={credit}
+        onChange={creditChangeHandler}
+        placeholder="0"
+        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-right text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+      />
       {/* Info: (20240927 - Julian) Delete button */}
       <div className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover">
         <button type="button" className="p-12px">
@@ -70,7 +97,7 @@ const VoucherLineBlock = () => {
         </div>
 
         {/* Info: (20240927 - Julian) Add button */}
-        <div className="col-start-1 col-end-13 text-center">
+        <div className="col-start-1 col-end-14 text-center">
           <Button type="button" className="h-44px w-44px p-0">
             <FaPlus size={20} />
           </Button>
