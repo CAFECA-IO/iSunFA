@@ -22,8 +22,8 @@ interface UserContextType {
   userAuth: IUser | null;
   username: string | null;
   signedIn: boolean;
-  isAgreeInfoCollection: boolean;
-  isAgreeTosNPrivacyPolicy: boolean;
+  isAgreeTermsOfService: boolean;
+  isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
@@ -53,8 +53,8 @@ export const UserContext = createContext<UserContextType>({
   userAuth: null,
   username: null,
   signedIn: false,
-  isAgreeInfoCollection: false,
-  isAgreeTosNPrivacyPolicy: false,
+  isAgreeTermsOfService: false,
+  isAgreePrivacyPolicy: false,
   isSignInError: false,
   selectedCompany: null,
   selectCompany: async () => {},
@@ -476,8 +476,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       userAuth: userAuthRef.current,
       username: usernameRef.current,
       signedIn: signedInRef.current,
-      isAgreeInfoCollection: isAgreeTermsOfServiceRef.current,
-      isAgreeTosNPrivacyPolicy: isAgreePrivacyPolicyRef.current,
+      isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
+      isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,

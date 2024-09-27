@@ -128,8 +128,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
-    useUserCtx();
+  const { signedIn, selectedCompany, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -389,16 +388,17 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     // }
   }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
 
+  // Info: (20240927 - Liz) 當使用者登入時，若尚未同意服務條款或隱私權政策，則導向同意頁面
   useEffect(() => {
     if (signedIn) {
-      if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
+      if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
         if (router.pathname !== ISUNFA_ROUTE.LOGIN) {
           router.push(ISUNFA_ROUTE.LOGIN);
         }
-        if (!isAgreeInfoCollection) {
+        if (!isAgreeTermsOfService) {
           termsOfServiceConfirmModalVisibilityHandler(true);
         }
-        if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
+        if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
           privacyPolicyConfirmModalVisibilityHandler(true);
         }
       } else {
@@ -406,7 +406,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         privacyPolicyConfirmModalVisibilityHandler(false);
       }
     }
-  }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
+  }, [pathname, signedIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
 
   useEffect(() => {
     if (signedIn) {
