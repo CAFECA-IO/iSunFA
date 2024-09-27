@@ -11,8 +11,11 @@ import CertificateSelection from '@/components/certificate/certificate_selection
 import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
 
 const AddVoucherPage: React.FC = () => {
-  const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(true);
-  const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(true);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean | undefined>(undefined);
+  const [isAnalyzSuccess, setIsAnalyzSuccess] = useState<boolean>(false);
+  const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
+  const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
@@ -32,19 +35,41 @@ const AddVoucherPage: React.FC = () => {
       setSelectedCertificates(
         Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
       );
+      setIsAnalyzing(selectedCertificates.length > 0 && isSelected);
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        setIsAnalyzSuccess(selectedCertificates.length > 0);
+      }, 2000);
     },
     [certificates]
   );
 
-  const onBack = useCallback(() => {
+  const handleOpenSelectorModal = useCallback(() => {
+    setSelectedIds(selectedCertificates.map((item) => item.id));
     setOpenSelectorModal(true);
+  }, [selectedCertificates]);
+
+  const onBack = useCallback(() => {
+    handleOpenSelectorModal();
     setOpenUploaderModal(false);
   }, []);
 
   const handleApiResponse = useCallback((resData: ICertificate[]) => {
     // Deprecated: (20240920 - tzuhan) Debugging purpose only
     // eslint-disable-next-line no-console
-    console.log(resData);
+    console.log(`resData`, resData, `selectedCertificates`, selectedCertificates);
+    const data = resData.reduce(
+      (acc, item) => {
+        acc[item.id] = {
+          ...item,
+          isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
+          actions: [],
+        };
+        return acc;
+      },
+      {} as { [id: string]: ICertificateUI }
+    );
+    setCertificates(data);
   }, []);
 
   return (
@@ -59,11 +84,12 @@ const AddVoucherPage: React.FC = () => {
         <CertificateSelectorModal
           isOpen={openSelectorModal}
           onClose={() => setOpenSelectorModal(false)}
-          selectedCertificates={selectedCertificates}
           openUploaderModal={() => setOpenUploaderModal(true)}
           handleSelect={handleSelect}
           handleApiResponse={handleApiResponse}
           certificates={Object.values(certificates)}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
         />
         <CertificateUploaderModal
           isOpen={openUploaderModal}
@@ -81,12 +107,14 @@ const AddVoucherPage: React.FC = () => {
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="px-6">
             {/* Info: (20240926 - tzuhan) AIAnalyzer */}
-            <AIAnalyzer />
+            <AIAnalyzer isAnalyzing={isAnalyzing} isAnalyzSuccess={isAnalyzSuccess} />
 
             {/* Info: (20240926 - tzuhan) CertificateSelection */}
             <CertificateSelection
               selectedCertificates={selectedCertificates}
-              setOpenModal={setOpenSelectorModal}
+              setOpenModal={handleOpenSelectorModal}
+              isSelectable
+              isDeletable
             />
           </div>
         </div>
