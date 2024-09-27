@@ -46,9 +46,9 @@ export interface ICertificateUI extends ICertificate {
 }
 
 // Info: (20240920 - tzuhan) 隨機生成的函數
-export const generateRandomCertificates = (): ICertificate[] => {
+export const generateRandomCertificates = (num?: number): ICertificate[] => {
   // Info: (20240920 - tzuhan) 隨機生成 1 到 100 之間的數量
-  const maxCount = Math.floor(Math.random() * 100) + 1;
+  const maxCount = num ?? Math.floor(Math.random() * 100) + 1;
   const certificates: ICertificate[] = [];
 
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機日期
