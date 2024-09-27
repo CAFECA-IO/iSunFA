@@ -1303,6 +1303,8 @@ module.exports = {
 
         scrollBtn:
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
+
+        crossBtn: '0px 0px 7px 0px #FFA502B2',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',

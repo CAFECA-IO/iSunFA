@@ -1,6 +1,7 @@
 import { ICertificateUI } from '@/interfaces/certificate';
+// import Image from 'next/image';
+import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { FaPlus } from 'react-icons/fa6';
-import CertificateSelectorThumbnail from './certificate_selector_thumbnail';
 
 interface SelectionPannlProps {
   certificates: ICertificateUI[];
@@ -19,13 +20,23 @@ const SelectionPannl: React.FC<SelectionPannlProps> = ({
     <div className="my-4 h-392px rounded-lg bg-surface-neutral-main-background px-8 py-4">
       <div className="h-full overflow-y-auto">
         <div className="grid grid-cols-5 place-items-center justify-start gap-2">
-          <div className="h-182px py-2">
+          <div className="group h-182px py-2">
             <button
               type="button"
-              className="flex h-136px w-85px items-center justify-center rounded-xs border border-dashed border-stroke-neutral-tertiary p-2 text-white"
+              className="flex h-136px w-85px items-center justify-center rounded-xs border border-dashed border-stroke-neutral-tertiary p-2 text-white group-hover:border-stroke-brand-primary"
               onClick={openUploaderModal}
             >
-              <FaPlus size={24} className="text-stroke-neutral-tertiary" />
+              <FaPlus
+                className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary"
+                size={24}
+              />
+              {/* <Image
+                src="/elements/plus.svg"
+                alt="plus"
+                width={24}
+                height={24}
+                className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary" // Info: (20240927 - tzuhan) shadow-crossBtn 沒有辦法符合設計稿
+              /> */}
             </button>
           </div>
           {certificates.map((certificate) => (

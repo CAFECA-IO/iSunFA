@@ -48,7 +48,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
         className={`flex flex-col items-center gap-2 rounded-sm px-4 py-3 ${isSelected || !isSelectable ? (isSelectable ? 'border border-stroke-brand-primary bg-surface-brand-primary-30' : 'hover:group') : ''}`}
         onClick={handleSelect?.bind(null, certificate.id)}
       >
-        <div className={`h-136px relative w-85px ${!isSelected || !isSelectable ? 'group' : ''}`}>
+        <div className={`relative h-136px w-85px ${!isSelected || !isSelectable ? 'group' : ''}`}>
           <Image
             src={certificate.thumbnailUrl}
             alt="AI"

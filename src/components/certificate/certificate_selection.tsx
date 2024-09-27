@@ -108,19 +108,31 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
               />
             ))
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center">
+            <div
+              className={`flex h-full w-full flex-col items-center justify-center ${isSelectable ? 'hidden' : ''}`}
+            >
               <Image src="/elements/empty_box.svg" alt="empty" width={32} height={32} />
               <div className="text-sm text-text-neutral-mute">Empty</div>
             </div>
           )}
           {isSelectable && (
-            <div>
+            <div className="group">
               <button
                 type="button"
-                className="mx-4 my-2 flex h-140px w-80px items-center justify-center rounded-xs border border-dashed border-stroke-neutral-tertiary p-2 text-white"
+                className="mx-4 my-2 flex h-140px w-80px items-center justify-center rounded-xs border border-dashed border-stroke-neutral-tertiary p-2 text-white group-hover:border-stroke-brand-primary"
                 onClick={setOpenModal}
               >
-                <FaPlus size={24} className="text-stroke-neutral-tertiary" />
+                <FaPlus
+                  className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary"
+                  size={24}
+                />
+                {/* <Image
+                src="/elements/plus.svg"
+                alt="plus"
+                width={24}
+                height={24}
+                className="text-stroke-neutral-tertiary group-hover:text-stroke-brand-primary" // Info: (20240927 - tzuhan) shadow-crossBtn 沒有辦法符合設計稿
+              /> */}
               </button>
             </div>
           )}
