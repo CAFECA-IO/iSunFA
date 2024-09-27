@@ -28,8 +28,10 @@ import { trialBalanceListValidator } from '@/lib/utils/zod_schema/trial_balance'
 import {
   voucherCreateValidator,
   voucherGetAllValidatorV2,
+  voucherGetOneValidatorV2,
   voucherPostValidatorV2,
   voucherUpdateValidator,
+  voucherWasReadValidatorV2,
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 
@@ -68,6 +70,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
+  [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
+  [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
 
   [APIName.TRIAL_BALANCE_LIST_V2]: trialBalanceListValidator,
   [APIName.LEDGER_LIST_V2]: ledgerListValidator,

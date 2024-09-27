@@ -94,3 +94,33 @@ export const voucherPostValidatorV2: IZodValidator<
   query: voucherPostQueryValidatorV2,
   body: voucherPostBodyValidatorV2,
 };
+
+// Info: (20240927 - Murky) Post vouchers have been read
+const voucherWasReadQueryValidatorV2 = z.object({});
+const voucherWasReadBodyValidatorV2 = z.object({
+  voucherIds: z.array(z.number().int()),
+});
+
+export const voucherWasReadValidatorV2: IZodValidator<
+  (typeof voucherWasReadQueryValidatorV2)['shape'],
+  (typeof voucherWasReadBodyValidatorV2)['shape']
+> = {
+  query: voucherWasReadQueryValidatorV2,
+  body: voucherWasReadBodyValidatorV2,
+};
+
+// Info: (20240927 - Murky) GET One Voucher v2
+
+const voucherGetOneQueryValidatorV2 = z.object({
+  voucherId: z.number().int(),
+});
+
+const voucherGetOneBodyValidatorV2 = z.object({});
+
+export const voucherGetOneValidatorV2: IZodValidator<
+  (typeof voucherGetOneQueryValidatorV2)['shape'],
+  (typeof voucherGetOneBodyValidatorV2)['shape']
+> = {
+  query: voucherGetOneQueryValidatorV2,
+  body: voucherGetOneBodyValidatorV2,
+};
