@@ -25,6 +25,7 @@ import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import PrintButton from '@/components/button/print_button';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -514,30 +515,6 @@ const ViewFinancialSection = ({
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
             <Button
-              disabled={!reportLink || isLoading || isInvalidReport}
-              // disabled={isLoading || pdfFile === null} // TODO: (20240729 - Shirley) PDF file
-              onClick={downloadClickHandler}
-              variant={'tertiary'}
-              className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
-            >
-              <div className="flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    fill="#FCFDFF"
-                    fillRule="evenodd"
-                    d="M8.002 1.251a.75.75 0 01.75.75v6.19l2.053-2.054a.75.75 0 011.06 1.061l-3.332 3.333a.75.75 0 01-1.061 0L4.139 7.198a.75.75 0 011.06-1.06L7.252 8.19V2.001a.75.75 0 01.75-.75zm-6 8a.75.75 0 01.75.75v.8c0 .572 0 .957.025 1.252.023.288.065.425.111.515.12.236.312.427.547.547.09.046.228.088.515.111.296.024.68.025 1.252.025h5.6c.573 0 .957 0 1.253-.025.287-.023.424-.065.515-.111a1.25 1.25 0 00.546-.546c.046-.091.088-.228.111-.516.025-.295.025-.68.025-1.252v-.8a.75.75 0 111.5 0V10.831c0 .535 0 .98-.03 1.345-.03.38-.098.736-.27 1.073a2.75 2.75 0 01-1.201 1.202c-.338.172-.694.24-1.074.27-.364.03-.81.03-1.344.03H5.172c-.534 0-.98 0-1.344-.03-.38-.03-.737-.098-1.074-.27a2.75 2.75 0 01-1.202-1.202c-.172-.337-.239-.694-.27-1.073-.03-.365-.03-.81-.03-1.345V10.001a.75.75 0 01.75-.75z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-              </div>
-            </Button>
-            <Button
               // TODO: (20240507 - Shirley) [Beta] yet to dev
               disabled
               variant={'tertiary'}
@@ -560,6 +537,11 @@ const ViewFinancialSection = ({
                 </svg>
               </div>
             </Button>
+            {/* Info: (20240930 - Anna) 列印按鈕獨立出組件，並且在這裡使用 */}
+            <PrintButton
+              onClick={downloadClickHandler}
+              disabled={!reportLink || isLoading || isInvalidReport}
+            />
           </div>
         </div>
       </div>
