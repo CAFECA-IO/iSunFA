@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompanyBeta } from '@/interfaces/company';
+import { ICompany } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -12,7 +12,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 // Info: (20240924 - Jacky) Implement the logic to get the company list data from the database
 async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<ICompanyBeta[]> | null = null;
+  let payload: IPaginatedData<ICompany[]> | null = null;
   // const session = await getSession(req, res);
   // const { userId } = session;
 
@@ -23,7 +23,7 @@ async function handleGetRequest() {
   //   if (!isAuth) {
   //     statusMessage = STATUS_MESSAGE.FORBIDDEN;
   //   } else {
-  const companyList: IPaginatedData<ICompanyBeta[]> = {
+  const companyList: IPaginatedData<ICompany[]> = {
     data: [
       {
         id: 1,
@@ -70,7 +70,7 @@ async function handleGetRequest() {
 // ToDo: (20240924 - Jacky) Implement the logic to create a new company record in the database
 async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyBeta | null = null;
+  let payload: ICompany | null = null;
   const { taxId, name, regional } = req.body;
   // const isValid = await checkInput(code, name, regional);
 
@@ -143,7 +143,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null;
+    payload: ICompany | IPaginatedData<ICompany[]> | null;
   }>;
 } = {
   GET: handleGetRequest,
@@ -152,10 +152,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null>>
+  res: NextApiResponse<IResponseData<ICompany | IPaginatedData<ICompany[]> | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null = null;
+  let payload: ICompany | IPaginatedData<ICompany[]> | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -169,9 +169,10 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<
-      ICompanyBeta | IPaginatedData<ICompanyBeta[]> | null
-    >(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<ICompany | IPaginatedData<ICompany[]> | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

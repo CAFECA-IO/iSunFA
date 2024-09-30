@@ -111,37 +111,59 @@ model Authentication {
   @@map("authentication")
 }
 
-model Client {
-  id        Int     @id @default(autoincrement())
-  companyId Int     @map("company_id")
-  name      String
-  taxId     String  @map("tax_id")
-  favorite  Boolean
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  deletedAt Int?    @map("deleted_at")
-  company   Company @relation(fields: [companyId], references: [id])
+model AccountingSetting {
+  id                    Int        @id @default(autoincrement())
+  companyId             Int        @map("company_id")
+  salesTaxTaxable       Boolean    @map("sales_tax_taxable")
+  salesTaxRate          Float      @map("sales_tax_rate")   
+  purchaseTaxTaxable    Boolean    @map("purchase_tax_taxable")
+  purchaseTaxRate       Float      @map("purchase_tax_rate") 
+  returnPeriodicity     String     @map("return_periodicity")
+  currency              String
 
-  @@map("client")
+  company               Company    @relation(fields: [companyId], references: [id])
+
+  shortcuts             Shortcut[]
+
+  @@map("accounting_setting")
+}
+
+
+model CustomerVendor {
+  id        Int    @id @default(autoincrement())
+  companyId Int    @map("company_id")
+  name      String
+  taxId     String @map("tax_id")
+  type      String
+  note      String
+  createdAt Int    @map("created_at")
+  updatedAt Int    @map("updated_at")
+  deletedAt Int?   @map("deleted_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("customer_vendor")
 }
 
 model Company {
-  id          Int     @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   name        String
-  code        String 
-  regional    String
-  kycStatus   Boolean @map("kyc_status")
+  taxId       String @map("tax_id")
+  tag         String @default("all")
   imageFileId Int    @unique @map("image_file_id")
-  startDate   Int     @map("start_date")
-  createdAt   Int     @map("created_at")
-  updatedAt   Int     @map("updated_at")
-  deletedAt   Int?    @map("deleted_at")
+  startDate   Int    @map("start_date")
+  createdAt   Int    @map("created_at")
+  updatedAt   Int    @map("updated_at")
+  deletedAt   Int?   @map("deleted_at")
 
-  imageFile File  @relation("company_image_file", fields: [imageFileId], references: [id])
+  imageFile File @relation("company_image_file", fields: [imageFileId], references: [id])
 
   admins                     Admin[]
-  clients                    Client[]
+  accountingSettings         AccountingSetting[]
+  customerVendors            CustomerVendor[]
+  companySettings            CompanySetting[]
   contracts                  Contract[]
+  companyKYCs                CompanyKYC[]
   departments                Department[]
   employees                  Employee[]
   invitations                Invitation[]
@@ -151,12 +173,11 @@ model Company {
   projects                   Project[]
   subscriptions              Subscription[]
   auditReports               AuditReport[]
-  companyKYCs                CompanyKYC[]
-  companySettings            CompanySetting[]
   incomeExpenses             IncomeExpense[]
   accounts                   Account[]
   reports                    Report[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
+
 
   @@map("company")
 }
@@ -199,16 +220,18 @@ model CompanyKYC {
 }
 
 model CompanySetting {
-  id            Int     @id @default(autoincrement())
-  companyId     Int     @map("company_id")
-  autoRenewal   Boolean @map("auto_renewal")
-  notifyTiming  Int     @map("notify_timing")
-  notifyChannel String  @map("notify_channel")
-  reminderFreq  Int     @map("reminder_freq")
-  createdAt     Int     @map("created_at")
-  updatedAt     Int     @map("updated_at")
-  deletedAt     Int?    @map("deleted_at")
-  company       Company @relation(fields: [companyId], references: [id])
+  id                 Int    @id @default(autoincrement())
+  companyId          Int    @unique @map("company_id")
+  taxSerialNumber    String @map("tax_serial_number")
+  representativeName String @map("representative_name")
+  country            String
+  phone              String
+  address            String
+  createdAt          Int    @map("created_at")
+  updatedAt          Int    @map("updated_at")
+  deletedAt          Int?   @map("deleted_at")
+
+  company Company @relation(fields: [companyId], references: [id])
 
   @@map("company_setting")
 }
@@ -313,14 +336,16 @@ model File {
   updatedAt             Int     @map("updated_at")
   deletedAt             Int?    @map("deleted_at")
 
-  companyKYCregistrationCertificateFile CompanyKYC? @relation("registration_certificate_file")
-  companyKYCtaxCertificateFile          CompanyKYC? @relation("tax_certificate_file")
-  companyKYCrepresentativeIdCardFile    CompanyKYC? @relation("representative_id_card_file")
-  companyImageFile                      Company?    @relation("company_image_file")
-  invoiceImageFile                      Invoice?    @relation("invoice_image_file")
-  ocrImageFile                          Ocr?        @relation("ocr_image_file")
-  userImageFile                         User?       @relation("user_image_file")
-  projectImageFile                      Project?    @relation("project_image_file")
+  companyImageFile            Company?       @relation("company_image_file")
+  invoiceImageFile            Invoice?       @relation("invoice_image_file")
+  ocrImageFile                Ocr?           @relation("ocr_image_file")
+  userImageFile               User?          @relation("user_image_file")
+  projectImageFile            Project?       @relation("project_image_file")
+  registrationCertificateFile CompanyKYC?    @relation("registration_certificate_file")
+  taxCertificateFile          CompanyKYC?    @relation("tax_certificate_file")
+  representativeIdCardFile    CompanyKYC?    @relation("representative_id_card_file")
+  personalIdFile              KYCBookkeeper? @relation("kyc_personal_id_file")
+  certificationFile           KYCBookkeeper? @relation("kyc_certification_file")
 
   @@map("file")
 }
@@ -406,6 +431,29 @@ model Journal {
   @@map("journal")
 }
 
+model KYCBookkeeper {
+  id                  Int     @id @default(autoincrement())
+  userId              Int     @map("user_id")
+  name                String
+  birthDate           String  @map("birth_date")
+  email               String
+  phone               String
+  qualification       Boolean
+  certificationNumber String  @map("certification_number")
+  personalIdType      String  @map("personal_id_type")
+  personalIdFileId    Int     @unique @map("personal_id_file_id")
+  certificationFileId Int     @unique @map("certification_file_id")
+  createdAt           Int     @map("created_at")
+  updatedAt           Int     @map("updated_at")
+  deletedAt           Int?    @map("deleted_at")
+
+  user              User @relation(fields: [userId], references: [id])
+  personalIdFile    File @relation("kyc_personal_id_file", fields: [personalIdFileId], references: [id])
+  certificationFile File @relation("kyc_certification_file", fields: [certificationFileId], references: [id])
+
+  @@map("kyc_bookkeeper")
+}
+
 model LineItem {
   id          Int     @id @default(autoincrement())
   amount      Int
@@ -434,6 +482,18 @@ model Milestone {
   project   Project @relation(fields: [projectId], references: [id])
 
   @@map("milestone")
+}
+
+model News {
+  id        Int    @id @default(autoincrement())
+  type      String
+  title     String
+  content   String
+  createdAt Int    @map("created_at")
+  updatedAt Int    @map("updated_at")
+  deletedAt Int?   @map("deleted_at")
+
+  @@map("news")
 }
 
 model Ocr {
@@ -556,11 +616,13 @@ model Role {
   id          Int          @id @default(autoincrement())
   name        String       @unique
   permissions String[]
+  lastLoginAt Int          @map("last_login_at") @default(0)
   createdAt   Int          @map("created_at")
   updatedAt   Int          @map("updated_at")
   deletedAt   Int?         @map("deleted_at")
   admins      Admin[]
   invitations Invitation[]
+  userRoles   UserRole[]
 
   @@map("role")
 }
@@ -656,12 +718,26 @@ model SalaryRecordProjectHour {
   @@map("salary_record_project_hour")
 }
 
+model Shortcut {
+  id              Int      @id @default(autoincrement())
+  accountingSettingId Int  @map("accounting_setting_id")
+  actionName      String   @map("action_name") 
+  description     String   
+  fieldList       Json     @map("field_list")
+  keyList         String[] @map("key_list")
+  createdAt       Int      @map("created_at")
+  updatedAt       Int      @map("updated_at")
+  deletedAt       Int?     @map("deleted_at")
+
+  accountingSetting AccountingSetting @relation(fields: [accountingSettingId], references: [id])
+
+  @@map("shortcut")
+}
+
 model User {
   id              Int              @id @default(autoincrement())
   name            String
-  fullName        String?          @map("full_name")
   email           String?
-  phone           String?
   imageFileId     Int              @unique @map("image_File_id")
   createdAt       Int              @map("created_at")
   updatedAt       Int              @map("updated_at")
@@ -670,6 +746,8 @@ model User {
   invitations     Invitation[]
   authentications Authentication[]
   userAgreements  UserAgreement[]
+  userRoles       UserRole[]
+  kycBookkeepers  KYCBookkeeper[]
 
   imageFile File @relation("user_image_file", fields: [imageFileId], references: [id])
 
@@ -688,6 +766,56 @@ model UserAgreement {
 
   @@unique([userId, agreementHash]) // Info: (20240816 - Jacky) Ensures a user can't agree to the same term more than once
   @@map("user_agreement")
+}
+
+model UserActionLog {
+  id                Int    @id @default(autoincrement())
+  sessionId         String @map("session_id")
+  userId            Int    @map("user_id")
+  actionType        String @map("action_type")
+  actionDescription String @map("action_description")
+  actionTime        Int    @map("action_time")
+  ipAddress         String @map("ip_address")
+  userAgent         String @map("user_agent")
+  apiEndpoint       String @map("api_endpoint")
+  httpMethod        String @map("http_method")
+  requestPayload    Json   @map("request_payload")
+  httpStatusCode    Int    @map("http_status_code")
+  statusMessage     String @map("status_message")
+
+  @@map("user_action_log")
+}
+
+model UserSetting {
+  id                                Int     @id @default(autoincrement())
+  userId                            Int     @map("user_id")
+  firstName                         String? @map("first_name")
+  lastName                          String? @map("last_name")
+  country                           String?
+  language                          String?
+  phone                             String?
+  systemNotification                Boolean @map("system_notification")
+  updateAndSubscriptionNotification Boolean @map("update_and_subscription_notification")
+  emailNotification                 Boolean @map("email_notification")
+  createdAt                         Int     @map("created_at")
+  updatedAt                         Int     @map("updated_at")
+  deletedAt                         Int?    @map("deleted_at")
+
+  @@map("user_setting")
+}
+
+model UserRole {
+  id        Int  @id @default(autoincrement())
+  userId    Int  @map("user_id")
+  roleId    Int  @map("role_id")
+  createdAt Int  @map("created_at")
+  updatedAt Int  @map("updated_at")
+  deletedAt Int? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@map("user_role")
 }
 
 model Voucher {

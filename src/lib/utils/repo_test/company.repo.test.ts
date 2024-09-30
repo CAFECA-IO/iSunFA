@@ -8,11 +8,9 @@ describe('Company Repository Tests', () => {
     it('should return a company by its ID', async () => {
       const company = await getCompanyById(testCompanyId);
       expect(company).toBeDefined();
-      expect(company?.code).toEqual(companies[0].code);
+      expect(company?.taxId).toEqual(companies[0].taxId);
       expect(company?.name).toEqual(companies[0].name);
-      expect(company?.regional).toEqual(companies[0].regional);
       expect(company?.createdAt).toEqual(companies[0].createdAt);
-      expect(company?.kycStatus).toEqual(companies[0].kycStatus);
     });
 
     describe('updateCompanyById', () => {
@@ -25,19 +23,12 @@ describe('Company Repository Tests', () => {
         const company = await updateCompanyById(
           testCompanyId,
           updatedCompany.code,
-          updatedCompany.name,
-          updatedCompany.regional
+          updatedCompany.name
         );
-        await updateCompanyById(
-          testCompanyId,
-          companies[0].code,
-          companies[0].name,
-          companies[0].regional
-        ); // Info: (20240704 - Jacky) Rollback the changes
+        await updateCompanyById(testCompanyId, companies[0].taxId, companies[0].name); // Info: (20240704 - Jacky) Rollback the changes
         expect(company).toBeDefined();
-        expect(company!.code).toBe(updatedCompany.code);
+        expect(company!.taxId).toBe(updatedCompany.code);
         expect(company!.name).toBe(updatedCompany.name);
-        expect(company!.regional).toBe(updatedCompany.regional);
       });
     });
     it('should return null if the company is not found', async () => {
@@ -50,26 +41,19 @@ describe('Company Repository Tests', () => {
   describe('updateCompanyById', () => {
     it("should update a company's details", async () => {
       const updatedCompany = {
-        code: 'NEWCODE',
+        taxId: 'NEWCODE',
         name: 'New Name',
         regional: 'New Regional',
       };
       const company = await updateCompanyById(
         testCompanyId,
-        updatedCompany.code,
-        updatedCompany.name,
-        updatedCompany.regional
+        updatedCompany.taxId,
+        updatedCompany.name
       );
-      await updateCompanyById(
-        testCompanyId,
-        companies[0].code,
-        companies[0].name,
-        companies[0].regional
-      ); // Info: (20240704 - Jacky) Rollback the changes
+      await updateCompanyById(testCompanyId, companies[0].taxId, companies[0].name); // Info: (20240704 - Jacky) Rollback the changes
       expect(company).toBeDefined();
-      expect(company!.code).toBe(updatedCompany.code);
+      expect(company!.taxId).toBe(updatedCompany.taxId);
       expect(company!.name).toBe(updatedCompany.name);
-      expect(company!.regional).toBe(updatedCompany.regional);
     });
   });
 });

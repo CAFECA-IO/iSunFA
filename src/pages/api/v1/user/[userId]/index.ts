@@ -9,14 +9,8 @@ import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 
-async function checkInput(
-  userId: string,
-  name: string,
-  fullName: string,
-  email: string,
-  phone: string
-): Promise<boolean> {
-  const isValid = !!userId && !!name && !!fullName && !!email && !!phone;
+async function checkInput(userId: string, name: string, email: string): Promise<boolean> {
+  const isValid = !!userId && !!name && !!email;
   return isValid;
 }
 
@@ -61,8 +55,8 @@ async function handlePutRequest(
   let payload: IUser | null = null;
 
   const queryUserId = req.query.userId as string;
-  const { name, fullName, email, phone, imageId } = req.body;
-  const isValid = await checkInput(queryUserId, name, fullName, email, phone);
+  const { name, email, imageId } = req.body;
+  const isValid = await checkInput(queryUserId, name, email);
 
   if (!isValid) {
     statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
@@ -84,14 +78,7 @@ async function handlePutRequest(
         if (!getUser) {
           statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
         } else {
-          const updatedUser = await updateUserById(
-            userIdNum,
-            name,
-            fullName,
-            email,
-            phone,
-            imageId
-          );
+          const updatedUser = await updateUserById(userIdNum, name, email, imageId);
           const user = formatUser(updatedUser);
           statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
           payload = user;

@@ -3,7 +3,6 @@ export interface IAuditReports {
   companyId: number;
   code: string;
   company: string;
-  regional: string;
   informationYear: string;
   detailedInformation: string;
   creditRating: string;
