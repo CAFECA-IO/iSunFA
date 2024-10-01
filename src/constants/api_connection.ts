@@ -62,6 +62,12 @@ export enum APIName {
   AI_ASK_RESULT = 'AI_ASK_RESULT',
   VOUCHER_CREATE = 'VOUCHER_CREATE',
   VOUCHER_UPDATE = 'VOUCHER_UPDATE',
+  VOUCHER_LIST_V2 = 'VOUCHER_LIST_V2',
+  VOUCHER_POST_V2 = 'VOUCHER_POST_V2',
+  VOUCHER_GET_BY_ID_V2 = 'VOUCHER_GET_BY_ID_V2',
+  VOUCHER_DELETE_V2 = 'VOUCHER_DELETE_V2',
+  VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
+  VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
   // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
@@ -93,8 +99,6 @@ export enum APIName {
   PUBLIC_KEY_GET = 'PUBLIC_KEY_GET',
   ZOD_EXAMPLE = 'ZOD_EXAMPLE', // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = 'CERTIFICATE_LIST',
-  TRIAL_BALANCE_LIST_V2 = 'TRIAL_BALANCE_LIST_V2',
-  LEDGER_LIST_V2 = 'LEDGER_LIST_V2',
 }
 
 export enum APIPath {
@@ -136,6 +140,12 @@ export enum APIPath {
   AI_ASK_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
   VOUCHER_CREATE = `${apiPrefix}/company/:companyId/voucher`,
   VOUCHER_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
+  VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
+  VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
   // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`, // Info: (20240720 - Tzuhan)
@@ -167,8 +177,6 @@ export enum APIPath {
   PUBLIC_KEY_GET = `${apiPrefix}/company/:companyId/public_key`,
   ZOD_EXAMPLE = `${apiPrefix}/company/zod`, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate`,
-  TRIAL_BALANCE_LIST_V2 = `${apiPrefixV2}/company/:companyId/trial_balance`,
-  LEDGER_LIST_V2 = `${apiPrefixV2}/company/:companyId/ledger`,
 }
 const createConfig = ({
   name,
@@ -509,15 +517,5 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST,
-  }),
-  [APIName.TRIAL_BALANCE_LIST_V2]: createConfig({
-    name: APIName.TRIAL_BALANCE_LIST_V2,
-    method: HttpMethod.GET,
-    path: APIPath.TRIAL_BALANCE_LIST_V2,
-  }),
-  [APIName.LEDGER_LIST_V2]: createConfig({
-    name: APIName.LEDGER_LIST_V2,
-    method: HttpMethod.GET,
-    path: APIPath.LEDGER_LIST_V2,
   }),
 };

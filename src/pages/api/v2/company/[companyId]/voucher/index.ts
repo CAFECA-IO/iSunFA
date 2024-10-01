@@ -1,95 +1,84 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-// import { AuthFunctionsKeys } from '@/interfaces/auth';
-// import { checkAuthorization } from '@/lib/utils/auth_check';
-import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { mockCertificateList } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+import { loggerError } from '@/lib/utils/logger_back';
+import { formatApiResponse } from '@/lib/utils/common';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
+import { mockVouchersReturn } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
 
-import { loggerError } from '@/lib/utils/logger_back';
-
-type APIResponse =
-  | object
-  | {
-      data: unknown;
-    }
-  | null;
-
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | object
-    | {
-        data: unknown;
-      }
-    | null = null;
-
-  const session = await getSession(req, res);
-  const { userId } = session;
-
-  // ToDo: (20240924 - Murky) We need to check auth
-  //   const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-
-  //   if (isAuth) {
-  const { query } = validateRequest(APIName.CERTIFICATE_LIST_V2, req, userId);
-
-  if (query) {
-    // ToDo: (20240924 - Murky) Remember to use sortBy, sortOrder, startDate, endDate, searchQuery, hasBeenUsed
-    const { page, pageSize, sortBy, sortOrder } = query;
-    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-    payload = {
-      data: mockCertificateList,
-      page,
-      totalPages: 3,
-      totalCount: 30,
-      pageSize,
-      hasNextPage: true,
-      hasPreviousPage: false,
-      sort: [
-        {
-          sortBy,
-          sortOrder,
-        },
-      ],
-    };
-  }
-  //   }
-
-  return {
-    statusMessage,
-    payload,
-    userId,
-  };
-}
-
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
-
   const session = await getSession(req, res);
   const { userId } = session;
+  const { query } = validateRequest(APIName.VOUCHER_LIST_V2, req, userId);
 
-  const { body } = validateRequest(APIName.CERTIFICATE_POST_V2, req, userId);
-
-  if (body) {
-    statusMessage = STATUS_MESSAGE.CREATED;
-    [payload] = mockCertificateList;
+  // ToDo: (20240927 - Murky) Remember to add auth check
+  if (query) {
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = {
+      page: 1, // Info: (20240927 - Murky) current page
+      totalUnRead: 99,
+      totalPages: 3,
+      totalCount: 30,
+      pageSize: 10,
+      hasNextPage: true,
+      hasPreviousPage: true,
+      sort: [
+        {
+          sortBy: 'createAt',
+          sortOrder: 'desc',
+        },
+      ],
+      data: mockVouchersReturn,
+    };
   }
-
   return {
     statusMessage,
     payload,
     userId,
   };
 }
+export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+  /**
+   * Info: (20240927 - Murky)
+   * Post voucher has conditional situation when posting,
+   * it might have recurring event, asset connecting, reverse voucher connect
+   * if not that situation, front end can provide  undefined recurring event, or empty array for asset connecting, reverse voucher connect
+   */
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: number | null = null;
+  const session = await getSession(req, res);
+  const { userId } = session;
+  const { body } = validateRequest(APIName.VOUCHER_POST_V2, req, userId);
+  const mockPostedVoucherId = 1002;
+
+  // ToDo: (20240927 - Murky) Remember to add auth check
+  if (body) {
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = mockPostedVoucherId;
+  }
+  return {
+    statusMessage,
+    payload,
+    userId,
+  };
+}
+
+type APIResponse = object | number | null;
+
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: APIResponse; userId: number }>;
+  ) => Promise<{
+    statusMessage: string;
+    payload: APIResponse;
+    userId: number;
+  }>;
 } = {
   GET: handleGetRequest,
   POST: handlePostRequest,
@@ -101,7 +90,8 @@ export default async function handler(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: APIResponse = null;
-  let userId = -1;
+  let userId: number = -1;
+
   try {
     const handleRequest = methodHandlers[req.method || ''];
     if (handleRequest) {

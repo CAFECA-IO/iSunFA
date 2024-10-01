@@ -141,6 +141,7 @@
     --yellow-700: #997c15;
     --yellow-800: #66520e;
     --yellow-900: #322907;
+    --card-text-sub: #878eac;
 
     /* spacing */
     --number-none: 0px;
@@ -269,6 +270,7 @@
     --text-brand-secondary-lv1: var(--navy-blue-600);
     --text-brand-secondary-lv2: var(--navy-blue-400);
     --text-brand-secondary-lv3: var(--navy-blue-200);
+    --text-card-sub: var(--card-text-sub);
     --text-brand-secondary-solid: var(--navy-blue-600);
     --text-neutral-invert: var(--neutral-25);
     --text-neutral-link: var(--support-baby-600);
@@ -421,6 +423,7 @@
     --card-text-secondary: var(--text-neutral-secondary);
     --card-text-tertiary: var(--text-neutral-tertiary);
     --card-text-title: var(--text-brand-secondary-lv2);
+    --card-text-sub: var(--text-card-sub);
     --card-text-white: var(--text-neutral-solid-light);
     --carousel-surface-active: var(--surface-brand-primary);
     --carousel-surface-background: var(--surface-neutral-surface-lv1);
@@ -846,6 +849,7 @@
     --card-text-secondary: var(--text-neutral-secondary);
     --card-text-tertiary: var(--text-neutral-tertiary);
     --card-text-title: var(--text-brand-secondary-lv2);
+    --card-text-sub: var(--text-card-sub);
     --card-text-white: var(--text-neutral-solid-light);
     --carousel-surface-active: var(--surface-brand-primary);
     --carousel-surface-background: var(--surface-neutral-surface-lv1);

@@ -3,14 +3,16 @@ import React from 'react';
 import FilterSection from '@/components/filter_section/filter_section';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
-import SelectionPannl from '@/components/certificate/selection_pannel';
+import SelectionPannl from '@/components/certificate/certificate_selection_pannel';
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
+  selectedIds: number[];
+  setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
-  selectedCertificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 已選擇的證書
+
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
   handleApiResponse: (data: ICertificate[]) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
@@ -21,27 +23,31 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   isOpen,
   onClose,
   handleSelect,
-  selectedCertificates,
   handleApiResponse,
   certificates,
+  selectedIds,
+  setSelectedIds,
   openUploaderModal,
 }) => {
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
 
   const handleSelectAll = () => {
-    handleSelect(
-      certificates.map((item) => item.id),
-      true
-    );
+    setSelectedIds(certificates.map((item) => item.id));
   };
 
   const handleComfirm = () => {
-    handleSelect(
-      selectedCertificates.map((item) => item.id),
-      true
-    );
+    handleSelect(selectedIds, true);
     onClose();
+  };
+
+  const handleSelectOne = (id: number) => {
+    const index = selectedIds.findIndex((item) => item === id);
+    if (index === -1) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter((item) => item !== id));
+    }
   };
 
   return (
@@ -68,7 +74,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         <div className="px-4">
           <div className="flex items-center justify-between">
             <div className="font-medium text-text-neutral-secondary">
-              (Select {selectedCertificates.length}/{certificates.length})
+              (Select {selectedIds.length}/{certificates.length})
             </div>
             <button
               type="button"
@@ -81,7 +87,8 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         </div>
         <SelectionPannl
           certificates={certificates}
-          handleSelect={handleSelect}
+          selectedIds={selectedIds}
+          handleSelect={handleSelectOne}
           openUploaderModal={openUploaderModal}
         />
         <div className="flex items-center justify-end gap-2">
