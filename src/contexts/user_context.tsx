@@ -22,8 +22,8 @@ interface UserContextType {
   userAuth: IUser | null;
   username: string | null;
   isSignIn: boolean;
-  isAgreeInfoCollection: boolean;
-  isAgreeTosNPrivacyPolicy: boolean;
+  isAgreeTermsOfService: boolean;
+  isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
@@ -53,8 +53,8 @@ export const UserContext = createContext<UserContextType>({
   userAuth: null,
   username: null,
   isSignIn: false,
-  isAgreeInfoCollection: false,
-  isAgreeTosNPrivacyPolicy: false,
+  isAgreeTermsOfService: false,
+  isAgreePrivacyPolicy: false,
   isSignInError: false,
   selectedCompany: null,
   selectCompany: async () => {},
@@ -76,7 +76,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
 
-  const [, setSignedIn, signedInRef] = useStateRef(false);
+  const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
@@ -112,11 +112,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(!isSignInErrorRef.current);
   };
 
-  const clearState = () => {
+  const clearStates = () => {
     setUserAuth(null);
     setUsername(null);
     setCredential(null);
-    setSignedIn(false);
+    setIsSignIn(false);
     setIsSignInError(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
@@ -126,14 +126,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
-  const handleNotSignedIn = () => {
-    clearState();
+  const redirectToLoginPage = () => {
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       router.push(ISUNFA_ROUTE.LOGIN);
     }
   };
 
-  const handleSignInRoute = () => {
+  // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
+  const redirectToSelectCompanyPage = () => {
     if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     }
@@ -193,7 +193,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     await signOutAPI();
     await authSignOut({ redirect: false });
-    handleNotSignedIn();
+    clearStates();
+    redirectToLoginPage();
   };
 
   const isProfileFetchNeeded = () => {
@@ -226,71 +227,92 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
+  // ===============================================================================
+  // Info: (20241001 - Liz) 此函式根據使用者的協議列表，更新使用者是否同意了服務條款和隱私政策。
+  // 它會將結果存入狀態變數 setIsAgreeTermsOfService 和 setIsAgreePrivacyPolicy。
+  const updateUserAgreements = (user: IUser) => {
+    const hasAgreedToTerms = user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE);
+    const hasAgreedToPrivacy = user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY);
+
+    setIsAgreeTermsOfService(hasAgreedToTerms);
+    setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
+  };
+
+  // Info: (20241001 - Liz) 此函式處理公司資訊:
+  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
+  // 若公司資料不存在，會將公司資訊設為空，並檢查路由是否位於 users 路徑中。如果符合條件且不在 SELECT_COMPANY 頁面，它會呼叫 redirectToSelectCompanyPage 函式進行重新導向。
+  const processCompanyInfo = (company: ICompany) => {
+    if (company && Object.keys(company).length > 0) {
+      setSelectedCompany(company);
+      setSuccessSelectCompany(true);
+      handleReturnUrl();
+    } else {
+      setSuccessSelectCompany(undefined);
+      setSelectedCompany(null);
+
+      const isInUsersRoute =
+        router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
+
+      if (isInUsersRoute) {
+        redirectToSelectCompanyPage();
+      }
+    }
+  };
+
+  // Info: (20241001 - Liz) 此函式處理使用者資訊:
+  // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入。
+  // 它還會將使用者的 userId 和過期時間儲存在 localStorage。
+  // 最後，它會更新使用者的協議狀態。
+  // 如果使用者資料無效，則呼叫 handleNotSignedIn 函式來處理未登入的情況。
+  const processUserInfo = (user: IUser) => {
+    if (user && Object.keys(user).length > 0) {
+      setUserAuth(user);
+      setUsername(user.name);
+      setIsSignIn(true);
+      setIsSignInError(false);
+
+      localStorage.setItem('userId', user.id.toString());
+      localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
+
+      updateUserAgreements(user);
+    } else {
+      clearStates();
+      redirectToLoginPage();
+    }
+  };
+
+  // Info: (20241001 - Liz) 此函式使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
+  // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接返回。
+  // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading) 並清除公司選擇狀態。
+  // 當 API 回傳成功且有資料時，它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
+  // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
+  // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
-    const isNeed = isProfileFetchNeeded();
-    if (!isNeed) return;
+    if (!isProfileFetchNeeded()) return;
+
     setIsAuthLoading(true);
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+
     const {
       data: StatusInfo,
       success: getStatusInfoSuccess,
       code: getStatusInfoCode,
     } = await getStatusInfoAPI();
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
-    if (getStatusInfoSuccess) {
-      if (StatusInfo) {
-        if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
-          setUserAuth(StatusInfo.user);
-          setUsername(StatusInfo.user.name);
-          setSignedIn(true);
-          setIsSignInError(false);
-          localStorage.setItem('userId', StatusInfo.user.id.toString());
-          localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
-          if (StatusInfo.user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE)) {
-            setIsAgreeTermsOfService(true);
-          } else {
-            setIsAgreeTermsOfService(false);
-          }
-          if (StatusInfo.user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY)) {
-            setIsAgreePrivacyPolicy(true);
-          } else {
-            setIsAgreePrivacyPolicy(false);
-          }
-          if (
-            'company' in StatusInfo &&
-            StatusInfo.company &&
-            Object.keys(StatusInfo.company).length > 0
-          ) {
-            setSelectedCompany(StatusInfo.company);
-            setSuccessSelectCompany(true);
-            handleReturnUrl();
-          } else {
-            setSuccessSelectCompany(undefined);
-            setSelectedCompany(null);
-            if (
-              router.pathname.includes('users') &&
-              !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
-            ) {
-              handleSignInRoute();
-            }
-          }
-        } else {
-          handleNotSignedIn();
-        }
-      }
-    }
-    if (getStatusInfoSuccess === false) {
-      handleNotSignedIn();
+
+    if (getStatusInfoSuccess && StatusInfo) {
+      processUserInfo(StatusInfo.user);
+      processCompanyInfo(StatusInfo.company);
+    } else {
+      clearStates();
+      redirectToLoginPage();
       setIsSignInError(true);
       setErrorCode(getStatusInfoCode ?? '');
     }
+
     setIsAuthLoading(false);
   }, [router.pathname]);
-
-  // Info: (20240903 - Shirley) 第一次登入，在用戶同意後，重新導向到選擇公司的頁面
-  useEffect(() => {
-    handleSignInRoute();
-  }, [userAgreeResponseRef.current]);
+  // ===============================================================================
 
   const handleUserAgree = async (hash: Hash) => {
     try {
@@ -430,9 +452,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
-      isSignIn: signedInRef.current,
-      isAgreeInfoCollection: isAgreeTermsOfServiceRef.current,
-      isAgreeTosNPrivacyPolicy: isAgreePrivacyPolicyRef.current,
+      isSignIn: isSignInRef.current,
+      isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
+      isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
@@ -485,7 +507,7 @@ export const useUserCtx = () => {
  *    - `getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 會攜帶 NextAuth 管理的 session。
  *    - 在 `status_info.ts` 中的 `handleGetRequest` 函數中，通過調用 `getSession` 函數（來自 `session.ts`）獲取當前請求的 session，並從中獲取用戶的 ID 和公司 ID。
  *    - 根據獲取到的用戶 ID 和公司 ID，從資料庫中獲取相應的用戶和公司資料，並返回給前端。
- *    - 如果回傳的資料有 user 但沒有 company，透過 `handleSignInRoute` 將用戶導向選擇公司的頁面，有 user 跟 company 則透過 `handleReturnUrl` 將用戶導向之前儀表板/嘗試訪問的頁面。
+ *    - 如果回傳的資料有 user 但沒有 company，透過 `redirectToSelectCompanyPage` 將用戶導向選擇公司的頁面，有 user 跟 company 則透過 `handleReturnUrl` 將用戶導向之前儀表板/嘗試訪問的頁面。
  * 10. 如果 `getStatusInfoAPI` 請求成功，並且返回的數據中包含用戶和公司的資訊：
  *     - 將這些資料存儲到 React 的 state 中。
  *     - 將用戶 ID 存儲到 localStorage 中。

@@ -133,8 +133,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { isSignIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
-    useUserCtx();
+  const { isSignIn, selectedCompany, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -407,10 +406,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   useEffect(() => {
     if (isSignIn) {
-      if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
+      if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
         if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
-        if (!isAgreeInfoCollection) termsOfServiceConfirmModalVisibilityHandler(true);
-        if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
+        if (!isAgreeTermsOfService) termsOfServiceConfirmModalVisibilityHandler(true);
+        if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
           privacyPolicyConfirmModalVisibilityHandler(true);
         }
       } else {
@@ -418,7 +417,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         privacyPolicyConfirmModalVisibilityHandler(false);
       }
     }
-  }, [pathname, isSignIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
+  }, [pathname, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
 
   useEffect(() => {
     if (isSignIn) {
