@@ -151,7 +151,7 @@ const AssetItem = () => {
     );
 
   return (
-    <div className="table-row font-medium">
+    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px text-center align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}

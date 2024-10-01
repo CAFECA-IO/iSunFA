@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { useTranslation } from 'next-i18next';
@@ -9,15 +9,27 @@ import Toggle from '@/components/toggle/toggle';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
+import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 const NewVoucherForm = () => {
   const { t } = useTranslation('common');
+
+  const { selectedCompany } = useUserCtx();
+  const { getAccountListHandler } = useAccountingCtx();
 
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [type, setType] = useState<string>(VoucherType.EXPENSE);
   const [note, setNote] = useState<string>('');
   const [counterparty, setCounterparty] = useState<string>('');
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (selectedCompany) {
+      getAccountListHandler(selectedCompany.id);
+    }
+  }, [selectedCompany]);
 
   // ToDo: (20240926 - Julian) Add 'credit not equal to debit'
   const saveBtnDisabled = (date.startTimeStamp === 0 && date.endTimeStamp === 0) || type === '';
@@ -148,10 +160,8 @@ const NewVoucherForm = () => {
           <Toggle id="recurring-toggle" getToggledState={recurringToggleHandler} />
           <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
         </div>
-        {/* ToDo: (20240926 - Julian) voucher block */}
-        <div className="col-span-2 w-full bg-surface-brand-secondary-moderate p-40px text-center text-white">
-          This is voucher block
-        </div>
+        {/* Info: (20240926 - Julian) voucher line block */}
+        <VoucherLineBlock />
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryOutline">

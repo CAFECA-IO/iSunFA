@@ -78,7 +78,7 @@ const APandARItem = () => {
   const displayedReverse = <p className="text-center text-link-text-primary">{reverse}</p>;
 
   return (
-    <div className="table-row font-medium">
+    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240924 - Julian) Issued Date */}
       <div className="table-cell py-10px text-center align-middle">{displayedDate}</div>
       {/* Info: (20240924 - Julian) Voucher No */}

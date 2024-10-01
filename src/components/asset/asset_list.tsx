@@ -99,9 +99,6 @@ const AssetList = () => {
 
         {/* Info: (20240925 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedAssetList}</div>
-
-        {/* Info: (20240925 - Julian) ---------------- Table Footer(排版用) ---------------- */}
-        <div className="table-footer-group h-10px"></div>
       </div>
 
       {/* Info: (20240925 - Julian) Pagination */}
