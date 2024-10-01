@@ -1,25 +1,25 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import {
-  IDetailedAssetV2,
-  IBriefAssetV2,
-  mockBriefAssetV2,
-  mockDetailedAssetV2,
-  ICreateAssetInputV2,
+  IAssetDetails,
+  IAssetItem,
+  mockAssetItem,
+  mockAssetDetails,
+  ICreateAssetInput,
 } from '@/interfaces/asset';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IPaginatedData } from '@/interfaces/pagination';
 
-interface IAssetListPayload extends IPaginatedData<IBriefAssetV2[]> {}
+interface IAssetListPayload extends IPaginatedData<IAssetItem[]> {}
 
 interface IResponse {
   statusMessage: string;
-  payload: IAssetListPayload | IDetailedAssetV2 | null;
+  payload: IAssetListPayload | IAssetDetails | null;
 }
 
 export const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
-  data: [mockBriefAssetV2],
+  data: [mockAssetItem],
   page: 1,
   totalPages: 1,
   totalCount: 1,
@@ -28,26 +28,21 @@ export const MOCK_ASSET_LIST_PAYLOAD: IAssetListPayload = {
   hasPreviousPage: false,
   sort: [
     {
-      sortBy: 'acquireDate',
+      sortBy: 'acquisitionDate',
       sortOrder: 'desc',
     },
   ],
 };
 
-// ToDo: (20240927 - Shirley) 從資料庫獲取資料的邏輯
 export async function handleGetRequest() {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetListPayload | null = null;
 
-  // ToDo: (20240927 - Shirley) 從請求中獲取session資料
-  // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
+  // ToDo: (20240927 - Shirley) 從請求中獲取查詢參數
   // ToDo: (20240927 - Shirley) 從資料庫獲取資產數據
   // ToDo: (20240927 - Shirley) 將資產數據格式化為資產介面
 
-  // Deprecated: (20241010 - Shirley) 連接的模擬資料
   payload = MOCK_ASSET_LIST_PAYLOAD;
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
   return { statusMessage, payload };
@@ -55,49 +50,43 @@ export async function handleGetRequest() {
 
 export async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IDetailedAssetV2 | null = null;
+  let payload: IAssetDetails | null = null;
 
-  // ToDo: (20241010 - Shirley) 從請求中獲取資產數據
-  // ToDo: (20241010 - Shirley) 驗證資產數據
-  // ToDo: (20241010 - Shirley) 在資料庫中創建資產數據
-  // ToDo: (20241010 - Shirley) 獲取並格式化創建後的資產數據
-
-  // Deprecated: (20241010 - Shirley) 連接的模擬資料
   try {
-    // ToDo: 從請求中獲取資產數據 (20240927 - Shirley)
     const {
-      name,
-      acquireDate,
-      propertyNumber,
-      accountingSubject,
-      // amount,
-      depreciationMethod,
-      usefulLife,
+      assetName,
+      assetType,
+      assetNumber,
+      acquisitionDate,
       purchasePrice,
-      currency,
+      currencyAlias,
+      // TODO: (20241001 - Shirley) implement API
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      amount,
+      // depreciationStart,
+      // depreciationMethod,
+      // usefulLife,
       note,
-    } = req.body as ICreateAssetInputV2;
+    } = req.body as ICreateAssetInput;
 
     // ToDo: (20240927 - Shirley) 驗證資產數據
-
     // ToDo: (20240927 - Shirley) 在資料庫中創建資產數據
-    // const newAsset = await createAssetInDatabase(req.body);
-
     // ToDo: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-    // payload = formatAssetData(newAsset);
 
-    // Deprecated: (20241010 - Shirley) 暫時返回模擬數據
     payload = {
-      ...mockDetailedAssetV2,
-      name,
-      acquireDate,
-      propertyNumber,
-      accountingSubject,
-      depreciationMethod,
-      usefulLife,
+      ...mockAssetDetails,
+      assetName,
+      assetType,
+      assetNumber,
+      acquisitionDate,
       purchasePrice,
-      currency,
+      currencyAlias,
+      // depreciationStart,
+      // depreciationMethod,
+      // usefulLife,
       note,
+      createdAt: getTimestampNow(),
+      updatedAt: getTimestampNow(),
     };
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (error) {
@@ -116,10 +105,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAssetListPayload | IDetailedAssetV2 | null>>
+  res: NextApiResponse<IResponseData<IAssetListPayload | IAssetDetails | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAssetListPayload | IDetailedAssetV2 | null = null;
+  let payload: IAssetListPayload | IAssetDetails | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -134,7 +123,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IAssetListPayload | IDetailedAssetV2 | null>(
+    const { httpCode, result } = formatApiResponse<IAssetListPayload | IAssetDetails | null>(
       statusMessage,
       payload
     );
