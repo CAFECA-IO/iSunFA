@@ -6,7 +6,7 @@ const ExamplePage: React.FC = () => {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      signIn(); // 若未驗證則導向登入頁面
+      signIn(); // Info: (20241001 - Liz) 若未驗證則導向登入頁面
     }
   }, [status]);
 
