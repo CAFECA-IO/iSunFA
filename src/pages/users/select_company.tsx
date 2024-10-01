@@ -60,9 +60,7 @@ const SelectCompanyPage = () => {
       </Head>
 
       <div className="h-screen bg-white">
-        <div className="">
-          <NavBar />
-        </div>
+        {!isAnimationShowing && <NavBar />}
         {displayedBody}
       </div>
     </>

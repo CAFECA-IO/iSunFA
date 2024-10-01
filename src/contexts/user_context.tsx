@@ -130,6 +130,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       router.push(ISUNFA_ROUTE.LOGIN);
     }
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 redirectToLoginPage');
   };
 
   // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
@@ -137,6 +140,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     }
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 redirectToSelectCompanyPage');
   };
 
   const checkIsRegistered = async (): Promise<{
@@ -299,6 +305,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       success: getStatusInfoSuccess,
       code: getStatusInfoCode,
     } = await getStatusInfoAPI();
+
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('getStatusInfo', StatusInfo, 'getStatusInfoSuccess', getStatusInfoSuccess);
 
     if (getStatusInfoSuccess && StatusInfo) {
       processUserInfo(StatusInfo.user);
