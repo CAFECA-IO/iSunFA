@@ -192,7 +192,7 @@ const initialAccountingContext: IAccountingContext = {
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
-  const { userAuth, selectedCompany, signedIn } = useUserCtx();
+  const { userAuth, selectedCompany, isSignIn } = useUserCtx();
   const {
     trigger: getAccountList,
     data: accountTitleList,
@@ -480,7 +480,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   useEffect(() => {
     clearOCRs();
-  }, [signedIn, selectedCompany]);
+  }, [isSignIn, selectedCompany]);
 
   useEffect(() => {
     if (accountSuccess && accountTitleList) {

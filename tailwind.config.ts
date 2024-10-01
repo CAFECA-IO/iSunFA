@@ -734,6 +734,7 @@ module.exports = {
         '44px': ['44px', '52px'],
         '48px': ['48px', '52px'],
         '6xl': ['56px', '60px'],
+        '64px': ['64px', '68px'],
         '7xl': ['72px', 1],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
@@ -1385,11 +1386,35 @@ module.exports = {
           '0%': { transform: 'translateX(-80%)' },
           '100%': { transform: 'translateX(120%)' },
         },
+        // Info: (20240925 - Liz) 客製化動畫幀
+        'slide-in': {
+          '0%': { left: '-100%' },
+          '100%': { left: '5%' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'fade-in-out': {
+          '0%': { opacity: '0' },
+          '50%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
         spinFast: 'spin 1s linear infinite',
         loading: 'loading 1.5s infinite',
+        // Info: (20240925 - Liz) 客製化動畫 使用方式是 animate-fade-in
+        'slide-in-back': 'slide-in 1s linear backwards', // Info: (20241001 - Liz) 1s 代表動畫時間
+        'fade-in-out': 'fade-in-out 3s ease-in-out forwards',
+        'fade-in-1': 'fade-in 2s ease-in forwards', // Info: (20241001 - Liz) forwards 代表動畫結束後保持最後的狀態
+        'fade-in-2': 'fade-in 2s ease-in 1s forwards', // Info: (20241001 - Liz) 動畫將在渲染或觸發動畫後 1 秒開始
+        wiggle: 'wiggle 1s ease-in-out infinite', // Info: (20241001 - Liz) 1s 代表動畫時間，ease-in-out 代表動畫速度，infinite 代表無限循環
       },
 
       content: {
