@@ -63,16 +63,15 @@ export async function handlePostRequest(req: NextApiRequest) {
       // TODO: (20241001 - Shirley) implement API
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       amount,
-      // depreciationStart,
-      // depreciationMethod,
-      // usefulLife,
+      depreciationStart,
+      depreciationMethod,
+      usefulLife,
       note,
     } = req.body as ICreateAssetInput;
 
     // ToDo: (20240927 - Shirley) 驗證資產數據
     // ToDo: (20240927 - Shirley) 在資料庫中創建資產數據
     // ToDo: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-
     payload = {
       ...mockAssetDetails,
       assetName,
@@ -81,9 +80,9 @@ export async function handlePostRequest(req: NextApiRequest) {
       acquisitionDate,
       purchasePrice,
       currencyAlias,
-      // depreciationStart,
-      // depreciationMethod,
-      // usefulLife,
+      depreciationStart: depreciationStart || 0,
+      depreciationMethod: depreciationMethod || '',
+      usefulLife: usefulLife || 0,
       note,
       createdAt: getTimestampNow(),
       updatedAt: getTimestampNow(),
