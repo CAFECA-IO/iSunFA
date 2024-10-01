@@ -201,7 +201,7 @@ const AccountingVoucherRow = ({ accountingVoucher }: IAccountingVoucherRow) => {
           <FiSearch size={16} />
         </div>
         <div className="px-12px py-8px uppercase text-dropdown-text-head">
-          {t('common:COMMON.ASSETS')}
+          {t('common:COMMON.ASSET')}
         </div>
         <div
           ref={accountingRef}

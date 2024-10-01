@@ -194,7 +194,7 @@ const AccountingTitlePageBody = () => {
       <div className="mt-40px flex flex-col items-center gap-x-20px gap-y-8px lg:mt-0 lg:flex-row">
         {/* Info: (20240717 - Julian) Assets */}
         <div className="flex w-full flex-col gap-8px lg:w-200px">
-          <p className="font-semibold text-input-text-primary">{t('common:COMMON.ASSETS')}</p>
+          <p className="font-semibold text-input-text-primary">{t('common:COMMON.ASSET')}</p>
           <div
             onClick={assetDropmenuToggleHandler}
             className={`relative flex items-center justify-between rounded-sm border bg-input-surface-input-background ${assetVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}

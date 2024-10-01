@@ -6,8 +6,9 @@ import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
+import CollapseButton from '@/components/button/collapse_button';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -15,6 +16,17 @@ interface IIncomeStatementReportBodyAllProps {
 
 const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
   const { isAuthLoading, selectedCompany } = useUserCtx();
+  // Info: (20241001 - Anna) 管理表格摺疊狀態
+  const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
+  const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
+  // Info: (20241001 - Anna) 切換摺疊狀態
+  const toggleSummaryTable = () => {
+    setIsSummaryCollapsed(!isSummaryCollapsed);
+  };
+
+  const toggleDetailTable = () => {
+    setIsDetailCollapsed(!isDetailCollapsed);
+  };
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
     data: reportFinancial,
@@ -124,73 +136,78 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
 
       <section className="text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
+          <div className="flex items-center">
+            <p className="text-xs font-bold leading-5">一、項目彙總格式</p>
+            <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
+          </div>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
-        <table className="relative z-1 w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
-              </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
-              </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
-                {reportFinancial && reportFinancial.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
-                  </p>
-                )}
-              </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
-                %
-              </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                {reportFinancial && reportFinancial.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
-                  </p>
-                )}
-              </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
-                %
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.general &&
-              reportFinancial.general.slice(0, 10).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td
-                    className="border border-stroke-brand-secondary-soft p-10px text-xs"
-                    style={{ width: '200px' }}
-                  >
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        {!isSummaryCollapsed && (
+          <table className="relative z-1 w-full border-collapse bg-white">
+            <thead>
+              <tr>
+                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                  代號
+                </th>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                  會計項目
+                </th>
+                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+                  {!isSummaryCollapsed && reportFinancial && reportFinancial.company && (
+                    <p className="text-left font-barlow text-xs font-semibold leading-5">
+                      {formattedCurFromDate}至{formattedCurToDate}
+                    </p>
+                  )}
+                </th>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                  %
+                </th>
+                <th
+                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {reportFinancial && reportFinancial.company && (
+                    <p className="text-left font-barlow text-xs font-semibold leading-5">
+                      {formattedPreFromDate}至{formattedPreToDate}
+                    </p>
+                  )}
+                </th>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                  %
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportFinancial &&
+                reportFinancial.general &&
+                reportFinancial.general.slice(0, 10).map((value) => (
+                  <tr key={value.code} className="h-40px">
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                      {value.code}
+                    </td>
+                    <td
+                      className="border border-stroke-brand-secondary-soft p-10px text-xs"
+                      style={{ width: '200px' }}
+                    >
+                      {value.name}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                      {value.curPeriodAmount}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                      {value.curPeriodPercentage}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                      {value.prePeriodAmount}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                      {value.prePeriodPercentage}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        )}
       </section>
       {renderedFooter(1)}
     </div>
@@ -451,73 +468,78 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       </header>
       <section className="text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+          <div className="flex items-center">
+            <p className="text-xs font-bold leading-5">二、細項分類格式</p>
+            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
+          </div>
           <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
         </div>
-        <table className="w-full border-collapse bg-white">
-          <thead>
-            <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                代號
-              </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
-                會計項目
-              </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                {reportFinancial && reportFinancial.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
-                  </p>
-                )}
-              </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
-                %
-              </th>
-              <th
-                className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                {reportFinancial && reportFinancial.company && (
-                  <p className="text-left font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
-                  </p>
-                )}
-              </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
-                %
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportFinancial &&
-              reportFinancial.details &&
-              reportFinancial.details.slice(0, 15).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        {!isDetailCollapsed && (
+          <table className="w-full border-collapse bg-white">
+            <thead>
+              <tr>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                  代號
+                </th>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
+                  會計項目
+                </th>
+                <th
+                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {!isDetailCollapsed && reportFinancial && reportFinancial.company && (
+                    <p className="text-left font-barlow text-xs font-semibold leading-5">
+                      {formattedCurFromDate}至{formattedCurToDate}
+                    </p>
+                  )}
+                </th>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                  %
+                </th>
+                <th
+                  className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold"
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {reportFinancial && reportFinancial.company && (
+                    <p className="text-left font-barlow text-xs font-semibold leading-5">
+                      {formattedPreFromDate}至{formattedPreToDate}
+                    </p>
+                  )}
+                </th>
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
+                  %
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportFinancial &&
+                reportFinancial.details &&
+                reportFinancial.details.slice(0, 15).map((value) => (
+                  <tr key={value.code} className="h-40px">
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
+                      {value.code}
+                    </td>
+                    <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
+                      {value.name}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                      {value.curPeriodAmount}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                      {value.curPeriodPercentage}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                      {value.prePeriodAmount}
+                    </td>
+                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
+                      {value.prePeriodPercentage}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        )}
       </section>
       {renderedFooter(4)}
     </div>
