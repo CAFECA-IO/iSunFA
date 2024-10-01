@@ -15,6 +15,9 @@ export const ISUNFA_ROUTE = {
   TERMS_OF_SERVICE: '/terms-of-service',
   PRIVACY_POLICY: '/privacy-policy',
   LOGIN: '/users/login',
+  BETA_LOGIN: '/beta/login', // Info: (20241001 - Liz) Beta login
+  EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
+
   DASHBOARD: '/users/dashboard',
   KYC: '/users/kyc',
   SALARY: '/users/salary',
