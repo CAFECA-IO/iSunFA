@@ -8,6 +8,7 @@
     "ADMINISTRATOR": "Administrator",
     "SUBSCRIPTION_BILLS": "Subscription&Bills",
     "ACCOUNTING_TITLE_MANAGEMENT": "Accounting Title Management",
+    "ASSETS": "資產",
     "LIABILITY": "Liability",
     "EQUITY": "Equity",
     "ALL": "All",
@@ -40,6 +41,8 @@
     "SUCCESSFULLY_UPDATED_ACCOUNT": "Successfully updated account: ",
     "FAILED_TO_UPDATE_ACCOUNT": "Failed to update account, please try again later.",
     "FAILED_TO_GET_ACCOUNT_DATA": "Failed to get account data, please try again later.",
-    "FAIL_UPDATE_COMPANY_NAME": "Fail to update company name. Code:{{updateTeamCode}}"
+    "FAIL_UPDATE_COMPANY_NAME": "Fail to update company name. Code:{{updateTeamCode}}",
+    "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income",
+    "COST": "Cost"
   }
 }
