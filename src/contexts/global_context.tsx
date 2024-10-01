@@ -133,7 +133,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
+  const { isSignIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
     useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
@@ -361,7 +361,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   };
 
   useEffect(() => {
-    if (!signedIn) return;
+    if (!isSignIn) return;
 
     if (reportGeneratedStatus) {
       toastHandler({
@@ -403,10 +403,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //     autoClose: false,
     //   });
     // }
-  }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
+  }, [reportPendingStatus, reportGeneratedStatus, isSignIn, pathname]);
 
   useEffect(() => {
-    if (signedIn) {
+    if (isSignIn) {
       if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
         if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
         if (!isAgreeInfoCollection) termsOfServiceConfirmModalVisibilityHandler(true);
@@ -418,10 +418,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         privacyPolicyConfirmModalVisibilityHandler(false);
       }
     }
-  }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
+  }, [pathname, isSignIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
 
   useEffect(() => {
-    if (signedIn) {
+    if (isSignIn) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
         eliminateToast(ToastId.ALPHA_TEST_REMINDER);
         if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
@@ -468,7 +468,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       //   eliminateToast(ToastId.ALPHA_TEST_REMINDER);
       // }
     }
-  }, [pathname, signedIn]);
+  }, [pathname, isSignIn]);
 
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 

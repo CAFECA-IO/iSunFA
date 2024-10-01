@@ -13,7 +13,7 @@ const CTASection = () => {
 
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
-  const { signedIn } = useContext(UserContext);
+  const { isSignIn } = useContext(UserContext);
 
   useEffect(() => {
     const waitForCTA = setTimeout(() => {
@@ -49,7 +49,7 @@ const CTASection = () => {
         </div>
 
         <Link
-          href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}
+          href={isSignIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}
           className="z-5 flex w-full justify-center px-5 md:w-auto"
         >
           <Button
