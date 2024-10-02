@@ -1410,11 +1410,11 @@ module.exports = {
         spinFast: 'spin 1s linear infinite',
         loading: 'loading 1.5s infinite',
         // Info: (20240925 - Liz) 客製化動畫 使用方式是 animate-fade-in
-        'slide-in-back': 'slide-in 1s linear backwards', // 1s 代表動畫時間
+        'slide-in-back': 'slide-in 1s linear backwards', // Info: (20241001 - Liz) 1s 代表動畫時間
         'fade-in-out': 'fade-in-out 3s ease-in-out forwards',
-        'fade-in-1': 'fade-in 2s ease-in forwards', // forwards 代表動畫結束後保持最後的狀態
-        'fade-in-2': 'fade-in 2s ease-in 1s forwards', // 動畫將在渲染或觸發動畫後 1 秒開始
-        wiggle: 'wiggle 1s ease-in-out infinite', // 1s 代表動畫時間，ease-in-out 代表動畫速度，infinite 代表無限循環
+        'fade-in-1': 'fade-in 2s ease-in forwards', // Info: (20241001 - Liz) forwards 代表動畫結束後保持最後的狀態
+        'fade-in-2': 'fade-in 2s ease-in 1s forwards', // Info: (20241001 - Liz) 動畫將在渲染或觸發動畫後 1 秒開始
+        wiggle: 'wiggle 1s ease-in-out infinite', // Info: (20241001 - Liz) 1s 代表動畫時間，ease-in-out 代表動畫速度，infinite 代表無限循環
       },
 
       content: {
@@ -1422,6 +1422,14 @@ module.exports = {
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
+        13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
+      },
+      gridColumnEnd: {
+        13: '13',
+        14: '14',
+        15: '15',
+        16: '16',
+        17: '17',
       },
     },
   },

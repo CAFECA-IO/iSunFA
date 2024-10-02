@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { FiHome } from 'react-icons/fi';
 import { PiGlobe } from 'react-icons/pi';
 
-const LoginAnimation = () => {
+const LoginAnimation = ({
+  setIsAnimationShowing,
+}: {
+  setIsAnimationShowing: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
   const [switchTitle, setSwitchTitle] = useState(false);
 
   useEffect(() => {
@@ -11,8 +15,14 @@ const LoginAnimation = () => {
       setSwitchTitle(true);
     }, 3000);
 
+    // Info: (20241001 - Liz) 6 秒後關閉動畫
+    const closeAnimation = setTimeout(() => {
+      setIsAnimationShowing(false);
+    }, 6000);
+
     return () => {
       clearTimeout(titleTimer);
+      clearTimeout(closeAnimation);
     };
   }, []);
 

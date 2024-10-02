@@ -1,15 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Image from 'next/image';
-import { useModalContext } from '@/contexts/modal_context';
 import AvatarSVG from '@/components/avatar_svg/avatar_svg';
-import { ILoginPageProps } from '@/interfaces/page_props';
-import { Provider } from '@/constants/provider';
-import { useUserCtx } from '@/contexts/user_context';
-import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
-import { signIn } from 'next-auth/react';
+import { signIn, signOut, useSession } from 'next-auth/react';
+
+const isAuthLoading = false;
 
 const Loader = () => {
   return (
@@ -19,30 +16,21 @@ const Loader = () => {
   );
 };
 
-const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
+const LoginPageBody = () => {
   const { t } = useTranslation('common');
-  const { toastHandler } = useModalContext();
-  const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
+  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (userAgreeResponse) {
-      if (!userAgreeResponse.success) {
-        toastHandler({
-          id: `user-agree-error`,
-          type: ToastType.ERROR,
-          content: `${t('common:COMMON.ERROR')}: ${userAgreeResponse.code}`,
-          closeable: true,
-        });
-      }
-    }
-  }, [userAgreeResponse]);
-
-  const googleAuthSignIn = () => {
-    authenticateUser(Provider.GOOGLE, {
-      invitation,
-      action,
-    });
-  };
+  if (status === 'authenticated') {
+    // ToDo: (20240927 - Liz) 拿取使用者資料，檢查是否有同意服務條款，如果沒有就跳出同意服務條款的 modal
+    return (
+      <div>
+        <p>已登入為 {session?.user?.email}</p>
+        <button type="button" onClick={() => signOut()}>
+          登出
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -70,19 +58,17 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
           <div className="flex w-360px flex-col gap-16px">
             <button
               type="button"
-              onClick={googleAuthSignIn}
+              onClick={() => signIn('google')}
               className="flex items-center justify-center gap-15px rounded-sm bg-white p-15px"
             >
               <Image src="/icons/google_logo.svg" alt="google_logo" width="24" height="24"></Image>
               <p className="text-xl font-medium text-gray-500">Log In with Google</p>
             </button>
 
-            {/* // Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
             <button
               type="button"
               onClick={() => signIn('apple')}
               className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
-              disabled
             >
               <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
               <p className="text-xl font-medium text-white">Log In with Apple</p>
@@ -92,29 +78,6 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
       )}
     </div>
   );
-
-  // return (
-  //   <div className="relative flex h-screen flex-col items-center justify-center text-center">
-  //     <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
-  //     {isAuthLoading ? (
-  //       <Loader />
-  //     ) : (
-  //       <div className="z-10 mb-8 flex flex-col items-center">
-  //         <h1 className="mb-6 text-4xl font-bold text-gray-800">
-  //           {t('common:LOGIN_PAGE_BODY.LOG_IN')}
-  //         </h1>
-  //         <div className="mx-2.5 mb-6 flex flex-col justify-center rounded-full">
-  //           <AvatarSVG size="large" />
-  //         </div>
-  //         <div className="flex flex-col space-y-4">
-  //           <AuthButton onClick={googleAuthSignIn} provider={Provider.GOOGLE} />
-  //           {/* Info: (20240819-Tzuhan) [Beta] Apple login is not supported in the beta version
-  //           <AuthButton onClick={appleAuthSignIn} provider="Apple" /> */}
-  //         </div>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
 };
 
 export default LoginPageBody;

@@ -1,11 +1,11 @@
 import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import LoginPageBody from '@/components/beta/login/login_page_body';
+import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
-import { ILocale } from '@/interfaces/locale';
-import LoginAnimation from '@/components/login/login_animation';
 
-const AnimationPage = () => {
+const LoginPage = () => {
   const { t } = useTranslation('common');
 
   return (
@@ -29,15 +29,19 @@ const AnimationPage = () => {
       </Head>
 
       <div className="h-screen">
-        <LoginAnimation />
+        <LoginPageBody />
       </div>
     </>
   );
 };
 
-export const getServerSideProps = async ({ locale }: ILocale) => {
+export const getServerSideProps: GetServerSideProps = async ({ locale, query }) => {
+  const { invitation = '', action = '' } = query;
+
   return {
     props: {
+      invitation: invitation as string,
+      action: action as string,
       ...(await serverSideTranslations(locale as string, [
         'common',
         'report_401',
@@ -52,4 +56,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default AnimationPage;
+export default LoginPage;

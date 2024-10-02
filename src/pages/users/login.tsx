@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import NavBar from '@/components/nav_bar/nav_bar';
+// import NavBar from '@/components/nav_bar/nav_bar';
 import LoginPageBody from '@/components/login_page_body/login_page_body';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
@@ -9,12 +9,6 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('common');
-
-  const displayedBody = (
-    <div className="pt-60px">
-      <LoginPageBody invitation={invitation} action={action} />
-    </div>
-  );
 
   return (
     <>
@@ -37,8 +31,8 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
       </Head>
 
       <div className="h-screen">
-        <NavBar />
-        {displayedBody}
+        {/* <NavBar /> */}
+        <LoginPageBody invitation={invitation} action={action} />
       </div>
     </>
   );

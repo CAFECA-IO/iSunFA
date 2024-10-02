@@ -19,7 +19,7 @@ import { useTranslation } from 'next-i18next';
 const SelectCompanyPageBody = () => {
   const { t } = useTranslation(['common', 'kyc']);
 
-  const { signedIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
+  const { isSignIn, username, selectCompany, successSelectCompany, errorCode, userAuth } =
     useUserCtx();
   const { companyInvitationModalVisibilityHandler, createCompanyModalVisibilityHandler } =
     useGlobalCtx();
@@ -45,7 +45,7 @@ const SelectCompanyPageBody = () => {
     Array<{ company: ICompany; role: IRole }>
   >([]);
 
-  const userName = signedIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
+  const userName = isSignIn ? username || DEFAULT_DISPLAYED_USER_NAME : '';
   const selectedCompanyName = selectedCompany?.name ?? t('kyc:SELECT_COMPANY.SELECT_AN_COMPANY');
 
   const menuOpenHandler = () => {

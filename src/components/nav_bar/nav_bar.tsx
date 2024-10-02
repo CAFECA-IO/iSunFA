@@ -29,7 +29,7 @@ import { UploadType } from '@/constants/file';
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
 
-  const { signedIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
+  const { isSignIn, signOut, username, selectedCompany, userAuth, isAuthLoading, selectCompany } =
     useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
@@ -119,7 +119,7 @@ const NavBar = () => {
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
-          href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+          href={`${isSignIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
           className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
         > */}
         <Image src={'/icons/rocket.svg'} width={30} height={30} alt="rocket_icon" />
@@ -127,7 +127,7 @@ const NavBar = () => {
         {/* </Link> */}
       </button>
       <Link
-        href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
+        href={`${isSignIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <Image src={'/icons/calculator.svg'} width={30} height={30} alt="calculator_icon" />
@@ -149,7 +149,7 @@ const NavBar = () => {
         className="mx-auto flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary disabled:text-button-text-disable"
       >
         {/* <Link
-          href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
+          href={`${isSignIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
           className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-primaryYellow"
         > */}
         <Image src={'/icons/briefcase.svg'} width={30} height={30} alt="briefcase_icon" />
@@ -157,7 +157,7 @@ const NavBar = () => {
         {/* </Link> */}
       </button>
       <Link
-        href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
+        href={`${isSignIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
         className="flex w-full items-center gap-16px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover"
       >
         <Image src={'/icons/report.svg'} width={30} height={30} alt="report_icon" />
@@ -223,7 +223,7 @@ const NavBar = () => {
         className="mx-auto flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
         {/* <Link
-          href={`${signedIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
+          href={`${isSignIn ? ISUNFA_ROUTE.PROJECT_LIST : ISUNFA_ROUTE.LOGIN}`}
           className="flex flex-col items-center gap-8px"
         > */}
         <Image src={'/icons/rocket.svg'} width={48} height={48} alt="rocket_icon" />
@@ -234,7 +234,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Account button */}
       <button type="button" className="mx-auto">
         <Link
-          href={`${signedIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
+          href={`${isSignIn ? ISUNFA_ROUTE.JOURNAL_LIST : ISUNFA_ROUTE.LOGIN}`}
           className="flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
         >
           <Image src={'/icons/calculator.svg'} width={48} height={48} alt="calculator_icon" />
@@ -260,7 +260,7 @@ const NavBar = () => {
         className="mx-auto flex flex-col items-center gap-8px disabled:text-button-text-disable"
       >
         {/* <Link
-          href={`${signedIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
+          href={`${isSignIn ? ISUNFA_ROUTE.SALARY : ISUNFA_ROUTE.LOGIN}`}
           className="flex flex-col items-center gap-8px"
         > */}
         <Image src={'/icons/briefcase.svg'} width={48} height={48} alt="briefcase_icon" />
@@ -270,7 +270,7 @@ const NavBar = () => {
       {/* Info: (20240416 - Julian) Report button */}
       <button type="button" className="mx-auto">
         <Link
-          href={`${signedIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
+          href={`${isSignIn ? ISUNFA_ROUTE.USERS_MY_REPORTS : ISUNFA_ROUTE.LOGIN}`}
           className="flex flex-col items-center gap-8px hover:text-button-text-primary-hover disabled:text-button-text-disable"
         >
           <Image src={'/icons/report.svg'} width={48} height={48} alt="report_icon" />
@@ -301,7 +301,7 @@ const NavBar = () => {
         </button>
         <div className="mt-3 flex justify-center gap-0 px-16">
           <div className="my-auto text-base font-semibold leading-6 tracking-normal text-button-text-secondary">
-            {signedIn ? username ?? DEFAULT_DISPLAYED_USER_NAME : ''}
+            {isSignIn ? (username ?? DEFAULT_DISPLAYED_USER_NAME) : ''}
           </div>
           {/* Info: (20240809 - Shirley) edit name button */}
           <button
@@ -401,7 +401,7 @@ const NavBar = () => {
 
   const displayedAvatar = isAuthLoading ? (
     <Skeleton width={44} height={40} />
-  ) : signedIn ? (
+  ) : isSignIn ? (
     <div ref={userMenuRef}>
       <button
         type="button"
@@ -525,7 +525,7 @@ const NavBar = () => {
 
         {/* Info: (20240802 - Shirley) hide the login button for now */}
         <div
-          className={`hidden flex-col items-start justify-center ${signedIn ? 'lg:flex' : 'hidden'}`}
+          className={`hidden flex-col items-start justify-center ${isSignIn ? 'lg:flex' : 'hidden'}`}
         >
           <div className="h-40px w-px shrink-0 bg-divider-stroke-lv-4" />
         </div>

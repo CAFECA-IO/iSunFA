@@ -21,9 +21,9 @@ interface UserContextType {
   signOut: () => void;
   userAuth: IUser | null;
   username: string | null;
-  signedIn: boolean;
-  isAgreeInfoCollection: boolean;
-  isAgreeTosNPrivacyPolicy: boolean;
+  isSignIn: boolean;
+  isAgreeTermsOfService: boolean;
+  isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
@@ -52,9 +52,9 @@ export const UserContext = createContext<UserContextType>({
   signOut: () => {},
   userAuth: null,
   username: null,
-  signedIn: false,
-  isAgreeInfoCollection: false,
-  isAgreeTosNPrivacyPolicy: false,
+  isSignIn: false,
+  isAgreeTermsOfService: false,
+  isAgreePrivacyPolicy: false,
   isSignInError: false,
   selectedCompany: null,
   selectCompany: async () => {},
@@ -76,7 +76,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
 
-  const [, setSignedIn, signedInRef] = useStateRef(false);
+  const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
@@ -112,11 +112,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(!isSignInErrorRef.current);
   };
 
-  const clearState = () => {
+  const clearStates = () => {
     setUserAuth(null);
     setUsername(null);
     setCredential(null);
-    setSignedIn(false);
+    setIsSignIn(false);
     setIsSignInError(false);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
@@ -126,17 +126,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
-  const handleNotSignedIn = () => {
-    clearState();
+  const redirectToLoginPage = () => {
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       router.push(ISUNFA_ROUTE.LOGIN);
     }
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 redirectToLoginPage');
   };
 
-  const handleSignInRoute = () => {
+  // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
+  const redirectToSelectCompanyPage = () => {
     if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
       router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     }
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 redirectToSelectCompanyPage');
   };
 
   const checkIsRegistered = async (): Promise<{
@@ -193,7 +199,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     await signOutAPI();
     await authSignOut({ redirect: false });
-    handleNotSignedIn();
+    clearStates();
+    redirectToLoginPage();
   };
 
   const isProfileFetchNeeded = () => {
@@ -226,116 +233,96 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
-  /** Info: (20240903 - Shirley)
-   * 前端登入流程：
-   * 1. 當用戶點擊登入按鈕時，會調用 `authenticateUser` 函數，傳入選擇的登入方式（如 Google 或 Apple）和登入頁面的 props。
-   * 2. `authenticateUser` 函數會調用 `authSignIn` 函數（來自 `next-auth/react`），傳入選擇的登入方式和額外的參數，開始 OAuth2.0 的登入流程。
-   * 3. 登入流程跳轉到 `[...nextauth].ts` 中的 `/api/auth/signin` 路由，該路由由 NextAuth 處理。
-   * 4. NextAuth 根據選擇的登入方式（如 Google 或 Apple），跳轉到相應的 OAuth 提供者進行用戶認證。
-   * 5. 用戶在 OAuth 提供者的頁面上輸入憑證並授權應用訪問其資料。
-   * 6. OAuth 提供者認證成功後，會將用戶重定向回應用的 `/api/auth/callback/:provider` 路由，該路由也由 NextAuth 處理。
-   * 7. NextAuth 在 `[...nextauth].ts` 的 `signIn` 回調函數中處理登入成功後的邏輯：
-   *    - 檢查用戶是否已存在於資料庫中，如果不存在則創建新用戶。
-   *    - 調用 `setSession` 函數（來自 `session.ts`）將用戶的 ID 存儲在 session 中。
-   * 8. 登入成功後，NextAuth 會將用戶重定向到應用的主頁面(iSunFA login page)。
-   * 9. 在主頁面(iSunFA login page)中，`UserProvider` 組件會調用 `getStatusInfo` 函數來獲取當前登入用戶和公司的資料。
-   *    - `getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 會攜帶 NextAuth 管理的 session。
-   *    - 在 `status_info.ts` 中的 `handleGetRequest` 函數中，通過調用 `getSession` 函數（來自 `session.ts`）獲取當前請求的 session，並從中獲取用戶的 ID 和公司 ID。
-   *    - 根據獲取到的用戶 ID 和公司 ID，從資料庫中獲取相應的用戶和公司資料，並返回給前端。
-   *    - 如果回傳的資料有 user 但沒有 company，透過 `handleSignInRoute` 將用戶導向選擇公司的頁面，有 user 跟 company 則透過 `handleReturnUrl` 將用戶導向之前儀表板/嘗試訪問的頁面。
-   * 10. 如果 `getStatusInfoAPI` 請求成功，並且返回的數據中包含用戶和公司的資訊：
-   *     - 將這些資料存儲到 React 的 state 中。
-   *     - 將用戶 ID 存儲到 localStorage 中。
-   *     - 設置一個過期時間（例如 1 小時後），並將其存儲到 localStorage 中。
-   * 11. React state 中的用戶和公司資料會通過 `UserContext` 提供給應用的其他組件使用。
-   * 12. 檢查用戶是否已同意所有必要的條款：
-   *     - 如果用戶尚未同意所有必要的條款（如資訊收集同意書和服務條款），系統會顯示相應的同意書頁面。
-   *     - 用戶需要閱讀並同意這些條款。
-   * 13. 當用戶同意條款時：
-   *     - 調用 `handleUserAgree` 函數，該函數會發送 API 請求（`agreementAPI`）來更新用戶的同意狀態。
-   *     - 如果 API 請求成功，更新本地 state 中的用戶同意狀態（`setIsAgreeTermsOfService` 和 `setIsAgreePrivacyPolicy`）。
-   * 14. 當用戶同意所有必要的條款後：
-   *     - 如果用戶尚未選擇公司，系統會將用戶重定向到選擇公司的頁面。
-   *     - 如果用戶已經選擇了公司，系統會將用戶重定向到儀表板或之前嘗試訪問的頁面（如果有的話）。
-   * 15. 在每次頁面加載或路由變更時，系統會檢查 localStorage 中的用戶 ID 和過期時間：
-   *     - 如果存在有效的用戶 ID 和未過期的時間戳，系統會嘗試重新獲取用戶狀態（調用 `getStatusInfo`）。
-   *     - 如果 localStorage 中的數據已過期或不存在，系統會清除 state 並將用戶重定向到登入頁面。
-   *
-   * 總結：
-   * - NextAuth 負責管理 OAuth2.0 的登入流程，並在登入成功後調用 `setSession` 函數將用戶的 ID 存儲在 session 中。
-   * - 在主頁面(iSunFA login page)中，`getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 通過 `getSession` 函數從 NextAuth 管理的 session 中獲取當前登入用戶的 ID 和公司 ID，並根據這些 ID 從資料庫中獲取相應的用戶和公司資料。
-   * - 獲取到的用戶和公司資料會存儲到 React 的 state 中，並通過 `UserContext` 提供給應用的其他組件使用。
-   * - 用戶 ID 和登入狀態的過期時間會被存儲在 localStorage 中，用於在頁面刷新或重新訪問時快速恢復用戶狀態。
-   * - `session.ts` 中提供的 `getSession` 和 `setSession` 函數封裝了 `next-session` 庫的功能，不僅 NextAuth 可以使用這些函數來操作 session，其他後端檔案（如 API 路由）也可以通過調用這些函數來讀取和修改 session。
-   * - 登入流程包含了檢查和處理用戶同意條款的邏輯，確保用戶在使用系統之前已經同意了所有必要的條款。
-   * - 用戶同意條款的狀態會被更新到資料庫中，並反映在本地 state 中，影響後續的導航邏輯。
-   * - 系統使用 localStorage 來保存用戶的登入狀態，以提高用戶體驗並減少不必要的 API 請求。
-   */
+  // ===============================================================================
+  // Info: (20241001 - Liz) 此函式根據使用者的協議列表，更新使用者是否同意了服務條款和隱私政策。
+  // 它會將結果存入狀態變數 setIsAgreeTermsOfService 和 setIsAgreePrivacyPolicy。
+  const updateUserAgreements = (user: IUser) => {
+    const hasAgreedToTerms = user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE);
+    const hasAgreedToPrivacy = user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY);
+
+    setIsAgreeTermsOfService(hasAgreedToTerms);
+    setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
+  };
+
+  // Info: (20241001 - Liz) 此函式處理公司資訊:
+  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
+  // 若公司資料不存在，會將公司資訊設為空，並檢查路由是否位於 users 路徑中。如果符合條件且不在 SELECT_COMPANY 頁面，它會呼叫 redirectToSelectCompanyPage 函式進行重新導向。
+  const processCompanyInfo = (company: ICompany) => {
+    if (company && Object.keys(company).length > 0) {
+      setSelectedCompany(company);
+      setSuccessSelectCompany(true);
+      handleReturnUrl();
+    } else {
+      setSuccessSelectCompany(undefined);
+      setSelectedCompany(null);
+
+      const isInUsersRoute =
+        router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
+
+      if (isInUsersRoute) {
+        redirectToSelectCompanyPage();
+      }
+    }
+  };
+
+  // Info: (20241001 - Liz) 此函式處理使用者資訊:
+  // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入。
+  // 它還會將使用者的 userId 和過期時間儲存在 localStorage。
+  // 最後，它會更新使用者的協議狀態。
+  // 如果使用者資料無效，則呼叫 handleNotSignedIn 函式來處理未登入的情況。
+  const processUserInfo = (user: IUser) => {
+    if (user && Object.keys(user).length > 0) {
+      setUserAuth(user);
+      setUsername(user.name);
+      setIsSignIn(true);
+      setIsSignInError(false);
+
+      localStorage.setItem('userId', user.id.toString());
+      localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
+
+      updateUserAgreements(user);
+    } else {
+      clearStates();
+      redirectToLoginPage();
+    }
+  };
+
+  // Info: (20241001 - Liz) 此函式使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
+  // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接返回。
+  // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading) 並清除公司選擇狀態。
+  // 當 API 回傳成功且有資料時，它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
+  // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
+  // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
-    const isNeed = isProfileFetchNeeded();
-    if (!isNeed) return;
+    if (!isProfileFetchNeeded()) return;
+
     setIsAuthLoading(true);
+    setSelectedCompany(null);
+    setSuccessSelectCompany(undefined);
+
     const {
       data: StatusInfo,
       success: getStatusInfoSuccess,
       code: getStatusInfoCode,
     } = await getStatusInfoAPI();
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
-    if (getStatusInfoSuccess) {
-      if (StatusInfo) {
-        if ('user' in StatusInfo && StatusInfo.user && Object.keys(StatusInfo.user).length > 0) {
-          setUserAuth(StatusInfo.user);
-          setUsername(StatusInfo.user.name);
-          setSignedIn(true);
-          setIsSignInError(false);
-          localStorage.setItem('userId', StatusInfo.user.id.toString());
-          localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
-          if (StatusInfo.user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE)) {
-            setIsAgreeTermsOfService(true);
-          } else {
-            setIsAgreeTermsOfService(false);
-          }
-          if (StatusInfo.user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY)) {
-            setIsAgreePrivacyPolicy(true);
-          } else {
-            setIsAgreePrivacyPolicy(false);
-          }
-          if (
-            'company' in StatusInfo &&
-            StatusInfo.company &&
-            Object.keys(StatusInfo.company).length > 0
-          ) {
-            setSelectedCompany(StatusInfo.company);
-            setSuccessSelectCompany(true);
-            handleReturnUrl();
-          } else {
-            setSuccessSelectCompany(undefined);
-            setSelectedCompany(null);
-            if (
-              router.pathname.includes('users') &&
-              !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)
-            ) {
-              handleSignInRoute();
-            }
-          }
-        } else {
-          handleNotSignedIn();
-        }
-      }
-    }
-    if (getStatusInfoSuccess === false) {
-      handleNotSignedIn();
+
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('getStatusInfo', StatusInfo, 'getStatusInfoSuccess', getStatusInfoSuccess);
+
+    if (getStatusInfoSuccess && StatusInfo) {
+      processUserInfo(StatusInfo.user);
+      processCompanyInfo(StatusInfo.company);
+    } else {
+      clearStates();
+      redirectToLoginPage();
       setIsSignInError(true);
       setErrorCode(getStatusInfoCode ?? '');
     }
+
     setIsAuthLoading(false);
   }, [router.pathname]);
-
-  // Info: (20240903 - Shirley) 第一次登入，在用戶同意後，重新導向到選擇公司的頁面
-  useEffect(() => {
-    handleSignInRoute();
-  }, [userAgreeResponseRef.current]);
+  // ===============================================================================
 
   const handleUserAgree = async (hash: Hash) => {
     try {
@@ -475,9 +462,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       signOut,
       userAuth: userAuthRef.current,
       username: usernameRef.current,
-      signedIn: signedInRef.current,
-      isAgreeInfoCollection: isAgreeTermsOfServiceRef.current,
-      isAgreeTosNPrivacyPolicy: isAgreePrivacyPolicyRef.current,
+      isSignIn: isSignInRef.current,
+      isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
+      isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
@@ -513,3 +500,49 @@ export const useUserCtx = () => {
   }
   return context;
 };
+
+/** Info: (20240903 - Shirley)
+ * 前端登入流程：
+ * 1. 當用戶點擊登入按鈕時，會調用 `authenticateUser` 函數，傳入選擇的登入方式（如 Google 或 Apple）和登入頁面的 props。
+ * 2. `authenticateUser` 函數會調用 `authSignIn` 函數（來自 `next-auth/react`），傳入選擇的登入方式和額外的參數，開始 OAuth2.0 的登入流程。
+ * 3. 登入流程跳轉到 `[...nextauth].ts` 中的 `/api/auth/signin` 路由，該路由由 NextAuth 處理。
+ * 4. NextAuth 根據選擇的登入方式（如 Google 或 Apple），跳轉到相應的 OAuth 提供者進行用戶認證。
+ * 5. 用戶在 OAuth 提供者的頁面上輸入憑證並授權應用訪問其資料。
+ * 6. OAuth 提供者認證成功後，會將用戶重定向回應用的 `/api/auth/callback/:provider` 路由，該路由也由 NextAuth 處理。
+ * 7. NextAuth 在 `[...nextauth].ts` 的 `signIn` 回調函數中處理登入成功後的邏輯：
+ *    - 檢查用戶是否已存在於資料庫中，如果不存在則創建新用戶。
+ *    - 調用 `setSession` 函數（來自 `session.ts`）將用戶的 ID 存儲在 session 中。
+ * 8. 登入成功後，NextAuth 會將用戶重定向到應用的主頁面(iSunFA login page)。
+ * 9. 在主頁面(iSunFA login page)中，`UserProvider` 組件會調用 `getStatusInfo` 函數來獲取當前登入用戶和公司的資料。
+ *    - `getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 會攜帶 NextAuth 管理的 session。
+ *    - 在 `status_info.ts` 中的 `handleGetRequest` 函數中，通過調用 `getSession` 函數（來自 `session.ts`）獲取當前請求的 session，並從中獲取用戶的 ID 和公司 ID。
+ *    - 根據獲取到的用戶 ID 和公司 ID，從資料庫中獲取相應的用戶和公司資料，並返回給前端。
+ *    - 如果回傳的資料有 user 但沒有 company，透過 `redirectToSelectCompanyPage` 將用戶導向選擇公司的頁面，有 user 跟 company 則透過 `handleReturnUrl` 將用戶導向之前儀表板/嘗試訪問的頁面。
+ * 10. 如果 `getStatusInfoAPI` 請求成功，並且返回的數據中包含用戶和公司的資訊：
+ *     - 將這些資料存儲到 React 的 state 中。
+ *     - 將用戶 ID 存儲到 localStorage 中。
+ *     - 設置一個過期時間（例如 1 小時後），並將其存儲到 localStorage 中。
+ * 11. React state 中的用戶和公司資料會通過 `UserContext` 提供給應用的其他組件使用。
+ * 12. 檢查用戶是否已同意所有必要的條款：
+ *     - 如果用戶尚未同意所有必要的條款（如資訊收集同意書和服務條款），系統會顯示相應的同意書頁面。
+ *     - 用戶需要閱讀並同意這些條款。
+ * 13. 當用戶同意條款時：
+ *     - 調用 `handleUserAgree` 函數，該函數會發送 API 請求（`agreementAPI`）來更新用戶的同意狀態。
+ *     - 如果 API 請求成功，更新本地 state 中的用戶同意狀態（`setIsAgreeTermsOfService` 和 `setIsAgreePrivacyPolicy`）。
+ * 14. 當用戶同意所有必要的條款後：
+ *     - 如果用戶尚未選擇公司，系統會將用戶重定向到選擇公司的頁面。
+ *     - 如果用戶已經選擇了公司，系統會將用戶重定向到儀表板或之前嘗試訪問的頁面（如果有的話）。
+ * 15. 在每次頁面加載或路由變更時，系統會檢查 localStorage 中的用戶 ID 和過期時間：
+ *     - 如果存在有效的用戶 ID 和未過期的時間戳，系統會嘗試重新獲取用戶狀態（調用 `getStatusInfo`）。
+ *     - 如果 localStorage 中的數據已過期或不存在，系統會清除 state 並將用戶重定向到登入頁面。
+ *
+ * 總結：
+ * - NextAuth 負責管理 OAuth2.0 的登入流程，並在登入成功後調用 `setSession` 函數將用戶的 ID 存儲在 session 中。
+ * - 在主頁面(iSunFA login page)中，`getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 通過 `getSession` 函數從 NextAuth 管理的 session 中獲取當前登入用戶的 ID 和公司 ID，並根據這些 ID 從資料庫中獲取相應的用戶和公司資料。
+ * - 獲取到的用戶和公司資料會存儲到 React 的 state 中，並通過 `UserContext` 提供給應用的其他組件使用。
+ * - 用戶 ID 和登入狀態的過期時間會被存儲在 localStorage 中，用於在頁面刷新或重新訪問時快速恢復用戶狀態。
+ * - `session.ts` 中提供的 `getSession` 和 `setSession` 函數封裝了 `next-session` 庫的功能，不僅 NextAuth 可以使用這些函數來操作 session，其他後端檔案（如 API 路由）也可以通過調用這些函數來讀取和修改 session。
+ * - 登入流程包含了檢查和處理用戶同意條款的邏輯，確保用戶在使用系統之前已經同意了所有必要的條款。
+ * - 用戶同意條款的狀態會被更新到資料庫中，並反映在本地 state 中，影響後續的導航邏輯。
+ * - 系統使用 localStorage 來保存用戶的登入狀態，以提高用戶體驗並減少不必要的 API 請求。
+ */
