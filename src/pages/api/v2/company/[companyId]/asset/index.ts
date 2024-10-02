@@ -61,6 +61,7 @@ export async function handlePostRequest(req: NextApiRequest) {
       purchasePrice,
       currencyAlias,
       // TODO: (20241001 - Shirley) implement API
+      // Deprecated: (20241015 - Shirley) remove after API implementation
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       amount,
       depreciationStart,
