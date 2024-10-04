@@ -17,7 +17,7 @@ async function handleGetRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
-  if (!userId || !companyId) {
+  if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
@@ -45,7 +45,7 @@ async function handlePutRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
-  if (!userId || !companyId) {
+  if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {
@@ -73,7 +73,7 @@ async function handleDeleteRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
-  if (!userId || !companyId) {
+  if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.owner], {

@@ -1,5 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { handleGetRequest, MOCK_RESPONSE } from '@/pages/api/v2/company/[companyId]/ledger/index';
+import { MOCK_RESPONSE } from '@/interfaces/ledger';
+import { handleGetRequest } from '@/pages/api/v2/company/[companyId]/ledger/index';
 
 describe('handleGetRequest', () => {
   it('Should return the correct ledger data', async () => {
