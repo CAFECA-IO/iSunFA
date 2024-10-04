@@ -4,7 +4,7 @@ import {
   handlePostRequest,
   MOCK_ASSET_LIST_PAYLOAD,
 } from '@/pages/api/v2/company/[companyId]/asset/index';
-import { mockCreateAssetInputV2, mockDetailedAssetV2 } from '@/interfaces/asset';
+import { mockCreateAssetInput, mockAssetDetails } from '@/interfaces/asset';
 import { NextApiRequest } from 'next';
 
 describe('List assets', () => {
@@ -18,12 +18,20 @@ describe('List assets', () => {
 describe('Create asset', () => {
   it('should return correct new asset data', async () => {
     const mockRequest = {
-      body: mockCreateAssetInputV2,
+      body: mockCreateAssetInput,
     } as NextApiRequest;
     const { statusMessage, payload } = await handlePostRequest(mockRequest);
     expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
+    // TODO: amount 指的是資產購買數量，不會在單一資產數據中顯示，需要在實作 API 時產生 amount 數量的資產數據 (20241001 - Shirley)
+    const { amount, ...restOfMockCreateAssetInput } = mockCreateAssetInput;
+    const expectedPayload = {
+      ...mockAssetDetails,
+      ...restOfMockCreateAssetInput,
+    };
     expect(payload).toEqual({
-      ...mockDetailedAssetV2,
+      ...expectedPayload,
+      createdAt: expect.any(Number),
+      updatedAt: expect.any(Number),
     });
   });
 });

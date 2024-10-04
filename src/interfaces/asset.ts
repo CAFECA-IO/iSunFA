@@ -1,5 +1,3 @@
-import { timestampInSeconds } from '@/lib/utils/common';
-
 /* Info: (20240927 - Shirley) asset v1 介面 */
 export interface IAsset {
   id: number;
@@ -59,139 +57,105 @@ export const mockAssetData: IAsset[] = [
 ];
 /* Info: (20240927 - Shirley) asset v1 介面 */
 
-export interface IBriefAssetV2 {
-  id: number;
-  acquireDate: number;
-  type: string;
-  propertyNumber: string;
-  name: string;
-  purchaseAmount: number;
-  depreciation: number;
-  residualValue: number;
-  remainingDays: number;
-  status: string;
-}
+/* Info: (20240927 - Shirley) asset v2 介面 */
 
-export interface IDetailedAssetV2 {
+export interface IAssetItem {
   id: number;
-  name: string;
-  propertyNumber: string;
-  accountingSubject: string;
-  acquireDate: number;
-  depreciationStart: number;
-  depreciationMethod: string;
-  usefulLife: number;
+  currencyAlias: string;
+  acquisitionDate: number;
+  assetType: string;
+  assetNumber: string;
+  assetName: string;
   purchasePrice: number;
-  currency: string;
   accumulatedDepreciation: number;
   residualValue: number;
   remainingLife: number;
-  relatedVouchers: IRelatedVoucherV2[];
-  status: string;
+  assetStatus: string;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
+}
+
+export interface IAssetDetails extends IAssetItem {
+  depreciationStart: number;
+  depreciationMethod: string;
+  usefulLife: number;
+  relatedVouchers: IRelatedVoucher[];
   note?: string;
 }
 
-export interface ITotalV2 {
-  beginningCreditAmount: number;
-  beginningDebitAmount: number;
-  midtermCreditAmount: number;
-  midtermDebitAmount: number;
-  endingCreditAmount: number;
-  endingDebitAmount: number;
-  createAt: number;
-  updateAt: number;
-}
-
-export interface IRelatedVoucherV2 {
+export interface IRelatedVoucher {
   id: number;
   number: string;
 }
 
-export interface ICreateAssetInputV2 {
-  name: string;
-  propertyNumber: string;
-  accountingSubject: string;
-  acquireDate: number;
-  depreciationStart: number;
-  amount: number;
-  depreciationMethod: string;
-  usefulLife: number;
+export interface ICreateAssetInput {
+  assetName: string;
+  assetType: string;
+  assetNumber: string;
+  acquisitionDate: number;
   purchasePrice: number;
-  currency: string;
+  currencyAlias: string;
+  amount: number;
+  depreciationStart?: number;
+  depreciationMethod?: string;
+  usefulLife?: number;
   note?: string;
 }
 
-export interface IUpdateAssetInputV2 extends Partial<ICreateAssetInputV2> {
-  status?: string;
+export interface IUpdateAssetInput {
+  updatedAt: number;
+  assetStatus?: string;
+  note?: string;
 }
 
-export const mockBriefAssetV2: IBriefAssetV2 = {
-  id: 1001,
-  acquireDate: 1672531200,
-  type: 'Equipment',
-  propertyNumber: 'EQ-001',
-  name: 'Main office computer',
-  purchaseAmount: 50000,
-  depreciation: 10000,
-  residualValue: 40000,
-  remainingDays: 1460,
-  status: 'normal',
+export const mockAssetItem: IAssetItem = {
+  id: 1,
+  currencyAlias: 'TWD',
+  acquisitionDate: 1632511200,
+  assetType: '123 Machinery',
+  assetNumber: 'A-000010',
+  assetName: 'MackBook',
+  purchasePrice: 100000,
+  accumulatedDepreciation: 5000,
+  residualValue: 95000,
+  remainingLife: 61580800,
+  assetStatus: 'normal',
+  createdAt: 1632511200,
+  updatedAt: 1632511200,
+  deletedAt: null,
 };
 
-export const mockCreateAssetInputV2: ICreateAssetInputV2 = {
-  name: 'Main office computer',
-  propertyNumber: 'EQ-001',
-  accountingSubject: 'Equipment',
-  acquireDate: 1672531200,
-  depreciationStart: 1672617600,
-  depreciationMethod: 'Straight Line',
-  usefulLife: 157680000,
-  purchasePrice: 50000,
-  amount: 50000,
-  currency: 'TWD',
-  note: 'Main office computer',
-};
-
-export const mockDetailedAssetV2: IDetailedAssetV2 = {
-  id: 1001,
-  name: 'Main office computer',
-  propertyNumber: 'EQ-001',
-  accountingSubject: 'Equipment',
-  acquireDate: 1672531200,
-  depreciationStart: 1672617600,
-  depreciationMethod: 'Straight Line',
-  usefulLife: 157680000,
-  purchasePrice: 50000,
-  currency: 'TWD',
-  accumulatedDepreciation: 10000,
-  residualValue: 40000,
-  remainingLife: 126144000,
-  note: 'Main office computer',
+export const mockAssetDetails: IAssetDetails = {
+  ...mockAssetItem,
+  depreciationStart: 1632511200,
+  depreciationMethod: 'straight-line',
+  usefulLife: 36000,
   relatedVouchers: [
     { id: 101, number: 'V-2023-001' },
     { id: 102, number: 'V-2023-002' },
   ],
-  status: 'normal',
-  createdAt: 1672531200,
-  updatedAt: 1672617600,
-  deletedAt: null,
+  note: 'Main office computer',
 };
 
-export const mockRelatedVoucherV2: IRelatedVoucherV2 = {
-  id: 103,
-  number: 'V2023-0503',
+export const mockCreateAssetInput: ICreateAssetInput = {
+  assetName: 'New Office Laptop',
+  assetType: 'Equipment',
+  assetNumber: 'EQ-002',
+  acquisitionDate: 1632511200,
+  purchasePrice: 30000,
+  currencyAlias: 'TWD',
+  amount: 30000,
+  depreciationStart: 1632511200,
+  depreciationMethod: 'straight-line',
+  usefulLife: 36000,
+  note: 'Laptop for new employee',
 };
 
-export const mockTotalV2: ITotalV2 = {
-  beginningCreditAmount: 0,
-  beginningDebitAmount: 35000,
-  midtermCreditAmount: 0,
-  midtermDebitAmount: 0,
-  endingCreditAmount: 5833,
-  endingDebitAmount: 35000,
-  createAt: timestampInSeconds(Date.now() - 31 * 24 * 60 * 60 * 1000),
-  updateAt: timestampInSeconds(Date.now()),
+export const mockUpdateAssetInput: IUpdateAssetInput = {
+  updatedAt: 1632511200,
+  note: 'Updated: Laptop for marketing team',
+  assetStatus: 'missing',
 };
+
+/* Info: (20240927 - Shirley) asset v2 介面 */
