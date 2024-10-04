@@ -1,5 +1,6 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z } from 'zod';
+import { zodStringToNumber } from './common';
 
 const askAIPostQueryValidatorV2 = z.object({
   reason: z.enum(['help', 'certificate', 'voucher']),
@@ -25,4 +26,19 @@ export const askAIPostValidatorV2: IZodValidator<
 > = {
   query: askAIPostQueryValidatorV2,
   body: askAIPostBodyValidatorV2,
+};
+
+const askAIGetResultQueryValidatorV2 = z.object({
+  resultId: zodStringToNumber,
+  reason: z.enum(['help', 'certificate', 'voucher']),
+});
+
+const askAIGetResultBodyValidatorV2 = z.object({});
+
+export const askAIGetResultValidatorV2: IZodValidator<
+  (typeof askAIGetResultQueryValidatorV2)['shape'],
+  (typeof askAIGetResultBodyValidatorV2)['shape']
+> = {
+  query: askAIGetResultQueryValidatorV2,
+  body: askAIGetResultBodyValidatorV2,
 };
