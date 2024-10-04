@@ -17,26 +17,12 @@ const SelectCompanyPage = () => {
   const { isAuthLoading } = useUserCtx();
   const { eliminateToast } = useModalContext();
   const [isAnimationShowing, setIsAnimationShowing] = useState(true);
-  // Info: (20241001 - Liz) 先預設都要顯示動畫，之後會依照是否有建立過「角色」來判斷是否要顯示動畫
+  // ToDo: (20241004 - Liz) 先預設都要顯示動畫，之後會依照是否有建立過「角色」來判斷是否要顯示動畫
 
   useEffect(() => {
     // Info: (20240513 - Julian) 回到選擇公司頁面時，要把提醒試用版的 Toast 關掉
     eliminateToast(ToastId.TRIAL);
   }, []);
-
-  const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
-      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-    </div>
-  ) : (
-    <div className="bg-surface-neutral-main-background pt-16">
-      {isAnimationShowing ? (
-        <LoginAnimation setIsAnimationShowing={setIsAnimationShowing} />
-      ) : (
-        <SelectCompanyPageBody />
-      )}
-    </div>
-  );
 
   return (
     <>
@@ -59,9 +45,26 @@ const SelectCompanyPage = () => {
         />
       </Head>
 
-      <div className="h-screen bg-white">
-        {!isAnimationShowing && <NavBar />}
-        {displayedBody}
+      <div className="h-screen">
+        {isAuthLoading ? (
+          <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+            <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
+          </div>
+        ) : (
+          <div>
+            {isAnimationShowing ? (
+              // Info: (20241004 - Liz) 登入動畫
+              <LoginAnimation setIsAnimationShowing={setIsAnimationShowing} />
+            ) : (
+              <>
+                <NavBar />
+                <div className="bg-surface-neutral-main-background pt-16">
+                  <SelectCompanyPageBody />
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

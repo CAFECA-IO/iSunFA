@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FiHome } from 'react-icons/fi';
 import { PiGlobe } from 'react-icons/pi';
+import { useUserCtx } from '@/contexts/user_context';
 
 const LoginAnimation = ({
   setIsAnimationShowing,
@@ -8,6 +9,7 @@ const LoginAnimation = ({
   setIsAnimationShowing: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [switchTitle, setSwitchTitle] = useState(false);
+  const { username } = useUserCtx();
 
   useEffect(() => {
     // Info: (20240925 - Liz) 3 秒後切換 Title
@@ -39,7 +41,7 @@ const LoginAnimation = ({
       {!switchTitle && (
         <div className="z-10 flex animate-fade-in-out">
           <p className="text-64px font-bold text-surface-brand-secondary">Welcome, </p>
-          <p className="text-64px font-bold text-surface-brand-primary">UserName</p>
+          <p className="text-64px font-bold text-surface-brand-primary">{username}</p>
         </div>
       )}
 
