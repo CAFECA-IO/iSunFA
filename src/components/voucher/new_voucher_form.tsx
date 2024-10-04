@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaChevronDown, FaPlus } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
+import { LuTrash2 } from 'react-icons/lu';
+import { FiBookOpen, FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
@@ -8,13 +10,13 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { default30DayPeriodInSec } from '@/constants/display';
-import { VoucherType } from '@/constants/account';
+import { VoucherType, AccountType } from '@/constants/account';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { numberWithCommas } from '@/lib/utils/common';
-import { LuTrash2 } from 'react-icons/lu';
-import { FiBookOpen } from 'react-icons/fi';
+import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface ILineItem {
   id: number;
@@ -24,22 +26,33 @@ interface ILineItem {
   credit: number;
 }
 
+interface ICounterparty {
+  id: number;
+  code: string;
+  name: string;
+}
+
 const VoucherLineItem = ({
   deleteHandler,
   accountTitleHandler,
   particularsChangeHandler,
   debitChangeHandler,
   creditChangeHandler,
+  flagOfClear,
 }: {
   deleteHandler: () => void;
   accountTitleHandler: (account: IAccount | null) => void;
   particularsChangeHandler: (particulars: string) => void;
   debitChangeHandler: (debit: number) => void;
   creditChangeHandler: (credit: number) => void;
+  flagOfClear: boolean;
 }) => {
+  const { t } = useTranslation('common');
   const { accountList } = useAccountingCtx();
 
-  const [accountTitle, setAccountTitle] = useState<string>('Accounting');
+  const [accountTitle, setAccountTitle] = useState<string>(
+    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+  );
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
 
@@ -78,19 +91,25 @@ const VoucherLineItem = ({
     setFilteredAccountList(filteredList);
   }, [searchKeyword, accountList]);
 
-  // Info: (20241004 - Julian) 查詢會計科目關鍵字時聚焦
   useEffect(() => {
+    // Info: (20241004 - Julian) 查詢會計科目關鍵字時聚焦
     if (isAccountEditing && accountInputRef.current) {
       accountInputRef.current.focus();
     }
-  }, [isAccountEditing]);
 
-  // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
-  useEffect(() => {
+    // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
     if (!isAccountEditing) {
       setSearchKeyword('');
     }
   }, [isAccountEditing]);
+
+  useEffect(() => {
+    // Info: (20241004 - Julian) Reset All State
+    setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
+    setParticulars('');
+    setDebitInput('');
+    setCreditInput('');
+  }, [flagOfClear]);
 
   const isDebitDisabled = creditInput !== '';
   const isCreditDisabled = debitInput !== '';
@@ -128,47 +147,72 @@ const VoucherLineItem = ({
     setAccountingMenuOpen(true);
   };
 
-  const accountingMenu =
-    filteredAccountList.length > 0 ? (
-      filteredAccountList.map((account) => {
-        const accountClickHandler = () => {
-          setAccountTitle(`${account.code} ${account.name}`);
-          // Info: (20241001 - Julian) 關閉 Accounting Menu 和編輯狀態
-          setAccountingMenuOpen(false);
-          setIsAccountEditing(false);
-          // Info: (20241001 - Julian) 重置搜尋關鍵字
-          setSearchKeyword('');
-          // Info: (20241001 - Julian) 設定 Account title
-          accountTitleHandler(account);
-        };
+  // Info: (20241004 - Julian) Remove AccountType.OTHER_COMPREHENSIVE_INCOME, AccountType.CASH_FLOW, AccountType.OTHER
+  const accountTypeList = Object.values(AccountType).filter(
+    (value) =>
+      value !== AccountType.OTHER_COMPREHENSIVE_INCOME &&
+      value !== AccountType.CASH_FLOW &&
+      value !== AccountType.OTHER
+  );
 
-        return (
-          <button
-            key={account.id}
-            type="button"
-            onClick={accountClickHandler}
-            className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-          >
-            <p className="text-dropdown-text-primary">{account.code}</p>
-            <p className="text-dropdown-text-secondary">{account.name}</p>
-          </button>
-        );
-      })
+  const accountTitleMenu = accountTypeList.map((value) => {
+    // Info: (20241004 - Julian) 子項目
+    const childAccountList = filteredAccountList.filter((account) => account.type === value);
+    const childAccountMenu = childAccountList.map((account) => {
+      const accountClickHandler = () => {
+        setAccountTitle(`${account.code} ${account.name}`);
+        // Info: (20241001 - Julian) 關閉 Accounting Menu 和編輯狀態
+        setAccountingMenuOpen(false);
+        setIsAccountEditing(false);
+        // Info: (20241001 - Julian) 重置搜尋關鍵字
+        setSearchKeyword('');
+        // Info: (20241001 - Julian) 設定 Account title
+        accountTitleHandler(account);
+      };
+
+      return (
+        <button
+          key={account.id}
+          type="button"
+          onClick={accountClickHandler}
+          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+        >
+          <p className="text-dropdown-text-primary">{account.code}</p>
+          <p className="text-dropdown-text-secondary">{account.name}</p>
+        </button>
+      );
+    });
+
+    return (
+      // Info: (20241004 - Julian) 顯示有子項目的 AccountType
+      childAccountList.length > 0 ? (
+        <div className="flex flex-col">
+          <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
+            {t(`journal:ACCOUNT_TYPE.${value.toUpperCase()}`)}
+          </p>
+          <div className="flex flex-col py-4px">{childAccountMenu}</div>
+        </div>
+      ) : null
+    );
+  });
+
+  // Info: (20241004 - Julian) 沒有子項目時顯示 no accounting found
+  const isShowAccountingMenu =
+    // Info: (20241004 - Julian) 找出有子項目的 AccountType
+    accountTitleMenu.filter((value) => value !== null).length > 0 ? (
+      accountTitleMenu
     ) : (
       <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-        No accounting found
+        {t('journal:ADD_NEW_VOUCHER.NO_ACCOUNTING_FOUND')}
       </p>
     );
 
   const displayedAccountingMenu = isAccountingMenuOpen ? (
     <div
       ref={accountingRef}
-      className="absolute top-50px z-30 flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
+      className="absolute top-50px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
     >
-      <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-        assets
-      </p>
-      <div className="flex max-h-100px flex-col overflow-y-auto py-4px">{accountingMenu}</div>
+      <div className="flex max-h-150px flex-col overflow-y-auto">{isShowAccountingMenu}</div>
     </div>
   ) : null;
 
@@ -177,7 +221,7 @@ const VoucherLineItem = ({
       ref={accountInputRef}
       value={searchKeyword}
       onChange={accountSearchHandler}
-      placeholder="Accounting"
+      placeholder={accountTitle}
       className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
     />
   ) : (
@@ -238,27 +282,68 @@ const NewVoucherForm = () => {
 
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+
+  // Info: (20241001 - Julian) 初始傳票列
+  const initialVoucherLine = {
+    id: 0,
+    account: null,
+    particulars: '',
+    debit: 0,
+    credit: 0,
+  };
+
+  // ToDo: (20241004 - Julian) dummy data
+  const dummyCounterparty: ICounterparty[] = [
+    {
+      id: 1,
+      code: '59382730',
+      name: 'Padberg LLC',
+    },
+    {
+      id: 2,
+      code: '59382731',
+      name: 'Hermiston - West',
+    },
+    {
+      id: 3,
+      code: '59382732',
+      name: 'Feil, Ortiz and Lebsack',
+    },
+    {
+      id: 4,
+      code: '59382733',
+      name: 'Romaguera Inc',
+    },
+    {
+      id: 5,
+      code: '59382734',
+      name: 'Stamm - Baumbach',
+    },
+  ];
 
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [type, setType] = useState<string>(VoucherType.EXPENSE);
   const [note, setNote] = useState<string>('');
-  const [counterparty, setCounterparty] = useState<string>('');
+
+  const [counterKeyword, setCounterKeyword] = useState<string>('');
+  const [counterparty, setCounterparty] = useState<string>(
+    t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')
+  );
+  const [filteredCounterparty, setFilteredCounterparty] =
+    useState<ICounterparty[]>(dummyCounterparty);
+
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
-  const [lineItems, setLineItems] = useState<ILineItem[]>([
-    // Info: (20241001 - Julian) 初始傳票列
-    {
-      id: 0,
-      account: null,
-      particulars: '',
-      debit: 0,
-      credit: 0,
-    },
-  ]);
+  const [lineItems, setLineItems] = useState<ILineItem[]>([initialVoucherLine]);
+
   // Info: (20241004 - Julian) voucher line state
   const [totalCredit, setTotalCredit] = useState<number>(0);
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
   const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
+
+  // Info: (20241004 - Julian) 清除所有資料
+  const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
 
   const {
     targetRef: typeRef,
@@ -266,13 +351,28 @@ const NewVoucherForm = () => {
     setComponentVisible: setTypeVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: counterMenuRef,
+    componentVisible: isCounterMenuOpen,
+    setComponentVisible: setCounterMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: counterpartyRef,
+    componentVisible: isSearchCounterparty,
+    setComponentVisible: setIsSearchCounterparty,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const counterpartyInputRef = useRef<HTMLInputElement>(null);
+
+  // Info: (20241004 - Julian) 取得會計科目列表
   useEffect(() => {
     if (selectedCompany) {
       getAccountListHandler(selectedCompany.id);
     }
   }, [selectedCompany]);
 
-  //
+  // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
     // Info: (20241004 - Julian) 計算總借貸金額
     const debitTotal = lineItems.reduce((acc, item) => acc + item.debit, 0);
@@ -287,6 +387,37 @@ const NewVoucherForm = () => {
     setHaveZeroLine(zeroLine);
     setIsAccountingNull(accountingNull);
   }, [lineItems]);
+
+  useEffect(() => {
+    // Info: (20241004 - Julian) 查詢交易對象關鍵字時聚焦
+    if (isSearchCounterparty && counterpartyInputRef.current) {
+      counterpartyInputRef.current.focus();
+    }
+
+    // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
+    if (!isSearchCounterparty) {
+      setCounterKeyword('');
+    }
+  }, [isSearchCounterparty]);
+
+  // Info: (20241004 - Julian) 搜尋交易對象
+  useEffect(() => {
+    const filteredList = dummyCounterparty.filter((counter) => {
+      // Info: (20241004 - Julian) 編號(數字)搜尋: 字首符合
+      if (counterKeyword.match(/^\d+$/)) {
+        const codeMatch = counter.code.toLowerCase().startsWith(counterKeyword.toLowerCase());
+        return codeMatch;
+      } else if (counterKeyword !== '') {
+        // Info: (20241004 - Julian) 名稱搜尋: 部分符合
+        const nameMatch = counter.name.toLowerCase().includes(counterKeyword.toLowerCase());
+        return nameMatch;
+      }
+      return true;
+    });
+    setFilteredCounterparty(filteredList);
+  }, [counterKeyword]);
+
+  useEffect(() => {}, []);
 
   const AddNewVoucherLine = () => {
     // Info: (20241001 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
@@ -310,6 +441,8 @@ const NewVoucherForm = () => {
   const saveBtnDisabled =
     (date.startTimeStamp === 0 && date.endTimeStamp === 0) || // Info: (20241004 - Julian) 日期不可為 0
     type === '' || // Info: (20241004 - Julian) 類型不可為空
+    counterparty === '' ||
+    counterparty === t('journal:ADD_NEW_VOUCHER.COUNTERPARTY') || // Info: (20241004 - Julian) 交易對象不可為空
     (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
     totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
     haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
@@ -319,12 +452,17 @@ const NewVoucherForm = () => {
     setTypeVisible(!typeVisible);
   };
 
+  const counterSearchToggleHandler = () => {
+    setIsSearchCounterparty(!isSearchCounterparty);
+    setCounterMenuOpen(!isCounterMenuOpen);
+  };
+
   const noteChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNote(e.target.value);
   };
 
-  const counterpartyChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCounterparty(e.target.value);
+  const counterKeywordChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCounterKeyword(e.target.value);
   };
 
   const recurringToggleHandler = () => {
@@ -336,10 +474,34 @@ const NewVoucherForm = () => {
     return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
   };
 
+  // Info: (20241004 - Julian) 清除所有資料
+  const clearAllHandler = () => {
+    setDate(default30DayPeriodInSec);
+    setType(VoucherType.EXPENSE);
+    setNote('');
+    setCounterparty(t('journal:ADD_NEW_VOUCHER.COUNTERPARTY'));
+    setIsRecurring(false);
+    setLineItems([initialVoucherLine]);
+    setFlagOfClear(!flagOfClear);
+  };
+
+  const clearClickHandler = () => {
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: t('journal:JOURNAL.CLEAR_FORM'),
+      content: t('journal:JOURNAL.CLEAR_FORM_CONTENT'),
+      submitBtnStr: t('journal:JOURNAL.CLEAR_FORM'),
+      submitBtnFunction: clearAllHandler,
+      backBtnStr: t('common:COMMON.CANCEL'),
+    });
+    messageModalVisibilityHandler();
+  };
+
   // ToDo: (20240926 - Julian) Save voucher function
   const saveVoucher = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Info: (20241004 - Julian) for debug
     // eslint-disable-next-line no-console
     console.log(
       'Save voucher\nDate:',
@@ -380,6 +542,53 @@ const NewVoucherForm = () => {
           </button>
         );
       })}
+    </div>
+  ) : null;
+
+  const displayedCounterparty = isSearchCounterparty ? (
+    <input
+      ref={counterpartyInputRef}
+      value={counterKeyword}
+      onChange={counterKeywordChangeHandler}
+      placeholder={counterparty}
+      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
+    />
+  ) : (
+    <p className="truncate text-input-text-input-filled">{counterparty}</p>
+  );
+
+  const counterMenu =
+    filteredCounterparty && filteredCounterparty.length > 0 ? (
+      filteredCounterparty.map((counter) => {
+        const counterClickHandler = () => {
+          setCounterparty(`${counter.code} ${counter.name}`);
+          setCounterMenuOpen(false);
+        };
+
+        return (
+          <button
+            key={counter.id}
+            type="button"
+            onClick={counterClickHandler}
+            className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+          >
+            <p className="text-dropdown-text-primary">{counter.code}</p>
+            <p className="text-dropdown-text-secondary">{counter.name}</p>
+          </button>
+        );
+      })
+    ) : (
+      <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
+        {t('journal:ADD_NEW_VOUCHER.NO_COUNTERPARTY_FOUND')}
+      </p>
+    );
+
+  const counterpartyDropMenu = isCounterMenuOpen ? (
+    <div
+      ref={counterMenuRef}
+      className="absolute top-85px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
+    >
+      {counterMenu}
     </div>
   ) : null;
 
@@ -431,6 +640,7 @@ const NewVoucherForm = () => {
         particularsChangeHandler={particularsChangeHandler}
         debitChangeHandler={debitChangeHandler}
         creditChangeHandler={creditChangeHandler}
+        flagOfClear={flagOfClear}
       />
     );
   });
@@ -440,10 +650,18 @@ const NewVoucherForm = () => {
       {/* Info: (20240927 - Julian) Table */}
       <div className="grid w-full grid-cols-13 gap-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
         {/* Info: (20240927 - Julian) Table Header */}
-        <div className="col-span-3 font-semibold text-text-neutral-invert">Accounting</div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">Particulars</div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">Debit</div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">Credit</div>
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER.ACCOUNTING')}
+        </div>
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER.PARTICULARS')}
+        </div>
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER.DEBIT')}
+        </div>
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER.CREDIT')}
+        </div>
         <div className=""></div>
 
         {/* Info: (20240927 - Julian) Table Body */}
@@ -519,18 +737,23 @@ const NewVoucherForm = () => {
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
-        <div className="col-span-2 flex flex-col gap-8px">
+        <div className="relative col-span-2 flex flex-col gap-8px">
           <p className="font-bold text-input-text-primary">
             {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
+            <span className="text-text-state-error">*</span>
           </p>
-          <input
-            id="counterparty-input"
-            type="text"
-            value={counterparty}
-            onChange={counterpartyChangeHandler}
-            placeholder={t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
-            className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
-          />
+          <div
+            ref={counterpartyRef}
+            onClick={counterSearchToggleHandler}
+            className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : 'border-input-stroke-input'}`}
+          >
+            {displayedCounterparty}
+            <div className="h-20px w-20px">
+              <FiSearch size={20} />
+            </div>
+          </div>
+          {/* Info: (20241004 - Julian) Counterparty drop menu */}
+          {counterpartyDropMenu}
         </div>
         {/* Info: (20240926 - Julian) switch */}
         <div className="col-span-2 flex items-center gap-16px text-switch-text-primary">
@@ -541,7 +764,7 @@ const NewVoucherForm = () => {
         {voucherLineBlock}
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
-          <Button type="button" variant="secondaryOutline">
+          <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
           <Button type="submit" disabled={saveBtnDisabled}>
