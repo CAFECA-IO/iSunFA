@@ -1,4 +1,5 @@
 import { APIName } from '@/constants/api_connection';
+import { askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
   certificateGetOneValidator,
@@ -73,4 +74,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteValidatorV2,
+
+  [APIName.AI_ASK_V2]: askAIPostValidatorV2,
 };
