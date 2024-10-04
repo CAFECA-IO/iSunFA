@@ -58,7 +58,7 @@ async function voucherHandler() {
   // Info: (20241004 - Murky) Simulate fetching data from an AI service
   const resultFromAI = await mockFetchAIResult;
   if (resultFromAI) {
-    statusMessage = STATUS_MESSAGE.SUCCESS;
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
 
     // Info: (20241004 - Murky) Populate the payload with voucher details
     payload = {

@@ -37,7 +37,6 @@ async function helpHandler(key: string, body: object) {
       answer: 'it is 42', // Info: (20241004 - Murky) Example response, replace with actual logic as needed
     };
   }
-
   return {
     statusMessage,
     payload,

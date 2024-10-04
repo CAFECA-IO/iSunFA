@@ -18,7 +18,11 @@ export const voucherValidator = z.object({
   certificateId: z.number(),
 });
 
-const askAIPostBodyValidatorV2 = z.object({});
+const askAIPostBodyValidatorV2 = z.object({
+  content: z.string().optional(),
+  fileId: z.number().optional(),
+  certificateId: z.number().optional(),
+});
 
 export const askAIPostValidatorV2: IZodValidator<
   (typeof askAIPostQueryValidatorV2)['shape'],
