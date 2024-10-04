@@ -123,7 +123,7 @@ async function handleGetRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
-  if (!userId || !companyId) {
+  if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
@@ -153,7 +153,7 @@ async function handleDeleteRequest(req: NextApiRequest, res: NextApiResponse<IRe
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
-  if (!userId || !companyId) {
+  if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
@@ -185,7 +185,7 @@ async function handlePutRequest(
   const session = await getSession(req, res);
   const { userId, companyId } = session;
 
-  if (!userId || !companyId) {
+  if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
     const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], {
