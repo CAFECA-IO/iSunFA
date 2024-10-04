@@ -1308,6 +1308,7 @@ module.exports = {
         crossBtn: '0px 0px 7px 0px #FFA502B2',
       },
       dropShadow: {
+        xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0px 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
