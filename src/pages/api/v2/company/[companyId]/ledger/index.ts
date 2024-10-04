@@ -2,68 +2,14 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPaginatedData } from '@/interfaces/pagination';
-import { ILedgerItem } from '@/interfaces/ledger';
+import { ILedgerPayload, MOCK_RESPONSE } from '@/interfaces/ledger';
 
-interface IPayload {
-  currency: string;
-  items: IPaginatedData<ILedgerItem[]>;
-  totalDebitAmount: number;
-  totalCreditAmount: number;
-}
+interface IPayload extends ILedgerPayload {}
 
 interface IResponse {
   statusMessage: string;
   payload: IPayload | null;
 }
-
-export const MOCK_RESPONSE: IPayload = {
-  currency: 'TWD',
-  items: {
-    data: [
-      {
-        id: 1,
-        voucherDate: 1706745600,
-        no: '1141',
-        accountingTitle: '應收帳款',
-        voucherNumber: 'ZV2024-001',
-        particulars: '設備採購',
-        debitAmount: 300000,
-        creditAmount: 0,
-        balance: 420000,
-        createAt: 1706745600,
-        updateAt: 1706745600,
-      },
-      {
-        id: 2,
-        voucherDate: 1706745600,
-        no: '1142',
-        accountingTitle: '應收票據',
-        voucherNumber: 'ZV2024-002',
-        particulars: '開立發票',
-        debitAmount: 500000,
-        creditAmount: 0,
-        balance: 500000,
-        createAt: 1706745600,
-        updateAt: 1706745600,
-      },
-    ],
-    page: 1,
-    totalPages: 1,
-    totalCount: 2,
-    pageSize: 10,
-    hasNextPage: false,
-    hasPreviousPage: false,
-    sort: [
-      {
-        sortBy: 'voucherDate',
-        sortOrder: 'asc',
-      },
-    ],
-  },
-  totalDebitAmount: 800000,
-  totalCreditAmount: 800000,
-};
 
 // ToDo: (20240927 - Shirley) 從資料庫獲取分類帳資料的邏輯
 export async function handleGetRequest() {
