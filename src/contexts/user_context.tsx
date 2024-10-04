@@ -122,7 +122,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
-    clearAllItems(); // Info: 清空 IndexedDB 中的數據 (20240822 - Shirley)
+    clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
@@ -136,13 +136,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
-  const redirectToSelectCompanyPage = () => {
-    if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-    }
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 redirectToSelectCompanyPage');
+  // const redirectToSelectCompanyPage = () => {
+  //   if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
+  //     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+  //   }
+  // };
+
+  const goToSelectRolePage = () => {
+    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
   };
 
   const checkIsRegistered = async (): Promise<{
@@ -197,10 +198,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await signOutAPI();
-    await authSignOut({ redirect: false });
-    clearStates();
-    redirectToLoginPage();
+    await signOutAPI(); // Info: (20241004 - Liz) 打 API 清除後端 session
+    await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
+    clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
+    redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
   };
 
   const isProfileFetchNeeded = () => {
@@ -234,7 +235,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ===============================================================================
-  // Info: (20241001 - Liz) 此函式根據使用者的協議列表，更新使用者是否同意了服務條款和隱私政策。
+  // Info: (20241001 - Liz) 此函數根據使用者的協議列表，更新使用者是否同意了服務條款和隱私政策。
   // 它會將結果存入狀態變數 setIsAgreeTermsOfService 和 setIsAgreePrivacyPolicy。
   const updateUserAgreements = (user: IUser) => {
     const hasAgreedToTerms = user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE);
@@ -244,32 +245,36 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
   };
 
-  // Info: (20241001 - Liz) 此函式處理公司資訊:
+  /* // Deprecated: (20241004 - Liz) 之後統一刪除
+  // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
-  // 若公司資料不存在，會將公司資訊設為空，並檢查路由是否位於 users 路徑中。如果符合條件且不在 SELECT_COMPANY 頁面，它會呼叫 redirectToSelectCompanyPage 函式進行重新導向。
-  const processCompanyInfo = (company: ICompany) => {
-    if (company && Object.keys(company).length > 0) {
-      setSelectedCompany(company);
-      setSuccessSelectCompany(true);
-      handleReturnUrl();
-    } else {
-      setSuccessSelectCompany(undefined);
-      setSelectedCompany(null);
+  // 若公司資料不存在，會將公司資訊設為空，並檢查路由是否位於 users 路徑中。如果符合條件且不在 SELECT_COMPANY 頁面，它會呼叫 redirectToSelectCompanyPage 函數進行重新導向。
+  // const processCompanyInfo = (company: ICompany) => {
+  //   if (company && Object.keys(company).length > 0) {
+  //     setSelectedCompany(company);
+  //     setSuccessSelectCompany(true);
+  //     handleReturnUrl();
+  //   } else {
+  //     setSuccessSelectCompany(undefined);
+  //     setSelectedCompany(null);
 
-      const isInUsersRoute =
-        router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
+  //     const isInUsersRoute =
+  //       router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
 
-      if (isInUsersRoute) {
-        redirectToSelectCompanyPage();
-      }
-    }
-  };
+  //     if (isInUsersRoute) {
+  //       redirectToSelectCompanyPage();
+  //     }
+  //   }
+  // };
+  */
 
-  // Info: (20241001 - Liz) 此函式處理使用者資訊:
+  // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
+
+  // Info: (20241001 - Liz) 此函數處理使用者資訊:
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入。
   // 它還會將使用者的 userId 和過期時間儲存在 localStorage。
-  // 最後，它會更新使用者的協議狀態。
-  // 如果使用者資料無效，則呼叫 handleNotSignedIn 函式來處理未登入的情況。
+  // 最後，它會呼叫 updateUserAgreements 函數更新使用者的協議狀態。
+  // 如果使用者資料不存在，則會清除狀態，並導向登入頁面。
   const processUserInfo = (user: IUser) => {
     if (user && Object.keys(user).length > 0) {
       setUserAuth(user);
@@ -281,13 +286,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
 
       updateUserAgreements(user);
+
+      // Deprecated: (20241004 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('呼叫 processUserInfo 並且 user 存在:', user);
+
+      goToSelectRolePage();
     } else {
       clearStates();
       redirectToLoginPage();
     }
   };
 
-  // Info: (20241001 - Liz) 此函式使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
+  // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接返回。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading) 並清除公司選擇狀態。
   // 當 API 回傳成功且有資料時，它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
@@ -297,8 +308,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!isProfileFetchNeeded()) return;
 
     setIsAuthLoading(true);
-    setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
 
     const {
       data: StatusInfo,
@@ -308,11 +317,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Deprecated: (20241001 - Liz)
     // eslint-disable-next-line no-console
-    console.log('getStatusInfo', StatusInfo, 'getStatusInfoSuccess', getStatusInfoSuccess);
+    console.log('getStatusInfo:', StatusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
     if (getStatusInfoSuccess && StatusInfo) {
       processUserInfo(StatusInfo.user);
-      processCompanyInfo(StatusInfo.company);
     } else {
       clearStates();
       redirectToLoginPage();
@@ -429,6 +437,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    // Deprecated: (20241004 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(
+      '觸發 useEffect (dependency: handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete)'
+    );
+
     getStatusInfo();
     document.addEventListener('visibilitychange', handleVisibilityChange);
     router.events.on('routeChangeStart', handleRouteChangeStart);
@@ -442,7 +456,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
   useEffect(() => {
+    // Deprecated: (20241004 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
+
     const handleUnauthorizedAccess = () => {
+      // Deprecated: (20241004 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('觸發 useEffect 並且呼叫 signOut 函數');
+
       signOut();
     };
 
@@ -453,7 +475,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       eventManager.off(STATUS_MESSAGE.UNAUTHORIZED_ACCESS, handleUnauthorizedAccess);
     };
-  }, [signOut]);
+  }, []);
 
   // Info: (20240522 - Shirley) dependency array 的值改變，才會讓更新後的 value 傳到其他 components
   const value = useMemo(

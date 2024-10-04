@@ -479,7 +479,7 @@ export default async function handler(
       logError.error('handle OCR request failed in handler function in ocr/index.ts');
     }
   } else {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
     loggerBack.info(
       {
         userId,
