@@ -204,6 +204,7 @@
     "VOUCHER_NO": "传票号码",
     "NOTE": "备注",
     "ACCOUNTING": "会计科目",
+    "PARTICULARS": "摘要",
     "CREDIT": "贷方金额",
     "DEBIT": "借方金额",
     "COUNTRYPARTY": "交易对象",
@@ -230,6 +231,19 @@
     "TYPE_TRANSFER": "转帐",
     "NOTE": "备注",
     "COUNTERPARTY": "交易对象",
-    "RECURRING_ENTRY": "周期性分录"
+    "RECURRING_ENTRY": "周期性分录",
+    "SELECT_ACCOUNTING": "选择会计科目",
+    "NO_ACCOUNTING_FOUND": "查无会计科目",
+    "NO_COUNTERPARTY_FOUND": "查无交易对象"
+  },
+  "ACCOUNT_TYPE": {
+    "ASSET": "资产",
+    "LIABILITY": "负债",
+    "EQUITY": "权益",
+    "REVENUE": "收入",
+    "COST": "成本",
+    "INCOME": "收益",
+    "EXPENSE": "支出",
+    "GAIN_OR_LOSS": "收益或损失"
   }
 }
