@@ -23,7 +23,6 @@ import subscriptions from '@/seed_json/subscription.json';
 import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
 import invitations from '@/seed_json/invitation.json';
-import clients from '@/seed_json/client.json';
 import journals from '@/seed_json/journal.json';
 import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
@@ -102,12 +101,6 @@ async function createCompany() {
 async function createCompanyKYC() {
   await prisma.companyKYC.createMany({
     data: companyKYCs,
-  });
-}
-
-async function createClient() {
-  await prisma.client.createMany({
-    data: clients,
   });
 }
 
@@ -264,7 +257,6 @@ async function main() {
 
   await createRole();
   await createCompanyKYC();
-  await createClient();
   await createAccount();
   await createAdmin();
   await createDepartment();

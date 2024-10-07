@@ -2,9 +2,7 @@
   {
     "id": 1000,
     "name": "Test Company",
-    "code": "TEST123",
-    "regional": "United States",
-    "kycStatus": true,
+    "taxId": "TEST123",
     "imageFileId": 1000,
     "startDate": 1717751006,
     "createdAt": 1717751006,
@@ -13,9 +11,7 @@
   {
     "id": 1001,
     "name": "Trial Company",
-    "code": "TRIAL123",
-    "regional": "United States",
-    "kycStatus": true,
+    "taxId": "TRIAL123",
     "imageFileId": 1001,
     "startDate": 1717751006,
     "createdAt": 1717751006,
@@ -24,9 +20,7 @@
   {
     "id": 1002,
     "name": "Public_Company",
-    "code": "1",
-    "regional": "Taiwan",
-    "kycStatus": false,
+    "taxId": "1",
     "imageFileId": 1002,
     "startDate": 1717751006,
     "createdAt": 1717751006,
@@ -35,9 +29,7 @@
   {
     "id": 8867,
     "name": "CNN",
-    "code": "202406111752",
-    "regional": "Taiwan",
-    "kycStatus": false,
+    "taxId": "202406111752",
     "imageFileId": 1003,
     "startDate": 1717751006,
     "createdAt": 1717751006,

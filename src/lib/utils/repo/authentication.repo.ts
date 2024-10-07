@@ -31,9 +31,7 @@ export async function createUserByAuth({
   provider,
   authData,
   imageId,
-  fullName,
   email,
-  phone,
 }: {
   name: string;
   credentialId: string;
@@ -53,9 +51,7 @@ export async function createUserByAuth({
       user: {
         create: {
           name,
-          fullName,
           email,
-          phone,
           imageFile: {
             connect: {
               id: imageId,

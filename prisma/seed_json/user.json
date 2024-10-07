@@ -2,9 +2,7 @@
   {
     "id": 1000,
     "name": "Test_User_1",
-    "fullName": "Test User 1",
     "email": "test1@gmail.com",
-    "phone": "1234567891",
     "imageFileId": 1002,
     "createdAt": 1,
     "updatedAt": 1
@@ -12,9 +10,7 @@
   {
     "id": 1001,
     "name": "Test_User_2",
-    "fullName": "Test User 2",
     "email": "test2@gmail.com",
-    "phone": "1234567892",
     "imageFileId": 1003,
     "createdAt": 1,
     "updatedAt": 1
@@ -22,9 +18,7 @@
   {
     "id": 1002,
     "name": "Test_User_3",
-    "fullName": "Test User 3",
     "email": "test3@gmail.com",
-    "phone": "1234567893",
     "imageFileId": 1004,
     "createdAt": 1,
     "updatedAt": 1
@@ -32,9 +26,7 @@
   {
     "id": 1003,
     "name": "Test_User",
-    "fullName": "Test User",
     "email": "test@gmail.com",
-    "phone": "1234567890",
     "imageFileId": 1005,
     "createdAt": 1,
     "updatedAt": 1

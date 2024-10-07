@@ -38,7 +38,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IAuditReports[] | IAuditReports>>
 ) {
-  const { region, page = '1', limit = '10', begin, end, search = '' } = req.query;
+  const { page = '1', limit = '10', begin, end, search = '' } = req.query;
   try {
     if (req.method !== 'GET') {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
@@ -53,7 +53,6 @@ export default async function handler(
         : undefined
       : undefined;
     const offset = pageToOffset(pageValue, limitValue);
-    const regionValue = region as string;
     const { numbers, texts } = parsedSearch(search as string);
     const { numbersConditions, textsConditions } = getSearchConditions(numbers as [], texts as []);
 
@@ -62,7 +61,6 @@ export default async function handler(
         // Info: (20240621 - Gibbs) 使用 AND 操作符來組合多個條件
         AND: [
           // Info: (20240621 - Gibbs) 如果有提供 region，則增加篩選條件
-          ...(region ? [{ company: { regional: regionValue } }] : []),
           {
             report: {
               // Info: (20240621 - Gibbs) 根據關聯的 report 的 createdAt 進行篩選
@@ -89,8 +87,7 @@ export default async function handler(
     const responseDataArray = auditReports.map((auditReport) => ({
       id: auditReport.id,
       companyId: auditReport.companyId,
-      code: auditReport.company.code,
-      regional: auditReport.company.regional,
+      code: auditReport.company.taxId,
       company: auditReport.company.name,
       informationYear: auditReport.informationYear,
       detailedInformation: auditReport.report.name,
