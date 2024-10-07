@@ -219,7 +219,9 @@
     "VOUCHER_NUMBER": "Voucher Number",
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",
-    "TO_PLACEHOLDER": "To"
+    "TO_PLACEHOLDER": "To",
+    "BALANCE": "Balance",
+    "LEDGER": "Ledger"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",

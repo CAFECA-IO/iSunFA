@@ -16,7 +16,7 @@ const LedgerPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('journal:VOUCHER.VOUCHER_LIST_PAGE_TITLE')} - iSunFA</title>
+        <title>{t('journal:VOUCHER.LEDGER')} - iSunFA</title>
       </Head>
 
       <button

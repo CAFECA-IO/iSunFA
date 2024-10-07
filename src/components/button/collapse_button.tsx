@@ -32,11 +32,11 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({
         {buttonType === 'orange' && (
           <div className="whitespace-nowrap">
             {isCollapsed ? (
-              <span className="flex items-center">
+              <span className="flex items-center gap-1">
                 展開 <BsChevronDown style={{ color: 'var(--orange-900)' }} />
               </span>
             ) : (
-              <span className="flex items-center">
+              <span className="flex items-center gap-1">
                 收合 <BsChevronUp style={{ color: 'var(--orange-900)' }} />
               </span>
             )}

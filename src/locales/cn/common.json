@@ -281,7 +281,8 @@
     "LOADING": "加载中...",
     "COMPLETED": "已完成",
     "DAY": "日",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "CODE": "科目编号"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",

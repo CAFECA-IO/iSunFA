@@ -219,7 +219,9 @@
     "VOUCHER_NUMBER": "傳票號碼",
     "EXPORT_BTN": "匯出",
     "FROM_PLACEHOLDER": "從",
-    "TO_PLACEHOLDER": "到"
+    "TO_PLACEHOLDER": "到",
+    "BALANCE": "餘額",
+    "LEDGER": "分類帳"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
