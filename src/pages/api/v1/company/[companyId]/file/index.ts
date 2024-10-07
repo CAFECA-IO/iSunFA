@@ -113,11 +113,11 @@ async function handleFileUpload(
     //   break;
     // }
     case UploadType.COMPANY: {
-      await updateCompanyById(targetIdNum, undefined, undefined, undefined, fileId);
+      await updateCompanyById(targetIdNum, undefined, undefined, fileId);
       break;
     }
     case UploadType.USER: {
-      await updateUserById(targetIdNum, undefined, undefined, undefined, undefined, fileId);
+      await updateUserById(targetIdNum, undefined, undefined, fileId);
       break;
     }
     case UploadType.PROJECT: {
