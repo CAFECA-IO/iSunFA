@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/select_role/introduction';
 import RoleCard from '@/components/beta/select_role/role_card';
 
-const SelectRole = () => {
+const SelectRolePage = () => {
   const { t } = useTranslation(['common', 'kyc']);
   const [role, setRole] = useState<string>('');
 
@@ -60,4 +60,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default SelectRole;
+export default SelectRolePage;

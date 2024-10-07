@@ -9,7 +9,7 @@ interface IntroductionProps {
 
 const DefaultIntroduction = () => {
   return (
-    <section className="h-full bg-bg_select_role bg-contain bg-right-top bg-no-repeat">
+    <section className="h-600px bg-bg_select_role bg-contain bg-right-top bg-no-repeat">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
         <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
           Select Your Role
