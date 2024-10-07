@@ -28,9 +28,7 @@ interface IShortcut {
 export interface IAccountingSetting {
   id: number;
   companyId: number;
-  companyName: string;
   taxSettings: ITaxSetting;
   currency: string;
-  lastDayOfFiscalYear: number;
   shortcutList: IShortcut[];
 }

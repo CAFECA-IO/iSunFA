@@ -18,14 +18,12 @@ async function handleGetRequest() {
   payload = {
     id: 1,
     companyId: 1,
-    companyName: 'Company A',
     taxSettings: {
       salesTax: { taxable: true, rate: 0.07 },
       purchaseTax: { taxable: true, rate: 0.05 },
       returnPeriodicity: 'Monthly',
     },
     currency: 'USD',
-    lastDayOfFiscalYear: 31,
     shortcutList: [
       {
         action: {
@@ -54,16 +52,13 @@ async function handlePutRequest(req: NextApiRequest) {
   // ToDo: (20240924 - Jacky) Format the accounting settings data to the IAccountingSetting interface
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
-  const { companyId, companyName, taxSettings, currency, lastDayOfFiscalYear, shortcutList } =
-    req.body;
+  const { companyId, taxSettings, currency, shortcutList } = req.body;
 
   const updatedAccountingSetting: IAccountingSetting = {
     id: 123,
     companyId,
-    companyName,
     taxSettings,
     currency,
-    lastDayOfFiscalYear,
     shortcutList,
   };
 

@@ -260,7 +260,7 @@ async function generateReportName(
   const company = await getCompanyById(companyId);
   const reportSheetForDisplay = ReportSheetTypeDisplayMap[reportSheetType];
   const dateString = timestampToString(endDateInSecond).date.replace(/-/g, '');
-  const reportName = `${company?.code}_${reportSheetForDisplay}_${reportLanguage}_${dateString}`;
+  const reportName = `${company?.taxId}_${reportSheetForDisplay}_${reportLanguage}_${dateString}`;
   return reportName;
 }
 

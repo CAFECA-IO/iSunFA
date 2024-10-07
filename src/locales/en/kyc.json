@@ -156,5 +156,9 @@
     "SELECT_AN_COMPANY": "Select an Company",
     "ENTER_COMPANY_NAME": "Enter company name",
     "ENTER_BUSINESS_REGISTRATION_NUMBER": "Enter business registration number"
+  },
+
+  "SELECT_ROLE": {
+    "SELECT_ROLE_ISUNFA": "Select Role - iSunFA"
   }
 }

@@ -405,7 +405,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
 
 export async function getCompanyAndRoleByCompanyCode(
   userId: number,
-  companyCode: string
+  taxId: string
 ): Promise<{
   company: Company;
   role: Role;
@@ -414,11 +414,11 @@ export async function getCompanyAndRoleByCompanyCode(
     company: Company;
     role: Role;
   } | null = null;
-  if (companyCode) {
+  if (taxId) {
     const companyRole = await prisma.admin.findFirst({
       where: {
         company: {
-          code: companyCode,
+          taxId,
         },
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -435,9 +435,8 @@ export async function getCompanyAndRoleByCompanyCode(
 
 export async function createCompanyAndRole(
   userId: number,
-  code: string,
+  taxId: string,
   name: string,
-  regional: string,
   imageFileId: number,
   email?: string
 ): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
@@ -473,10 +472,8 @@ export async function createCompanyAndRole(
         user: userConnect,
         company: {
           create: {
-            code,
+            taxId,
             name,
-            regional,
-            kycStatus: false,
             imageFile: {
               connect: {
                 id: imageFileId,
