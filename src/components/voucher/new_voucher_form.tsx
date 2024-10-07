@@ -9,7 +9,7 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
 import { VoucherType, AccountType } from '@/constants/account';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -30,6 +30,11 @@ interface ICounterparty {
   id: number;
   code: string;
   name: string;
+}
+
+enum RecurringUnit {
+  MONTH = 'month',
+  WEEK = 'week',
 }
 
 const VoucherLineItem = ({
@@ -62,12 +67,14 @@ const VoucherLineItem = ({
 
   const accountInputRef = useRef<HTMLInputElement>(null);
 
+  // Info: (20241001 - Julian) Accounting 下拉選單
   const {
     targetRef: accountingRef,
     componentVisible: isAccountingMenuOpen,
     setComponentVisible: setAccountingMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241001 - Julian) Account 編輯狀態
   const {
     targetRef: accountRef,
     componentVisible: isAccountEditing,
@@ -322,10 +329,12 @@ const NewVoucherForm = () => {
     },
   ];
 
+  // Info: (20241004 - Julian) form state
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [type, setType] = useState<string>(VoucherType.EXPENSE);
   const [note, setNote] = useState<string>('');
 
+  // Info: (20241004 - Julian) counterparty state
   const [counterKeyword, setCounterKeyword] = useState<string>('');
   const [counterparty, setCounterparty] = useState<string>(
     t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')
@@ -333,10 +342,15 @@ const NewVoucherForm = () => {
   const [filteredCounterparty, setFilteredCounterparty] =
     useState<ICounterparty[]>(dummyCounterparty);
 
+  // Info: (20241004 - Julian) recurring state
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
-  const [lineItems, setLineItems] = useState<ILineItem[]>([initialVoucherLine]);
+  const [recurringPeriod, setRecurringPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
+  const [recurringUnit, setRecurringUnit] = useState<RecurringUnit>(RecurringUnit.MONTH);
 
   // Info: (20241004 - Julian) voucher line state
+  const [lineItems, setLineItems] = useState<ILineItem[]>([initialVoucherLine]);
+
+  // Info: (20241004 - Julian) verification state
   const [totalCredit, setTotalCredit] = useState<number>(0);
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
@@ -345,22 +359,32 @@ const NewVoucherForm = () => {
   // Info: (20241004 - Julian) 清除所有資料
   const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
 
+  // Info: (20241004 - Julian) Type 下拉選單
   const {
     targetRef: typeRef,
     componentVisible: typeVisible,
     setComponentVisible: setTypeVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241004 - Julian) Counterparty 下拉選單
   const {
     targetRef: counterMenuRef,
     componentVisible: isCounterMenuOpen,
     setComponentVisible: setCounterMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241004 - Julian) Counterparty 搜尋
   const {
     targetRef: counterpartyRef,
     componentVisible: isSearchCounterparty,
     setComponentVisible: setIsSearchCounterparty,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20241007 - Julian) Recurring 下拉選單
+  const {
+    targetRef: recurringRef,
+    componentVisible: isRecurringMenuOpen,
+    setComponentVisible: setRecurringMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const counterpartyInputRef = useRef<HTMLInputElement>(null);
@@ -417,23 +441,6 @@ const NewVoucherForm = () => {
     setFilteredCounterparty(filteredList);
   }, [counterKeyword]);
 
-  useEffect(() => {}, []);
-
-  const AddNewVoucherLine = () => {
-    // Info: (20241001 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
-    const newVoucherId = lineItems.length > 0 ? lineItems[lineItems.length - 1].id + 1 : 0;
-    setLineItems([
-      ...lineItems,
-      {
-        id: newVoucherId,
-        account: null,
-        particulars: '',
-        debit: 0,
-        credit: 0,
-      },
-    ]);
-  };
-
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
     totalCredit === totalDebit && totalCredit !== 0
@@ -450,6 +457,21 @@ const NewVoucherForm = () => {
     totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
     haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
     isAccountingNull; // Info: (20241004 - Julian) 沒有未選擇的會計科目
+
+  const AddNewVoucherLine = () => {
+    // Info: (20241001 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
+    const newVoucherId = lineItems.length > 0 ? lineItems[lineItems.length - 1].id + 1 : 0;
+    setLineItems([
+      ...lineItems,
+      {
+        id: newVoucherId,
+        account: null,
+        particulars: '',
+        debit: 0,
+        credit: 0,
+      },
+    ]);
+  };
 
   const typeToggleHandler = () => {
     setTypeVisible(!typeVisible);
@@ -470,6 +492,10 @@ const NewVoucherForm = () => {
 
   const recurringToggleHandler = () => {
     setIsRecurring(!isRecurring);
+  };
+
+  const recurringUnitToggleHandler = () => {
+    setRecurringMenuOpen(!isRecurringMenuOpen);
   };
 
   // ToDo: (20240926 - Julian) type 字串轉換
@@ -691,6 +717,51 @@ const NewVoucherForm = () => {
     </div>
   );
 
+  const recurringUnitMenu = (
+    <div
+      ref={recurringRef}
+      className={`absolute left-0 top-12 ${isRecurringMenuOpen ? 'flex' : 'hidden'} w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px`}
+    >
+      {Object.values(RecurringUnit).map((unit) => {
+        const recurringUnitClickHandler = () => {
+          setRecurringUnit(unit);
+          setRecurringMenuOpen(false);
+        };
+        return (
+          <button
+            key={unit}
+            type="button"
+            className="py-8px hover:bg-dropdown-surface-menu-background-secondary"
+            onClick={recurringUnitClickHandler}
+          >
+            {unit}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const recurringUnitCheckboxes =
+    recurringUnit === RecurringUnit.WEEK
+      ? Array.from({ length: 7 }, (_, i) => {
+          const day = i + 1;
+          return (
+            <div key={day} className="flex items-center gap-8px">
+              <input type="checkbox" id={`day-${day}`} className={checkboxStyle} />
+              <label htmlFor={`day-${day}`}>{day}</label>
+            </div>
+          );
+        })
+      : Array.from({ length: 12 }, (_, i) => {
+          const month = i + 1;
+          return (
+            <div key={month} className="flex items-center gap-8px">
+              <input type="checkbox" id={`month-${month}`} className={checkboxStyle} />
+              <label htmlFor={`month-${month}`}>{month}</label>
+            </div>
+          );
+        });
+
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
       {/* ToDo: (20240926 - Julian) AI analyze */}
@@ -759,10 +830,42 @@ const NewVoucherForm = () => {
           {/* Info: (20241004 - Julian) Counterparty drop menu */}
           {counterpartyDropMenu}
         </div>
-        {/* Info: (20240926 - Julian) switch */}
-        <div className="col-span-2 flex items-center gap-16px text-switch-text-primary">
-          <Toggle id="recurring-toggle" getToggledState={recurringToggleHandler} />
-          <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+        {/* Info: (20241007 - Julian) Recurring */}
+        <div className="col-span-2 grid grid-cols-6 gap-16px">
+          {/* Info: (20241007 - Julian) switch */}
+          <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
+            <Toggle id="recurring-toggle" getToggledState={recurringToggleHandler} />
+            <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+          </div>
+          {/* Info: (20241007 - Julian) recurring period */}
+          <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
+            <DatePicker
+              type={DatePickerType.TEXT_PERIOD}
+              period={recurringPeriod}
+              setFilteredPeriod={setRecurringPeriod}
+              calenderClassName="w-full"
+            />
+          </div>
+          {/* Info: (20241007 - Julian) recurring unit */}
+          <div
+            className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
+          >
+            {/* Info: (20241007 - Julian) recurring unit block */}
+            <div className="flex w-160px items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+              <p className="px-12px py-10px text-input-text-input-placeholder">Every</p>
+              <div
+                onClick={recurringUnitToggleHandler}
+                className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
+              >
+                <p>{recurringUnit}</p>
+                <FaChevronDown />
+                {/* Info: (20240926 - Julian) recurring unit dropdown */}
+                {recurringUnitMenu}
+              </div>
+            </div>
+            {/* Info: (20241007 - Julian) recurring unit checkbox */}
+            <div className="flex items-center gap-12px">{recurringUnitCheckboxes}</div>
+          </div>
         </div>
         {/* Info: (20240926 - Julian) voucher line block */}
         {voucherLineBlock}
