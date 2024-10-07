@@ -1,14 +1,14 @@
 import Head from 'next/head';
+import { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import Image from 'next/image';
 import Introduction from '@/components/beta/select_role/introduction';
-// import RoleCardContainer from '@/components/beta/select_role/role_card_container';
-// ToDo: (20241004 - Liz) 還在實作角色卡片
+import RoleCard from '@/components/beta/select_role/role_card';
 
 const SelectRole = () => {
   const { t } = useTranslation(['common', 'kyc']);
+  const [role, setRole] = useState<string>('');
 
   return (
     <>
@@ -31,45 +31,11 @@ const SelectRole = () => {
         />
       </Head>
 
-      <main className="flex h-screen flex-col justify-between overflow-x-hidden">
-        <Introduction />
+      <main className="mx-auto flex h-screen w-1280px flex-col justify-center gap-100px overflow-x-hidden">
+        <Introduction role={role} />
 
-        <div className="mx-80px mb-40px flex gap-80px">
-          <div className="relative flex h-120px w-360px skew-x-20 items-center rounded-sm border-4 border-orange-400 bg-yellow-200 text-text-neutral-primary transition-all duration-300 ease-in-out hover:border-yellow-400 hover:bg-yellow-300">
-            <p className="-skew-x-20 pl-140px text-32px font-bold">Bookkeeper</p>
-
-            <Image
-              src={'/images/bookkeeper.png'}
-              alt="bookkeeper"
-              width={48}
-              height={48}
-              className="absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full"
-            ></Image>
-          </div>
-
-          <div className="relative flex h-120px w-360px skew-x-20 items-center rounded-sm border-4 border-orange-400 bg-yellow-200 text-text-neutral-primary transition-all duration-300 ease-in-out hover:border-yellow-400 hover:bg-yellow-300">
-            <p className="-skew-x-20 pl-140px text-32px font-bold">Educational Trial Version</p>
-
-            <Image
-              src={'/images/educational_trial.png'}
-              alt="educational_trial"
-              width={48}
-              height={48}
-              className="absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full"
-            ></Image>
-          </div>
-
-          <div className="relative flex h-120px w-360px skew-x-20 items-center rounded-sm border-4 border-orange-400 bg-yellow-200 text-text-neutral-primary transition-all duration-300 ease-in-out hover:border-yellow-400 hover:bg-yellow-300">
-            <p className="-skew-x-20 pl-140px text-32px font-bold">Accountant</p>
-
-            <Image
-              src={'/images/accountant.png'}
-              alt="accountant"
-              width={48}
-              height={48}
-              className="absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full"
-            ></Image>
-          </div>
+        <div className="mx-100px mb-40px">
+          <RoleCard role={role} setRole={setRole} />
         </div>
       </main>
     </>
