@@ -8,6 +8,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
+// Info: (20241004 - Julian) 以移入 /components/voucher/new_voucher_form.tsx，本檔案預計刪除
 interface ILineItem {
   id: number;
   account: IAccount | null;
@@ -225,10 +226,7 @@ const VoucherLineBlock = () => {
     },
   ]);
 
-  // ToDo: (20240927 - Julian) Implement total calculation
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalCredit, setTotalCredit] = useState<number>(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalDebit, setTotalDebit] = useState<number>(0);
 
   const totalStyle =

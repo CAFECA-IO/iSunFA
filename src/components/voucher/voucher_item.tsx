@@ -6,34 +6,26 @@ import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
+import { IVoucherBeta } from '@/interfaces/voucher';
 
-// Info: (20240926 - Julian) temp interface
-export interface IVoucherBeta {
-  id: number;
-  date: number;
-  voucherNo: string;
-  voucherType: VoucherType;
-  note: string;
-  accounting: string[];
-  credit: number[];
-  debit: number[];
-  counterparty: {
-    code: string;
-    name: string;
-  };
-  issuer: {
-    avatar: string;
-    name: string;
-  };
-}
 interface IVoucherItemProps {
   voucher: IVoucherBeta;
   isCheckBoxOpen: boolean;
 }
 
 const VoucherItem = ({ voucher, isCheckBoxOpen }: IVoucherItemProps) => {
-  const { date, voucherNo, voucherType, note, accounting, credit, debit, counterparty, issuer } =
-    voucher;
+  const {
+    date,
+    voucherNo,
+    voucherType,
+    note,
+    accounting,
+    credit,
+    debit,
+    counterparty,
+    issuer,
+    onRead,
+  } = voucher;
 
   const [isChecked, setIsChecked] = useState(false);
 
@@ -52,8 +44,8 @@ const VoucherItem = ({ voucher, isCheckBoxOpen }: IVoucherItemProps) => {
   );
 
   const displayedDate = (
-    <div className="relative top-10px">
-      <CalendarIcon timestamp={date} />
+    <div className="relative top-10px flex justify-center">
+      <CalendarIcon timestamp={date} onRead={onRead} />
     </div>
   );
 
