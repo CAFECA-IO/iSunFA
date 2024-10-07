@@ -1,5 +1,4 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { useQRCode } from 'next-qrcode';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
@@ -10,19 +9,23 @@ import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
 import { APIName } from '@/constants/api_connection';
 import SelectionToolbar from '@/components/selection_tool_bar/selection_tool_bar';
-import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
+import {
+  ICertificate,
+  ICertificateInfo,
+  ICertificateUI,
+  OPERATIONS,
+  VIEW_TYPES,
+} from '@/interfaces/certificate';
 import Certificate from '@/components/certificate/certificate';
 import CertificateEditModal from '@/components/certificate/certificate_edit_modal';
 import Pusher, { Channel } from 'pusher-js';
+import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
+import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import Image from 'next/image';
-import { ISUNFA_ROUTE } from '@/constants/url';
+import { v4 as uuidv4 } from 'uuid';
+import { ProgressStatus } from '@/constants/account';
 
-interface ImageData {
-  url: string;
-  status: string;
-}
 const UploadCertificatePage: React.FC = () => {
-  const { Canvas } = useQRCode();
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState<{ [tab: number]: { [id: number]: ICertificateUI } }>({
@@ -40,7 +43,8 @@ const UploadCertificatePage: React.FC = () => {
     0: false,
     1: false,
   });
-  const [receivedImages, setReceivedImages] = useState<ImageData[]>([]);
+  const token = uuidv4(); // Info: (20241007 - tzuhan) 生成唯一 token
+  const [uploadingCertificates, setUploadingCertificates] = useState<ICertificateInfo[]>([]);
 
   const handleApiResponse = useCallback((resData: ICertificate[]) => {
     const sumInvoiceTotalPrice = {
@@ -185,21 +189,58 @@ const UploadCertificatePage: React.FC = () => {
     console.log('Save selected id:', certificate);
   }, []);
 
+  const certificateHandler = async (certificateData: { url: string; token: string }) => {
+    // TODO: (20241007 - tzuhan) post certificate data to server and get uploading certificate list back and update certificate list when uploaded
+    // TODO: (20241007 - tzuhan) get Token from server
+    if (certificateData.token === token) {
+      // Info: (20241007 - tzuhan) 使用 fetch 下載圖片文件
+      const response = await fetch(certificateData.url);
+      const blob = await response.blob();
+
+      // Info: (20241007 - tzuhan) 獲取文件名，從 response headers 提取
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let fileName = 'unknown';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match && match[1]) {
+          // Info: (20241007 - tzuhan) 使用陣列解構提取文件名
+          [, fileName] = match;
+        }
+      } else {
+        // Info: (20241007 - tzuhan) 如果沒有提供 header，可以從 url 推斷出文件名
+        fileName = certificateData.url.split('/').pop() || 'unknown';
+      }
+
+      // Info: (20241007 - tzuhan) 獲取文件大小
+      const fileSize = blob.size;
+
+      const imageObjectUrl = URL.createObjectURL(blob);
+      setUploadingCertificates((prev) => [
+        ...prev,
+        {
+          url: imageObjectUrl,
+          status: ProgressStatus.IN_PROGRESS,
+          name: fileName,
+          size: fileSize,
+          progress: 80,
+        },
+      ]);
+    }
+  };
+
   useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER!,
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: '',
+      wsHost: process.env.NEXT_PUBLIC_PUSHER_HOST!,
+      wsPort: parseFloat(process.env.NEXT_PUBLIC_PUSHER_PORT!),
     });
 
     const channel: Channel = pusher.subscribe('certificate-channel');
 
-    const imageHandler = (imageData: { images: ImageData[] }) => {
-      setReceivedImages((prev) => [...prev, ...imageData.images]);
-    };
-
-    channel.bind('certificate-event', imageHandler);
+    channel.bind('certificate-event', certificateHandler);
 
     return () => {
-      channel.unbind('certificate-event', imageHandler);
+      channel.unbind('certificate-event', certificateHandler);
       pusher.unsubscribe('certificate-channel');
     };
   }, []);
@@ -221,6 +262,14 @@ const UploadCertificatePage: React.FC = () => {
             onSave={handleSave}
           />
         )}
+        {showQRCode && (
+          <CertificateQRCodeModal
+            isOpen={showQRCode}
+            onClose={() => setShowQRCode((prev) => !prev)}
+            isOnTopOfModal={false}
+            token={token}
+          />
+        )}
 
         {/* Info: (20240919 - tzuhan) Side Menu */}
         <SideMenu />
@@ -229,22 +278,6 @@ const UploadCertificatePage: React.FC = () => {
         <div className="flex flex-1 flex-col">
           {/* Info: (20240919 - tzuhan) Header */}
           <Header />
-
-          {showQRCode && (
-            <Canvas
-              text={`http://192.168.71.34:3000/${ISUNFA_ROUTE.UPLOAD}`}
-              options={{
-                errorCorrectionLevel: 'M',
-                margin: 3,
-                scale: 4,
-                width: 200,
-                color: {
-                  dark: '#010599FF',
-                  light: '#FFBF60FF',
-                },
-              }}
-            />
-          )}
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="space-y-4 overflow-y-scroll p-6">
             {/* Info: (20240919 - tzuhan) Upload Area */}
@@ -254,7 +287,7 @@ const UploadCertificatePage: React.FC = () => {
               toggleQRCode={() => setShowQRCode((prev) => !prev)}
             />
             <div>
-              {receivedImages.map((image, index) => (
+              {uploadingCertificates.map((image, index) => (
                 <div key={`pusher_${index + 1}`}>
                   <Image src={image.url} alt={`Received Image ${index}`} width={200} height={200} />
                   <p>Status: {image.status}</p>
@@ -292,7 +325,7 @@ const UploadCertificatePage: React.FC = () => {
               onActiveChange={setActiveSelection}
               items={Object.values(data[activeTab])}
               itemType="Certificates"
-              subtitle={`Invoice Total Price: ${sumPrice} TWD`}
+              subtitle={`Invoice Total Price: ${sumPrice[activeTab]} TWD`}
               selectedCount={filterSelectedIds().length}
               totalCount={Object.values(data[activeTab]).length || 0}
               handleSelect={handleSelect}
@@ -307,7 +340,6 @@ const UploadCertificatePage: React.FC = () => {
             <Certificate
               data={Object.values(data[activeTab])}
               viewType={viewType}
-              activeTab={activeTab}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
               isSelectedAll={isSelectedAll[activeTab]}
@@ -316,6 +348,10 @@ const UploadCertificatePage: React.FC = () => {
               onEdit={onEdit}
             />
           </div>
+          {/* Info: (20240926- tzuhan) Floating Upload Popup */}
+          {uploadingCertificates.length > 0 && (
+            <FloatingUploadPopup uploadingCertificates={uploadingCertificates} />
+          )}
         </div>
       </main>
     </>

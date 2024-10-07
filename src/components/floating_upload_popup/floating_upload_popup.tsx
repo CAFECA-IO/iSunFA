@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import UploadFileItem, { UploadFile } from '@/components/upload_certificate/upload_file_item';
+import UploadFileItem from '@/components/upload_certificate/upload_file_item';
 import { ProgressStatus } from '@/constants/account';
 import Image from 'next/image';
+import { ICertificateInfo } from '@/interfaces/certificate';
 
-const FloatingUploadPopup: React.FC = () => {
-  const [files, setFiles] = useState<UploadFile[]>([
-    { name: 'preline-ui.xls', size: 7, progress: 20, status: ProgressStatus.IN_PROGRESS },
-    { name: 'preline-ui.xls', size: 7, progress: 50, status: ProgressStatus.IN_PROGRESS },
-    { name: 'preline-ui.xls', size: 7, progress: 80, status: ProgressStatus.IN_PROGRESS },
-  ]);
+interface FloatingUploadPopupProps {
+  uploadingCertificates: ICertificateInfo[];
+}
+
+const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({ uploadingCertificates }) => {
+  const [files, setFiles] = useState<ICertificateInfo[]>(uploadingCertificates);
+  // const [files, setFiles] = useState<UploadFile[]>([
+  //   { name: 'preline-ui.xls', size: 7, progress: 20, status: ProgressStatus.IN_PROGRESS },
+  //   { name: 'preline-ui.xls', size: 7, progress: 50, status: ProgressStatus.IN_PROGRESS },
+  //   { name: 'preline-ui.xls', size: 7, progress: 80, status: ProgressStatus.IN_PROGRESS },
+  // ]);
   const [expanded, setExpanded] = useState(false); // Info: (20240919 - tzuhan) 控制展開/收縮狀態
 
   // Info: (20240919 - tzuhan) 計算總上傳進度和狀態
@@ -19,7 +25,7 @@ const FloatingUploadPopup: React.FC = () => {
   );
 
   // Info: (20240919 - tzuhan) 暫停或繼續上傳
-  const updateFileStatus = (prevFiles: UploadFile[], index: number) =>
+  const updateFileStatus = (prevFiles: ICertificateInfo[], index: number) =>
     prevFiles.map((file, i) => {
       return i === index
         ? {
