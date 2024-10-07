@@ -246,47 +246,68 @@ async function createLineItems() {
   await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
 }
 
-/* eslint-disable */
 async function createAsset() {
-  assets.forEach(async (asset: any) => {
-    // // 檢查公司是否存在
-    // const company = await prisma.company.findUnique({
-    //   where: { id: asset.companyId },
-    // });
+  assets.forEach(
+    async (asset: {
+      id: number;
+      companyId: number;
+      name: string;
+      type: string;
+      number: string;
+      acquisitionDate: number;
+      purchasePrice: number;
+      accumulatedDepreciation: number;
+      residualValue: number;
+      remainingLife: number;
+      status: string;
+      depreciationStart: number;
+      depreciationMethod: string;
+      usefulLife: number;
+      note: string;
+      createdAt: number;
+      updatedAt: number;
+    }) => {
+      const company = await prisma.company.findUnique({
+        where: { id: asset.companyId },
+      });
 
-    // if (!company) {
-    //   console.warn(`公司 ID ${asset.companyId} 不存在，跳過資產 "${asset.name}" 的插入`);
-    //   return;
-    // }
+      if (!company) {
+        return;
+      }
 
-    // 插入資產資料
-    await prisma.asset.create({
-      data: asset,
-    });
-  });
+      await prisma.asset.create({
+        data: asset,
+      });
+    }
+  );
 }
 
 async function createAssetVoucher() {
-  for (const assetVoucher of assetVouchers) {
-    const asset = await prisma.asset.findUnique({
-      where: { id: assetVoucher.assetId },
-    });
+  assetVouchers.forEach(
+    async (assetVoucher: {
+      id: number;
+      assetId: number;
+      voucherId: number;
+      createdAt: number;
+      updatedAt: number;
+    }) => {
+      const asset = await prisma.asset.findUnique({
+        where: { id: assetVoucher.assetId },
+      });
 
-    const voucher = await prisma.voucher.findUnique({
-      where: { id: assetVoucher.voucherId },
-    });
+      const voucher = await prisma.voucher.findUnique({
+        where: { id: assetVoucher.voucherId },
+      });
 
-    if (!asset || !voucher) {
-      console.warn(
-        `Asset ID ${assetVoucher.assetId} 或 Voucher ID ${assetVoucher.voucherId} 不存在，跳過 AssetVoucher 的插入`
-      );
-      continue;
+      if (!asset || !voucher) {
+        return;
+      }
+
+      await prisma.assetVoucher.create({
+        data: assetVoucher,
+      });
     }
-
-    await prisma.assetVoucher.create({
-      data: assetVoucher,
-    });
-  }
+  );
 }
 
 async function main() {
@@ -355,9 +376,7 @@ main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async (error) => {
-    console.error('種子資料插入失敗:', error);
-    throw error;
+  .catch(async () => {
     // Info (20240316 - Murky) - disconnect prisma
     await prisma.$disconnect();
     process.exit(1);
