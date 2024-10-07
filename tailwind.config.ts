@@ -699,6 +699,9 @@ module.exports = {
 
         green_light_left: 'url("/elements/green_light_left.svg")',
         green_light_right: 'url("/elements/green_light_right.svg")',
+
+        // Info: (20241004 - Liz) Beta
+        bg_select_role: 'url("/images/bg_select_role.png")',
       },
       zIndex: {
         '-10': '-10',
@@ -1430,6 +1433,9 @@ module.exports = {
         15: '15',
         16: '16',
         17: '17',
+      },
+      skew: {
+        20: '20deg', // Info: (20241004 - Liz) 用來創造平行四邊形，例如: skew-x-20
       },
     },
   },
