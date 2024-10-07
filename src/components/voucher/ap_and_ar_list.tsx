@@ -102,9 +102,6 @@ const APandARList = () => {
 
         {/* Info: (20240924 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedAPandARList}</div>
-
-        {/* Info: (20240924 - Julian) ---------------- Table Footer(排版用) ---------------- */}
-        <div className="table-footer-group h-10px"></div>
       </div>
 
       {/* Info: (20240924 - Julian) Pagination */}

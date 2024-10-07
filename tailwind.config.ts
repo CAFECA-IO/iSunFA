@@ -502,6 +502,7 @@ module.exports = {
           'text-secondary': 'var(--card-text-secondary)',
           'text-tertiary': 'var(--card-text-tertiary)',
           'text-title': 'var(--card-text-title)',
+          'text-sub': 'var(--card-text-sub)',
           'text-white': 'var(--card-text-white)',
         },
 
@@ -733,6 +734,7 @@ module.exports = {
         '44px': ['44px', '52px'],
         '48px': ['48px', '52px'],
         '6xl': ['56px', '60px'],
+        '64px': ['64px', '68px'],
         '7xl': ['72px', 1],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
@@ -941,12 +943,14 @@ module.exports = {
         '128px': '128px',
         '130px': '130px',
         '134px': '134px',
+        '136px': '136px',
         '140px': '140px',
         '150px': '150px',
         '160px': '160px',
         '170px': '170px',
         '177px': '177px',
         '180px': '180px',
+        '182px': '182px',
         '190px': '190px',
         '200px': '200px',
         '220px': '220px',
@@ -977,6 +981,7 @@ module.exports = {
         '360px': '360px',
         '370px': '370px',
         '372px': '372px',
+        '375px': '375px',
         '376px': '376px',
         '380px': '380px',
         '388px': '388px',
@@ -1016,6 +1021,7 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '678px': '678px',
         '700px': '700px',
         '726px': '726px',
         '750px': '750px',
@@ -1165,6 +1171,7 @@ module.exports = {
         '80%': '80%',
         '95%': '95%',
 
+        '60vh': '60vh',
         '80vh': '80vh',
         '90vh': '90vh',
         '95vh': '95vh',
@@ -1297,6 +1304,8 @@ module.exports = {
 
         scrollBtn:
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
+
+        crossBtn: '0px 0px 7px 0px #FFA502B2',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -1377,11 +1386,35 @@ module.exports = {
           '0%': { transform: 'translateX(-80%)' },
           '100%': { transform: 'translateX(120%)' },
         },
+        // Info: (20240925 - Liz) 客製化動畫幀
+        'slide-in': {
+          '0%': { left: '-100%' },
+          '100%': { left: '5%' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'fade-in-out': {
+          '0%': { opacity: '0' },
+          '50%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
         spinFast: 'spin 1s linear infinite',
         loading: 'loading 1.5s infinite',
+        // Info: (20240925 - Liz) 客製化動畫 使用方式是 animate-fade-in
+        'slide-in-back': 'slide-in 1s linear backwards', // Info: (20241001 - Liz) 1s 代表動畫時間
+        'fade-in-out': 'fade-in-out 3s ease-in-out forwards',
+        'fade-in-1': 'fade-in 2s ease-in forwards', // Info: (20241001 - Liz) forwards 代表動畫結束後保持最後的狀態
+        'fade-in-2': 'fade-in 2s ease-in 1s forwards', // Info: (20241001 - Liz) 動畫將在渲染或觸發動畫後 1 秒開始
+        wiggle: 'wiggle 1s ease-in-out infinite', // Info: (20241001 - Liz) 1s 代表動畫時間，ease-in-out 代表動畫速度，infinite 代表無限循環
       },
 
       content: {
@@ -1389,6 +1422,14 @@ module.exports = {
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
+        13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
+      },
+      gridColumnEnd: {
+        13: '13',
+        14: '14',
+        15: '15',
+        16: '16',
+        17: '17',
       },
     },
   },

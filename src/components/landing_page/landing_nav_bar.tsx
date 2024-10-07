@@ -27,7 +27,7 @@ const isLinkDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是
 
 function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
   const { t }: { t: TranslateFunction } = useTranslation('common');
-  const { signedIn } = useContext(UserContext);
+  const { isSignIn } = useContext(UserContext);
 
   const router = useRouter();
   const { asPath } = router;
@@ -281,7 +281,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
           </div>
         </li>
         <li>
-          <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
+          <Link href={isSignIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
             <Button className="flex space-x-3">
               <p
                 className={cn(
@@ -533,7 +533,7 @@ function LandingNavBar({ transparentInitially }: LandingNavBarProps) {
         </li>
 
         <li className="w-full px-6 py-4">
-          <Link href={signedIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
+          <Link href={isSignIn ? ISUNFA_ROUTE.DASHBOARD : ISUNFA_ROUTE.LOGIN}>
             <Button className="flex space-x-3">
               <p
                 className={cn(

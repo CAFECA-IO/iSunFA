@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import Image from 'next/image';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -5,47 +6,46 @@ import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
+import { IVoucherBeta } from '@/interfaces/voucher';
 
-// Info: (20240926 - Julian) temp interface
-export interface IVoucherBeta {
-  id: number;
-  date: number;
-  voucherNo: string;
-  voucherType: VoucherType;
-  note: string;
-  accounting: string[];
-  credit: number[];
-  debit: number[];
-  counterparty: {
-    code: string;
-    name: string;
-  };
-  issuer: {
-    avatar: string;
-    name: string;
-  };
-}
 interface IVoucherItemProps {
   voucher: IVoucherBeta;
-  isSelecting: boolean;
+  isCheckBoxOpen: boolean;
 }
 
-const VoucherItem = ({ voucher, isSelecting }: IVoucherItemProps) => {
-  const { date, voucherNo, voucherType, note, accounting, credit, debit, counterparty, issuer } =
-    voucher;
+const VoucherItem = ({ voucher, isCheckBoxOpen }: IVoucherItemProps) => {
+  const {
+    date,
+    voucherNo,
+    voucherType,
+    note,
+    accounting,
+    credit,
+    debit,
+    counterparty,
+    issuer,
+    onRead,
+  } = voucher;
+
+  const [isChecked, setIsChecked] = useState(false);
 
   // Info: (20240920 - Julian) 借貸總和
   const total = credit.reduce((acc, cur) => acc + cur, 0);
 
   const displayedCheckbox = (
     <div className="relative top-20px px-8px">
-      <input type="checkbox" className={checkboxStyle} />
+      <input
+        type="checkbox"
+        className={checkboxStyle}
+        checked={isChecked}
+        onChange={() => setIsChecked(!isChecked)}
+      />
     </div>
   );
 
   const displayedDate = (
-    <div className="relative top-10px">
-      <CalendarIcon timestamp={date} />
+    <div className="relative top-10px flex justify-center">
+      <CalendarIcon timestamp={date} onRead={onRead} />
     </div>
   );
 
@@ -136,9 +136,9 @@ const VoucherItem = ({ voucher, isSelecting }: IVoucherItemProps) => {
   );
 
   return (
-    <div className="table-row font-medium">
+    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240920 - Julian) Select */}
-      <div className={`${isSelecting ? 'table-cell' : 'hidden'} text-center`}>
+      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
         {displayedCheckbox}
       </div>
       {/* Info: (20240920 - Julian) Issued Date */}

@@ -3,103 +3,22 @@ import { useTranslation } from 'next-i18next';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
-import VoucherItem, { IVoucherBeta } from '@/components/voucher/voucher_item';
+import VoucherItem from '@/components/voucher/voucher_item';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { VoucherType } from '@/constants/account';
-
-const dummyVoucherList: IVoucherBeta[] = [
-  {
-    id: 1,
-    date: 1632511200,
-    voucherNo: '20240920-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Printer-0001',
-    accounting: [
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-    ],
-    credit: [100200],
-    debit: [100000, 200],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-  {
-    id: 2,
-    date: 1662511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.EXPENSE,
-    note: 'Printer-0002',
-    accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
-    credit: [10200],
-    debit: [10200],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-  {
-    id: 3,
-    date: 1672592800,
-    voucherNo: '20240925-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Scanner-0001',
-    accounting: [
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-    ],
-    credit: [100000, 200],
-    debit: [100000, 200],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-  {
-    id: 4,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
-    credit: [300],
-    debit: [300],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-];
+import { IVoucherBeta, dummyVoucherList } from '@/interfaces/voucher';
 
 const VoucherList = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  const [isSelecting, setIsSelecting] = useState(false);
+  // ToDo: (20240927 - Julian) data filter
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>(dummyVoucherList);
+  const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
@@ -112,9 +31,9 @@ const VoucherList = () => {
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
-  const checkStyle = `${isSelecting ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
+  const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
-  const selectToggleHandler = () => setIsSelecting((prev) => !prev);
+  const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
   // Info: (20240920 - Julian) 日期排序按鈕
   const displayedDate = SortingButton({
@@ -145,7 +64,7 @@ const VoucherList = () => {
         <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
       </Button>
       {/* Info: (20240920 - Julian) Delete button */}
-      <div className={isSelecting ? 'block' : 'hidden'}>
+      <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
         <Button type="button" variant="tertiary" className="h-44px w-44px p-0">
           <FaRegTrashAlt />
         </Button>
@@ -153,7 +72,7 @@ const VoucherList = () => {
       {/* Info: (20240920 - Julian) Select All & Cancel button */}
       <button
         type="button"
-        className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+        className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
       >
         {t('common:COMMON.SELECT_ALL')}
       </button>
@@ -161,7 +80,7 @@ const VoucherList = () => {
       <button
         type="button"
         onClick={selectToggleHandler}
-        className={`${isSelecting ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+        className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
       >
         {t('common:COMMON.CANCEL')}
       </button>
@@ -169,15 +88,15 @@ const VoucherList = () => {
       <button
         type="button"
         onClick={selectToggleHandler}
-        className={`${isSelecting ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
+        className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
       >
         {t('common:COMMON.SELECT')}
       </button>
     </div>
   );
 
-  const displayedVoucherList = dummyVoucherList.map((voucher) => {
-    return <VoucherItem key={voucher.id} voucher={voucher} isSelecting={isSelecting} />;
+  const displayedVoucherList = voucherList.map((voucher) => {
+    return <VoucherItem key={voucher.id} voucher={voucher} isCheckBoxOpen={isCheckBoxOpen} />;
   });
 
   return (
@@ -216,9 +135,6 @@ const VoucherList = () => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedVoucherList}</div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Footer(排版用) ---------------- */}
-        <div className="table-footer-group h-20px"></div>
       </div>
 
       {/* Info: (20240920 - Julian) Pagination */}

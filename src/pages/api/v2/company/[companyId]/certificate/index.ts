@@ -5,9 +5,11 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { mockCertificateList } from '@/pages/api/v2/company/[companyId]/certificate/service';
+import { mockCertificateList } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
+
+import { loggerError } from '@/lib/utils/logger_back';
 
 type APIResponse =
   | object
@@ -59,6 +61,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   return {
     statusMessage,
     payload,
+    userId,
   };
 }
 
@@ -79,13 +82,14 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   return {
     statusMessage,
     payload,
+    userId,
   };
 }
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: APIResponse }>;
+  ) => Promise<{ statusMessage: string; payload: APIResponse; userId: number }>;
 } = {
   GET: handleGetRequest,
   POST: handlePostRequest,
@@ -97,16 +101,18 @@ export default async function handler(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: APIResponse = null;
-
+  let userId = -1;
   try {
     const handleRequest = methodHandlers[req.method || ''];
     if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
+      ({ statusMessage, payload, userId } = await handleRequest(req, res));
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (_error) {
     const error = _error as Error;
+    const logger = loggerError(userId, error.name, error.message);
+    logger.error(error);
     statusMessage = error.message;
   }
   const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
