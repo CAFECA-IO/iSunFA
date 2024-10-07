@@ -5,9 +5,10 @@ import Image from 'next/image';
 interface UploadAreaProps {
   isDisabled: boolean;
   withScanner: boolean;
+  toggleQRCode: () => void;
 }
 
-const UploadArea: React.FC<UploadAreaProps> = ({ isDisabled, withScanner }) => {
+const UploadArea: React.FC<UploadAreaProps> = ({ isDisabled, withScanner, toggleQRCode }) => {
   const { t } = useTranslation(['common', 'journal']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
@@ -109,7 +110,10 @@ const UploadArea: React.FC<UploadAreaProps> = ({ isDisabled, withScanner }) => {
               />
               <p className="font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
                 {t('journal:JOURNAL.USE_YOUR_PHONE_AS')}
-                <span className="cursor-pointer text-text-brand-primary-lv2 group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable">
+                <span
+                  className="cursor-pointer text-text-brand-primary-lv2 group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable"
+                  onClick={toggleQRCode}
+                >
                   {t('journal:JOURNAL.SCANNER')}
                 </span>
               </p>

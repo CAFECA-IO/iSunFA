@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
+import { useQRCode } from 'next-qrcode';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
@@ -12,8 +13,17 @@ import SelectionToolbar from '@/components/selection_tool_bar/selection_tool_bar
 import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
 import Certificate from '@/components/certificate/certificate';
 import CertificateEditModal from '@/components/certificate/certificate_edit_modal';
+import Pusher, { Channel } from 'pusher-js';
+import Image from 'next/image';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
+interface ImageData {
+  url: string;
+  status: string;
+}
 const UploadCertificatePage: React.FC = () => {
+  const { Canvas } = useQRCode();
+  const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState<{ [tab: number]: { [id: number]: ICertificateUI } }>({
     0: {},
@@ -30,6 +40,7 @@ const UploadCertificatePage: React.FC = () => {
     0: false,
     1: false,
   });
+  const [receivedImages, setReceivedImages] = useState<ImageData[]>([]);
 
   const handleApiResponse = useCallback((resData: ICertificate[]) => {
     const sumInvoiceTotalPrice = {
@@ -174,6 +185,25 @@ const UploadCertificatePage: React.FC = () => {
     console.log('Save selected id:', certificate);
   }, []);
 
+  useEffect(() => {
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_APP_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER!,
+    });
+
+    const channel: Channel = pusher.subscribe('certificate-channel');
+
+    const imageHandler = (imageData: { images: ImageData[] }) => {
+      setReceivedImages((prev) => [...prev, ...imageData.images]);
+    };
+
+    channel.bind('certificate-event', imageHandler);
+
+    return () => {
+      channel.unbind('certificate-event', imageHandler);
+      pusher.unsubscribe('certificate-channel');
+    };
+  }, []);
+
   return (
     <>
       <Head>
@@ -200,10 +230,37 @@ const UploadCertificatePage: React.FC = () => {
           {/* Info: (20240919 - tzuhan) Header */}
           <Header />
 
+          {showQRCode && (
+            <Canvas
+              text={`http://192.168.71.34:3000/${ISUNFA_ROUTE.UPLOAD}`}
+              options={{
+                errorCorrectionLevel: 'M',
+                margin: 3,
+                scale: 4,
+                width: 200,
+                color: {
+                  dark: '#010599FF',
+                  light: '#FFBF60FF',
+                },
+              }}
+            />
+          )}
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="space-y-4 overflow-y-scroll p-6">
             {/* Info: (20240919 - tzuhan) Upload Area */}
-            <UploadArea isDisabled={false} withScanner />
+            <UploadArea
+              isDisabled={false}
+              withScanner
+              toggleQRCode={() => setShowQRCode((prev) => !prev)}
+            />
+            <div>
+              {receivedImages.map((image, index) => (
+                <div key={`pusher_${index + 1}`}>
+                  <Image src={image.url} alt={`Received Image ${index}`} width={200} height={200} />
+                  <p>Status: {image.status}</p>
+                </div>
+              ))}
+            </div>
 
             {/* Info: (20240919 - tzuhan) Tabs */}
             <Tabs
