@@ -434,10 +434,13 @@ const NewVoucherForm = () => {
     ]);
   };
 
+  // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
-    totalCredit === totalDebit ? 'text-text-state-success-invert' : 'text-text-state-error-invert';
+    totalCredit === totalDebit && totalCredit !== 0
+      ? 'text-text-state-success-invert'
+      : 'text-text-state-error-invert';
 
-  // Info: (20241004 - Julian) 保存條件
+  // Info: (20241004 - Julian) 送出表單的條件
   const saveBtnDisabled =
     (date.startTimeStamp === 0 && date.endTimeStamp === 0) || // Info: (20241004 - Julian) 日期不可為 0
     type === '' || // Info: (20241004 - Julian) 類型不可為空
@@ -474,7 +477,7 @@ const NewVoucherForm = () => {
     return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
   };
 
-  // Info: (20241004 - Julian) 清除所有資料
+  // Info: (20241004 - Julian) 清空表單
   const clearAllHandler = () => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
@@ -485,6 +488,7 @@ const NewVoucherForm = () => {
     setFlagOfClear(!flagOfClear);
   };
 
+  // Info: (20241004 - Julian) Message Modal
   const clearClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
@@ -688,7 +692,7 @@ const NewVoucherForm = () => {
   );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px px-40px py-40px">
+    <div className="relative flex flex-col items-center gap-40px p-40px">
       {/* ToDo: (20240926 - Julian) AI analyze */}
       <div className="w-full bg-surface-brand-primary-moderate p-40px text-center text-white">
         This is AI analyze
