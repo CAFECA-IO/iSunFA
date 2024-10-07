@@ -301,6 +301,9 @@ const NewVoucherForm = () => {
     setNote('');
     setCounterparty(t('journal:ADD_NEW_VOUCHER.COUNTERPARTY'));
     setIsRecurring(false);
+    setRecurringPeriod(default30DayPeriodInSec);
+    setRecurringUnit(RecurringUnit.MONTH);
+    setRecurringArray([]);
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
   };
@@ -319,53 +322,7 @@ const NewVoucherForm = () => {
   };
 
   // ToDo: (20240926 - Julian) Save voucher function
-  const saveVoucher = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Info: (20241007 - Julian) 日期不可為 0
-    if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
-      // Info: (20241007 - Julian) 顯示日期提示，並定位到日期欄位
-      setIsShowDateHint(true);
-      router.push('#voucher-date');
-      return;
-    }
-
-    // Info: (20241004 - Julian) 交易對象不可為空
-    if (counterparty === '' || counterparty === t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')) {
-      // Info: (20241004 - Julian) 顯示類型提示，並定位到類型欄位
-      setIsShowCounterHint(true);
-      router.push('#voucher-counterparty');
-      return;
-    }
-
-    // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
-    if (
-      isRecurring &&
-      (recurringPeriod.startTimeStamp === 0 || recurringPeriod.endTimeStamp === 0)
-    ) {
-      setIsShowRecurringPeriodHint(true);
-      router.push('#voucher-recurring');
-      return;
-    }
-
-    // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
-    if (isRecurring && recurringArray.length === 0) {
-      setIsShowRecurringArrayHint(true);
-      router.push('#voucher-recurring');
-      return;
-    }
-
-    if (
-      (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
-      totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
-      haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
-      isAccountingNull // Info: (20241004 - Julian) 沒有未選擇的會計科目
-    ) {
-      setFlagOfSubmit(!flagOfSubmit);
-      router.push('#voucher-line-block');
-      return;
-    }
-
+  const saveVoucher = async () => {
     // Info: (20241004 - Julian) for debug
     // eslint-disable-next-line no-console
     console.log(
@@ -389,11 +346,48 @@ const NewVoucherForm = () => {
       'LineItems:',
       lineItems
     );
+  };
 
-    // Info: (20241007 - Julian) 重設提示
-    setIsShowDateHint(false);
-    setIsShowCounterHint(false);
-    setFlagOfSubmit(!flagOfSubmit);
+  const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
+    if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
+      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
+      setIsShowDateHint(true);
+      router.push('#voucher-date');
+    } else if (counterparty === '' || counterparty === t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')) {
+      // Info: (20241004 - Julian) 交易對象不可為空：顯示類型提示，並定位到類型欄位
+      setIsShowCounterHint(true);
+      router.push('#voucher-counterparty');
+    } else if (
+      isRecurring &&
+      (recurringPeriod.startTimeStamp === 0 || recurringPeriod.endTimeStamp === 0)
+    ) {
+      // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
+      setIsShowRecurringPeriodHint(true);
+      router.push('#voucher-recurring');
+    } else if (isRecurring && recurringArray.length === 0) {
+      // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
+      setIsShowRecurringArrayHint(true);
+      router.push('#voucher-recurring');
+    } else if (
+      (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
+      totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
+      haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
+      isAccountingNull // Info: (20241004 - Julian) 沒有未選擇的會計科目
+    ) {
+      setFlagOfSubmit(!flagOfSubmit);
+      router.push('#voucher-line-block');
+    } else {
+      // Info: (20241007 - Julian) 儲存傳票
+      saveVoucher();
+
+      // Info: (20241007 - Julian) 重設提示
+      setIsShowDateHint(false);
+      setIsShowCounterHint(false);
+      setFlagOfSubmit(!flagOfSubmit);
+    }
   };
 
   const typeDropdownMenu = typeVisible ? (
@@ -659,7 +653,7 @@ const NewVoucherForm = () => {
       </div>
 
       {/* Info: (20240926 - Julian) form */}
-      <form onSubmit={saveVoucher} className="grid w-full grid-cols-2 gap-24px">
+      <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
         {/* Info: (20240926 - Julian) Date */}
         <div id="voucher-date" className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
@@ -724,7 +718,11 @@ const NewVoucherForm = () => {
         <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
           {/* Info: (20241007 - Julian) switch */}
           <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
-            <Toggle id="recurring-toggle" getToggledState={recurringToggleHandler} />
+            <Toggle
+              id="recurring-toggle"
+              initialToggleState={isRecurring}
+              getToggledState={recurringToggleHandler}
+            />
             <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
           </div>
           {/* Info: (20241007 - Julian) recurring period */}
