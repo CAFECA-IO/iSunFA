@@ -18,10 +18,43 @@
   - Added the required column `phone` to the `company_setting` table without a default value. This is not possible if the table is not empty.
   - Added the required column `representative_name` to the `company_setting` table without a default value. This is not possible if the table is not empty.
   - Added the required column `tax_serial_number` to the `company_setting` table without a default value. This is not possible if the table is not empty.
+  
+  - You are about to drop the column `contract_id` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `description` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `end_date` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `estimate_useful_life` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `label` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `name` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `price` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `project_id` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `start_date` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `supplier` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `type` on the `asset` table. All the data in the column will be lost.
+  - You are about to drop the column `voucher_id` on the `asset` table. All the data in the column will be lost.
+  - Added the required column `acquisition_date` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `asset_name` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `asset_number` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `asset_type` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `company_id` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `depreciation_start` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `note` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `purchase_price` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `remaining_life` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `useful_life` to the `asset` table without a default value. This is not possible if the table is not empty.
+  - Changed the type of `residual_value` on the `asset` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
 
 */
 -- DropForeignKey
 ALTER TABLE "client" DROP CONSTRAINT "client_company_id_fkey";
+
+-- DropForeignKey
+ALTER TABLE "asset" DROP CONSTRAINT "asset_contract_id_fkey";
+
+-- DropForeignKey
+ALTER TABLE "asset" DROP CONSTRAINT "asset_project_id_fkey";
+
+-- DropForeignKey
+ALTER TABLE "asset" DROP CONSTRAINT "asset_voucher_id_fkey";
 
 -- AlterTable company
 -- Step 1: Drop the columns 'kyc_status' and 'regional'
@@ -54,6 +87,34 @@ ALTER TABLE "role" ADD COLUMN     "last_login_at" INTEGER NOT NULL DEFAULT 0;
 -- AlterTable
 ALTER TABLE "user" DROP COLUMN "full_name",
 DROP COLUMN "phone";
+
+-- AlterTable
+ALTER TABLE "asset" DROP COLUMN "contract_id",
+DROP COLUMN "description",
+DROP COLUMN "end_date",
+DROP COLUMN "estimate_useful_life",
+DROP COLUMN "label",
+DROP COLUMN "name",
+DROP COLUMN "price",
+DROP COLUMN "project_id",
+DROP COLUMN "start_date",
+DROP COLUMN "supplier",
+DROP COLUMN "type",
+DROP COLUMN "voucher_id",
+ADD COLUMN     "accumulated_depreciation" DECIMAL(20,2) NOT NULL DEFAULT 0,
+ADD COLUMN     "acquisition_date" INTEGER NOT NULL,
+ADD COLUMN     "asset_name" TEXT NOT NULL,
+ADD COLUMN     "asset_number" TEXT NOT NULL,
+ADD COLUMN     "asset_status" TEXT NOT NULL DEFAULT 'normal',
+ADD COLUMN     "asset_type" TEXT NOT NULL,
+ADD COLUMN     "company_id" INTEGER NOT NULL,
+ADD COLUMN     "depreciation_start" INTEGER NOT NULL,
+ADD COLUMN     "note" TEXT NOT NULL,
+ADD COLUMN     "purchase_price" DECIMAL(20,2) NOT NULL,
+ADD COLUMN     "remaining_life" INTEGER NOT NULL,
+ADD COLUMN     "useful_life" INTEGER NOT NULL,
+DROP COLUMN "residual_value",
+ADD COLUMN     "residual_value" DECIMAL(20,2) NOT NULL;
 
 -- DropTable
 DROP TABLE "client";
@@ -185,6 +246,18 @@ CREATE TABLE "user_role" (
     CONSTRAINT "user_role_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "asset_voucher" (
+    "id" SERIAL NOT NULL,
+    "asset_id" INTEGER NOT NULL,
+    "voucher_id" INTEGER NOT NULL,
+    "created_at" INTEGER NOT NULL,
+    "updated_at" INTEGER NOT NULL,
+    "deleted_at" INTEGER,
+
+    CONSTRAINT "asset_voucher_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "kyc_bookkeeper_personal_id_file_id_key" ON "kyc_bookkeeper"("personal_id_file_id");
 
@@ -193,6 +266,9 @@ CREATE UNIQUE INDEX "kyc_bookkeeper_certification_file_id_key" ON "kyc_bookkeepe
 
 -- CreateIndex
 CREATE UNIQUE INDEX "company_setting_company_id_key" ON "company_setting"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "asset_voucher_asset_id_voucher_id_key" ON "asset_voucher"("asset_id", "voucher_id");
 
 -- AddForeignKey
 ALTER TABLE "accounting_setting" ADD CONSTRAINT "accounting_setting_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -217,6 +293,15 @@ ALTER TABLE "user_role" ADD CONSTRAINT "user_role_user_id_fkey" FOREIGN KEY ("us
 
 -- AddForeignKey
 ALTER TABLE "user_role" ADD CONSTRAINT "user_role_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "asset" ADD CONSTRAINT "asset_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "asset_voucher" ADD CONSTRAINT "asset_voucher_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "asset"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "asset_voucher" ADD CONSTRAINT "asset_voucher_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 
 ALTER SEQUENCE "accounting_setting_id_seq" RESTART WITH 10000000;

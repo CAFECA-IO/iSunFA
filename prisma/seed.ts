@@ -29,6 +29,8 @@ import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
 import file from '@/seed_json/file.json';
+import assets from '@/seed_json/asset.json';
+import assetVouchers from '@/seed_json/asset_voucher.json';
 
 const prisma = new PrismaClient();
 
@@ -244,6 +246,49 @@ async function createLineItems() {
   await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
 }
 
+/* eslint-disable */
+async function createAsset() {
+  assets.forEach(async (asset: any) => {
+    // // 檢查公司是否存在
+    // const company = await prisma.company.findUnique({
+    //   where: { id: asset.companyId },
+    // });
+
+    // if (!company) {
+    //   console.warn(`公司 ID ${asset.companyId} 不存在，跳過資產 "${asset.name}" 的插入`);
+    //   return;
+    // }
+
+    // 插入資產資料
+    await prisma.asset.create({
+      data: asset,
+    });
+  });
+}
+
+async function createAssetVoucher() {
+  for (const assetVoucher of assetVouchers) {
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetVoucher.assetId },
+    });
+
+    const voucher = await prisma.voucher.findUnique({
+      where: { id: assetVoucher.voucherId },
+    });
+
+    if (!asset || !voucher) {
+      console.warn(
+        `Asset ID ${assetVoucher.assetId} 或 Voucher ID ${assetVoucher.voucherId} 不存在，跳過 AssetVoucher 的插入`
+      );
+      continue;
+    }
+
+    await prisma.assetVoucher.create({
+      data: assetVoucher,
+    });
+  }
+}
+
 async function main() {
   await createFile();
   await createCompany();
@@ -295,6 +340,7 @@ async function main() {
 
   await createJournal();
   await createVoucher();
+  await createAsset();
 
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
@@ -302,13 +348,16 @@ async function main() {
   await createLineItems();
   await createSalaryRecord();
   await createVoucherSalaryRecordFolder();
+  await createAssetVoucher();
 }
 
 main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async () => {
+  .catch(async (error) => {
+    console.error('種子資料插入失敗:', error);
+    throw error;
     // Info (20240316 - Murky) - disconnect prisma
     await prisma.$disconnect();
     process.exit(1);
