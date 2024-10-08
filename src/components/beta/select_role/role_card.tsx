@@ -1,0 +1,105 @@
+import React from 'react';
+import Image from 'next/image';
+import { RoleId } from '@/constants/role';
+
+interface RoleCardProps {
+  role: React.SetStateAction<string>;
+  setRole: React.Dispatch<React.SetStateAction<string>>;
+}
+
+interface CardProps {
+  roleId: RoleId;
+  isRoleDisabled: boolean;
+  title: string;
+  imageSrc: string;
+  altText: string;
+  role: React.SetStateAction<string>;
+  setRole: React.Dispatch<React.SetStateAction<string>>;
+}
+
+// Info: (20241007 - Liz) 每個角色卡片的資訊
+const cards: {
+  roleId: RoleId;
+  isRoleDisabled: boolean;
+  title: string;
+  imageSrc: string;
+  altText: string;
+}[] = [
+  {
+    roleId: RoleId.BOOKKEEPER,
+    isRoleDisabled: false,
+    title: 'Bookkeeper',
+    imageSrc: '/images/bookkeeper.png',
+    altText: 'bookkeeper',
+  },
+  {
+    roleId: RoleId.EDUCATIONAL_TRIAL_VERSION,
+    isRoleDisabled: false,
+    title: 'Educational Trial Version',
+    imageSrc: '/images/educational_trial.png',
+    altText: 'educational_trial',
+  },
+  {
+    roleId: RoleId.ACCOUNTANT,
+    isRoleDisabled: true,
+    title: 'Accountant',
+    imageSrc: '/images/accountant.png',
+    altText: 'accountant',
+  },
+];
+
+// Info: (20241007 - Liz) 卡片元件
+const Card: React.FC<CardProps> = ({
+  roleId,
+  isRoleDisabled,
+  title,
+  imageSrc,
+  altText,
+  role,
+  setRole,
+}) => {
+  const isRoleSelected = role === roleId;
+
+  return (
+    <button
+      type="button"
+      onClick={() => setRole(roleId)}
+      disabled={isRoleDisabled}
+      className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:opacity-50 desktop:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'} ${isRoleDisabled && 'pointer-events-none'}`}
+    >
+      <p
+        className={`-skew-x-20 pl-110px text-center text-xl font-bold desktop:w-300px desktop:pl-100px desktop:text-32px ${roleId === RoleId.EDUCATIONAL_TRIAL_VERSION && 'pl-100px desktop:text-28px'}`}
+      >
+        {title}
+      </p>
+      <Image
+        src={imageSrc}
+        alt={altText}
+        width={48}
+        height={48}
+        className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${role === roleId ? 'border-4 border-stroke-brand-primary' : ''}`}
+      />
+    </button>
+  );
+};
+
+const RoleCard = ({ role, setRole }: RoleCardProps) => {
+  return (
+    <div className="flex gap-80px">
+      {cards.map((card) => (
+        <Card
+          key={card.roleId}
+          roleId={card.roleId}
+          isRoleDisabled={card.isRoleDisabled}
+          title={card.title}
+          imageSrc={card.imageSrc}
+          altText={card.altText}
+          role={role}
+          setRole={setRole}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default RoleCard;

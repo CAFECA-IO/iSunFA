@@ -183,7 +183,7 @@ function formatPayloadFromIReport(report: IReport, company: Company): FinancialR
   return {
     company: {
       id: company.id,
-      code: company.code,
+      code: company.taxId,
       name: company.name,
     },
     reportType,

@@ -37,8 +37,8 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
         },
         body: {
           name: companyName,
-          code: selectedCompany.code,
-          regional: selectedCompany.regional,
+          code: selectedCompany.taxId,
+          regional: 'Taiwan', // Deprecated: (20240930 - Jacky) Mock data for beta change
         },
       });
 

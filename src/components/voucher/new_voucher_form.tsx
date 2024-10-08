@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { FaChevronDown, FaPlus } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
-import { LuTrash2 } from 'react-icons/lu';
-import { FiBookOpen, FiSearch } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { default30DayPeriodInSec } from '@/constants/display';
-import { VoucherType, AccountType } from '@/constants/account';
+import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
+import { VoucherType } from '@/constants/account';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
@@ -25,260 +26,27 @@ interface ILineItem {
   debit: number;
   credit: number;
 }
-
 interface ICounterparty {
   id: number;
   code: string;
   name: string;
 }
 
-const VoucherLineItem = ({
-  deleteHandler,
-  accountTitleHandler,
-  particularsChangeHandler,
-  debitChangeHandler,
-  creditChangeHandler,
-  flagOfClear,
-}: {
-  deleteHandler: () => void;
-  accountTitleHandler: (account: IAccount | null) => void;
-  particularsChangeHandler: (particulars: string) => void;
-  debitChangeHandler: (debit: number) => void;
-  creditChangeHandler: (credit: number) => void;
-  flagOfClear: boolean;
-}) => {
-  const { t } = useTranslation('common');
-  const { accountList } = useAccountingCtx();
-
-  const [accountTitle, setAccountTitle] = useState<string>(
-    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
-  );
-  const [searchKeyword, setSearchKeyword] = useState<string>('');
-  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
-
-  const [particulars, setParticulars] = useState<string>('');
-  const [debitInput, setDebitInput] = useState<string>('');
-  const [creditInput, setCreditInput] = useState<string>('');
-
-  const accountInputRef = useRef<HTMLInputElement>(null);
-
-  const {
-    targetRef: accountingRef,
-    componentVisible: isAccountingMenuOpen,
-    setComponentVisible: setAccountingMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const {
-    targetRef: accountRef,
-    componentVisible: isAccountEditing,
-    setComponentVisible: setIsAccountEditing,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  // Info: (20241001 - Julian) 搜尋 Account
-  useEffect(() => {
-    const filteredList = accountList.filter((account) => {
-      // Info: (20241001 - Julian) 編號(數字)搜尋: 字首符合
-      if (searchKeyword.match(/^\d+$/)) {
-        const codeMatch = account.code.toLowerCase().startsWith(searchKeyword.toLowerCase());
-        return codeMatch;
-      } else if (searchKeyword !== '') {
-        // Info: (20241001 - Julian) 名稱搜尋: 部分符合
-        const nameMatch = account.name.toLowerCase().includes(searchKeyword.toLowerCase());
-        return nameMatch;
-      }
-      return true;
-    });
-    setFilteredAccountList(filteredList);
-  }, [searchKeyword, accountList]);
-
-  useEffect(() => {
-    // Info: (20241004 - Julian) 查詢會計科目關鍵字時聚焦
-    if (isAccountEditing && accountInputRef.current) {
-      accountInputRef.current.focus();
-    }
-
-    // Info: (20241001 - Julian) 查詢模式關閉後清除搜尋關鍵字
-    if (!isAccountEditing) {
-      setSearchKeyword('');
-    }
-  }, [isAccountEditing]);
-
-  useEffect(() => {
-    // Info: (20241004 - Julian) Reset All State
-    setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
-    setParticulars('');
-    setDebitInput('');
-    setCreditInput('');
-  }, [flagOfClear]);
-
-  const isDebitDisabled = creditInput !== '';
-  const isCreditDisabled = debitInput !== '';
-
-  const accountSearchHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchKeyword(e.target.value);
-    setAccountingMenuOpen(true);
-  };
-
-  const particularsInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setParticulars(e.target.value);
-    particularsChangeHandler(e.target.value);
-  };
-
-  const debitInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字
-    const debitValue = e.target.value.replace(/\D/g, '');
-    // Info: (20241001 - Julian) 加入千分位逗號
-    setDebitInput(numberWithCommas(debitValue));
-    // Info: (20241001 - Julian) 設定 Debit
-    debitChangeHandler(Number(debitValue));
-  };
-
-  const creditInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字
-    const creditValue = e.target.value.replace(/\D/g, '');
-    // Info: (20241001 - Julian) 加入千分位逗號
-    setCreditInput(numberWithCommas(creditValue));
-    // Info: (20241001 - Julian) 設定 Credit
-    creditChangeHandler(Number(creditValue));
-  };
-
-  const accountEditingHandler = () => {
-    setIsAccountEditing(true);
-    setAccountingMenuOpen(true);
-  };
-
-  // Info: (20241004 - Julian) Remove AccountType.OTHER_COMPREHENSIVE_INCOME, AccountType.CASH_FLOW, AccountType.OTHER
-  const accountTypeList = Object.values(AccountType).filter(
-    (value) =>
-      value !== AccountType.OTHER_COMPREHENSIVE_INCOME &&
-      value !== AccountType.CASH_FLOW &&
-      value !== AccountType.OTHER
-  );
-
-  const accountTitleMenu = accountTypeList.map((value) => {
-    // Info: (20241004 - Julian) 子項目
-    const childAccountList = filteredAccountList.filter((account) => account.type === value);
-    const childAccountMenu = childAccountList.map((account) => {
-      const accountClickHandler = () => {
-        setAccountTitle(`${account.code} ${account.name}`);
-        // Info: (20241001 - Julian) 關閉 Accounting Menu 和編輯狀態
-        setAccountingMenuOpen(false);
-        setIsAccountEditing(false);
-        // Info: (20241001 - Julian) 重置搜尋關鍵字
-        setSearchKeyword('');
-        // Info: (20241001 - Julian) 設定 Account title
-        accountTitleHandler(account);
-      };
-
-      return (
-        <button
-          key={account.id}
-          type="button"
-          onClick={accountClickHandler}
-          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-        >
-          <p className="text-dropdown-text-primary">{account.code}</p>
-          <p className="text-dropdown-text-secondary">{account.name}</p>
-        </button>
-      );
-    });
-
-    return (
-      // Info: (20241004 - Julian) 顯示有子項目的 AccountType
-      childAccountList.length > 0 ? (
-        <div className="flex flex-col">
-          <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-            {t(`journal:ACCOUNT_TYPE.${value.toUpperCase()}`)}
-          </p>
-          <div className="flex flex-col py-4px">{childAccountMenu}</div>
-        </div>
-      ) : null
-    );
-  });
-
-  // Info: (20241004 - Julian) 沒有子項目時顯示 no accounting found
-  const isShowAccountingMenu =
-    // Info: (20241004 - Julian) 找出有子項目的 AccountType
-    accountTitleMenu.filter((value) => value !== null).length > 0 ? (
-      accountTitleMenu
-    ) : (
-      <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-        {t('journal:ADD_NEW_VOUCHER.NO_ACCOUNTING_FOUND')}
-      </p>
-    );
-
-  const displayedAccountingMenu = isAccountingMenuOpen ? (
-    <div
-      ref={accountingRef}
-      className="absolute top-50px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-dropmenu"
-    >
-      <div className="flex max-h-150px flex-col overflow-y-auto">{isShowAccountingMenu}</div>
-    </div>
-  ) : null;
-
-  const isEditAccounting = isAccountEditing ? (
-    <input
-      ref={accountInputRef}
-      value={searchKeyword}
-      onChange={accountSearchHandler}
-      placeholder={accountTitle}
-      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
-    />
-  ) : (
-    <p className="truncate text-input-text-input-filled">{accountTitle}</p>
-  );
-
-  return (
-    <>
-      {/* Info: (20240927 - Julian) Accounting */}
-      <div className="relative col-span-3">
-        <div
-          ref={accountRef}
-          onClick={accountEditingHandler}
-          className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : 'border-input-stroke-input'}`}
-        >
-          {isEditAccounting}
-          <div className="h-20px w-20px">
-            <FiBookOpen size={20} />
-          </div>
-        </div>
-        {/* Info: (20241001 - Julian) Accounting Menu */}
-        {displayedAccountingMenu}
-      </div>
-      {/* Info: (20240927 - Julian) Particulars */}
-      <input
-        value={particulars}
-        onChange={particularsInputChangeHandler}
-        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none"
-      />
-      {/* Info: (20240927 - Julian) Debit */}
-      <input
-        value={debitInput}
-        onChange={debitInputChangeHandler}
-        placeholder="0"
-        disabled={isDebitDisabled}
-        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-right text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder"
-      />
-      {/* Info: (20240927 - Julian) Credit */}
-      <input
-        value={creditInput}
-        onChange={creditInputChangeHandler}
-        placeholder="0"
-        disabled={isCreditDisabled}
-        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-right text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder"
-      />
-      {/* Info: (20240927 - Julian) Delete button */}
-      <div className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover">
-        <button type="button" className="p-12px" onClick={deleteHandler}>
-          <LuTrash2 size={22} />
-        </button>
-      </div>
-    </>
-  );
-};
+enum RecurringUnit {
+  MONTH = 'month',
+  WEEK = 'week',
+}
 
 const NewVoucherForm = () => {
   const { t } = useTranslation('common');
+  const router = useRouter();
+
+  const inputStyle = {
+    NORMAL:
+      'border-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
+    ERROR:
+      'border-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
+  };
 
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
@@ -322,10 +90,12 @@ const NewVoucherForm = () => {
     },
   ];
 
+  // Info: (20241004 - Julian) form state
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [type, setType] = useState<string>(VoucherType.EXPENSE);
   const [note, setNote] = useState<string>('');
 
+  // Info: (20241004 - Julian) counterparty state
   const [counterKeyword, setCounterKeyword] = useState<string>('');
   const [counterparty, setCounterparty] = useState<string>(
     t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')
@@ -333,34 +103,58 @@ const NewVoucherForm = () => {
   const [filteredCounterparty, setFilteredCounterparty] =
     useState<ICounterparty[]>(dummyCounterparty);
 
+  // Info: (20241004 - Julian) recurring state
   const [isRecurring, setIsRecurring] = useState<boolean>(false);
-  const [lineItems, setLineItems] = useState<ILineItem[]>([initialVoucherLine]);
+  const [recurringPeriod, setRecurringPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
+  const [recurringUnit, setRecurringUnit] = useState<RecurringUnit>(RecurringUnit.MONTH);
+  const [recurringArray, setRecurringArray] = useState<number[]>([]);
 
   // Info: (20241004 - Julian) voucher line state
+  const [lineItems, setLineItems] = useState<ILineItem[]>([initialVoucherLine]);
+
+  // Info: (20241004 - Julian) verification state
   const [totalCredit, setTotalCredit] = useState<number>(0);
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
   const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
 
-  // Info: (20241004 - Julian) 清除所有資料
-  const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
+  // Info: (20241004 - Julian) style state
+  const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
+  const [isShowCounterHint, setIsShowCounterHint] = useState<boolean>(false);
+  const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
+  const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
 
+  // Info: (20241004 - Julian) 清空表單 flag
+  const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
+  //  Info: (20241007 - Julian) 送出表單 flag
+  const [flagOfSubmit, setFlagOfSubmit] = useState<boolean>(false);
+
+  // Info: (20241004 - Julian) Type 下拉選單
   const {
     targetRef: typeRef,
     componentVisible: typeVisible,
     setComponentVisible: setTypeVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241004 - Julian) Counterparty 下拉選單
   const {
     targetRef: counterMenuRef,
     componentVisible: isCounterMenuOpen,
     setComponentVisible: setCounterMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241004 - Julian) Counterparty 搜尋
   const {
     targetRef: counterpartyRef,
     componentVisible: isSearchCounterparty,
     setComponentVisible: setIsSearchCounterparty,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20241007 - Julian) Recurring 下拉選單
+  const {
+    targetRef: recurringRef,
+    componentVisible: isRecurringMenuOpen,
+    setComponentVisible: setRecurringMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const counterpartyInputRef = useRef<HTMLInputElement>(null);
@@ -417,7 +211,43 @@ const NewVoucherForm = () => {
     setFilteredCounterparty(filteredList);
   }, [counterKeyword]);
 
-  useEffect(() => {}, []);
+  // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
+  useEffect(() => {
+    setRecurringArray([]);
+  }, [recurringUnit]);
+
+  // Info: (20241007 - Julian) 日期未選擇時顯示提示
+  useEffect(() => {
+    if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
+      setIsShowDateHint(false);
+    }
+  }, [date]);
+
+  // Info: (20241004 - Julian) 交易對象未選擇時顯示提示
+  useEffect(() => {
+    if (counterparty !== '' && counterparty !== t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')) {
+      setIsShowCounterHint(false);
+    }
+  }, [counterparty]);
+
+  // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
+  useEffect(() => {
+    if (isRecurring && recurringPeriod.startTimeStamp !== 0 && recurringPeriod.endTimeStamp !== 0) {
+      setIsShowRecurringPeriodHint(false);
+    }
+  }, [isRecurring, recurringPeriod]);
+
+  useEffect(() => {
+    if (isRecurring && recurringArray.length > 0) {
+      setIsShowRecurringArrayHint(false);
+    }
+  }, [recurringArray]);
+
+  // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
+  const totalStyle =
+    totalCredit === totalDebit && totalCredit !== 0
+      ? 'text-text-state-success-invert'
+      : 'text-text-state-error-invert';
 
   const AddNewVoucherLine = () => {
     // Info: (20241001 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
@@ -433,20 +263,6 @@ const NewVoucherForm = () => {
       },
     ]);
   };
-
-  const totalStyle =
-    totalCredit === totalDebit ? 'text-text-state-success-invert' : 'text-text-state-error-invert';
-
-  // Info: (20241004 - Julian) 保存條件
-  const saveBtnDisabled =
-    (date.startTimeStamp === 0 && date.endTimeStamp === 0) || // Info: (20241004 - Julian) 日期不可為 0
-    type === '' || // Info: (20241004 - Julian) 類型不可為空
-    counterparty === '' ||
-    counterparty === t('journal:ADD_NEW_VOUCHER.COUNTERPARTY') || // Info: (20241004 - Julian) 交易對象不可為空
-    (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
-    totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
-    haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
-    isAccountingNull; // Info: (20241004 - Julian) 沒有未選擇的會計科目
 
   const typeToggleHandler = () => {
     setTypeVisible(!typeVisible);
@@ -469,22 +285,30 @@ const NewVoucherForm = () => {
     setIsRecurring(!isRecurring);
   };
 
+  const recurringUnitToggleHandler = () => {
+    setRecurringMenuOpen(!isRecurringMenuOpen);
+  };
+
   // ToDo: (20240926 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
     return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
   };
 
-  // Info: (20241004 - Julian) 清除所有資料
+  // Info: (20241004 - Julian) 清空表單
   const clearAllHandler = () => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
     setNote('');
     setCounterparty(t('journal:ADD_NEW_VOUCHER.COUNTERPARTY'));
     setIsRecurring(false);
+    setRecurringPeriod(default30DayPeriodInSec);
+    setRecurringUnit(RecurringUnit.MONTH);
+    setRecurringArray([]);
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
   };
 
+  // Info: (20241004 - Julian) Message Modal
   const clearClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
@@ -498,9 +322,7 @@ const NewVoucherForm = () => {
   };
 
   // ToDo: (20240926 - Julian) Save voucher function
-  const saveVoucher = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const saveVoucher = async () => {
     // Info: (20241004 - Julian) for debug
     // eslint-disable-next-line no-console
     console.log(
@@ -514,9 +336,58 @@ const NewVoucherForm = () => {
       counterparty,
       '\nRecurring:',
       isRecurring,
-      '\nLineItems:',
+      isRecurring
+        ? `Period: ${recurringPeriod.startTimeStamp} ~ ${recurringPeriod.endTimeStamp}`
+        : '',
+      isRecurring
+        ? `${recurringArray.map((item) => (recurringUnit === RecurringUnit.WEEK ? `W${item}` : `M${item}`))}
+      `
+        : '',
+      'LineItems:',
       lineItems
     );
+  };
+
+  const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Info: (20241007 - Julian) 若任一條件不符，則中斷 function
+    if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
+      // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
+      setIsShowDateHint(true);
+      router.push('#voucher-date');
+    } else if (counterparty === '' || counterparty === t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')) {
+      // Info: (20241004 - Julian) 交易對象不可為空：顯示類型提示，並定位到類型欄位
+      setIsShowCounterHint(true);
+      router.push('#voucher-counterparty');
+    } else if (
+      isRecurring &&
+      (recurringPeriod.startTimeStamp === 0 || recurringPeriod.endTimeStamp === 0)
+    ) {
+      // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
+      setIsShowRecurringPeriodHint(true);
+      router.push('#voucher-recurring');
+    } else if (isRecurring && recurringArray.length === 0) {
+      // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
+      setIsShowRecurringArrayHint(true);
+      router.push('#voucher-recurring');
+    } else if (
+      (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
+      totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
+      haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
+      isAccountingNull // Info: (20241004 - Julian) 沒有未選擇的會計科目
+    ) {
+      setFlagOfSubmit(!flagOfSubmit);
+      router.push('#voucher-line-block');
+    } else {
+      // Info: (20241007 - Julian) 儲存傳票
+      saveVoucher();
+
+      // Info: (20241007 - Julian) 重設提示
+      setIsShowDateHint(false);
+      setIsShowCounterHint(false);
+      setFlagOfSubmit(!flagOfSubmit);
+    }
   };
 
   const typeDropdownMenu = typeVisible ? (
@@ -554,7 +425,9 @@ const NewVoucherForm = () => {
       className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
     />
   ) : (
-    <p className="truncate text-input-text-input-filled">{counterparty}</p>
+    <p className={`truncate ${isShowCounterHint ? inputStyle.ERROR : inputStyle.NORMAL}`}>
+      {counterparty}
+    </p>
   );
 
   const counterMenu =
@@ -641,12 +514,16 @@ const NewVoucherForm = () => {
         debitChangeHandler={debitChangeHandler}
         creditChangeHandler={creditChangeHandler}
         flagOfClear={flagOfClear}
+        flagOfSubmit={flagOfSubmit}
+        accountIsNull={isAccountingNull}
+        amountIsZero={haveZeroLine}
+        amountNotEqual={totalCredit !== totalDebit}
       />
     );
   });
 
   const voucherLineBlock = (
-    <div className="col-span-2">
+    <div id="voucher-line-block" className="col-span-2">
       {/* Info: (20240927 - Julian) Table */}
       <div className="grid w-full grid-cols-13 gap-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
         {/* Info: (20240927 - Julian) Table Header */}
@@ -687,8 +564,85 @@ const NewVoucherForm = () => {
     </div>
   );
 
+  const recurringUnitMenu = (
+    <div
+      ref={recurringRef}
+      className={`absolute left-0 top-12 ${isRecurringMenuOpen ? 'flex' : 'hidden'} w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px`}
+    >
+      {Object.values(RecurringUnit).map((unit) => {
+        const recurringUnitClickHandler = () => {
+          setRecurringUnit(unit);
+          setRecurringMenuOpen(false);
+        };
+        return (
+          <button
+            key={unit}
+            type="button"
+            className="py-8px hover:bg-dropdown-surface-menu-background-secondary"
+            onClick={recurringUnitClickHandler}
+          >
+            {unit}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const recurringUnitCheckboxes =
+    recurringUnit === RecurringUnit.WEEK
+      ? Array.from({ length: 7 }, (_, i) => {
+          const week = i + 1;
+          const weekChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.checked) {
+              setRecurringArray([...recurringArray, week]);
+            } else {
+              setRecurringArray(recurringArray.filter((item) => item !== week));
+            }
+          };
+          // Info: (20241007 - Julian) 檢查 Array 是否有該值
+          const weekChecked = recurringArray.includes(week);
+
+          return (
+            <div key={week} className="flex items-center gap-8px">
+              <input
+                type="checkbox"
+                id={`week-${week}`}
+                checked={weekChecked}
+                className={checkboxStyle}
+                onChange={weekChangeHandler}
+              />
+              <label htmlFor={`week-${week}`}>{week}</label>
+            </div>
+          );
+        })
+      : Array.from({ length: 12 }, (_, i) => {
+          const month = i + 1;
+          const monthChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.checked) {
+              setRecurringArray([...recurringArray, month]);
+            } else {
+              setRecurringArray(recurringArray.filter((item) => item !== month));
+            }
+          };
+          // Info: (20241007 - Julian) 檢查 Array 是否有該值
+          const monthChecked = recurringArray.includes(month);
+
+          return (
+            <div key={month} className="flex items-center gap-8px">
+              <input
+                type="checkbox"
+                id={`month-${month}`}
+                checked={monthChecked}
+                className={checkboxStyle}
+                onChange={monthChangeHandler}
+              />
+              <label htmlFor={`month-${month}`}>{month}</label>
+            </div>
+          );
+        });
+
   return (
-    <div className="relative flex flex-col items-center gap-40px px-40px py-40px">
+    <div className="relative flex flex-col items-center gap-40px p-40px">
       {/* ToDo: (20240926 - Julian) AI analyze */}
       <div className="w-full bg-surface-brand-primary-moderate p-40px text-center text-white">
         This is AI analyze
@@ -699,14 +653,19 @@ const NewVoucherForm = () => {
       </div>
 
       {/* Info: (20240926 - Julian) form */}
-      <form onSubmit={saveVoucher} className="grid w-full grid-cols-2 gap-24px">
+      <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
         {/* Info: (20240926 - Julian) Date */}
-        <div className="flex flex-col gap-8px">
+        <div id="voucher-date" className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
             {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
             <span className="text-text-state-error">*</span>
           </p>
-          <DatePicker type={DatePickerType.TEXT_DATE} period={date} setFilteredPeriod={setDate} />
+          <DatePicker
+            type={DatePickerType.TEXT_DATE}
+            period={date}
+            setFilteredPeriod={setDate}
+            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
+          />
         </div>
         {/* Info: (20240926 - Julian) Type */}
         <div className="flex flex-col gap-8px">
@@ -737,7 +696,7 @@ const NewVoucherForm = () => {
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
-        <div className="relative col-span-2 flex flex-col gap-8px">
+        <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
           <p className="font-bold text-input-text-primary">
             {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
             <span className="text-text-state-error">*</span>
@@ -745,7 +704,7 @@ const NewVoucherForm = () => {
           <div
             ref={counterpartyRef}
             onClick={counterSearchToggleHandler}
-            className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : 'border-input-stroke-input'}`}
+            className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
           >
             {displayedCounterparty}
             <div className="h-20px w-20px">
@@ -755,10 +714,51 @@ const NewVoucherForm = () => {
           {/* Info: (20241004 - Julian) Counterparty drop menu */}
           {counterpartyDropMenu}
         </div>
-        {/* Info: (20240926 - Julian) switch */}
-        <div className="col-span-2 flex items-center gap-16px text-switch-text-primary">
-          <Toggle id="recurring-toggle" getToggledState={recurringToggleHandler} />
-          <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+        {/* Info: (20241007 - Julian) Recurring */}
+        <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
+          {/* Info: (20241007 - Julian) switch */}
+          <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
+            <Toggle
+              id="recurring-toggle"
+              initialToggleState={isRecurring}
+              getToggledState={recurringToggleHandler}
+            />
+            <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+          </div>
+          {/* Info: (20241007 - Julian) recurring period */}
+          <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
+            <DatePicker
+              type={DatePickerType.TEXT_PERIOD}
+              period={recurringPeriod}
+              setFilteredPeriod={setRecurringPeriod}
+              datePickerClassName="w-full"
+              btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
+            />
+          </div>
+          {/* Info: (20241007 - Julian) recurring unit */}
+          <div
+            className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
+          >
+            {/* Info: (20241007 - Julian) recurring unit block */}
+            <div className="flex w-160px items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+              <p className="px-12px py-10px text-input-text-input-placeholder">Every</p>
+              <div
+                onClick={recurringUnitToggleHandler}
+                className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
+              >
+                <p>{recurringUnit}</p>
+                <FaChevronDown />
+                {/* Info: (20240926 - Julian) recurring unit dropdown */}
+                {recurringUnitMenu}
+              </div>
+            </div>
+            {/* Info: (20241007 - Julian) recurring unit checkbox */}
+            <div
+              className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
+            >
+              {recurringUnitCheckboxes}
+            </div>
+          </div>
         </div>
         {/* Info: (20240926 - Julian) voucher line block */}
         {voucherLineBlock}
@@ -767,7 +767,7 @@ const NewVoucherForm = () => {
           <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
-          <Button type="submit" disabled={saveBtnDisabled}>
+          <Button type="submit">
             <p>{t('common:COMMON.SAVE')}</p>
             <BiSave size={20} />
           </Button>
