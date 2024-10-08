@@ -10,7 +10,7 @@ const VoucherListPageBody = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px px-40px py-40px">
+    <div className="relative flex flex-col items-center gap-40px p-40px">
       {/* Info: (20240920 - Julian) Add New Voucher button */}
       <div className="ml-auto">
         <Button type="button">
