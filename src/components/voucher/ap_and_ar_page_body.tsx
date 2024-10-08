@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import APandARList from '@/components/voucher/ap_and_ar_list';
 import Tabs from '@/components/tabs/tabs';
 
-const APandARPageBody = () => {
+const APandARPageBody: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   return (

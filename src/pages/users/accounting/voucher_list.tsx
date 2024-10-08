@@ -5,7 +5,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import VoucherListPageBody from '@/components/voucher/voucher_list_page_body';
 
-const VoucherListPage = () => {
+const VoucherListPage: React.FC = () => {
   const { t } = useTranslation('common');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);

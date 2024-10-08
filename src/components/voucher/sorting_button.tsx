@@ -1,17 +1,16 @@
 // Info: (20240924 - tzuhan) To Julian, this component is seperated from your VourchList
 // Info: (20240920 - Julian) 排序按鈕
+import React from 'react';
 import { SortOrder } from '@/constants/sort';
 import { BsFillTriangleFill } from 'react-icons/bs';
 
-const SortingButton = ({
-  string,
-  sortOrder,
-  setSortOrder,
-}: {
+interface ISortingButtonProps {
   string: string;
   sortOrder: null | SortOrder;
   setSortOrder: (sortOrder: null | SortOrder) => void;
-}) => {
+}
+
+const SortingButton: React.FC<ISortingButtonProps> = ({ string, sortOrder, setSortOrder }) => {
   // Info: (20240920 - Julian) 初始無排序 -> 點擊後變成 ASC -> 再點擊變成 DESC -> 再點擊變回無排序
   const clickHandler = () => {
     switch (sortOrder) {

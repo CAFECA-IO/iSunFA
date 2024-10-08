@@ -37,7 +37,7 @@ enum RecurringUnit {
   WEEK = 'week',
 }
 
-const NewVoucherForm = () => {
+const NewVoucherForm: React.FC = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
