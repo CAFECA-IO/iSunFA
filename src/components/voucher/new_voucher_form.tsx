@@ -536,10 +536,9 @@ const NewVoucherForm = () => {
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER.DEBIT')}
         </div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-end-13 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER.CREDIT')}
         </div>
-        <div className=""></div>
 
         {/* Info: (20240927 - Julian) Table Body */}
         {voucherLines}
