@@ -522,4 +522,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST,
   }),
+  [APIName.VOUCHER_GET_BY_ID_V2]: createConfig({
+    name: APIName.VOUCHER_GET_BY_ID_V2,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_GET_BY_ID_V2,
+  }),
 };
