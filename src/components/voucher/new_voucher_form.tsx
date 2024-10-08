@@ -703,7 +703,7 @@ const NewVoucherForm: React.FC = () => {
           <div
             ref={counterpartyRef}
             onClick={counterSearchToggleHandler}
-            className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
+            className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
           >
             {displayedCounterparty}
             <div className="h-20px w-20px">
