@@ -128,15 +128,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const redirectToLoginPage = () => {
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後重新導向
-      const currentPath = router.asPath;
-      localStorage.setItem('redirectPath', currentPath);
+      // Deprecated: (20241008 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('呼叫 redirectToLoginPage 並且重新導向到登入頁面');
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
     // Deprecated: (20241001 - Liz)
     // eslint-disable-next-line no-console
-    console.log('呼叫 redirectToLoginPage');
+    console.log('呼叫 redirectToLoginPage (但不一定真的重新導向喔)');
   };
 
   // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
@@ -368,6 +368,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (!isProfileFetchNeeded()) return;
 
     setIsAuthLoading(true);
+
+    // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後可以重新導向回原本的路徑
+    const currentPath = router.asPath;
+    localStorage.setItem('redirectPath', currentPath);
+
+    // Deprecated: (20241008 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('儲存現在路由 currentPath:', currentPath);
 
     const {
       data: StatusInfo,
