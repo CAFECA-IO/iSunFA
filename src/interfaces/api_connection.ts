@@ -41,6 +41,7 @@ export type IAPIName =
   | 'JOURNAL_DELETE'
   | 'REPORT_LIST'
   | 'REPORT_GET_BY_ID'
+  | 'REPORT_GET_V2'
   | 'REPORT_GENERATE'
   | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'

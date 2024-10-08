@@ -76,6 +76,7 @@ export enum APIName {
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
+  REPORT_GET_V2 = 'REPORT_GET_V2',
   REPORT_GENERATE = 'REPORT_GENERATE',
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
@@ -156,6 +157,7 @@ export enum APIPath {
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/journal/:journalId`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
+  REPORT_GET_V2 = `${apiPrefixV2}/company/:companyId/report`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
   STATUS_INFO_GET = `${apiPrefix}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
@@ -526,5 +528,14 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_GET_BY_ID_V2,
     method: HttpMethod.GET,
     path: APIPath.VOUCHER_GET_BY_ID_V2,
+  }),
+  /**
+   * Info: (20241007 - Murky)
+   * Below is v2 API
+   */
+  [APIName.REPORT_GET_V2]: createConfig({
+    name: APIName.REPORT_GET_V2,
+    method: HttpMethod.GET,
+    path: APIPath.REPORT_GET_V2,
   }),
 };
