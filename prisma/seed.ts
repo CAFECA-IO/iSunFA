@@ -247,67 +247,15 @@ async function createLineItems() {
 }
 
 async function createAsset() {
-  assets.forEach(
-    async (asset: {
-      id: number;
-      companyId: number;
-      name: string;
-      type: string;
-      number: string;
-      acquisitionDate: number;
-      purchasePrice: number;
-      accumulatedDepreciation: number;
-      residualValue: number;
-      remainingLife: number;
-      status: string;
-      depreciationStart: number;
-      depreciationMethod: string;
-      usefulLife: number;
-      note: string;
-      createdAt: number;
-      updatedAt: number;
-    }) => {
-      const company = await prisma.company.findUnique({
-        where: { id: asset.companyId },
-      });
-
-      if (!company) {
-        return;
-      }
-
-      await prisma.asset.create({
-        data: asset,
-      });
-    }
-  );
+  await prisma.asset.createMany({
+    data: assets,
+  });
 }
 
 async function createAssetVoucher() {
-  assetVouchers.forEach(
-    async (assetVoucher: {
-      id: number;
-      assetId: number;
-      voucherId: number;
-      createdAt: number;
-      updatedAt: number;
-    }) => {
-      const asset = await prisma.asset.findUnique({
-        where: { id: assetVoucher.assetId },
-      });
-
-      const voucher = await prisma.voucher.findUnique({
-        where: { id: assetVoucher.voucherId },
-      });
-
-      if (!asset || !voucher) {
-        return;
-      }
-
-      await prisma.assetVoucher.create({
-        data: assetVoucher,
-      });
-    }
-  );
+  await prisma.assetVoucher.createMany({
+    data: assetVouchers,
+  });
 }
 
 async function main() {
