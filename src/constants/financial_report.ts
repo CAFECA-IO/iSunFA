@@ -21,5 +21,5 @@ export const EMPTY_I_ACCOUNT_READY_FRONTEND: IAccountReadyForFrontend = {
   prePeriodPercentage: 0,
   prePeriodPercentageString: '0',
   indent: 0,
-  children: {},
+  children: [],
 };

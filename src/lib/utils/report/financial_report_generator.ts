@@ -185,7 +185,7 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
           prePeriodAmountString,
           prePeriodPercentageString,
           indent: curPeriodAccount.indent,
-          children: {},
+          children: [],
         };
         curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
       });

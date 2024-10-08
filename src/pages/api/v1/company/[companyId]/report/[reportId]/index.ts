@@ -108,7 +108,7 @@ function transformDetailsIntoGeneral(
       prePeriodPercentage: 0,
       prePeriodPercentageString: '0',
       indent: account.indent,
-      children: {},
+      children: [],
     };
   });
   return general;

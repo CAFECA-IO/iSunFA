@@ -53,7 +53,7 @@ export interface IAccountReadyForFrontend {
   prePeriodPercentage: number;
   prePeriodPercentageString: string;
   indent: number;
-  children: { [code: string]: IAccountReadyForFrontend };
+  children: IAccountReadyForFrontend[];
 }
 
 export type IAccountQueryArgs = {

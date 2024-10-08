@@ -12,9 +12,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
-type ReportObject = {
-  [code: string]: IAccountReadyForFrontend;
-};
+type ReportObject = IAccountReadyForFrontend[];
 
 type ReportReturnType = {
   general: ReportObject;
@@ -40,8 +38,8 @@ export async function balanceSheetHandler({
   // ToDo: (20241007 - Murky) negative number need to be in brackets
   // ToDo: (20241007 - Murky) Maybe IAccountReadyForFrontEnd need to have "string" version of percentage
 
-  const general: ReportObject = {
-    '11XX': {
+  const general: ReportObject = [
+    {
       code: '11XX',
       name: '流動資產合計',
       curPeriodAmount: 2194032910,
@@ -53,12 +51,12 @@ export async function balanceSheetHandler({
       prePeriodPercentage: 41,
       prePeriodPercentageString: '41',
       indent: 3,
-      children: {},
+      children: [],
     },
-  };
+  ];
 
-  const detail: ReportObject = {
-    1100: {
+  const detail: ReportObject = [
+    {
       code: '1100',
       name: '現金及約當現金',
       curPeriodAmount: 20000,
@@ -70,8 +68,8 @@ export async function balanceSheetHandler({
       prePeriodPercentage: 5,
       prePeriodPercentageString: '5',
       indent: 3,
-      children: {
-        1101: {
+      children: [
+        {
           code: '1101',
           name: '庫存現金',
           curPeriodAmount: 10000,
@@ -83,9 +81,9 @@ export async function balanceSheetHandler({
           prePeriodPercentage: 2.5,
           prePeriodPercentageString: '2.5',
           indent: 4,
-          children: {},
+          children: [],
         },
-        1102: {
+        {
           code: '1102',
           name: '零用金∕週轉金',
           curPeriodAmount: 10000,
@@ -97,11 +95,11 @@ export async function balanceSheetHandler({
           prePeriodPercentage: 2.5,
           prePeriodPercentageString: '2.5',
           indent: 4,
-          children: {},
+          children: [],
         },
-      },
+      ],
     },
-  };
+  ];
 
   const payload: ReportReturnType = {
     general,
@@ -131,8 +129,8 @@ export async function incomeStatementHandler({
   // ToDo: (20241007 - Murky) negative number need to be in brackets
   // ToDo: (20241007 - Murky) Maybe IAccountReadyForFrontEnd need to have "string" version of percentage
 
-  const general: ReportObject = {
-    5950: {
+  const general: ReportObject = [
+    {
       code: '5950',
       name: '營業毛利（毛損）淨額流動',
       curPeriodAmount: 2194032910,
@@ -144,12 +142,12 @@ export async function incomeStatementHandler({
       prePeriodPercentage: 41,
       prePeriodPercentageString: '41',
       indent: 3,
-      children: {},
+      children: [],
     },
-  };
+  ];
 
-  const detail: ReportObject = {
-    4110: {
+  const detail: ReportObject = [
+    {
       code: '4110',
       name: '銷貨收入',
       curPeriodAmount: 20000,
@@ -161,8 +159,8 @@ export async function incomeStatementHandler({
       prePeriodPercentage: 5,
       prePeriodPercentageString: '5',
       indent: 3,
-      children: {
-        4111: {
+      children: [
+        {
           code: '4111',
           name: '銷貨收入',
           curPeriodAmount: 10000,
@@ -174,9 +172,9 @@ export async function incomeStatementHandler({
           prePeriodPercentage: 2.5,
           prePeriodPercentageString: '2.5',
           indent: 4,
-          children: {},
+          children: [],
         },
-        4112: {
+        {
           code: '4112',
           name: '天然氣銷貨收入（天然氣業）',
           curPeriodAmount: 10000,
@@ -188,11 +186,11 @@ export async function incomeStatementHandler({
           prePeriodPercentage: 2.5,
           prePeriodPercentageString: '2.5',
           indent: 4,
-          children: {},
+          children: [],
         },
-      },
+      ],
     },
-  };
+  ];
 
   const payload: ReportReturnType = {
     general,
@@ -222,8 +220,8 @@ export async function cashFlowHandler({
   // ToDo: (20241007 - Murky) negative number need to be in brackets
   // ToDo: (20241007 - Murky) Maybe IAccountReadyForFrontEnd need to have "string" version of percentage
 
-  const general: ReportObject = {
-    A20010: {
+  const general: ReportObject = [
+    {
       code: 'A200105950',
       name: '收益費損項目合計',
       curPeriodAmount: 2194032910,
@@ -235,12 +233,12 @@ export async function cashFlowHandler({
       prePeriodPercentage: 41,
       prePeriodPercentageString: '41',
       indent: 3,
-      children: {},
+      children: [],
     },
-  };
+  ];
 
-  const detail: ReportObject = {
-    4110: {
+  const detail: ReportObject = [
+    {
       code: '4110',
       name: '銷貨收入',
       curPeriodAmount: 20000,
@@ -252,9 +250,9 @@ export async function cashFlowHandler({
       prePeriodPercentage: 5,
       prePeriodPercentageString: '5',
       indent: 3,
-      children: {},
+      children: [],
     },
-  };
+  ];
 
   const payload: ReportReturnType = {
     general,
