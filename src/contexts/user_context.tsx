@@ -128,6 +128,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const redirectToLoginPage = () => {
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
+      // Info: (20241008 - Liz) 將當前路徑存入 localStorage，以便登入後重新導向
+      const currentPath = router.asPath;
+      localStorage.setItem('redirectPath', currentPath);
+
       router.push(ISUNFA_ROUTE.LOGIN);
     }
     // Deprecated: (20241001 - Liz)
@@ -142,8 +146,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   //   }
   // };
 
+  // ToDo: (20241008 - Liz) Beta 要重新導向到選擇角色的頁面。但目前先導向到選擇公司的頁面。
   const goToSelectRolePage = () => {
+    // Deprecated: (20241008 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 goToSelectRolePage');
+
     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+  };
+
+  // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
+  // const goToDashboard = () => {
+  //   router.push(ISUNFA_ROUTE.DASHBOARD);
+  // };
+
+  const goBackToOriginalPath = () => {
+    const redirectPath = localStorage.getItem('redirectPath');
+    localStorage.removeItem('redirectPath'); // Info: (20241008 - Liz) 移除 localStorage 中的 redirectPath
+
+    // Deprecated: (20241008 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
+
+    if (redirectPath) {
+      router.push(redirectPath || '/');
+    }
   };
 
   const checkIsRegistered = async (): Promise<{
@@ -245,28 +272,38 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
   };
 
-  /* // Deprecated: (20241004 - Liz) 之後統一刪除
+  // Deprecated: (20241004 - Liz) 之後統一刪除
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
   // 若公司資料不存在，會將公司資訊設為空，並檢查路由是否位於 users 路徑中。如果符合條件且不在 SELECT_COMPANY 頁面，它會呼叫 redirectToSelectCompanyPage 函數進行重新導向。
-  // const processCompanyInfo = (company: ICompany) => {
-  //   if (company && Object.keys(company).length > 0) {
-  //     setSelectedCompany(company);
-  //     setSuccessSelectCompany(true);
-  //     handleReturnUrl();
-  //   } else {
-  //     setSuccessSelectCompany(undefined);
-  //     setSelectedCompany(null);
+  const processCompanyInfo = (company: ICompany) => {
+    if (company && Object.keys(company).length > 0) {
+      // Deprecated: (20241008 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 processCompanyInfo 並且 company 存在:', company);
 
-  //     const isInUsersRoute =
-  //       router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
+      setSelectedCompany(company);
+      setSuccessSelectCompany(true);
 
-  //     if (isInUsersRoute) {
-  //       redirectToSelectCompanyPage();
-  //     }
-  //   }
-  // };
-  */
+      return true;
+    } else {
+      // Deprecated: (20241008 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 processCompanyInfo 並且 company 不存在:', company);
+
+      setSuccessSelectCompany(undefined);
+      setSelectedCompany(null);
+
+      return false;
+
+      // const isInUsersRoute =
+      //   router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
+
+      // if (isInUsersRoute) {
+      //   goToSelectRolePage();
+      // }
+    }
+  };
 
   // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
 
@@ -291,7 +328,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // eslint-disable-next-line no-console
       console.log('呼叫 processUserInfo 並且 user 存在:', user);
 
-      goToSelectRolePage();
+      return true;
+    } else {
+      // clearStates();
+      // redirectToLoginPage();
+      return false;
+    }
+  };
+
+  const handleUserAndCompanyProcessing = (user: IUser, company: ICompany) => {
+    const isProcessedInfo = processUserInfo(user);
+    const isProcessedCompany = processCompanyInfo(company);
+    // ToDo: (20241008 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
+    // const isProcessedRole = processRoleInfo(role);
+
+    // Deprecated: (20241008 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('isProcessedInfo: ', isProcessedInfo, 'isProcessedCompany: ', isProcessedCompany);
+
+    // ToDo: (20241008 - Liz) 之後會增加一個判斷是否有選擇角色的邏輯
+    if (isProcessedInfo && isProcessedCompany) {
+      goBackToOriginalPath();
+    } else if (isProcessedInfo && !isProcessedCompany) {
+      // goToDashboard(); // ToDo: (20241008 - Liz) 之後沒有選擇公司會導向到可以選擇公司的儀表板
+      goToSelectRolePage(); // Info: (20241008 - Liz) 暫時用 Alpha 版的選擇公司頁面
     } else {
       clearStates();
       redirectToLoginPage();
@@ -320,7 +380,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('getStatusInfo:', StatusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
     if (getStatusInfoSuccess && StatusInfo) {
-      processUserInfo(StatusInfo.user);
+      handleUserAndCompanyProcessing(StatusInfo.user, StatusInfo.company);
     } else {
       clearStates();
       redirectToLoginPage();
