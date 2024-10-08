@@ -5,10 +5,20 @@ import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/select_role/introduction';
 import RoleCard from '@/components/beta/select_role/role_card';
+import PreviewModal from '@/components/beta/select_role/preview_modal';
 
 const SelectRolePage = () => {
   const { t } = useTranslation(['common', 'kyc']);
   const [role, setRole] = useState<string>('');
+  const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(true);
+
+  // Deprecated: (20241008 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('isPreviewModalVisible', isPreviewModalVisible);
+
+  const togglePreviewModal = () => {
+    setIsPreviewModalVisible((prev) => !prev);
+  };
 
   return (
     <>
@@ -31,12 +41,14 @@ const SelectRolePage = () => {
         />
       </Head>
 
-      <main className="mx-auto flex h-screen w-1280px flex-col justify-center gap-100px overflow-x-hidden">
+      <main className="relative mx-auto flex h-screen w-1280px flex-col justify-center gap-100px overflow-x-hidden">
         <Introduction role={role} />
 
         <div className="mx-100px mb-40px">
           <RoleCard role={role} setRole={setRole} />
         </div>
+
+        {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
       </main>
     </>
   );
