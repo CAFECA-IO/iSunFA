@@ -5,7 +5,7 @@ import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 import Tabs from '@/components/tabs/tabs';
 
-const VoucherListPageBody = () => {
+const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
   const [activeTab, setActiveTab] = useState(0);
 

@@ -13,7 +13,7 @@ interface IVoucherItemProps {
   isCheckBoxOpen: boolean;
 }
 
-const VoucherItem = ({ voucher, isCheckBoxOpen }: IVoucherItemProps) => {
+const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) => {
   const {
     date,
     voucherNo,

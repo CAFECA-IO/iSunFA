@@ -1,10 +1,11 @@
+import React from 'react';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import APandARPageBody from '@/components/voucher/ap_and_ar_page_body';
 
-const APandARListPage = () => {
+const APandARListPage: React.FC = () => {
   const { t } = useTranslation('common');
 
   return (

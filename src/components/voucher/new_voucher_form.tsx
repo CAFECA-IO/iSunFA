@@ -37,7 +37,7 @@ enum RecurringUnit {
   WEEK = 'week',
 }
 
-const NewVoucherForm = () => {
+const NewVoucherForm: React.FC = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -536,10 +536,9 @@ const NewVoucherForm = () => {
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER.DEBIT')}
         </div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-end-13 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER.CREDIT')}
         </div>
-        <div className=""></div>
 
         {/* Info: (20240927 - Julian) Table Body */}
         {voucherLines}
@@ -704,7 +703,7 @@ const NewVoucherForm = () => {
           <div
             ref={counterpartyRef}
             onClick={counterSearchToggleHandler}
-            className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
+            className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
           >
             {displayedCounterparty}
             <div className="h-20px w-20px">
