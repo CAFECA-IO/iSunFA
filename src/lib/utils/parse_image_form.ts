@@ -1,4 +1,4 @@
-import formidable, { IncomingForm, Fields, Files } from 'formidable';
+import { IncomingForm, Fields, Files } from 'formidable';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextApiRequest } from 'next';
@@ -6,32 +6,12 @@ import { FORMIDABLE_OPTIONS } from '@/constants/config';
 import { FileFolder, getFileFolder } from '@/constants/file';
 import loggerBack from '@/lib/utils/logger_back';
 
-export const extractKeyAndIvFromFields = (fields: formidable.Fields) => {
-  const { encryptedSymmetricKey, iv } = fields;
-  const keyStr =
-    encryptedSymmetricKey && encryptedSymmetricKey.length ? encryptedSymmetricKey[0] : '';
-  const ivStr = iv ? iv[0] : '';
-
-  const ivUnit8: Uint8Array = new Uint8Array(ivStr.split(',').map((num) => parseInt(num, 10)));
-
-  const isEncrypted = !!(keyStr && ivUnit8.length > 0);
-
-  return {
-    isEncrypted,
-    encryptedSymmetricKey: keyStr,
-    iv: ivUnit8,
-  };
-};
-
 export const parseForm = async (
   req: NextApiRequest,
   subDir: FileFolder = FileFolder.TMP, // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
   subSubDir?: string // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，則使用subSubDir
 ) => {
   let uploadDir = getFileFolder(subDir);
-  // Deprecated: (20241011-tzuhan) Debugging purpose
-  // eslint-disable-next-line no-console
-  console.log(`parseForm (subDir: ${subDir}, subSubDir: ${subSubDir}), req`, req);
 
   // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，更新 uploadDir
   if (subSubDir) {
@@ -48,14 +28,8 @@ export const parseForm = async (
   const parsePromise = new Promise<{ fields: Fields; files: Files<string> }>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
-        // Deprecated: (20241011-tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.error(`form.parse err:`, err);
         reject(err);
       } else {
-        // Deprecated: (20241011-tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`form.parse fields, files:`, fields, files);
         resolve({ fields, files });
       }
     });
