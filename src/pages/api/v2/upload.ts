@@ -34,6 +34,7 @@ async function handlePostRequest(req: NextApiRequest) {
 
     const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type], token as string);
     // TODO: (20241011 - tzuhan) Handle file upload logic here, save to DB
+    // Deprecated: (20241011-tzuhan) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(`API POST companyId(${companyId}) parsedForm: `, parsedForm);
 
@@ -69,7 +70,7 @@ export default async function handler(
       ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-
+      // Deprecated: (20241011-tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.error('Failed to send certificates update via Pusher', `METHOD_NOT_ALLOWED`);
     }
