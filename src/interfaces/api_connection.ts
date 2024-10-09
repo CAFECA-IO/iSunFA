@@ -45,6 +45,7 @@ export type IAPIName =
   | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
+  | 'PUBLIC_FILE_UPLOAD'
   | 'FILE_DELETE'
   | 'FILE_GET'
   | 'COMPANY_GET_BY_ID'
@@ -64,7 +65,10 @@ export type IAPIName =
   | 'GET_PROJECT_BY_ID'
   | 'UPDATE_PROJECT_BY_ID'
   | 'PUBLIC_KEY_GET'
-  | 'CERTIFICATE_LIST';
+  | 'CERTIFICATE_LIST'
+  | 'PUSHER'
+  | 'ENCRYPT'
+  | 'DECRYPT';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
@@ -75,7 +79,8 @@ export type IAPIInput = {
     | FormData
     | IVoucher
     | IFinancialReportRequest
-    | ICompanyKYCForm;
+    | ICompanyKYCForm
+    | string;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };

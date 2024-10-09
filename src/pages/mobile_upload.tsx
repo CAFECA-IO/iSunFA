@@ -2,86 +2,139 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/button/button';
 import Head from 'next/head';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import { ICertificateData } from '@/interfaces/certificate';
+import { ICertificateInfo } from '@/interfaces/certificate';
+import { APIName } from '@/constants/api_connection';
+import { IFile } from '@/interfaces/file';
+import APIHandler from '@/lib/utils/api_handler';
+import { UploadType } from '@/constants/file';
+import useStateRef from 'react-usestateref';
 import { ProgressStatus } from '@/constants/account';
 
-interface FileWithUrl extends File {
+interface IFileWithUrl extends File {
+  file: File;
+  name: string;
+  size: number;
+  type: string;
+  lastModified: number;
   url: string;
 }
 
 const MobileUploadPage: React.FC = () => {
   const router = useRouter();
   const { query } = router;
-  const { token } = query;
-  const [selectedCertificates, setSelectedCertificates] = useState<FileWithUrl[]>([]);
-  const [uploadedCertificates, setUploadedCertificates] = useState<ICertificateData[]>([]);
+  const [token, setToken] = useState<string | undefined>(undefined);
+  const [selectedCertificates, setSelectedCertificates, selectedCertificatesRef] = useStateRef<
+    IFileWithUrl[]
+  >([]);
+  const [uploadedCertificates, setUploadedCertificates] = useState<ICertificateInfo[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const { trigger: uploadFileAPI } = APIHandler<IFile[]>(APIName.PUBLIC_FILE_UPLOAD);
+  const { trigger: pusherAPI } = APIHandler<void>(APIName.PUSHER);
+
+  useEffect(() => {
+    if (router.isReady && query.token) {
+      setToken(query.token as string);
+    }
+  }, [router.isReady, query.token]);
 
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setSelectedCertificates(
-        Array.from(e.target.files).map((file) => {
-          return {
-            ...file,
-            url: URL.createObjectURL(file),
-          };
-        })
+      const certificates = Array.from(e.target.files).map(
+        (file) =>
+          ({
+            file, // Info: (20241009 - tzuhan) Store the original File object for FormData
+            name: file.name, // Info: (20241009 - tzuhan)  File metadata
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified,
+            url: URL.createObjectURL(file), // Info: (20241009 - tzuhan)  For displaying the image preview
+          }) as IFileWithUrl
       );
+      setSelectedCertificates(certificates);
     }
   };
 
   const uploadCertificates = async () => {
     setIsUploading(true);
 
-    // Info: (20241007 - tzuhan) 使用 FormData 上傳文件
-    const formData = new FormData();
-    selectedCertificates.forEach((certificate) => {
-      formData.append('file', certificate);
-    });
-
     try {
-      const response = await fetch('/api/v2/upload', {
-        method: 'POST',
+      // Info: (20241007 - tzuhan) Step 1: Push initial certificate info via Pusher
+      const certificatesPayload = selectedCertificatesRef.current.map(
+        (obj, index) =>
+          ({
+            id: uploadedCertificates.length + index,
+            name: obj.name,
+            size: obj.size,
+            url: obj.url,
+            status: ProgressStatus.IN_PROGRESS,
+            progress: 0,
+          }) as ICertificateInfo
+      );
+
+      // Deprecated: (20241011-tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log('certificatesPayload:', certificatesPayload);
+
+      const { success: successPush } = await pusherAPI({
+        body: {
+          token: token as string,
+          certificates: certificatesPayload,
+        },
+      });
+
+      if (successPush === false) {
+        throw new Error('Failed to send initial certificates via Pusher');
+      }
+
+      // Info: (20241008 - tzuhan) Step 2: Use FormData to upload files
+      const formData = new FormData();
+      selectedCertificates.forEach((certificate) => {
+        formData.append('file', certificate.file); // Info: (20241009 - tzuhan) Use the original File object
+      });
+
+      const { success } = await uploadFileAPI({
+        query: {
+          type: UploadType.MOBILE_UPLOAD,
+          token: token as string,
+        },
         body: formData,
       });
 
-      const data = await response.json();
-      if (!response.ok) {
+      if (success === false) {
         throw new Error('Failed to upload certificates');
       }
 
-      // Deprecated: (20241011 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log('data:', data);
+      // Info: (20241008 - tzuhan) Step 3: Update certificates progress and push again
+      const uploadingCertificates = selectedCertificatesRef.current.map(
+        (obj, index) =>
+          ({
+            id: uploadedCertificates.length + index,
+            name: obj.name,
+            size: obj.size,
+            url: obj.url, // Info: (20241008 - tzuhan) Use original URL here
+            status: ProgressStatus.SUCCESS,
+            progress: 100, // Info: (20241008 - tzuhan) Placeholder progress
+          }) as ICertificateInfo
+      );
 
-      const { certificates } = data;
-      certificates.forEach(async (certificate: { fileUrl: string }) => {
-        const certificateUpload = {
-          url: certificate.fileUrl,
+      const { success: successPushAgain } = await pusherAPI({
+        body: {
           token: token as string,
-          status: ProgressStatus.IN_PROGRESS,
-        };
-
-        setUploadedCertificates([...uploadedCertificates, certificateUpload]);
-
-        // Deprecated: (20241011 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log('certificates:', certificateUpload);
-
-        // Info: (20241007 - tzuhan) 通過 Pusher 傳送圖片 URL 和 token
-        await fetch('/api/v2/pusher', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ certificate: certificateUpload }),
-        });
+          certificates: uploadingCertificates,
+        },
       });
 
-      setSelectedCertificates([]);
+      if (successPushAgain === false) {
+        // Deprecated: (20241011 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.error('Failed to send certificates update via Pusher');
+      } else {
+        setSelectedCertificates([]);
+        setUploadedCertificates((prev) => [...prev, ...uploadingCertificates]);
+      }
     } catch (error) {
       // Deprecated: (20241011 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
@@ -104,7 +157,7 @@ const MobileUploadPage: React.FC = () => {
         <input type="file" accept="image/*" multiple onChange={handleCertificateChange} />
         <Button
           onClick={uploadCertificates}
-          disabled={isUploading || selectedCertificates.length === 0}
+          disabled={isUploading || selectedCertificates.length === 0 || !token}
         >
           {isUploading ? 'Uploading...' : 'Send Certificates'}
         </Button>
@@ -127,8 +180,8 @@ const MobileUploadPage: React.FC = () => {
           <h2>Uploaded Certificates</h2>
           <div className="flex flex-row gap-2">
             {uploadedCertificates.map((certificate, index) => (
-              <div key={`pusher_mobile_${index + 1}`}>
-                {certificate.status !== ProgressStatus.SYSTEM_ERROR ? (
+              <div key={`uploaded_certificate_${index + 1}`}>
+                {certificate.status !== ProgressStatus.FAILED ? (
                   <Image
                     src={certificate.url}
                     alt={`Uploaded Certificate ${index}`}
@@ -148,7 +201,7 @@ const MobileUploadPage: React.FC = () => {
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
+export const getStaticProps = async ({ locale }: ILocale) => ({
   props: {
     ...(await serverSideTranslations(locale, [
       'common',
@@ -162,7 +215,5 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
     ])),
   },
 });
-
-export const getStaticProps = getStaticPropsFunction;
 
 export default MobileUploadPage;

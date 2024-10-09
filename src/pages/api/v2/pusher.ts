@@ -1,37 +1,40 @@
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { ICertificateInfo } from '@/interfaces/certificate';
+import { formatApiResponse } from '@/lib/utils/common';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Pusher from 'pusher';
-
-// Info: (20241004-tzuhan) 初始化 Pusher
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  host: process.env.NEXT_PUBLIC_PUSHER_HOST!,
-  useTLS: process.env.PUSHER_USE_TLS === 'true',
-});
+import { getPusherInstance } from '@/lib/pusher'; // Info: (20241009-tzuhan) 使用封裝好的 Pusher singleton instance
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { certificates } = req.body;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
 
-    // eslint-disable-next-line no-console
-    console.log('certificates:', certificates);
+  try {
+    if (req.method !== 'POST') {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    } else {
+      const { token, certificates } = req.body;
 
-    // Info: (20241004-tzuhan) 發送圖片 URL 給其他訂閱者
-    try {
-      await Promise.all(
-        certificates.map(async (certificate: { url: string; token: string }) => {
-          await pusher.trigger('certificate-channel', 'certificate-event', {
-            url: certificate.url,
-            token: certificate.token,
+      if (!token || !certificates || !Array.isArray(certificates)) {
+        statusMessage = STATUS_MESSAGE.BAD_REQUEST;
+      } else {
+        const pusher = getPusherInstance();
+        const certificatePromises = certificates.map(async (certificate: ICertificateInfo) => {
+          return pusher.trigger(PRIVATE_CHANNEL.CERTIFICATE, CERTIFICATE_EVENT.UPLOAD, {
+            certificate,
+            token,
           });
-        })
-      );
-      res.status(200).json({ status: 'Certificate sent successfully' });
-    } catch (error) {
-      res.status(500).json({ status: 'Failed to send certificates', error });
+        });
+
+        await Promise.all(certificatePromises);
+
+        statusMessage = STATUS_MESSAGE.SUCCESS;
+      }
     }
-  } else {
-    res.status(405).send('Method not allowed');
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+    res.status(httpCode).json(result);
   }
 }

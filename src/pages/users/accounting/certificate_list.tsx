@@ -18,14 +18,19 @@ import {
 } from '@/interfaces/certificate';
 import Certificate from '@/components/certificate/certificate';
 import CertificateEditModal from '@/components/certificate/certificate_edit_modal';
-import Pusher, { Channel } from 'pusher-js';
+import { getPusherInstance } from '@/lib/pusherClient';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
-import Image from 'next/image';
-import { v4 as uuidv4 } from 'uuid';
-import { ProgressStatus } from '@/constants/account';
+import APIHandler from '@/lib/utils/api_handler';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import useStateRef from 'react-usestateref';
+import { useUserCtx } from '@/contexts/user_context';
 
-const UploadCertificatePage: React.FC = () => {
+const CertificateListPage: React.FC = () => {
+  const { selectedCompany } = useUserCtx();
+  const { id: companyId } = selectedCompany!;
+  const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
+  const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState<{ [tab: number]: { [id: number]: ICertificateUI } }>({
@@ -43,8 +48,10 @@ const UploadCertificatePage: React.FC = () => {
     0: false,
     1: false,
   });
-  const token = uuidv4(); // Info: (20241007 - tzuhan) 生成唯一 token
-  const [uploadingCertificates, setUploadingCertificates] = useState<ICertificateInfo[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [uploadingCertificates, setUploadingCertificates, uploadingCertificatesRef] = useStateRef<{
+    [id: number]: ICertificateInfo;
+  }>({});
 
   const handleApiResponse = useCallback((resData: ICertificate[]) => {
     const sumInvoiceTotalPrice = {
@@ -189,61 +196,60 @@ const UploadCertificatePage: React.FC = () => {
     console.log('Save selected id:', certificate);
   }, []);
 
-  const certificateHandler = async (certificateData: { url: string; token: string }) => {
-    // TODO: (20241007 - tzuhan) post certificate data to server and get uploading certificate list back and update certificate list when uploaded
-    // TODO: (20241007 - tzuhan) get Token from server
-    if (certificateData.token === token) {
-      // Info: (20241007 - tzuhan) 使用 fetch 下載圖片文件
-      const response = await fetch(certificateData.url);
-      const blob = await response.blob();
+  const certificateHandler = useCallback(
+    async (message: { token: string; certificate: ICertificateInfo }) => {
+      const { token: receivedToken, certificate: certificateData } = message;
+      // Deprecated: (20241011 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(
+        `pusher got message, (token(${tokenRef.current})===_token${receivedToken})?${tokenRef.current === receivedToken} message:`,
+        message
+      );
 
-      // Info: (20241007 - tzuhan) 獲取文件名，從 response headers 提取
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let fileName = 'unknown';
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="(.+)"/);
-        if (match && match[1]) {
-          // Info: (20241007 - tzuhan) 使用陣列解構提取文件名
-          [, fileName] = match;
-        }
-      } else {
-        // Info: (20241007 - tzuhan) 如果沒有提供 header，可以從 url 推斷出文件名
-        fileName = certificateData.url.split('/').pop() || 'unknown';
+      if (receivedToken === tokenRef.current) {
+        const updatedCertificates = {
+          ...uploadingCertificatesRef.current,
+        };
+        updatedCertificates[certificateData.id] = certificateData;
+        setUploadingCertificates(updatedCertificates);
+        // Deprecated: (20241011 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(`uploadingCertificatesRef.current:`, uploadingCertificatesRef.current);
       }
-
-      // Info: (20241007 - tzuhan) 獲取文件大小
-      const fileSize = blob.size;
-
-      const imageObjectUrl = URL.createObjectURL(blob);
-      setUploadingCertificates((prev) => [
-        ...prev,
-        {
-          url: imageObjectUrl,
-          status: ProgressStatus.IN_PROGRESS,
-          name: fileName,
-          size: fileSize,
-          progress: 80,
-        },
-      ]);
+    },
+    [tokenRef, setUploadingCertificates]
+  );
+  const getToken = useCallback(async () => {
+    if (!tokenRef.current) {
+      const res = await encryptAPI({ body: { companyId } });
+      if (res.success && res.data) {
+        setToken(res.data);
+      } else {
+        setToken('');
+      }
     }
-  };
+  }, [tokenRef, companyId, setToken]);
+
+  const toggleQRCode = useCallback(() => {
+    getToken();
+    setShowQRCode((prev) => !prev);
+  }, []);
 
   useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: '',
-      wsHost: process.env.NEXT_PUBLIC_PUSHER_HOST!,
-      wsPort: parseFloat(process.env.NEXT_PUBLIC_PUSHER_PORT!),
-    });
+    getToken();
+  }, [getToken]);
 
-    const channel: Channel = pusher.subscribe('certificate-channel');
+  useEffect(() => {
+    const pusher = getPusherInstance();
+    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
 
-    channel.bind('certificate-event', certificateHandler);
+    channel.bind(CERTIFICATE_EVENT.UPLOAD, certificateHandler);
 
     return () => {
-      channel.unbind('certificate-event', certificateHandler);
-      pusher.unsubscribe('certificate-channel');
+      channel.unbind(CERTIFICATE_EVENT.UPLOAD, certificateHandler);
+      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
-  }, []);
+  }, [certificateHandler]);
 
   return (
     <>
@@ -251,7 +257,7 @@ const UploadCertificatePage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>Upload Certificate - iSunFA</title>
+        <title>Certificate List - iSunFA</title>
       </Head>
       <main className="flex h-screen w-screen overflow-hidden">
         {editingId && (
@@ -262,12 +268,12 @@ const UploadCertificatePage: React.FC = () => {
             onSave={handleSave}
           />
         )}
-        {showQRCode && (
+        {showQRCode && !!token && (
           <CertificateQRCodeModal
             isOpen={showQRCode}
             onClose={() => setShowQRCode((prev) => !prev)}
             isOnTopOfModal={false}
-            token={token}
+            token={tokenRef.current!}
           />
         )}
 
@@ -281,20 +287,7 @@ const UploadCertificatePage: React.FC = () => {
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="space-y-4 overflow-y-scroll p-6">
             {/* Info: (20240919 - tzuhan) Upload Area */}
-            <UploadArea
-              isDisabled={false}
-              withScanner
-              toggleQRCode={() => setShowQRCode((prev) => !prev)}
-            />
-            <div>
-              {uploadingCertificates.map((image, index) => (
-                <div key={`pusher_${index + 1}`}>
-                  <Image src={image.url} alt={`Received Image ${index}`} width={200} height={200} />
-                  <p>Status: {image.status}</p>
-                </div>
-              ))}
-            </div>
-
+            <UploadArea isDisabled={false} withScanner toggleQRCode={toggleQRCode} />
             {/* Info: (20240919 - tzuhan) Tabs */}
             <Tabs
               tabs={['Certificate Without Voucher', 'Certificate with Voucher']}
@@ -349,9 +342,9 @@ const UploadCertificatePage: React.FC = () => {
             />
           </div>
           {/* Info: (20240926- tzuhan) Floating Upload Popup */}
-          {uploadingCertificates.length > 0 && (
-            <FloatingUploadPopup uploadingCertificates={uploadingCertificates} />
-          )}
+          <FloatingUploadPopup
+            uploadingCertificates={Object.values(uploadingCertificatesRef.current)}
+          />
         </div>
       </main>
     </>
@@ -375,4 +368,4 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
 
 export const getStaticProps = getStaticPropsFunction;
 
-export default UploadCertificatePage;
+export default CertificateListPage;

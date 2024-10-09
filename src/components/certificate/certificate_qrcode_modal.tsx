@@ -40,7 +40,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
           <div className="text-xl font-semibold">Url</div>
           <div className="text-xs font-normal text-card-text-sub">for mobile upload</div>
         </h2>
-        <div className="mx-20 my-10">
+        <div className="mx-20 my-10 flex flex-col items-center">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
           <Canvas
             text={`${isDev ? 'http://192.168.2.29:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${token}`}
@@ -55,6 +55,12 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
               },
             }}
           />
+          <a
+            className="mt-2 text-center text-xs text-card-text-sub"
+            href={`${isDev ? 'http://localhost:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${token}`}
+            target="_blank"
+            rel="noreferrer"
+          >{`${isDev ? 'http://localhost:3000' : DOMAIN}/${ISUNFA_ROUTE.UPLOAD}?token=${token}`}</a>
         </div>
         <div className="flex justify-end gap-2 border-t border-stroke-neutral-quaternary px-4 py-3">
           <Button

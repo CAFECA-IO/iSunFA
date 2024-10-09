@@ -31,18 +31,14 @@ export interface ICertificate {
   uploader: string;
 }
 
-export interface ICertificateData {
-  token: string;
-  url: string;
-  status: ProgressStatus;
-}
-
 export interface ICertificateInfo {
-  url: string;
+  id: number;
   name: string;
   size: number;
   status: ProgressStatus;
   progress: number;
+  url: string;
+  file?: File;
 }
 
 export enum VIEW_TYPES {

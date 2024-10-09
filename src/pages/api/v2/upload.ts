@@ -1,67 +1,83 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IncomingForm, File as FormidableFile } from 'formidable';
-import { promises as fs } from 'fs';
+import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
+import { parseForm } from '@/lib/utils/parse_image_form';
+import loggerBack from '@/lib/utils/logger_back';
+import { isEnumValue } from '@/lib/utils/type_guard/common';
+import { formatApiResponse } from '@/lib/utils/common';
+import { decrypt } from '@/lib/utils/pusher_token';
 
-import path from 'path';
-
-// Info: (20241007 - tzuhan) 禁用內建的 body 解析
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const form = new IncomingForm({
-      uploadDir: path.join(process.cwd(), '/tmp'),
-      keepExtensions: true, // Info: (20241007 - tzuhan) 保留文件擴展名
-    });
+async function handlePostRequest(req: NextApiRequest) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  const payload: null = null;
 
-    // Deprecated: (20241011 - tzuhan) Debugging purpose
+  try {
+    const { type, token } = req.query;
+    // Deprecated: (20241011-tzuhan) Debugging purpose
     // eslint-disable-next-line no-console
-    console.log('form:', form);
+    console.log(`API POST type (${!isEnumValue(UploadType, type)}): `, type, ` token: `, token);
 
-    form.parse(req, async (err, fields, files) => {
-      if (err) {
-        // Deprecated: (20241011 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.error('Error parsing the files:', err);
-        return res.status(500).json({ message: 'File upload error' });
-      }
+    if (!isEnumValue(UploadType, type)) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+    }
+    if (!token) {
+      throw new Error(STATUS_MESSAGE.BAD_REQUEST);
+    }
+    const companyId = decrypt(token as string);
 
-      // Deprecated: (20241011 - tzuhan) Debugging purpose
+    const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type], token as string);
+    // TODO: (20241011 - tzuhan) Handle file upload logic here, save to DB
+    // eslint-disable-next-line no-console
+    console.log(`API POST companyId(${companyId}) parsedForm: `, parsedForm);
+
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+  } catch (_error) {
+    const error = _error as Error;
+    loggerBack.error(error, `API POST File: ${error.message}`);
+    statusMessage = error.message;
+  }
+
+  return { statusMessage, payload };
+}
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: null }>;
+} = {
+  POST: handlePostRequest,
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<null>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: null = null;
+
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+
       // eslint-disable-next-line no-console
-      console.log('files:', files);
-
-      // Info: (20241007 - tzuhan) 處理多個文件
-      const uploadedFiles = Array.isArray(files.files) ? files.files : [files.files]; // 確保它是數組
-
-      const uploadDir = path.join(process.cwd(), '/public/uploads');
-      await fs.mkdir(uploadDir, { recursive: true }); // Info: (20241007 - tzuhan) 確保上傳目錄存在
-
-      // Info: (20241007 - tzuhan) 生成每個文件的 URL 和 token
-      const certificates = await Promise.all(
-        uploadedFiles
-          .filter((file: FormidableFile | undefined) => !!file)
-          .map(async (file: FormidableFile) => {
-            const tempFilePath = file.filepath;
-            const fileName = `${Date.now()}_${file.originalFilename}`;
-            const finalFilePath = path.join(uploadDir, fileName);
-
-            await fs.rename(tempFilePath, finalFilePath); // Info: (20241007 - tzuhan) 將文件移動到最終目錄
-
-            const fileUrl = `/uploads/${fileName}`; // Info: (20241007 - tzuhan) 文件的相對 URL
-
-            return {
-              fileUrl,
-            };
-          })
-      );
-
-      return res.status(200).json({ certificates });
-    });
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
+      console.error('Failed to send certificates update via Pusher', `METHOD_NOT_ALLOWED`);
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+  } finally {
+    const { httpCode, result } = formatApiResponse<null>(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
 }
