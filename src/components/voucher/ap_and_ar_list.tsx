@@ -10,7 +10,7 @@ enum ListType {
   PAYABLE = 'Payable',
 }
 
-const APandARList = () => {
+const APandARList: React.FC = () => {
   const { t } = useTranslation('common');
 
   // ToDo: (20240924 - Julian) tabs 切換

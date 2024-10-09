@@ -648,3 +648,26 @@ export function generateUUID(): string {
   const randomUUID = Math.random().toString(36).substring(2, 12);
   return randomUUID;
 }
+
+/**
+ * Info: (20241007 - Murky)
+ * Return String version of number, comma will be added, add bracket if num is negative
+ * Return '-' if num is undefined, null or too small (-0.1~0.1)
+ * @param num - {number | null | undefined | string}
+ * number that be transform into string,
+ * if already string, than it will only be add comma than return
+ * @returns - {string} return number with comma and bracket
+ */
+export function numberBeDashIfFalsy(num: number | null | undefined | string) {
+  if (typeof num === 'string') {
+    return numberWithCommas(num);
+  }
+
+  if (num === null || num === undefined || (num < 0.1 && num > -0.1)) {
+    return '-';
+  }
+
+  const formattedNumber = numberWithCommas(Math.abs(num));
+
+  return num < 0 ? `(${formattedNumber})` : formattedNumber;
+}

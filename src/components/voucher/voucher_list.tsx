@@ -11,7 +11,7 @@ import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IVoucherBeta, dummyVoucherList } from '@/interfaces/voucher';
 
-const VoucherList = () => {
+const VoucherList: React.FC = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 

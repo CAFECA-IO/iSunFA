@@ -41,6 +41,7 @@ export type IAPIName =
   | 'JOURNAL_DELETE'
   | 'REPORT_LIST'
   | 'REPORT_GET_BY_ID'
+  | 'REPORT_GET_V2'
   | 'REPORT_GENERATE'
   | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
@@ -64,7 +65,8 @@ export type IAPIName =
   | 'GET_PROJECT_BY_ID'
   | 'UPDATE_PROJECT_BY_ID'
   | 'PUBLIC_KEY_GET'
-  | 'CERTIFICATE_LIST';
+  | 'CERTIFICATE_LIST'
+  | 'VOUCHER_GET_BY_ID_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

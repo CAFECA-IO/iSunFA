@@ -8,18 +8,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { numberWithCommas } from '@/lib/utils/common';
 
-const VoucherLineItem = ({
-  flagOfClear,
-  flagOfSubmit,
-  accountIsNull,
-  amountNotEqual,
-  amountIsZero,
-  deleteHandler,
-  accountTitleHandler,
-  particularsChangeHandler,
-  debitChangeHandler,
-  creditChangeHandler,
-}: {
+interface IVoucherLineItemProps {
   flagOfClear: boolean;
   flagOfSubmit: boolean;
   accountIsNull: boolean;
@@ -30,6 +19,19 @@ const VoucherLineItem = ({
   particularsChangeHandler: (particulars: string) => void;
   debitChangeHandler: (debit: number) => void;
   creditChangeHandler: (credit: number) => void;
+}
+
+const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
+  flagOfClear,
+  flagOfSubmit,
+  accountIsNull,
+  amountNotEqual,
+  amountIsZero,
+  deleteHandler,
+  accountTitleHandler,
+  particularsChangeHandler,
+  debitChangeHandler,
+  creditChangeHandler,
 }) => {
   const { t } = useTranslation('common');
   const { accountList } = useAccountingCtx();
@@ -260,7 +262,7 @@ const VoucherLineItem = ({
         <div
           ref={accountRef}
           onClick={accountEditingHandler}
-          className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
+          className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
         >
           {isEditAccounting}
           <div className="h-20px w-20px">
