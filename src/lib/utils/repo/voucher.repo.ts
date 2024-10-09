@@ -303,7 +303,11 @@ export async function findManyVoucherWithCashInPrisma(
         },
       },
       include: {
-        journal: true,
+        journal: {
+          include: {
+            invoice: true,
+          },
+        },
         lineItems: {
           include: {
             account: true,
