@@ -246,5 +246,17 @@
     "INCOME": "收益",
     "EXPENSE": "支出",
     "GAIN_OR_LOSS": "收益或损失"
+  },
+  "ASSET_SECTION": {
+    "TITLE": "资产",
+    "EMPTY_HINT": "请新增至少 1 笔资产！",
+    "ADD_BTN": "新增资产"
+  },
+  "REVERSE_SECTION": {
+    "TITLE": "冲销",
+    "REVERSE_VOUCHER": "冲销传票",
+    "REVERSE_VOUCHER_PLACEHOLDER": "请选择...",
+    "REVERSE_AMOUNT": "冲销金额",
+    "ADD_BTN": "新增更多冲销传票"
   }
 }

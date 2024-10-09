@@ -279,9 +279,13 @@ const NewVoucherForm: React.FC = () => {
     setRecurringMenuOpen(!isRecurringMenuOpen);
   };
 
-  // ToDo: (20240926 - Julian) type 字串轉換
+  // Info: (20240926 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
     return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+  };
+
+  const translateUnit = (unit: RecurringUnit) => {
+    return t(`common:COMMON.${unit.toUpperCase()}`);
   };
 
   // Info: (20241004 - Julian) 清空表單
@@ -573,7 +577,7 @@ const NewVoucherForm: React.FC = () => {
             className="py-8px hover:bg-dropdown-surface-menu-background-secondary"
             onClick={recurringUnitClickHandler}
           >
-            {t(`common:COMMON.${unit.toUpperCase()}`)}
+            {translateUnit(unit)}
           </button>
         );
       })}
@@ -742,7 +746,7 @@ const NewVoucherForm: React.FC = () => {
                 onClick={recurringUnitToggleHandler}
                 className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
               >
-                <p>{recurringUnit}</p>
+                <p>{translateUnit(recurringUnit)}</p>
                 <FaChevronDown />
                 {/* Info: (20240926 - Julian) recurring unit dropdown */}
                 {recurringUnitMenu}

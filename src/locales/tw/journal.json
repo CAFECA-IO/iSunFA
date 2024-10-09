@@ -246,5 +246,17 @@
     "INCOME": "收益",
     "EXPENSE": "支出",
     "GAIN_OR_LOSS": "收益或損失"
+  },
+  "ASSET_SECTION": {
+    "TITLE": "資產",
+    "EMPTY_HINT": "請新增至少 1 筆資產！",
+    "ADD_BTN": "新增資產"
+  },
+  "REVERSE_SECTION": {
+    "TITLE": "沖銷",
+    "REVERSE_VOUCHER": "沖銷傳票",
+    "REVERSE_VOUCHER_PLACEHOLDER": "請選擇...",
+    "REVERSE_AMOUNT": "沖銷金額",
+    "ADD_BTN": "新增更多沖銷傳票"
   }
 }

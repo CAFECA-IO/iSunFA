@@ -67,5 +67,5 @@ export const AccountCodesOfAsset = [
 
 export const AccountCodesOfAPandAR = [
   '1172', // 應收帳款
-  '2170', // 應付帳款
+  '2171', // 應付帳款
 ];

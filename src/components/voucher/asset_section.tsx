@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { IAssetItem, mockAssetItem } from '@/interfaces/asset';
 
 const AssetSection: React.FC = () => {
+  const { t } = useTranslation('common');
   const [assets, setAssets] = useState<IAssetItem[]>([]);
 
   // ToDo: (20241009 - Julian) Replace with real function to add asset
@@ -63,8 +65,8 @@ const AssetSection: React.FC = () => {
       })
     ) : (
       <div className="flex flex-col items-center text-xs">
-        <p className="text-text-neutral-tertiary">Empty</p>
-        <p className="text-text-neutral-primary">Please add at least 1 asset!</p>
+        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
+        <p className="text-text-neutral-primary">{t('journal:ASSET_SECTION.EMPTY_HINT')}</p>
       </div>
     );
 
@@ -75,7 +77,7 @@ const AssetSection: React.FC = () => {
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/asset.svg" width={16} height={16} alt="asset_icon" />
-          <p>Asset</p>
+          <p>{t('journal:ASSET_SECTION.TITLE')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
@@ -84,7 +86,7 @@ const AssetSection: React.FC = () => {
         {displayedAssetList}
         <Button type="button" variant="secondaryOutline" onClick={generateRandomAsset}>
           <FiPlus size={20} />
-          <p>Add New Asset</p>
+          <p>{t('journal:ASSET_SECTION.ADD_BTN')}</p>
         </Button>
       </div>
     </>

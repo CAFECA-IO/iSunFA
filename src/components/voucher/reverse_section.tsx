@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { BsChevronDown } from 'react-icons/bs';
 import { FiTrash2 } from 'react-icons/fi';
 import { LuPlus } from 'react-icons/lu';
@@ -15,6 +16,8 @@ interface IReverseSectionProps {
 }
 
 const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint = false }) => {
+  const { t } = useTranslation('common');
+
   const [selectedVoucher, setSelectedVoucher] = useState<IVoucherBeta | null>(null);
   const [reverseAmountInput, setReverseAmountInput] = useState<string>('');
   // ToDo: (20241009 - Julian) Send reverse amount to backend
@@ -57,7 +60,7 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
     <p
       className={`truncate text-input-text-input-placeholder ${isShowReverseVoucherHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
     >
-      Please select...
+      {t('journal:REVERSE_SECTION.REVERSE_VOUCHER_PLACEHOLDER')}
     </p>
   );
 
@@ -96,7 +99,7 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
       {/* Info: (20241009 - Julian) reverse voucher */}
       <div className="flex flex-1 flex-col gap-8px">
         <p className="font-bold text-input-text-primary">
-          Reverse Voucher
+          {t('journal:REVERSE_SECTION.REVERSE_VOUCHER')}
           <span className="text-text-state-error">*</span>
         </p>
         <div
@@ -113,7 +116,7 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
       {/* Info: (20241009 - Julian) reverse amount */}
       <div className="flex flex-col gap-8px">
         <p className="font-bold text-input-text-primary">
-          Reverse Amount
+          {t('journal:REVERSE_SECTION.REVERSE_AMOUNT')}
           <span className="text-text-state-error">*</span>
         </p>
         <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
@@ -146,6 +149,8 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
 };
 
 const ReverseSection: React.FC = () => {
+  const { t } = useTranslation('common');
+
   const [reverseLineItems, setReverseLineItems] = useState<number[]>([1]);
 
   // ToDo: (20241009 - Julian) Implement addReverseLineItem
@@ -164,7 +169,7 @@ const ReverseSection: React.FC = () => {
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/bell.svg" width={16} height={16} alt="bell_icon" />
-          <p>Reverse</p>
+          <p>{t('journal:REVERSE_SECTION.TITLE')}</p>
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
@@ -178,7 +183,7 @@ const ReverseSection: React.FC = () => {
           onClick={addReverseLineItem}
         >
           <LuPlus />
-          <p>Add more reverse voucher</p>
+          <p>{t('journal:REVERSE_SECTION.ADD_BTN')}</p>
         </button>
       </div>
     </>
