@@ -2,6 +2,7 @@
 // Info: (20240416 - Murky) type
 export enum ProgressStatus {
   SUCCESS = 'success',
+  FAILED = 'failed',
   IN_PROGRESS = 'inProgress',
   NOT_FOUND = 'notFound',
   ALREADY_UPLOAD = 'alreadyUpload',
