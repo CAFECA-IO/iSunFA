@@ -9,7 +9,10 @@ import {
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
-import { IVoucherFromPrismaIncludeJournalLineItems } from '@/interfaces/voucher';
+import {
+  IVoucherForCashFlow,
+  IVoucherFromPrismaIncludeJournalLineItems,
+} from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
@@ -28,7 +31,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
 
-  private voucherLastPeriod: IVoucherFromPrismaIncludeJournalLineItems[];
+  private voucherLastPeriod: IVoucherForCashFlow[];
 
   private YEAR_RANGE = 5;
 
@@ -38,7 +41,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     companyId: number,
     startDateInSecond: number,
     endDateInSecond: number,
-    voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[]
+    voucherRelatedToCash: IVoucherForCashFlow[]
   ) {
     const reportSheetType = ReportSheetType.CASH_FLOW_STATEMENT;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
@@ -54,13 +57,19 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       endDateInSecond
     );
     this.voucherRelatedToCash = voucherRelatedToCash.filter((voucher) => {
-      const laterThanStartDate = voucher.journal.createdAt >= startDateInSecond;
-      const earlierThanEndDate = voucher.journal.createdAt <= endDateInSecond;
+      const laterThanStartDate = voucher.journal?.invoice?.date
+        ? voucher.journal.invoice.date >= startDateInSecond
+        : false;
+      const earlierThanEndDate = voucher.journal?.invoice?.date
+        ? voucher.journal?.invoice?.date <= endDateInSecond
+        : false;
       return laterThanStartDate && earlierThanEndDate;
     });
 
     this.voucherLastPeriod = voucherRelatedToCash.filter((voucher) => {
-      const earlierThanStartDate = voucher.journal.createdAt < startDateInSecond;
+      const earlierThanStartDate = voucher.journal?.invoice?.date
+        ? voucher.journal?.invoice?.date < startDateInSecond
+        : false;
       return earlierThanStartDate;
     });
   }
