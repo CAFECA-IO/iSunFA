@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { FiEye, FiArrowRight } from 'react-icons/fi';
 import { RoleId } from '@/constants/role';
 import { useUserCtx } from '@/contexts/user_context';
+import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IntroductionProps {
   showingRole: React.SetStateAction<RoleId | null>;
@@ -62,14 +64,16 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
         <FiEye size={24} />
       </button>
 
-      <button
-        type="button"
-        className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={handleStart}
-      >
-        <p>Start</p>
-        <FiArrowRight size={24} />
-      </button>
+      <Link href={ISUNFA_ROUTE.JOB_RECORD}>
+        <button
+          type="button"
+          className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+          onClick={handleStart}
+        >
+          <p>Start</p>
+          <FiArrowRight size={24} />
+        </button>
+      </Link>
     </div>
   );
 };
