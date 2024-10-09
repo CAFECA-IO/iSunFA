@@ -25,6 +25,8 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
+  role: string | null;
+  selectRole: (roleId: string) => void;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -56,6 +58,8 @@ export const UserContext = createContext<UserContextType>({
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
+  role: null,
+  selectRole: () => {},
   selectedCompany: null,
   selectCompany: async () => {},
   successSelectCompany: undefined,
@@ -80,6 +84,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
+  const [, setRole, roleRef] = useStateRef<string | null>(null);
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
   const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
     undefined
@@ -118,6 +123,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setCredential(null);
     setIsSignIn(false);
     setIsSignInError(false);
+    setRole(null);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
@@ -272,10 +278,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
   };
 
-  // Deprecated: (20241004 - Liz) 之後統一刪除
   // Info: (20241001 - Liz) 此函數處理公司資訊:
   // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
-  // 若公司資料不存在，會將公司資訊設為空，並檢查路由是否位於 users 路徑中。如果符合條件且不在 SELECT_COMPANY 頁面，它會呼叫 redirectToSelectCompanyPage 函數進行重新導向。
+  // 若公司資料不存在，會將公司資訊設為空，並標記為未選擇公司。
   const processCompanyInfo = (company: ICompany) => {
     if (company && Object.keys(company).length > 0) {
       // Deprecated: (20241008 - Liz)
@@ -295,23 +300,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setSelectedCompany(null);
 
       return false;
-
-      // const isInUsersRoute =
-      //   router.pathname.includes('users') && !router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY);
-
-      // if (isInUsersRoute) {
-      //   goToSelectRolePage();
-      // }
     }
   };
 
   // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
 
   // Info: (20241001 - Liz) 此函數處理使用者資訊:
-  // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入。
-  // 它還會將使用者的 userId 和過期時間儲存在 localStorage。
-  // 最後，它會呼叫 updateUserAgreements 函數更新使用者的協議狀態。
-  // 如果使用者資料不存在，則會清除狀態，並導向登入頁面。
+  // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
+  // 它還會將使用者的 userId 和過期時間儲存在 localStorage 中，
+  // 接著它會呼叫 updateUserAgreements 函數更新使用者的協議狀態，
+  // 最後回傳 true。
+  // 如果使用者資料不存在，會回傳 false。
   const processUserInfo = (user: IUser) => {
     if (user && Object.keys(user).length > 0) {
       setUserAuth(user);
@@ -330,12 +329,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return true;
     } else {
-      // clearStates();
-      // redirectToLoginPage();
+      // clearStates(); // Deprecated: (20241009 - Liz)
+      // redirectToLoginPage(); // Deprecated: (20241009 - Liz)
       return false;
     }
   };
 
+  // Info: (20241009 - Liz) 此函數是在處理使用者和公司資訊，並根據處理結果來決定下一步的操作:
+  // 它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
+  // 依據處理結果，它會執行不同的自動導向邏輯。
   const handleUserAndCompanyProcessing = (user: IUser, company: ICompany) => {
     const isProcessedInfo = processUserInfo(user);
     const isProcessedCompany = processCompanyInfo(company);
@@ -359,9 +361,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
-  // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接返回。
-  // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading) 並清除公司選擇狀態。
-  // 當 API 回傳成功且有資料時，它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
+  // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
+  // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
+  // 當 API 回傳成功且有資料時，它會呼叫 handleUserAndCompanyProcessing 分別處理使用者和公司資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
@@ -462,6 +464,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20241009 - Liz) 選擇角色的功能
+  const selectRole = (roleId: string) => {
+    setRole(roleId);
+  };
+
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
     setSelectedCompany(null);
@@ -556,6 +563,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
       isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
+      role: roleRef.current,
+      selectRole,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       successSelectCompany: successSelectCompanyRef.current,
@@ -570,6 +579,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }),
     [
       credentialRef.current,
+      roleRef.current,
       selectedCompanyRef.current,
       successSelectCompanyRef.current,
       errorCodeRef.current,

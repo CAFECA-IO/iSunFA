@@ -2,12 +2,26 @@ import React from 'react';
 import Image from 'next/image';
 import { FiEye, FiArrowRight } from 'react-icons/fi';
 import { RoleId } from '@/constants/role';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface IntroductionProps {
-  role: React.SetStateAction<string>;
+  showingRole: React.SetStateAction<RoleId | null>;
+  togglePreviewModal: () => void;
+}
+interface ButtonsProps {
+  showingRole: RoleId;
+  togglePreviewModal: () => void;
+}
+interface BookkeeperIntroductionProps {
+  showingRole: RoleId;
+  togglePreviewModal: () => void;
+}
+interface EducationalTrialVersionIntroductionProps {
+  showingRole: RoleId;
+  togglePreviewModal: () => void;
 }
 
-const DefaultIntroduction = () => {
+const DefaultIntroduction: React.FC = () => {
   return (
     <section className="h-600px bg-bg_select_role bg-contain bg-right-top bg-no-repeat">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
@@ -26,17 +40,15 @@ const DefaultIntroduction = () => {
   );
 };
 
-const Buttons = () => {
-  const handlePreview = () => {
-    // Deprecated: (20241007 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('Preview');
-  };
+const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) => {
+  const { selectRole } = useUserCtx();
 
   const handleStart = () => {
     // Deprecated: (20241007 - Liz)
     // eslint-disable-next-line no-console
-    console.log('Start');
+    console.log('showingRole:', showingRole, '儲存 showingRole 到 userCtx');
+
+    selectRole(showingRole);
   };
 
   return (
@@ -44,7 +56,7 @@ const Buttons = () => {
       <button
         type="button"
         className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary px-32px py-14px text-lg font-medium text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable"
-        onClick={handlePreview}
+        onClick={togglePreviewModal}
       >
         <p>Preview</p>
         <FiEye size={24} />
@@ -62,7 +74,10 @@ const Buttons = () => {
   );
 };
 
-const BookkeeperIntroduction = () => {
+const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({
+  showingRole,
+  togglePreviewModal,
+}) => {
   return (
     <section className="h-600px bg-bg_bookkeeper bg-contain bg-right-top bg-no-repeat">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
@@ -82,13 +97,16 @@ const BookkeeperIntroduction = () => {
           <p>General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports</p>
         </div>
 
-        <Buttons />
+        <Buttons showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
       </div>
     </section>
   );
 };
 
-const EducationalTrialVersionIntroduction = () => {
+const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntroductionProps> = ({
+  showingRole,
+  togglePreviewModal,
+}) => {
   return (
     <section className="h-600px bg-bg_educational_trial_version bg-contain bg-right-top bg-no-repeat">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
@@ -113,18 +131,25 @@ const EducationalTrialVersionIntroduction = () => {
           <p>General Ledger, Voucher Issuance</p>
         </div>
 
-        <Buttons />
+        <Buttons showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
       </div>
     </section>
   );
 };
 
-const Introduction = ({ role }: IntroductionProps) => {
+const Introduction: React.FC<IntroductionProps> = ({ showingRole, togglePreviewModal }) => {
   return (
     <>
-      {!role && <DefaultIntroduction />}
-      {role === RoleId.BOOKKEEPER && <BookkeeperIntroduction />}
-      {role === RoleId.EDUCATIONAL_TRIAL_VERSION && <EducationalTrialVersionIntroduction />}
+      {!showingRole && <DefaultIntroduction />}
+      {showingRole === RoleId.BOOKKEEPER && (
+        <BookkeeperIntroduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+      )}
+      {showingRole === RoleId.EDUCATIONAL_TRIAL_VERSION && (
+        <EducationalTrialVersionIntroduction
+          showingRole={showingRole}
+          togglePreviewModal={togglePreviewModal}
+        />
+      )}
     </>
   );
 };

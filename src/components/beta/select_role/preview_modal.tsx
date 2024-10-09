@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { useState } from 'react';
 import { IoCloseOutline, IoEllipse } from 'react-icons/io5';
 
 interface PreviewModalProps {
@@ -6,6 +7,11 @@ interface PreviewModalProps {
 }
 
 const PreviewModal = ({ togglePreviewModal }: PreviewModalProps) => {
+  // ToDo: (20241009 - Liz) 根據 videoIndex 顯示不同影片
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [videoIndex, setVideoIndex] = useState<number>(0);
+  const videoIds = ['video1', 'video2', 'video3', 'video4', 'video5'];
+
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
       <div className="flex w-700px flex-col gap-40px rounded-lg bg-white p-40px">
@@ -13,7 +19,7 @@ const PreviewModal = ({ togglePreviewModal }: PreviewModalProps) => {
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             Role Function Preview
           </h1>
-          <button type="button" onClick={togglePreviewModal} className="">
+          <button type="button" onClick={togglePreviewModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -28,15 +34,20 @@ const PreviewModal = ({ togglePreviewModal }: PreviewModalProps) => {
           ></Image>
         </section>
 
-        {/* // Info: (20241008 - Liz) 切換影片控制鈕 */}
-        <section className="flex">
-          <button type="button" className="text-carousel-surface-active">
-            <IoEllipse size={8} />
-          </button>
-          <IoEllipse size={8} />
-          <IoEllipse size={8} />
-          <IoEllipse size={8} />
-          <IoEllipse size={8} />
+        {/* // Info: (20241008 - Liz) 切換影片控制按鈕 */}
+        <section className="flex justify-center gap-8px p-16px">
+          {videoIds.map((id, index) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setVideoIndex(index)}
+              className={
+                videoIndex === index ? 'text-carousel-surface-active' : 'text-carousel-surface-mute'
+              }
+            >
+              <IoEllipse size={10} />
+            </button>
+          ))}
         </section>
       </div>
     </div>
