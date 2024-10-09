@@ -48,6 +48,7 @@ const CertificateListPage: React.FC = () => {
     0: false,
     1: false,
   });
+  // Deprecated: (20241011-tzuhan) Debugging purpose
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadingCertificates, setUploadingCertificates, uploadingCertificatesRef] = useStateRef<{
     [id: number]: ICertificateInfo;
