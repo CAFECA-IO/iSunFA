@@ -1,5 +1,6 @@
-// Info: (20240920 - tzuhan) 定義 ICertificate 接口
+import { ProgressStatus } from '@/constants/account';
 
+// Info: (20240920 - tzuhan) 定義 ICertificate 接口
 export enum CERTIFICATE_TYPES {
   INPUT = 'Input',
   OUTPUT = 'Output',
@@ -28,6 +29,16 @@ export interface ICertificate {
   totalPrice: number;
   voucherNo?: string;
   uploader: string;
+}
+
+export interface ICertificateInfo {
+  id: number;
+  name: string;
+  size: number;
+  status: ProgressStatus;
+  progress: number;
+  url: string;
+  file?: File;
 }
 
 export enum VIEW_TYPES {

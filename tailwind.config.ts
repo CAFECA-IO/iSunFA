@@ -1317,6 +1317,10 @@ module.exports = {
 
         Dropshadow_XS:
           '0px 2px 5px var(--shadow-lv-5, rgba(49, 67, 98, 0.10)), 0px 6px 10px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 11px 13px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 28px 15px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 50px 17px var(--shadow-lv-1, rgba(49, 67, 98, 0.00))',
+
+        // Shadow/Down/Dropshadow_S
+        Dropshadow_S:
+          '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',

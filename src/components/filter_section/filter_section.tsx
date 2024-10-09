@@ -101,7 +101,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {
-    fetchData();
+    if (typeof window !== 'undefined') {
+      fetchData();
+    }
   }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting, sorting]);
 
   return (
