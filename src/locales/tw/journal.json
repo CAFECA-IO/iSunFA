@@ -234,7 +234,8 @@
     "RECURRING_ENTRY": "週期性分錄",
     "SELECT_ACCOUNTING": "選擇會計科目",
     "NO_ACCOUNTING_FOUND": "查無會計科目",
-    "NO_COUNTERPARTY_FOUND": "查無交易對象"
+    "NO_COUNTERPARTY_FOUND": "查無交易對象",
+    "EVERY": "每"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",
