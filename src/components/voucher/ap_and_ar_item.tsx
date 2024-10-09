@@ -5,7 +5,7 @@ import { FaDownload, FaUpload } from 'react-icons/fa';
 import { VoucherType } from '@/constants/account';
 import { FiRepeat } from 'react-icons/fi';
 
-const APandARItem = () => {
+const APandARItem: React.FC = () => {
   // ToDo: (20240924 - Julian) dummy data
   const date: number = new Date().getTime() / 1000;
   const voucherType: VoucherType = VoucherType.EXPENSE;

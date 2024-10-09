@@ -3,99 +3,15 @@ import { useTranslation } from 'next-i18next';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
-import VoucherItem, { IVoucherBeta } from '@/components/voucher/voucher_item';
+import VoucherItem from '@/components/voucher/voucher_item';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { VoucherType } from '@/constants/account';
+import { IVoucherBeta, dummyVoucherList } from '@/interfaces/voucher';
 
-const dummyVoucherList: IVoucherBeta[] = [
-  {
-    id: 1,
-    date: 1632511200,
-    voucherNo: '20240920-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Printer-0001',
-    accounting: [
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-    ],
-    credit: [100200],
-    debit: [100000, 200],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-  {
-    id: 2,
-    date: 1662511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.EXPENSE,
-    note: 'Printer-0002',
-    accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
-    credit: [10200],
-    debit: [10200],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-  {
-    id: 3,
-    date: 1672592800,
-    voucherNo: '20240925-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Scanner-0001',
-    accounting: [
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-      '1141 Accounts receivable',
-    ],
-    credit: [100000, 200],
-    debit: [100000, 200],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-  {
-    id: 4,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
-    credit: [300],
-    debit: [300],
-    counterparty: {
-      code: '59373022',
-      name: 'PX Mart',
-    },
-    issuer: {
-      avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-      name: 'Julian',
-    },
-  },
-];
-
-const VoucherList = () => {
+const VoucherList: React.FC = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 

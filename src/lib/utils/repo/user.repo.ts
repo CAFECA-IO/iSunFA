@@ -23,15 +23,11 @@ export async function listUser(): Promise<
 
 export async function createUser({
   name,
-  fullName,
   email,
-  phone,
   imageId,
 }: {
   name: string;
-  fullName: string;
   email: string;
-  phone: string;
   imageId: number;
 }): Promise<User & { userAgreements: UserAgreement[] }> {
   const now = Date.now();
@@ -44,9 +40,7 @@ export async function createUser({
   };
   const createdUser: Prisma.UserCreateInput = {
     name,
-    fullName,
     email,
-    phone,
     imageFile: fileConnect,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
@@ -84,9 +78,7 @@ export async function getUserById(
 export async function updateUserById(
   userId: number,
   name?: string,
-  fullName?: string,
   email?: string,
-  phone?: string,
   imageId?: number
 ): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {
   const now = Date.now();
@@ -98,9 +90,7 @@ export async function updateUserById(
     },
     data: {
       name,
-      fullName,
       email,
-      phone,
       updatedAt: nowTimestamp,
       imageFileId: imageId,
     },

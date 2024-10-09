@@ -60,6 +60,8 @@ export enum APIName {
   INVOICE_GET_BY_ID = 'INVOICE_GET_BY_ID',
   AI_ASK_STATUS = 'AI_ASK_STATUS',
   AI_ASK_RESULT = 'AI_ASK_RESULT',
+  AI_ASK_V2 = 'AI_ASK_V2',
+  AI_ASK_RESULT_V2 = 'AI_ASK_RESULT_V2',
   VOUCHER_CREATE = 'VOUCHER_CREATE',
   VOUCHER_UPDATE = 'VOUCHER_UPDATE',
   VOUCHER_LIST_V2 = 'VOUCHER_LIST_V2',
@@ -74,6 +76,7 @@ export enum APIName {
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
+  REPORT_GET_V2 = 'REPORT_GET_V2',
   REPORT_GENERATE = 'REPORT_GENERATE',
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
@@ -138,6 +141,8 @@ export enum APIPath {
   INVOICE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
   AI_ASK_STATUS = `${apiPrefix}/company/:companyId/ask_ai/:resultId/status`,
   AI_ASK_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
+  AI_ASK_V2 = `${apiPrefix}/company/:companyId/ask_ai`,
+  AI_ASK_RESULT_V2 = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
   VOUCHER_CREATE = `${apiPrefix}/company/:companyId/voucher`,
   VOUCHER_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
@@ -152,6 +157,7 @@ export enum APIPath {
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/journal/:journalId`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
+  REPORT_GET_V2 = `${apiPrefixV2}/company/:companyId/report`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
   STATUS_INFO_GET = `${apiPrefix}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
@@ -517,5 +523,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST,
+  }),
+  [APIName.VOUCHER_GET_BY_ID_V2]: createConfig({
+    name: APIName.VOUCHER_GET_BY_ID_V2,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_GET_BY_ID_V2,
+  }),
+  /**
+   * Info: (20241007 - Murky)
+   * Below is v2 API
+   */
+  [APIName.REPORT_GET_V2]: createConfig({
+    name: APIName.REPORT_GET_V2,
+    method: HttpMethod.GET,
+    path: APIPath.REPORT_GET_V2,
   }),
 };

@@ -2,92 +2,14 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPaginatedData } from '@/interfaces/pagination';
-import { TrialBalanceItem, ITotal } from '@/interfaces/trial_balance';
+import { ITrialBalancePayload, MOCK_RESPONSE } from '@/interfaces/trial_balance';
 
-interface IPayload {
-  currency: string;
-  items: IPaginatedData<TrialBalanceItem[]>;
-  total: ITotal;
-}
+interface IPayload extends ITrialBalancePayload {}
 
 interface IResponse {
   statusMessage: string;
   payload: IPayload | null;
 }
-
-export const MOCK_RESPONSE: IPayload = {
-  currency: 'TWD',
-  items: {
-    data: [
-      {
-        id: 1,
-        no: '1141',
-        accountingTitle: '應收帳款',
-        beginningCreditAmount: 0,
-        beginningDebitAmount: 1785000,
-        midtermCreditAmount: 0,
-        midtermDebitAmount: 1785000,
-        endingCreditAmount: 0,
-        endingDebitAmount: 1785000,
-        createAt: 1704067200,
-        updateAt: 1704067200,
-        subAccounts: [
-          {
-            id: 2,
-            no: '114101',
-            accountingTitle: '應收帳款-A公司',
-            beginningCreditAmount: 0,
-            beginningDebitAmount: 1785000,
-            midtermCreditAmount: 0,
-            midtermDebitAmount: 1785000,
-            endingCreditAmount: 0,
-            endingDebitAmount: 1785000,
-            createAt: 1704067200,
-            updateAt: 1704067200,
-            subAccounts: [],
-          },
-        ],
-      },
-      {
-        id: 3,
-        no: '1151',
-        accountingTitle: '其他應收款',
-        beginningCreditAmount: 0,
-        beginningDebitAmount: 500000,
-        midtermCreditAmount: 0,
-        midtermDebitAmount: 500000,
-        endingCreditAmount: 0,
-        endingDebitAmount: 500000,
-        createAt: 1704067200,
-        updateAt: 1704067200,
-        subAccounts: [],
-      },
-    ],
-    page: 1,
-    totalPages: 1,
-    totalCount: 2,
-    pageSize: 10,
-    hasNextPage: false,
-    hasPreviousPage: false,
-    sort: [
-      {
-        sortBy: 'no',
-        sortOrder: 'asc',
-      },
-    ],
-  },
-  total: {
-    beginningCreditAmount: 0,
-    beginningDebitAmount: 2285000,
-    midtermCreditAmount: 0,
-    midtermDebitAmount: 2285000,
-    endingCreditAmount: 0,
-    endingDebitAmount: 2285000,
-    createAt: 1704067200,
-    updateAt: 1704067200,
-  },
-};
 
 // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
 export async function handleGetRequest() {

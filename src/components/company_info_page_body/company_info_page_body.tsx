@@ -685,7 +685,7 @@ const CompanyInfoPageBody = () => {
                 {t('kyc:COMPANY_BASIC_INFO.TAX_ID_NUMBER')}{' '}
               </div>
               <div className="text-xl font-bold leading-8 text-text-brand-secondary-lv1 lg:mt-4">
-                {company?.code ?? '-'}
+                {company?.taxId ?? '-'}
               </div>
             </div>
             <div className="my-auto flex flex-row flex-wrap content-center items-center justify-between self-stretch lg:flex-col">

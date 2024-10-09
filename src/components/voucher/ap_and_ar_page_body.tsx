@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import APandARList from '@/components/voucher/ap_and_ar_list';
 import Tabs from '@/components/tabs/tabs';
 
-const APandARPageBody = () => {
+const APandARPageBody: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px px-40px py-40px">
+    <div className="relative flex flex-col items-center gap-40px p-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs

@@ -102,10 +102,13 @@ function transformDetailsIntoGeneral(
       curPeriodAmount: 0,
       curPeriodAmountString: '0',
       curPeriodPercentage: 0,
+      curPeriodPercentageString: '0',
       prePeriodAmount: 0,
       prePeriodAmountString: '0',
       prePeriodPercentage: 0,
+      prePeriodPercentageString: '0',
       indent: account.indent,
+      children: [],
     };
   });
   return general;
@@ -180,7 +183,7 @@ function formatPayloadFromIReport(report: IReport, company: Company): FinancialR
   return {
     company: {
       id: company.id,
-      code: company.code,
+      code: company.taxId,
       name: company.name,
     },
     reportType,

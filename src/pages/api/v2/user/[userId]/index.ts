@@ -84,14 +84,7 @@ async function handlePutRequest(
         if (!getUser) {
           statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
         } else {
-          const updatedUser = await updateUserById(
-            userIdNum,
-            name,
-            fullName,
-            email,
-            phone,
-            imageId
-          );
+          const updatedUser = await updateUserById(userIdNum, name, email, imageId);
           const user = formatUser(updatedUser);
           statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
           payload = user;

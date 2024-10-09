@@ -94,13 +94,7 @@ async function handlePostRequest(
           });
           if (file) {
             // Info: (20240830 - Murky) 將圖片存放在database之後connect company
-            const createdCompanyAndRole = await createCompanyAndRole(
-              userId,
-              code,
-              name,
-              regional,
-              file?.id
-            );
+            const createdCompanyAndRole = await createCompanyAndRole(userId, code, name, file?.id);
             const newCompanyAndRole = formatCompanyAndRole(createdCompanyAndRole);
             statusMessage = STATUS_MESSAGE.CREATED;
             payload = newCompanyAndRole;

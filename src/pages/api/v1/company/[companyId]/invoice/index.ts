@@ -182,14 +182,14 @@ export default async function handler(
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } else {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
 
     const logger = loggerRequest(
       userId,
       APIPath[APIName.INVOICE_CREATE],
       req.method || 'unknown',
       401,
-      { message: 'Unauthorized access' },
+      { message: 'Forbidden' },
       req.headers['user-agent'] || 'unknown user-agent',
       req.socket.remoteAddress || 'unknown ip'
     );
