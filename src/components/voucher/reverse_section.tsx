@@ -21,6 +21,7 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
   const [selectedVoucher, setSelectedVoucher] = useState<IVoucherBeta | null>(null);
   const [reverseAmountInput, setReverseAmountInput] = useState<string>('');
   // ToDo: (20241009 - Julian) Send reverse amount to backend
+  // Deprecated: (20241009 - Julian) code incomplete
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [reverseAmount, setReverseAmount] = useState<number>(0);
 
@@ -159,6 +160,7 @@ const ReverseSection: React.FC = () => {
   };
 
   // ToDo: (20241009 - Julian) 🔧施工中
+  // Deprecated: (20241009 - Julian) code incomplete
   // eslint-disable-next-line react/no-array-index-key
   const displayedReverseLineItems = reverseLineItems.map((_, index) => <ReverseLine key={index} />);
 
