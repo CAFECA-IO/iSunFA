@@ -24,3 +24,11 @@ export function zodTimestampInSeconds(canBeUndefined: boolean = false, defaultVa
     .regex(/^\d+$/)
     .transform((val) => timestampInSeconds(Number(val)));
 }
+
+export function zodTimestampInSecondsNoDefault() {
+  const setting = z
+    .string()
+    .regex(/^\d+$/)
+    .transform((val) => timestampInSeconds(Number(val)));
+  return setting;
+}

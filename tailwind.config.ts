@@ -699,6 +699,11 @@ module.exports = {
 
         green_light_left: 'url("/elements/green_light_left.svg")',
         green_light_right: 'url("/elements/green_light_right.svg")',
+
+        // Info: (20241004 - Liz) Beta
+        bg_select_role: 'url("/images/bg_select_role.png")',
+        bg_bookkeeper: 'url("/images/bg_bookkeeper.png")',
+        bg_educational_trial_version: 'url("/images/bg_educational_trial_version.png")',
       },
       zIndex: {
         '-10': '-10',
@@ -725,6 +730,7 @@ module.exports = {
         lg: ['18px', '28px'],
         xl: ['20px', '28px'],
         '2xl': ['24px', '32px'],
+        '28px': ['28px', '36px'],
         '3xl': ['30px', '36px'],
         '32px': ['32px', '36px'],
         '4xl': ['36px', '40px'],
@@ -775,7 +781,8 @@ module.exports = {
 
         tablet: '768px',
         laptop: '1024px',
-        desktop: '1440px',
+        // desktop: '1440px',
+        desktop: '1280px', // Info: (20241007 - Liz) 設計稿是以 1280px 為基準
       },
       container: {
         center: true,
@@ -1034,6 +1041,7 @@ module.exports = {
         '1000px': '1000px',
         '1100px': '1100px',
         '1200px': '1200px',
+        '1280px': '1280px',
         '1300px': '1300px',
         '1350px': '1350px',
         '1400px': '1400px',
@@ -1306,6 +1314,9 @@ module.exports = {
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
 
         crossBtn: '0px 0px 7px 0px #FFA502B2',
+
+        Dropshadow_XS:
+          '0px 2px 5px var(--shadow-lv-5, rgba(49, 67, 98, 0.10)), 0px 6px 10px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 11px 13px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 28px 15px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 50px 17px var(--shadow-lv-1, rgba(49, 67, 98, 0.00))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -1430,6 +1441,9 @@ module.exports = {
         15: '15',
         16: '16',
         17: '17',
+      },
+      skew: {
+        20: '20deg', // Info: (20241004 - Liz) 用來創造平行四邊形，例如: skew-x-20
       },
     },
   },

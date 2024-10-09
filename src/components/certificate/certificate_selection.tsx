@@ -91,7 +91,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
   return (
     <div className={`${className} w-full flex-col items-center`} ref={containerRef}>
       <div
-        className={`flex h-56 w-full flex-col ${isSelectable ? 'justify-start' : 'justify-center'} overflow-hidden rounded-md border border-stroke-neutral-quaternary px-8 pt-5 shadow-inset-lg`}
+        className={`flex h-56 w-full flex-col ${isSelectable ? 'justify-start' : 'justify-center'} overflow-hidden rounded-md border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 px-8 pt-5 shadow-inset-lg`}
         style={{
           maxWidth: `${maxWidth}px`,
         }}

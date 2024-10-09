@@ -141,9 +141,8 @@ describe('Admin Repository Tests', () => {
 
   describe('createCompanyAndRole', () => {
     it('should create a company and role for a given user', async () => {
-      const code = `TESTCODE-${Date.now()}`;
+      const taxId = `TESTCODE-${Date.now()}`;
       const name = 'Test Company';
-      const regional = 'Test Regional';
       const testFile = await createFile({
         name: 'test',
         size: 100,
@@ -156,14 +155,13 @@ describe('Admin Repository Tests', () => {
       if (!testFile) {
         throw new Error('Failed to create a test file');
       }
-      const companyRole = await createCompanyAndRole(testUserId, code, name, regional, testFile.id);
+      const companyRole = await createCompanyAndRole(testUserId, taxId, name, testFile.id);
       await deleteAdminListByCompanyIdForTesting(companyRole.company.id);
       await deleteCompanyByIdForTesting(companyRole.company.id);
       await deleteFileByIdForTesting(testFile.id); // Clean up after test
       expect(companyRole).toBeDefined();
-      expect(companyRole.company.code).toBe(code);
+      expect(companyRole.company.taxId).toBe(taxId);
       expect(companyRole.company.name).toBe(name);
-      expect(companyRole.company.regional).toBe(regional);
       expect(companyRole.role.name).toBe(ROLE_NAME.OWNER);
     });
   });

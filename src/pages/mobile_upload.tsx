@@ -201,7 +201,7 @@ const MobileUploadPage: React.FC = () => {
   );
 };
 
-export const getStaticProps = async ({ locale }: ILocale) => ({
+const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
     ...(await serverSideTranslations(locale, [
       'common',
@@ -212,8 +212,12 @@ export const getStaticProps = async ({ locale }: ILocale) => ({
       'salary',
       'setting',
       'terms',
+      'asset',
     ])),
+    locale,
   },
 });
+
+export const getStaticProps = getStaticPropsFunction;
 
 export default MobileUploadPage;

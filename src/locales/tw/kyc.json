@@ -156,5 +156,9 @@
     "SELECT_AN_COMPANY": "選擇公司",
     "ENTER_COMPANY_NAME": "輸入公司名稱",
     "ENTER_BUSINESS_REGISTRATION_NUMBER": "輸入商業登記號碼"
+  },
+
+  "SELECT_ROLE": {
+    "SELECT_ROLE_ISUNFA": "選擇角色 - iSunFA"
   }
 }

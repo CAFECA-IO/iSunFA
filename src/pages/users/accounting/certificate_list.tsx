@@ -351,21 +351,22 @@ const CertificateListPage: React.FC = () => {
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-    ])),
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
+export const getServerSideProps = async ({ locale }: ILocale) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+        'asset',
+      ])),
+    },
+  };
+};
 
 export default CertificateListPage;
