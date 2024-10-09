@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
@@ -9,11 +9,29 @@ import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
 import { APIName } from '@/constants/api_connection';
 import SelectionToolbar from '@/components/selection_tool_bar/selection_tool_bar';
-import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
+import {
+  ICertificate,
+  ICertificateInfo,
+  ICertificateUI,
+  OPERATIONS,
+  VIEW_TYPES,
+} from '@/interfaces/certificate';
 import Certificate from '@/components/certificate/certificate';
 import CertificateEditModal from '@/components/certificate/certificate_edit_modal';
+import { getPusherInstance } from '@/lib/pusherClient';
+import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
+import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
+import APIHandler from '@/lib/utils/api_handler';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import useStateRef from 'react-usestateref';
+import { useUserCtx } from '@/contexts/user_context';
 
-const UploadCertificatePage: React.FC = () => {
+const CertificateListPage: React.FC = () => {
+  const { selectedCompany } = useUserCtx();
+  const { id: companyId } = selectedCompany!;
+  const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
+  const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
+  const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState<{ [tab: number]: { [id: number]: ICertificateUI } }>({
     0: {},
@@ -30,6 +48,11 @@ const UploadCertificatePage: React.FC = () => {
     0: false,
     1: false,
   });
+  // Deprecated: (20241011-tzuhan) Debugging purpose
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [uploadingCertificates, setUploadingCertificates, uploadingCertificatesRef] = useStateRef<{
+    [id: number]: ICertificateInfo;
+  }>({});
 
   const handleApiResponse = useCallback((resData: ICertificate[]) => {
     const sumInvoiceTotalPrice = {
@@ -174,13 +197,68 @@ const UploadCertificatePage: React.FC = () => {
     console.log('Save selected id:', certificate);
   }, []);
 
+  const certificateHandler = useCallback(
+    async (message: { token: string; certificate: ICertificateInfo }) => {
+      const { token: receivedToken, certificate: certificateData } = message;
+      // Deprecated: (20241011 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.log(
+        `pusher got message, (token(${tokenRef.current})===_token${receivedToken})?${tokenRef.current === receivedToken} message:`,
+        message
+      );
+
+      if (receivedToken === tokenRef.current) {
+        const updatedCertificates = {
+          ...uploadingCertificatesRef.current,
+        };
+        updatedCertificates[certificateData.id] = certificateData;
+        setUploadingCertificates(updatedCertificates);
+        // Deprecated: (20241011 - tzuhan) Debugging purpose
+        // eslint-disable-next-line no-console
+        console.log(`uploadingCertificatesRef.current:`, uploadingCertificatesRef.current);
+      }
+    },
+    [tokenRef, setUploadingCertificates]
+  );
+  const getToken = useCallback(async () => {
+    if (!tokenRef.current) {
+      const res = await encryptAPI({ body: { companyId } });
+      if (res.success && res.data) {
+        setToken(res.data);
+      } else {
+        setToken('');
+      }
+    }
+  }, [tokenRef, companyId, setToken]);
+
+  const toggleQRCode = useCallback(() => {
+    getToken();
+    setShowQRCode((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    getToken();
+  }, [getToken]);
+
+  useEffect(() => {
+    const pusher = getPusherInstance();
+    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
+
+    channel.bind(CERTIFICATE_EVENT.UPLOAD, certificateHandler);
+
+    return () => {
+      channel.unbind(CERTIFICATE_EVENT.UPLOAD, certificateHandler);
+      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
+    };
+  }, [certificateHandler]);
+
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>Upload Certificate - iSunFA</title>
+        <title>Certificate List - iSunFA</title>
       </Head>
       <main className="flex h-screen w-screen overflow-hidden">
         {editingId && (
@@ -191,6 +269,14 @@ const UploadCertificatePage: React.FC = () => {
             onSave={handleSave}
           />
         )}
+        {showQRCode && !!token && (
+          <CertificateQRCodeModal
+            isOpen={showQRCode}
+            onClose={() => setShowQRCode((prev) => !prev)}
+            isOnTopOfModal={false}
+            token={tokenRef.current!}
+          />
+        )}
 
         {/* Info: (20240919 - tzuhan) Side Menu */}
         <SideMenu />
@@ -199,12 +285,10 @@ const UploadCertificatePage: React.FC = () => {
         <div className="flex flex-1 flex-col">
           {/* Info: (20240919 - tzuhan) Header */}
           <Header />
-
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="space-y-4 overflow-y-scroll p-6">
             {/* Info: (20240919 - tzuhan) Upload Area */}
-            <UploadArea isDisabled={false} withScanner />
-
+            <UploadArea isDisabled={false} withScanner toggleQRCode={toggleQRCode} />
             {/* Info: (20240919 - tzuhan) Tabs */}
             <Tabs
               tabs={['Certificate Without Voucher', 'Certificate with Voucher']}
@@ -235,7 +319,7 @@ const UploadCertificatePage: React.FC = () => {
               onActiveChange={setActiveSelection}
               items={Object.values(data[activeTab])}
               itemType="Certificates"
-              subtitle={`Invoice Total Price: ${sumPrice} TWD`}
+              subtitle={`Invoice Total Price: ${sumPrice[activeTab]} TWD`}
               selectedCount={filterSelectedIds().length}
               totalCount={Object.values(data[activeTab]).length || 0}
               handleSelect={handleSelect}
@@ -250,7 +334,6 @@ const UploadCertificatePage: React.FC = () => {
             <Certificate
               data={Object.values(data[activeTab])}
               viewType={viewType}
-              activeTab={activeTab}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
               isSelectedAll={isSelectedAll[activeTab]}
@@ -259,27 +342,32 @@ const UploadCertificatePage: React.FC = () => {
               onEdit={onEdit}
             />
           </div>
+          {/* Info: (20240926- tzuhan) Floating Upload Popup */}
+          <FloatingUploadPopup
+            uploadingCertificates={Object.values(uploadingCertificatesRef.current)}
+          />
         </div>
       </main>
     </>
   );
 };
 
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-    ])),
-  },
-});
+export const getServerSideProps = async ({ locale }: ILocale) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+        'asset',
+      ])),
+    },
+  };
+};
 
-export const getStaticProps = getStaticPropsFunction;
-
-export default UploadCertificatePage;
+export default CertificateListPage;

@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
-import UploadFileItem, { UploadFile } from '@/components/upload_certificate/upload_file_item';
+import React, { useState, useMemo, useEffect } from 'react';
+import UploadFileItem from '@/components/upload_certificate/upload_file_item';
 import { ProgressStatus } from '@/constants/account';
 import Image from 'next/image';
+import { ICertificateInfo } from '@/interfaces/certificate';
 
-const FloatingUploadPopup: React.FC = () => {
-  const [files, setFiles] = useState<UploadFile[]>([
-    { name: 'preline-ui.xls', size: 7, progress: 20, status: ProgressStatus.IN_PROGRESS },
-    { name: 'preline-ui.xls', size: 7, progress: 50, status: ProgressStatus.IN_PROGRESS },
-    { name: 'preline-ui.xls', size: 7, progress: 80, status: ProgressStatus.IN_PROGRESS },
-  ]);
-  const [expanded, setExpanded] = useState(false); // Info: (20240919 - tzuhan) 控制展開/收縮狀態
+interface FloatingUploadPopupProps {
+  uploadingCertificates: ICertificateInfo[];
+}
 
-  // Info: (20240919 - tzuhan) 計算總上傳進度和狀態
-  const totalFiles = files.length;
-  const completedFiles = files.filter((file) => file.progress === 100).length;
-  const isUploading = files.some(
-    (file) => file.progress > 0 && file.progress < 100 && file.status !== ProgressStatus.PAUSED
+const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({ uploadingCertificates }) => {
+  const [files, setFiles] = useState<ICertificateInfo[]>(uploadingCertificates);
+  const [expanded, setExpanded] = useState(false);
+
+  // Info: (20241009 - tzuhan) Memoize calculated values to avoid redundant recalculations
+  const totalFiles = useMemo(() => uploadingCertificates.length, [files]);
+  const completedFiles = useMemo(
+    () => uploadingCertificates.filter((file) => file.status === ProgressStatus.SUCCESS).length,
+    [files]
   );
-
+  const isUploading = useMemo(
+    () =>
+      files.some(
+        (file) => file.progress > 0 && file.progress < 100 && file.status !== ProgressStatus.PAUSED
+      ),
+    [files]
+  );
   // Info: (20240919 - tzuhan) 暫停或繼續上傳
-  const updateFileStatus = (prevFiles: UploadFile[], index: number) =>
+  const updateFileStatus = (prevFiles: ICertificateInfo[], index: number) =>
     prevFiles.map((file, i) => {
       return i === index
         ? {
@@ -42,13 +49,21 @@ const FloatingUploadPopup: React.FC = () => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
-  return (
+  const displayed =
+    totalFiles > 0 ||
+    uploadingCertificates.filter((file) => file.status === ProgressStatus.IN_PROGRESS).length > 0;
+
+  useEffect(() => {
+    setFiles(uploadingCertificates);
+  }, [uploadingCertificates]);
+
+  const popUpBody = displayed ? (
     <div className="dashboardCardShadow fixed bottom-4 right-4 w-480px overflow-hidden">
       {/* Info: (20240919 - tzuhan) Header: 顯示標題與收縮/展開按鈕 */}
       <div className="flex items-center justify-between p-4">
         <div className="flex-auto flex-col items-center text-center">
           <div className="flex items-center justify-center space-x-2 text-lg font-semibold">
-            <Image src="/elements/cloud_upload.svg" width={24} height={24} alt="clock" />
+            <Image src="/elements/cloud_upload.svg" width={24} height={24} alt="Upload icon" />
             <div>Upload file</div>
           </div>
           {totalFiles > 0 && (
@@ -88,7 +103,9 @@ const FloatingUploadPopup: React.FC = () => {
         </div>
       )}
     </div>
-  );
+  ) : null;
+
+  return popUpBody;
 };
 
 export default FloatingUploadPopup;
