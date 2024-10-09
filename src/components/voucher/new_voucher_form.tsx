@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { FaChevronDown, FaPlus } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
-import { FiPlus, FiSearch } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -11,14 +10,18 @@ import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
+import AssetSection from '@/components/voucher/asset_section';
+import ReverseSection from '@/components/voucher/reverse_section';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { IAccount } from '@/interfaces/accounting_account';
 import { MessageType } from '@/interfaces/message_modal';
-import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
-import { VoucherType } from '@/constants/account';
+import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
+import { checkboxStyle, inputStyle, default30DayPeriodInSec } from '@/constants/display';
+import { VoucherType } from '@/constants/account';
+import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 
 interface ILineItem {
   id: number;
@@ -27,29 +30,15 @@ interface ILineItem {
   debit: number;
   credit: number;
 }
-interface ICounterparty {
-  id: number;
-  code: string;
-  name: string;
-}
 
 enum RecurringUnit {
   MONTH = 'month',
   WEEK = 'week',
 }
 
-const AccountTitlesOfAPandAR = ['應收帳款', '應付帳款'];
-
 const NewVoucherForm: React.FC = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
-
-  const inputStyle = {
-    NORMAL:
-      'border-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
-    ERROR:
-      'border-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
-  };
 
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
@@ -63,35 +52,6 @@ const NewVoucherForm: React.FC = () => {
     debit: 0,
     credit: 0,
   };
-
-  // ToDo: (20241004 - Julian) dummy data
-  const dummyCounterparty: ICounterparty[] = [
-    {
-      id: 1,
-      code: '59382730',
-      name: 'Padberg LLC',
-    },
-    {
-      id: 2,
-      code: '59382731',
-      name: 'Hermiston - West',
-    },
-    {
-      id: 3,
-      code: '59382732',
-      name: 'Feil, Ortiz and Lebsack',
-    },
-    {
-      id: 4,
-      code: '59382733',
-      name: 'Romaguera Inc',
-    },
-    {
-      id: 5,
-      code: '59382734',
-      name: 'Stamm - Baumbach',
-    },
-  ];
 
   // Info: (20241004 - Julian) 通用項目
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -120,8 +80,8 @@ const NewVoucherForm: React.FC = () => {
 
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
-  // const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
-  // const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
+  const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
+  const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
   const [counterKeyword, setCounterKeyword] = useState<string>('');
@@ -185,8 +145,21 @@ const NewVoucherForm: React.FC = () => {
     const accountingNull = lineItems.some((item) => item.account === null);
 
     // Info: (20241009 - Julian) 會計科目有應收付帳款時，顯示 Counterparty
-    const isAPorAR = lineItems.some((item) =>
-      AccountTitlesOfAPandAR.includes(item.account?.name || ''));
+    const isAPorAR = lineItems.some((item) => {
+      return AccountCodesOfAPandAR.includes(item.account?.code || '');
+    });
+
+    // Info: (20241009 - Julian) 會計科目有資產時，顯示 Asset
+    const isAsset = lineItems.some((item) => {
+      return AccountCodesOfAsset.includes(item.account?.code || '');
+    });
+
+    // Info: (20241004 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
+    const isReverse = lineItems.some(
+      (item) =>
+        (item.account?.code === '2170' && item.debit > 0) || // Info: (20241009 - Julian) 應付帳款
+        (item.account?.code === '1172' && item.credit > 0) // Info: (20241009 - Julian) 應收帳款
+    );
 
     setTotalDebit(debitTotal);
     setTotalCredit(creditTotal);
@@ -194,6 +167,8 @@ const NewVoucherForm: React.FC = () => {
     setIsAccountingNull(accountingNull);
 
     setIsCounterpartyRequired(isAPorAR);
+    setIsAssetRequired(isAsset);
+    setIsReverseRequired(isReverse);
   }, [lineItems]);
 
   useEffect(() => {
@@ -782,29 +757,18 @@ const NewVoucherForm: React.FC = () => {
           </div>
         </div>
         {/* Info: (20241009 - Julian) Asset */}
-        <div className="col-span-2 flex flex-col">
-          {/* Info: (20241009 - Julian) Asset Divider */}
-          <div className="my-5 flex items-center gap-4">
-            <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
-            <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
-              <Image src="/icons/asset.svg" width={16} height={16} alt="asset_icon" />
-              <p>Asset</p>
-            </div>
-            <hr className="flex-1 border-divider-stroke-lv-4" />
+        {isAssetRequired && (
+          <div className="col-span-2 flex flex-col">
+            <AssetSection />
           </div>
-          {/* Info: (20241009 - Julian) Asset block */}
-          <div className="flex flex-col gap-12px">
-            <div className="flex flex-col items-center text-xs">
-              <p className="text-text-neutral-tertiary">Empty</p>
-              <p className="text-text-neutral-primary">Please add at least 1 asset!</p>
-            </div>
-            <Button type="button" variant="secondaryOutline">
-              <FiPlus size={20} />
-              <p>Add New Asset</p>
-            </Button>
+        )}
+        {/* Info: (20240926 - Julian) Reverse */}
+        {isReverseRequired && (
+          <div className="col-span-2 flex flex-col">
+            <ReverseSection />
           </div>
-        </div>
-        {/* Info: (20240926 - Julian) voucher line block */}
+        )}
+        {/* Info: (20240926 - Julian) Voucher line block */}
         {voucherLineBlock}
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
