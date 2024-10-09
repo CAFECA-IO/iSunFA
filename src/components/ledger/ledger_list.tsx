@@ -55,6 +55,28 @@ const dummyVoucherList: ILedgerBeta[] = [
     debit: [0],
     balance: [100200],
   },
+  {
+    id: 5,
+    date: 1702511200,
+    voucherNo: '20240922-0002',
+    voucherType: VoucherType.TRANSFER,
+    note: 'Mouse-0001',
+    accounting: [{ code: '1141', name: 'Accounts receivable' }],
+    credit: [300],
+    debit: [0],
+    balance: [100200],
+  },
+  {
+    id: 6,
+    date: 1702511200,
+    voucherNo: '20240922-0002',
+    voucherType: VoucherType.TRANSFER,
+    note: 'Mouse-0001',
+    accounting: [{ code: '1141', name: 'Accounts receivable' }],
+    credit: [300],
+    debit: [0],
+    balance: [100200],
+  },
 ];
 
 const LedgerList = () => {
@@ -75,7 +97,7 @@ const LedgerList = () => {
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
-  const sideBorderStyles = 'border-r border-stroke-neutral-quaternary';
+  const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
   //   const checkStyle = `'table-cell' text-center align-middle border-r border-stroke-neutral-quaternary`;
 
   // Info: (20240920 - Julian) 日期排序按鈕
@@ -122,9 +144,10 @@ const LedgerList = () => {
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
-            <div className={`${tableCellStyles} border-r`}>
-              <div className="flex items-center">
-                <div className="ml-4 text-center align-middle">
+            <div className={`${tableCellStyles} border-b border-r`}>
+              <div className="flex items-center justify-center">
+                {/* <div className="ml-4 text-center align-middle"> */}
+                <div className="relative">
                   <input type="checkbox" className={checkboxStyle} />
                 </div>
               </div>
