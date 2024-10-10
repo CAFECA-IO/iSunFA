@@ -152,8 +152,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   };
 
   const debitInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字
-    const debitValue = e.target.value.replace(/\D/g, '');
+    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
+    const debitValue = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
     // Info: (20241001 - Julian) 加入千分位逗號
     setDebitInput(numberWithCommas(debitValue));
     // Info: (20241001 - Julian) 設定 Debit
@@ -161,8 +161,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   };
 
   const creditInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241001 - Julian) 限制只能輸入數字
-    const creditValue = e.target.value.replace(/\D/g, '');
+    // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
+    const creditValue = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
     // Info: (20241001 - Julian) 加入千分位逗號
     setCreditInput(numberWithCommas(creditValue));
     // Info: (20241001 - Julian) 設定 Credit
