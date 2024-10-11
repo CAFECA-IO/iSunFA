@@ -236,7 +236,6 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
     BalanceSheetGenerator.calculateLiabilityAndEquity(accountForest);
     const accountMap = transformForestToMap(accountForest);
-
     return accountMap;
   }
 

@@ -194,6 +194,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       indent: level,
       debit,
       percentage: null,
+      children: [],
     };
 
     const newReportSheetMapping = new Map<string, IAccountForSheetDisplay>([
@@ -247,6 +248,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: sum,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     return indirectOperatingCashFlow;
@@ -311,6 +313,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: null,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     let directCashFlow = 0;
@@ -337,6 +340,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         amount: total,
         indent: 1,
         percentage: null,
+        children: [],
       };
 
       directCashFlow += total;
@@ -359,6 +363,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: directCashFlow,
       indent: 1,
       percentage: null,
+      children: [],
     });
     return reportSheetMapping;
   }
@@ -374,6 +379,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: directCashFlow,
       indent: 1,
       percentage: null,
+      children: [],
     });
     return reportSheetMapping;
   }
@@ -414,6 +420,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: 0,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_INCREASE_THIS_PERIOD.code, {
@@ -422,6 +429,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: cashFlowFromOperating,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code, {
@@ -430,6 +438,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: startCashBalance,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code, {
@@ -438,6 +447,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: endCashBalance,
       indent: 0,
       percentage: null,
+      children: [],
     });
     return result;
   }
@@ -457,6 +467,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         amount: 0,
         indent: account.indent,
         percentage: 0,
+        children: [],
       };
     });
     return result;
