@@ -291,6 +291,7 @@ const MobileUploadPage: React.FC = () => {
         <title>Upload Certificate - iSunFA</title>
       </Head>
       <main
+        // Deprecated: (20241019 - tzuhan) Debugging purpose
         // eslint-disable-next-line tailwindcss/no-arbitrary-value
         className={`grid h-screen grid-rows-[100px_1fr_85px] ${uploadMode === UploadMode.CAMERA ? '' : 'hidden'}`}
       >
@@ -330,6 +331,7 @@ const MobileUploadPage: React.FC = () => {
 
         {/* Info: (20241011 - tzuhan) 拍照區域 */}
         <div
+          // Deprecated: (20241019 - tzuhan) Debugging purpose
           // eslint-disable-next-line tailwindcss/no-arbitrary-value
           className={`relative h-full max-h-[calc(100vh-185px)] ${isCameraOpen ? 'hidden' : ''}`}
         >
@@ -365,6 +367,7 @@ const MobileUploadPage: React.FC = () => {
                   <video
                     ref={videoRef}
                     autoPlay
+                    // Deprecated: (20241019 - tzuhan) Debugging purpose
                     // eslint-disable-next-line tailwindcss/no-arbitrary-value
                     className="h-full w-full object-cover"
                   >
