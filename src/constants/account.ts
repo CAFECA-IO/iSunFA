@@ -306,6 +306,18 @@ export const SPECIAL_ACCOUNTS: {
     rootCode: '3350',
     level: 3,
   },
+  ACCUMULATED_PROFIT_AND_LOSS: {
+    system: 'IFRS',
+    type: AccountType.EQUITY,
+    debit: false,
+    liquidity: false,
+    code: '3351',
+    name: '累積盈虧',
+    forUser: true,
+    parentCode: '3350',
+    rootCode: '3350',
+    level: 3,
+  },
   OTHER_EQUITY_OTHER: {
     system: 'IFRS',
     type: AccountType.EQUITY,
