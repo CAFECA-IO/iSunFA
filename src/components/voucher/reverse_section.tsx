@@ -17,8 +17,6 @@ interface IReverseLineProps {
   amountChangeHandler: (amount: number) => void;
   flagOfClear: boolean;
   flagOfSubmit: boolean;
-  // ToDo: (20241009 - Julian) 未選擇
-  isShowReverseVoucherHint?: boolean;
 }
 
 interface IReverseSectionProps {
@@ -34,7 +32,6 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
   amountChangeHandler,
   flagOfClear,
   flagOfSubmit,
-  isShowReverseVoucherHint = false,
 }) => {
   const { t } = useTranslation('common');
 
@@ -102,9 +99,7 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
       </div>
     </div>
   ) : (
-    <p
-      className={`truncate text-input-text-input-placeholder ${isShowReverseVoucherHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
-    >
+    <p className="truncate text-input-text-input-placeholder">
       {t('journal:REVERSE_SECTION.REVERSE_VOUCHER_PLACEHOLDER')}
     </p>
   );
@@ -240,7 +235,13 @@ const ReverseSection: React.FC<IReverseSectionProps> = ({
     ) : (
       <div className="col-span-10 flex flex-col items-center text-xs">
         <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
-        <p className="text-text-neutral-primary">{t('journal:REVERSE_SECTION.EMPTY_HINT')}</p>
+        <p
+          className={`${
+            reverses.length === 0 ? 'text-text-state-error' : 'text-text-neutral-primary'
+          }`}
+        >
+          {t('journal:REVERSE_SECTION.EMPTY_HINT')}
+        </p>
       </div>
     );
 
