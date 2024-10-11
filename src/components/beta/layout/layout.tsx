@@ -14,11 +14,10 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen border-2 border-rose-400">
+    <div className="flex h-screen">
       {/* side menu */}
-
       {isSideMenuOpen ? (
-        <section className="w-280px flex-none border-2 border-sky-400 px-12px py-32px">
+        <section className="w-280px flex-none px-12px py-32px">
           <button type="button" className="p-10px">
             <FiLayout size={24} onClick={ToggleSideMenu} />
           </button>
@@ -36,7 +35,7 @@ const Layout = ({ children }: LayoutProps) => {
         </section>
       )}
 
-      <div className="flex flex-auto flex-col gap-40px border-2 border-lime-400 bg-surface-neutral-main-background px-56px py-32px">
+      <div className="flex flex-auto flex-col gap-40px bg-surface-neutral-main-background px-56px py-32px">
         <Header />
 
         {/* Content */}

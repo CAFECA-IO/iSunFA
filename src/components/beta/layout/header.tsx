@@ -1,26 +1,22 @@
-import { FiSearch } from 'react-icons/fi';
+import Search from '@/components/beta/layout/search';
 import ModeSwitch from '@/components/beta/layout/mode_switch';
+import I18n from '@/components/i18n/i18n';
+import Notification from '@/components/beta/layout/notification';
+import Profile from '@/components/beta/layout/profile';
 
 const Header = () => {
   return (
-    <header className="flex items-center">
-      <div className="flex grow items-center rounded-sm border-2 border-lime-400 bg-input-surface-input-background">
-        <input
-          type="text"
-          placeholder="Search"
-          className="grow rounded-l-sm border border-rose-600 bg-transparent px-12px py-10px"
-        />
+    <header className="flex items-center gap-24px">
+      <Search />
 
-        <button type="button" className="px-12px py-10px">
-          <FiSearch size={20} />
-        </button>
-      </div>
-
-      <section className="flex items-center">
+      <section className="flex flex-none items-center gap-16px">
         <ModeSwitch />
 
-        {/* Avatar */}
-        <div className="h-40px w-40px rounded-full bg-sky-400"></div>
+        <I18n />
+
+        <Notification />
+
+        <Profile />
       </section>
     </header>
   );
