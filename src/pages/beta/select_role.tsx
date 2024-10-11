@@ -38,8 +38,10 @@ const SelectRolePage = () => {
         />
       </Head>
 
-      <main className="relative mx-auto flex h-screen w-1280px flex-col justify-center gap-100px overflow-x-hidden">
-        <Introduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+      <main className="relative h-screen overflow-hidden">
+        <div className="h-75%">
+          <Introduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+        </div>
 
         <div className="mx-100px mb-40px">
           <RoleCard showingRole={showingRole} setShowingRole={setShowingRole} />

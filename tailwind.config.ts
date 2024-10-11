@@ -780,9 +780,11 @@ module.exports = {
         xl: '1440px',
 
         tablet: '768px',
-        laptop: '1024px',
-        // desktop: '1440px',
-        desktop: '1280px', // Info: (20241007 - Liz) 設計稿是以 1280px 為基準
+        laptop: '1024px', // (1024*768)
+        desktop: '1440px', // (1440*900)
+
+        // Info: (20241007 - Liz) iSunFA 設計稿以 1280px 為基準 (1280*800)
+        screen1280: '1280px',
       },
       container: {
         center: true,
@@ -1028,6 +1030,7 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '675px': '675px',
         '678px': '678px',
         '700px': '700px',
         '726px': '726px',
