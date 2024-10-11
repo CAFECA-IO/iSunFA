@@ -17,6 +17,8 @@ export const ISUNFA_ROUTE = {
   LOGIN: '/users/login',
   BETA_LOGIN: '/beta/login', // Info: (20241001 - Liz) Beta login
   EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
+  SELECT_ROLE: '/beta/select_role',
+  JOB_RECORD: '/beta/job_record',
 
   DASHBOARD: '/users/dashboard',
   KYC: '/users/kyc',
@@ -36,6 +38,7 @@ export const ISUNFA_ROUTE = {
   USERS_FINANCIAL_REPORTS_BALANCE_SHEET: `/users/reports/financials?report_type=${FinancialReportTypesKey.balance_sheet}`,
   USERS_FINANCIAL_REPORTS_INCOME_STATEMENT: `/users/reports/financials?report_type=${FinancialReportTypesKey.comprehensive_income_statement}`,
   USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
+  UPLOAD: `mobile_upload`,
 };
 
 export const EXTERNAL_API = {

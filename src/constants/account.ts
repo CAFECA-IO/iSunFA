@@ -2,6 +2,7 @@
 // Info: (20240416 - Murky) type
 export enum ProgressStatus {
   SUCCESS = 'success',
+  FAILED = 'failed',
   IN_PROGRESS = 'inProgress',
   NOT_FOUND = 'notFound',
   ALREADY_UPLOAD = 'alreadyUpload',
@@ -300,6 +301,18 @@ export const SPECIAL_ACCOUNTS: {
     liquidity: false,
     code: '3353',
     name: '本期損益',
+    forUser: true,
+    parentCode: '3350',
+    rootCode: '3350',
+    level: 3,
+  },
+  ACCUMULATED_PROFIT_AND_LOSS: {
+    system: 'IFRS',
+    type: AccountType.EQUITY,
+    debit: false,
+    liquidity: false,
+    code: '3351',
+    name: '累積盈虧',
     forUser: true,
     parentCode: '3350',
     rootCode: '3350',

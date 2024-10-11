@@ -234,7 +234,8 @@
     "RECURRING_ENTRY": "Recurring Entry",
     "SELECT_ACCOUNTING": "Select Accounting",
     "NO_ACCOUNTING_FOUND": "No accounting found",
-    "NO_COUNTERPARTY_FOUND": "No counterparty found"
+    "NO_COUNTERPARTY_FOUND": "No counterparty found",
+    "EVERY": "Every"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "Assets",
@@ -245,5 +246,17 @@
     "INCOME": "Income",
     "EXPENSE": "Expenses",
     "GAIN_OR_LOSS": "Gain or Loss"
+  },
+  "ASSET_SECTION": {
+    "TITLE": "Asset",
+    "EMPTY_HINT": "Please add at least 1 asset!",
+    "ADD_BTN": "Add New Asset"
+  },
+  "REVERSE_SECTION": {
+    "TITLE": "Reverse",
+    "REVERSE_VOUCHER": "Reverse Voucher",
+    "REVERSE_VOUCHER_PLACEHOLDER": "Please select...",
+    "REVERSE_AMOUNT": "Reverse Amount",
+    "ADD_BTN": "Add more reverse voucher"
   }
 }

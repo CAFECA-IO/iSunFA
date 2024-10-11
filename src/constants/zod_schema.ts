@@ -24,6 +24,7 @@ import {
   ocrResultGetByIdValidator,
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
+import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
 import {
   voucherCreateValidator,
   voucherDeleteValidatorV2,
@@ -77,4 +78,6 @@ export const API_ZOD_SCHEMA = {
 
   [APIName.AI_ASK_V2]: askAIPostValidatorV2,
   [APIName.AI_ASK_RESULT_V2]: askAIGetResultValidatorV2,
+
+  [APIName.REPORT_GET_V2]: reportGetValidatorV2,
 };

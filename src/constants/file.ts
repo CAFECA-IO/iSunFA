@@ -4,6 +4,7 @@ export enum FileFolder {
   INVOICE = 'invoice',
   KYC = 'kyc',
   TMP = 'tmp',
+  mobile_upload = 'mobile_upload',
 }
 
 export enum UploadType {
@@ -12,6 +13,7 @@ export enum UploadType {
   USER = 'user',
   PROJECT = 'project',
   INVOICE = 'invoice',
+  MOBILE_UPLOAD = 'mobile_upload',
 }
 
 export enum FileDatabaseConnectionType {
@@ -31,6 +33,7 @@ export const UPLOAD_TYPE_TO_FOLDER_MAP = {
   [UploadType.USER]: FileFolder.TMP,
   [UploadType.PROJECT]: FileFolder.TMP,
   [UploadType.INVOICE]: FileFolder.INVOICE,
+  [UploadType.MOBILE_UPLOAD]: FileFolder.mobile_upload,
 };
 
 export enum UploadDocumentType {

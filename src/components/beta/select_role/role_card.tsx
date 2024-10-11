@@ -3,8 +3,8 @@ import Image from 'next/image';
 import { RoleId } from '@/constants/role';
 
 interface RoleCardProps {
-  role: React.SetStateAction<string>;
-  setRole: React.Dispatch<React.SetStateAction<string>>;
+  showingRole: React.SetStateAction<RoleId | null>;
+  setShowingRole: React.Dispatch<React.SetStateAction<RoleId | null>>;
 }
 
 interface CardProps {
@@ -13,8 +13,8 @@ interface CardProps {
   title: string;
   imageSrc: string;
   altText: string;
-  role: React.SetStateAction<string>;
-  setRole: React.Dispatch<React.SetStateAction<string>>;
+  showingRole: React.SetStateAction<RoleId | null>;
+  setShowingRole: React.Dispatch<React.SetStateAction<RoleId | null>>;
 }
 
 // Info: (20241007 - Liz) 每個角色卡片的資訊
@@ -55,15 +55,15 @@ const Card: React.FC<CardProps> = ({
   title,
   imageSrc,
   altText,
-  role,
-  setRole,
+  showingRole,
+  setShowingRole,
 }) => {
-  const isRoleSelected = role === roleId;
+  const isRoleSelected = showingRole === roleId;
 
   return (
     <button
       type="button"
-      onClick={() => setRole(roleId)}
+      onClick={() => setShowingRole(roleId)}
       disabled={isRoleDisabled}
       className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:opacity-50 desktop:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'} ${isRoleDisabled && 'pointer-events-none'}`}
     >
@@ -77,13 +77,13 @@ const Card: React.FC<CardProps> = ({
         alt={altText}
         width={48}
         height={48}
-        className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${role === roleId ? 'border-4 border-stroke-brand-primary' : ''}`}
+        className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${showingRole === roleId ? 'border-4 border-stroke-brand-primary' : ''}`}
       />
     </button>
   );
 };
 
-const RoleCard = ({ role, setRole }: RoleCardProps) => {
+const RoleCard = ({ showingRole, setShowingRole }: RoleCardProps) => {
   return (
     <div className="flex gap-80px">
       {cards.map((card) => (
@@ -94,8 +94,8 @@ const RoleCard = ({ role, setRole }: RoleCardProps) => {
           title={card.title}
           imageSrc={card.imageSrc}
           altText={card.altText}
-          role={role}
-          setRole={setRole}
+          showingRole={showingRole}
+          setShowingRole={setShowingRole}
         />
       ))}
     </div>

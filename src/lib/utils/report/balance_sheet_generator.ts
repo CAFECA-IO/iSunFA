@@ -17,18 +17,24 @@ import IncomeStatementGenerator from '@/lib/utils/report/income_statement_genera
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
-import { timestampToString } from '@/lib/utils/common';
+import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
+  private startSecondOfYear: number;
+
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private incomeStatementGeneratorFromTimeZero: IncomeStatementGenerator;
+  private incomeStatementGeneratorFromTimeZeroToBeginOfYear: IncomeStatementGenerator;
+
+  private incomeStatementGeneratorFromBeginOfYearToEndDate: IncomeStatementGenerator;
 
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
     super(companyId, 0, endDateInSecond, reportSheetType);
+
+    this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(startDateInSecond);
 
     this.incomeStatementGenerator = new IncomeStatementGenerator(
       companyId,
@@ -36,9 +42,17 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       endDateInSecond
     );
 
-    this.incomeStatementGeneratorFromTimeZero = new IncomeStatementGenerator(
+    // Info: (20241011 - Murky) For Accumulate Profit and Loss
+    this.incomeStatementGeneratorFromTimeZeroToBeginOfYear = new IncomeStatementGenerator(
       companyId,
       0,
+      this.startSecondOfYear
+    );
+
+    // Info: (20241011 - Murky) For NetIncome
+    this.incomeStatementGeneratorFromBeginOfYearToEndDate = new IncomeStatementGenerator(
+      companyId,
+      this.startSecondOfYear,
       endDateInSecond
     );
   }
@@ -48,14 +62,29 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private async closeAccountFromIncomeStatement(
     curPeriod: boolean
   ): Promise<ILineItemIncludeAccount[]> {
-    const incomeStatementContent =
-      await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
+    const currentYearISContent =
+      await this.incomeStatementGeneratorFromBeginOfYearToEndDate.generateIAccountReadyForFrontendArray();
 
+    const beforeISContent =
+      await this.incomeStatementGeneratorFromTimeZeroToBeginOfYear.generateIAccountReadyForFrontendArray();
+
+    // Info: (20241011 - Murky) net income 是本期範圍內的營收
     const netIncome =
-      incomeStatementContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
+      currentYearISContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const otherComprehensiveIncome =
-      incomeStatementContent.find(
+
+    // Info: (20241011 - Murky) Accumulate Profit and loss是本期以前的營收
+    const accumulateProfitAndLoss =
+      beforeISContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const currentOtherComprehensiveIncome =
+      currentYearISContent.find(
+        (account) => account.code === SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
+      ) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const beforeOtherComprehensiveIncome =
+      beforeISContent.find(
         (account) => account.code === SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
       ) || EMPTY_I_ACCOUNT_READY_FRONTEND;
 
@@ -64,12 +93,17 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const netIncomeAccount = await findUniqueAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.NET_INCOME.code
     );
+
     const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
     );
 
     const netIncomeInEquity = await findUniqueAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code
+    );
+
+    const accumulateProfitAndLossInEquity = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code
     );
 
     const otherEquityOther = await findUniqueAccountByCodeInPrisma(
@@ -103,10 +137,40 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     });
 
     closeAccount.push({
+      id: accumulateProfitAndLossInEquity?.id || -1,
+      amount: curPeriod
+        ? accumulateProfitAndLoss.curPeriodAmount
+        : accumulateProfitAndLoss.prePeriodAmount,
+      description: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.name,
+      debit: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.debit,
+      accountId: accumulateProfitAndLossInEquity?.id || -1,
+      voucherId: -1,
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
+      account: netIncomeAccount
+        ? {
+            ...netIncomeAccount,
+            code: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code,
+            debit: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.debit,
+          }
+        : {
+            ...SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS,
+            id: -1,
+            companyId: this.companyId,
+            createdAt: 1,
+            updatedAt: 1,
+            deletedAt: null,
+          },
+    });
+
+    closeAccount.push({
       id: otherEquityOther?.id || -1,
       amount: curPeriod
-        ? otherComprehensiveIncome.curPeriodAmount
-        : otherComprehensiveIncome.prePeriodAmount,
+        ? currentOtherComprehensiveIncome.curPeriodAmount +
+          beforeOtherComprehensiveIncome.curPeriodAmount
+        : beforeOtherComprehensiveIncome.prePeriodAmount +
+          beforeOtherComprehensiveIncome.prePeriodAmount,
       description: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.name,
       debit: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.debit,
       accountId: otherEquityOther?.id || -1,
@@ -172,7 +236,6 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
     BalanceSheetGenerator.calculateLiabilityAndEquity(accountForest);
     const accountMap = transformForestToMap(accountForest);
-
     return accountMap;
   }
 

@@ -9,7 +9,10 @@ import {
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
-import { IVoucherFromPrismaIncludeJournalLineItems } from '@/interfaces/voucher';
+import {
+  IVoucherForCashFlow,
+  IVoucherFromPrismaIncludeJournalLineItems,
+} from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
@@ -28,7 +31,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
 
-  private voucherLastPeriod: IVoucherFromPrismaIncludeJournalLineItems[];
+  private voucherLastPeriod: IVoucherForCashFlow[];
 
   private YEAR_RANGE = 5;
 
@@ -38,7 +41,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     companyId: number,
     startDateInSecond: number,
     endDateInSecond: number,
-    voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[]
+    voucherRelatedToCash: IVoucherForCashFlow[]
   ) {
     const reportSheetType = ReportSheetType.CASH_FLOW_STATEMENT;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
@@ -54,15 +57,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       endDateInSecond
     );
     this.voucherRelatedToCash = voucherRelatedToCash.filter((voucher) => {
-      // ToDo: (20241011 - Jacky) To Murky, This is a temporary fix for the voucher with cash flow
-      const laterThanStartDate = voucher.createdAt >= startDateInSecond;
-      const earlierThanEndDate = voucher.createdAt <= endDateInSecond;
+
+      const laterThanStartDate = voucher.date >= startDateInSecond;
+      const earlierThanEndDate = voucher.date <= endDateInSecond;
       return laterThanStartDate && earlierThanEndDate;
     });
 
     this.voucherLastPeriod = voucherRelatedToCash.filter((voucher) => {
-      // ToDo: (20241011 - Jacky) To Murky, This is a temporary fix for the voucher with cash flow
-      const earlierThanStartDate = voucher.createdAt < startDateInSecond;
+
+      const earlierThanStartDate = voucher.date < startDateInSecond;
       return earlierThanStartDate;
     });
   }
@@ -187,6 +190,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       indent: level,
       debit,
       percentage: null,
+      children: [],
     };
 
     const newReportSheetMapping = new Map<string, IAccountForSheetDisplay>([
@@ -240,6 +244,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: sum,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     return indirectOperatingCashFlow;
@@ -304,6 +309,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: null,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     let directCashFlow = 0;
@@ -330,6 +336,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         amount: total,
         indent: 1,
         percentage: null,
+        children: [],
       };
 
       directCashFlow += total;
@@ -352,6 +359,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: directCashFlow,
       indent: 1,
       percentage: null,
+      children: [],
     });
     return reportSheetMapping;
   }
@@ -367,6 +375,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: directCashFlow,
       indent: 1,
       percentage: null,
+      children: [],
     });
     return reportSheetMapping;
   }
@@ -407,6 +416,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: 0,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_INCREASE_THIS_PERIOD.code, {
@@ -415,6 +425,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: cashFlowFromOperating,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code, {
@@ -423,6 +434,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: startCashBalance,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code, {
@@ -431,6 +443,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: endCashBalance,
       indent: 0,
       percentage: null,
+      children: [],
     });
     return result;
   }
@@ -450,6 +463,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         amount: 0,
         indent: account.indent,
         percentage: 0,
+        children: [],
       };
     });
     return result;
