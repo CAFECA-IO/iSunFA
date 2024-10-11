@@ -64,9 +64,9 @@ export type IVoucherFromPrismaIncludeJournalLineItems = Prisma.VoucherGetPayload
 
 export type IVoucherForCashFlow = Prisma.VoucherGetPayload<{
   include: {
-    journal: {
+    invoiceVoucherJournals: {
       include: {
-        invoice: true;
+        journal: true;
       };
     };
     lineItems: {
