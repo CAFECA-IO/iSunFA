@@ -68,6 +68,10 @@ const MobileUploadPage: React.FC = () => {
       frameElement.style.width = `${frameWidth}px`;
       frameElement.style.height = `${frameHeight}px`;
     }
+    if (videoRef.current) {
+      videoRef.current.width = frameWidth;
+      videoRef.current.height = frameHeight;
+    }
   };
 
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,7 +265,7 @@ const MobileUploadPage: React.FC = () => {
     if (router.isReady && query.token) {
       setToken(query.token as string);
     }
-    // 判斷裝置是否為手機
+    // Info: (20241011 - tzuhan) 判斷裝置是否為手機
     const userAgent = navigator.userAgent || navigator.vendor;
     if (/android|iPad|iPhone|iPod/i.test(userAgent)) {
       setIsMobile(true);
@@ -327,7 +331,7 @@ const MobileUploadPage: React.FC = () => {
         {/* Info: (20241011 - tzuhan) 拍照區域 */}
         <div
           // eslint-disable-next-line tailwindcss/no-arbitrary-value
-          className={`relative h-full max-h-[calc(100vh-185px)] ${isCameraOpen ? 'hidden' : ''} bg-black/50`}
+          className={`relative h-full max-h-[calc(100vh-185px)] ${isCameraOpen ? 'hidden' : ''}`}
         >
           <RxCamera
             onClick={openCameraHanler}
@@ -348,23 +352,25 @@ const MobileUploadPage: React.FC = () => {
             />
           ) : (
             <div className="relative h-full w-full">
-              <video
-                ref={videoRef}
-                autoPlay
-                // eslint-disable-next-line tailwindcss/no-arbitrary-value
-                className="h-full max-h-[calc(100vh-185px)] w-full object-cover"
-              >
-                <track kind="captions" />
-              </video>
-              <canvas ref={canvasRef} className="hidden"></canvas>
-
-              {/* Info: (20241011 - tzuhan) 對齊框 */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="absolute left-1/2 top-4 h-fit w-fit -translate-x-1/2 rounded-full bg-black/50 p-2 px-6 text-text-neutral-solid-light">
+                  Put the document in the frame
+                </div>
+                {/* Info: (20241011 - tzuhan) 對齊框 */}
                 <div
                   id="alignment-frame"
                   className="relative border-4 border-yellow-500"
                   style={{ aspectRatio: '1.54' }}
                 >
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    // eslint-disable-next-line tailwindcss/no-arbitrary-value
+                    className="h-full w-full object-cover"
+                  >
+                    <track kind="captions" />
+                  </video>
+                  <canvas ref={canvasRef} className="hidden"></canvas>
                   {/* 四個角上的圓點 */}
                   <div className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full bg-yellow-500"></div>
                   <div className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-yellow-500"></div>
@@ -392,13 +398,13 @@ const MobileUploadPage: React.FC = () => {
           >
             <div className="h-45px w-45px rounded-full border-2 border-stroke-brand-secondary bg-surface-neutral-solid-light"></div>
           </button>
-          <button
-            type="button"
+          <Button
+            variant="tertiaryBorderless"
             onClick={() => setFlashEnabled(!flashEnabled)}
-            className={`rounded-md px-4 py-2 ${flashEnabled ? 'bg-yellow-500' : 'bg-gray-300'}`}
+            disabled={!flashEnabled}
           >
-            {flashEnabled ? 'Flash On' : 'Flash Off'}
-          </button>
+            <Image src="/elements/flash.svg" alt="Flash" width={24} height={24} />
+          </Button>
         </div>
       </main>
     </>
