@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { IAssetItem, mockAssetItem } from '@/interfaces/asset';
 
-const AssetSection: React.FC = () => {
+interface IAssetSectionProps {
+  isShowAssetHint: boolean;
+  assets: IAssetItem[];
+  setAssets: React.Dispatch<React.SetStateAction<IAssetItem[]>>;
+}
+
+const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, setAssets }) => {
   const { t } = useTranslation('common');
-  const [assets, setAssets] = useState<IAssetItem[]>([]);
 
   // ToDo: (20241009 - Julian) Replace with real function to add asset
   const generateRandomAsset = () => {
-    const newId = assets[assets.length - 1]?.id || 0;
+    // Info: (20241011 - Julian) 取得最後一筆資產的 id，並加 1
+    const lastItem = assets[assets.length - 1];
+    const newId = lastItem ? lastItem.id + 1 : 0;
+
     const randomNum = Math.random() * 10;
     const randomAssetName =
       randomNum > 8
@@ -66,7 +74,9 @@ const AssetSection: React.FC = () => {
     ) : (
       <div className="flex flex-col items-center text-xs">
         <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
-        <p className="text-text-neutral-primary">{t('journal:ASSET_SECTION.EMPTY_HINT')}</p>
+        <p className={`${isShowAssetHint ? 'text-text-state-error' : 'text-text-neutral-primary'}`}>
+          {t('journal:ASSET_SECTION.EMPTY_HINT')}
+        </p>
       </div>
     );
 

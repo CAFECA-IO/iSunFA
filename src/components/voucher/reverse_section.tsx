@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa';
@@ -13,22 +13,36 @@ import { Button } from '@/components/button/button';
 
 interface IReverseLineProps {
   deleteHandler: () => void;
+  voucherChangeHandler: (voucher: IVoucherBeta) => void;
+  amountChangeHandler: (amount: number) => void;
+  flagOfClear: boolean;
+  flagOfSubmit: boolean;
   // ToDo: (20241009 - Julian) 未選擇
   isShowReverseVoucherHint?: boolean;
 }
 
+interface IReverseSectionProps {
+  reverses: IReverse[];
+  setReverses: React.Dispatch<React.SetStateAction<IReverse[]>>;
+  flagOfClear: boolean;
+  flagOfSubmit: boolean;
+}
+
 const ReverseLine: React.FC<IReverseLineProps> = ({
   deleteHandler,
+  voucherChangeHandler,
+  amountChangeHandler,
+  flagOfClear,
+  flagOfSubmit,
   isShowReverseVoucherHint = false,
 }) => {
   const { t } = useTranslation('common');
 
   const [selectedVoucher, setSelectedVoucher] = useState<IVoucherBeta | null>(null);
   const [reverseAmountInput, setReverseAmountInput] = useState<string>('');
-  // ToDo: (20241009 - Julian) Send reverse amount to backend
-  // Deprecated: (20241009 - Julian) code incomplete
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reverseAmount, setReverseAmount] = useState<number>(0);
+
+  const [voucherStyle, setVoucherStyle] = useState<string>(inputStyle.NORMAL);
+  const [amountStyle, setAmountStyle] = useState<string>(inputStyle.NORMAL);
 
   // Info: (20241009 - Julian) 選單顯示狀態
   const {
@@ -36,6 +50,29 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
     componentVisible: isVoucherMenuVisible,
     setComponentVisible: setVoucherMenuVisible,
   } = useOuterClick<HTMLDivElement>(false);
+
+  useEffect(() => {
+    // Info: (20241011 - Julian) Reset All State
+    setSelectedVoucher(null);
+    setReverseAmountInput('');
+  }, [flagOfClear]);
+
+  useEffect(() => {
+    // Info: (20241011 - Julian) 檢查是否選擇傳票
+    setVoucherStyle(selectedVoucher ? inputStyle.NORMAL : inputStyle.ERROR);
+    // Info: (20241011 - Julian) 檢查是否輸入金額
+    setAmountStyle(reverseAmountInput ? inputStyle.NORMAL : inputStyle.ERROR);
+  }, [flagOfSubmit]);
+
+  useEffect(() => {
+    // Info: (20241011 - Julian) 選擇傳票時，樣式改回 NORMAL
+    setVoucherStyle(inputStyle.NORMAL);
+  }, [selectedVoucher]);
+
+  useEffect(() => {
+    // Info: (20241007 - Julian) 修改金額時，樣式改回 NORMAL
+    setAmountStyle(inputStyle.NORMAL);
+  }, [reverseAmountInput]);
 
   const toggleVoucherEditing = () => {
     setVoucherMenuVisible(!isVoucherMenuVisible);
@@ -47,7 +84,7 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
     // Info: (20241009 - Julian) 加入千分位逗號
     setReverseAmountInput(numberWithCommas(value));
     // Info: (20241009 - Julian) 設定 reverseAmount
-    setReverseAmount(Number(e.target.value));
+    amountChangeHandler(Number(e.target.value));
   };
 
   const displayedReverseVoucher = selectedVoucher ? (
@@ -81,6 +118,7 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
         const clickHandler = () => {
           setSelectedVoucher(voucher);
           setVoucherMenuVisible(false);
+          voucherChangeHandler(voucher);
         };
 
         return (
@@ -107,7 +145,7 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
       {/* Info: (20241009 - Julian) reverse voucher */}
       <div
         onClick={toggleVoucherEditing}
-        className={`relative col-span-7 flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isVoucherMenuVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}`}
+        className={`relative col-span-7 flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isVoucherMenuVisible ? 'border-input-stroke-selected' : voucherStyle}`}
       >
         {displayedReverseVoucher}
         <div className="h-20px w-20px">
@@ -116,7 +154,9 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
         {voucherDropdownMenu}
       </div>
       {/* Info: (20241009 - Julian) reverse amount */}
-      <div className="col-span-2 flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+      <div
+        className={`col-span-2 flex items-center divide-x rounded-sm border bg-input-surface-input-background ${amountStyle}`}
+      >
         <input
           id="reverse-amount"
           type="text"
@@ -144,29 +184,58 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
   );
 };
 
-const ReverseSection: React.FC = () => {
+const ReverseSection: React.FC<IReverseSectionProps> = ({
+  reverses,
+  setReverses,
+  flagOfClear,
+  flagOfSubmit,
+}) => {
   const { t } = useTranslation('common');
 
-  const [reverseLineItems, setReverseLineItems] = useState<IReverse[]>([defaultReverse]);
-
   const addReverseLineItem = () => {
-    // Info: (20241011 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
-    const newId =
-      reverseLineItems.length > 0 ? reverseLineItems[reverseLineItems.length - 1].id + 1 : 0;
+    // Info: (20241011 - Julian) 取得最後一筆的 ID + 1
+    const lastItem = reverses[reverses.length - 1];
+    const newId = lastItem ? lastItem.id + 1 : 0;
+
     const newLine = { ...defaultReverse, id: newId };
 
-    setReverseLineItems([...reverseLineItems, newLine]);
+    setReverses([...reverses, newLine]);
   };
 
   const displayedReverseLineItems =
-    reverseLineItems && reverseLineItems.length > 0 ? (
-      reverseLineItems.map((reverse) => {
+    reverses && reverses.length > 0 ? (
+      reverses.map((reverse) => {
+        // Info: (20241011 - Julian) 複製傳票列
+        const duplicateLineItem = { ...reverse };
+
+        // Info: (20241011 - Julian) 刪除
         const deleteReverseLineItem = () => {
-          const newLineItems = reverseLineItems.filter((item) => item.id !== reverse.id);
-          setReverseLineItems(newLineItems);
+          const newLineItems = reverses.filter((item) => item.id !== reverse.id);
+          setReverses(newLineItems);
         };
 
-        return <ReverseLine key={reverse.id} deleteHandler={deleteReverseLineItem} />;
+        // Info: (20241011 - Julian)
+        const voucherChangeHandler = (voucher: IVoucherBeta) => {
+          // Info: (20241011 - Julian) 設定 reverse voucher
+          duplicateLineItem.voucher = voucher;
+          setReverses(reverses.map((item) => (item.id === reverse.id ? duplicateLineItem : item)));
+        };
+        const amountChangeHandler = (amount: number) => {
+          // Info: (20241011 - Julian) 設定 reverse amount
+          duplicateLineItem.amount = amount;
+          setReverses(reverses.map((item) => (item.id === reverse.id ? duplicateLineItem : item)));
+        };
+
+        return (
+          <ReverseLine
+            key={reverse.id}
+            deleteHandler={deleteReverseLineItem}
+            voucherChangeHandler={voucherChangeHandler}
+            amountChangeHandler={amountChangeHandler}
+            flagOfClear={flagOfClear}
+            flagOfSubmit={flagOfSubmit}
+          />
+        );
       })
     ) : (
       <div className="col-span-10 flex flex-col items-center text-xs">

@@ -15,6 +15,8 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
+import { IAssetItem } from '@/interfaces/asset';
+import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
@@ -56,7 +58,7 @@ const NewVoucherForm: React.FC = () => {
   const [recurringArray, setRecurringArray] = useState<number[]>([]);
 
   // Info: (20241004 - Julian) 傳票列
-  const [lineItems, setLineItems] = useState<ILineItemBeta[]>([initialVoucherLine]);
+  const [voucherLineItems, setLineItems] = useState<ILineItemBeta[]>([initialVoucherLine]);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
   const [totalCredit, setTotalCredit] = useState<number>(0);
@@ -83,11 +85,20 @@ const NewVoucherForm: React.FC = () => {
   const [filteredCounterparty, setFilteredCounterparty] =
     useState<ICounterparty[]>(dummyCounterparty);
 
+  // Info: (20241011 - Julian) 資產相關 state
+  const [assets, setAssets] = useState<IAssetItem[]>([]);
+
+  // Info: (20241011 - Julian) 沖銷傳票相關 state
+  const [reverses, setReverses] = useState<IReverse[]>([defaultReverse]);
+  const [haveUnselectedReverse, setHaveUnselectedReverse] = useState<boolean>(false);
+  const [haveZeroAmountReverse, setHaveZeroAmountReverse] = useState<boolean>(false);
+
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
   const [isShowCounterHint, setIsShowCounterHint] = useState<boolean>(false);
   const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
+  const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) Type 下拉選單
   const {
@@ -129,27 +140,27 @@ const NewVoucherForm: React.FC = () => {
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
     // Info: (20241004 - Julian) 計算總借貸金額
-    const debitTotal = lineItems.reduce((acc, item) => acc + item.debit, 0);
-    const creditTotal = lineItems.reduce((acc, item) => acc + item.credit, 0);
+    const debitTotal = voucherLineItems.reduce((acc, item) => acc + item.debit, 0);
+    const creditTotal = voucherLineItems.reduce((acc, item) => acc + item.credit, 0);
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = lineItems.some((item) => item.debit === 0 && item.credit === 0);
+    const zeroLine = voucherLineItems.some((item) => item.debit === 0 && item.credit === 0);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
-    const accountingNull = lineItems.some((item) => item.account === null);
+    const accountingNull = voucherLineItems.some((item) => item.account === null);
 
     // Info: (20241009 - Julian) 會計科目有應收付帳款時，顯示 Counterparty
-    const isAPorAR = lineItems.some((item) => {
+    const isAPorAR = voucherLineItems.some((item) => {
       return AccountCodesOfAPandAR.includes(item.account?.code || '');
     });
 
     // Info: (20241009 - Julian) 會計科目有資產時，顯示 Asset
-    const isAsset = lineItems.some((item) => {
+    const isAsset = voucherLineItems.some((item) => {
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
     // Info: (20241004 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
-    const isReverse = lineItems.some(
+    const isReverse = voucherLineItems.some(
       (item) =>
-        (item.account?.code === '2170' && item.debit > 0) || // Info: (20241009 - Julian) 應付帳款
+        (item.account?.code === '2171' && item.debit > 0) || // Info: (20241009 - Julian) 應付帳款
         (item.account?.code === '1172' && item.credit > 0) // Info: (20241009 - Julian) 應收帳款
     );
 
@@ -157,11 +168,21 @@ const NewVoucherForm: React.FC = () => {
     setTotalCredit(creditTotal);
     setHaveZeroLine(zeroLine);
     setIsAccountingNull(accountingNull);
-    setIsVoucherLineEmpty(lineItems.length === 0);
+    setIsVoucherLineEmpty(voucherLineItems.length === 0);
     setIsCounterpartyRequired(isAPorAR);
     setIsAssetRequired(isAsset);
     setIsReverseRequired(isReverse);
-  }, [lineItems]);
+  }, [voucherLineItems]);
+
+  useEffect(() => {
+    // Info: (20241004 - Julian) 檢查是否有未選擇的沖銷傳票
+    const unselectedReverse = reverses.some((reverse) => reverse.voucher === null);
+    // Info: (20241004 - Julian) 檢查是否有金額為 0 的沖銷傳票
+    const zeroAmountReverse = reverses.some((reverse) => reverse.amount === 0);
+
+    setHaveUnselectedReverse(unselectedReverse);
+    setHaveZeroAmountReverse(zeroAmountReverse);
+  }, [reverses]);
 
   useEffect(() => {
     // Info: (20241004 - Julian) 查詢交易對象關鍵字時聚焦
@@ -225,6 +246,12 @@ const NewVoucherForm: React.FC = () => {
     }
   }, [recurringArray]);
 
+  useEffect(() => {
+    if (isAssetRequired && assets.length > 0) {
+      setIsShowAssetHint(false);
+    }
+  }, [assets]);
+
   const typeToggleHandler = () => {
     setTypeVisible(!typeVisible);
   };
@@ -269,6 +296,8 @@ const NewVoucherForm: React.FC = () => {
     setRecurringPeriod(default30DayPeriodInSec);
     setRecurringUnit(RecurringUnit.MONTH);
     setRecurringArray([]);
+    setAssets([]);
+    setReverses([defaultReverse]);
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
   };
@@ -308,8 +337,12 @@ const NewVoucherForm: React.FC = () => {
         ? `${recurringArray.map((item) => (recurringUnit === RecurringUnit.WEEK ? `W${item}` : `M${item}`))}
       `
         : '',
-      'LineItems:',
-      lineItems
+      assets.length > 0 ? '\nAssets:' : '',
+      `${assets.map((asset) => `${asset.assetNumber} ${asset.assetName}`)}`,
+      reverses.length > 0 ? '\nReverses:' : '',
+      `${reverses.map((reverse) => `${reverse.voucher?.voucherNo} ${reverse.amount}`)}`,
+      '\nVoucherLineItems:',
+      voucherLineItems
     );
   };
 
@@ -348,6 +381,18 @@ const NewVoucherForm: React.FC = () => {
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       router.push('#voucher-line-block');
+    } else if (isAssetRequired && assets.length === 0) {
+      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
+      setIsShowAssetHint(true);
+      router.push('#asset-section');
+    } else if (
+      // Info: (20241007 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空 or 有未選擇的沖銷傳票 or 有金額為 0 的沖銷傳票
+      // 則顯示沖銷傳票提示，並定位到沖銷傳票欄位
+      isReverseRequired &&
+      (reverses.length === 0 || haveUnselectedReverse || haveZeroAmountReverse)
+    ) {
+      setFlagOfSubmit(!flagOfSubmit);
+      router.push('#reverse-section');
     } else {
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
@@ -355,7 +400,11 @@ const NewVoucherForm: React.FC = () => {
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
       setIsShowCounterHint(false);
+      setIsShowRecurringPeriodHint(false);
+      setIsShowRecurringArrayHint(false);
+      setIsShowAssetHint(false);
       setFlagOfSubmit(!flagOfSubmit);
+      router.push('#');
     }
   };
 
@@ -637,13 +686,18 @@ const NewVoucherForm: React.FC = () => {
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
           <div className="col-span-2 flex flex-col">
-            <AssetSection />
+            <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
           </div>
         )}
         {/* Info: (20240926 - Julian) Reverse */}
-        {!isReverseRequired && (
+        {isReverseRequired && (
           <div className="col-span-2 flex flex-col">
-            <ReverseSection />
+            <ReverseSection
+              reverses={reverses}
+              setReverses={setReverses}
+              flagOfClear={flagOfClear}
+              flagOfSubmit={flagOfSubmit}
+            />
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
@@ -653,7 +707,7 @@ const NewVoucherForm: React.FC = () => {
           haveZeroLine={haveZeroLine}
           isAccountingNull={isAccountingNull}
           isVoucherLineEmpty={isVoucherLineEmpty}
-          lineItems={lineItems}
+          lineItems={voucherLineItems}
           setLineItems={setLineItems}
           flagOfClear={flagOfClear}
           flagOfSubmit={flagOfSubmit}
