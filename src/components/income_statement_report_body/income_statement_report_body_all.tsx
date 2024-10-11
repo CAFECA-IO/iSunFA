@@ -9,6 +9,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
+import IncomeStatementReportTableRow from './income_statement_report_table_row';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -180,31 +181,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <tbody>
               {reportFinancial &&
                 reportFinancial.general &&
-                reportFinancial.general.slice(0, 10).map((value) => (
-                  <tr key={value.code} className="h-40px">
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                      {value.code}
-                    </td>
-                    <td
-                      className="border border-stroke-brand-secondary-soft p-10px text-xs"
-                      style={{ width: '200px' }}
-                    >
-                      {value.name}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                      {value.curPeriodAmount}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                      {value.curPeriodPercentage}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                      {value.prePeriodAmount}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                      {value.prePeriodPercentage}
-                    </td>
-                  </tr>
-                ))}
+                reportFinancial.general
+                  .slice(0, 10)
+                  .map((value) => <IncomeStatementReportTableRow {...value} />)}
             </tbody>
           </table>
         )}
@@ -277,28 +256,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.general &&
-              reportFinancial.general.slice(10, 24).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="min-w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.general
+                .slice(10, 24)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
         </table>
       </section>
@@ -368,28 +328,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.general &&
-              reportFinancial.general.slice(24, 33).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.general
+                .slice(24, 33)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
 
             <tr>
               <td className="border border-stroke-brand-secondary-soft p-10px text-xs">&nbsp;</td>
@@ -411,28 +352,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.general &&
-              reportFinancial.general.slice(34, 36).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
-                    {value.code}
-                  </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs font-semibold">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
-                    &nbsp;
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-semibold">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs font-semibold">
-                    &nbsp;
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.general
+                .slice(34, 36)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
         </table>
         <div className="relative mt-6">
@@ -515,28 +437,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <tbody>
               {reportFinancial &&
                 reportFinancial.details &&
-                reportFinancial.details.slice(0, 15).map((value) => (
-                  <tr key={value.code} className="h-40px">
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                      {value.code}
-                    </td>
-                    <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                      {value.name}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                      {value.curPeriodAmount}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                      {value.curPeriodPercentage}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                      {value.prePeriodAmount}
-                    </td>
-                    <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                      {value.prePeriodPercentage}
-                    </td>
-                  </tr>
-                ))}
+                reportFinancial.details
+                  .slice(0, 15)
+                  .map((value) => <IncomeStatementReportTableRow {...value} />)}
             </tbody>
           </table>
         )}
@@ -607,28 +510,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.details &&
-              reportFinancial.details.slice(15, 28).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.details
+                .slice(15, 28)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
         </table>
       </section>
@@ -698,28 +582,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.details &&
-              reportFinancial.details.slice(28, 39).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.details
+                .slice(28, 39)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
         </table>
       </section>
@@ -791,28 +656,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.details &&
-              reportFinancial.details.slice(39, 49).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="w-177px min-w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.details
+                .slice(39, 49)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
         </table>
       </section>
@@ -882,28 +728,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <tbody>
             {reportFinancial &&
               reportFinancial.details &&
-              reportFinancial.details.slice(49, 58).map((value) => (
-                <tr key={value.code} className="h-40px">
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.code}
-                  </td>
-                  <td className="w-177px border border-stroke-brand-secondary-soft p-10px text-xs">
-                    {value.name}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.curPeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.curPeriodPercentage}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                    {value.prePeriodAmount}
-                  </td>
-                  <td className="border border-stroke-brand-secondary-soft p-10px text-center text-xs">
-                    {value.prePeriodPercentage}
-                  </td>
-                </tr>
-              ))}
+              reportFinancial.details
+                .slice(49, 58)
+                .map((value) => <IncomeStatementReportTableRow {...value} />)}
           </tbody>
           <tbody>
             {reportFinancial &&
