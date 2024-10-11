@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/button/button';
 import Head from 'next/head';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { ICertificateInfo } from '@/interfaces/certificate';
@@ -12,6 +12,16 @@ import APIHandler from '@/lib/utils/api_handler';
 import { UploadType } from '@/constants/file';
 import useStateRef from 'react-usestateref';
 import { ProgressStatus } from '@/constants/account';
+import { FiUpload } from 'react-icons/fi';
+import { MdArrowBack } from 'react-icons/md';
+import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { RxCamera } from 'react-icons/rx';
+
+enum UploadMode {
+  CAMERA = 'CAMERA',
+  ALBUM = 'ALBUM',
+}
 
 interface IFileWithUrl extends File {
   file: File;
@@ -33,35 +43,131 @@ const MobileUploadPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const { trigger: uploadFileAPI } = APIHandler<IFile[]>(APIName.PUBLIC_FILE_UPLOAD);
   const { trigger: pusherAPI } = APIHandler<void>(APIName.PUSHER);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null); // 存儲相機流
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const [uploadMode, setUploadMode] = useState<UploadMode>(UploadMode.CAMERA);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [isCameraOpen, setIsCameraOpen] = useState<boolean>(true);
+  const [flashEnabled, setFlashEnabled] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (router.isReady && query.token) {
-      setToken(query.token as string);
+  const adjustFrameSize = () => {
+    const aspectRatio = 1.54;
+    let frameWidth = 0;
+    let frameHeight = 0;
+    if (window.innerWidth > window.innerHeight) {
+      frameHeight = (window.innerHeight - 200) * 0.7;
+      frameWidth = frameHeight / aspectRatio;
+    } else {
+      frameWidth = window.innerWidth * 0.7;
+      frameHeight = frameWidth * aspectRatio;
     }
-  }, [router.isReady, query.token]);
+    const frameElement = document.getElementById('alignment-frame');
+    if (frameElement) {
+      frameElement.style.width = `${frameWidth}px`;
+      frameElement.style.height = `${frameHeight}px`;
+    }
+  };
 
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const certificates = Array.from(e.target.files).map(
         (file) =>
           ({
-            file, // Info: (20241009 - tzuhan) Store the original File object for FormData
-            name: file.name, // Info: (20241009 - tzuhan)  File metadata
+            file,
+            name: file.name,
             size: file.size,
             type: file.type,
             lastModified: file.lastModified,
-            url: URL.createObjectURL(file), // Info: (20241009 - tzuhan)  For displaying the image preview
+            url: URL.createObjectURL(file),
           }) as IFileWithUrl
       );
       setSelectedCertificates(certificates);
     }
   };
 
+  const startCamera = async () => {
+    try {
+      if (videoRef.current && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: flashEnabled ? 'user' : 'environment' },
+          audio: false,
+        });
+        videoRef.current.srcObject = stream;
+        setCameraStream(stream);
+      }
+    } catch (error) {
+      // Deprecated: (20241019 - tzuhan) Debugging purpose
+      // eslint-disable-next-line no-console
+      console.error(`startCamera error:`, error);
+
+      messageModalDataHandler({
+        title: 'Camera Error', // ToDo: (20240823 - Julian) i18n
+        content: '相機不支援此裝置或瀏覽器。',
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => {
+          messageModalVisibilityHandler();
+          setIsCameraOpen(false);
+        },
+      });
+      messageModalVisibilityHandler();
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      // 停止所有相機的流
+      cameraStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+      setCameraStream(null);
+    }
+  };
+
+  const dataURLtoFile = (dataUrl: string, filename: string) => {
+    const arr = dataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    const u8arr = new Uint8Array(bstr.length);
+
+    Array.from(bstr).forEach((char, index) => {
+      u8arr[index] = char.charCodeAt(0);
+    });
+
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (video && canvas) {
+      const frameElement = document.getElementById('alignment-frame');
+      canvas.width = frameElement?.clientWidth || 0;
+      canvas.height = frameElement?.clientHeight || 0;
+
+      const context = canvas.getContext('2d');
+      context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      const file = dataURLtoFile(dataUrl, `photo-${Date.now()}.jpg`);
+      const newFile = {
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        url: URL.createObjectURL(file),
+      } as IFileWithUrl;
+
+      setSelectedCertificates((prev) => [...prev, newFile]);
+    }
+  };
+
   const uploadCertificates = async () => {
     setIsUploading(true);
-
     try {
-      // Info: (20241007 - tzuhan) Step 1: Push initial certificate info via Pusher
       const certificatesPayload = selectedCertificatesRef.current.map(
         (obj, index) =>
           ({
@@ -74,10 +180,6 @@ const MobileUploadPage: React.FC = () => {
           }) as ICertificateInfo
       );
 
-      // Deprecated: (20241011-tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log('certificatesPayload:', certificatesPayload);
-
       const { success: successPush } = await pusherAPI({
         body: {
           token: token as string,
@@ -89,10 +191,9 @@ const MobileUploadPage: React.FC = () => {
         throw new Error('Failed to send initial certificates via Pusher');
       }
 
-      // Info: (20241008 - tzuhan) Step 2: Use FormData to upload files
       const formData = new FormData();
       selectedCertificates.forEach((certificate) => {
-        formData.append('file', certificate.file); // Info: (20241009 - tzuhan) Use the original File object
+        formData.append('file', certificate.file);
       });
 
       const { success } = await uploadFileAPI({
@@ -107,16 +208,15 @@ const MobileUploadPage: React.FC = () => {
         throw new Error('Failed to upload certificates');
       }
 
-      // Info: (20241008 - tzuhan) Step 3: Update certificates progress and push again
       const uploadingCertificates = selectedCertificatesRef.current.map(
         (obj, index) =>
           ({
             id: uploadedCertificates.length + index,
             name: obj.name,
             size: obj.size,
-            url: obj.url, // Info: (20241008 - tzuhan) Use original URL here
+            url: obj.url,
             status: ProgressStatus.SUCCESS,
-            progress: 100, // Info: (20241008 - tzuhan) Placeholder progress
+            progress: 100,
           }) as ICertificateInfo
       );
 
@@ -128,7 +228,7 @@ const MobileUploadPage: React.FC = () => {
       });
 
       if (successPushAgain === false) {
-        // Deprecated: (20241011 - tzuhan) Debugging purpose
+        // Deprecated: (20241019 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
         console.error('Failed to send certificates update via Pusher');
       } else {
@@ -136,13 +236,47 @@ const MobileUploadPage: React.FC = () => {
         setUploadedCertificates((prev) => [...prev, ...uploadingCertificates]);
       }
     } catch (error) {
-      // Deprecated: (20241011 - tzuhan) Debugging purpose
+      // Deprecated: (20241019 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.error('Error uploading certificates:', error);
     } finally {
       setIsUploading(false);
     }
   };
+
+  const openCameraHanler = () => {
+    setIsCameraOpen(true);
+    startCamera();
+  };
+
+  const closeCameraHandler = () => {
+    setIsCameraOpen(false);
+    stopCamera();
+  };
+
+  useEffect(() => {
+    if (isCameraOpen) {
+      startCamera();
+    }
+    if (router.isReady && query.token) {
+      setToken(query.token as string);
+    }
+    // 判斷裝置是否為手機
+    const userAgent = navigator.userAgent || navigator.vendor;
+    if (/android|iPad|iPhone|iPod/i.test(userAgent)) {
+      setIsMobile(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      adjustFrameSize();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   return (
     <>
@@ -152,49 +286,119 @@ const MobileUploadPage: React.FC = () => {
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>Upload Certificate - iSunFA</title>
       </Head>
-      <main>
-        <h1>Upload Certificates</h1>
-        <input type="file" accept="image/*" multiple onChange={handleCertificateChange} />
-        <Button
-          onClick={uploadCertificates}
-          disabled={isUploading || selectedCertificates.length === 0 || !token}
-        >
-          {isUploading ? 'Uploading...' : 'Send Certificates'}
-        </Button>
-        <div>
-          <h2>Selected Certificates</h2>
-          <div className="flex flex-row gap-2">
-            {selectedCertificates.map((certificate, index) => (
-              <div key={`pusher_mobile_${index + 1}`}>
-                <Image
-                  src={certificate.url}
-                  alt={`Uploaded Certificate ${index}`}
-                  width={200}
-                  height={200}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h2>Uploaded Certificates</h2>
-          <div className="flex flex-row gap-2">
-            {uploadedCertificates.map((certificate, index) => (
-              <div key={`uploaded_certificate_${index + 1}`}>
-                {certificate.status !== ProgressStatus.FAILED ? (
+      <main
+        // eslint-disable-next-line tailwindcss/no-arbitrary-value
+        className={`grid h-screen grid-rows-[100px_1fr_85px] ${uploadMode === UploadMode.CAMERA ? '' : 'hidden'}`}
+      >
+        <div className="flex h-100px shrink-0 items-center bg-surface-neutral-solid-dark p-2">
+          {isCameraOpen && (
+            <Button className="" type="button" variant={null} onClick={closeCameraHandler}>
+              <MdArrowBack size={24} className="text-stroke-neutral-invert" />
+            </Button>
+          )}
+          {/* Info: (20241011 - tzuhan) 拍照預覽區域 */}
+          <div className="flex-1">
+            <div className="flex gap-2 overflow-x-scroll">
+              {selectedCertificates.map((certificate, index) => (
+                <div key={`image-${index + 1}`} className="h-77px w-50px">
                   <Image
                     src={certificate.url}
-                    alt={`Uploaded Certificate ${index}`}
-                    width={200}
-                    height={200}
+                    alt={`Captured ${index}`}
+                    width={77}
+                    height={50}
+                    className="object-fill"
                   />
-                ) : (
-                  <p>Certificate {index + 1} upload failed</p>
-                )}
-                <p>Status: {certificate.status}</p>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
+          <Button
+            id="camera-upload-image-button"
+            type="button"
+            variant="default"
+            onClick={uploadCertificates}
+            className={`rounded-xs px-3`}
+            disabled={isUploading || selectedCertificates.length === 0}
+          >
+            <FiUpload size={20} className="leading-none text-button-text-secondary" />
+          </Button>
+        </div>
+
+        {/* Info: (20241011 - tzuhan) 拍照區域 */}
+        <div
+          // eslint-disable-next-line tailwindcss/no-arbitrary-value
+          className={`relative h-full max-h-[calc(100vh-185px)] ${isCameraOpen ? 'hidden' : ''} bg-black/50`}
+        >
+          <RxCamera
+            onClick={openCameraHanler}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            size={120}
+          />
+        </div>
+
+        <div
+          className={`relative flex items-center justify-center ${isCameraOpen ? '' : 'hidden'}`}
+        >
+          {isMobile ? (
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleCertificateChange}
+            />
+          ) : (
+            <div className="relative h-full w-full">
+              <video
+                ref={videoRef}
+                autoPlay
+                // eslint-disable-next-line tailwindcss/no-arbitrary-value
+                className="h-full max-h-[calc(100vh-185px)] w-full object-cover"
+              >
+                <track kind="captions" />
+              </video>
+              <canvas ref={canvasRef} className="hidden"></canvas>
+
+              {/* Info: (20241011 - tzuhan) 對齊框 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  id="alignment-frame"
+                  className="relative border-4 border-yellow-500"
+                  style={{ aspectRatio: '1.54' }}
+                >
+                  {/* 四個角上的圓點 */}
+                  <div className="absolute -left-1.5 -top-1.5 h-3 w-3 rounded-full bg-yellow-500"></div>
+                  <div className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-yellow-500"></div>
+                  <div className="absolute -bottom-1.5 -left-1.5 h-3 w-3 rounded-full bg-yellow-500"></div>
+                  <div className="absolute -bottom-1.5 -right-1.5 h-3 w-3 rounded-full bg-yellow-500"></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Info: (20241011 - tzuhan) 底部功能區 */}
+        <div className="flex h-100px shrink-0 -translate-y-15px items-center justify-between rounded-t-lg bg-surface-neutral-solid-dark p-2">
+          <button
+            type="button"
+            onClick={() => setUploadMode(UploadMode.ALBUM)}
+            className="rounded-md bg-gray-300 px-4 py-2"
+          >
+            Open Album
+          </button>
+          <button
+            type="button"
+            onClick={capturePhoto}
+            className="flex h-55px w-55px items-center justify-center rounded-full bg-surface-neutral-solid-light"
+          >
+            <div className="h-45px w-45px rounded-full border-2 border-stroke-brand-secondary bg-surface-neutral-solid-light"></div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFlashEnabled(!flashEnabled)}
+            className={`rounded-md px-4 py-2 ${flashEnabled ? 'bg-yellow-500' : 'bg-gray-300'}`}
+          >
+            {flashEnabled ? 'Flash On' : 'Flash Off'}
+          </button>
         </div>
       </main>
     </>
