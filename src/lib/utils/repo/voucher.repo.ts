@@ -1,3 +1,4 @@
+// ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
@@ -21,9 +22,9 @@ export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
         id: journalId,
       },
       include: {
-        invoice: {
+        invoiceVoucherJournals: {
           include: {
-            payment: true,
+            invoice: true,
           },
         },
       },
@@ -110,7 +111,11 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
         id: voucherId,
       },
       include: {
-        journal: true,
+        invoiceVoucherJournals: {
+          include: {
+            journal: true,
+          },
+        },
         lineItems: {
           include: {
             account: true,
@@ -200,9 +205,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
   try {
     const result = await prisma.voucher.findFirst({
       where: {
-        journal: {
-          companyId,
-        },
+        companyId,
       },
       orderBy: {
         no: SortOrder.DESC,
@@ -239,40 +242,40 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
   }
 }
 
-export async function createVoucherInPrisma(newVoucherNo: string, journalId: number) {
-  try {
-    const now = Date.now();
-    const nowTimestamp = timestampInSeconds(now);
-    const voucherData = await prisma.voucher.create({
-      data: {
-        no: newVoucherNo,
-        journal: {
-          connect: {
-            id: journalId,
-          },
-        },
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
-      },
-      select: {
-        id: true,
-        lineItems: true,
-      },
-    });
+// export async function createVoucherInPrisma(newVoucherNo: string, journalId: number) {
+//   try {
+//     const now = Date.now();
+//     const nowTimestamp = timestampInSeconds(now);
+//     const voucherData = await prisma.voucher.create({
+//       data: {
+//         no: newVoucherNo,
+//         journal: {
+//           connect: {
+//             id: journalId,
+//           },
+//         },
+//         createdAt: nowTimestamp,
+//         updatedAt: nowTimestamp,
+//       },
+//       select: {
+//         id: true,
+//         lineItems: true,
+//       },
+//     });
 
-    return voucherData;
-  } catch (error) {
-    const logError = loggerError(
-      0,
-      'create voucher in createVoucherInPrisma failed',
-      error as Error
-    );
-    logError.error(
-      'Prisma related create voucher in createVoucherInPrisma in voucher.repo.ts failed'
-    );
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-  }
-}
+//     return voucherData;
+//   } catch (error) {
+//     const logError = loggerError(
+//       0,
+//       'create voucher in createVoucherInPrisma failed',
+//       error as Error
+//     );
+//     logError.error(
+//       'Prisma related create voucher in createVoucherInPrisma in voucher.repo.ts failed'
+//     );
+//     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+//   }
+// }
 
 // Info: (20240710 - Murky) Unefficient need to be refactor
 export async function findManyVoucherWithCashInPrisma(
@@ -283,9 +286,7 @@ export async function findManyVoucherWithCashInPrisma(
   try {
     const vouchers = await prisma.voucher.findMany({
       where: {
-        journal: {
-          companyId,
-        },
+        companyId,
         createdAt: {
           gte: startDateInSecond,
           lte: endDateInSecond,
@@ -303,7 +304,11 @@ export async function findManyVoucherWithCashInPrisma(
         },
       },
       include: {
-        journal: true,
+        invoiceVoucherJournals: {
+          include: {
+            journal: true,
+          },
+        },
         lineItems: {
           include: {
             account: true,
@@ -326,6 +331,7 @@ export async function findManyVoucherWithCashInPrisma(
   }
 }
 
+// ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 export async function updateVoucherByJournalIdInPrisma(
   journalId: number,
   companyId: number,
@@ -358,21 +364,26 @@ export async function updateVoucherByJournalIdInPrisma(
         companyId,
       },
       include: {
-        voucher: {
+        invoiceVoucherJournals: {
           include: {
-            lineItems: true,
+            voucher: {
+              include: {
+                lineItems: true,
+              },
+            },
           },
         },
       },
     });
+    const voucherExists = journalExists?.invoiceVoucherJournals?.[0]?.voucher;
 
     // Info: (20240712 - Murky) If journal exists and voucher exists, update the voucher
 
-    if (journalExists && journalExists?.voucher && journalExists?.voucher?.id) {
-      if (journalExists?.voucher?.lineItems) {
+    if (journalExists && voucherExists && voucherExists.id) {
+      if (voucherExists.lineItems) {
         await prismaClient.lineItem.deleteMany({
           where: {
-            voucherId: journalExists.voucher.id,
+            voucherId: voucherExists.id,
           },
         });
       }
@@ -390,7 +401,7 @@ export async function updateVoucherByJournalIdInPrisma(
                 },
               },
               voucher: {
-                connect: { id: journalExists?.voucher?.id },
+                connect: { id: voucherExists.id },
               },
               createdAt: nowInSecond,
               updatedAt: nowInSecond,
@@ -400,7 +411,7 @@ export async function updateVoucherByJournalIdInPrisma(
       );
       const voucherBeUpdated = await prismaClient.voucher.update({
         where: {
-          id: journalExists.voucher.id,
+          id: voucherExists.id,
         },
         data: {
           updatedAt: nowInSecond,
@@ -409,8 +420,12 @@ export async function updateVoucherByJournalIdInPrisma(
           lineItems: true,
         },
       });
+      const newVoucherData = {
+        ...voucherBeUpdated,
+        journalId,
+      };
 
-      return voucherBeUpdated;
+      return newVoucherData;
     }
 
     return null;

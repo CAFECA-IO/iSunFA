@@ -3,13 +3,16 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IJournal } from '@/interfaces/journal';
-import { deleteJournalInPrisma, findUniqueJournalInPrisma } from '@/lib/utils/repo/journal.repo';
 import { formatIJournal } from '@/lib/utils/formatter/journal.formatter';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
+import {
+  deleteInvoiceVoucherJournal,
+  getInvoiceVoucherJournalByJournalId,
+} from '@/lib/utils/repo/beta_transition.repo';
 
 async function handleGetRequest(
   req: NextApiRequest,
@@ -32,7 +35,7 @@ async function handleGetRequest(
       if (query) {
         const { journalId } = query;
         try {
-          const journalData = await findUniqueJournalInPrisma(journalId, companyId);
+          const journalData = await getInvoiceVoucherJournalByJournalId(journalId);
           if (journalData) {
             payload = formatIJournal(journalData);
             statusMessage = STATUS_MESSAGE.SUCCESS;
@@ -70,7 +73,7 @@ async function handleDeleteRequest(
       if (query) {
         const { journalId } = query;
         try {
-          const journalData = await deleteJournalInPrisma(journalId, companyId);
+          const journalData = await deleteInvoiceVoucherJournal(journalId, companyId);
           if (journalData) {
             payload = formatIJournal(journalData);
             statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;

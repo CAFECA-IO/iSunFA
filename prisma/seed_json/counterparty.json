@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1000,
+        "companyId": 1000,
+        "name": "ABC Corp",
+        "taxId": "123456789",
+        "type": "Supplier",
+        "note": "Preferred supplier",
+        "createdAt": 1622548800,
+        "updatedAt": 1625130800,
+        "deletedAt": null
+    },
+    {
+        "id": 1001,
+        "companyId": 1000,
+        "name": "XYZ Ltd",
+        "taxId": "987654321",
+        "type": "Customer",
+        "note": "Regular customer",
+        "createdAt": 1622548800,
+        "updatedAt": 1625130800,
+        "deletedAt": null
+    }
+]

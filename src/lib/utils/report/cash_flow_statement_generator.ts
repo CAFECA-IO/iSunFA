@@ -54,13 +54,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       endDateInSecond
     );
     this.voucherRelatedToCash = voucherRelatedToCash.filter((voucher) => {
-      const laterThanStartDate = voucher.journal.createdAt >= startDateInSecond;
-      const earlierThanEndDate = voucher.journal.createdAt <= endDateInSecond;
+      // ToDo: (20241011 - Jacky) To Murky, This is a temporary fix for the voucher with cash flow
+      const laterThanStartDate = voucher.createdAt >= startDateInSecond;
+      const earlierThanEndDate = voucher.createdAt <= endDateInSecond;
       return laterThanStartDate && earlierThanEndDate;
     });
 
     this.voucherLastPeriod = voucherRelatedToCash.filter((voucher) => {
-      const earlierThanStartDate = voucher.journal.createdAt < startDateInSecond;
+      // ToDo: (20241011 - Jacky) To Murky, This is a temporary fix for the voucher with cash flow
+      const earlierThanStartDate = voucher.createdAt < startDateInSecond;
       return earlierThanStartDate;
     });
   }
