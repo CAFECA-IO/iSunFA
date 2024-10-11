@@ -257,6 +257,7 @@
     "REVERSE_VOUCHER": "沖銷傳票",
     "REVERSE_VOUCHER_PLACEHOLDER": "請選擇...",
     "REVERSE_AMOUNT": "沖銷金額",
-    "ADD_BTN": "新增更多沖銷傳票"
+    "ADD_BTN": "新增更多沖銷傳票",
+    "EMPTY_HINT": "請新增至少 1 筆沖銷傳票！"
   }
 }

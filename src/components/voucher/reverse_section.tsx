@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
-import { BsChevronDown } from 'react-icons/bs';
+import { FaChevronDown } from 'react-icons/fa';
 import { FiTrash2 } from 'react-icons/fi';
 import { LuPlus } from 'react-icons/lu';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { numberWithCommas } from '@/lib/utils/common';
 import { inputStyle } from '@/constants/display';
 import { IVoucherBeta, dummyVoucherList } from '@/interfaces/voucher';
-import { numberWithCommas } from '@/lib/utils/common';
+import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { Button } from '@/components/button/button';
 
-interface IReverseSectionProps {
+interface IReverseLineProps {
+  deleteHandler: () => void;
   // ToDo: (20241009 - Julian) 未選擇
   isShowReverseVoucherHint?: boolean;
 }
 
-const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint = false }) => {
+const ReverseLine: React.FC<IReverseLineProps> = ({
+  deleteHandler,
+  isShowReverseVoucherHint = false,
+}) => {
   const { t } = useTranslation('common');
 
   const [selectedVoucher, setSelectedVoucher] = useState<IVoucherBeta | null>(null);
@@ -47,11 +52,13 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
 
   const displayedReverseVoucher = selectedVoucher ? (
     <div className="flex w-full items-center">
-      <div className="w-1/3 font-medium text-dropdown-text-primary">
-        {selectedVoucher.voucherNo}
+      <div className="flex flex-1 items-center gap-24px">
+        <div className="font-medium text-dropdown-text-primary">{selectedVoucher.voucherNo}</div>
+        <div className="text-xs text-dropdown-text-secondary">
+          {selectedVoucher.counterparty.name}
+        </div>
       </div>
-      <div className="w-1/3 text-dropdown-text-secondary">{selectedVoucher.counterparty.name}</div>
-      <div className="w-1/3 font-medium text-text-neutral-primary">
+      <div className="font-medium text-text-neutral-primary">
         {/* ToDo: (20241009 - Julian) 須確認這欄的內容 */}
         {numberWithCommas(selectedVoucher.debit.reduce((acc, cur) => acc + cur, 0))}{' '}
         <span className="text-dropdown-text-secondary">TWD</span>
@@ -96,78 +103,82 @@ const ReverseLine: React.FC<IReverseSectionProps> = ({ isShowReverseVoucherHint 
   ) : null;
 
   return (
-    <div className="flex items-end gap-24px">
+    <>
       {/* Info: (20241009 - Julian) reverse voucher */}
-      <div className="flex flex-1 flex-col gap-8px">
-        <p className="font-bold text-input-text-primary">
-          {t('journal:REVERSE_SECTION.REVERSE_VOUCHER')}
-          <span className="text-text-state-error">*</span>
-        </p>
-        <div
-          onClick={toggleVoucherEditing}
-          className={`relative flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isVoucherMenuVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}`}
-        >
-          {displayedReverseVoucher}
-          <div className="h-20px w-20px">
-            <BsChevronDown size={20} />
-          </div>
-          {voucherDropdownMenu}
+      <div
+        onClick={toggleVoucherEditing}
+        className={`relative col-span-7 flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isVoucherMenuVisible ? 'border-input-stroke-selected' : 'border-input-stroke-input'}`}
+      >
+        {displayedReverseVoucher}
+        <div className="h-20px w-20px">
+          <FaChevronDown size={20} />
         </div>
+        {voucherDropdownMenu}
       </div>
       {/* Info: (20241009 - Julian) reverse amount */}
-      <div className="flex flex-col gap-8px">
-        <p className="font-bold text-input-text-primary">
-          {t('journal:REVERSE_SECTION.REVERSE_AMOUNT')}
-          <span className="text-text-state-error">*</span>
-        </p>
-        <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-          <input
-            id="reverse-amount"
-            type="text"
-            value={reverseAmountInput}
-            onChange={changeReverseAmount}
-            className="bg-transparent px-12px py-10px text-right outline-none"
-            placeholder="0"
+      <div className="col-span-2 flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+        <input
+          id="reverse-amount"
+          type="text"
+          value={reverseAmountInput}
+          onChange={changeReverseAmount}
+          className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
+          placeholder="0"
+        />
+        <div className="flex items-center gap-8px px-12px py-10px text-input-text-input-placeholder">
+          <Image
+            src="/flags/tw.svg"
+            width={16}
+            height={16}
+            alt="tw_icon"
+            className="rounded-full"
           />
-          <div className="flex items-center gap-8px px-12px py-10px text-input-text-input-placeholder">
-            <Image
-              src="/flags/tw.svg"
-              width={16}
-              height={16}
-              alt="tw_icon"
-              className="rounded-full"
-            />
-            <p>TWD</p>
-          </div>
+          <p>TWD</p>
         </div>
       </div>
       {/* Info: (20241009 - Julian) delete button */}
-      <Button type="button" variant="tertiaryBorderless">
+      <Button type="button" variant="tertiaryBorderless" className="p-0" onClick={deleteHandler}>
         <FiTrash2 size={22} />
       </Button>
-    </div>
+    </>
   );
 };
 
 const ReverseSection: React.FC = () => {
   const { t } = useTranslation('common');
 
-  const [reverseLineItems, setReverseLineItems] = useState<number[]>([1]);
+  const [reverseLineItems, setReverseLineItems] = useState<IReverse[]>([defaultReverse]);
 
-  // ToDo: (20241009 - Julian) Implement addReverseLineItem
   const addReverseLineItem = () => {
-    setReverseLineItems([...reverseLineItems, reverseLineItems.length + 1]);
+    // Info: (20241011 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
+    const newId =
+      reverseLineItems.length > 0 ? reverseLineItems[reverseLineItems.length - 1].id + 1 : 0;
+    const newLine = { ...defaultReverse, id: newId };
+
+    setReverseLineItems([...reverseLineItems, newLine]);
   };
 
-  // ToDo: (20241009 - Julian) 🔧施工中
-  // Deprecated: (20241009 - Julian) code incomplete
-  // eslint-disable-next-line react/no-array-index-key
-  const displayedReverseLineItems = reverseLineItems.map((_, index) => <ReverseLine key={index} />);
+  const displayedReverseLineItems =
+    reverseLineItems && reverseLineItems.length > 0 ? (
+      reverseLineItems.map((reverse) => {
+        const deleteReverseLineItem = () => {
+          const newLineItems = reverseLineItems.filter((item) => item.id !== reverse.id);
+          setReverseLineItems(newLineItems);
+        };
+
+        return <ReverseLine key={reverse.id} deleteHandler={deleteReverseLineItem} />;
+      })
+    ) : (
+      <div className="col-span-10 flex flex-col items-center text-xs">
+        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
+        <p className="text-text-neutral-primary">{t('journal:REVERSE_SECTION.EMPTY_HINT')}</p>
+      </div>
+    );
 
   return (
     <>
       {/* Info: (20241009 - Julian) Reverse Divider */}
-      <div className="my-5 flex items-center gap-4">
+      <div id="reverse-section" className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/bell.svg" width={16} height={16} alt="bell_icon" />
@@ -177,8 +188,19 @@ const ReverseSection: React.FC = () => {
       </div>
 
       <div className="mt-12px flex flex-col gap-12px">
+        {/* Info: (20241009 - Julian) reverse voucher header */}
+        <div className="grid grid-cols-3">
+          <p className="font-bold text-input-text-primary">
+            {t('journal:REVERSE_SECTION.REVERSE_VOUCHER')}
+            <span className="text-text-state-error">*</span>
+          </p>
+          <p className="font-bold text-input-text-primary">
+            {t('journal:REVERSE_SECTION.REVERSE_AMOUNT')}
+            <span className="text-text-state-error">*</span>
+          </p>
+        </div>
         {/* Info: (20241009 - Julian) reverse voucher list */}
-        <div className="flex flex-col">{displayedReverseLineItems}</div>
+        <div className="grid grid-cols-10 gap-x-24px gap-y-14px">{displayedReverseLineItems}</div>
         <button
           type="button"
           className="ml-auto flex items-center text-sm font-semibold text-link-text-primary"

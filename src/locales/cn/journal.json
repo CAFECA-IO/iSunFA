@@ -257,6 +257,7 @@
     "REVERSE_VOUCHER": "冲销传票",
     "REVERSE_VOUCHER_PLACEHOLDER": "请选择...",
     "REVERSE_AMOUNT": "冲销金额",
-    "ADD_BTN": "新增更多冲销传票"
+    "ADD_BTN": "新增更多冲销传票",
+    "EMPTY_HINT": "请新增至少 1 笔冲销传票！"
   }
 }

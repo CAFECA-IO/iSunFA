@@ -73,7 +73,7 @@ const AssetSection: React.FC = () => {
   return (
     <>
       {/* Info: (20241009 - Julian) Asset Divider */}
-      <div className="my-5 flex items-center gap-4">
+      <div id="asset-section" className="my-5 flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
         <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
           <Image src="/icons/asset.svg" width={16} height={16} alt="asset_icon" />
