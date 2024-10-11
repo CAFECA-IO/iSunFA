@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { FaChevronDown, FaPlus } from 'react-icons/fa6';
+import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { numberWithCommas } from '@/lib/utils/common';
-import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
 import ReverseSection from '@/components/voucher/reverse_section';
+import VoucherLineBlock from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { IAccount } from '@/interfaces/accounting_account';
+import { ILineItemBeta } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
@@ -22,14 +21,6 @@ import { useModalContext } from '@/contexts/modal_context';
 import { checkboxStyle, inputStyle, default30DayPeriodInSec } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
-
-interface ILineItem {
-  id: number;
-  account: IAccount | null;
-  particulars: string;
-  debit: number;
-  credit: number;
-}
 
 enum RecurringUnit {
   MONTH = 'month',
@@ -45,7 +36,7 @@ const NewVoucherForm: React.FC = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   // Info: (20241001 - Julian) 初始傳票列
-  const initialVoucherLine = {
+  const initialVoucherLine: ILineItemBeta = {
     id: 0,
     account: null,
     particulars: '',
@@ -65,13 +56,14 @@ const NewVoucherForm: React.FC = () => {
   const [recurringArray, setRecurringArray] = useState<number[]>([]);
 
   // Info: (20241004 - Julian) 傳票列
-  const [lineItems, setLineItems] = useState<ILineItem[]>([initialVoucherLine]);
+  const [lineItems, setLineItems] = useState<ILineItemBeta[]>([initialVoucherLine]);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
   const [totalCredit, setTotalCredit] = useState<number>(0);
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
   const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
+  const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 清空表單 flag
   const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
@@ -165,7 +157,7 @@ const NewVoucherForm: React.FC = () => {
     setTotalCredit(creditTotal);
     setHaveZeroLine(zeroLine);
     setIsAccountingNull(accountingNull);
-
+    setIsVoucherLineEmpty(lineItems.length === 0);
     setIsCounterpartyRequired(isAPorAR);
     setIsAssetRequired(isAsset);
     setIsReverseRequired(isReverse);
@@ -232,27 +224,6 @@ const NewVoucherForm: React.FC = () => {
       setIsShowRecurringArrayHint(false);
     }
   }, [recurringArray]);
-
-  // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
-  const totalStyle =
-    totalCredit === totalDebit && totalCredit !== 0
-      ? 'text-text-state-success-invert'
-      : 'text-text-state-error-invert';
-
-  const AddNewVoucherLine = () => {
-    // Info: (20241001 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
-    const newVoucherId = lineItems.length > 0 ? lineItems[lineItems.length - 1].id + 1 : 0;
-    setLineItems([
-      ...lineItems,
-      {
-        id: newVoucherId,
-        account: null,
-        particulars: '',
-        debit: 0,
-        credit: 0,
-      },
-    ]);
-  };
 
   const typeToggleHandler = () => {
     setTypeVisible(!typeVisible);
@@ -372,7 +343,8 @@ const NewVoucherForm: React.FC = () => {
       (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
       totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
       haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
-      isAccountingNull // Info: (20241004 - Julian) 沒有未選擇的會計科目
+      isAccountingNull || // Info: (20241004 - Julian) 沒有未選擇的會計科目
+      isVoucherLineEmpty // Info: (20241004 - Julian) 沒有傳票列
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       router.push('#voucher-line-block');
@@ -461,104 +433,6 @@ const NewVoucherForm: React.FC = () => {
       {counterMenu}
     </div>
   ) : null;
-
-  const voucherLines = lineItems.map((lineItem) => {
-    // Info: (20241001 - Julian) 複製傳票列
-    const duplicateLineItem = { ...lineItem };
-
-    // Info: (20241001 - Julian) 刪除傳票列
-    const deleteVoucherLine = () => {
-      setLineItems(lineItems.filter((item) => item.id !== lineItem.id));
-    };
-
-    // Info: (20241001 - Julian) 設定 Account title
-    const accountTitleHandler = (account: IAccount | null) => {
-      duplicateLineItem.account = account;
-      setLineItems(
-        lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-      );
-    };
-
-    // Info: (20241001 - Julian) 設定 Particulars
-    const particularsChangeHandler = (particulars: string) => {
-      duplicateLineItem.particulars = particulars;
-      setLineItems(
-        lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-      );
-    };
-
-    // Info: (20241001 - Julian) 設定 Debit
-    const debitChangeHandler = (debit: number) => {
-      duplicateLineItem.debit = debit;
-      setLineItems(
-        lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-      );
-    };
-
-    // Info: (20241001 - Julian) 設定 Credit
-    const creditChangeHandler = (credit: number) => {
-      duplicateLineItem.credit = credit;
-      setLineItems(
-        lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-      );
-    };
-    return (
-      <VoucherLineItem
-        key={lineItem.id}
-        deleteHandler={deleteVoucherLine}
-        accountTitleHandler={accountTitleHandler}
-        particularsChangeHandler={particularsChangeHandler}
-        debitChangeHandler={debitChangeHandler}
-        creditChangeHandler={creditChangeHandler}
-        flagOfClear={flagOfClear}
-        flagOfSubmit={flagOfSubmit}
-        accountIsNull={isAccountingNull}
-        amountIsZero={haveZeroLine}
-        amountNotEqual={totalCredit !== totalDebit}
-      />
-    );
-  });
-
-  const voucherLineBlock = (
-    <div id="voucher-line-block" className="col-span-2">
-      {/* Info: (20240927 - Julian) Table */}
-      <div className="grid w-full grid-cols-13 gap-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
-        {/* Info: (20240927 - Julian) Table Header */}
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER.ACCOUNTING')}
-        </div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER.PARTICULARS')}
-        </div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER.DEBIT')}
-        </div>
-        <div className="col-span-3 col-end-13 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER.CREDIT')}
-        </div>
-
-        {/* Info: (20240927 - Julian) Table Body */}
-        {voucherLines}
-
-        {/* Info: (20240927 - Julian) Total calculation */}
-        {/* Info: (20240927 - Julian) Total Debit */}
-        <div className="col-start-7 col-end-10 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
-        </div>
-        {/* Info: (20240927 - Julian) Total Debit */}
-        <div className="col-start-11 col-end-13 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
-        </div>
-
-        {/* Info: (20240927 - Julian) Add button */}
-        <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0" onClick={AddNewVoucherLine}>
-            <FaPlus size={20} />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
 
   const recurringUnitMenu = (
     <div
@@ -767,13 +641,23 @@ const NewVoucherForm: React.FC = () => {
           </div>
         )}
         {/* Info: (20240926 - Julian) Reverse */}
-        {isReverseRequired && (
+        {!isReverseRequired && (
           <div className="col-span-2 flex flex-col">
             <ReverseSection />
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
-        {voucherLineBlock}
+        <VoucherLineBlock
+          totalCredit={totalCredit}
+          totalDebit={totalDebit}
+          haveZeroLine={haveZeroLine}
+          isAccountingNull={isAccountingNull}
+          isVoucherLineEmpty={isVoucherLineEmpty}
+          lineItems={lineItems}
+          setLineItems={setLineItems}
+          flagOfClear={flagOfClear}
+          flagOfSubmit={flagOfSubmit}
+        />
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>

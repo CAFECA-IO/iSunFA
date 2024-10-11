@@ -203,10 +203,6 @@
     "VOUCHER_DATE": "传票日期",
     "VOUCHER_NO": "传票号码",
     "NOTE": "备注",
-    "ACCOUNTING": "会计科目",
-    "PARTICULARS": "摘要",
-    "CREDIT": "贷方金额",
-    "DEBIT": "借方金额",
     "COUNTRYPARTY": "交易对象",
     "ISSUER": "发行人",
     "RECEIVABLE_AMOUNT": "应收金额",
@@ -259,5 +255,12 @@
     "REVERSE_AMOUNT": "冲销金额",
     "ADD_BTN": "新增更多冲销传票",
     "EMPTY_HINT": "请新增至少 1 笔冲销传票！"
+  },
+  "VOUCHER_LINE_BLOCK": {
+    "ACCOUNTING": "会计科目",
+    "PARTICULARS": "摘要",
+    "CREDIT": "贷方金额",
+    "DEBIT": "借方金额",
+    "EMPTY_HINT": "请新增至少 1 笔会计分录！"
   }
 }

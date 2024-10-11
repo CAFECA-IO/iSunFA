@@ -189,12 +189,12 @@ const ReverseSection: React.FC = () => {
 
       <div className="mt-12px flex flex-col gap-12px">
         {/* Info: (20241009 - Julian) reverse voucher header */}
-        <div className="grid grid-cols-3">
-          <p className="font-bold text-input-text-primary">
+        <div className="grid grid-cols-10 gap-24px">
+          <p className="col-span-7 font-bold text-input-text-primary">
             {t('journal:REVERSE_SECTION.REVERSE_VOUCHER')}
             <span className="text-text-state-error">*</span>
           </p>
-          <p className="font-bold text-input-text-primary">
+          <p className="col-span-3 font-bold text-input-text-primary">
             {t('journal:REVERSE_SECTION.REVERSE_AMOUNT')}
             <span className="text-text-state-error">*</span>
           </p>
