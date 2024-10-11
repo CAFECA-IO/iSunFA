@@ -40,7 +40,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
 
   return (
     <div className="w-full flex-auto pb-4">
-      <div className="h-fit-content table w-full overflow-x-scroll border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
+      <div className="table h-fit w-full overflow-x-scroll border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
         <div className="table-header-group h-60px w-full bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row w-full">
             {activeSelection && (
