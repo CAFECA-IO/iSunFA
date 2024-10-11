@@ -459,8 +459,11 @@ export function setTimestampToDayStart(timestamp: number) {
   return timestampInSeconds(date.getTime());
 }
 
-export function getTimestampOfFirstDateOfThisYear() {
-  const year = new Date().getFullYear();
+export function getTimestampOfFirstDateOfThisYear(currentDateInSecond?: number) {
+  const dateToGetYear = currentDateInSecond
+    ? new Date(timestampInMilliSeconds(currentDateInSecond))
+    : new Date();
+  const year = dateToGetYear.getFullYear();
   const date = new Date(year, 0, 1);
   const timestamp = date.getTime();
   const timestampInSecond = setTimestampToDayStart(timestamp);
