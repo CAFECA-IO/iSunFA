@@ -120,12 +120,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         ? inputStyle.ERROR
         : inputStyle.NORMAL
     );
-    // Info: (20241007 - Julian) 檢查借貸金額是否為零
     setAmountStyle(
-      amountIsZero && debitInput === '' && creditInput === '' ? inputStyle.ERROR : inputStyle.NORMAL
+      // Info: (20241007 - Julian) 檢查借貸金額是否為零
+      (amountIsZero && (debitInput === '' || creditInput === '')) ||
+        // Info: (20241007 - Julian) 檢查借貸金額是否相等
+        amountNotEqual
+        ? inputStyle.ERROR
+        : inputStyle.NORMAL
     );
-    // Info: (20241007 - Julian) 檢查借貸金額是否相等
-    setAmountStyle(amountNotEqual ? inputStyle.ERROR : inputStyle.NORMAL);
   }, [flagOfSubmit]);
 
   useEffect(() => {

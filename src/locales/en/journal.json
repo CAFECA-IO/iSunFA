@@ -203,10 +203,6 @@
     "VOUCHER_DATE": "Voucher Date",
     "VOUCHER_NO": "Voucher No.",
     "NOTE": "Note",
-    "ACCOUNTING": "Accounting",
-    "PARTICULARS": "Particulars",
-    "CREDIT": "Credit",
-    "DEBIT": "Debit",
     "COUNTRYPARTY": "Country Party",
     "ISSUER": "Issuer",
     "RECEIVABLE_AMOUNT": "Receivable Amount",
@@ -257,6 +253,14 @@
     "REVERSE_VOUCHER": "Reverse Voucher",
     "REVERSE_VOUCHER_PLACEHOLDER": "Please select...",
     "REVERSE_AMOUNT": "Reverse Amount",
-    "ADD_BTN": "Add more reverse voucher"
+    "ADD_BTN": "Add more reverse voucher",
+    "EMPTY_HINT": "Please add at least 1 reverse voucher!"
+  },
+  "VOUCHER_LINE_BLOCK": {
+    "ACCOUNTING": "Accounting",
+    "PARTICULARS": "Particulars",
+    "CREDIT": "Credit",
+    "DEBIT": "Debit",
+    "EMPTY_HINT": "Please add at least 1 accounting voucher!"
   }
 }
