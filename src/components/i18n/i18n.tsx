@@ -1,11 +1,10 @@
 import { useTranslation } from 'next-i18next';
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import { SlGlobe } from 'react-icons/sl';
+import { VscGlobe } from 'react-icons/vsc';
 
 type TranslateFunction = (s: string) => string;
 interface II18nProps {
@@ -109,18 +108,22 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
 
   const displayedI18n = (
     <>
-      <button type="button" onClick={desktopClickHandler} className="hidden lg:flex">
-        <Image src="/icons/globe.svg" alt="globe" width={24} height={24} />
+      <button
+        type="button"
+        onClick={desktopClickHandler}
+        className="hidden p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable laptop:flex"
+      >
+        <VscGlobe size={26} />
       </button>
 
       <button
         id="NavLanguageMobile"
         onClick={mobileClickHandler}
         type="button"
-        className="flex w-screen items-center justify-between gap-8px py-10px pl-6 pr-6 text-button-text-secondary hover:text-button-text-primary-hover disabled:text-button-text-secondary disabled:opacity-50 lg:hidden"
+        className="flex w-screen items-center justify-between gap-8px py-10px pl-6 pr-6 text-button-text-secondary hover:text-button-text-primary-hover disabled:text-button-text-secondary disabled:opacity-50 laptop:hidden"
       >
         <div className="flex w-full items-center gap-8px">
-          <SlGlobe size={20} />
+          <VscGlobe size={20} />
           <p> {t('common:NAV_BAR.LANGUAGE')}</p>
         </div>
 
