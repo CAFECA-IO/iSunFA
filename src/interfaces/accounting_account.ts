@@ -38,6 +38,7 @@ export interface IAccountForSheetDisplay {
   amount: number | null;
   percentage: number | null;
   indent: number;
+  children: IAccountForSheetDisplay[];
   debit?: boolean;
 }
 

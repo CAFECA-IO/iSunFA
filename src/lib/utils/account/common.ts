@@ -110,17 +110,48 @@ export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<n
   return updatedForest;
 }
 
+/**
+ * Info: (20241011 - Murky)
+ * Start with 0 depth
+ */
+export function calculateMaxHeighOfNode(node: IAccountNode): number {
+  if (!node.children || node.children.length === 0) {
+    return 0;
+  }
+
+  let maxChildDepth = 0;
+  node.children.forEach((child) => {
+    maxChildDepth = Math.max(maxChildDepth, calculateMaxHeighOfNode(child));
+  });
+
+  return maxChildDepth + 1;
+}
+
 export function addAccountNodeToMapRecursively(
   accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
   account: IAccountNode,
-  rootAmount: number
+  rootAmount: number,
+  currentDepth: number,
+  maxHeight?: number
 ) {
-  const newAccountNode = { ...account, children: [] };
+  // Info: (20241011 - Murky) 倒數第二層可以保有自己的child
+  const isSecondLastLayer = maxHeight === 1;
+  const newAccountNode = isSecondLastLayer ? account : { ...account, children: [] };
   const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
   accountMap.set(account.code, { accountNode: newAccountNode, percentage });
+
   account.children.forEach((child) => {
-    addAccountNodeToMapRecursively(accountMap, child, rootAmount);
+    const maxHeightOfChild = calculateMaxHeighOfNode(child);
+    addAccountNodeToMapRecursively(
+      accountMap,
+      child,
+      rootAmount,
+      currentDepth + 1,
+      maxHeightOfChild
+    );
   });
+
+  return false;
 }
 
 export function transformForestToMap(
@@ -129,10 +160,28 @@ export function transformForestToMap(
   const accountMap = new Map<string, { accountNode: IAccountNode; percentage: number }>();
 
   forest.forEach((accountNode) => {
-    addAccountNodeToMapRecursively(accountMap, accountNode, accountNode.amount);
+    const maxHeight = calculateMaxHeighOfNode(accountNode);
+    addAccountNodeToMapRecursively(accountMap, accountNode, accountNode.amount, 0, maxHeight);
   });
 
   return accountMap;
+}
+
+export function iAccountNode2IAccountForSheetDisplay(
+  accountNode: IAccountNode,
+  percentage: number,
+  children?: IAccountForSheetDisplay[]
+): IAccountForSheetDisplay {
+  const iAccountForSheetDisplay: IAccountForSheetDisplay = {
+    code: accountNode.code,
+    name: accountNode.name,
+    amount: accountNode.amount,
+    indent: accountNode.level,
+    debit: accountNode.debit,
+    percentage,
+    children: children || [],
+  };
+  return iAccountForSheetDisplay;
 }
 
 export function mappingAccountToSheetDisplay(
@@ -162,8 +211,20 @@ export function mappingAccountToSheetDisplay(
         indent: row.indent,
         debit: undefined,
         percentage: 0,
+        children: [],
       });
     } else {
+      const hasChildren = account.accountNode.children.length > 0;
+      const children = hasChildren
+        ? account.accountNode.children.map((child) => {
+            const childAccount = accountMap.get(child.code)!;
+            // Info: (20241011 - Murky) 最多只有兩層，所以最底不會再有children
+            return iAccountNode2IAccountForSheetDisplay(
+              childAccount.accountNode,
+              childAccount.percentage
+            );
+          })
+        : [];
       sheetDisplay.push({
         code: row.code,
         name: row.name,
@@ -171,6 +232,7 @@ export function mappingAccountToSheetDisplay(
         indent: row.indent,
         debit: account.accountNode.debit,
         percentage: account.percentage,
+        children,
       });
     }
   });
