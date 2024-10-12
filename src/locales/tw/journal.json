@@ -203,10 +203,6 @@
     "VOUCHER_DATE": "傳票日期",
     "VOUCHER_NO": "傳票號碼",
     "NOTE": "備註",
-    "ACCOUNTING": "會計科目",
-    "PARTICULARS": "摘要",
-    "CREDIT": "貸方金額",
-    "DEBIT": "借方金額",
     "COUNTRYPARTY": "交易對象",
     "ISSUER": "發行人",
     "RECEIVABLE_AMOUNT": "應收金額",
@@ -257,6 +253,14 @@
     "REVERSE_VOUCHER": "沖銷傳票",
     "REVERSE_VOUCHER_PLACEHOLDER": "請選擇...",
     "REVERSE_AMOUNT": "沖銷金額",
-    "ADD_BTN": "新增更多沖銷傳票"
+    "ADD_BTN": "新增更多沖銷傳票",
+    "EMPTY_HINT": "請新增至少 1 筆沖銷傳票！"
+  },
+  "VOUCHER_LINE_BLOCK": {
+    "ACCOUNTING": "會計科目",
+    "PARTICULARS": "摘要",
+    "CREDIT": "貸方金額",
+    "DEBIT": "借方金額",
+    "EMPTY_HINT": "請新增至少 1 筆會計分錄！"
   }
 }
