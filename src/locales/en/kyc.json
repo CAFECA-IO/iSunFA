@@ -160,5 +160,13 @@
 
   "SELECT_ROLE": {
     "SELECT_ROLE_ISUNFA": "Select Role - iSunFA"
+  },
+
+  "CREATED_ROLES": {
+    "CREATED_ROLES": "Created Roles"
+  },
+
+  "DASHBOARD": {
+    "DASHBOARD": "Dashboard"
   }
 }

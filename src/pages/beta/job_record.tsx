@@ -1,3 +1,7 @@
+import Head from 'next/head';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { ILocale } from '@/interfaces/locale';
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import I18n from '@/components/i18n/i18n';
 import { FiHome, FiArrowRight } from 'react-icons/fi';
@@ -90,51 +94,91 @@ const JobRecordCard = ({
 };
 
 const JobRecordPage = () => {
+  const { t } = useTranslation(['kyc']);
   const { signOut } = useUserCtx();
 
   return (
-    <div className="relative h-screen">
-      <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
+    <>
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon/favicon.ico" />
+        <title>{t('kyc:CREATED_ROLES.CREATED_ROLES')}</title>
+        <meta
+          name="description"
+          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+        />
+        <meta name="author" content="CAFECA" />
+        <meta name="keywords" content="區塊鏈,人工智慧,會計" />
 
-      <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
-        <I18n />
+        <meta property="og:title" content="iSunFA" />
+        <meta
+          property="og:description"
+          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
+        />
+      </Head>
 
-        {/* // ToDo: (20241009 - Liz) 回到主頁功能 */}
-        <FiHome size={20} />
-      </div>
+      <div className="relative h-screen">
+        <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
-      <button
-        type="button"
-        onClick={signOut}
-        className="absolute left-0 top-0 z-0 ml-40px mt-40px flex items-center gap-25px text-button-text-secondary"
-      >
-        <TbLogout size={32} />
-        <p className="font-semibold">Log out</p>
-      </button>
+        <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
+          <I18n />
 
-      {/* // Info: (20241009 - Liz) Job Record Cards */}
-      <section className="flex items-center justify-center gap-40px pt-120px">
-        {jobsRecords.map((jobRecord) => (
-          <JobRecordCard
-            key={jobRecord.jobId}
-            roleName={jobRecord.roleName}
-            roleIconSrc={jobRecord.roleIconSrc}
-            roleAltText={jobRecord.roleAltText}
-            jobAvatarSrc={jobRecord.jobAvatarSrc}
-            jonAltText={jobRecord.jonAltText}
-            lastLoginTime={jobRecord.lastLoginTime}
-          />
-        ))}
+          {/* // ToDo: (20241009 - Liz) 回到主頁功能 */}
+          <FiHome size={20} />
+        </div>
 
-        <Link
-          href={ISUNFA_ROUTE.SELECT_ROLE}
-          className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
+        <button
+          type="button"
+          onClick={signOut}
+          className="absolute left-0 top-0 z-0 ml-40px mt-40px flex items-center gap-25px text-button-text-secondary"
         >
-          <HiPlus size={64} />
-        </Link>
-      </section>
-    </div>
+          <TbLogout size={32} />
+          <p className="font-semibold">Log out</p>
+        </button>
+
+        {/* // Info: (20241009 - Liz) Job Record Cards */}
+        <section className="flex items-center justify-center gap-40px pt-120px">
+          {jobsRecords.map((jobRecord) => (
+            <JobRecordCard
+              key={jobRecord.jobId}
+              roleName={jobRecord.roleName}
+              roleIconSrc={jobRecord.roleIconSrc}
+              roleAltText={jobRecord.roleAltText}
+              jobAvatarSrc={jobRecord.jobAvatarSrc}
+              jonAltText={jobRecord.jonAltText}
+              lastLoginTime={jobRecord.lastLoginTime}
+            />
+          ))}
+
+          <Link
+            href={ISUNFA_ROUTE.SELECT_ROLE}
+            className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
+          >
+            <HiPlus size={64} />
+          </Link>
+        </section>
+      </div>
+    </>
   );
+};
+
+export const getServerSideProps = async ({ locale }: ILocale) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale as string, [
+        'common',
+        'report_401',
+        'journal',
+        'kyc',
+        'project',
+        'setting',
+        'terms',
+        'salary',
+        'asset',
+      ])),
+    },
+  };
 };
 
 export default JobRecordPage;

@@ -160,5 +160,13 @@
 
   "SELECT_ROLE": {
     "SELECT_ROLE_ISUNFA": "選擇角色 - iSunFA"
+  },
+
+  "CREATED_ROLES": {
+    "CREATED_ROLES": "已建立角色"
+  },
+
+  "DASHBOARD": {
+    "DASHBOARD": "儀表板"
   }
 }

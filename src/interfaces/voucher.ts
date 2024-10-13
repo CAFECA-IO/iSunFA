@@ -134,7 +134,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
   {
     id: 2,
     date: 1662511200,
-    voucherNo: '20240922-0002',
+    voucherNo: '20240922-0001',
     voucherType: VoucherType.EXPENSE,
     note: 'Printer-0002',
     accounting: ['1141 Accounts receivable', '1141 Accounts receivable'],
@@ -153,7 +153,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
   {
     id: 3,
     date: 1672592800,
-    voucherNo: '20240925-0001',
+    voucherNo: '20240925-0002',
     voucherType: VoucherType.RECEIVE,
     note: 'Scanner-0001',
     accounting: [

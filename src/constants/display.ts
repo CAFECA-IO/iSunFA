@@ -69,9 +69,9 @@ export const MILLISECONDS_IN_A_SECOND = 1000;
 // Info: (20241009 - Julian) input CSS style
 export const inputStyle = {
   NORMAL:
-    'border-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
+    'border-input-stroke-input divide-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
   ERROR:
-    'border-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
+    'border-input-text-error divide-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
 };
 
 // Info: (20240429 - Julian) checkbox CSS style

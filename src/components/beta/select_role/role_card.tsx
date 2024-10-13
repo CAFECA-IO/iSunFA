@@ -65,10 +65,10 @@ const Card: React.FC<CardProps> = ({
       type="button"
       onClick={() => setShowingRole(roleId)}
       disabled={isRoleDisabled}
-      className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:opacity-50 desktop:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'} ${isRoleDisabled && 'pointer-events-none'}`}
+      className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:opacity-50 screen1280:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'} ${isRoleDisabled && 'pointer-events-none'}`}
     >
       <p
-        className={`-skew-x-20 pl-110px text-center text-xl font-bold desktop:w-300px desktop:pl-100px desktop:text-32px ${roleId === RoleId.EDUCATIONAL_TRIAL_VERSION && 'pl-100px desktop:text-28px'}`}
+        className={`-skew-x-20 pl-110px text-center font-bold screen1280:w-300px screen1280:pl-100px ${roleId === RoleId.EDUCATIONAL_TRIAL_VERSION ? 'pl-100px laptop:text-lg screen1280:text-28px' : 'laptop:text-xl screen1280:text-32px'}`}
       >
         {title}
       </p>
@@ -85,7 +85,7 @@ const Card: React.FC<CardProps> = ({
 
 const RoleCard = ({ showingRole, setShowingRole }: RoleCardProps) => {
   return (
-    <div className="flex gap-80px">
+    <div className="flex justify-center gap-80px">
       {cards.map((card) => (
         <Card
           key={card.roleId}

@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { IAccount } from '@/interfaces/accounting_account';
 
 export interface ILineItem {
   lineItemIndex: string;
@@ -17,3 +18,12 @@ export type ILineItemIncludeAccount = Prisma.LineItemGetPayload<{
     account: true;
   };
 }>;
+
+// Info: (20241011 - Julian) for frontend testing
+export interface ILineItemBeta {
+  id: number;
+  account: IAccount | null;
+  particulars: string;
+  debit: number;
+  credit: number;
+}
