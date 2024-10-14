@@ -35,30 +35,44 @@ model Account {
 }
 
 model Asset {
-  id                 Int    @id @default(autoincrement())
-  voucherId          Int    @map("voucher_id")
-  projectId          Int?   @map("project_id")
-  contractId         Int?   @map("contract_id")
-  name               String
-  label              String
-  type               String
-  description        String
-  supplier           String
-  startDate          String @map("start_date")
-  endDate            String @map("end_date")
-  price              String
-  residualValue      String @map("residual_value")
-  estimateUsefulLife String @map("estimate_useful_life")
-  depreciationMethod String @map("depreciation_method")
-  createdAt          Int    @map("created_at")
-  updatedAt          Int    @map("updated_at")
-  deletedAt          Int?   @map("deleted_at")
+  id                       Int     @id @default(autoincrement())
+  companyId                Int     @map("company_id")
+  name                     String
+  type                     String
+  number                   String
+  acquisitionDate         Int     @map("acquisition_date")
+  purchasePrice           Float   @map("purchase_price")
+  accumulatedDepreciation Float   @map("accumulated_depreciation")
+  residualValue           Float   @map("residual_value")
+  remainingLife           Int     @map("remaining_life")
+  status                   String
+  depreciationStart       Int     @map("depreciation_start")
+  depreciationMethod      String  @map("depreciation_method")
+  usefulLife              Int     @map("useful_life")
+  note                     String
+  createdAt                Int     @map("created_at")
+  updatedAt                Int     @map("updated_at")
+  deletedAt                Int?    @map("deleted_at")
 
-  contract Contract? @relation(fields: [contractId], references: [id])
-  project  Project?  @relation(fields: [projectId], references: [id])
-  voucher  Voucher   @relation(fields: [voucherId], references: [id])
+  assetVouchers AssetVoucher[]
+
+  company Company @relation(fields: [companyId], references: [id])
 
   @@map("asset")
+}
+
+model AssetVoucher {
+  id         Int  @id @default(autoincrement())
+  assetId    Int  @map("asset_id")
+  voucherId  Int  @map("voucher_id")
+  createdAt  Int  @map("created_at")
+  updatedAt  Int  @map("updated_at")
+  deletedAt  Int? @map("deleted_at")
+
+  asset   Asset   @relation(fields: [assetId], references: [id])
+  voucher Voucher @relation(fields: [voucherId], references: [id])
+
+  @@map("asset_voucher")
 }
 
 model AuditReport {
@@ -112,24 +126,39 @@ model Authentication {
 }
 
 model AccountingSetting {
-  id                    Int        @id @default(autoincrement())
-  companyId             Int        @map("company_id")
-  salesTaxTaxable       Boolean    @map("sales_tax_taxable")
-  salesTaxRate          Float      @map("sales_tax_rate")   
-  purchaseTaxTaxable    Boolean    @map("purchase_tax_taxable")
-  purchaseTaxRate       Float      @map("purchase_tax_rate") 
-  returnPeriodicity     String     @map("return_periodicity")
-  currency              String
+  id                 Int     @id @default(autoincrement())
+  companyId          Int     @map("company_id")
+  salesTaxTaxable    Boolean @map("sales_tax_taxable")
+  salesTaxRate       Float   @map("sales_tax_rate")
+  purchaseTaxTaxable Boolean @map("purchase_tax_taxable")
+  purchaseTaxRate    Float   @map("purchase_tax_rate")
+  returnPeriodicity  String  @map("return_periodicity")
+  currency           String
 
-  company               Company    @relation(fields: [companyId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
 
-  shortcuts             Shortcut[]
+  shortcuts Shortcut[]
 
   @@map("accounting_setting")
 }
 
+model AccociateVoucher {
+  id                Int  @id @default(autoincrement())
+  eventId           Int  @map("event_id")
+  originalVoucherId Int  @map("original_voucher_id")
+  resultVoucherId   Int  @map("result_voucher_id")
+  createdAt         Int  @map("created_at")
+  updatedAt         Int  @map("updated_at")
+  deletedAt         Int? @map("deleted_at")
 
-model CustomerVendor {
+  event           Event   @relation(fields: [eventId], references: [id])
+  originalVoucher Voucher @relation("original_voucher", fields: [originalVoucherId], references: [id])
+  resultVoucher   Voucher @relation("result_voucher", fields: [resultVoucherId], references: [id])
+
+  @@map("associate_voucher")
+}
+
+model Counterparty {
   id        Int    @id @default(autoincrement())
   companyId Int    @map("company_id")
   name      String
@@ -140,9 +169,12 @@ model CustomerVendor {
   updatedAt Int    @map("updated_at")
   deletedAt Int?   @map("deleted_at")
 
+  invoices Invoice[]
+  voucher Voucher[]
+
   company Company @relation(fields: [companyId], references: [id])
 
-  @@map("customer_vendor")
+  @@map("counterparty")
 }
 
 model Company {
@@ -160,10 +192,12 @@ model Company {
 
   admins                     Admin[]
   accountingSettings         AccountingSetting[]
-  customerVendors            CustomerVendor[]
+  assets                     Asset[]
+  counterpartys              Counterparty[]
   companySettings            CompanySetting[]
   contracts                  Contract[]
   companyKYCs                CompanyKYC[]
+  certificates               Certificate[]
   departments                Department[]
   employees                  Employee[]
   invitations                Invitation[]
@@ -176,8 +210,8 @@ model Company {
   incomeExpenses             IncomeExpense[]
   accounts                   Account[]
   reports                    Report[]
+  vouchers                   Voucher[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
-
 
   @@map("company")
 }
@@ -259,7 +293,6 @@ model Contract {
   createdAt         Int       @map("created_at")
   updatedAt         Int       @map("updated_at")
   deletedAt         Int?      @map("deleted_at")
-  assets            Asset[]
   journal           Journal[]
 
   company Company  @relation(fields: [companyId], references: [id])
@@ -267,6 +300,24 @@ model Contract {
   payment Payment  @relation(fields: [paymentId], references: [id])
 
   @@map("contract")
+}
+
+model Certificate {
+  id        Int  @id @default(autoincrement())
+  companyId Int  @map("company_id")
+  fileId    Int  @unique @map("file_id")
+  createdAt Int  @map("created_at")
+  updatedAt Int  @map("updated_at")
+  deletedAt Int? @map("deleted_at")
+
+  invoices Invoice[]
+  voucherCertificate VoucherCertificate[]
+
+  company         Company           @relation(fields: [companyId], references: [id])
+  file            File              @relation(fields: [fileId], references: [id])
+  UserCertificate UserCertificate[]
+
+  @@map("certificate")
 }
 
 model Department {
@@ -322,6 +373,23 @@ model EmployeeProject {
   @@map("employee_project")
 }
 
+model Event {
+  id           Int      @id @default(autoincrement())
+  eventType    String   @map("event_type")
+  frequence    String
+  startDate    Int      @map("start_date")
+  endDate      Int      @map("end_date")
+  daysOfWeek   Int[]
+  monthsOfYear String[]
+  createdAt    Int      @map("created_at")
+  updatedAt    Int      @map("updated_at")
+  deletedAt    Int?     @map("deleted_at")
+
+  associateVouchers AccociateVoucher[]
+
+  @@map("event")
+}
+
 model File {
   id                    Int     @id @default(autoincrement())
   name                  String // Info: (20240830 - Murky) Name example: "100000.jpg"
@@ -330,48 +398,72 @@ model File {
   type                  String //Info: (20240830 - Murky) FileFolder Type ex: invoice, tmp
   url                   String // Info: (20240830 - Murky) File URL, it can be local folder or google bucket
   isEncrypted           Boolean @map("is_encrypted") // Info: (20240830 - Murky) File is Encrypted by encryptSymmetricKey
-  encryptedSymmetricKey String // Info: (20240830 - Murky) File Encrypt Symmetric Key
+  encryptedSymmetricKey String  @map("encrypted_symmetric_key") // Info: (20240830 - Murky) File Encrypt Symmetric Key
   iv                    Bytes   @default("") // Info: (20240830 - Murky) File Encrypt IV
   createdAt             Int     @map("created_at")
   updatedAt             Int     @map("updated_at")
   deletedAt             Int?    @map("deleted_at")
 
+  certificate                 Certificate?
   companyImageFile            Company?       @relation("company_image_file")
-  invoiceImageFile            Invoice?       @relation("invoice_image_file")
   ocrImageFile                Ocr?           @relation("ocr_image_file")
   userImageFile               User?          @relation("user_image_file")
   projectImageFile            Project?       @relation("project_image_file")
   registrationCertificateFile CompanyKYC?    @relation("registration_certificate_file")
   taxCertificateFile          CompanyKYC?    @relation("tax_certificate_file")
   representativeIdCardFile    CompanyKYC?    @relation("representative_id_card_file")
-  personalIdFile              KYCBookkeeper? @relation("kyc_personal_id_file")
-  certificationFile           KYCBookkeeper? @relation("kyc_certification_file")
+  kycPersonalIdFile           KYCBookkeeper? @relation("kyc_personal_id_file")
+  kycCertificationFile        KYCBookkeeper? @relation("kyc_certification_file")
 
   @@map("file")
 }
 
 model Invoice {
-  id               Int     @id @default(autoincrement())
-  journalId        Int     @unique @map("journal_id")
-  paymentId        Int     @unique @map("payment_id")
-  number           String  @unique
-  type             String
-  date             Int
-  eventType        String  @map("event_type")
-  paymentReason    String  @map("payment_reason")
-  description      String
-  vendorTaxId      String  @map("vendor_tax_id")
-  vendorOrSupplier String  @map("vendor_or_supplier")
-  imageFileId      Int?    @unique @map("image_file_id")
-  deductible       Boolean
-  createdAt        Int     @map("created_at")
-  updatedAt        Int     @map("updated_at")
-  deletedAt        Int?    @map("deleted_at")
-  payment          Payment @relation(fields: [paymentId], references: [id])
-  journal          Journal @relation(fields: [journalId], references: [id])
-  imageFile        File?   @relation("invoice_image_file", fields: [imageFileId], references: [id])
+  id                Int     @id @default(autoincrement())
+  certificateId     Int     @map("certificate_id")
+  counterPartyId    Int    @map("counter_party_id")
+  inputOrOutput     String  @map("input_or_output")
+  date              Int
+  no                String
+  currencyAlias     String  @map("currency_alias")
+  priceBeforeTax    Int     @map("price_before_tax")
+  taxType           String  @map("tax_type")
+  taxRatio          Int     @map("tax_ratio")
+  taxPrice          Int     @map("tax_price")
+  totalPrice        Int     @map("total_price")
+  type              String
+  deductible        Boolean
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+  deletedAt         Int?    @map("deleted_at")
+
+  invoiceVoucherJournals InvoiceVoucherJournal[]
+
+  certificate    Certificate @relation(fields: [certificateId], references: [id])
+  counterParty   Counterparty @relation(fields: [counterPartyId], references: [id])
+  
 
   @@map("invoice")
+}
+
+model InvoiceVoucherJournal {
+  id         Int     @id @default(autoincrement())
+  invoiceId  Int?     @map("invoice_id")
+  voucherId  Int?     @map("voucher_id")
+  journalId  Int     @map("journal_id")
+  description String
+  paymentId  Int?    @map("payment_id")
+  paymentReason String @map("payment_reason")
+  vendorOrSupplier String @map("vendor_or_supplier")
+  createdAt  Int     @map("created_at")
+  updatedAt  Int     @map("updated_at")
+  deletedAt  Int?    @map("deleted_at")
+
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+  voucher Voucher? @relation(fields: [voucherId], references: [id])
+  journal Journal @relation(fields: [journalId], references: [id])
+
+  @@map("invoice_voucher_journal")
 }
 
 model Invitation {
@@ -421,8 +513,8 @@ model Journal {
   createdAt     Int      @map("created_at")
   updatedAt     Int      @map("updated_at")
   deletedAt     Int?     @map("deleted_at")
-  invoice       Invoice?
-  voucher       Voucher?
+
+  invoiceVoucherJournals InvoiceVoucherJournal[]
 
   company  Company   @relation(fields: [companyId], references: [id])
   contract Contract? @relation(fields: [contractId], references: [id])
@@ -519,11 +611,12 @@ model Order {
   status    String
   createdAt Int     @map("created_at")
   updatedAt Int     @map("updated_at")
-  company   Company @relation(fields: [companyId], references: [id])
-  plan      Plan    @relation(fields: [planId], references: [id])
   deletedAt Int?    @map("deleted_at")
 
   paymentRecords PaymentRecord[]
+
+  company   Company @relation(fields: [companyId], references: [id])
+  plan      Plan    @relation(fields: [planId], references: [id])
 
   @@map("order")
 }
@@ -538,7 +631,6 @@ model Project {
   createdAt        Int               @map("created_at")
   updatedAt        Int               @map("updated_at")
   deletedAt        Int?              @map("deleted_at")
-  assets           Asset[]
   contracts        Contract[]
   journals         Journal[]
   milestones       Milestone[]
@@ -572,25 +664,27 @@ model Payment {
   createdAt         Int       @map("created_at")
   updatedAt         Int       @map("updated_at")
   deletedAt         Int?      @map("deleted_at")
-  invoice           Invoice?
   contract          Contract?
 
   @@map("payment")
 }
 
 model PaymentRecord {
-  id            Int    @id @default(autoincrement())
-  orderId       Int    @map("order_id")
-  // Info: (20240604 - Jacky) Third party payment transaction id 
-  transactionId String @map("transaction_id")
-  date          Int
-  description   String
-  amount        Int
-  method        String
-  status        String // Info: (20240621 - Murky) completed、failed、pending
-  createdAt     Int    @map("created_at")
-  updatedAt     Int    @map("updated_at")
-  deletedAt     Int?   @map("deleted_at")
+  id                Int     @id @default(autoincrement())
+  orderId           Int     @map("order_id")
+  transactionId     String  @map("transaction_id")
+  action            String
+  amount            Float
+  fee               Float
+  method            String  @map("method")
+  cardIssuerCountry String @map("card_issuer_country")
+  status            String
+  paymentCreatedAt  String  @map("payment_created_at")
+  refundAmount      Float   @map("refund_amount")
+  authCode          String @map("auth_code")
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+  deletedAt         Int?    @map("deleted_at")
 
   order Order @relation(fields: [orderId], references: [id])
 
@@ -598,14 +692,15 @@ model PaymentRecord {
 }
 
 model Plan {
-  id            Int            @id @default(autoincrement())
-  name          String         @unique
-  description   String
-  monthlyFee    Int            @map("monthly_fee")
-  annualFee     Int            @map("annual_fee")
-  createdAt     Int            @map("created_at")
-  updatedAt     Int            @map("updated_at")
-  deletedAt     Int?           @map("deleted_at")
+  id           Int    @id @default(autoincrement())
+  name         String @unique
+  description  String
+  billingCycle String @map("billing_cycle")
+  price        Float
+  createdAt    Int    @map("created_at")
+  updatedAt    Int    @map("updated_at")
+  deletedAt    Int?   @map("deleted_at")
+
   orders        Order[]
   subscriptions Subscription[]
 
@@ -616,7 +711,7 @@ model Role {
   id          Int          @id @default(autoincrement())
   name        String       @unique
   permissions String[]
-  lastLoginAt Int          @map("last_login_at") @default(0)
+  lastLoginAt Int          @default(0) @map("last_login_at")
   createdAt   Int          @map("created_at")
   updatedAt   Int          @map("updated_at")
   deletedAt   Int?         @map("deleted_at")
@@ -658,16 +753,18 @@ model Report {
 
 model Subscription {
   id          Int     @id @default(autoincrement())
-  companyId   Int     @map("company_id")
   planId      Int     @map("plan_id")
+  companyId   Int     @map("company_id")
+  autoRenewal Boolean @map("auto_renewal")
   status      Boolean
   startDate   Int     @map("start_date")
   expiredDate Int     @map("expired_date")
   createdAt   Int     @map("created_at")
   updatedAt   Int     @map("updated_at")
   deletedAt   Int?    @map("deleted_at")
-  company     Company @relation(fields: [companyId], references: [id])
-  plan        Plan    @relation(fields: [planId], references: [id])
+
+  company Company @relation(fields: [companyId], references: [id])
+  plan    Plan    @relation(fields: [planId], references: [id])
 
   @@map("subscription")
 }
@@ -719,15 +816,15 @@ model SalaryRecordProjectHour {
 }
 
 model Shortcut {
-  id              Int      @id @default(autoincrement())
-  accountingSettingId Int  @map("accounting_setting_id")
-  actionName      String   @map("action_name") 
-  description     String   
-  fieldList       Json     @map("field_list")
-  keyList         String[] @map("key_list")
-  createdAt       Int      @map("created_at")
-  updatedAt       Int      @map("updated_at")
-  deletedAt       Int?     @map("deleted_at")
+  id                  Int      @id @default(autoincrement())
+  accountingSettingId Int      @map("accounting_setting_id")
+  actionName          String   @map("action_name")
+  description         String
+  fieldList           Json     @map("field_list")
+  keyList             String[] @map("key_list")
+  createdAt           Int      @map("created_at")
+  updatedAt           Int      @map("updated_at")
+  deletedAt           Int?     @map("deleted_at")
 
   accountingSetting AccountingSetting @relation(fields: [accountingSettingId], references: [id])
 
@@ -735,21 +832,25 @@ model Shortcut {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
+  id              Int               @id @default(autoincrement())
   name            String
   email           String?
-  imageFileId     Int              @unique @map("image_File_id")
-  createdAt       Int              @map("created_at")
-  updatedAt       Int              @map("updated_at")
-  deletedAt       Int?             @map("deleted_at")
+  imageFileId     Int               @unique @map("image_File_id")
+  createdAt       Int               @map("created_at")
+  updatedAt       Int               @map("updated_at")
+  deletedAt       Int?              @map("deleted_at")
   admins          Admin[]
   invitations     Invitation[]
   authentications Authentication[]
   userAgreements  UserAgreement[]
+  userPaymentInfo UserPaymentInfo[]
   userRoles       UserRole[]
   kycBookkeepers  KYCBookkeeper[]
+  UserCertificate UserCertificate[]
+  UserVoucher     UserVoucher[]
+  Voucher        Voucher[]
 
-  imageFile File @relation("user_image_file", fields: [imageFileId], references: [id])
+  imageFile       File              @relation("user_image_file", fields: [imageFileId], references: [id])
 
   @@map("user")
 }
@@ -786,6 +887,20 @@ model UserActionLog {
   @@map("user_action_log")
 }
 
+model UserPaymentInfo {
+  id            Int    @id @default(autoincrement())
+  userId        Int    @map("user_id")
+  token         String
+  transactionId String @map("transaction_id")
+  createdAt     Int    @map("created_at")
+  updatedAt     Int    @map("updated_at")
+  deletedAt     Int?   @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_payment_info")
+}
+
 model UserSetting {
   id                                Int     @id @default(autoincrement())
   userId                            Int     @map("user_id")
@@ -818,20 +933,80 @@ model UserRole {
   @@map("user_role")
 }
 
-model Voucher {
-  id                   Int                   @id @default(autoincrement())
-  journalId            Int                   @unique @map("journal_id")
-  no                   String
-  createdAt            Int                   @map("created_at")
-  updatedAt            Int                   @map("updated_at")
-  deletedAt            Int?                  @map("deleted_at")
-  assets               Asset[]
-  lineItems            LineItem[]
-  voucherSalaryRecords VoucherSalaryRecord[]
+model UserCertificate {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @map("user_id")
+  certificateId Int     @map("certificate_id")
+  isRead        Boolean @map("is_read")
+  createdAt     Int     @map("created_at")
+  updatedAt     Int     @map("updated_at")
+  deletedAt     Int?    @map("deleted_at")
 
-  journal Journal @relation(fields: [journalId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  certificate Certificate @relation(fields: [certificateId], references: [id])
+
+  @@map("user_certificate")
+}
+
+model UserVoucher {
+  id        Int     @id @default(autoincrement())
+  userId    Int     @map("user_id")
+  voucherId Int     @map("voucher_id")
+  isRead    Boolean @map("is_read")
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+  deletedAt Int?    @map("deleted_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  voucher Voucher @relation(fields: [voucherId], references: [id])
+
+  @@map("user_voucher")
+}
+
+model Voucher {
+  id                   Int     @id @default(autoincrement())
+  issuerId             Int     @map("issuer_id")
+  counterPartyId       Int     @map("counter_party_id")
+  companyId            Int     @map("company_id")
+  status               String  @default("journal:JOURNAL.UPLOADED")
+  editable             Boolean @default(true)
+  no            String  
+  date          Int     
+  type          String @default("payment")
+  note          String?
+  createdAt     Int     @map("created_at")
+  updatedAt     Int     @map("updated_at")
+  deletedAt     Int?    @map("deleted_at")
+
+  assetVouchers         AssetVoucher[]
+  lineItems            LineItem[]
+  UserVoucher UserVoucher[]
+  voucherSalaryRecords VoucherSalaryRecord[]
+  voucherCertificates  VoucherCertificate[]
+  invoiceVoucherJournals InvoiceVoucherJournal[]
+
+  originalVouchers AccociateVoucher[] @relation("original_voucher")
+  resultVouchers   AccociateVoucher[] @relation("result_voucher")
+
+  company Company @relation(fields: [companyId], references: [id])
+  issuer  User    @relation(fields: [issuerId], references: [id])
+  counterparty Counterparty @relation(fields: [counterPartyId], references: [id])
 
   @@map("voucher")
+}
+
+model VoucherCertificate {
+  id            Int  @id @default(autoincrement())
+  voucherId     Int  @map("voucher_id")
+  certificateId Int  @map("certificate_id")
+  createdAt     Int  @map("created_at")
+  updatedAt     Int  @map("updated_at")
+  deletedAt     Int? @map("deleted_at")
+
+  voucher     Voucher     @relation(fields: [voucherId], references: [id])
+  certificate Certificate @relation(fields: [certificateId], references: [id])
+
+  @@map("voucher_certificate")
 }
 
 model VoucherSalaryRecord {

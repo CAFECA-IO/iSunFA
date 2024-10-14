@@ -12,11 +12,18 @@ import {
 } from '@/interfaces/report';
 import { getCompanyKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
-import { listJournalFor401 } from '@/lib/utils/repo/journal.repo';
+import { listInvoiceVoucherJournalFor401 } from '@/lib/utils/repo/beta_transition.repo';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
-import { IJournalIncludeVoucherLineItemsInvoicePayment } from '@/interfaces/journal';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
-import { CompanyKYC } from '@prisma/client';
+import {
+  Account,
+  CompanyKYC,
+  Invoice,
+  InvoiceVoucherJournal,
+  Journal,
+  LineItem,
+  Voucher,
+} from '@prisma/client';
 
 export default class Report401Generator extends ReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
@@ -45,13 +52,17 @@ export default class Report401Generator extends ReportGenerator {
    */
   private static updateSalesResult(
     sales: Sales,
-    journal: IJournalIncludeVoucherLineItemsInvoicePayment,
+    journal: InvoiceVoucherJournal & {
+      journal: Journal | null;
+      invoice: Invoice | null;
+      voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+    },
     category: keyof SalesBreakdown
   ) {
     const updatedSales = sales;
-    if (journal.invoice?.payment.hasTax) {
-      if (journal.invoice?.payment.taxPercentage === 0) {
-        updatedSales.breakdown[category].zeroTax += journal.invoice?.payment.price ?? 0;
+    if (journal.invoice?.taxRatio === 0) {
+      if (journal.invoice?.taxRatio === 0) {
+        updatedSales.breakdown[category].zeroTax += journal.invoice?.totalPrice ?? 0;
       } else {
         let taxPrice = 0;
         if (journal.voucher?.lineItems) {
@@ -71,9 +82,9 @@ export default class Report401Generator extends ReportGenerator {
         // updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
 
         updatedSales.breakdown[category].sales +=
-          (journal.invoice?.payment.price ?? 0) - Math.abs(taxPrice);
+          (journal.invoice?.priceBeforeTax ?? 0) - Math.abs(taxPrice);
         updatedSales.breakdown.total.sales +=
-          (journal.invoice?.payment.price ?? 0) - Math.abs(taxPrice);
+          (journal.invoice?.priceBeforeTax ?? 0) - Math.abs(taxPrice);
         updatedSales.breakdown[category].tax += Math.abs(taxPrice);
         updatedSales.breakdown.total.tax += Math.abs(taxPrice);
       }
@@ -100,7 +111,11 @@ export default class Report401Generator extends ReportGenerator {
    */
   private static updatePurchasesResult(
     purchases: Purchases,
-    journal: IJournalIncludeVoucherLineItemsInvoicePayment,
+    journal: InvoiceVoucherJournal & {
+      journal: Journal | null;
+      invoice: Invoice | null;
+      voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+    },
     category: keyof PurchaseBreakdown
   ) {
     const updatedPurchase = purchases;
@@ -123,7 +138,7 @@ export default class Report401Generator extends ReportGenerator {
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
             // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
             fixedAssets.amount += lineItem.amount;
-            fixedAssets.tax += lineItem.amount * (journal.invoice?.payment.taxPercentage ?? 0.05);
+            fixedAssets.tax += lineItem.amount * (journal.invoice?.taxRatio ?? 0.05);
           }
 
           // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
@@ -139,7 +154,7 @@ export default class Report401Generator extends ReportGenerator {
         //   tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
         // };
         generalPurchases = {
-          amount: (journal.invoice?.payment.price ?? 0) - Math.abs(inputTax) - fixedAssets.amount,
+          amount: (journal.invoice?.priceBeforeTax ?? 0) - Math.abs(inputTax) - fixedAssets.amount,
           tax: Math.abs(inputTax) - fixedAssets.tax,
         };
       } else {
@@ -149,7 +164,7 @@ export default class Report401Generator extends ReportGenerator {
           }
         });
         unDeductible.generalPurchases =
-          journal.invoice?.payment.price ?? 0 - unDeductible.fixedAssets;
+          journal.invoice?.priceBeforeTax ?? 0 - unDeductible.fixedAssets;
       }
     }
 
@@ -175,12 +190,16 @@ export default class Report401Generator extends ReportGenerator {
    */
   private static updateImportsResult(
     imports: Imports,
-    journal: IJournalIncludeVoucherLineItemsInvoicePayment,
+    journal: InvoiceVoucherJournal & {
+      journal: Journal | null;
+      invoice: Invoice | null;
+      voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+    },
     category: keyof Imports
   ) {
     const updatedImports = imports;
-    if (!journal.invoice?.payment.hasTax) {
-      updatedImports[category] += journal.invoice?.payment.price ?? 0;
+    if (!journal.invoice?.taxRatio) {
+      updatedImports[category] += journal.invoice?.priceBeforeTax ?? 0;
     }
   }
 
@@ -249,7 +268,11 @@ export default class Report401Generator extends ReportGenerator {
     const ROCStartDate = convertTimestampToROCDate(from);
     const ROCEndDate = convertTimestampToROCDate(to);
     // 1. 獲取所有發票
-    const journalList = await listJournalFor401(companyId, from, to);
+    const journalList: (InvoiceVoucherJournal & {
+      journal: Journal | null;
+      invoice: Invoice | null;
+      voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+    })[] = await listInvoiceVoucherJournalFor401(companyId, from, to);
     const basicInfo = {
       uniformNumber: companyKYC?.registrationNumber ?? '',
       businessName: companyKYC?.legalName ?? '',
