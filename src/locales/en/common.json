@@ -283,7 +283,10 @@
     "COMPLETED": "Completed",
     "DAY": "Day",
     "SAVE": "Save",
-    "CODE": "Code"
+    "CODE": "Code",
+    "BEGINNING": "Beginning",
+    "MIDTERM": "Midterm",
+    "ENDING": "Ending"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",

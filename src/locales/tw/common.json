@@ -283,7 +283,10 @@
     "COMPLETED": "已完成",
     "DAY": "日",
     "SAVE": "保存",
-    "CODE": "科目編號"
+    "CODE": "科目編號",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "結束日"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",

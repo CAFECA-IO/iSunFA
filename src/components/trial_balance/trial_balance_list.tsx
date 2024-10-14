@@ -25,13 +25,13 @@ const TrialBalanceList = () => {
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
 
   const displayedCredit = SortingButton({
-    string: t('journal:VOUCHER.CREDIT'),
+    string: t('journal:JOURNAL.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
   });
 
   const displayedDebit = SortingButton({
-    string: t('journal:VOUCHER.DEBIT'),
+    string: t('journal:JOURNAL.DEBIT'),
     sortOrder: debitSort,
     setSortOrder: setDebitSort,
   });
@@ -47,6 +47,10 @@ const TrialBalanceList = () => {
     <TrialBalanceItemRow key={voucher.id} voucher={voucher} />
   ));
 
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('en-US');
+  };
+
   return (
     <div className="flex flex-col">
       {displayedSelectArea}
@@ -54,65 +58,120 @@ const TrialBalanceList = () => {
       <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
-            <div className={`table-cell ${tableCellStyles} border-b border-r`}>
+            <div
+              className={`table-cell ${tableCellStyles} border-b border-r border-stroke-neutral-quaternary`}
+            >
               <div className="flex items-center justify-center">
                 <div className="relative">
                   <input type="checkbox" className={checkboxStyle} />
                 </div>
               </div>
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`table-cell w-50px ${tableCellStyles} ${sideBorderStyles}`}>
               {t('common:COMMON.CODE')}
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('journal:VOUCHER.ACCOUNTING')}
+            <div className={`table-cell w-370px ${tableCellStyles} ${sideBorderStyles}`}>
+              {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
             </div>
 
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              Beginning {displayedDebit}
+            <div
+              className={`table-cell w-77px bg-support-olive-100 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {t('common:COMMON.BEGINNING')}
+              {displayedDebit}
             </div>
 
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              Beginning {displayedCredit}
+            <div
+              className={`table-cell w-77px bg-support-olive-100 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {t('common:COMMON.BEGINNING')}
+              {displayedCredit}
             </div>
 
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              Midterm {displayedDebit}
+            <div
+              className={`table-cell w-77px bg-support-baby-100 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {t('common:COMMON.MIDTERM')}
+              {displayedDebit}
             </div>
 
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              Midterm {displayedCredit}
+            <div
+              className={`table-cell w-77px bg-support-baby-100 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {t('common:COMMON.MIDTERM')}
+              {displayedCredit}
             </div>
 
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              Ending {displayedDebit}
+            <div
+              className={`table-cell w-77px bg-support-pink-100 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {t('common:COMMON.ENDING')}
+              {displayedDebit}
             </div>
 
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              Ending {displayedCredit}
+            <div
+              className={`table-cell w-77px bg-support-pink-100 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {t('common:COMMON.ENDING')}
+              {displayedCredit}
             </div>
           </div>
         </div>
 
-        <div className="table-row-group">{displayedVoucherList}</div>
+        <div className="table-row-group text-sm">{displayedVoucherList}</div>
       </div>
 
       <div className="h-px w-full bg-neutral-100"></div>
 
-      <div className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary">
-        <div className="col-span-3 flex items-center justify-center py-8px text-left align-middle text-base">
-          Total
-        </div>
-        <div className="col-span-2 flex items-center justify-center py-8px text-left align-middle text-base text-neutral-600">
-          1,800,000
-        </div>
-        <div className="col-span-2 flex items-center justify-center py-8px text-left align-middle text-base text-neutral-600">
-          1,120,000
-        </div>
-        <div className="col-span-2 flex items-center justify-center py-8px text-left align-middle text-base text-neutral-600">
-          1,800,000
+      {/* Anna複製主表格 */}
+      <div className="mb-10 mt-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+          <div className="table-row h-60px">
+            <div
+              className={`col-span-3 table-cell h-full ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+            >
+              {t('journal:ADD_ASSET_MODAL.TOTAL')}
+            </div>
+
+            <div
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {formatNumber(TrialBalanceData.total.beginningDebitAmount)}
+            </div>
+
+            <div
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {formatNumber(TrialBalanceData.total.beginningCreditAmount)}
+            </div>
+
+            <div
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {formatNumber(TrialBalanceData.total.midtermDebitAmount)}
+            </div>
+
+            <div
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {formatNumber(TrialBalanceData.total.midtermCreditAmount)}
+            </div>
+
+            <div
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {formatNumber(TrialBalanceData.total.endingDebitAmount)}
+            </div>
+
+            <div
+              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+            >
+              {formatNumber(TrialBalanceData.total.endingCreditAmount)}
+            </div>
+          </div>
         </div>
       </div>
+      {/* Anna複製主表格結束 */}
 
       <div className="mx-auto">
         <Pagination

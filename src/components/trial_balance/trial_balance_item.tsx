@@ -6,6 +6,8 @@ import type { TrialBalanceItem } from '@/interfaces/trial_balance';
 interface ITrialBalanceItemProps {
   voucher: TrialBalanceItem;
 }
+const tableCellStyles = 'text-center align-middle';
+const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
 
 const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => {
   const [isChecked, setIsChecked] = useState(false);
@@ -79,32 +81,44 @@ const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => 
   return (
     <div className="table-row h-20px font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240920 - Julian) Select */}
-      <div className={`table-cell text-center`}>{displayedCheckbox}</div>
+      <div className={`table-cell w-32px text-center`}>{displayedCheckbox}</div>
       {/* Info: (20241004 - Anna) Accounting */}
-      <div className="table-cell text-center align-middle">{displayedAccountingCode}</div>
-      <div className="table-cell text-center align-middle">{displayedAccountingName}</div>
+      <div className="table-cell w-50px text-center align-middle">{displayedAccountingCode}</div>
+      <div className="table-cell w-370px text-center align-middle">{displayedAccountingName}</div>
       {/* Info: (20241009 - Anna) Beginning Debit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">
+      <div
+        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+      >
         {displayedBeginningDebitAmount}
       </div>
       {/* Info: (20241009 - Anna) Beginning Credit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">
+      <div
+        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+      >
         {displayedBeginningCreditAmount}
       </div>
       {/* Info: (20241009 - Anna) Midterm Debit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">
+      <div
+        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+      >
         {displayedMidtermDebitAmount}
       </div>
       {/* Info: (20241009 - Anna) Midterm Credit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">
+      <div
+        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+      >
         {displayedMidtermCreditAmount}
       </div>
       {/* Info: (20241009 - Anna) Ending Debit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">
+      <div
+        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+      >
         {displayedEndingDebitAmount}
       </div>
       {/* Info: (20241009 - Anna) Ending Credit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">
+      <div
+        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+      >
         {displayedEndingCreditAmount}
       </div>
     </div>
