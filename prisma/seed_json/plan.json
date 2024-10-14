@@ -4,7 +4,7 @@
     "name": "Basic Plan",
     "description": "This is a basic plan.",
     "billingCycle": "monthly",
-    "price": 9.99,
+    "price": 89,
     "createdAt": 1627849200,
     "updatedAt": 1627849200,
     "deletedAt": null
@@ -14,7 +14,7 @@
     "name": "Pro Plan",
     "description": "This is a pro plan.",
     "billingCycle": "monthly",
-    "price": 19.99,
+    "price": 899,
     "createdAt": 1627849200,
     "updatedAt": 1627849200,
     "deletedAt": null
@@ -24,7 +24,7 @@
     "name": "Enterprise Plan",
     "description": "This is an enterprise plan.",
     "billingCycle": "yearly",
-    "price": 199.99,
+    "price": 8990,
     "createdAt": 1627849200,
     "updatedAt": 1627849200,
     "deletedAt": null
