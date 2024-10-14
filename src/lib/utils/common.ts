@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
+import { MILLISECONDS_IN_A_SECOND, MONTH_LIST, MONTH_SHORT_NAME, MONTH_FULL_NAME } from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import { FileFolder } from '@/constants/file';
@@ -59,38 +59,9 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   const second = `${date.getSeconds()}`.padStart(2, '0');
 
   const monthIndex = date.getMonth();
-  const monthNamesInShort = [
-    'Jan.',
-    'Feb.',
-    'Mar.',
-    'Apr.',
-    'May',
-    'Jun.',
-    'Jul.',
-    'Aug.',
-    'Sep.',
-    'Oct.',
-    'Nov.',
-    'Dec.',
-  ];
 
-  const monthFullName = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
-  const monthNameShort = monthNamesInShort[monthIndex];
-  const monthName = monthFullName[monthIndex];
+  const monthNameShort = MONTH_SHORT_NAME[monthIndex];
+  const monthName = MONTH_FULL_NAME[monthIndex];
   const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
     .padStart(2, '0')}`;
