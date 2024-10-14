@@ -12,7 +12,7 @@ import AssetSection from '@/components/voucher/asset_section';
 import ReverseSection from '@/components/voucher/reverse_section';
 import VoucherLineBlock from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { ILineItemBeta } from '@/interfaces/line_item';
+import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
 import { IAssetItem } from '@/interfaces/asset';
@@ -36,15 +36,6 @@ const NewVoucherForm: React.FC = () => {
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-
-  // Info: (20241001 - Julian) 初始傳票列
-  const initialVoucherLine: ILineItemBeta = {
-    id: 0,
-    account: null,
-    particulars: '',
-    debit: 0,
-    credit: 0,
-  };
 
   // Info: (20241004 - Julian) 通用項目
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -140,10 +131,14 @@ const NewVoucherForm: React.FC = () => {
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
     // Info: (20241004 - Julian) 計算總借貸金額
-    const debitTotal = voucherLineItems.reduce((acc, item) => acc + item.debit, 0);
-    const creditTotal = voucherLineItems.reduce((acc, item) => acc + item.credit, 0);
+    const debitTotal = voucherLineItems.reduce((acc, item) => {
+      return item.debit === true ? acc + item.amount : acc;
+    }, 0);
+    const creditTotal = voucherLineItems.reduce((acc, item) => {
+      return item.debit === false ? acc + item.amount : acc;
+    }, 0);
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = voucherLineItems.some((item) => item.debit === 0 && item.credit === 0);
+    const zeroLine = voucherLineItems.some((item) => item.amount === 0 || item.debit === null);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
     const accountingNull = voucherLineItems.some((item) => item.account === null);
 
@@ -160,8 +155,8 @@ const NewVoucherForm: React.FC = () => {
     // Info: (20241004 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
     const isReverse = voucherLineItems.some(
       (item) =>
-        (item.account?.code === '2171' && item.debit > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.credit > 0) // Info: (20241009 - Julian) 應收帳款
+        (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
+        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
     );
 
     setTotalDebit(debitTotal);
@@ -583,7 +578,7 @@ const NewVoucherForm: React.FC = () => {
             type={DatePickerType.TEXT_DATE}
             period={date}
             setFilteredPeriod={setDate}
-            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
+            btnClassName={isShowDateHint ? inputStyle.ERROR : inputStyle.NORMAL}
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}

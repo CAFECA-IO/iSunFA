@@ -6,12 +6,16 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { ILocale } from '@/interfaces/locale';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
-import { generateRandomCertificates, ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
+import {
+  generateRandomCertificates,
+  ICertificate,
+  ICertificateUI,
+  OPERATIONS,
+} from '@/interfaces/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
-import { ILineItem } from '@/interfaces/line_item';
-import { IDatePeriod } from '@/interfaces/date_period';
+import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
 import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
@@ -39,6 +43,10 @@ interface IVoucherDetailForFrontend {
       day: number;
     }[];
   };
+  certificates: ICertificate[];
+  lineItemsInfo: {
+    lineItems: ILineItemBeta[];
+  };
 }
 
 const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -59,14 +67,15 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     dayOfMonth: [],
     daysOfYear: [],
   },
+  certificates: [],
+  lineItemsInfo: {
+    lineItems: [],
+  },
 };
 
 const VoucherDetailPage: React.FC = () => {
   const recurringStr: string = 'Every month';
-  const recurringPeriod: IDatePeriod = {
-    startTimeStamp: 1643567783,
-    endTimeStamp: 1801578367,
-  };
+
   const payableAmount: number = 1300;
   const paidAmount: number = 1000;
   const remainAmount: number = 300;
@@ -103,6 +112,7 @@ const VoucherDetailPage: React.FC = () => {
   const { data: voucherData, isLoading } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
     {
+      // ToDo: (20241014 - Julian) Replace with real parameters
       params: {
         companyId: '111',
         voucherId: '123',
@@ -117,6 +127,8 @@ const VoucherDetailPage: React.FC = () => {
     type,
     note,
     counterParty,
+    recurringInfo,
+    certificates,
   } = voucherData || defaultVoucherDetail;
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
@@ -127,7 +139,7 @@ const VoucherDetailPage: React.FC = () => {
     0
   );
 
-  const recurringPeriodStr = `From ${timestampToString(recurringPeriod.startTimeStamp).date} to ${timestampToString(recurringPeriod.endTimeStamp).date}`;
+  const recurringPeriodStr = `From ${timestampToString(recurringInfo.startDate).date} to ${timestampToString(recurringInfo.endDate).date}`;
 
   // ToDo: (20241008 - Julian) Call API to delete voucher
   const deleteVoucher = async () => {
@@ -148,16 +160,17 @@ const VoucherDetailPage: React.FC = () => {
     messageModalVisibilityHandler();
   };
 
-  const selectedCertificates: ICertificateUI[] = generateRandomCertificates(3).map(
-    (certificate) => {
-      const actions = [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE];
-      return {
-        ...certificate,
-        isSelected: false,
-        actions,
-      };
-    }
-  );
+  // ToDo: (20241014 - Julian) dummy data
+  const selectedCertificates: ICertificateUI[] = generateRandomCertificates(
+    certificates.length
+  ).map((certificate) => {
+    const actions = [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE];
+    return {
+      ...certificate,
+      isSelected: false,
+      actions,
+    };
+  });
 
   const reverseVoucherList = reverseVouchers.map((reverseVoucher) => (
     <p key={reverseVoucher} className="text-link-text-primary">
