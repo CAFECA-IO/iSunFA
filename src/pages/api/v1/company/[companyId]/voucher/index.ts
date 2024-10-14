@@ -11,20 +11,14 @@ import { formatApiResponse } from '@/lib/utils/common';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import {
-  createLineItemInPrisma,
-  createVoucherInPrisma,
-  findUniqueVoucherInPrisma,
-  getLatestVoucherNoInPrisma,
-  findUniqueJournalInvolveInvoicePaymentInPrisma,
-} from '@/lib/utils/repo/voucher.repo';
+import { createLineItemInPrisma, findUniqueVoucherInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { IJournalFromPrismaIncludeInvoicePayment } from '@/interfaces/journal';
 import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 import { loggerError } from '@/lib/utils/logger_back';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
+import { getInvoiceVoucherJournalByJournalId } from '@/lib/utils/repo/beta_transition.repo';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;
 
@@ -36,32 +30,37 @@ async function handleVoucherCreatePrismaLogic(
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
 
   try {
-    const journal: IJournalFromPrismaIncludeInvoicePayment | null =
-      await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
+    const invoiceVoucherJournal = await getInvoiceVoucherJournalByJournalId(voucher.journalId || 0);
 
-    if (!journal || !journal.invoice || !journal.invoice.payment) {
+    if (!invoiceVoucherJournal || !invoiceVoucherJournal.invoice) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
+    if (
+      !isVoucherAmountGreaterOrEqualThenPaymentAmount(
+        voucher,
+        invoiceVoucherJournal.invoice.totalPrice
+      )
+    ) {
       throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 
-    const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
-    const voucherData = await createVoucherInPrisma(newVoucherNo, journal.id);
     // Info: (20240925 - Murky) I need to make sure lineitems is created in order
     // Deprecated: (20240926 - Murky) Need to find better way to sort line items
     /* eslint-disable no-restricted-syntax */
+    if (!invoiceVoucherJournal.voucher) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
     for (const lineItem of voucher.lineItems) {
       // Deprecated: (20240926 - Murky) Need to find better way to sort line items
       /* eslint-disable no-await-in-loop */
-      await createLineItemInPrisma(lineItem, voucherData.id, companyId);
+      await createLineItemInPrisma(lineItem, invoiceVoucherJournal.voucher.id, companyId);
       /* eslint-enable no-await-in-loop */
     }
     /* eslint-enable no-restricted-syntax */
 
     // Info: （ 20240613 - Murky）Get the voucher data again after creating the line items
-    updatedVoucher = await findUniqueVoucherInPrisma(voucherData.id);
+    updatedVoucher = await findUniqueVoucherInPrisma(invoiceVoucherJournal.voucher?.id || 1000);
     statusMessage = STATUS_MESSAGE.CREATED;
   } catch (_error) {
     const error = _error as Error;
@@ -141,7 +140,24 @@ export default async function handler(
             companyId,
             voucher
           );
-          payload = updatedVoucher;
+          if (
+            updatedVoucher &&
+            updatedVoucher.id &&
+            updatedVoucher.invoiceVoucherJournals[0].journalId &&
+            updatedVoucher.invoiceVoucherJournals[0].journal
+          ) {
+            const formattedVoucher = {
+              ...updatedVoucher,
+              id: updatedVoucher.id,
+              journalId: updatedVoucher.invoiceVoucherJournals[0].journalId,
+              journal: updatedVoucher.invoiceVoucherJournals[0].journal,
+              lineItems: updatedVoucher.lineItems,
+            };
+            payload = formattedVoucher;
+            statusMessage = message;
+          } else {
+            throw new Error(STATUS_MESSAGE.INVALID_INPUT_VOUCHER_BODY_TO_JOURNAL);
+          }
           statusMessage = message;
         }
       } else {

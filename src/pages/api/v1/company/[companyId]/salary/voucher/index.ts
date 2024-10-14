@@ -1,21 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, timestampInSeconds } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { getAdminByCompanyIdAndUserId } from '@/lib/utils/repo/admin.repo';
 import { IFolder } from '@/interfaces/folder';
-import {
-  createLineItemInPrisma,
-  createVoucherInPrisma,
-  getLatestVoucherNoInPrisma,
-} from '@/lib/utils/repo/voucher.repo';
+import { createLineItemInPrisma, getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
 import {
   createSalaryRecordJournal,
   getInfoFromSalaryRecordLists,
   createVoucherFolder,
   createVoucherSalaryRecordFolderMapping,
 } from '@/lib/utils/repo/salary_record.repo';
+import { createVoucher } from '@/lib/utils/repo/beta_transition.repo';
 
 function checkInput(salaryRecordsIdsList: number[], voucherType: string): boolean {
   return (
@@ -86,10 +83,12 @@ async function handlePostRequest(
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
       // Info: (20240715 - Gibbs) create journal
-      const journalId = await createSalaryRecordJournal(companyId);
+      await createSalaryRecordJournal(companyId);
       // Info: (20240715 - Gibbs) create voucher
       const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
-      const voucherData = await createVoucherInPrisma(newVoucherNo, journalId);
+      const now = Date.now();
+      const nowTimestamp = timestampInSeconds(now);
+      const voucherData = await createVoucher(newVoucherNo, companyId, nowTimestamp);
       // Info: (20240715 - Gibbs) create line items
       await createLineItems(voucherType, voucherData.id, companyId, salaryRecordsIdsList);
       // Info: (20240715 - Gibbs) create folder

@@ -29,6 +29,9 @@ import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
 import file from '@/seed_json/file.json';
+import assets from '@/seed_json/asset.json';
+import assetVouchers from '@/seed_json/asset_voucher.json';
+import counterpartys from '@/seed_json/counterparty.json';
 
 const prisma = new PrismaClient();
 
@@ -244,6 +247,24 @@ async function createLineItems() {
   await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
 }
 
+async function createAsset() {
+  await prisma.asset.createMany({
+    data: assets,
+  });
+}
+
+async function createAssetVoucher() {
+  await prisma.assetVoucher.createMany({
+    data: assetVouchers,
+  });
+}
+
+async function createCounterparty() {
+  await prisma.counterparty.createMany({
+    data: counterpartys,
+  });
+}
+
 async function main() {
   await createFile();
   await createCompany();
@@ -254,7 +275,7 @@ async function main() {
     setTimeout(resolve, 3000);
   });
   await createUser();
-
+  await createCounterparty();
   await createRole();
   await createCompanyKYC();
   await createAccount();
@@ -295,6 +316,7 @@ async function main() {
 
   await createJournal();
   await createVoucher();
+  await createAsset();
 
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
@@ -302,6 +324,7 @@ async function main() {
   await createLineItems();
   await createSalaryRecord();
   await createVoucherSalaryRecordFolder();
+  await createAssetVoucher();
 }
 
 main()
