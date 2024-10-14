@@ -259,7 +259,7 @@ export async function createVoucher(voucherNo: string, companyId: number, date: 
     },
     counterparty: {
       connect: {
-        id: 1000, // ToDo: (20241011 - Jacky) need to change to real counterparty id
+        id: 555, // ToDo: (20241011 - Jacky) need to change to real counterparty id
       },
     },
     no: voucherNo,
