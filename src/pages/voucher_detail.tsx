@@ -36,12 +36,8 @@ interface IVoucherDetailForFrontend {
     type: string;
     startDate: number;
     endDate: number;
-    daysOfWeek: number[];
-    dayOfMonth: number[];
-    daysOfYear: {
-      month: number;
-      day: number;
-    }[];
+    daysOfWeek: number[]; // 0~6
+    monthsOfYear: string[]; // '1'~'12'
   };
   certificates: ICertificate[];
   lineItemsInfo: {
@@ -64,8 +60,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     startDate: 0,
     endDate: 0,
     daysOfWeek: [],
-    dayOfMonth: [],
-    daysOfYear: [],
+    monthsOfYear: [],
   },
   certificates: [],
   lineItemsInfo: {
