@@ -780,9 +780,11 @@ module.exports = {
         xl: '1440px',
 
         tablet: '768px',
-        laptop: '1024px',
-        // desktop: '1440px',
-        desktop: '1280px', // Info: (20241007 - Liz) 設計稿是以 1280px 為基準
+        laptop: '1024px', // (1024*768)
+        desktop: '1440px', // (1440*900)
+
+        // Info: (20241007 - Liz) iSunFA 設計稿以 1280px 為基準 (1280*800)
+        screen1280: '1280px',
       },
       container: {
         center: true,
@@ -923,6 +925,7 @@ module.exports = {
         '63px': '63px',
         '64px': '64px',
         '65px': '65px',
+        '66px': '66px',
         '69px': '69px',
         '70px': '70px',
         '71px': '71px',
@@ -1028,6 +1031,7 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '675px': '675px',
         '678px': '678px',
         '700px': '700px',
         '726px': '726px',
@@ -1317,6 +1321,14 @@ module.exports = {
 
         Dropshadow_XS:
           '0px 2px 5px var(--shadow-lv-5, rgba(49, 67, 98, 0.10)), 0px 6px 10px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 11px 13px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 28px 15px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 50px 17px var(--shadow-lv-1, rgba(49, 67, 98, 0.00))',
+
+        // Shadow/Down/Dropshadow_S
+        Dropshadow_S:
+          '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        // Shadow/Down/Dropshadow_M
+        Dropshadow_M:
+          '0px 166px 46px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',

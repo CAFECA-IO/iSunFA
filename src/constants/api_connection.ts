@@ -81,6 +81,7 @@ export enum APIName {
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
+  PUBLIC_FILE_UPLOAD = 'PUBLIC_FILE_UPLOAD',
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
@@ -102,6 +103,9 @@ export enum APIName {
   PUBLIC_KEY_GET = 'PUBLIC_KEY_GET',
   ZOD_EXAMPLE = 'ZOD_EXAMPLE', // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = 'CERTIFICATE_LIST',
+  PUSHER = 'PUSHER',
+  ENCRYPT = 'ENCRYPT',
+  DECRYPT = 'DECRYPT',
 }
 
 export enum APIPath {
@@ -162,6 +166,7 @@ export enum APIPath {
   STATUS_INFO_GET = `${apiPrefix}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
+  PUBLIC_FILE_UPLOAD = `${apiPrefixV2}/upload`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
@@ -183,6 +188,9 @@ export enum APIPath {
   PUBLIC_KEY_GET = `${apiPrefix}/company/:companyId/public_key`,
   ZOD_EXAMPLE = `${apiPrefix}/company/zod`, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate`,
+  PUSHER = `${apiPrefixV2}/pusher`,
+  ENCRYPT = `${apiPrefixV2}/encrypt`,
+  DECRYPT = `${apiPrefixV2}/decrypt`,
 }
 const createConfig = ({
   name,
@@ -424,6 +432,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.FILE_UPLOAD,
   }),
+  [APIName.PUBLIC_FILE_UPLOAD]: createConfig({
+    name: APIName.PUBLIC_FILE_UPLOAD,
+    method: HttpMethod.POST,
+    path: APIPath.PUBLIC_FILE_UPLOAD,
+  }),
   [APIName.FILE_DELETE]: createConfig({
     name: APIName.FILE_DELETE,
     method: HttpMethod.DELETE,
@@ -523,6 +536,21 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST,
+  }),
+  [APIName.PUSHER]: createConfig({
+    name: APIName.PUSHER,
+    method: HttpMethod.POST,
+    path: APIPath.PUSHER,
+  }),
+  [APIName.ENCRYPT]: createConfig({
+    name: APIName.ENCRYPT,
+    method: HttpMethod.POST,
+    path: APIPath.ENCRYPT,
+  }),
+  [APIName.DECRYPT]: createConfig({
+    name: APIName.DECRYPT,
+    method: HttpMethod.POST,
+    path: APIPath.DECRYPT,
   }),
   [APIName.VOUCHER_GET_BY_ID_V2]: createConfig({
     name: APIName.VOUCHER_GET_BY_ID_V2,

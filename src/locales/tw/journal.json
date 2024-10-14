@@ -203,10 +203,6 @@
     "VOUCHER_DATE": "傳票日期",
     "VOUCHER_NO": "傳票號碼",
     "NOTE": "備註",
-    "ACCOUNTING": "會計科目",
-    "PARTICULARS": "摘要",
-    "CREDIT": "貸方金額",
-    "DEBIT": "借方金額",
     "COUNTRYPARTY": "交易對象",
     "ISSUER": "發行人",
     "RECEIVABLE_AMOUNT": "應收金額",
@@ -237,7 +233,8 @@
     "RECURRING_ENTRY": "週期性分錄",
     "SELECT_ACCOUNTING": "選擇會計科目",
     "NO_ACCOUNTING_FOUND": "查無會計科目",
-    "NO_COUNTERPARTY_FOUND": "查無交易對象"
+    "NO_COUNTERPARTY_FOUND": "查無交易對象",
+    "EVERY": "每"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "資產",
@@ -248,5 +245,25 @@
     "INCOME": "收益",
     "EXPENSE": "支出",
     "GAIN_OR_LOSS": "收益或損失"
+  },
+  "ASSET_SECTION": {
+    "TITLE": "資產",
+    "EMPTY_HINT": "請新增至少 1 筆資產！",
+    "ADD_BTN": "新增資產"
+  },
+  "REVERSE_SECTION": {
+    "TITLE": "沖銷",
+    "REVERSE_VOUCHER": "沖銷傳票",
+    "REVERSE_VOUCHER_PLACEHOLDER": "請選擇...",
+    "REVERSE_AMOUNT": "沖銷金額",
+    "ADD_BTN": "新增更多沖銷傳票",
+    "EMPTY_HINT": "請新增至少 1 筆沖銷傳票！"
+  },
+  "VOUCHER_LINE_BLOCK": {
+    "ACCOUNTING": "會計科目",
+    "PARTICULARS": "摘要",
+    "CREDIT": "貸方金額",
+    "DEBIT": "借方金額",
+    "EMPTY_HINT": "請新增至少 1 筆會計分錄！"
   }
 }

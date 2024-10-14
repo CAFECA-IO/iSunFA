@@ -7,11 +7,15 @@ import { Prisma } from '@prisma/client';
 export async function createPaymentRecord(
   orderId: number,
   transactionId: string,
-  date: number,
-  description: string,
+  action: string,
   amount: number,
+  fee: number,
   method: string,
-  status: string
+  cardIssuerCountry: string,
+  status: string,
+  paymentCreatedAt: string,
+  refundAmount: number,
+  authCode: string
 ): Promise<IPaymentRecord> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -19,11 +23,15 @@ export async function createPaymentRecord(
     data: {
       orderId,
       transactionId,
-      date,
-      description,
+      action,
       amount,
+      fee,
       method,
+      cardIssuerCountry,
       status,
+      paymentCreatedAt,
+      refundAmount,
+      authCode,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },

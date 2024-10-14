@@ -203,10 +203,6 @@
     "VOUCHER_DATE": "传票日期",
     "VOUCHER_NO": "传票号码",
     "NOTE": "备注",
-    "ACCOUNTING": "会计科目",
-    "PARTICULARS": "摘要",
-    "CREDIT": "贷方金额",
-    "DEBIT": "借方金额",
     "COUNTRYPARTY": "交易对象",
     "ISSUER": "发行人",
     "RECEIVABLE_AMOUNT": "应收金额",
@@ -237,7 +233,8 @@
     "RECURRING_ENTRY": "周期性分录",
     "SELECT_ACCOUNTING": "选择会计科目",
     "NO_ACCOUNTING_FOUND": "查无会计科目",
-    "NO_COUNTERPARTY_FOUND": "查无交易对象"
+    "NO_COUNTERPARTY_FOUND": "查无交易对象",
+    "EVERY": "每"
   },
   "ACCOUNT_TYPE": {
     "ASSET": "资产",
@@ -248,5 +245,25 @@
     "INCOME": "收益",
     "EXPENSE": "支出",
     "GAIN_OR_LOSS": "收益或损失"
+  },
+  "ASSET_SECTION": {
+    "TITLE": "资产",
+    "EMPTY_HINT": "请新增至少 1 笔资产！",
+    "ADD_BTN": "新增资产"
+  },
+  "REVERSE_SECTION": {
+    "TITLE": "冲销",
+    "REVERSE_VOUCHER": "冲销传票",
+    "REVERSE_VOUCHER_PLACEHOLDER": "请选择...",
+    "REVERSE_AMOUNT": "冲销金额",
+    "ADD_BTN": "新增更多冲销传票",
+    "EMPTY_HINT": "请新增至少 1 笔冲销传票！"
+  },
+  "VOUCHER_LINE_BLOCK": {
+    "ACCOUNTING": "会计科目",
+    "PARTICULARS": "摘要",
+    "CREDIT": "贷方金额",
+    "DEBIT": "借方金额",
+    "EMPTY_HINT": "请新增至少 1 笔会计分录！"
   }
 }

@@ -66,6 +66,14 @@ export const default30DayPeriodInSec = {
 
 export const MILLISECONDS_IN_A_SECOND = 1000;
 
+// Info: (20241009 - Julian) input CSS style
+export const inputStyle = {
+  NORMAL:
+    'border-input-stroke-input divide-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
+  ERROR:
+    'border-input-text-error divide-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
+};
+
 // Info: (20240429 - Julian) checkbox CSS style
 export const checkboxStyle =
   'relative h-16px w-16px appearance-none rounded-xxs border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:top-0 after:-mt-3px after:ml-px after:hidden after:text-sm after:text-checkbox-stroke-check-mark after:content-checked checked:bg-checkbox-surface-selected checked:after:block';

@@ -5,10 +5,17 @@ import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/select_role/introduction';
 import RoleCard from '@/components/beta/select_role/role_card';
+import PreviewModal from '@/components/beta/select_role/preview_modal';
+import { RoleId } from '@/constants/role';
 
 const SelectRolePage = () => {
   const { t } = useTranslation(['common', 'kyc']);
-  const [role, setRole] = useState<string>('');
+  const [showingRole, setShowingRole] = useState<RoleId | null>(null);
+  const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
+
+  const togglePreviewModal = () => {
+    setIsPreviewModalVisible((prev) => !prev);
+  };
 
   return (
     <>
@@ -31,12 +38,16 @@ const SelectRolePage = () => {
         />
       </Head>
 
-      <main className="mx-auto flex h-screen w-1280px flex-col justify-center gap-100px overflow-x-hidden">
-        <Introduction role={role} />
+      <main className="relative h-screen overflow-hidden">
+        <div className="h-75%">
+          <Introduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+        </div>
 
         <div className="mx-100px mb-40px">
-          <RoleCard role={role} setRole={setRole} />
+          <RoleCard showingRole={showingRole} setShowingRole={setShowingRole} />
         </div>
+
+        {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
       </main>
     </>
   );

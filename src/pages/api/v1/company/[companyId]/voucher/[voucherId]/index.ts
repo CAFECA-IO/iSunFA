@@ -26,11 +26,15 @@ async function handleVoucherUpdatePrismaLogic(
   try {
     const journal = await findUniqueJournalInvolveInvoicePaymentInPrisma(voucher.journalId);
 
-    if (!journal || !journal.invoice || !journal.invoice.payment) {
+    if (!journal || !journal.invoiceVoucherJournals || !journal.invoiceVoucherJournals) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, journal.invoice.payment)) {
+    const { invoiceVoucherJournals } = journal;
+    const amount = invoiceVoucherJournals.reduce((sum, invoiceVoucherJournal) => {
+      return sum + (invoiceVoucherJournal.invoice?.totalPrice || 0);
+    }, 0);
+    if (!isVoucherAmountGreaterOrEqualThenPaymentAmount(voucher, amount)) {
       throw new Error(STATUS_MESSAGE.INVALID_VOUCHER_AMOUNT);
     }
 
