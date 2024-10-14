@@ -38,25 +38,34 @@ describe('Payment Record Repository', () => {
       const newPaymentRecord = {
         orderId: 1001,
         transactionId: 'txn_999',
+        action: 'charge',
+        amount: 1000,
+        fee: 0,
+        cardIssuerCountry: 'SG',
+        paymentCreatedAt: '2022-07-04T00:00:00Z',
+        refundAmount: 0,
         date: 12736412,
         description: 'Test Payment',
-        amount: 1000,
         method: 'credit_card',
         status: 'completed',
+        authCode: 'auth_999',
       };
       const paymentRecord = await createPaymentRecord(
         newPaymentRecord.orderId,
         newPaymentRecord.transactionId,
-        newPaymentRecord.date,
-        newPaymentRecord.description,
+        newPaymentRecord.action,
         newPaymentRecord.amount,
+        newPaymentRecord.fee,
         newPaymentRecord.method,
-        newPaymentRecord.status
+        newPaymentRecord.cardIssuerCountry,
+        newPaymentRecord.status,
+        newPaymentRecord.paymentCreatedAt,
+        newPaymentRecord.refundAmount,
+        newPaymentRecord.authCode
       );
       expect(paymentRecord).toBeDefined();
       expect(paymentRecord.orderId).toBe(newPaymentRecord.orderId);
       expect(paymentRecord.transactionId).toBe(newPaymentRecord.transactionId);
-      expect(paymentRecord.description).toBe(newPaymentRecord.description);
       expect(paymentRecord.amount).toBe(newPaymentRecord.amount);
       expect(paymentRecord.method).toBe(newPaymentRecord.method);
       expect(paymentRecord.status).toBe(newPaymentRecord.status);

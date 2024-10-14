@@ -2,12 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { OEN_BASE_ENDPOINT, OEN_MERCHANT_ENDPOINT } from '@/constants/url';
 import { IResponseData } from '@/interfaces/response_data';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import {
-  convertDateToTimestamp,
-  convertStringToNumber,
-  formatApiResponse,
-  timestampInSeconds,
-} from '@/lib/utils/common';
+import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { getOrderDetailById, updateOrder } from '@/lib/utils/repo/order.repo';
 import { createPaymentRecord } from '@/lib/utils/repo/payment_record.repo';
 import { createSubscription } from '@/lib/utils/repo/subscription.repo';
@@ -140,7 +135,7 @@ async function handlePostRequest(req: NextApiRequest) {
     const oenMerchantId = process.env.PAYMENT_ID ?? '';
     // Info: (20240823 - Murky) customId 格式會是 orderId-subPlan-subPeriod
     const { token, customId } = oenReturn;
-    const { orderId, subPlan, subPeriod } = decryptCustomId(customId);
+    const { orderId, subPeriod } = decryptCustomId(customId);
 
     const getOrder = await getOrderDetailById(orderId);
     if (!getOrder) {
@@ -154,7 +149,7 @@ async function handlePostRequest(req: NextApiRequest) {
         },
         body: JSON.stringify({
           merchantId: oenMerchantId,
-          amount: getOrder.plan.monthlyFee,
+          amount: getOrder.plan.price,
           currency: OEN_CURRENCY[CurrencyType.TWD],
           token,
           orderId: customId,
@@ -172,18 +167,19 @@ async function handlePostRequest(req: NextApiRequest) {
         }
       );
       const transactionResponseJson = await transactionResponse.json();
-      const createDate = convertDateToTimestamp(transactionResponseJson.data.createdAt);
-      const createDateInSec = timestampInSeconds(createDate);
       // Info: (20240806 - Jacky) Create payment record
-      const paymentDescription = `${subPlan} - ${subPeriod}`;
       const paymentRecord = await createPaymentRecord(
         orderId,
-        transactionResponseJson.data.transactionId,
-        createDateInSec,
-        paymentDescription, // Info (20240822 - Murky) Add subscription plan and period to payment description
+        transactionResponseJson.data.id,
+        transactionResponseJson.data.action,
         transactionResponseJson.data.amount,
-        transactionResponseJson.data.paymentInfo.method,
-        transactionResponseJson.data.status
+        transactionResponseJson.data.fee,
+        transactionResponseJson.data.method,
+        transactionResponseJson.data.cardIssuerCountry,
+        transactionResponseJson.data.status,
+        transactionResponseJson.data.createdAt,
+        transactionResponseJson.data.refundAmount,
+        transactionResponseJson.data.authCode
       );
       payload = paymentRecord.status;
       // Info: (20240806 - Jacky) Update order status

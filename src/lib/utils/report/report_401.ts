@@ -10,10 +10,11 @@ import {
 import { getCompanyKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { listJournalFor401 } from '@/lib/utils/repo/journal.repo';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
-import { IJournalIncludeVoucherLineItemsInvoicePayment } from '@/interfaces/journal';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
+import { InvoiceVoucherJournal, Journal, Invoice, Voucher, LineItem } from '@prisma/client';
+import { Account } from 'next-auth';
+import { listInvoiceVoucherJournalFor401 } from '@/lib/utils/repo/beta_transition.repo';
 
 /** Info: (20240814 - Jacky) 更新銷項資料
  * Updates the sales result based on the provided journal, category, and sales object.
@@ -26,22 +27,27 @@ import { importsCategories, purchasesCategories, salesCategories } from '@/const
  */
 function updateSalesResult(
   sales: Sales,
-  journal: IJournalIncludeVoucherLineItemsInvoicePayment,
+  invoiceVoucherJournal: InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  },
   category: keyof SalesBreakdown
 ) {
   const updatedSales = sales;
-  if (journal.invoice?.payment.hasTax) {
-    if (journal.invoice?.payment.taxPercentage === 0) {
-      updatedSales.breakdown[category].zeroTax += journal.invoice?.payment.price ?? 0;
+  if (invoiceVoucherJournal.invoice?.taxRatio === 0) {
+    if (invoiceVoucherJournal.invoice?.taxRatio === 0) {
+      updatedSales.breakdown[category].zeroTax +=
+        invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0;
     } else {
-      updatedSales.breakdown[category].sales += journal.invoice?.payment.price ?? 0;
-      updatedSales.breakdown[category].tax += journal.invoice?.payment.taxPrice ?? 0;
-      updatedSales.breakdown.total.sales += journal.invoice?.payment.price ?? 0;
-      updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
+      updatedSales.breakdown[category].sales += invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0;
+      updatedSales.breakdown[category].tax += invoiceVoucherJournal.invoice?.taxPrice ?? 0;
+      updatedSales.breakdown.total.sales += invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0;
+      updatedSales.breakdown.total.tax += invoiceVoucherJournal.invoice?.taxPrice ?? 0;
     }
   }
-  if (journal.voucher?.lineItems) {
-    journal.voucher?.lineItems.forEach((lineItem) => {
+  if (invoiceVoucherJournal.voucher?.lineItems) {
+    invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
       if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
         updatedSales.includeFixedAsset += lineItem.amount;
       }
@@ -62,7 +68,11 @@ function updateSalesResult(
  */
 function updatePurchasesResult(
   purchases: Purchases,
-  journal: IJournalIncludeVoucherLineItemsInvoicePayment,
+  invoiceVoucherJournal: InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  },
   category: keyof PurchaseBreakdown
 ) {
   const updatedPurchase = purchases;
@@ -78,26 +88,26 @@ function updatePurchasesResult(
     generalPurchases: 0,
     fixedAssets: 0,
   };
-  if (journal.voucher?.lineItems) {
-    if (journal.invoice?.deductible) {
-      journal.voucher?.lineItems.forEach((lineItem) => {
+  if (invoiceVoucherJournal.voucher?.lineItems) {
+    if (invoiceVoucherJournal.invoice?.deductible) {
+      invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
           fixedAssets.amount += lineItem.amount;
-          fixedAssets.tax += lineItem.amount * (journal.invoice?.payment.taxPercentage ?? 0.05);
+          fixedAssets.tax += lineItem.amount * (invoiceVoucherJournal.invoice?.taxRatio ?? 0.05);
         }
       });
       generalPurchases = {
-        amount: (journal.invoice?.payment.price ?? 0) - fixedAssets.amount,
-        tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
+        amount: (invoiceVoucherJournal.invoice.priceBeforeTax ?? 0) - fixedAssets.amount,
+        tax: (invoiceVoucherJournal.invoice?.taxPrice ?? 0) - fixedAssets.tax,
       };
     } else {
-      journal.voucher?.lineItems.forEach((lineItem) => {
+      invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
           unDeductible.fixedAssets += lineItem.amount;
         }
       });
       unDeductible.generalPurchases =
-        journal.invoice?.payment.price ?? 0 - unDeductible.fixedAssets;
+        invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0 - unDeductible.fixedAssets;
     }
   }
   updatedPurchase.breakdown[category].generalPurchases.amount += generalPurchases.amount;
@@ -122,12 +132,16 @@ function updatePurchasesResult(
  */
 function updateImportsResult(
   imports: Imports,
-  journal: IJournalIncludeVoucherLineItemsInvoicePayment,
+  invoiceVoucherJournal: InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  },
   category: keyof Imports
 ) {
   const updatedImports = imports;
-  if (!journal.invoice?.payment.hasTax) {
-    updatedImports[category] += journal.invoice?.payment.price ?? 0;
+  if (!invoiceVoucherJournal.invoice?.taxRatio) {
+    updatedImports[category] += invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0;
   }
 }
 
@@ -191,7 +205,15 @@ export async function generate401Report(
   const ROCStartDate = convertTimestampToROCDate(from);
   const ROCEndDate = convertTimestampToROCDate(to);
   // Info: (20240813 - Jacky) 1. 獲取所有發票
-  const journalList = await listJournalFor401(companyId, from, to);
+  const invoiceVoucherJournalList: (InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  })[] = (await listInvoiceVoucherJournalFor401(companyId, from, to)) as (InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  })[];
   const basicInfo = {
     uniformNumber: companyKYC.registrationNumber,
     businessName: companyKYC.legalName,
@@ -201,7 +223,7 @@ export async function generate401Report(
     currentYear: ROCStartDate.year.toString(),
     startMonth: ROCStartDate.month.toString(),
     endMonth: ROCEndDate.month.toString(),
-    usedInvoiceCount: journalList.length,
+    usedInvoiceCount: invoiceVoucherJournalList.length,
   };
   const sales = {
     breakdown: {
@@ -264,18 +286,18 @@ export async function generate401Report(
   };
   const bondedAreaSalesToTaxArea = 0;
 
-  journalList.forEach((journal) => {
-    if (journal.invoice && journal.invoice.type) {
-      const { type } = journal.invoice;
+  invoiceVoucherJournalList.forEach((invoiceVoucherJournal) => {
+    if (invoiceVoucherJournal.invoice && invoiceVoucherJournal.invoice.type) {
+      const { type } = invoiceVoucherJournal.invoice;
       if (type in salesCategories) {
         const category = type as keyof SalesBreakdown;
-        updateSalesResult(sales, journal, category);
+        updateSalesResult(sales, invoiceVoucherJournal, category);
       } else if (type in purchasesCategories) {
         const category = type as keyof PurchaseBreakdown;
-        updatePurchasesResult(purchases, journal, category);
+        updatePurchasesResult(purchases, invoiceVoucherJournal, category);
       } else if (type in importsCategories) {
         const category = type as keyof Imports;
-        updateImportsResult(imports, journal, category);
+        updateImportsResult(imports, invoiceVoucherJournal, category);
       }
     }
   });

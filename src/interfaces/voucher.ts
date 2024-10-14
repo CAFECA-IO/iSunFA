@@ -49,7 +49,11 @@ export interface IVoucherDataForSavingToDB {
 
 export type IVoucherFromPrismaIncludeJournalLineItems = Prisma.VoucherGetPayload<{
   include: {
-    journal: true;
+    invoiceVoucherJournals: {
+      include: {
+        journal: true;
+      };
+    };
     lineItems: {
       include: {
         account: true;
@@ -60,9 +64,9 @@ export type IVoucherFromPrismaIncludeJournalLineItems = Prisma.VoucherGetPayload
 
 export type IVoucherForCashFlow = Prisma.VoucherGetPayload<{
   include: {
-    journal: {
+    invoiceVoucherJournals: {
       include: {
-        invoice: true;
+        journal: true;
       };
     };
     lineItems: {

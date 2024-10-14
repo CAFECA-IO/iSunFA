@@ -109,11 +109,7 @@ export async function getFolderContent(
         select: {
           no: true,
           createdAt: true,
-          journal: {
-            select: {
-              event: true,
-            },
-          },
+          type: true,
         },
       },
     },
@@ -147,14 +143,14 @@ export async function getFolderContent(
     };
   });
 
-  assertIsJournalEvent(voucher.voucher.journal.event);
+  assertIsJournalEvent(voucher.voucher.type);
   const folderContent = {
     id: folderId,
     name: salaryRecordList[0].voucherSalaryRecordFolder.name,
     createdAt: salaryRecordList[0].voucherSalaryRecordFolder.createdAt,
     voucher: {
       id: voucherIdNumber,
-      event: voucher.voucher.journal.event,
+      event: voucher.voucher.type,
       date: voucher.voucher.createdAt,
       type: 'Payment',
       particulars: 'Salary Bookkeeping',

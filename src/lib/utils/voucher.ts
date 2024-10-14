@@ -1,9 +1,8 @@
 import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import { Payment } from '@prisma/client';
 
 export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
   voucher: IVoucherDataForSavingToDB,
-  payment: Payment
+  price: number
 ): boolean {
   let debitAmount = 0;
   let creditAmount = 0;
@@ -16,11 +15,8 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
     }
   });
 
-  const paymentAmount = payment.price;
-
   const isDebitCreditEqual = debitAmount === creditAmount;
-  const isDebitCreditGreaterOrEqualPaymentAmount =
-    debitAmount >= paymentAmount && creditAmount >= paymentAmount;
+  const isDebitCreditGreaterOrEqualPaymentAmount = debitAmount >= price && creditAmount >= price;
 
   return isDebitCreditEqual && isDebitCreditGreaterOrEqualPaymentAmount;
 }
