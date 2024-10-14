@@ -173,7 +173,11 @@ const MobileUploadPage: React.FC = () => {
             onFileChange={handleFileChange}
           />
         ) : (
-          <PhotoGrid selectedCertificates={selectedCertificates} onRemove={handleRemoveFile} setUploadMode={setUploadMode}/>
+          <PhotoGrid
+            selectedCertificates={selectedCertificates}
+            onRemove={handleRemoveFile}
+            setUploadMode={setUploadMode}
+          />
         )}
       </main>
     </>
