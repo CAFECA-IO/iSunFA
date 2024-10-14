@@ -20,7 +20,13 @@ import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { checkboxStyle, inputStyle, default30DayPeriodInSec, WEEK_FULL_LIST, MONTH_ABR_LIST } from '@/constants/display';
+import {
+  checkboxStyle,
+  inputStyle,
+  default30DayPeriodInSec,
+  WEEK_FULL_LIST,
+  MONTH_ABR_LIST,
+} from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 
@@ -333,8 +339,7 @@ const NewVoucherForm: React.FC = () => {
         ? `Period: ${recurringPeriod.startTimeStamp} ~ ${recurringPeriod.endTimeStamp}`
         : '',
       isRecurring
-        ? `${recurringArray.map((item) => (recurringUnit === RecurringUnit.WEEK ? `W${item}` : `M${item}`))}
-      `
+        ? `Every ${recurringUnit === RecurringUnit.WEEK ? 'week' : 'year'}: ${recurringArray.map((item) => item)}`
         : '',
       assets.length > 0 ? '\nAssets:' : '',
       `${assets.map((asset) => `${asset.assetNumber} ${asset.assetName}`)}`,
