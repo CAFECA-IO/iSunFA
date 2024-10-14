@@ -872,6 +872,7 @@ module.exports = {
 
         // '1px': '1px',
         // '2px': '2px',
+        '2.5px': '2.5px',
         // '3px': '3px',
         // '4px': '4px',
         // '5px': '5px',
