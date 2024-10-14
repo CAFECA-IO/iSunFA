@@ -1,23 +1,31 @@
 import React from 'react';
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { ILocale } from '@/interfaces/locale';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
-import { generateRandomCertificates, ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
+import {
+  generateRandomCertificates,
+  ICertificate,
+  ICertificateUI,
+  OPERATIONS,
+} from '@/interfaces/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
-import { ILineItem } from '@/interfaces/line_item';
-import { IDatePeriod } from '@/interfaces/date_period';
+import { ILineItemBeta } from '@/interfaces/line_item';
 import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import Skeleton from '@/components/skeleton/skeleton';
+import { WEEK_FULL_LIST } from '@/constants/display';
+import { IAsset } from '@/interfaces/asset';
 
+// Info: (20241014 - Julian) @Murky Interface for Voucher Detail
 interface IVoucherDetailForFrontend {
   id: number;
   voucherDate: number;
@@ -32,12 +40,31 @@ interface IVoucherDetailForFrontend {
     type: string;
     startDate: number;
     endDate: number;
-    daysOfWeek: number[];
-    dayOfMonth: number[];
-    daysOfYear: {
-      month: number;
-      day: number;
-    }[];
+    daysOfWeek: number[]; // 0~6
+    monthsOfYear: string[]; // '1'~'12'
+  };
+  payableInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  receivingInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  reverseVoucherIds: {
+    id: number;
+    voucherNo: string;
+  }[];
+  assets: IAsset[];
+  certificates: ICertificate[];
+  lineItemsInfo: {
+    lineItems: ILineItemBeta[];
   };
 }
 
@@ -56,53 +83,25 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     startDate: 0,
     endDate: 0,
     daysOfWeek: [],
-    dayOfMonth: [],
-    daysOfYear: [],
+    monthsOfYear: [],
+  },
+  payableInfo: undefined,
+  receivingInfo: undefined,
+  reverseVoucherIds: [],
+  assets: [],
+  certificates: [],
+  lineItemsInfo: {
+    lineItems: [],
   },
 };
 
 const VoucherDetailPage: React.FC = () => {
-  const recurringStr: string = 'Every month';
-  const recurringPeriod: IDatePeriod = {
-    startTimeStamp: 1643567783,
-    endTimeStamp: 1801578367,
-  };
-  const payableAmount: number = 1300;
-  const paidAmount: number = 1000;
-  const remainAmount: number = 300;
-  const reverseVouchers: string[] = ['20241008-002', '20241008-003'];
-  // ToDo: (20241008 - Julian) Asset
-  // const assetIds = ['A00000001', 'A00000002', 'A00000003'];
-  const voucherLineItems: ILineItem[] = [
-    {
-      lineItemIndex: '0',
-      accountId: 320,
-      account: 'Cash',
-      description: 'Buy a printer',
-      debit: true,
-      amount: 1000,
-    },
-    {
-      lineItemIndex: '1',
-      accountId: 503,
-      account: 'Accounts Payable',
-      description: '',
-      debit: false,
-      amount: 1300,
-    },
-    {
-      lineItemIndex: '3',
-      accountId: 673,
-      account: 'Miscellaneous Expense',
-      description: '',
-      debit: true,
-      amount: 300,
-    },
-  ];
+  const { t } = useTranslation('common');
 
   const { data: voucherData, isLoading } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
     {
+      // ToDo: (20241014 - Julian) Replace with real parameters
       params: {
         companyId: '111',
         voucherId: '123',
@@ -117,17 +116,34 @@ const VoucherDetailPage: React.FC = () => {
     type,
     note,
     counterParty,
+    recurringInfo,
+    payableInfo,
+    receivingInfo,
+    reverseVoucherIds,
+    assets,
+    certificates,
+    lineItemsInfo: { lineItems },
   } = voucherData || defaultVoucherDetail;
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   const pageTitle = `Voucher ${voucherId}`;
-  const totalDebit = voucherLineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
-  const totalCredit = voucherLineItems.reduce(
-    (acc, cur) => (!cur.debit ? acc + cur.amount : acc),
-    0
-  );
+  const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
+  const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + cur.amount : acc), 0);
 
-  const recurringPeriodStr = `From ${timestampToString(recurringPeriod.startTimeStamp).date} to ${timestampToString(recurringPeriod.endTimeStamp).date}`;
+  // Info: (20241014 - Julian) Destructuring payableInfo or receivingInfo
+  const {
+    total: payableAmount,
+    alreadyHappened: paidAmount,
+    remain: remainAmount,
+  } = payableInfo ||
+    receivingInfo || { payableAmount: undefined, paidAmount: undefined, remainAmount: undefined };
+
+  const displayDaysOfWeek = recurringInfo.daysOfWeek
+    .map((day) => t(WEEK_FULL_LIST[day]))
+    .join(', ');
+
+  const recurringStr = t('journal:ADD_NEW_VOUCHER.EVERY') + displayDaysOfWeek; // ToDo: (20241014 - Julian) Replace with real recurring string
+  const recurringPeriodStr = `From ${timestampToString(recurringInfo.startDate).date} to ${timestampToString(recurringInfo.endDate).date}`;
 
   // ToDo: (20241008 - Julian) Call API to delete voucher
   const deleteVoucher = async () => {
@@ -148,35 +164,23 @@ const VoucherDetailPage: React.FC = () => {
     messageModalVisibilityHandler();
   };
 
-  const selectedCertificates: ICertificateUI[] = generateRandomCertificates(3).map(
-    (certificate) => {
-      const actions = [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE];
-      return {
-        ...certificate,
-        isSelected: false,
-        actions,
-      };
-    }
-  );
+  // ToDo: (20241014 - Julian) dummy data
+  const selectedCertificates: ICertificateUI[] = generateRandomCertificates(
+    certificates.length
+  ).map((certificate) => {
+    const actions = [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE];
+    return {
+      ...certificate,
+      isSelected: false,
+      actions,
+    };
+  });
 
-  const reverseVoucherList = reverseVouchers.map((reverseVoucher) => (
-    <p key={reverseVoucher} className="text-link-text-primary">
-      {reverseVoucher}
-    </p>
-  ));
-
-  // ToDo: (20241008 - Julian) Display asset
-  // const displayAssetIds = assetIds.map((assetId) => (
-  //   <p key={assetId} className="text-link-text-primary">
-  //     {assetId}
-  //   </p>
-  // ));
-
-  const voucherLineBlock = voucherLineItems.map((lineItem) => (
+  const voucherLineBlock = lineItems.map((lineItem) => (
     <>
       <div className="flex items-center justify-between gap-8px rounded-sm bg-input-surface-input-background px-12px py-10px">
         <p className="overflow-x-auto whitespace-nowrap">
-          {lineItem.accountId} - {lineItem.account}
+          {lineItem.account?.id} - {lineItem.account?.name}
         </p>
         <div className="h-20px w-20px">
           <FiBookOpen size={20} />
@@ -225,6 +229,107 @@ const VoucherDetailPage: React.FC = () => {
   ) : (
     <Skeleton width={200} height={24} rounded />
   );
+
+  const isDisplayRecurringEntry = !isLoading ? (
+    <div className="flex flex-col text-right">
+      <p className="text-input-text-primary">{recurringStr}</p>
+      <p className="text-input-text-primary">{recurringPeriodStr}</p>
+    </div>
+  ) : (
+    <Skeleton width={200} height={48} rounded />
+  );
+
+  const isDisplayReverseVoucher = !isLoading ? (
+    <div className="flex flex-col">
+      {reverseVoucherIds.map((reverseVoucher) => (
+        <p key={reverseVoucher.id} className="text-link-text-primary">
+          {reverseVoucher.voucherNo}
+        </p>
+      ))}
+    </div>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+
+  const isDisplayPayableAmount = !isLoading ? (
+    <p className="text-input-text-primary">
+      {numberWithCommas(payableAmount ?? 0)}
+      <span className="ml-4px text-text-neutral-tertiary">TWD</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+
+  const isDisplayPaidAmount = !isLoading ? (
+    <p className="text-input-text-primary">
+      {numberWithCommas(paidAmount ?? 0)}
+      <span className="ml-4px text-text-neutral-tertiary">TWD</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+
+  const isDisplayRemainAmount = !isLoading ? (
+    <p className="text-input-text-primary">
+      {numberWithCommas(remainAmount ?? 0)}
+      <span className="ml-4px text-text-neutral-tertiary">TWD</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+
+  // ToDo: (20241014 - Julian) should display asset name
+  const isDisplayAsset = !isLoading ? (
+    <div className="flex flex-col">
+      {assets.map((asset) => (
+        <p key={asset.id} className="text-link-text-primary">
+          {asset.id}
+        </p>
+      ))}
+    </div>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+
+  const isPayableAmount =
+    payableAmount !== undefined ? (
+      <div className="flex justify-between">
+        <p className="text-text-neutral-tertiary">Payable Amount</p>
+        {isDisplayPayableAmount}
+      </div>
+    ) : null;
+
+  const isPaidAmount =
+    paidAmount !== undefined ? (
+      <div className="flex justify-between">
+        <p className="text-text-neutral-tertiary">Paid Amount</p>
+        {isDisplayPaidAmount}
+      </div>
+    ) : null;
+
+  const isRemainAmount =
+    remainAmount !== undefined ? (
+      <div className="flex justify-between">
+        <p className="text-text-neutral-tertiary">Remain Amount</p>
+        {isDisplayRemainAmount}
+      </div>
+    ) : null;
+
+  const isReverseVoucher =
+    reverseVoucherIds.length > 0 ? (
+      <div className="flex justify-between">
+        <p className="text-text-neutral-tertiary">Reverse Vouchers</p>
+        {isDisplayReverseVoucher}
+      </div>
+    ) : null;
+
+  const isAsset =
+    assets.length > 0 ? (
+      <div className="flex justify-between">
+        <p className="text-text-neutral-tertiary">Asset</p>
+        {isDisplayAsset}
+      </div>
+    ) : null;
 
   return (
     <>
@@ -294,45 +399,18 @@ const VoucherDetailPage: React.FC = () => {
               {/* Info: (20241007 - Julian) Recurring Entry */}
               <div className="flex justify-between">
                 <p className="text-text-neutral-tertiary">Recurring Entry</p>
-                <div className="flex flex-col text-right">
-                  <p className="text-input-text-primary">{recurringStr}</p>
-                  <p className="text-input-text-primary">{recurringPeriodStr}</p>
-                </div>
+                {isDisplayRecurringEntry}
               </div>
               {/* Info: (20241007 - Julian) Payable Amount */}
-              <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Payable Amount</p>
-                <p className="text-text-neutral-primary">
-                  {numberWithCommas(payableAmount)}
-                  <span className="ml-4px text-text-neutral-tertiary">TWD</span>
-                </p>
-              </div>
+              {isPayableAmount}
               {/* Info: (20241007 - Julian) Paid Amount */}
-              <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Paid Amount</p>
-                <p className="text-text-neutral-primary">
-                  {numberWithCommas(paidAmount)}
-                  <span className="ml-4px text-text-neutral-tertiary">TWD</span>
-                </p>
-              </div>
+              {isPaidAmount}
               {/* Info: (20241007 - Julian) Remain Amount */}
-              <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Remain Amount</p>
-                <p className="text-text-neutral-primary">
-                  {numberWithCommas(remainAmount)}
-                  <span className="ml-4px text-text-neutral-tertiary">TWD</span>
-                </p>
-              </div>
+              {isRemainAmount}
               {/* Info: (20241007 - Julian) Reverse Vouchers */}
-              <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Reverse Vouchers</p>
-                <div className="flex flex-col">{reverseVoucherList}</div>
-              </div>
+              {isReverseVoucher}
               {/* Info: (20241007 - Julian) Asset */}
-              {/* <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Asset</p>
-                <div className="flex flex-col">{displayAssetIds}</div>
-              </div> */}
+              {isAsset}
             </div>
 
             {/* Info: (20241008 - Julian) Voucher Line Block */}
