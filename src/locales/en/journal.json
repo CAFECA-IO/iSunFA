@@ -222,7 +222,8 @@
     "FROM_PLACEHOLDER": "From",
     "TO_PLACEHOLDER": "To",
     "BALANCE": "Balance",
-    "LEDGER": "Ledger"
+    "LEDGER": "Ledger",
+    "TRIAL_BALANCE": "Trial_Balance"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",

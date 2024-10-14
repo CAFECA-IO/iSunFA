@@ -1,7 +1,7 @@
 import React from 'react';
-import LedgerList from '@/components/ledger/ledger_list';
+import TrialBalanceList from '@/components/trial_balance/trial_balance_list';
 
-const LedgerPageBody = () => {
+const TrialBalancePageBody = () => {
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px px-40px py-40px">
       {/* Info: (20240920 - Julian) Voucher List */}
@@ -11,10 +11,10 @@ const LedgerPageBody = () => {
           This is filter
         </div>
         {/* Info: (20240920 - Julian) Voucher List */}
-        <LedgerList />
+        <TrialBalanceList />
       </div>
     </div>
   );
 };
 
-export default LedgerPageBody;
+export default TrialBalancePageBody;

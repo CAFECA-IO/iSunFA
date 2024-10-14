@@ -222,7 +222,8 @@
     "FROM_PLACEHOLDER": "从",
     "TO_PLACEHOLDER": "到",
     "BALANCE": "余额",
-    "LEDGER": "分类帐"
+    "LEDGER": "分类帐",
+    "TRIAL_BALANCE": "试算表"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",

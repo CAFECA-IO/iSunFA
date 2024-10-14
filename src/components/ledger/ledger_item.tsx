@@ -136,11 +136,11 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
       {/* Info: (20240920 - Julian) Note */}
       <div className="table-cell py-8px text-right align-middle">{displayedNote}</div>
       {/* Info: (20240920 - Julian) Credit */}
-      <div className="table-cell py-8px text-right align-middle">{displayedCredit}</div>
+      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedCredit}</div>
       {/* Info: (20240920 - Julian) Debit */}
-      <div className="table-cell py-8px text-right align-middle">{displayedDebit}</div>
+      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedDebit}</div>
       {/* Info: (20241004 - Anna) Balance */}
-      <div className="table-cell py-8px text-right align-middle">{displayedBalance}</div>
+      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedBalance}</div>
     </div>
   );
 });

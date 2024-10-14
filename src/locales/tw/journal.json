@@ -222,7 +222,8 @@
     "FROM_PLACEHOLDER": "從",
     "TO_PLACEHOLDER": "到",
     "BALANCE": "餘額",
-    "LEDGER": "分類帳"
+    "LEDGER": "分類帳",
+    "TRIAL_BALANCE": "試算表"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",

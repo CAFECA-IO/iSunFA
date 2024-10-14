@@ -96,7 +96,7 @@ const LedgerList = () => {
   const totalPage = 10;
 
   // Info: (20240920 - Julian) css string
-  const tableCellStyles = 'table-cell text-center align-middle';
+  const tableCellStyles = 'text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
   //   const checkStyle = `'table-cell' text-center align-middle border-r border-stroke-neutral-quaternary`;
 
@@ -135,45 +135,49 @@ const LedgerList = () => {
   });
 
   return (
-    <div className="flex flex-col gap-40px">
+    <div className="flex flex-col">
       {/* Info: (20240920 - Julian) export & select button */}
       {displayedSelectArea}
 
-      {/* Info: (20240920 - Julian) Table */}
-      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row">
-            <div className={`${tableCellStyles} border-b border-r`}>
+        <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+          <div className="table-row h-60px">
+            <div className={`table-cell ${tableCellStyles} border-b border-r`}>
               <div className="flex items-center justify-center">
-                {/* <div className="ml-4 text-center align-middle"> */}
                 <div className="relative">
                   <input type="checkbox" className={checkboxStyle} />
                 </div>
               </div>
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+              {displayedDate}
+            </div>
+            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('common:COMMON.CODE')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.ACCOUNTING')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
             </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles}`}>
+            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            {/* Info: (20241004 - Anna) Only show if debit is not zero */}
             {voucherList.some((voucher) => voucher.debit.some((d) => d !== 0)) && (
-              <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDebit}</div>
+              <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+                {displayedDebit}
+              </div>
             )}
-            {/* Info: (20241004 - Anna) Only show if credit is not zero */}
             {voucherList.some((voucher) => voucher.credit.some((c) => c !== 0)) && (
-              <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedCredit}</div>
+              <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
+                {displayedCredit}
+              </div>
             )}
-            <div className={`${tableCellStyles} ${sideBorderStyles.replace('border-r', '')}`}>
+            <div
+              className={`table-cell ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')}`}
+            >
               {t('journal:VOUCHER.BALANCE')}
             </div>
           </div>
@@ -181,6 +185,26 @@ const LedgerList = () => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedVoucherList}</div>
+      </div>
+
+      <div className="h-px w-full bg-neutral-100"></div>
+
+      {/* Info: (20241009 - Anna) 加總數字的表格 */}
+      <div className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary">
+        {/* Info: (20241009 - Anna) 表格內容 */}
+        <div className="col-span-1"></div>
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
+          Total Debit amount
+        </div>
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
+          1,800,000
+        </div>
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
+          Total Credit amount
+        </div>
+        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
+          1,120,000
+        </div>
       </div>
 
       {/* Info: (20240920 - Julian) Pagination */}
