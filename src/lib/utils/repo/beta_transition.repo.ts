@@ -40,11 +40,12 @@ export async function listInvoiceVoucherJournal(
         companyId,
         type: eventType,
         status: journalEvent,
+        date: {
+          gte: startDateInSecond,
+          lte: endDateInSecond,
+        },
       },
-      createdAt: {
-        gte: startDateInSecond,
-        lte: endDateInSecond,
-      },
+
       AND: [
         { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
         {
