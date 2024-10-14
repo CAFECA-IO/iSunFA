@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
-import { ILineItemBeta } from '@/interfaces/line_item';
+import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { IAccount } from '@/interfaces/accounting_account';
 
 interface IVoucherLineBlockProps {
@@ -41,16 +41,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   const addNewVoucherLine = () => {
     // Info: (20241001 - Julian) 取得最後一筆的 ID + 1，如果沒有資料就設定為 0
     const newVoucherId = lineItems.length > 0 ? lineItems[lineItems.length - 1].id + 1 : 0;
-    setLineItems([
-      ...lineItems,
-      {
-        id: newVoucherId,
-        account: null,
-        particulars: '',
-        debit: 0,
-        credit: 0,
-      },
-    ]);
+    setLineItems([...lineItems, { ...initialVoucherLine, id: newVoucherId }]);
   };
 
   const voucherLines =
@@ -74,7 +65,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
         // Info: (20241001 - Julian) 設定 Particulars
         const particularsChangeHandler = (particulars: string) => {
-          duplicateLineItem.particulars = particulars;
+          duplicateLineItem.description = particulars;
           setLineItems(
             lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
           );
@@ -82,7 +73,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
         // Info: (20241001 - Julian) 設定 Debit
         const debitChangeHandler = (debit: number) => {
-          duplicateLineItem.debit = debit;
+          duplicateLineItem.debit = true;
+          duplicateLineItem.amount = debit;
           setLineItems(
             lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
           );
@@ -90,7 +82,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
         // Info: (20241001 - Julian) 設定 Credit
         const creditChangeHandler = (credit: number) => {
-          duplicateLineItem.credit = credit;
+          duplicateLineItem.debit = false;
+          duplicateLineItem.amount = credit;
           setLineItems(
             lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
           );
