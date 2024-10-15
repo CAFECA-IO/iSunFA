@@ -7,217 +7,397 @@
   {
     "code": "A00010",
     "name": "繼續營業單位稅前淨利（淨損）",
-    "indent": 0
+    "indent": 1
+  },
+  {
+    "code": "A00020",
+    "name": "停業單位稅前淨利（淨損）",
+    "indent": 1
   },
   {
     "code": "A10000",
     "name": "本期稅前淨利（淨損）",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "",
     "name": "調整項目",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "A20010",
     "name": "收益費損項目合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "A20100",
     "name": "折舊費用",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A20200",
     "name": "攤銷費用",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A20300",
     "name": "預期信⽤減損損失（利益）數／呆帳費⽤提列（轉列收入）數",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A20400",
     "name": "透過損益按公允價值衡量之金融資產及負債之淨損失（利益）",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A20900",
     "name": "利息費用",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A21200",
     "name": "利息收入",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A21300",
     "name": "股利收入",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A21900",
     "name": "股利基礎給付酬勞成本",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "A22000",
+    "name": "應付公司債匯率影響數",
+    "indent": 3
   },
   {
     "code": "A22300",
     "name": "採用權益法之關聯企業及合資之淨損失（利益）",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A22500",
     "name": "處分及報廢不動產、廠房及設備損失（利益）",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "A22600",
+    "name": "不動產、廠房及設備轉列費用數",
+    "indent": 3
   },
   {
     "code": "A22800",
     "name": "處分無形資產損失（利益）",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "A22900",
+    "name": "處分其他資產損失（利益）",
+    "indent": 3
+  },
+  {
+    "code": "A23000",
+    "name": "處分待出售非流動資產損失（利益）",
+    "indent": 3
   },
   {
     "code": "A23100",
     "name": "處分投資損失（利益）",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A23200",
     "name": "處理採用權益法之投資損失（利益）",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "A23500",
+    "name": "金融資產減損損失",
+    "indent": 3
+  },
+  {
+    "code": "A23600",
+    "name": "金融資產減損迴轉利益",
+    "indent": 3
   },
   {
     "code": "A23700",
     "name": "非金融資產減損損失",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "A23800",
+    "name": "非金融資產減損迴轉利益",
+    "indent": 3
+  },
+  {
+    "code": "A23900",
+    "name": "未實現銷貨利益（損失）",
+    "indent": 3
+  },
+  {
+    "code": "A24000",
+    "name": "已實現銷貨損失（利益）",
+    "indent": 3
   },
   {
     "code": "A24100",
     "name": "未實現外幣兌換損失（利益）",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "A24200",
+    "name": "買回應付公司債損失（利益）",
+    "indent": 3
+  },
+  {
+    "code": "A24500",
+    "name": "逾期未領董監酬勞轉列其他收入",
+    "indent": 3
+  },
+  {
+    "code": "A24600",
+    "name": "投資性不動產公允價值調整損失(利益)",
+    "indent": 3
   },
   {
     "code": "A29900",
     "name": "其他項目",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A20010",
     "name": "收益費損項目合計",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "",
     "name": "與營業活動相關之資產／負債變動數",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "",
     "name": "與營業活動相關之資產之淨變動",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A31115",
     "name": "強制透過㔯役案公允假值橫量之金融資產（增加）減少",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "A31120",
+    "name": "避險之金融資產（增加）減少",
+    "indent": 4
+  },
+  {
+    "code": "A31125",
+    "name": "合約資產（增加）減少",
+    "indent": 4
+  },
+  {
+    "code": "A31130",
+    "name": "應收票據（增加）減少",
+    "indent": 4
+  },
+  {
+    "code": "A31140",
+    "name": "應收票據－關係人（增加）減少",
+    "indent": 4
   },
   {
     "code": "A31150",
     "name": "應收帳款（增加）減少",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A31160",
     "name": "應收帳款－關係人（增加）減少",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "A31180",
+    "name": "其他應收款（增加）減少",
+    "indent": 4
   },
   {
     "code": "A31190",
     "name": "其他應收款－關係人（增加）減少",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A31200",
     "name": "存貨（增加）減少",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "A31210",
+    "name": "生物資產（增加）減少",
+    "indent": 4
+  },
+  {
+    "code": "A31220",
+    "name": "預付費用（增加）減少",
+    "indent": 4
+  },
+  {
+    "code": "A31230",
+    "name": "預付款項（增加）減少",
+    "indent": 4
   },
   {
     "code": "A31240",
     "name": "其他流動資產（增加）減少",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A31250",
     "name": "其他金融資產（增加）減少",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A31990",
     "name": "其他營業資產（增加）減少",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A31000",
     "name": "與營業活動相關之資產之淨變動合計",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "",
     "name": "與營業活動相關之負債之淨變動",
-    "indent": 0
+    "indent": 3
   },
   {
-    "code": "A31150",
+    "code": "A31110",
+    "name": "持有供交易之金融負債增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A31120",
+    "name": "避險之金融負債增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A31125",
+    "name": "合約負債增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A31130",
+    "name": "應付票據增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A32140",
+    "name": "應付票據－關係人增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A32150",
     "name": "應付帳款增加（減少）",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A32160",
     "name": "應付帳款－關係人增加（減少）",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "A32180",
+    "name": "其他應付款增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A32190",
+    "name": "其他應付款－關係人增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A32200",
+    "name": "負債準備增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A32210",
+    "name": "預收款項增加（減少）",
+    "indent": 4
+  },
+  {
+    "code": "A32220",
+    "name": "其他金融負債增加（減少）",
+    "indent": 4
   },
   {
     "code": "A32230",
     "name": "其他流動負債增加（減少）",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A32240",
-    "name": "淨確定福利負債增加（減少）",
-    "indent": 0
+    "name": "淨確定福利負債增加(減少)",
+    "indent": 4
+  },
+  {
+    "code": "A32250",
+    "name": "遞延貸項增加（減少）",
+    "indent": 4
   },
   {
     "code": "A32990",
     "name": "其他營業負債增加（減少）",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A32000",
     "name": "與營業活動相關之負債之淨變動合計",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "A30000",
     "name": "與營業活動相關之資產及負債之淨變動合計",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "A20000",
     "name": "調整項目合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "A33000",
     "name": "營運產生之現金流入（流出）",
-    "indent": 0
+    "indent": 1
+  },
+  {
+    "code": "A33100",
+    "name": "收取之利息",
+    "indent": 1
+  },
+  {
+    "code": "A33200",
+    "name": "收取之股利",
+    "indent": 1
+  },
+  {
+    "code": "A33300",
+    "name": "支付之利息",
+    "indent": 1
+  },
+  {
+    "code": "A33400",
+    "name": "支付之股利",
+    "indent": 1
   },
   {
     "code": "A33500",
     "name": "退還（支付）之所得稅",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "AAAA",
@@ -235,9 +415,54 @@
     "indent": 0
   },
   {
+    "code": "B00020",
+    "name": "處分透過其他綜合損益按公允價值衡量之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B00030",
+    "name": "透過其他綜合損益按公允價值衡量之金融資產減資退回股款",
+    "indent": 2
+  },
+  {
+    "code": "B00040",
+    "name": "取得按攤銷後成本衡量之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B00050",
+    "name": "處分按攤銷後成本衡量之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B00100",
+    "name": "取得透過損益按公允價值衡量之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B00200",
+    "name": "處分透過損益按公允價值衡量之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B01500",
+    "name": "取得避險之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B01600",
+    "name": "處分避險之金融資產",
+    "indent": 2
+  },
+  {
+    "code": "B01700",
+    "name": "除列避險之金融負債(寫到這裡)",
+    "indent": 2
+  },
+  {
     "code": "B07600",
     "name": "收取之股利",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "B09900",
