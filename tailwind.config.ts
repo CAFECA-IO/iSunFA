@@ -774,6 +774,7 @@ module.exports = {
         iphonexr: '415px',
         iphone12promax: '431px',
 
+        xs: '450px', // mobile
         sm: '500px', // mobile
         md: '768px', // tablet
         lg: '1024px', // desktop
@@ -872,6 +873,7 @@ module.exports = {
 
         // '1px': '1px',
         // '2px': '2px',
+        '2.5px': '2.5px',
         // '3px': '3px',
         // '4px': '4px',
         // '5px': '5px',
@@ -946,6 +948,7 @@ module.exports = {
         '95px': '95px',
         '98px': '98px',
         // '100px': '100px',
+        '105px': '105px',
         '110px': '110px',
         // '120px': '120px',
         '122px': '122px',
@@ -1329,6 +1332,10 @@ module.exports = {
         // Shadow/Down/Dropshadow_M
         Dropshadow_M:
           '0px 166px 46px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        // Side menu
+        SideMenu:
+          '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         lg: '0 4px 10px rgba(0,0,0,0.7)',
@@ -1445,7 +1452,11 @@ module.exports = {
       },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
+        'dynamic-fill': 'repeat(auto-fill, minmax(200px, 1fr))',
         13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
+      },
+      gridAutoRows: {
+        'min-content': 'min-content',
       },
       gridColumnEnd: {
         13: '13',

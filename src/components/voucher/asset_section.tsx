@@ -3,7 +3,8 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
-import { IAssetItem, mockAssetItem } from '@/interfaces/asset';
+import { IAssetItem } from '@/interfaces/asset';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
@@ -13,31 +14,10 @@ interface IAssetSectionProps {
 
 const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, setAssets }) => {
   const { t } = useTranslation('common');
+  const { addAssetModalVisibilityHandler } = useGlobalCtx();
 
-  // ToDo: (20241009 - Julian) Replace with real function to add asset
-  const generateRandomAsset = () => {
-    // Info: (20241011 - Julian) 取得最後一筆資產的 id，並加 1
-    const lastItem = assets[assets.length - 1];
-    const newId = lastItem ? lastItem.id + 1 : 0;
-
-    const randomNum = Math.random() * 10;
-    const randomAssetName =
-      randomNum > 8
-        ? 'MacBook Pro'
-        : randomNum > 5
-          ? 'Printer'
-          : randomNum > 2
-            ? 'Monitor'
-            : 'Keyboard';
-
-    const randomAsset: IAssetItem = {
-      ...mockAssetItem,
-      id: newId,
-      assetName: randomAssetName,
-      assetNumber: `A - ${newId.toFixed(0).padStart(6, '0')}`,
-    };
-
-    setAssets([...assets, randomAsset]);
+  const assNewAssetHandler = () => {
+    addAssetModalVisibilityHandler();
   };
 
   const displayedAssetList =
@@ -94,7 +74,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, s
 
       <div className="flex flex-col gap-12px">
         {displayedAssetList}
-        <Button type="button" variant="secondaryOutline" onClick={generateRandomAsset}>
+        <Button type="button" variant="secondaryOutline" onClick={assNewAssetHandler}>
           <FiPlus size={20} />
           <p>{t('journal:ASSET_SECTION.ADD_BTN')}</p>
         </Button>
