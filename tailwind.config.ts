@@ -872,6 +872,7 @@ module.exports = {
 
         // '1px': '1px',
         // '2px': '2px',
+        '2.5px': '2.5px',
         // '3px': '3px',
         // '4px': '4px',
         // '5px': '5px',
@@ -1329,6 +1330,10 @@ module.exports = {
         // Shadow/Down/Dropshadow_M
         Dropshadow_M:
           '0px 166px 46px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        // Side menu
+        SideMenu:
+          '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',

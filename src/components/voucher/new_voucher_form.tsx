@@ -12,7 +12,7 @@ import AssetSection from '@/components/voucher/asset_section';
 import ReverseSection from '@/components/voucher/reverse_section';
 import VoucherLineBlock from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { ILineItemBeta } from '@/interfaces/line_item';
+import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
 import { IAssetItem } from '@/interfaces/asset';
@@ -20,7 +20,13 @@ import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { checkboxStyle, inputStyle, default30DayPeriodInSec } from '@/constants/display';
+import {
+  checkboxStyle,
+  inputStyle,
+  default30DayPeriodInSec,
+  WEEK_FULL_LIST,
+  MONTH_ABR_LIST,
+} from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 
@@ -36,15 +42,6 @@ const NewVoucherForm: React.FC = () => {
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-
-  // Info: (20241001 - Julian) 初始傳票列
-  const initialVoucherLine: ILineItemBeta = {
-    id: 0,
-    account: null,
-    particulars: '',
-    debit: 0,
-    credit: 0,
-  };
 
   // Info: (20241004 - Julian) 通用項目
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -140,10 +137,14 @@ const NewVoucherForm: React.FC = () => {
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
     // Info: (20241004 - Julian) 計算總借貸金額
-    const debitTotal = voucherLineItems.reduce((acc, item) => acc + item.debit, 0);
-    const creditTotal = voucherLineItems.reduce((acc, item) => acc + item.credit, 0);
+    const debitTotal = voucherLineItems.reduce((acc, item) => {
+      return item.debit === true ? acc + item.amount : acc;
+    }, 0);
+    const creditTotal = voucherLineItems.reduce((acc, item) => {
+      return item.debit === false ? acc + item.amount : acc;
+    }, 0);
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = voucherLineItems.some((item) => item.debit === 0 && item.credit === 0);
+    const zeroLine = voucherLineItems.some((item) => item.amount === 0 || item.debit === null);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
     const accountingNull = voucherLineItems.some((item) => item.account === null);
 
@@ -160,8 +161,8 @@ const NewVoucherForm: React.FC = () => {
     // Info: (20241004 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
     const isReverse = voucherLineItems.some(
       (item) =>
-        (item.account?.code === '2171' && item.debit > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.credit > 0) // Info: (20241009 - Julian) 應收帳款
+        (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
+        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
     );
 
     setTotalDebit(debitTotal);
@@ -283,7 +284,11 @@ const NewVoucherForm: React.FC = () => {
   };
 
   const translateUnit = (unit: RecurringUnit) => {
-    return t(`common:COMMON.${unit.toUpperCase()}`);
+    if (unit === RecurringUnit.WEEK) {
+      return t(`common:COMMON.WEEK`);
+    } else {
+      return t(`common:COMMON.YEAR`);
+    }
   };
 
   // Info: (20241004 - Julian) 清空表單
@@ -334,8 +339,7 @@ const NewVoucherForm: React.FC = () => {
         ? `Period: ${recurringPeriod.startTimeStamp} ~ ${recurringPeriod.endTimeStamp}`
         : '',
       isRecurring
-        ? `${recurringArray.map((item) => (recurringUnit === RecurringUnit.WEEK ? `W${item}` : `M${item}`))}
-      `
+        ? `Every ${recurringUnit === RecurringUnit.WEEK ? 'week' : 'year'}: ${recurringArray.map((item) => item)}`
         : '',
       assets.length > 0 ? '\nAssets:' : '',
       `${assets.map((asset) => `${asset.assetNumber} ${asset.assetName}`)}`,
@@ -510,7 +514,7 @@ const NewVoucherForm: React.FC = () => {
   const recurringUnitCheckboxes =
     recurringUnit === RecurringUnit.WEEK
       ? Array.from({ length: 7 }, (_, i) => {
-          const week = i + 1;
+          const week = i;
           const weekChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
             if (e.target.checked) {
               setRecurringArray([...recurringArray, week]);
@@ -522,7 +526,7 @@ const NewVoucherForm: React.FC = () => {
           const weekChecked = recurringArray.includes(week);
 
           return (
-            <div key={week} className="flex items-center gap-8px">
+            <div key={week} className="flex items-center gap-8px whitespace-nowrap">
               <input
                 type="checkbox"
                 id={`week-${week}`}
@@ -530,7 +534,7 @@ const NewVoucherForm: React.FC = () => {
                 className={checkboxStyle}
                 onChange={weekChangeHandler}
               />
-              <label htmlFor={`week-${week}`}>{week}</label>
+              <label htmlFor={`week-${week}`}>{t(WEEK_FULL_LIST[week])}</label>
             </div>
           );
         })
@@ -547,7 +551,7 @@ const NewVoucherForm: React.FC = () => {
           const monthChecked = recurringArray.includes(month);
 
           return (
-            <div key={month} className="flex items-center gap-8px">
+            <div key={month} className="flex items-center gap-8px whitespace-nowrap">
               <input
                 type="checkbox"
                 id={`month-${month}`}
@@ -555,7 +559,7 @@ const NewVoucherForm: React.FC = () => {
                 className={checkboxStyle}
                 onChange={monthChangeHandler}
               />
-              <label htmlFor={`month-${month}`}>{month}</label>
+              <label htmlFor={`month-${month}`}>{t(MONTH_ABR_LIST[i])}</label>
             </div>
           );
         });
@@ -583,7 +587,7 @@ const NewVoucherForm: React.FC = () => {
             type={DatePickerType.TEXT_DATE}
             period={date}
             setFilteredPeriod={setDate}
-            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
+            btnClassName={isShowDateHint ? inputStyle.ERROR : inputStyle.NORMAL}
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}
@@ -661,7 +665,7 @@ const NewVoucherForm: React.FC = () => {
             className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
           >
             {/* Info: (20241007 - Julian) recurring unit block */}
-            <div className="flex w-160px items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+            <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
               <p className="px-12px py-10px text-input-text-input-placeholder">
                 {t('journal:ADD_NEW_VOUCHER.EVERY')}
               </p>
@@ -669,7 +673,7 @@ const NewVoucherForm: React.FC = () => {
                 onClick={recurringUnitToggleHandler}
                 className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
               >
-                <p>{translateUnit(recurringUnit)}</p>
+                <p className="w-50px">{translateUnit(recurringUnit)}</p>
                 <FaChevronDown />
                 {/* Info: (20240926 - Julian) recurring unit dropdown */}
                 {recurringUnitMenu}

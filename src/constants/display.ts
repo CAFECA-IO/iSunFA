@@ -19,6 +19,36 @@ export const MONTH_LIST = [
   'common:DATE_PICKER.DEC',
 ];
 
+export const MONTH_FULL_NAME = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export const MONTH_SHORT_NAME = [
+  'Jan.',
+  'Feb.',
+  'Mar.',
+  'Apr.',
+  'May',
+  'Jun.',
+  'Jul.',
+  'Aug.',
+  'Sep.',
+  'Oct.',
+  'Nov.',
+  'Dec.',
+];
+
 export const MONTH_FULL_LIST_SHORT = [
   'Jan',
   'Feb',
@@ -57,6 +87,16 @@ export const WEEK_LIST = [
   'common:DATE_PICKER.THU',
   'common:DATE_PICKER.FRI',
   'common:DATE_PICKER.SAT',
+];
+
+export const WEEK_FULL_LIST = [
+  'common:DATE_PICKER.SUNDAY',
+  'common:DATE_PICKER.MONDAY',
+  'common:DATE_PICKER.TUESDAY',
+  'common:DATE_PICKER.WEDNESDAY',
+  'common:DATE_PICKER.THURSDAY',
+  'common:DATE_PICKER.FRIDAY',
+  'common:DATE_PICKER.SATURDAY',
 ];
 
 export const default30DayPeriodInSec = {

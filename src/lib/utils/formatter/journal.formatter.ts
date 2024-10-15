@@ -24,7 +24,7 @@ export function formatSingleIJournalListItem(
 
   assertIsJournalEvent(invoiceVoucherJournal.voucher?.status);
   return {
-    id: invoiceVoucherJournal.id,
+    id: invoiceVoucherJournal.journalId,
     date: invoiceVoucherJournal.invoice?.date || invoiceVoucherJournal.createdAt,
     type: invoiceVoucherJournal.voucher?.type,
     particulars: invoiceVoucherJournal.description,
