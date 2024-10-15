@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import { BiSave } from 'react-icons/bi';
 import { RxCross2 } from 'react-icons/rx';
 import { FaChevronDown } from 'react-icons/fa6';
-import { Button } from '@/components/button/button';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import NumericInput from '@/components/numeric_input/numeric_input';
-import { default30DayPeriodInSec, inputStyle } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { BiSave } from 'react-icons/bi';
-import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
+import { IAccount } from '@/interfaces/accounting_account';
+import { useModalContext } from '@/contexts/modal_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { ToastId } from '@/constants/toast_id';
+import { default30DayPeriodInSec, inputStyle } from '@/constants/display';
+import { AccountCodesOfAsset } from '@/constants/asset';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -32,12 +36,40 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { t } = useTranslation(['common', 'journal']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
+  const { accountList } = useAccountingCtx();
+  const assetAccountList = accountList.filter((account) => {
+    return AccountCodesOfAsset.includes(account.code);
+  });
 
+  const accountInputRef = useRef<HTMLInputElement>(null);
+
+  // Info: (20241015 - Julian) Accounting 下拉選單
+  const {
+    targetRef: accountMenuRef,
+    componentVisible: isAccountingMenuOpen,
+    setComponentVisible: setAccountingMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20241015 - Julian) Account 編輯狀態
+  const {
+    targetRef: accountRef,
+    componentVisible: isAccountEditing,
+    setComponentVisible: setIsAccountEditing,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20241015 - Julian) Depreciation Method 下拉選單
   const {
     targetRef: methodRef,
     componentVisible: isMethodVisible,
     setComponentVisible: setMethodVisible,
   } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20241015 - Julian) Account state
+  const [accountTitle, setAccountTitle] = useState<string>(
+    t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+  );
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(assetAccountList);
 
   const [inputNo, setInputNo] = useState<string>('');
   const [inputName, setInputName] = useState<string>('');
@@ -52,14 +84,21 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   );
   const [inputNote, setInputNote] = useState<string>('');
 
+  // Info: (20241015 - Julian) 提示訊息
+  const [isShowTypeHint, setIsShowTypeHint] = useState<boolean>(false);
   const [isShowTotalHint, setIsShowTotalHint] = useState<boolean>(false);
   const [isShowAcquisitionDateHint, setIsShowAcquisitionDateHint] = useState<boolean>(false);
   const [isShowDepreciationStartDateHint, setIsShowDepreciationStartDateHint] =
     useState<boolean>(false);
   const [isShowUsefulLifeHint, setIsShowUsefulLifeHint] = useState<boolean>(false);
 
+  // Info: (20241015 - Julian) 判斷是否為 1602 - 土地成本
+  const [isLandCost, setIsLandCost] = useState<boolean>(false);
+
   useEffect(() => {
     if (!isModalVisible) {
+      setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
+      setSearchKeyword('');
       setInputNo('');
       setInputName('');
       setInputAmount(1);
@@ -71,6 +110,12 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setInputNote('');
     }
   }, [isModalVisible]);
+
+  useEffect(() => {
+    if (isShowTypeHint && accountTitle !== t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
+      setIsShowTypeHint(false);
+    }
+  }, [accountTitle, isShowTypeHint]);
 
   useEffect(() => {
     if (isShowTotalHint && inputTotal > 0) {
@@ -95,6 +140,53 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setIsShowUsefulLifeHint(false);
     }
   }, [inputUsefulLife, isShowUsefulLifeHint]);
+
+  // Info: (20241015 - Julian) 搜尋 Account
+  useEffect(() => {
+    const filteredList = assetAccountList.filter((account) => {
+      // Info: (20241015 - Julian) 編號(數字)搜尋: 字首符合
+      if (searchKeyword.match(/^\d+$/)) {
+        const codeMatch = account.code.toLowerCase().startsWith(searchKeyword.toLowerCase());
+        return codeMatch;
+      } else if (searchKeyword !== '') {
+        // Info: (20241015 - Julian) 名稱搜尋: 部分符合
+        const nameMatch = account.name.toLowerCase().includes(searchKeyword.toLowerCase());
+        return nameMatch;
+      }
+      return true;
+    });
+    setFilteredAccountList(filteredList);
+  }, [searchKeyword, accountList]);
+
+  useEffect(() => {
+    // Info: (20241015 - Julian) 查詢會計科目關鍵字時聚焦
+    if (isAccountEditing && accountInputRef.current) {
+      accountInputRef.current.focus();
+    }
+
+    // Info: (20241015 - Julian) 查詢模式關閉後清除搜尋關鍵字
+    if (!isAccountEditing) {
+      setSearchKeyword('');
+    }
+  }, [isAccountEditing]);
+
+  useEffect(() => {
+    if (accountTitle.includes('1602')) {
+      setIsLandCost(true);
+    } else {
+      setIsLandCost(false);
+    }
+  }, [accountTitle]);
+
+  const accountSearchHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+    setAccountingMenuOpen(true);
+  };
+
+  const accountEditingHandler = () => {
+    setIsAccountEditing(true);
+    setAccountingMenuOpen(true);
+  };
 
   const nameChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputName(event.target.value);
@@ -130,10 +222,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       inputTotal,
       '\nAcquisition Date:',
       acquisitionDate,
-      '\nDepreciation Start Date:',
-      depreciationStartDate,
-      '\nUseful Life:',
-      inputUsefulLife,
+      isLandCost ? '' : `\nDepreciation Start Date: ${depreciationStartDate}`,
+      isLandCost ? '' : `\nUseful Life: ${inputUsefulLife} month`,
       '\nDepreciation Method:',
       selectedDepreciationMethod,
       '\nNote:',
@@ -141,7 +231,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     );
 
     toastHandler({
-      id: 'add-asset-toast',
+      id: ToastId.ADD_ASSET_SUCCESS,
       type: ToastType.SUCCESS,
       content: t('journal:ADD_ASSET_MODAL.TOAST_SUCCESS'),
       closeable: true,
@@ -151,13 +241,19 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (inputTotal === 0) {
+    if (accountTitle === t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
+      // Info: (20241015 - Julian) 顯示提示訊息 & 滾動到最上方
+      setIsShowTypeHint(true);
+      accountRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else if (inputTotal === 0) {
       setIsShowTotalHint(true);
     } else if (acquisitionDate.startTimeStamp === 0) {
       setIsShowAcquisitionDateHint(true);
-    } else if (depreciationStartDate.startTimeStamp === 0) {
+    } else if (depreciationStartDate.startTimeStamp === 0 && isLandCost === false) {
+      // Info: (20241015 - Julian) 土地成本不需要 Depreciation Start Date
       setIsShowDepreciationStartDateHint(true);
-    } else if (inputUsefulLife === 0) {
+    } else if (inputUsefulLife === 0 && isLandCost === false) {
+      //  Info: (20241015 - Julian) 土地成本不需要 Useful Life
       setIsShowUsefulLifeHint(true);
     } else {
       messageModalDataHandler({
@@ -165,7 +261,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         title: t('journal:ADD_ASSET_MODAL.CONFIRM_MESSAGE_TITLE'),
         content: t('journal:ADD_ASSET_MODAL.CONFIRM_MESSAGE_CONTENT'),
         backBtnStr: t('common:COMMON.CANCEL'),
-        submitBtnStr: t('common:COMMON.CONFIRM_MESSAGE_BTN'),
+        submitBtnStr: t('journal:ADD_ASSET_MODAL.CONFIRM_MESSAGE_BTN'),
         submitBtnFunction: () => {
           addNewAsset();
           modalVisibilityHandler();
@@ -179,6 +275,61 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     const key = method.toUpperCase().replace(/ /g, '_');
     return t(`journal:ADD_ASSET_MODAL.${key}`);
   };
+
+  const accountingItems =
+    filteredAccountList && filteredAccountList.length > 0 ? (
+      filteredAccountList.map((account) => {
+        const accountClickHandler = () => {
+          setAccountTitle(`${account.code} ${account.name}`);
+          // Info: (20241001 - Julian) 關閉 Accounting Menu 和編輯狀態
+          setAccountingMenuOpen(false);
+          setIsAccountEditing(false);
+          // Info: (20241001 - Julian) 重置搜尋關鍵字
+          setSearchKeyword('');
+        };
+
+        return (
+          <button
+            key={account.id}
+            type="button"
+            onClick={accountClickHandler}
+            className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+          >
+            <p className="text-dropdown-text-primary">{account.code}</p>
+            <p className="text-dropdown-text-secondary">{account.name}</p>
+          </button>
+        );
+      })
+    ) : (
+      <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
+        {t('journal:ADD_NEW_VOUCHER.NO_ACCOUNTING_FOUND')}
+      </p>
+    );
+
+  const displayedAccountingMenu = (
+    <div
+      ref={accountMenuRef}
+      className={`absolute left-0 top-50px z-30 grid w-full overflow-hidden ${
+        isAccountingMenuOpen ? 'grid-rows-1' : 'grid-rows-0'
+      } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
+    >
+      <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+        {accountingItems}
+      </div>
+    </div>
+  );
+
+  const isEditAccounting = isAccountEditing ? (
+    <input
+      ref={accountInputRef}
+      value={searchKeyword}
+      onChange={accountSearchHandler}
+      placeholder={accountTitle}
+      className="w-full truncate bg-transparent outline-none"
+    />
+  ) : (
+    <p className={`truncate text-input-text-input-filled`}>{accountTitle}</p>
+  );
 
   const depreciationMethodList = Object.values(DepreciationMethod);
 
@@ -198,7 +349,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="flex max-h-450px w-90vw max-w-600px flex-col rounded-sm bg-surface-neutral-surface-lv2 md:max-h-90vh">
+      <div className="flex max-h-450px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 md:max-h-90vh">
         {/* Info: (20241015 - Julian) title */}
         <div className="relative flex flex-col items-center px-20px py-16px">
           {/* Info: (20241015 - Julian) desktop title */}
@@ -221,10 +372,29 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         {/* Info: (20241015 - Julian) content */}
         <form
           onSubmit={addAssetSubmitHandler}
-          className="my-24px flex w-full flex-col gap-y-40px overflow-y-auto overflow-x-hidden px-40px text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-y-40px px-40px py-24px text-sm text-input-text-primary"
         >
           {/* Info: (20241015 - Julian) input fields */}
-          <div className="grid grid-cols-1 items-center gap-16px text-center md:grid-cols-2">
+          <div className="grid max-h-550px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden text-center md:grid-cols-2">
+            {/* Info: (20241015 - Julian) Asset Type */}
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+              <p className="font-semibold">
+                {t('journal:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <div ref={accountRef} className="relative w-full">
+                <div
+                  onClick={accountEditingHandler}
+                  className={`flex items-center justify-between gap-8px rounded-sm border ${
+                    isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
+                  } bg-input-surface-input-background px-12px py-10px hover:cursor-pointer`}
+                >
+                  {isEditAccounting}
+                  <FaChevronDown />
+                </div>
+                {displayedAccountingMenu}
+              </div>
+            </div>
             {/* Info: (20241015 - Julian) Asset no */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">
@@ -258,7 +428,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               />
             </div>
             {/* Info: (20241015 - Julian) Amount */}
-            <div className="col-span-2 flex w-full flex-col items-start gap-y-8px">
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.AMOUNT')}</p>
               <input
                 id="input-amount"
@@ -271,7 +441,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               />
             </div>
             {/* Info: (20241015 - Julian) Total Price */}
-            <div className="col-span-2 flex w-full flex-col items-start gap-y-8px">
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">
                 {t('journal:ADD_ASSET_MODAL.TOTAL_PRICE')}{' '}
                 <span className="text-text-state-error">*</span>
@@ -303,7 +473,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               </div>
             </div>
             {/* Info: (20241015 - Julian) Acquisition Date */}
-            <div className="flex w-full flex-col items-start gap-y-8px">
+            <div
+              className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
+            >
               <p className="font-semibold">
                 {t('journal:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
                 <span className="text-text-state-error">*</span>
@@ -316,45 +488,49 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               />
             </div>
             {/* Info: (20241015 - Julian) Depreciation Start Date */}
-            <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <DatePicker
-                type={DatePickerType.TEXT_DATE}
-                period={depreciationStartDate}
-                setFilteredPeriod={setDepreciationStartDate}
-                btnClassName={isShowDepreciationStartDateHint ? inputStyle.ERROR : ''}
-                calenderClassName="right-0"
-              />
-            </div>
-            {/* Info: (20241015 - Julian) Useful Life (Month) */}
-            <div className="col-span-2 flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.USEFUL_LIFE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div
-                className={`flex h-46px w-full items-center justify-between divide-x ${isShowUsefulLifeHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
-              >
-                <NumericInput
-                  id="input-useful-life"
-                  name="input-useful-life"
-                  value={inputUsefulLife}
-                  setValue={setInputUsefulLife}
-                  isDecimal
-                  hasComma
-                  required
-                  className="flex-1 bg-transparent px-10px text-right outline-none"
+            {!isLandCost ? (
+              <div className="flex w-full flex-col items-start gap-y-8px">
+                <p className="font-semibold">
+                  {t('journal:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <DatePicker
+                  type={DatePickerType.TEXT_DATE}
+                  period={depreciationStartDate}
+                  setFilteredPeriod={setDepreciationStartDate}
+                  btnClassName={isShowDepreciationStartDateHint ? inputStyle.ERROR : ''}
+                  calenderClassName="right-0"
                 />
-                <div className="flex w-60px items-center justify-center p-12px text-sm text-input-text-input-placeholder">
-                  <p>{t('common:COMMON.MONTH')}</p>
+              </div>
+            ) : null}
+            {/* Info: (20241015 - Julian) Useful Life (Month) */}
+            {!isLandCost ? (
+              <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+                <p className="font-semibold">
+                  {t('journal:ADD_ASSET_MODAL.USEFUL_LIFE')}{' '}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div
+                  className={`flex h-46px w-full items-center justify-between divide-x ${isShowUsefulLifeHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+                >
+                  <NumericInput
+                    id="input-useful-life"
+                    name="input-useful-life"
+                    value={inputUsefulLife}
+                    setValue={setInputUsefulLife}
+                    isDecimal
+                    hasComma
+                    required={!isLandCost}
+                    className="flex-1 bg-transparent px-10px text-right outline-none"
+                  />
+                  <div className="flex w-60px items-center justify-center p-12px text-sm text-input-text-input-placeholder">
+                    <p>{t('common:COMMON.MONTH')}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
             {/* Info: (20241015 - Julian) Depreciation Method */}
-            <div className="col-span-2 flex w-full flex-col items-start gap-y-8px">
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
               <div
                 onClick={toggleMethodMenu}
@@ -375,7 +551,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               </div>
             </div>
             {/* Info: (20241015 - Julian) Note */}
-            <div className="col-span-2 flex w-full flex-col items-start gap-y-8px">
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.NOTE')}</p>
               <input
                 id="input-note"

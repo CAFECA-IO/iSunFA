@@ -157,6 +157,7 @@
   "ADD_ASSET_MODAL": {
     "TITLE": "Add New Asset",
     "SUBTITLE": "Please enter the information of asset",
+    "ASSET_TYPE": "Asset Type",
     "ASSET_NO": "Asset No.",
     "ASSET_NO_PLACEHOLDER": "Ex: A-000001",
     "ASSET_NAME": "Asset Name",

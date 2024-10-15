@@ -158,6 +158,7 @@
     "TITLE": "新增资产",
     "SUBTITLE": "请输入资产资讯",
     "ASSET_NO": "资产编号",
+    "ASSET_TYPE": "资产类型",
     "ASSET_NO_PLACEHOLDER": "例: A-000001",
     "ASSET_NAME": "资产名称",
     "ASSET_NAME_PLACEHOLDER": "例: Printer",
