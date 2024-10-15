@@ -1263,6 +1263,14 @@ input[type='checkbox']:checked::before {
   pointer-events: none;
 }
 
+.full-height {
+  height: 100dvh;
+}
+
+.safe-area-adjustment {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 @media (max-width: 769px) {
   .toast-container {
     margin-bottom: 40px;
