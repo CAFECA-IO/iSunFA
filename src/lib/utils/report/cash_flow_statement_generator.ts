@@ -60,19 +60,25 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       .filter((voucher) => {
         const laterThanStartDate = voucher.date >= startDateInSecond;
         const earlierThanEndDate = voucher.date <= endDateInSecond;
-        /* eslint-disable no-console */
+        // Deprecated: (20241015 - Murky) Debug
+        // eslint-disable-next-line no-console
         console.log('🚀~ voucher id', voucher.id);
+        // Deprecated: (20241015 - Murky) Debug
+        // eslint-disable-next-line no-console
         console.log('🚀~ startDateInSecond ', startDateInSecond);
+        // Deprecated: (20241015 - Murky) Debug
+        // eslint-disable-next-line no-console
         console.log('🚀~  endDateInSecond ', endDateInSecond);
+        // Deprecated: (20241015 - Murky) Debug
+        // eslint-disable-next-line no-console
         console.log('isValid', laterThanStartDate && earlierThanEndDate);
-        /* eslint-enable no-console */
 
         return laterThanStartDate && earlierThanEndDate;
       })
       .map((voucher) => {
-        /* eslint-disable no-console */
+        // Deprecated: (20241015 - Murky) Debug
+        // eslint-disable-next-line no-console
         console.log('Voucher id: ', voucher.id);
-        /* eslint-enable no-console */
         return {
           ...voucher,
           invoiceVoucherJournals: voucher.invoiceVoucherJournals || [],
