@@ -587,7 +587,7 @@ const NewVoucherForm: React.FC = () => {
             type={DatePickerType.TEXT_DATE}
             period={date}
             setFilteredPeriod={setDate}
-            btnClassName={isShowDateHint ? inputStyle.ERROR : inputStyle.NORMAL}
+            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}

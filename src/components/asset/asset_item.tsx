@@ -45,7 +45,11 @@ const AssetItem = () => {
     assetStatus,
   } = dummyData;
 
-  const displayedDate = <CalendarIcon timestamp={acquisitionDate} />;
+  const displayedDate = (
+    <div className="flex items-center justify-center">
+      <CalendarIcon timestamp={acquisitionDate} />
+    </div>
+  );
 
   const assetTypeCode = assetType.split(' ')[0];
   const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
@@ -153,7 +157,7 @@ const AssetItem = () => {
   return (
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240925 - Julian) Issued Date */}
-      <div className="table-cell py-10px text-center align-middle">{displayedDate}</div>
+      <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}
       <div className="table-cell text-center align-middle">{displayedAssetType}</div>
       {/* Info: (20240925 - Julian) Asset Number and Name */}
