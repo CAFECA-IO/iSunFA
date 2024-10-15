@@ -40,11 +40,12 @@ export async function listInvoiceVoucherJournal(
         companyId,
         type: eventType,
         status: journalEvent,
+        date: {
+          gte: startDateInSecond,
+          lte: endDateInSecond,
+        },
       },
-      createdAt: {
-        gte: startDateInSecond,
-        lte: endDateInSecond,
-      },
+
       AND: [
         { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
         {
@@ -259,7 +260,7 @@ export async function createVoucher(voucherNo: string, companyId: number, date: 
     },
     counterparty: {
       connect: {
-        id: 1000, // ToDo: (20241011 - Jacky) need to change to real counterparty id
+        id: 555, // ToDo: (20241011 - Jacky) need to change to real counterparty id
       },
     },
     no: voucherNo,
@@ -690,15 +691,16 @@ export async function listInvoiceVoucherJournalFor401(
   const where: Prisma.InvoiceVoucherJournalWhereInput = {
     voucher: {
       companyId,
-      status: JOURNAL_EVENT.UPCOMING,
-    },
-    createdAt: {
-      gte: startDateInSecond,
-      lte: endDateInSecond,
+      status: JOURNAL_EVENT.UPLOADED,
+      createdAt: {
+        gte: startDateInSecond,
+        lte: endDateInSecond,
+      },
     },
     AND: [
       { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
-      { invoice: { date: { gte: startDateInSecond, lte: endDateInSecond } } },
+      // Info: (20241015 - Murky) 401 use lineItem to determine input and output tax
+      // { invoice: { date: { gte: startDateInSecond, lte: endDateInSecond } } },
     ],
   };
   const include = {

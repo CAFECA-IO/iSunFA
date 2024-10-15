@@ -22,8 +22,17 @@ export type ILineItemIncludeAccount = Prisma.LineItemGetPayload<{
 // Info: (20241011 - Julian) for frontend testing
 export interface ILineItemBeta {
   id: number;
+  amount: number;
+  description: string;
+  debit: boolean | null;
   account: IAccount | null;
-  particulars: string;
-  debit: number;
-  credit: number;
 }
+
+// Info: (20241014 - Julian) 初始傳票列
+export const initialVoucherLine: ILineItemBeta = {
+  id: 0,
+  account: null,
+  description: '',
+  debit: null,
+  amount: 0,
+};
