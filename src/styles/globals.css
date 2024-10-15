@@ -266,7 +266,7 @@
     --text-brand-primary-lv1: var(--orange-600);
     --text-brand-primary-lv2: var(--orange-500);
     --text-brand-primary-lv3: var(--orange-400);
-    --text-brand-primary-solid: var(--orange-700);
+    --text-brand-primary-solid: var(--orange-900);
     --text-brand-secondary-lv1: var(--navy-blue-600);
     --text-brand-secondary-lv2: var(--navy-blue-400);
     --text-brand-secondary-lv3: var(--navy-blue-200);
@@ -693,7 +693,7 @@
     --text-brand-primary-lv1: var(--orange-500);
     --text-brand-primary-lv2: var(--orange-400);
     --text-brand-primary-lv3: var(--orange-300);
-    --text-brand-primary-solid: var(--orange-700);
+    --text-brand-primary-solid: var(--orange-900);
     --text-brand-secondary-lv1: var(--royal-blue-100);
     --text-brand-secondary-lv2: var(--royal-blue-50);
     --text-brand-secondary-lv3: var(--royal-blue-25);
