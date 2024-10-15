@@ -20,6 +20,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { RxCross2 } from 'react-icons/rx';
 import { RiExpandDiagonalLine } from 'react-icons/ri';
+import { PiHouse } from 'react-icons/pi';
 
 interface IFileWithUrl extends File {
   file: File;
@@ -40,6 +41,7 @@ const MobileUploadPage: React.FC = () => {
   >([]);
   const [uploadedCertificates, setUploadedCertificates] = useState<ICertificateInfo[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [successUpload, setSuccessUpload] = useState<boolean>(false);
   const { trigger: uploadFileAPI } = APIHandler<IFile[]>(APIName.PUBLIC_FILE_UPLOAD);
   const { trigger: pusherAPI } = APIHandler<void>(APIName.PUSHER);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
@@ -65,7 +67,7 @@ const MobileUploadPage: React.FC = () => {
       }
     } catch (error) {
       messageModalDataHandler({
-        title: 'Select File Error', // ToDo: (20240823 - Julian) i18n
+        title: 'Select File Error', // ToDo: (20241015 - Tzuhan) i18n
         content: `${error ? (error as Error).message : 'Something went wrong'}`,
         messageType: MessageType.ERROR,
         submitBtnStr: 'Close',
@@ -100,6 +102,10 @@ const MobileUploadPage: React.FC = () => {
           }) as ICertificateInfo
       );
 
+      if (!token) {
+        throw new Error('Token is not provided');
+      }
+
       const { success: successPush } = await pusherAPI({
         body: {
           token: token as string,
@@ -111,56 +117,65 @@ const MobileUploadPage: React.FC = () => {
         throw new Error('Failed to send initial certificates via Pusher');
       }
 
-      const formData = new FormData();
-      selectedCertificates.forEach((certificate) => {
+      selectedCertificates.map(async (certificate, index) => {
+        const formData = new FormData();
         formData.append('file', certificate.file);
+
+        const { success, error } = await uploadFileAPI({
+          query: {
+            type: UploadType.MOBILE_UPLOAD,
+            token: token as string,
+          },
+          body: formData,
+        });
+
+        if (success === false) {
+          throw error ? (error as Error) : new Error('Failed to upload file');
+        }
+
+        const uploadingCertificate = {
+          id: uploadedCertificates.length + index,
+          name: certificate.name,
+          size: certificate.size,
+          url: certificate.url,
+          status: ProgressStatus.SUCCESS,
+          progress: 100,
+        } as ICertificateInfo;
+
+        const { success: successPushAgain } = await pusherAPI({
+          body: {
+            token: token as string,
+            certificates: [uploadingCertificate],
+          },
+        });
+
+        if (successPushAgain === false) {
+          messageModalDataHandler({
+            title: 'Fail to inform web but upload success', // ToDo: (20241015 - Tzuhan) i18n
+            content: 'Please refresh the page to see the uploaded certificates',
+            messageType: MessageType.WARNING,
+            submitBtnStr: 'Close',
+            submitBtnFunction: () => {
+              messageModalVisibilityHandler();
+            },
+          });
+          messageModalVisibilityHandler();
+        }
+        setUploadedCertificates((prev) => [...prev, uploadingCertificate]);
       });
-
-      const { success } = await uploadFileAPI({
-        query: {
-          type: UploadType.MOBILE_UPLOAD,
-          token: token as string,
-        },
-        body: formData,
-      });
-
-      if (success === false) {
-        throw new Error('Failed to upload certificates');
-      }
-
-      const uploadingCertificates = selectedCertificatesRef.current.map(
-        (obj, index) =>
-          ({
-            id: uploadedCertificates.length + index,
-            name: obj.name,
-            size: obj.size,
-            url: obj.url,
-            status: ProgressStatus.SUCCESS,
-            progress: 100,
-          }) as ICertificateInfo
-      );
-
-      const { success: successPushAgain } = await pusherAPI({
-        body: {
-          token: token as string,
-          certificates: uploadingCertificates,
-        },
-      });
-
-      if (successPushAgain === false) {
-        // Deprecated: (20241019 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.error('Failed to send certificates update via Pusher');
-      } else {
-        setSelectedCertificates([]);
-        setUploadedCertificates((prev) => [...prev, ...uploadingCertificates]);
-      }
     } catch (error) {
-      // Deprecated: (20241019 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error('Error uploading certificates:', error);
-    } finally {
+      setSuccessUpload(false);
       setIsUploading(false);
+      messageModalDataHandler({
+        title: 'Upload File Error', // ToDo: (20241015 - Tzuhan) i18n
+        content: `${error ? (error as Error).message : 'Something went wrong'}`,
+        messageType: MessageType.ERROR,
+        submitBtnStr: 'Close',
+        submitBtnFunction: () => {
+          messageModalVisibilityHandler();
+        },
+      });
+      messageModalVisibilityHandler();
     }
   };
 
@@ -178,12 +193,29 @@ const MobileUploadPage: React.FC = () => {
     setSelectedCertificate(certificate);
   };
 
+  const handleBack = () => {
+    setIsUploading(false);
+    setSelectedCertificates([]);
+    setUploadedCertificates([]);
+  };
+
   useEffect(() => {
     clearAllItems();
     if (router.isReady && query.token) {
       setToken(query.token as string);
     }
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (
+      selectedCertificates.length === uploadedCertificates.length &&
+      selectedCertificates.length > 0
+    ) {
+      setTimeout(() => {
+        setSuccessUpload(true);
+      }, 1000);
+    }
+  }, [uploadedCertificates, selectedCertificates]);
 
   return (
     <>
@@ -209,7 +241,7 @@ const MobileUploadPage: React.FC = () => {
             variant="default"
             onClick={uploadCertificates}
             className={`mr-1 rounded-xs p-3`}
-            disabled={isUploading || selectedCertificates.length === 0}
+            disabled={!token || selectedCertificates.length === 0}
           >
             <FiUpload size={20} className="leading-none text-button-text-secondary" />
           </Button>
@@ -308,6 +340,47 @@ const MobileUploadPage: React.FC = () => {
             />
           </Button>
         </div>
+        {isUploading && (
+          <div className="full-height safe-area-adjustment absolute left-0 top-0 z-20 flex h-100vh w-100vw items-center justify-center bg-white">
+            {!successUpload ? (
+              <div className="flex flex-col items-center gap-2">
+                <Image
+                  src="/elements/uploading.gif"
+                  className="rounded-xs"
+                  width={150}
+                  height={150}
+                  alt="Uploading..."
+                />
+                <div>Uploading...</div>
+                <div className="text-sm text-text-neutral-tertiary">
+                  ({`${uploadedCertificates.length}/${selectedCertificates.length}`})
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full w-full flex-col justify-center">
+                <div className="flex flex-1 flex-col items-center justify-center gap-2">
+                  <Image
+                    src="/elements/upload_success.gif"
+                    className="rounded-xs"
+                    width={150}
+                    height={150}
+                    alt="Success"
+                  />
+                  <div>Compeleted</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleBack}
+                  className="mx-4 mb-4 flex items-center gap-2"
+                >
+                  <PiHouse size={20} />
+                  <div>Back</div>
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </>
   );
