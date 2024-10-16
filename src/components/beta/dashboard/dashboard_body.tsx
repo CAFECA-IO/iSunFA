@@ -1,6 +1,7 @@
 import Announcement from '@/components/beta/dashboard/announcement';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MyCompanyList from '@/components/beta/dashboard/my_company_list';
+import PendingTasks from '@/components/beta/dashboard/pending_task';
 
 const DashboardBody = () => {
   return (
@@ -35,10 +36,7 @@ const DashboardBody = () => {
             </p>
           </DashboardCardLayout>
 
-          <DashboardCardLayout>
-            <h3>Pending tasks</h3>
-            <p>No Data</p>
-          </DashboardCardLayout>
+          <PendingTasks />
         </section>
       </div>
     </div>
