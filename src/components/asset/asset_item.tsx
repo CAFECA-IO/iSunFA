@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
+import { timestampToYMD } from '@/lib/utils/common';
 
 interface IAssetItem {
   id: number;
@@ -88,21 +89,6 @@ const AssetItem = () => {
       <span className="text-text-neutral-tertiary"> TWD</span>
     </p>
   );
-
-  // Info: (20240926 - Julian) 將時間戳轉換成年月日
-  const timestampToYMD = (timestamp: number) => {
-    const years = Math.floor(timestamp / (60 * 60 * 24 * 365));
-    const months = Math.floor((timestamp % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30));
-    const days = Math.floor(
-      ((timestamp % (60 * 60 * 24 * 365)) % (60 * 60 * 24 * 30)) / (60 * 60 * 24)
-    );
-
-    return {
-      years: years < 0 ? 0 : years,
-      months: months < 0 ? 0 : months,
-      days: days < 0 ? 0 : days,
-    };
-  };
 
   const remainingYears = timestampToYMD(remainingLife).years;
   const remainingMonths = timestampToYMD(remainingLife).months;

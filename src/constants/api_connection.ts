@@ -106,6 +106,7 @@ export enum APIName {
   PUSHER = 'PUSHER',
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
+  ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
 }
 
 export enum APIPath {
@@ -191,6 +192,7 @@ export enum APIPath {
   PUSHER = `${apiPrefixV2}/pusher`,
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
+  ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
 }
 const createConfig = ({
   name,
@@ -565,5 +567,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REPORT_GET_V2,
     method: HttpMethod.GET,
     path: APIPath.REPORT_GET_V2,
+  }),
+  [APIName.ASSET_GET_BY_ID_V2]: createConfig({
+    name: APIName.ASSET_GET_BY_ID_V2,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_GET_BY_ID_V2,
   }),
 };

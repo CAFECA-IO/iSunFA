@@ -158,8 +158,7 @@ const VoucherDetailPage: React.FC = () => {
       content: 'All the assets that are connected to this voucher will be deleted too.',
       submitBtnStr: 'Yes, delete the voucher.',
       submitBtnFunction: deleteVoucher,
-      backBtnStr: 'Cancel',
-      backBtnFunction: messageModalVisibilityHandler,
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
