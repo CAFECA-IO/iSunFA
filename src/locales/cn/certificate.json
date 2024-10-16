@@ -1,0 +1,37 @@
+{
+  "LIST": {
+    "TITLE": "证书列表",
+    "INVOICE_TOTAL_PRRICE": "发票总价"
+  },
+  "TAB": {
+    "WITHOUT_VOUCHER": "未绑定传票的证书",
+    "WITH_VOUCHER": "绑定传票的证书"
+  },
+  "TABLE": {
+    "DATE": "日期",
+    "INVOICE_NAME": "发票名称",
+    "INVOICE_NUMBER": "发票编号",
+    "COUNTERPARTY": "对方",
+    "INVOICE_TYPE": "发票类型",
+    "TAX": "税",
+    "AMOUNT": "金额",
+    "DEDUCTABLE": "可扣除",
+    "UPLOADER": "上传者",
+    "VOUCHER_NUMBER": "传票编号"
+  },
+  "PAUSE": {
+    "TITLE": "您确定要取消上传吗？",
+    "CONTENT": "您确定要取消上传",
+    "YES": "是的，取消上传",
+    "NO": "不，继续上传"
+  },
+  "DELETE": {
+    "TITLE": "您真的要删除这些证书吗？",
+    "CONTENT": "您确定要删除",
+    "CONTENT_DELETE_MORE": "您确定要删除{{count}}张证书？",
+    "YES": "是的，删除证书",
+    "NO": "取消",
+    "SUCCESS": "证书已删除。",
+    "ERROR": "出了些问题，请再试一次。"
+  }
+}

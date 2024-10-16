@@ -3,12 +3,20 @@ import UploadFileItem from '@/components/upload_certificate/upload_file_item';
 import { ProgressStatus } from '@/constants/account';
 import Image from 'next/image';
 import { ICertificateInfo } from '@/interfaces/certificate';
+import { useModalContext } from '@/contexts/modal_context';
+import { useTranslation } from 'next-i18next';
+import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface FloatingUploadPopupProps {
   uploadingCertificates: ICertificateInfo[];
 }
 
 const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({ uploadingCertificates }) => {
+  const { t } = useTranslation(['common', 'certificate']);
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
   const [files, setFiles] = useState<ICertificateInfo[]>(uploadingCertificates);
   const [expanded, setExpanded] = useState(false);
 
@@ -41,12 +49,49 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({ uploadingCert
 
   // Info: (20240919 - tzuhan) 暫停或繼續上傳
   const togglePause = (index: number) => {
-    setFiles((prevFiles) => updateFileStatus(prevFiles, index));
+    messageModalDataHandler({
+      title: t('certificate:PAUSE.TITLE'),
+      content: t('certificate:PAUSE.CONTENT'),
+      notes: `${files[index].name}?`,
+      messageType: MessageType.WARNING,
+      submitBtnStr: t('certificate:PAUSE.YES'),
+      submitBtnFunction: () => {
+        setFiles((prevFiles) => updateFileStatus(prevFiles, index));
+      },
+      backBtnStr: t('certificate:PAUSE.NO'),
+    });
+    messageModalVisibilityHandler();
   };
 
   // Info: (20240919 - tzuhan) 刪除上傳文件
   const deleteFile = (index: number) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    messageModalDataHandler({
+      title: t('certificate:DELETE.TITLE'),
+      content: t('certificate:DELETE.CONTENT'),
+      notes: `${files[index].name}?`,
+      messageType: MessageType.WARNING,
+      submitBtnStr: t('certificate:DELETE.YES'),
+      submitBtnFunction: () => {
+        try {
+          setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+          toastHandler({
+            id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+            type: ToastType.SUCCESS,
+            content: t('certificate:DELETE.SUCCESS'),
+            closeable: true,
+          });
+        } catch (error) {
+          toastHandler({
+            id: ToastId.DELETE_CERTIFICATE_ERROR,
+            type: ToastType.ERROR,
+            content: t('certificate:DELETE.ERROR'),
+            closeable: true,
+          });
+        }
+      },
+      backBtnStr: t('certificate:DELETE.NO'),
+    });
+    messageModalVisibilityHandler();
   };
 
   const displayed =

@@ -1,0 +1,38 @@
+{
+  "LIST": {
+    "TITLE": "證書列表",
+    "INVOICE_TOTAL_PRRICE": "發票總價",
+    "EXPORT_CERTIFICATES": "匯出證書"
+  },
+  "TAB": {
+    "WITHOUT_VOUCHER": "未綁定傳票的證書",
+    "WITH_VOUCHER": "綁定傳票的證書"
+  },
+  "TABLE": {
+    "DATE": "日期",
+    "INVOICE_NAME": "發票名稱",
+    "INVOICE_NUMBER": "發票編號",
+    "COUNTERPARTY": "對方",
+    "INVOICE_TYPE": "發票類型",
+    "TAX": "稅",
+    "AMOUNT": "金額",
+    "DEDUCTABLE": "可扣除",
+    "UPLOADER": "上傳者",
+    "VOUCHER_NUMBER": "傳票編號"
+  },
+  "PAUSE": {
+    "TITLE": "您確定要取消上傳嗎？",
+    "CONTENT": "您確定要取消上傳",
+    "YES": "是的，取消上傳",
+    "NO": "不，繼續上傳"
+  },
+  "DELETE": {
+    "TITLE": "您真的要刪除這些證書嗎？",
+    "CONTENT": "您確定要刪除",
+    "CONTENT_DELETE_MORE": "您確定要刪除{{count}}張證書？",
+    "YES": "是的，刪除證書",
+    "NO": "取消",
+    "SUCCESS": "證書已刪除。",
+    "ERROR": "出了些問題，請再試一次。"
+  }
+}

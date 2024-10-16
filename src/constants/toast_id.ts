@@ -5,4 +5,6 @@ export enum ToastId {
   PROJECT_STAGE_UPDATE = 'toast-project-stage-update',
   ADD_ASSET_SUCCESS = 'toast-add-asset-success',
   ADD_ASSET_ERROR = 'toast-add-asset-error',
+  DELETE_CERTIFICATE_SUCCESS = 'toast-delete-certificate-success',
+  DELETE_CERTIFICATE_ERROR = 'toast-delete-certificate-error',
 }

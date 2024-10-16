@@ -1,10 +1,14 @@
 // Deprecated: (20240919 - tzuhan) will be replaced by the proper side menu component created by the @Liz
 import React from 'react';
 
-const Header = () => {
+interface HeaderProps {
+  title: string;
+}
+
+const Header: React.FC<HeaderProps> = ({ title }) => {
   return (
-    <header className="flex items-center justify-between bg-white p-4 shadow-sm">
-      <h1 className="text-xl font-semibold">Upload certificate</h1>
+    <header className="flex items-center justify-between">
+      <h1 className="text-xl font-semibold">{title}</h1>
       <div className="flex items-center space-x-4">
         {/* Info: (20240919 - tzuhan) 工具列按鈕及使用者圖示 */}
         <button type="button" className="rounded bg-gray-100 p-2">

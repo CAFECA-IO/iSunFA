@@ -1,6 +1,7 @@
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface SelectFilterProps {
   label: string; // Info: (20240920 - tzuhan) 選項標籤
@@ -10,6 +11,7 @@ interface SelectFilterProps {
 }
 
 const SelectFilter: React.FC<SelectFilterProps> = ({ label, options, selectedValue, onChange }) => {
+  const { t } = useTranslation('common');
   const {
     targetRef: menuRef,
     componentVisible: menuVisibility,
@@ -22,12 +24,18 @@ const SelectFilter: React.FC<SelectFilterProps> = ({ label, options, selectedVal
 
   return (
     <div className="flex w-full flex-col gap-8px lg:w-200px">
-      <p className="text-sm font-semibold text-input-text-primary">{label}</p>
+      <p className="text-sm font-semibold text-input-text-primary">
+        {t(`common:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
+      </p>
       <div
         onClick={toggleMenuHandler}
-        className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
+        className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer`}
       >
-        <p className="text-input-text-input-placeholder">{selectedValue}</p>
+        <p className="text-input-text-input-placeholder">
+          {selectedValue
+            ? t(`common:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
+            : selectedValue}
+        </p>
         <FaChevronDown />
         <div
           ref={menuRef}
@@ -44,7 +52,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({ label, options, selectedVal
                 onClick={() => onChange(option)}
                 className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
               >
-                {option}
+                {t(`common:FILTER_SECTION_TYPE.${option.toUpperCase()}`)}
               </li>
             ))}
           </ul>

@@ -1,0 +1,38 @@
+{
+  "LIST": {
+    "TITLE": "Certificate List",
+    "INVOICE_TOTAL_PRRICE": "Invoice Total Price",
+    "EXPORT_CERTIFICATES": "Export Certificates"
+  },
+  "TAB": {
+    "WITHOUT_VOUCHER": "Certificate Without Voucher",
+    "WITH_VOUCHER": "Certificate With Voucher"
+  },
+  "TABLE": {
+    "DATE": "Date",
+    "INVOICE_NAME": "Invoice Name",
+    "INVOICE_NUMBER": "Invoice NO.",
+    "COUNTERPARTY": "Counterparty",
+    "INVOICE_TYPE": "Invoice Type",
+    "TAX": "Tax",
+    "AMOUNT": "Amount",
+    "DEDUCTABLE": "Deductable",
+    "UPLOADER": "Uploader",
+    "VOUCHER_NUMBER": "Voucher NO."
+  },
+  "PAUSE": {
+    "TITLE": "Do you want to cancel uploading?",
+    "CONTENT": "Are you sure you’re going to cancel uploading",
+    "YES": "Yes, Cancel Uploading",
+    "NO": "No, Continue Uploading"
+  },
+  "DELETE": {
+    "TITLE": "Do you really want to delete these certificates?",
+    "CONTENT": "Are you sure you’re going to delete",
+    "CONTENT_DELETE_MORE": "Are you sure you’re going to delete {{count}} certificates?",
+    "YES": "Yes, Delete Certificate",
+    "NO": "Cancel",
+    "SUCCESS": "Certificates have been deleted.",
+    "ERROR": "Something went wrong, please try again."
+  }
+}

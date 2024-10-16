@@ -14,6 +14,8 @@ import useStateRef from 'react-usestateref';
 import { Button } from '@/components/button/button';
 
 export interface IPaginationProps {
+  className?: string;
+  totalCount: number;
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   totalPages: number;
@@ -22,6 +24,8 @@ export interface IPaginationProps {
 }
 
 const Pagination = ({
+  className,
+  totalCount,
   currentPage,
   setCurrentPage,
   totalPages,
@@ -155,29 +159,32 @@ const Pagination = ({
       value={targetPageRef.current}
       onChange={pageChangeHandler}
       onKeyDown={handleKeyDown}
-      className="h-40px w-40px rounded border border-button-stroke-secondary bg-transparent text-center text-sm font-semibold outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
+      className="h-40px w-40px rounded border border-input-stroke-input bg-transparent text-center text-sm font-semibold text-date-picker-text-input-placeholder outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
     />
   );
 
   return (
-    <ul className="flex items-start gap-10px text-input-text-input-hover">
-      {/* Info: (20240419 - Julian) 最前一頁 */}
-      <li>{displayFirstButton}</li>
-      {/* Info: (20240419 - Julian) 上一頁 */}
-      <li>{displayPreviousButton}</li>
-      {/* Info: (20240419 - Julian) 手動輸入/顯示當前頁數 */}
-      <li className="flex flex-col items-center">
+    <div className="flex flex-col items-center gap-2">
+      <ul className={`flex items-start gap-10px text-input-text-input-hover ${className || ''}`}>
+        {/* Info: (20240419 - Julian) 最前一頁 */}
+        <li>{displayFirstButton}</li>
+        {/* Info: (20240419 - Julian) 上一頁 */}
+        <li>{displayPreviousButton}</li>
+        {/* Info: (20240419 - Julian) 手動輸入/顯示當前頁數 */}
         {displayPageInput}
         {/* Info: (20240419 - Julian) 顯示總頁數 */}
-        <p>
-          {t('common:COMMON.OF')} {totalPages}
-        </p>
-      </li>
-      {/* Info: (20240419 - Julian) 下一頁 */}
-      <li>{displayNextButton}</li>
-      {/* Info: (20240419 - Julian) 最後一頁 */}
-      <li>{displayLastButton}</li>
-    </ul>
+        {/* Info: (20240419 - Julian) 下一頁 */}
+        <li>{displayNextButton}</li>
+        {/* Info: (20240419 - Julian) 最後一頁 */}
+        <li>{displayLastButton}</li>
+      </ul>
+      <p className="text-sm text-text-neutral-tertiary">
+        {t('common:COMMON.OF')} {totalPages}
+      </p>
+      <p className="text-sm text-text-neutral-tertiary">
+        {t('common:COMMON.TOTAL')}: {totalCount} {t('common:COMMON.DOCUMENT')}
+      </p>
+    </div>
   );
 };
 
