@@ -33,7 +33,7 @@ async function handlePutRequest(
       statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
       const companyId = getCompany ? companyIdNum : NON_EXISTING_COMPANY_ID;
       const company = getCompany ? formatCompany(getCompany) : null;
-      await setSession(session, undefined, companyId);
+      await setSession(session, { companyId });
       payload = company;
     }
   }

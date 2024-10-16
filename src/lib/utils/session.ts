@@ -1,6 +1,5 @@
 import { ISessionData } from '@/interfaces/session_data';
 import nextSession from 'next-session';
-import { Session } from 'node_modules/next-session/lib/types';
 
 const options = {
   cookie: {
@@ -13,24 +12,13 @@ const options = {
 export const getSession = nextSession<ISessionData>(options);
 
 export async function setSession(
-  session: Session,
-  userId?: number,
-  companyId?: number,
-  challenge?: string
+  session: ISessionData,
+  data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) {
-  const updatedSession = session;
-  if (userId) {
-    updatedSession.userId = userId;
-  }
-  if (companyId) {
-    updatedSession.companyId = companyId;
-  }
-  if (challenge) {
-    updatedSession.challenge = challenge;
-  }
-  return updatedSession;
+  Object.assign(session, data);
+  return session;
 }
 
-export async function destroySession(session: Session) {
+export async function destroySession(session: ISessionData) {
   session.destroy();
 }
