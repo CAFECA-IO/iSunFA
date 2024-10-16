@@ -1,32 +1,12 @@
-import { useSession, signIn } from 'next-auth/react';
-import { useEffect } from 'react';
+import Layout from '@/components/beta/layout/layout';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const ExamplePage: React.FC = () => {
-  const { data: session, status } = useSession();
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      signIn(); // Info: (20241001 - Liz) 若未驗證則導向登入頁面
-    }
-  }, [status]);
-
-  if (status === 'loading') {
-    return <p>載入中...</p>;
-  }
-
-  if (status === 'authenticated') {
-    return (
-      <div>
-        <h1>Example Page</h1>
-        <p>This is an example page. Let me know if you need help with anything.</p>
-        <p>
-          You are logged in as <strong>{session?.user?.email}</strong>.
-        </p>
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <Layout isDashboard={false} pageTitle="Example Page" goBackUrl={ISUNFA_ROUTE.BETA_DASHBOARD}>
+      <p>Example Page</p>
+    </Layout>
+  );
 };
 
 export default ExamplePage;
