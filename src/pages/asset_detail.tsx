@@ -17,6 +17,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { AssetStatus } from '@/constants/asset';
 import { ToastType } from '@/interfaces/toastify';
+import { ASSET_DELETE_TERM } from '@/constants/common';
 
 const AssetDetailPage: React.FC = () => {
   const { t } = useTranslation('common');
@@ -57,6 +58,25 @@ const AssetDetailPage: React.FC = () => {
   } = assetData || mockAssetDetails;
 
   const pageTitle = `${t('asset:ASSET_DETAIL_PAGE.TITLE')} ${assetId}`;
+
+  // Info: (20241016 - Julian) 可刪除資產的期限
+  const now = new Date().getTime() / 1000;
+  const assetDeleteDeadline = acquisitionDate + ASSET_DELETE_TERM;
+  const deleteDisabled = now > assetDeleteDeadline;
+  const deleteRemainingDays = Math.floor((assetDeleteDeadline - now) / 86400);
+  const deleteRemainingStr =
+    deleteRemainingDays > 0 ? (
+      <p>
+        ({deleteRemainingDays} {t('asset:ASSET_DETAIL_PAGE.DAYS_UNIT')})
+      </p>
+    ) : null;
+
+  // Info: (20241016 - Julian) 計算剩餘時間
+  const remainingYears = timestampToYMD(remainingLife).years;
+  const remainingMonths = timestampToYMD(remainingLife).months;
+  const remainingDays = timestampToYMD(remainingLife).days;
+
+  const voucherList = relatedVouchers.map((voucher) => <p key={voucher.id}>{voucher.number}</p>);
 
   // ToDo: (20241016 - Julian) Call API to undo delete asset
   const undoDeleteAsset = async () => {
@@ -113,10 +133,6 @@ const AssetDetailPage: React.FC = () => {
     assetStatusSettingModalVisibilityHandler();
   };
 
-  const remainingYears = timestampToYMD(remainingLife).years;
-  const remainingMonths = timestampToYMD(remainingLife).months;
-  const remainingDays = timestampToYMD(remainingLife).days;
-
   const remainingProcessBar = (
     <div className="relative h-5px w-120px overflow-hidden rounded-full bg-surface-neutral-depth">
       <span
@@ -165,8 +181,6 @@ const AssetDetailPage: React.FC = () => {
         {assetStatusString}
       </div>
     );
-
-  const voucherList = relatedVouchers.map((voucher) => <p key={voucher.id}>{voucher.number}</p>);
 
   const isTitle = !isLoading ? (
     <div className="flex items-center gap-10px font-bold">
@@ -266,9 +280,11 @@ const AssetDetailPage: React.FC = () => {
                   type="button"
                   variant="tertiary"
                   onClick={deleteClickHandler}
+                  disabled={deleteDisabled}
+                  className={deleteRemainingDays > 0 ? '' : 'h-48px w-48px p-0'}
                 >
                   <FiTrash2 size={20} />
-                  <p>(30 {t('asset:ASSET_DETAIL_PAGE.DAYS_UNIT')})</p>
+                  {deleteRemainingStr}
                 </Button>
                 <Button
                   id="edit-asset-btn"
