@@ -1,16 +1,6 @@
 import Announcement from '@/components/beta/dashboard/announcement';
-
-interface CardLayoutProps {
-  children: React.ReactNode;
-}
-
-const CardLayout = ({ children }: CardLayoutProps) => {
-  return (
-    <div className="flex-auto basis-400px rounded-md bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS">
-      {children}
-    </div>
-  );
-};
+import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
+import MyCompanyList from '@/components/beta/dashboard/my_company_list';
 
 const DashboardBody = () => {
   return (
@@ -19,21 +9,17 @@ const DashboardBody = () => {
 
       <div className="flex flex-col gap-24px">
         <section className="flex flex-wrap items-start gap-24px">
-          <CardLayout>
+          <DashboardCardLayout>
             <h3>To-do list</h3>
             <p>Calendar not yet linked.</p>
             <p>Link My Calendar</p>
-          </CardLayout>
+          </DashboardCardLayout>
 
-          <CardLayout>
-            <h3>My Company List</h3>
-            <p>Company not yet created.</p>
-            <p>Please proceed to create a company.</p>
-          </CardLayout>
+          <MyCompanyList />
         </section>
 
         <section className="flex flex-wrap items-start gap-24px">
-          <CardLayout>
+          <DashboardCardLayout>
             <h3>Latest News</h3>
             <p>
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit eaque tempora
@@ -47,12 +33,12 @@ const DashboardBody = () => {
               ipsam tenetur molestias, distinctio delectus. Veritatis dolor recusandae quam rem
               eveniet deleniti exercitationem.
             </p>
-          </CardLayout>
+          </DashboardCardLayout>
 
-          <CardLayout>
+          <DashboardCardLayout>
             <h3>Pending tasks</h3>
             <p>No Data</p>
-          </CardLayout>
+          </DashboardCardLayout>
         </section>
       </div>
     </div>
