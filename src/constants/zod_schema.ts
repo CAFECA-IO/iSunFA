@@ -18,6 +18,7 @@ import {
   journalListValidator,
 } from '@/lib/utils/zod_schema/journal';
 import { kycUploadValidator } from '@/lib/utils/zod_schema/kyc';
+import { newsListValidator, newsPostValidator } from '@/lib/utils/zod_schema/news';
 import {
   ocrDeleteValidator,
   ocrListValidator,
@@ -25,6 +26,11 @@ import {
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
 import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
+import {
+  roleListValidator,
+  rolePostValidator,
+  roleSelectValidator,
+} from '@/lib/utils/zod_schema/role';
 import {
   voucherCreateValidator,
   voucherDeleteValidatorV2,
@@ -80,4 +86,9 @@ export const API_ZOD_SCHEMA = {
   [APIName.AI_ASK_RESULT_V2]: askAIGetResultValidatorV2,
 
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
+  [APIName.ROLE_LIST]: roleListValidator,
+  [APIName.CREATE_ROLE]: rolePostValidator,
+  [APIName.ROLE_SELECT]: roleSelectValidator,
+  [APIName.NEWS_LIST]: newsListValidator,
+  [APIName.CREATE_NEWS]: newsPostValidator,
 };

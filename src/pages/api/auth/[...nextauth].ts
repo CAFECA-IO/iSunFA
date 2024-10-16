@@ -178,7 +178,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
                 authData: account,
                 imageId: file?.id ?? PUBLIC_IMAGE_ID,
               });
-              await setSession(session, createdUser.user.id);
+              await setSession(session, { userId: createdUser.user.id });
 
               // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
               // Dbuser = createdUser;
@@ -186,7 +186,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           } else {
             // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
             // Dbuser = getUser;
-            await setSession(session, getUser.user.id);
+            await setSession(session, { userId: getUser.user.id });
           }
           /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
           if (invitationCode) {
