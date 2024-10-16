@@ -268,5 +268,27 @@
     "CREDIT": "Credit",
     "DEBIT": "Debit",
     "EMPTY_HINT": "Please add at least 1 accounting voucher!"
+  },
+  "VOUCHER_DETAIL_PAGE": {
+    "TITLE": "Voucher",
+    "DATE": "Voucher Date",
+    "TYPE": "Voucher Type",
+    "NOTE": "Note",
+    "COUNTERPARTY": "Counterparty",
+    "RECURRING_ENTRY": "Recurring Entry",
+    "PAYABLE_AMOUNT": "Payable Amount",
+    "PAID_AMOUNT": "Paid Amount",
+    "REMAIN_AMOUNT": "Remain Amount",
+    "REVERSE_VOUCHERS": "Reverse Vouchers",
+    "ASSET": "Asset",
+    "ACCOUNTING": "Accounting",
+    "PARTICULARS": "Particulars",
+    "DEBIT": "Debit",
+    "CREDIT": "Credit",
+    "DELETE_MESSAGE_TITLE": "Do you really want to delete this Voucher?",
+    "DELETE_MESSAGE_CONTENT": "All the assets that are connected to this voucher will be deleted too.",
+    "DELETE_MESSAGE_SUBMIT_BTN": "Yes, delete the voucher",
+    "DELETE_SUCCESS_TOAST": "Vouchers have been deleted.",
+    "UNDO": "Undo"
   }
 }

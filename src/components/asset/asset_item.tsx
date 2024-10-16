@@ -120,15 +120,18 @@ const AssetItem = () => {
         <div className="flex items-center gap-4px">
           {/* Info: (20240925 - Julian) Years */}
           <p className="text-text-neutral-primary">
-            {remainingYears} <span className="text-text-neutral-tertiary">Y</span>
+            {remainingYears}{' '}
+            <span className="text-text-neutral-tertiary">{t('common:COMMON.Y')}</span>
           </p>
           {/* Info: (20240925 - Julian) Months */}
           <p className="text-text-neutral-primary">
-            {remainingMonths} <span className="text-text-neutral-tertiary">M</span>
+            {remainingMonths}{' '}
+            <span className="text-text-neutral-tertiary">{t('common:COMMON.M')}</span>
           </p>
           {/* Info: (20240925 - Julian) Days */}
           <p className="text-text-neutral-primary">
-            {remainingDays} <span className="text-text-neutral-tertiary">D</span>
+            {remainingDays}{' '}
+            <span className="text-text-neutral-tertiary">{t('common:COMMON.D')}</span>
           </p>
         </div>
         {/* Info: (20240925 - Julian) process bar */}
