@@ -4,9 +4,12 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { INews } from '@/interfaces/news';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
 
 // ToDo: (20240924 - Jacky) Implement the logic to get the news data from the database
-async function handleGetRequest() {
+const handleGetRequest: IHandleRequest<APIName.NEWS_LIST, IPaginatedData<INews[]>> = async () => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<INews[]> | null = null;
 
@@ -51,10 +54,10 @@ async function handleGetRequest() {
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
   return { statusMessage, payload };
-}
+};
 
 // ToDo: (20240924 - Jacky) Implement the logic to create a new news item in the database
-async function handlePostRequest() {
+const handlePostRequest: IHandleRequest<APIName.CREATE_NEWS, INews> = async ({ body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews | null = null;
 
@@ -67,9 +70,9 @@ async function handlePostRequest() {
   // Deprecated: (20240924 - Jacky) Mock data for connection
   const newNews: INews = {
     id: 3,
-    title: 'req.body.title',
-    content: 'req.body.content',
-    type: 'req.body.type',
+    title: body.title,
+    content: body.content,
+    type: body.type,
     createdAt: 82717,
     updatedAt: 75275,
   };
@@ -78,7 +81,7 @@ async function handlePostRequest() {
   statusMessage = STATUS_MESSAGE.CREATED;
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
@@ -86,8 +89,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPaginatedData<INews[]> | INews | null }>;
 } = {
-  GET: handleGetRequest,
-  POST: handlePostRequest,
+  GET: (req, res) => withRequestValidation(APIName.NEWS_LIST, req, res, handleGetRequest),
+  POST: (req, res) => withRequestValidation(APIName.CREATE_NEWS, req, res, handlePostRequest),
 };
 
 export default async function handler(
