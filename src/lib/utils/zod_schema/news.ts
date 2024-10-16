@@ -4,13 +4,13 @@ import { NewsType } from '@/constants/news';
 
 // Info: (20241015 - Jacky) News list validator
 const newsListQueryValidator = z.object({
-  light: z.boolean().nullish(),
-  type: z.nativeEnum(NewsType).nullish(),
-  targetPage: z.number().int().nullish(),
-  pageSize: z.number().int().nullish(),
-  startDateInSecond: z.number().int().nullish(),
-  endDateInSecond: z.number().int().nullish(),
-  searchQuery: z.string().nullish(),
+  simple: z.boolean().optional(),
+  type: z.nativeEnum(NewsType).optional(),
+  targetPage: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  startDateInSecond: z.number().int().optional(),
+  endDateInSecond: z.number().int().optional(),
+  searchQuery: z.string().optional(),
 });
 
 const newsListBodyValidator = z.object({});
