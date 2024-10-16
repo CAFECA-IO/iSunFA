@@ -7,6 +7,7 @@ import { ILocale } from '@/interfaces/locale';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
 import { Button } from '@/components/button/button';
+import Skeleton from '@/components/skeleton/skeleton';
 import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { MessageType } from '@/interfaces/message_modal';
@@ -24,7 +25,7 @@ const AssetDetailPage: React.FC = () => {
   const { assetStatusSettingModalDataHandler, assetStatusSettingModalVisibilityHandler } =
     useGlobalCtx();
 
-  const { data: assetData } = APIHandler<IAssetDetails>(
+  const { data: assetData, isLoading } = APIHandler<IAssetDetails>(
     APIName.ASSET_GET_BY_ID_V2,
     {
       // ToDo: (20241016 - Julian) Replace with real parameters
@@ -164,6 +165,75 @@ const AssetDetailPage: React.FC = () => {
 
   const voucherList = relatedVouchers.map((voucher) => <p key={voucher.id}>{voucher.number}</p>);
 
+  const isTitle = !isLoading ? (
+    <div className="flex items-center gap-10px font-bold">
+      <h1 className="text-44px text-text-neutral-primary">{assetName}</h1>
+      <p className="text-xl text-text-neutral-tertiary">{assetNumber}</p>
+    </div>
+  ) : (
+    <Skeleton width={300} height={44} rounded />
+  );
+
+  const isType = !isLoading ? <p>{assetType}</p> : <Skeleton width={200} height={24} rounded />;
+  const isAcquisitionDate = !isLoading ? (
+    <p>{timestampToString(acquisitionDate).date}</p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isDepreciationDate = !isLoading ? (
+    <p>{timestampToString(depreciationStart).date}</p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isDepreciationMethod = !isLoading ? (
+    <p>{depreciationMethod}</p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isUsefulLife = !isLoading ? (
+    <p>
+      {usefulLife}{' '}
+      <span className="text-text-neutral-tertiary">{t('asset:ASSET_DETAIL_PAGE.MONTH_UNIT')}</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isPurchasePrice = !isLoading ? (
+    <p>
+      {numberWithCommas(purchasePrice)}{' '}
+      <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isAccumDep = !isLoading ? (
+    <p>
+      {numberWithCommas(accumulatedDepreciation)}{' '}
+      <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isResidualValue = !isLoading ? (
+    <p>
+      {numberWithCommas(residualValue)}{' '}
+      <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
+    </p>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isRemainingLife = !isLoading ? (
+    displayedRemainingLife
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+  const isNote = !isLoading ? <p>{note}</p> : <Skeleton width={200} height={24} rounded />;
+  const isVoucher = !isLoading ? (
+    <div className="flex flex-col text-link-text-primary">{voucherList}</div>
+  ) : (
+    <Skeleton width={200} height={24} rounded />
+  );
+
   return (
     <>
       <Head>
@@ -185,10 +255,7 @@ const AssetDetailPage: React.FC = () => {
           <div className="overflow-y-auto px-40px pb-32px pt-40px">
             {/* Info: (20241016 - Julian) Title */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-10px font-bold">
-                <h1 className="text-44px text-text-neutral-primary">{assetName}</h1>
-                <p className="text-xl text-text-neutral-tertiary">{assetNumber}</p>
-              </div>
+              {isTitle}
               {/* Info: (20241016 - Julian) Action Buttons */}
               <div className="flex justify-end gap-16px">
                 <Button
@@ -224,87 +291,73 @@ const AssetDetailPage: React.FC = () => {
               {/* Info: (20241016 - Julian) Asset Type */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">{t('asset:ASSET_DETAIL_PAGE.TYPE')}</p>
-                <p>{assetType}</p>
+                {isType}
               </div>
               {/* Info: (20241016 - Julian) Acquisition Date */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.ACQUISITION_DATE')}
                 </p>
-                <p>{timestampToString(acquisitionDate).date}</p>
+                {isAcquisitionDate}
               </div>
               {/* Info: (20241016 - Julian) Depreciation Start Date */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.DEPRECIATION_START_DATE')}
                 </p>
-                <p>{timestampToString(depreciationStart).date}</p>
+                {isDepreciationDate}
               </div>
               {/* Info: (20241016 - Julian) Depreciation Method */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.DEPRECIATION_METHOD')}
                 </p>
-                <p>{depreciationMethod}</p>
+                {isDepreciationMethod}
               </div>
               {/* Info: (20241016 - Julian) Useful Life */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.USEFUL_LIFE')}
                 </p>
-                <p>
-                  {usefulLife}{' '}
-                  <span className="text-text-neutral-tertiary">
-                    {t('asset:ASSET_DETAIL_PAGE.MONTH_UNIT')}
-                  </span>
-                </p>
+                {isUsefulLife}
               </div>
               {/* Info: (20241016 - Julian) Purchase Price */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.PURCHASE_PRICE')}
                 </p>
-                <p>
-                  {numberWithCommas(purchasePrice)}{' '}
-                  <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
-                </p>
+                {isPurchasePrice}
               </div>
               {/* Info: (20241016 - Julian) Accumulated Depreciation */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.ACCUM_DEP')}
                 </p>
-                <p>
-                  {numberWithCommas(accumulatedDepreciation)}{' '}
-                  <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
-                </p>
+                {isAccumDep}
               </div>
               {/* Info: (20241016 - Julian) Residual Value */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.RESIDUAL_VALUE')}
                 </p>
-                <p>
-                  {numberWithCommas(residualValue)}{' '}
-                  <span className="text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
-                </p>
+                {isResidualValue}
               </div>
               {/* Info: (20241016 - Julian) Remaining Useful Life */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">
                   {t('asset:ASSET_DETAIL_PAGE.REMAINING_LIFE')}
                 </p>
-                {displayedRemainingLife}
+                {isRemainingLife}
               </div>
               {/* Info: (20241016 - Julian) Note */}
               <div className="flex items-center justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">{t('asset:ASSET_DETAIL_PAGE.NOTE')}</p>
-                <p>{note}</p>
+                {isNote}
               </div>
               {/* Info: (20241016 - Julian) Voucher */}
               <div className="flex items-start justify-between font-semibold">
                 <p className="text-text-neutral-tertiary">{t('asset:ASSET_DETAIL_PAGE.VOUCHER')}</p>
-                <div className="flex flex-col text-link-text-primary">{voucherList}</div>
+                {isVoucher}
               </div>
             </div>
           </div>
