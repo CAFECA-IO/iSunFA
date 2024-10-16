@@ -1434,6 +1434,10 @@ module.exports = {
           '0%, 100%': { transform: 'rotate(-3deg)' },
           '50%': { transform: 'rotate(3deg)' },
         },
+        marquee: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
@@ -1445,6 +1449,9 @@ module.exports = {
         'fade-in-1': 'fade-in 2s ease-in forwards', // Info: (20241001 - Liz) forwards 代表動畫結束後保持最後的狀態
         'fade-in-2': 'fade-in 2s ease-in 1s forwards', // Info: (20241001 - Liz) 動畫將在渲染或觸發動畫後 1 秒開始
         wiggle: 'wiggle 1s ease-in-out infinite', // Info: (20241001 - Liz) 1s 代表動畫時間，ease-in-out 代表動畫速度，infinite 代表無限循環
+
+        marquee: 'marquee 30s linear infinite',
+        marqueePaused: 'marquee 30s linear infinite paused',
       },
 
       content: {
