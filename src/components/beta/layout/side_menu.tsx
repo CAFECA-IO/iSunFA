@@ -99,9 +99,9 @@ const SideMenu = () => {
   };
 
   return (
-    <div>
+    <div className="bg-surface-neutral-main-background">
       {isSideMenuOpen ? (
-        <section className="relative flex h-screen w-max flex-none flex-col gap-24px px-12px py-32px shadow-SideMenu">
+        <section className="relative flex h-screen w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
           {/* Side Menu Icon */}
           <div>
             <button type="button" onClick={toggleSideMenu} className="p-10px">
