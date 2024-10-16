@@ -24,6 +24,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import Skeleton from '@/components/skeleton/skeleton';
 import { WEEK_FULL_LIST } from '@/constants/display';
 import { IAsset } from '@/interfaces/asset';
+import { ToastType } from '@/interfaces/toastify';
 
 // Info: (20241014 - Julian) @Murky Interface for Voucher Detail
 interface IVoucherDetailForFrontend {
@@ -124,9 +125,10 @@ const VoucherDetailPage: React.FC = () => {
     certificates,
     lineItemsInfo: { lineItems },
   } = voucherData || defaultVoucherDetail;
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
+  const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
+    useModalContext();
 
-  const pageTitle = `Voucher ${voucherId}`;
+  const pageTitle = `${t('journal:VOUCHER_DETAIL_PAGE.TITLE')} ${voucherId}`;
   const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
   const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + cur.amount : acc), 0);
 
@@ -143,23 +145,48 @@ const VoucherDetailPage: React.FC = () => {
     .join(', ');
 
   const recurringStr = t('journal:ADD_NEW_VOUCHER.EVERY') + displayDaysOfWeek; // ToDo: (20241014 - Julian) Replace with real recurring string
-  const recurringPeriodStr = `From ${timestampToString(recurringInfo.startDate).date} to ${timestampToString(recurringInfo.endDate).date}`;
+  const recurringPeriodStr = `${t('common:COMMON.FROM')} ${timestampToString(recurringInfo.startDate).date} ${t('common:COMMON.TO')} ${timestampToString(recurringInfo.endDate).date}`;
+
+  // ToDo: (20241016 - Julian) Call API to undo delete voucher
+  const undoDeleteVoucher = async () => {
+    // eslint-disable-next-line no-console
+    console.log('Voucher restored');
+  };
 
   // ToDo: (20241008 - Julian) Call API to delete voucher
   const deleteVoucher = async () => {
     // eslint-disable-next-line no-console
     console.log('Voucher deleted');
+
+    toastHandler({
+      id: 'delete-voucher-toast',
+      type: ToastType.SUCCESS,
+      content: (
+        <div className="flex items-center justify-between">
+          <p className="text-text-neutral-primary">
+            {t('journal:VOUCHER_DETAIL_PAGE.DELETE_SUCCESS_TOAST')}
+          </p>
+          <button
+            type="button"
+            onClick={undoDeleteVoucher}
+            className="font-semibold text-link-text-success"
+          >
+            {t('journal:VOUCHER_DETAIL_PAGE.UNDO')}
+          </button>
+        </div>
+      ),
+      closeable: true,
+    });
   };
 
   const deleteClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: 'Do you really want to delete this Voucher?',
-      content: 'All the assets that are connected to this voucher will be deleted too.',
-      submitBtnStr: 'Yes, delete the voucher.',
+      title: t('journal:VOUCHER_DETAIL_PAGE.DELETE_MESSAGE_TITLE'),
+      content: t('journal:VOUCHER_DETAIL_PAGE.DELETE_MESSAGE_CONTENT'),
+      submitBtnStr: t('journal:VOUCHER_DETAIL_PAGE.DELETE_MESSAGE_SUBMIT_BTN'),
       submitBtnFunction: deleteVoucher,
-      backBtnStr: 'Cancel',
-      backBtnFunction: messageModalVisibilityHandler,
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
   };
@@ -178,7 +205,10 @@ const VoucherDetailPage: React.FC = () => {
 
   const voucherLineBlock = lineItems.map((lineItem) => (
     <>
-      <div className="flex items-center justify-between gap-8px rounded-sm bg-input-surface-input-background px-12px py-10px">
+      <div
+        key={`${lineItem.account?.id}-account`}
+        className="flex items-center justify-between gap-8px rounded-sm bg-input-surface-input-background px-12px py-10px"
+      >
         <p className="overflow-x-auto whitespace-nowrap">
           {lineItem.account?.id} - {lineItem.account?.name}
         </p>
@@ -186,17 +216,26 @@ const VoucherDetailPage: React.FC = () => {
           <FiBookOpen size={20} />
         </div>
       </div>
-      <div className="rounded-sm bg-input-surface-input-background px-12px py-10px">
+      <div
+        id={`${lineItem.account?.id}-description`}
+        className="rounded-sm bg-input-surface-input-background px-12px py-10px"
+      >
         {lineItem.description}
       </div>
-      <div className="rounded-sm bg-input-surface-input-background px-12px py-10px text-right">
+      <div
+        id={`${lineItem.account?.id}-debit`}
+        className="rounded-sm bg-input-surface-input-background px-12px py-10px text-right"
+      >
         {lineItem.debit ? (
           numberWithCommas(lineItem.amount)
         ) : (
           <p className="text-input-text-input-placeholder">0</p>
         )}
       </div>
-      <div className="rounded-sm bg-input-surface-input-background px-12px py-10px text-right">
+      <div
+        id={`${lineItem.account?.id}-credit`}
+        className="rounded-sm bg-input-surface-input-background px-12px py-10px text-right"
+      >
         {lineItem.debit ? (
           <p className="text-input-text-input-placeholder">0</p>
         ) : (
@@ -254,7 +293,7 @@ const VoucherDetailPage: React.FC = () => {
   const isDisplayPayableAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(payableAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">TWD</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -263,7 +302,7 @@ const VoucherDetailPage: React.FC = () => {
   const isDisplayPaidAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(paidAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">TWD</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -272,7 +311,7 @@ const VoucherDetailPage: React.FC = () => {
   const isDisplayRemainAmount = !isLoading ? (
     <p className="text-input-text-primary">
       {numberWithCommas(remainAmount ?? 0)}
-      <span className="ml-4px text-text-neutral-tertiary">TWD</span>
+      <span className="ml-4px text-text-neutral-tertiary">{t('common:COMMON.TWD')}</span>
     </p>
   ) : (
     <Skeleton width={200} height={24} rounded />
@@ -294,7 +333,9 @@ const VoucherDetailPage: React.FC = () => {
   const isPayableAmount =
     payableAmount !== undefined ? (
       <div className="flex justify-between">
-        <p className="text-text-neutral-tertiary">Payable Amount</p>
+        <p className="text-text-neutral-tertiary">
+          {t('journal:VOUCHER_DETAIL_PAGE.PAYABLE_AMOUNT')}
+        </p>
         {isDisplayPayableAmount}
       </div>
     ) : null;
@@ -302,7 +343,7 @@ const VoucherDetailPage: React.FC = () => {
   const isPaidAmount =
     paidAmount !== undefined ? (
       <div className="flex justify-between">
-        <p className="text-text-neutral-tertiary">Paid Amount</p>
+        <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_DETAIL_PAGE.PAID_AMOUNT')}</p>
         {isDisplayPaidAmount}
       </div>
     ) : null;
@@ -310,7 +351,9 @@ const VoucherDetailPage: React.FC = () => {
   const isRemainAmount =
     remainAmount !== undefined ? (
       <div className="flex justify-between">
-        <p className="text-text-neutral-tertiary">Remain Amount</p>
+        <p className="text-text-neutral-tertiary">
+          {t('journal:VOUCHER_DETAIL_PAGE.REMAIN_AMOUNT')}
+        </p>
         {isDisplayRemainAmount}
       </div>
     ) : null;
@@ -318,7 +361,9 @@ const VoucherDetailPage: React.FC = () => {
   const isReverseVoucher =
     reverseVoucherIds.length > 0 ? (
       <div className="flex justify-between">
-        <p className="text-text-neutral-tertiary">Reverse Vouchers</p>
+        <p className="text-text-neutral-tertiary">
+          {t('journal:VOUCHER_DETAIL_PAGE.REVERSE_VOUCHERS')}
+        </p>
         {isDisplayReverseVoucher}
       </div>
     ) : null;
@@ -326,7 +371,7 @@ const VoucherDetailPage: React.FC = () => {
   const isAsset =
     assets.length > 0 ? (
       <div className="flex justify-between">
-        <p className="text-text-neutral-tertiary">Asset</p>
+        <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_DETAIL_PAGE.ASSET')}</p>
         {isDisplayAsset}
       </div>
     ) : null;
@@ -378,27 +423,37 @@ const VoucherDetailPage: React.FC = () => {
             <div className="flex flex-col items-stretch gap-24px font-semibold">
               {/* Info: (20241007 - Julian) Voucher date */}
               <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Voucher Date</p>
+                <p className="text-text-neutral-tertiary">
+                  {t('journal:VOUCHER_DETAIL_PAGE.DATE')}
+                </p>
                 {isDisplayDate}
               </div>
               {/* Info: (20241007 - Julian) Voucher type */}
               <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Voucher Type</p>
+                <p className="text-text-neutral-tertiary">
+                  {t('journal:VOUCHER_DETAIL_PAGE.TYPE')}
+                </p>
                 {isDisplayType}
               </div>
               {/* Info: (20241007 - Julian) Note */}
               <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Note</p>
+                <p className="text-text-neutral-tertiary">
+                  {t('journal:VOUCHER_DETAIL_PAGE.NOTE')}
+                </p>
                 {isDisplayNote}
               </div>
               {/* Info: (20241007 - Julian) Counterparty */}
               <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Counterparty</p>
+                <p className="text-text-neutral-tertiary">
+                  {t('journal:VOUCHER_DETAIL_PAGE.COUNTERPARTY')}
+                </p>
                 {isDisplayCounterParty}
               </div>
               {/* Info: (20241007 - Julian) Recurring Entry */}
               <div className="flex justify-between">
-                <p className="text-text-neutral-tertiary">Recurring Entry</p>
+                <p className="text-text-neutral-tertiary">
+                  {t('journal:VOUCHER_DETAIL_PAGE.RECURRING_ENTRY')}
+                </p>
                 {isDisplayRecurringEntry}
               </div>
               {/* Info: (20241007 - Julian) Payable Amount */}
@@ -417,10 +472,10 @@ const VoucherDetailPage: React.FC = () => {
             <div className="mt-40px flex flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px">
               {/* Info: (20241008 - Julian) Voucher Line Header */}
               <div className="grid grid-cols-4 gap-24px font-semibold text-text-neutral-solid-dark">
-                <p>Accounting</p>
-                <p>Particulars</p>
-                <p>Debit</p>
-                <p>Credit</p>
+                <p>{t('journal:VOUCHER_DETAIL_PAGE.ACCOUNTING')}</p>
+                <p>{t('journal:VOUCHER_DETAIL_PAGE.PARTICULARS')}</p>
+                <p>{t('journal:VOUCHER_DETAIL_PAGE.DEBIT')}</p>
+                <p>{t('journal:VOUCHER_DETAIL_PAGE.CREDIT')}</p>
               </div>
               {/* Info: (20241008 - Julian) Voucher Line Items */}
               <div className="grid grid-cols-4 gap-24px font-medium text-input-text-input-filled">
