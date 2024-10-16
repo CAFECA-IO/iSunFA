@@ -15,8 +15,16 @@ export async function setSession(
   session: ISessionData,
   data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
 ) {
-  Object.assign(session, data);
-  return session;
+  const { userId, companyId, challenge, roleId } = data;
+
+  const updatedSession = session;
+
+  if (userId) updatedSession.userId = userId;
+  if (companyId) updatedSession.companyId = companyId;
+  if (challenge) updatedSession.challenge = challenge;
+  if (roleId) updatedSession.roleId = roleId;
+
+  return updatedSession;
 }
 
 export async function destroySession(session: ISessionData) {

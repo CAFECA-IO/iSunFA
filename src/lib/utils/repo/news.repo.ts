@@ -9,7 +9,7 @@ import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { SortBy } from '@/constants/journal';
 
-export async function createNews(title: string, content: string, newsType: NewsType) {
+export async function createNews(title: string, content: string, type: NewsType) {
   const nowInSecond = getTimestampNow();
   let news: News | null = null;
 
@@ -18,7 +18,7 @@ export async function createNews(title: string, content: string, newsType: NewsT
       data: {
         title,
         content,
-        type: newsType,
+        type,
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
       },
@@ -84,6 +84,11 @@ export async function listNews(
   const hasNextPage = skip + pageSize < totalCount;
   const hasPreviousPage = targetPage > 1;
 
+  const sort: {
+    sortBy: string;
+    sortOrder: string;
+  }[] = [{ sortBy, sortOrder }];
+
   return {
     data: paginatedNews,
     page: targetPage,
@@ -92,12 +97,14 @@ export async function listNews(
     pageSize,
     hasNextPage,
     hasPreviousPage,
-    sortOrder,
-    sortBy,
+    sort,
   };
 }
 
-export async function listNewsSimple(type: NewsType.FINANCIAL, limit = DEFAULT_PAGE_LIMIT) {
+export async function listNewsSimple(
+  type: NewsType = NewsType.FINANCIAL,
+  pageSize: number = DEFAULT_PAGE_LIMIT
+) {
   let newsList: News[] = [];
   const where: Prisma.NewsWhereInput = {
     type,
@@ -105,7 +112,7 @@ export async function listNewsSimple(type: NewsType.FINANCIAL, limit = DEFAULT_P
 
   const findManyArgs: Prisma.NewsFindManyArgs = {
     where,
-    take: limit,
+    take: pageSize,
   };
   try {
     newsList = await prisma.news.findMany(findManyArgs);
@@ -115,4 +122,17 @@ export async function listNewsSimple(type: NewsType.FINANCIAL, limit = DEFAULT_P
   }
 
   return newsList;
+}
+
+export async function deleteNewsForTesting(newsId: number) {
+  try {
+    await prisma.news.delete({
+      where: {
+        id: newsId,
+      },
+    });
+  } catch (error) {
+    const logError = loggerError(0, 'delete news in deleteNewsForTesting failed', error as Error);
+    logError.error('Prisma related delete news in deleteNewsForTesting in news.repo.ts failed');
+  }
 }
