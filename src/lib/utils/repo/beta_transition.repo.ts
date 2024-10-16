@@ -243,7 +243,12 @@ export async function createInvoice(
   return invoice;
 }
 
-export async function createVoucher(voucherNo: string, companyId: number, date: number) {
+export async function createVoucher(
+  voucherNo: string,
+  companyId: number,
+  date: number,
+  type: EventType
+) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const data: Prisma.VoucherCreateInput = {
@@ -267,6 +272,7 @@ export async function createVoucher(voucherNo: string, companyId: number, date: 
     status: JOURNAL_EVENT.UPLOADED,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
+    type,
   };
 
   let voucher: Voucher;
@@ -287,6 +293,9 @@ export async function createVoucher(voucherNo: string, companyId: number, date: 
 export async function createInvoiceVoucherJournal(
   journalId: number,
   invoiceId: number,
+  paymentReason: string,
+  description: string,
+  vendorOrSupplier: string,
   voucherId?: number
 ) {
   const now = Date.now();
@@ -309,9 +318,9 @@ export async function createInvoiceVoucherJournal(
           },
         }
       : undefined,
-    description: 'description',
-    vendorOrSupplier: 'vendorOrSupplier',
-    paymentReason: 'paymentReason',
+    description,
+    vendorOrSupplier,
+    paymentReason,
     createdAt: nowTimestamp,
     updatedAt: nowTimestamp,
   };
@@ -640,7 +649,8 @@ export async function handlePrismaSavingLogic(
   ocrId: number | undefined
 ) {
   try {
-    const { projectId, contractId } = formattedInvoice;
+    const { projectId, contractId, eventType, paymentReason, description, vendorOrSupplier } =
+      formattedInvoice;
 
     let journalIdBeCreated: number = -1;
 
@@ -658,10 +668,23 @@ export async function handlePrismaSavingLogic(
         journalIdBeCreated,
         ocrIdInDB?.imageFileId
       );
-      const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
-      const createdVoucher = await createVoucher(newVoucherNo, companyId, formattedInvoice.date);
 
-      await createInvoiceVoucherJournal(journalIdBeCreated, createdInvoice.id, createdVoucher.id);
+      const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
+      const createdVoucher = await createVoucher(
+        newVoucherNo,
+        companyId,
+        formattedInvoice.date,
+        eventType
+      );
+
+      await createInvoiceVoucherJournal(
+        journalIdBeCreated,
+        createdInvoice.id,
+        paymentReason,
+        description,
+        vendorOrSupplier,
+        createdVoucher.id
+      );
       // Info: (20240524 - Murky) 更新ocr的狀態, 等到其他db操作都沒有錯誤後才更新
       if (ocrIdInDB?.id) {
         await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
