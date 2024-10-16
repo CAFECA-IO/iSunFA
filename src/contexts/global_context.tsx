@@ -6,7 +6,7 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
-import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
+import AddAssetModal from '@/components/asset/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {

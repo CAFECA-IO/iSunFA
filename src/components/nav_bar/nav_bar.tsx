@@ -511,7 +511,7 @@ const NavBar = () => {
           {/* Info: (20240808 - Anna) Alpha版先隱藏(小鈴鐺) */}
           {/* <Notification /> */}
           {/* Info: (20240606 - Shirley) app menu */}
-          <div ref={appMenuRef}>
+          <div ref={appMenuRef} className="flex items-center justify-center">
             <button
               type="button"
               onClick={appMenuClickHandler}

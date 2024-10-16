@@ -14,11 +14,11 @@ interface IAssetStatusSettingModal {
   defaultStatus: string;
 }
 
-const AssetStatusSettingModal = ({
+const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
   isModalVisible,
   modalVisibilityHandler,
   defaultStatus,
-}: IAssetStatusSettingModal) => {
+}) => {
   const { t } = useTranslation('common');
 
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
