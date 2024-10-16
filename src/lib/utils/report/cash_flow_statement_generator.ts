@@ -9,10 +9,7 @@ import {
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
-import {
-  IVoucherForCashFlow,
-  IVoucherFromPrismaIncludeJournalLineItems,
-} from '@/interfaces/voucher';
+import { IVoucherForCashFlow } from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
@@ -29,7 +26,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
+  private voucherRelatedToCash: IVoucherForCashFlow[];
 
   private voucherLastPeriod: IVoucherForCashFlow[];
 
@@ -56,18 +53,17 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       startDateInSecond,
       endDateInSecond
     );
-    this.voucherRelatedToCash = voucherRelatedToCash
-      .filter((voucher) => {
-        const laterThanStartDate = voucher.date >= startDateInSecond;
-        const earlierThanEndDate = voucher.date <= endDateInSecond;
-        return laterThanStartDate && earlierThanEndDate;
-      })
-      .map((voucher) => {
-        return {
-          ...voucher,
-          invoiceVoucherJournals: voucher.invoiceVoucherJournals || [],
-        };
-      });
+    this.voucherRelatedToCash = voucherRelatedToCash.filter((voucher) => {
+      const laterThanStartDate = voucher.date >= startDateInSecond;
+      const earlierThanEndDate = voucher.date <= endDateInSecond;
+      return laterThanStartDate && earlierThanEndDate;
+    });
+    // .map((voucher) => {
+    //   return {
+    //     ...voucher,
+    //     // invoiceVoucherJournals: voucher.invoiceVoucherJournals || [],
+    //   };
+    // });
 
     this.voucherLastPeriod = voucherRelatedToCash.filter((voucher) => {
       const earlierThanStartDate = voucher.date < startDateInSecond;
@@ -255,7 +251,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return indirectOperatingCashFlow;
   }
 
-  private static getDebitCreditCodes(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
+  private static getDebitCreditCodes(voucher: IVoucherForCashFlow) {
     const debitCodes = new Set<string>();
     const creditCodes = new Set<string>();
 
@@ -281,7 +277,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return matchDebit && matchCredit && matchEither;
   }
 
-  private static sumDebitAndCreditAmount(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
+  private static sumDebitAndCreditAmount(voucher: IVoucherForCashFlow) {
     let debitAmount = 0;
     let creditAmount = 0;
     voucher.lineItems.forEach((lineItem) => {

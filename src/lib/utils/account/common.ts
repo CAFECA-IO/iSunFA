@@ -11,7 +11,6 @@ export function transformLineItemsFromDBToMap(
     const isAccountDebit = lineItem.account.debit;
     const isLineItemDebit = lineItem.debit;
     const { amount } = lineItem;
-
     const adjustedAmount = isAccountDebit === isLineItemDebit ? amount : -amount;
 
     const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
@@ -54,12 +53,14 @@ export function buildAccountForest(accounts: Account[]): IAccountNode[] {
 
 function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<number, number>) {
   let newAmount = lineItemsMap.get(account.id) || 0;
+
   const updatedChildren = account.children.map((child) => {
     const childAccount = updateAccountAmountsByDFS(child, lineItemsMap);
 
     // Info: (20240702 - Murky) 如果parent和child的debit方向不同，則child的amount要取負值
     // 例如：Parent 是 機具設備淨額，Child 是 機具設備成本 and 累計折舊－機具設備，則機具設備淨額 = 機具設備成本 - 累計折舊
     newAmount += account.debit === child.debit ? childAccount.amount : -childAccount.amount;
+
     return childAccount;
   });
 
