@@ -48,16 +48,14 @@ export async function formatAdmin(
   return formattedAdmin;
 }
 
-export async function formatCompanyAndRoleList(
+export function formatCompanyAndRoleList(
   listedCompanyAndRole: Array<{ company: Company & { imageFile: File | null }; role: Role }>
-): Promise<Array<{ company: ICompany; role: IRole }>> {
-  const formatPromises = listedCompanyAndRole.map(async (companyAndRole) => {
-    const formattedCompany = await formatCompany(companyAndRole.company);
+): Array<{ company: ICompany; role: IRole }> {
+  const formattedCompanyAndRoleList = listedCompanyAndRole.map((companyAndRole) => {
+    const formattedCompany = formatCompany(companyAndRole.company);
     const formattedRole = companyAndRole.role;
     return { company: formattedCompany, role: formattedRole };
   });
-  const formattedCompanyAndRoleList: Array<{ company: ICompany; role: IRole }> =
-    await Promise.all(formatPromises);
   return formattedCompanyAndRoleList;
 }
 

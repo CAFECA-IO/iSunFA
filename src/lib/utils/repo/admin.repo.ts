@@ -11,7 +11,12 @@ import {
 } from '@prisma/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { SortOrder } from '@/constants/sort';
-import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { loggerError } from '@/lib/utils/logger_back';
+import { CompanyTag } from '@/constants/company';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -320,10 +325,24 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
 }
 
 export async function listCompanyAndRole(
-  userId: number
-): Promise<Array<{ company: Company & { imageFile: File | null }; role: Role }>> {
-  const listedCompanyRole: Array<{ company: Company & { imageFile: File | null }; role: Role }> =
-    await prisma.admin.findMany({
+  userId: number,
+  targetPage: number = DEFAULT_PAGE_NUMBER,
+  pageSize: number = DEFAULT_PAGE_LIMIT,
+  sortOrder: SortOrder = SortOrder.ASC
+): Promise<{
+  data: Array<{ company: Company & { imageFile: File | null }; role: Role }>;
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  sort: { sortBy: string; sortOrder: string }[];
+}> {
+  let companyRoleList: Array<{ company: Company & { imageFile: File | null }; role: Role }> = [];
+
+  try {
+    companyRoleList = await prisma.admin.findMany({
       where: {
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -343,7 +362,43 @@ export async function listCompanyAndRole(
         role: true,
       },
     });
-  return listedCompanyRole;
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'find many company roles in listCompanyAndRole failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find many company roles in listCompanyAndRole in admin.repo.ts failed'
+    );
+  }
+
+  const totalCount = companyRoleList.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  if (targetPage < 1) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const skip = pageToOffset(targetPage, pageSize);
+
+  const paginatedCompanyRoles = companyRoleList.slice(skip, skip + pageSize);
+
+  const hasNextPage = skip + pageSize < totalCount;
+  const hasPreviousPage = targetPage > 1;
+
+  const sort: { sortBy: string; sortOrder: string }[] = [{ sortBy: 'companyId', sortOrder }];
+
+  return {
+    data: paginatedCompanyRoles,
+    page: targetPage,
+    totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sort,
+  };
 }
 
 export async function getCompanyDetailAndRoleByCompanyId(
@@ -403,7 +458,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
   return companyDetail;
 }
 
-export async function getCompanyAndRoleByCompanyCode(
+export async function getCompanyAndRoleByTaxId(
   userId: number,
   taxId: string
 ): Promise<{
@@ -438,6 +493,7 @@ export async function createCompanyAndRole(
   taxId: string,
   name: string,
   imageFileId: number,
+  tag: CompanyTag = CompanyTag.ALL,
   email?: string
 ): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
   const nowTimestamp = getTimestampNow();
@@ -474,6 +530,7 @@ export async function createCompanyAndRole(
           create: {
             taxId,
             name,
+            tag,
             imageFile: {
               connect: {
                 id: imageFileId,
