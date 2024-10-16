@@ -3,10 +3,10 @@ import { API_ZOD_SCHEMA } from '@/constants/zod_schema';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { checkAuthorization } from './auth_check';
-import { loggerError } from './logger_back';
-import { getSession } from './session';
-import { validateRequest } from './request_validator';
+import { checkAuthorization } from '@/lib/utils/auth_check';
+import { loggerError } from '@/lib/utils/logger_back';
+import { getSession } from '@/lib/utils/session';
+import { validateRequest } from '@/lib/utils/request_validator';
 
 export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEMA, U>(
   apiName: T,
