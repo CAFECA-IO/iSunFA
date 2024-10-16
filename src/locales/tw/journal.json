@@ -268,5 +268,27 @@
     "CREDIT": "貸方金額",
     "DEBIT": "借方金額",
     "EMPTY_HINT": "請新增至少 1 筆會計分錄！"
+  },
+  "VOUCHER_DETAIL_PAGE": {
+    "TITLE": "傳票",
+    "DATE": "傳票日期",
+    "TYPE": "傳票類型",
+    "NOTE": "備註",
+    "COUNTERPARTY": "交易對象",
+    "RECURRING_ENTRY": "週期性分錄",
+    "PAYABLE_AMOUNT": "應付金額",
+    "PAID_AMOUNT": "已付金額",
+    "REMAIN_AMOUNT": "剩餘金額",
+    "REVERSE_VOUCHERS": "沖銷傳票",
+    "ASSET": "資產",
+    "ACCOUNTING": "會計科目",
+    "PARTICULARS": "摘要",
+    "DEBIT": "借方",
+    "CREDIT": "貸方",
+    "DELETE_MESSAGE_TITLE": "您確定要刪除此傳票嗎？",
+    "DELETE_MESSAGE_CONTENT": "與此傳票相關的所有資產也將被刪除。",
+    "DELETE_MESSAGE_SUBMIT_BTN": "是的，刪除傳票",
+    "DELETE_SUCCESS_TOAST": "傳票已刪除。",
+    "UNDO": "復原"
   }
 }
