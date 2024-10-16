@@ -14,7 +14,7 @@ export default class ReportGeneratorFactory {
   ): Promise<ReportGenerator> {
     switch (reportSheetType) {
       case ReportSheetType.BALANCE_SHEET:
-        return new BalanceSheetGenerator(companyId, startDateInSecond, endDateInSecond);
+        return new BalanceSheetGenerator(companyId, 0, endDateInSecond);
       case ReportSheetType.INCOME_STATEMENT:
         return new IncomeStatementGenerator(companyId, startDateInSecond, endDateInSecond);
       case ReportSheetType.CASH_FLOW_STATEMENT:

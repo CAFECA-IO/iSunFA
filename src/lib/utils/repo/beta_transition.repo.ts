@@ -692,7 +692,7 @@ export async function listInvoiceVoucherJournalFor401(
     voucher: {
       companyId,
       status: JOURNAL_EVENT.UPLOADED,
-      createdAt: {
+      date: {
         gte: startDateInSecond,
         lte: endDateInSecond,
       },

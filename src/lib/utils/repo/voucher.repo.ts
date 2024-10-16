@@ -287,7 +287,7 @@ export async function findManyVoucherWithCashInPrisma(
     const vouchers = await prisma.voucher.findMany({
       where: {
         companyId,
-        createdAt: {
+        date: {
           gte: startDateInSecond,
           lte: endDateInSecond,
         },
