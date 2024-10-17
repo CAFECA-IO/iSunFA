@@ -52,7 +52,9 @@ const ReportsHistoryItem = ({
       ) : null}
       <td className="border-x border-stroke-neutral-quaternary">
         {/* Info: (20240514 - Shirley) 將日期畫成日曆的 icon */}
-        <CalendarIcon timestamp={createdAt} />
+        <div className="flex items-center justify-center">
+          <CalendarIcon timestamp={createdAt} />
+        </div>
       </td>
       {/* Info: (20240528 - Shirley) report name */}
       <td className="pl-5 text-start text-base text-text-neutral-primary">
