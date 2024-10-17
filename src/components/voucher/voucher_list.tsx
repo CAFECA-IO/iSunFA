@@ -136,6 +136,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({ voucherList }) => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedVoucherList}</div>
+
+        {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
+        <div className="table-footer-group h-20px border-t bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary"></div>
       </div>
 
       {/* Info: (20240920 - Julian) Pagination */}
