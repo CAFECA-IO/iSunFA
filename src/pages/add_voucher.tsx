@@ -102,7 +102,7 @@ const AddVoucherPage: React.FC = () => {
         {/* Info: (20240919 - tzuhan) Main Content Area */}
         <div className="flex flex-1 flex-col">
           {/* Info: (20240919 - tzuhan) Header */}
-          <Header />
+          <Header title="Voucher-id" />
 
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="px-6">

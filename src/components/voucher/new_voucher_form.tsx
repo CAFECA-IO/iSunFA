@@ -565,169 +565,157 @@ const NewVoucherForm: React.FC = () => {
         });
 
   return (
-    <div className="relative flex flex-col items-center gap-40px p-40px">
-      {/* ToDo: (20240926 - Julian) AI analyze */}
-      <div className="w-full bg-surface-brand-primary-moderate p-40px text-center text-white">
-        This is AI analyze
+    <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+      {/* Info: (20240926 - Julian) Date */}
+      <div id="voucher-date" className="flex flex-col gap-8px whitespace-nowrap">
+        <p className="font-bold text-input-text-primary">
+          {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
+          <span className="text-text-state-error">*</span>
+        </p>
+        <DatePicker
+          type={DatePickerType.TEXT_DATE}
+          period={date}
+          setFilteredPeriod={setDate}
+          btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
+        />
       </div>
-      {/* ToDo: (20240926 - Julian) Uploaded certificates */}
-      <div className="w-full bg-stroke-neutral-quaternary p-40px text-center text-white">
-        Uploaded certificates
-      </div>
-
-      {/* Info: (20240926 - Julian) form */}
-      <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
-        {/* Info: (20240926 - Julian) Date */}
-        <div id="voucher-date" className="flex flex-col gap-8px whitespace-nowrap">
-          <p className="font-bold text-input-text-primary">
-            {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
-            <span className="text-text-state-error">*</span>
-          </p>
-          <DatePicker
-            type={DatePickerType.TEXT_DATE}
-            period={date}
-            setFilteredPeriod={setDate}
-            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
-          />
+      {/* Info: (20240926 - Julian) Type */}
+      <div className="flex flex-col gap-8px">
+        <p className="font-bold text-input-text-primary">
+          {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
+          <span className="text-text-state-error">*</span>
+        </p>
+        <div
+          onClick={typeToggleHandler}
+          className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
+        >
+          <p className="text-base text-input-text-input-filled">{translateType(type)}</p>
+          <FaChevronDown size={20} />
+          {/* Info: (20240926 - Julian) Type dropdown */}
+          {typeDropdownMenu}
         </div>
-        {/* Info: (20240926 - Julian) Type */}
-        <div className="flex flex-col gap-8px">
+      </div>
+      {/* Info: (20240926 - Julian) Note */}
+      <div className="col-span-2 flex flex-col gap-8px">
+        <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
+        <input
+          id="note-input"
+          type="text"
+          value={note}
+          onChange={noteChangeHandler}
+          placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
+          className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+        />
+      </div>
+      {/* Info: (20240926 - Julian) Counterparty */}
+      {isCounterpartyRequired && (
+        <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
           <p className="font-bold text-input-text-primary">
-            {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
+            {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
             <span className="text-text-state-error">*</span>
           </p>
           <div
-            onClick={typeToggleHandler}
-            className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
+            ref={counterpartyRef}
+            onClick={counterSearchToggleHandler}
+            className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
           >
-            <p className="text-base text-input-text-input-filled">{translateType(type)}</p>
-            <FaChevronDown size={20} />
-            {/* Info: (20240926 - Julian) Type dropdown */}
-            {typeDropdownMenu}
+            {displayedCounterparty}
+            <div className="h-20px w-20px">
+              <FiSearch size={20} />
+            </div>
           </div>
+          {/* Info: (20241004 - Julian) Counterparty drop menu */}
+          {counterpartyDropMenu}
         </div>
-        {/* Info: (20240926 - Julian) Note */}
-        <div className="col-span-2 flex flex-col gap-8px">
-          <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
-          <input
-            id="note-input"
-            type="text"
-            value={note}
-            onChange={noteChangeHandler}
-            placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+      )}
+      {/* Info: (20241007 - Julian) Recurring */}
+      <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
+        {/* Info: (20241007 - Julian) switch */}
+        <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
+          <Toggle
+            id="recurring-toggle"
+            initialToggleState={isRecurring}
+            getToggledState={recurringToggleHandler}
+          />
+          <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+        </div>
+        {/* Info: (20241007 - Julian) recurring period */}
+        <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
+          <DatePicker
+            type={DatePickerType.TEXT_PERIOD}
+            period={recurringPeriod}
+            setFilteredPeriod={setRecurringPeriod}
+            datePickerClassName="w-full"
+            btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
           />
         </div>
-        {/* Info: (20240926 - Julian) Counterparty */}
-        {isCounterpartyRequired && (
-          <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
-            <p className="font-bold text-input-text-primary">
-              {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
-              <span className="text-text-state-error">*</span>
+        {/* Info: (20241007 - Julian) recurring unit */}
+        <div
+          className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
+        >
+          {/* Info: (20241007 - Julian) recurring unit block */}
+          <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+            <p className="px-12px py-10px text-input-text-input-placeholder">
+              {t('journal:ADD_NEW_VOUCHER.EVERY')}
             </p>
             <div
-              ref={counterpartyRef}
-              onClick={counterSearchToggleHandler}
-              className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
+              onClick={recurringUnitToggleHandler}
+              className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
             >
-              {displayedCounterparty}
-              <div className="h-20px w-20px">
-                <FiSearch size={20} />
-              </div>
+              <p className="w-50px">{translateUnit(recurringUnit)}</p>
+              <FaChevronDown />
+              {/* Info: (20240926 - Julian) recurring unit dropdown */}
+              {recurringUnitMenu}
             </div>
-            {/* Info: (20241004 - Julian) Counterparty drop menu */}
-            {counterpartyDropMenu}
           </div>
-        )}
-        {/* Info: (20241007 - Julian) Recurring */}
-        <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
-          {/* Info: (20241007 - Julian) switch */}
-          <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
-            <Toggle
-              id="recurring-toggle"
-              initialToggleState={isRecurring}
-              getToggledState={recurringToggleHandler}
-            />
-            <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
-          </div>
-          {/* Info: (20241007 - Julian) recurring period */}
-          <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
-            <DatePicker
-              type={DatePickerType.TEXT_PERIOD}
-              period={recurringPeriod}
-              setFilteredPeriod={setRecurringPeriod}
-              datePickerClassName="w-full"
-              btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
-            />
-          </div>
-          {/* Info: (20241007 - Julian) recurring unit */}
+          {/* Info: (20241007 - Julian) recurring unit checkbox */}
           <div
-            className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
+            className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
           >
-            {/* Info: (20241007 - Julian) recurring unit block */}
-            <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-              <p className="px-12px py-10px text-input-text-input-placeholder">
-                {t('journal:ADD_NEW_VOUCHER.EVERY')}
-              </p>
-              <div
-                onClick={recurringUnitToggleHandler}
-                className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
-              >
-                <p className="w-50px">{translateUnit(recurringUnit)}</p>
-                <FaChevronDown />
-                {/* Info: (20240926 - Julian) recurring unit dropdown */}
-                {recurringUnitMenu}
-              </div>
-            </div>
-            {/* Info: (20241007 - Julian) recurring unit checkbox */}
-            <div
-              className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
-            >
-              {recurringUnitCheckboxes}
-            </div>
+            {recurringUnitCheckboxes}
           </div>
         </div>
-        {/* Info: (20241009 - Julian) Asset */}
-        {isAssetRequired && (
-          <div className="col-span-2 flex flex-col">
-            <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
-          </div>
-        )}
-        {/* Info: (20240926 - Julian) Reverse */}
-        {isReverseRequired && (
-          <div className="col-span-2 flex flex-col">
-            <ReverseSection
-              reverses={reverses}
-              setReverses={setReverses}
-              flagOfClear={flagOfClear}
-              flagOfSubmit={flagOfSubmit}
-            />
-          </div>
-        )}
-        {/* Info: (20240926 - Julian) Voucher line block */}
-        <VoucherLineBlock
-          totalCredit={totalCredit}
-          totalDebit={totalDebit}
-          haveZeroLine={haveZeroLine}
-          isAccountingNull={isAccountingNull}
-          isVoucherLineEmpty={isVoucherLineEmpty}
-          lineItems={voucherLineItems}
-          setLineItems={setLineItems}
-          flagOfClear={flagOfClear}
-          flagOfSubmit={flagOfSubmit}
-        />
-        {/* Info: (20240926 - Julian) buttons */}
-        <div className="col-span-2 ml-auto flex items-center gap-12px">
-          <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
-            {t('journal:JOURNAL.CLEAR_ALL')}
-          </Button>
-          <Button type="submit">
-            <p>{t('common:COMMON.SAVE')}</p>
-            <BiSave size={20} />
-          </Button>
+      </div>
+      {/* Info: (20241009 - Julian) Asset */}
+      {isAssetRequired && (
+        <div className="col-span-2 flex flex-col">
+          <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
         </div>
-      </form>
-    </div>
+      )}
+      {/* Info: (20240926 - Julian) Reverse */}
+      {isReverseRequired && (
+        <div className="col-span-2 flex flex-col">
+          <ReverseSection
+            reverses={reverses}
+            setReverses={setReverses}
+            flagOfClear={flagOfClear}
+            flagOfSubmit={flagOfSubmit}
+          />
+        </div>
+      )}
+      {/* Info: (20240926 - Julian) Voucher line block */}
+      <VoucherLineBlock
+        totalCredit={totalCredit}
+        totalDebit={totalDebit}
+        haveZeroLine={haveZeroLine}
+        isAccountingNull={isAccountingNull}
+        isVoucherLineEmpty={isVoucherLineEmpty}
+        lineItems={voucherLineItems}
+        setLineItems={setLineItems}
+        flagOfClear={flagOfClear}
+        flagOfSubmit={flagOfSubmit}
+      />
+      {/* Info: (20240926 - Julian) buttons */}
+      <div className="col-span-2 ml-auto flex items-center gap-12px">
+        <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
+          {t('journal:JOURNAL.CLEAR_ALL')}
+        </Button>
+        <Button type="submit">
+          <p>{t('common:COMMON.SAVE')}</p>
+          <BiSave size={20} />
+        </Button>
+      </div>
+    </form>
   );
 };
 
