@@ -29,6 +29,7 @@ import {
 } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
+import AIWorkingArea from '@/components/voucher/ai_working_area';
 
 enum RecurringUnit {
   MONTH = 'month',
@@ -566,10 +567,8 @@ const NewVoucherForm: React.FC = () => {
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
-      {/* ToDo: (20240926 - Julian) AI analyze */}
-      <div className="w-full bg-surface-brand-primary-moderate p-40px text-center text-white">
-        This is AI analyze
-      </div>
+      {/* Info: (20240926 - Julian) AI analyze */}
+      <AIWorkingArea />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
       <div className="w-full bg-stroke-neutral-quaternary p-40px text-center text-white">
         Uploaded certificates
