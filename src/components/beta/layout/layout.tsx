@@ -11,7 +11,7 @@ interface LayoutProps {
 
 const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) => {
   return (
-    <div className="flex h-full">
+    <div className="flex max-h-full min-h-screen">
       <SideMenu />
 
       <div className="flex flex-auto flex-col gap-40px bg-surface-neutral-main-background px-56px py-32px">
