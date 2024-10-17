@@ -8,7 +8,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { ICompany, ICompanyAndRoleDetail } from '@/interfaces/company';
 import { MessageType } from '@/interfaces/message_modal';
 import { IRole } from '@/interfaces/role';
 import APIHandler from '@/lib/utils/api_handler';
@@ -49,7 +49,7 @@ const CompanyInfoPageBody = () => {
     isLoading: isCompanyDataLoading,
     code: getCompanyDataCode,
     success: getCompanyDataSuccessfully,
-  } = APIHandler<ICompanyAndRole>(
+  } = APIHandler<ICompanyAndRoleDetail>(
     APIName.COMPANY_GET_BY_ID,
     {
       params: {

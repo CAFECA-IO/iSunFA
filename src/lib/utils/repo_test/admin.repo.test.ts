@@ -119,9 +119,9 @@ describe('Admin Repository Tests', () => {
     it('should list companies and roles for a given user ID', async () => {
       const list = await listCompanyAndRole(testUserId);
       expect(list).toBeDefined();
-      expect(list.length).toBeGreaterThan(0);
-      expect(list[0].company.id).toEqual(admins[0].companyId);
-      expect(list[0].role.id).toEqual(admins[0].roleId);
+      expect(list.data.length).toBeGreaterThan(0);
+      expect(list.data[0].company.id).toEqual(admins[0].companyId);
+      expect(list.data[0].role.id).toEqual(admins[0].roleId);
     });
   });
 
