@@ -237,7 +237,7 @@ export async function cashFlowHandler({
      * @description
      * Report filter is for reshaping output of Financial Report for front end needed
      */
-    const reportFilter = getReportFilterByReportType(ReportSheetType.INCOME_STATEMENT);
+    const reportFilter = getReportFilterByReportType(ReportSheetType.CASH_FLOW_STATEMENT);
 
     /**
      * Info: (20241016 - Murky)

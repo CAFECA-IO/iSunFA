@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import {
   balanceSheetHandler,
+  cashFlowHandler,
   handleGetRequest,
   incomeStatementHandler,
 } from '@/pages/api/v2/company/[companyId]/report/index';
@@ -665,7 +666,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     },
   },
   {
-    id: 10000030,
+    id: 10000031,
     amount: 3000,
     debit: true,
     accountId: 10000603,
@@ -693,7 +694,7 @@ const mockLineItems: (LineItem & { account: Account })[] = [
     },
   },
   {
-    id: 10000030,
+    id: 10000032,
     amount: 3000,
     debit: false,
     accountId: 10000417,
@@ -715,6 +716,63 @@ const mockLineItems: (LineItem & { account: Account })[] = [
       level: 2,
       parentCode: '7100',
       rootCode: '7101',
+      createdAt: 0,
+      updatedAt: 0,
+      deletedAt: null,
+    },
+  },
+  // Info: (20241017 - Murky) Cash Flow特別要測試的分錄voucherId從20000000, voucherDate從 6/1開始
+  {
+    id: 10000033,
+    amount: 500,
+    debit: true,
+    accountId: 10000014,
+    voucherId: 20000000,
+    createdAt: 1728983415,
+    updatedAt: 1728983415,
+    deletedAt: null,
+    description: '',
+    account: {
+      id: 10000014,
+      companyId: 1002,
+      system: 'IFRS',
+      type: 'income',
+      debit: false,
+      liquidity: true,
+      code: '7950',
+      name: '所得稅費用（利益）',
+      forUser: false,
+      level: 0,
+      parentCode: '7950',
+      rootCode: '7950',
+      createdAt: 0,
+      updatedAt: 0,
+      deletedAt: null,
+    },
+  },
+  {
+    id: 10000034,
+    amount: 500,
+    debit: false,
+    accountId: 10000603,
+    voucherId: 20000000,
+    createdAt: 1728983415,
+    updatedAt: 1728983415,
+    deletedAt: null,
+    description: '',
+    account: {
+      id: 10000603,
+      companyId: 1002,
+      system: 'IFRS',
+      type: 'asset',
+      debit: true,
+      liquidity: true,
+      code: '1103',
+      name: '銀行存款',
+      forUser: true,
+      level: 3,
+      parentCode: '1100',
+      rootCode: '1100',
       createdAt: 0,
       updatedAt: 0,
       deletedAt: null,
@@ -798,6 +856,21 @@ const mockVoucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }
     status: 'journal:JOURNAL.UPLOADED',
     type: 'payment',
   },
+  {
+    id: 20000000,
+    no: '20241015002',
+    createdAt: 1728983384,
+    updatedAt: 1728983384,
+    deletedAt: null,
+    companyId: 10000009,
+    counterPartyId: 555,
+    date: 1717209576, // Info: (20241017 - Murky) 2024/6/1
+    editable: true,
+    issuerId: 1000,
+    note: null,
+    status: 'journal:JOURNAL.UPLOADED',
+    type: 'payment',
+  },
 ].map((voucher) => {
   return {
     ...voucher,
@@ -842,23 +915,14 @@ beforeEach(() => {
   jest.spyOn(prisma.voucher, 'findMany').mockImplementation((args) => {
     const { where } = args || {}; // 確保 where 存在
 
-    const filteredVouchers = mockVoucher
-      .filter(
-        (voucher) =>
-          voucher.companyId === where?.companyId &&
-          voucher.date >= ((where?.date as Prisma.IntFilter<'Voucher'>)?.gte as number) &&
-          voucher.date <= ((where?.date as Prisma.IntFilter<'Voucher'>)?.lte as number) &&
-          voucher.lineItems.some((lineItem) =>
-            CASH_AND_CASH_EQUIVALENTS_CODE.some((cashCode) =>
-              lineItem.account.code.startsWith(cashCode)))
-      )
-      .map((voucher) => ({
-        ...voucher,
-        lineItems: voucher.lineItems.filter((lineItem) =>
+    const filteredVouchers = mockVoucher.filter(
+      (voucher) =>
+        voucher.date >= ((where?.date as Prisma.IntFilter<'Voucher'>)?.gte as number) &&
+        voucher.date <= ((where?.date as Prisma.IntFilter<'Voucher'>)?.lte as number) &&
+        voucher.lineItems.some((lineItem) =>
           CASH_AND_CASH_EQUIVALENTS_CODE.some((cashCode) =>
-            lineItem.account.code.startsWith(cashCode))),
-      }));
-
+            lineItem.account.code.startsWith(cashCode)))
+    );
     return Promise.resolve(filteredVouchers) as Prisma.PrismaPromise<typeof filteredVouchers>;
   });
 });
@@ -886,11 +950,10 @@ describe('company/[companyId]/report', () => {
   });
 
   describe('report handlers', () => {
-    // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
-    const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
-    const mockEndDate = timestampInSeconds(new Date(2024, 0, 31, 23, 59, 59).getTime());
-
     describe('balance sheet handler', () => {
+      // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
+      const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
+      const mockEndDate = timestampInSeconds(new Date(2024, 0, 31, 23, 59, 59).getTime());
       it('should generate payload', async () => {
         const { payload, statusMessage } = await balanceSheetHandler({
           companyId: mockCompany.id,
@@ -1032,6 +1095,9 @@ describe('company/[companyId]/report', () => {
     });
 
     describe('income statement handler', () => {
+      // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
+      const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
+      const mockEndDate = timestampInSeconds(new Date(2024, 0, 31, 23, 59, 59).getTime());
       it('should calculate correct answer', async () => {
         const { payload } = await incomeStatementHandler({
           companyId: mockCompany.id,
@@ -1155,6 +1221,74 @@ describe('company/[companyId]/report', () => {
         const profitLoss = general.find((detail) => detail.code === '8200');
         expect(profitLoss).toBeDefined();
         expect(profitLoss?.curPeriodAmount).toBe(77000);
+      });
+    });
+
+    describe('cash flow statement handler', () => {
+      // Info: (20241017 - Murky) 2024/01/01 ~ 2024/06/31
+      const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
+      const mockEndDate = timestampInSeconds(new Date(2024, 5, 31, 23, 59, 59).getTime());
+      it('should calculate correct answer', async () => {
+        const { payload } = await cashFlowHandler({
+          companyId: mockCompany.id,
+          startDate: mockStartDate,
+          endDate: mockEndDate,
+          language: 'en',
+        });
+
+        // Info: (20241017 - Murky) Payload 存在
+        expect(payload).toBeDefined();
+
+        const { general, details } = payload as FinancialReport;
+
+        // Info: (20241017 - Murky) General 與 details account 都有值
+        expect(general.length).toBeGreaterThan(0);
+        expect(details.length).toBeGreaterThan(0);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description A10000 本期稅前淨利（淨損）
+         */
+        const profitBeforeTax = general.find((detail) => detail.code === 'A10000');
+        expect(profitBeforeTax).toBeDefined();
+        expect(profitBeforeTax?.curPeriodAmount).toBe(77000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description A33500 退還（支付）所得稅
+         */
+        const incomeTaxRefundPayment = details.find((detail) => detail.code === 'A33500');
+        expect(incomeTaxRefundPayment).toBeDefined();
+        expect(incomeTaxRefundPayment?.curPeriodAmount).toBe(-500);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description E00100 期初現金及約當現金餘額
+         */
+        const cashAndCashEquivalentsAtBeginningOfPeriod = general.find(
+          (detail) => detail.code === 'E00100'
+        );
+        expect(cashAndCashEquivalentsAtBeginningOfPeriod).toBeDefined();
+        expect(cashAndCashEquivalentsAtBeginningOfPeriod?.curPeriodAmount).toBe(126000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description E00200 期末現金及約當現金餘額
+         */
+        const cashAndCashEquivalentsAtEndOfPeriod = general.find(
+          (detail) => detail.code === 'E00200'
+        );
+        expect(cashAndCashEquivalentsAtEndOfPeriod).toBeDefined();
+        expect(cashAndCashEquivalentsAtEndOfPeriod?.curPeriodAmount).toBe(52500);
+        /**
+         * Info: (20241017 - Murky)
+         * @description EEEE 本期現金及約當現金增加（減少）數
+         */
+        const netIncreaseInCashAndCashEquivalents = general.find(
+          (detail) => detail.code === 'EEEE'
+        );
+        expect(netIncreaseInCashAndCashEquivalents).toBeDefined();
+        expect(netIncreaseInCashAndCashEquivalents?.curPeriodAmount).toBe(-73500);
       });
     });
   });

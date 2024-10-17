@@ -8,7 +8,10 @@ import {
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
-import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
+import {
+  OPERATING_CASH_FLOW_INDIRECT_MAPPING,
+  OPERATING_CASHFLOW_SPECIAL_ACCOUNTS,
+} from '@/constants/cash_flow/operating_cash_flow';
 import { IVoucherForCashFlow } from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
@@ -349,6 +352,23 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     };
   }
 
+  private getOperatingCashFlowSpecialAccounts(): Map<string, IAccountForSheetDisplay> {
+    const { reportSheetMapping, directCashFlow } = this.aggregateVouchers(
+      '',
+      OPERATING_CASHFLOW_SPECIAL_ACCOUNTS
+    );
+
+    reportSheetMapping.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code, {
+      code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code,
+      name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.name,
+      amount: directCashFlow,
+      indent: 1,
+      percentage: null,
+      children: [],
+    });
+    return reportSheetMapping;
+  }
+
   private getInvestingCashFlow(): Map<string, IAccountForSheetDisplay> {
     const { reportSheetMapping, directCashFlow } = this.aggregateVouchers(
       '投資活動之現金流量',
@@ -384,31 +404,38 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   private static sumCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
     investingCashFlow: Map<string, IAccountForSheetDisplay>,
-    financingCashFlow: Map<string, IAccountForSheetDisplay>
+    financingCashFlow: Map<string, IAccountForSheetDisplay>,
+    operatingCashFlowSpecialAccounts: Map<string, IAccountForSheetDisplay>
   ): number {
     const cashFlowFromOperating =
       (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code)?.amount || 0) +
       (investingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code)?.amount || 0) +
-      (financingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.code)?.amount || 0);
+      (financingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.code)?.amount || 0) +
+      (operatingCashFlowSpecialAccounts.get(
+        SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code
+      )?.amount || 0);
     return cashFlowFromOperating;
   }
 
   private concatCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
     investingCashFlow: Map<string, IAccountForSheetDisplay>,
-    financingCashFlow: Map<string, IAccountForSheetDisplay>
+    financingCashFlow: Map<string, IAccountForSheetDisplay>,
+    operatingCashFlowSpecialAccounts: Map<string, IAccountForSheetDisplay>
   ): Map<string, IAccountForSheetDisplay> {
     const { startCashBalance, endCashBalance } = this.getCashStartAndEndAmount();
     const cashFlowFromOperating = CashFlowStatementGenerator.sumCashFlow(
       indirectOperatingCashFlow,
       investingCashFlow,
-      financingCashFlow
+      financingCashFlow,
+      operatingCashFlowSpecialAccounts
     );
 
     const result = new Map<string, IAccountForSheetDisplay>([
       ...Array.from(indirectOperatingCashFlow),
       ...Array.from(investingCashFlow),
       ...Array.from(financingCashFlow),
+      ...Array.from(operatingCashFlowSpecialAccounts),
     ]);
 
     result.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FOREIGN_EXCHANGE.code, {
@@ -499,6 +526,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   ): Promise<IAccountForSheetDisplay[]> {
     const indirectOperatingCashFlow = await this.getIndirectOperatingCashFlow(curPeriod);
 
+    const operatingCashFlowSpecialAccounts = this.getOperatingCashFlowSpecialAccounts();
+
     const investingCashFlow = this.getInvestingCashFlow();
 
     const financingCashFlow = this.getFinancingCashFlow();
@@ -506,7 +535,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const concatCashFlow = this.concatCashFlow(
       indirectOperatingCashFlow,
       investingCashFlow,
-      financingCashFlow
+      financingCashFlow,
+      operatingCashFlowSpecialAccounts
     );
 
     const result = CashFlowStatementGenerator.transformMapToArray(concatCashFlow);
