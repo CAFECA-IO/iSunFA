@@ -397,14 +397,14 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <>
-        <div>
-          <h2 className="mb-4 flex justify-center gap-2 text-xl font-semibold">
+        <div className="mb-4 flex w-full flex-col items-center gap-0">
+          <h2 className="flex justify-center gap-2 text-xl font-semibold">
             {certificate.invoiceName}
             <Image alt="edit" src="/elements/edit.svg" width={16} height={16} />
           </h2>
           <p>{t('certificate:EDIT.HEADER')}</p>
         </div>
-        <div className="my-40px flex w-full items-start justify-between gap-40px md:flex-row">
+        <div className="flex w-full items-start justify-between gap-40px md:flex-row">
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
           <Image
             className="h-400px w-250px items-start"
@@ -417,37 +417,39 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           {/* Info: (20240924 - tzuhan) 編輯表單 */}
           <div className="w-full flex-col items-start gap-x-60px space-y-4">
             {/* Info: (20240924 - tzuhan) 切換輸入/輸出 */}
-            <div className="mb-4 flex items-center space-x-4">
+            <div className="mb-4 flex flex-col items-start gap-4">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:EDIT.TYPE')}
               </p>
-              <label
-                htmlFor="invoice-input"
-                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
-              >
-                <input
-                  type="radio"
-                  id="invoice-input"
-                  name="invoice-type"
-                  className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                  defaultChecked
-                  onClick={() => setType(CERTIFICATE_TYPES.INPUT)}
-                />
-                <p>{t('certificate:EDIT.INPUT')}</p>
-              </label>
-              <label
-                htmlFor="invoice-output"
-                className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
-              >
-                <input
-                  type="radio"
-                  id="invoice-output"
-                  name="invoice-type"
-                  className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                  onClick={() => setType(CERTIFICATE_TYPES.OUTPUT)}
-                />
-                <p>{t('certificate:EDIT.Output')}</p>
-              </label>
+              <div className="mb-4 flex flex-row items-start gap-4">
+                <label
+                  htmlFor="invoice-input"
+                  className="flex flex-row items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+                >
+                  <input
+                    type="radio"
+                    id="invoice-input"
+                    name="invoice-type"
+                    className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
+                    defaultChecked
+                    onClick={() => setType(CERTIFICATE_TYPES.INPUT)}
+                  />
+                  <p>{t('certificate:EDIT.INPUT')}</p>
+                </label>
+                <label
+                  htmlFor="invoice-output"
+                  className="flex flex-row items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
+                >
+                  <input
+                    type="radio"
+                    id="invoice-output"
+                    name="invoice-type"
+                    className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
+                    onClick={() => setType(CERTIFICATE_TYPES.OUTPUT)}
+                  />
+                  <p>{t('certificate:EDIT.OUTPUT')}</p>
+                </label>
+              </div>
             </div>
             <div className="mb-4 flex items-center space-x-4">
               <p className="text-sm font-semibold text-input-text-primary">
