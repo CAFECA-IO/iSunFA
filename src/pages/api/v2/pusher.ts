@@ -1,5 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICertificateInfo } from '@/interfaces/certificate';
+import { ICertificateMeta } from '@/interfaces/certificate';
 import { formatApiResponse } from '@/lib/utils/common';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getPusherInstance } from '@/lib/pusher'; // Info: (20241009-tzuhan) 使用封裝好的 Pusher singleton instance
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         statusMessage = STATUS_MESSAGE.BAD_REQUEST;
       } else {
         const pusher = getPusherInstance();
-        const certificatePromises = certificates.map(async (certificate: ICertificateInfo) => {
+        const certificatePromises = certificates.map(async (certificate: ICertificateMeta) => {
           return pusher.trigger(PRIVATE_CHANNEL.CERTIFICATE, CERTIFICATE_EVENT.UPLOAD, {
             certificate,
             token,

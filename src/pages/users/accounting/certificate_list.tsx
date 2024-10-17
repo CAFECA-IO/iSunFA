@@ -17,7 +17,7 @@ const CertificateListPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('certificate:LIST.TITLE')} - iSunFA</title>
+        <title>{t('certificate:TITLE.LIST')} - iSunFA</title>
       </Head>
       <div className="flex h-screen">
         {/* Info: (20240919 - tzuhan) Side Menu */}
@@ -26,7 +26,7 @@ const CertificateListPage: React.FC = () => {
         {/* Info: (20240919 - tzuhan) Main Content Area */}
         <div className="flex flex-auto flex-col gap-40px overflow-hidden bg-surface-neutral-main-background px-56px py-32px">
           {/* Info: (20240919 - tzuhan) Header */}
-          <Header title={t('certificate:LIST.TITLE')} />
+          <Header title={t('certificate:TITLE.LIST')} />
 
           {/* ToDo: (20241017 - tzuhan) <Layout> */}
           <CertificateListBody />

@@ -15,7 +15,7 @@ import { Button } from '@/components/button/button';
 
 export interface IPaginationProps {
   className?: string;
-  totalCount: number;
+  totalCount?: number;
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   totalPages: number;

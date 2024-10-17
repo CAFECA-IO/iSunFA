@@ -1,38 +1,88 @@
 {
   "LIST": {
-    "TITLE": "證書列表",
     "INVOICE_TOTAL_PRRICE": "發票總價",
-    "EXPORT_CERTIFICATES": "匯出證書"
+    "EXPORT_CERTIFICATES": "匯出發票"
   },
   "TAB": {
-    "WITHOUT_VOUCHER": "未綁定傳票的證書",
-    "WITH_VOUCHER": "綁定傳票的證書"
+    "WITHOUT_VOUCHER": "無憑證的發票",
+    "WITH_VOUCHER": "有憑證的發票"
   },
   "TABLE": {
     "DATE": "日期",
     "INVOICE_NAME": "發票名稱",
     "INVOICE_NUMBER": "發票編號",
-    "COUNTERPARTY": "對方",
+    "COUNTERPARTY": "交易對象",
     "INVOICE_TYPE": "發票類型",
-    "TAX": "稅",
+    "TAX": "稅額",
     "AMOUNT": "金額",
-    "DEDUCTABLE": "可扣除",
+    "DEDUCTABLE": "可扣抵稅額",
     "UPLOADER": "上傳者",
-    "VOUCHER_NUMBER": "傳票編號"
+    "VOUCHER_NUMBER": "憑證編號"
   },
   "PAUSE": {
     "TITLE": "您確定要取消上傳嗎？",
     "CONTENT": "您確定要取消上傳",
-    "YES": "是的，取消上傳",
-    "NO": "不，繼續上傳"
+    "YES": "是，取消上傳",
+    "NO": "否，繼續上傳"
   },
   "DELETE": {
-    "TITLE": "您真的要刪除這些證書嗎？",
-    "CONTENT": "您確定要刪除",
-    "CONTENT_DELETE_MORE": "您確定要刪除{{count}}張證書？",
-    "YES": "是的，刪除證書",
+    "TITLE": "您真的想刪除這些發票嗎？",
+    "CONTENT": "您確定要刪除嗎？",
+    "CONTENT_DELETE_MORE": "您確定要刪除{{count}}個發票嗎？",
+    "YES": "是，刪除發票",
     "NO": "取消",
-    "SUCCESS": "證書已刪除。",
-    "ERROR": "出了些問題，請再試一次。"
+    "SUCCESS": "憑證已被刪除。",
+    "ERROR": "出錯了，請再試一次。"
+  },
+  "ERROR": {
+    "SELECT_CERTIFICATE": "選擇發票失敗",
+    "UPLOAD_CERTIFICATE": "上傳發票失敗",
+    "TOKEN_NOT_PROVIDED": "未提供令牌",
+    "NOTIFY_WEB": "通知網頁失敗",
+    "WENT_WRONG": "出錯了，請再試一次。",
+    "UPLOAD_AND_NOTIFY": "上傳並通知網頁失敗"
+  },
+  "WARNING": {
+    "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "發票已上傳，但通知網頁失敗"
+  },
+  "TITLE": {
+    "UPLOAD": "上傳發票",
+    "SELECT": "選擇一個或多個發票",
+    "LIST": "發票列表"
+  },
+  "EDIT": {
+    "HEADER": "發票資訊",
+    "TYPE": "進項/銷項",
+    "DATE": "發票日期",
+    "INPUT": "進項",
+    "OUTPUT": "銷項",
+    "INVOICE_NAME": "發票名稱",
+    "INVOICE_NUMBER": "發票編號",
+    "PRICE_BEFORE_TAX": "稅前價格",
+    "TAX": "稅額",
+    "TAXABLE": "應稅金額",
+    "TOTAL_PRICE": "總價（含稅）",
+    "COUNTERPARTY": "交易對象（客戶/供應商）",
+    "INVOICE_TYPE": "發票類型",
+    "DEDUCTABLE": "可扣抵稅額",
+    "SUCCESS": "您的發票資訊已更新。"
+  },
+  "COUNTERPARTY": {
+    "ADD_NEW": "新增客戶/供應商",
+    "BOTH": "客戶/供應商",
+    "CLIENT": "客戶",
+    "SUPPLIER": "供應商",
+    "TITLE": "將此交易對象新增至客戶/供應商列表",
+    "CONTENT": "{{counterparty}}不在您的客戶/供應商列表中。您要將其新增嗎？",
+    "YES": "是，新增",
+    "NO": "否，取消",
+    "SUCCESS": "新的客戶/供應商已新增。",
+    "COMPANY_NAME": "公司名稱",
+    "ENTER_NAME": "輸入名稱",
+    "TAX_NUMBER": "營業稅號",
+    "ENTER_NUMBER": "輸入編號",
+    "PARTNER_TYPE": "合作夥伴類型",
+    "NOTE": "備註",
+    "ENTER_TEXT": "輸入文字"
   }
 }

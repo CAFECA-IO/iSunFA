@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import {
   ICertificate,
-  ICertificateInfo,
+  ICertificateMeta,
   ICertificateUI,
   OPERATIONS,
   VIEW_TYPES,
@@ -57,7 +57,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   });
   // TODO: (20241016 - tzuhan) remove test data
   const [uploadingCertificates, setUploadingCertificates] = useState<{
-    [id: number]: ICertificateInfo;
+    [id: number]: ICertificateMeta;
   }>({
     0: {
       id: 0,
@@ -202,7 +202,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_ERROR,
             type: ToastType.ERROR,
-            content: t('certificate:DELETE.ERROR'),
+            content: t('certificate:ERROR.WENT_WRONG'),
             closeable: true,
           });
         }
@@ -245,7 +245,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             toastHandler({
               id: ToastId.DELETE_CERTIFICATE_ERROR,
               type: ToastType.ERROR,
-              content: t('certificate:DELETE.ERROR'),
+              content: t('certificate:ERROR.WENT_WRONG'),
               closeable: true,
             });
           }
@@ -296,7 +296,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, []);
 
   const certificateHandler = useCallback(
-    async (message: { token: string; certificate: ICertificateInfo }) => {
+    async (message: { token: string; certificate: ICertificateMeta }) => {
       const { token: receivedToken, certificate: certificateData } = message;
       // Deprecated: (20241011 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console

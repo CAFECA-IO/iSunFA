@@ -1,6 +1,5 @@
 {
   "LIST": {
-    "TITLE": "Certificate List",
     "INVOICE_TOTAL_PRRICE": "Invoice Total Price",
     "EXPORT_CERTIFICATES": "Export Certificates"
   },
@@ -34,5 +33,56 @@
     "NO": "Cancel",
     "SUCCESS": "Certificates have been deleted.",
     "ERROR": "Something went wrong, please try again."
+  },
+  "ERROR": {
+    "SELECT_CERTIFICATE": "Failed to select certificate",
+    "UPLOAD_CERTIFICATE": "Failed to upload certificate",
+    "TOKEN_NOT_PROVIDED": "Token not provided",
+    "NOTIFY_WEB": "Failed to notify web",
+    "WENT_WRONG": "Something went wrong, please try again.",
+    "UPLOAD_AND_NOTIFY": "Failed to upload and notify web"
+  },
+  "WARNING": {
+    "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "Certificates have been uploaded, but failed to notify web"
+  },
+  "TITLE": {
+    "UPLOAD": "Upload Certificate",
+    "SELECT": "Select 1 or more certificates",
+    "LIST": "Certificate List"
+  },
+  "EDIT": {
+    "HEADER": "Invoice Information",
+    "TYPE": "Input/Output",
+    "DATE": "Invoice Date",
+    "INPUT": "Input",
+    "OUTPUT": "Output",
+    "INVOICE_NAME": "Invoice Name",
+    "INVOICE_NUMBER": "Invoice NO.",
+    "PRICE_BEFORE_TAX": "Price Before Tax",
+    "TAX": "Tax",
+    "TAXABLE": "Taxable",
+    "TOTAL_PRICE": "Total Price (Including Tax)",
+    "COUNTERPARTY": "Counterparty (Client/Supplier)",
+    "INVOICE_TYPE": "Invoice Type",
+    "DEDUCTABLE": "Deductable",
+    "SUCCESS": "Your certificate information has been updated."
+  },
+  "COUNTERPARTY": {
+    "ADD_NEW": "Add New Client/Supplier",
+    "BOTH": "Both",
+    "CLIENT": "Client",
+    "SUPPLIER": "Supplier",
+    "TITLE": "Add this counterparty to Client/Supplier list",
+    "CONTENT": "{{counterparty}} is not in your Client/Supplier list. Do you want to add it?",
+    "YES": "Yes, Add it",
+    "NO": "No, Cancel",
+    "SUCCESS": "New Client/Supplier has been added.",
+    "COMPANY_NAME": "Company Name",
+    "ENTER_NAME": "Enter Name",
+    "TAX_NUMBER": "Business Tax ID Number",
+    "ENTER_NUMBER": "Enter Number",
+    "PARTNER_TYPE": "Partner Type",
+    "NOTE": "Note",
+    "ENTER_TEXT": "Enter Text"
   }
 }

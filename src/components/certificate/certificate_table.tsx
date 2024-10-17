@@ -71,9 +71,10 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
               <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div>
             </div>
             <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-              {t('certificate:TABLE.COUNTERPARTY')}
+              {t('certificate:TABLE.COUNTERPARTY')}({t('certificate:COUNTERPARTY.CLIENT')}/
+              {t('certificate:COUNTERPARTY.SUPPLIER')})
             </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
               {t('certificate:TABLE.INVOICE_TYPE')}
             </div>
             <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
@@ -82,7 +83,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
             <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
               {displayedAmount}
             </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
+            <div className="table-cell min-w-80px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
               {t('certificate:TABLE.DEDUCTABLE')}
             </div>
             <div className="table-cell border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
