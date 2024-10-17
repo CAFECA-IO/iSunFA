@@ -952,8 +952,8 @@ describe('company/[companyId]/report', () => {
   describe('report handlers', () => {
     describe('balance sheet handler', () => {
       // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
-      const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
-      const mockEndDate = timestampInSeconds(new Date(2024, 0, 31, 23, 59, 59).getTime());
+      const mockStartDate = timestampInSeconds(1704038400000); // (new Date(2024, 0, 1, 0, 0, 0).getTime());
+      const mockEndDate = timestampInSeconds(1706716799000); // new Date(2024, 0, 31, 23, 59, 59).getTime());
       it('should generate payload', async () => {
         const { payload, statusMessage } = await balanceSheetHandler({
           companyId: mockCompany.id,
@@ -1096,8 +1096,8 @@ describe('company/[companyId]/report', () => {
 
     describe('income statement handler', () => {
       // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
-      const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
-      const mockEndDate = timestampInSeconds(new Date(2024, 0, 31, 23, 59, 59).getTime());
+      const mockStartDate = timestampInSeconds(1704038400000); // (new Date(2024, 0, 1, 0, 0, 0).getTime());
+      const mockEndDate = timestampInSeconds(1706716799000); // new Date(2024, 0, 31, 23, 59, 59).getTime());
       it('should calculate correct answer', async () => {
         const { payload } = await incomeStatementHandler({
           companyId: mockCompany.id,
@@ -1226,8 +1226,8 @@ describe('company/[companyId]/report', () => {
 
     describe('cash flow statement handler', () => {
       // Info: (20241017 - Murky) 2024/01/01 ~ 2024/06/31
-      const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
-      const mockEndDate = timestampInSeconds(new Date(2024, 5, 31, 23, 59, 59).getTime());
+      const mockStartDate = timestampInSeconds(1704038400000); // (new Date(2024, 0, 1, 0, 0, 0).getTime());
+      const mockEndDate = timestampInSeconds(1719849599000); // new Date(2024, 0, 31, 23, 59, 59).getTime());
       it('should calculate correct answer', async () => {
         const { payload } = await cashFlowHandler({
           companyId: mockCompany.id,
