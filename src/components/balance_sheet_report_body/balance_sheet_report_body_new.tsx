@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import TrialBalanceList from '@/components/trial_balance/trial_balance_list';
+import BalanceSheetList from '@/components/balance_sheet_report_body/balance_sheet_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 
-const TrialBalancePageBody = () => {
+// const BalanceSheetPageBody = ({ reportId }: { reportId: string }) => {
+// Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
+const BalanceSheetPageBody = () => {
   // Info: (20241015 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
@@ -24,10 +26,10 @@ const TrialBalancePageBody = () => {
           />
         </div>
         {/* Info: (20240920 - Julian) Voucher List */}
-        <TrialBalanceList />
+        <BalanceSheetList />
       </div>
     </div>
   );
 };
 
-export default TrialBalancePageBody;
+export default BalanceSheetPageBody;

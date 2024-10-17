@@ -109,14 +109,14 @@ const LedgerList = () => {
 
   // Info: (20240920 - Julian) credit 排序按鈕
   const displayedCredit = SortingButton({
-    string: t('journal:VOUCHER.CREDIT'),
+    string: t('journal:JOURNAL.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
   });
 
   // Info: (20240920 - Julian) debit 排序按鈕
   const displayedDebit = SortingButton({
-    string: t('journal:VOUCHER.DEBIT'),
+    string: t('journal:JOURNAL.DEBIT'),
     sortOrder: debitSort,
     setSortOrder: setDebitSort,
   });
@@ -157,7 +157,7 @@ const LedgerList = () => {
               {t('common:COMMON.CODE')}
             </div>
             <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('journal:VOUCHER.ACCOUNTING')}
+              {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
             </div>
             <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.VOUCHER_NO')}
