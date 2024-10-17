@@ -135,11 +135,11 @@ export function addAccountNodeToMapRecursively(
   currentDepth: number,
   // Info: (20241014 - Murky) 暫時不用
   /* eslint-disable @typescript-eslint/no-unused-vars */
-  maxHeight?: number
+  maxHeight: number
   /* eslint-enable @typescript-eslint/no-unused-vars */
 ) {
   // Info: (20241011 - Murky) 第二層可以保有自己的child
-  const isThirdLayer = currentDepth === 2 || currentDepth === 3;
+  const isThirdLayer = currentDepth >= maxHeight;
   const newAccountNode = isThirdLayer ? account : { ...account, children: [] };
   const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
   accountMap.set(account.code, { accountNode: newAccountNode, percentage });

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import {
   balanceSheetHandler,
   handleGetRequest,
+  incomeStatementHandler,
 } from '@/pages/api/v2/company/[companyId]/report/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
@@ -26,7 +27,7 @@ jest.mock('../../../../../../lib/utils/auth_check', () => ({
   checkAuthorization: jest.fn().mockResolvedValue(true),
 }));
 
-// Info: (20241007 - Murky) Uncomment this to check zod return
+// Info: (20241007 - Murky) Uncomment this to check zod return log
 // jest.mock('../../../../../../lib/utils/logger_back', () => ({
 //   loggerRequest: jest.fn().mockReturnValue({
 //     info: jest.fn(),
@@ -45,8 +46,7 @@ const mockCompany: Company = {
   deletedAt: null,
   tag: 'all',
 };
-// mock prisma.voucher.findMany
-// (Voucher & { lineItems: (LineItem & { account: Account })[] })
+
 const mockLineItems: (LineItem & { account: Account })[] = [
   {
     id: 10000009,
@@ -664,6 +664,62 @@ const mockLineItems: (LineItem & { account: Account })[] = [
       deletedAt: null,
     },
   },
+  {
+    id: 10000030,
+    amount: 3000,
+    debit: true,
+    accountId: 10000603,
+    voucherId: 10000005,
+    createdAt: 1728983415,
+    updatedAt: 1728983415,
+    deletedAt: null,
+    description: '',
+    account: {
+      id: 10000603,
+      companyId: 1002,
+      system: 'IFRS',
+      type: 'asset',
+      debit: true,
+      liquidity: true,
+      code: '1103',
+      name: '銀行存款',
+      forUser: true,
+      level: 3,
+      parentCode: '1100',
+      rootCode: '1100',
+      createdAt: 0,
+      updatedAt: 0,
+      deletedAt: null,
+    },
+  },
+  {
+    id: 10000030,
+    amount: 3000,
+    debit: false,
+    accountId: 10000417,
+    voucherId: 10000005,
+    createdAt: 1728983415,
+    updatedAt: 1728983415,
+    deletedAt: null,
+    description: '',
+    account: {
+      id: 10000417,
+      companyId: 1002,
+      system: 'IFRS',
+      type: 'income',
+      debit: false,
+      liquidity: true,
+      code: '7101',
+      name: '銀行存款利息',
+      forUser: true,
+      level: 2,
+      parentCode: '7100',
+      rootCode: '7101',
+      createdAt: 0,
+      updatedAt: 0,
+      deletedAt: null,
+    },
+  },
 ];
 
 const mockVoucher: (Voucher & { lineItems: (LineItem & { account: Account })[] })[] = [
@@ -727,6 +783,21 @@ const mockVoucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }
     status: 'journal:JOURNAL.UPLOADED',
     type: 'payment',
   },
+  {
+    id: 10000005,
+    no: '20241015002',
+    createdAt: 1728983384,
+    updatedAt: 1728983384,
+    deletedAt: null,
+    companyId: 10000009,
+    counterPartyId: 555,
+    date: 1705370673,
+    editable: true,
+    issuerId: 1000,
+    note: null,
+    status: 'journal:JOURNAL.UPLOADED',
+    type: 'payment',
+  },
 ].map((voucher) => {
   return {
     ...voucher,
@@ -746,6 +817,50 @@ beforeEach(() => {
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>;
+
+  jest.spyOn(prisma.company, 'findUnique').mockResolvedValue(mockCompany);
+
+  /**
+   * Info: (20241016 - Murky)
+   * getLineItemsInPrisma in src/lib/utils/repo/line_item.repo.ts
+   */
+  jest.spyOn(prisma.lineItem, 'findMany').mockImplementation((args) => {
+    const { where } = args || {}; // 確保 where 存在
+
+    const filteredLineItems = mockVoucher
+      .filter(
+        (voucher) =>
+          voucher.date >= ((where?.voucher?.date as Prisma.IntFilter<'Voucher'>)?.gte as number) &&
+          voucher.date <= ((where?.voucher?.date as Prisma.IntFilter<'Voucher'>)?.lte as number)
+      )
+      .flatMap((voucher) => voucher.lineItems)
+      .filter((lineItem) => lineItem.account.type === where?.account?.type);
+
+    return Promise.resolve(filteredLineItems) as unknown as PrismaPromise<typeof filteredLineItems>; // 確保返回 PrismaPromise
+  });
+
+  jest.spyOn(prisma.voucher, 'findMany').mockImplementation((args) => {
+    const { where } = args || {}; // 確保 where 存在
+
+    const filteredVouchers = mockVoucher
+      .filter(
+        (voucher) =>
+          voucher.companyId === where?.companyId &&
+          voucher.date >= ((where?.date as Prisma.IntFilter<'Voucher'>)?.gte as number) &&
+          voucher.date <= ((where?.date as Prisma.IntFilter<'Voucher'>)?.lte as number) &&
+          voucher.lineItems.some((lineItem) =>
+            CASH_AND_CASH_EQUIVALENTS_CODE.some((cashCode) =>
+              lineItem.account.code.startsWith(cashCode)))
+      )
+      .map((voucher) => ({
+        ...voucher,
+        lineItems: voucher.lineItems.filter((lineItem) =>
+          CASH_AND_CASH_EQUIVALENTS_CODE.some((cashCode) =>
+            lineItem.account.code.startsWith(cashCode))),
+      }));
+
+    return Promise.resolve(filteredVouchers) as Prisma.PrismaPromise<typeof filteredVouchers>;
+  });
 });
 
 afterEach(() => {
@@ -774,57 +889,7 @@ describe('company/[companyId]/report', () => {
     // Info: (20241017 - Murky) 2024/01/01 ~ 2024/01/31
     const mockStartDate = timestampInSeconds(new Date(2024, 0, 1, 0, 0, 0).getTime());
     const mockEndDate = timestampInSeconds(new Date(2024, 0, 31, 23, 59, 59).getTime());
-    beforeEach(() => {
-      jest.spyOn(prisma.company, 'findUnique').mockResolvedValue(mockCompany);
 
-      /**
-       * Info: (20241016 - Murky)
-       * getLineItemsInPrisma in src/lib/utils/repo/line_item.repo.ts
-       */
-      jest.spyOn(prisma.lineItem, 'findMany').mockImplementation((args) => {
-        const { where } = args || {}; // 確保 where 存在
-
-        const filteredLineItems = mockVoucher
-          .filter(
-            (voucher) =>
-              // voucher.lineItems.some(
-              //   (lineItem) => lineItem.account.type === where?.account?.type
-              // ) &&
-              voucher.date >=
-                ((where?.voucher?.date as Prisma.IntFilter<'Voucher'>)?.gte as number) &&
-              voucher.date <= ((where?.voucher?.date as Prisma.IntFilter<'Voucher'>)?.lte as number)
-          )
-          .flatMap((voucher) => voucher.lineItems)
-          .filter((lineItem) => lineItem.account.type === where?.account?.type);
-
-        return Promise.resolve(filteredLineItems) as unknown as PrismaPromise<
-          typeof filteredLineItems
-        >; // 確保返回 PrismaPromise
-      });
-
-      jest.spyOn(prisma.voucher, 'findMany').mockImplementation((args) => {
-        const { where } = args || {}; // 確保 where 存在
-
-        const filteredVouchers = mockVoucher
-          .filter(
-            (voucher) =>
-              voucher.companyId === where?.companyId &&
-              voucher.date >= ((where?.date as Prisma.IntFilter<'Voucher'>)?.gte as number) &&
-              voucher.date <= ((where?.date as Prisma.IntFilter<'Voucher'>)?.lte as number) &&
-              voucher.lineItems.some((lineItem) =>
-                CASH_AND_CASH_EQUIVALENTS_CODE.some((cashCode) =>
-                  lineItem.account.code.startsWith(cashCode)))
-          )
-          .map((voucher) => ({
-            ...voucher,
-            lineItems: voucher.lineItems.filter((lineItem) =>
-              CASH_AND_CASH_EQUIVALENTS_CODE.some((cashCode) =>
-                lineItem.account.code.startsWith(cashCode))),
-          }));
-
-        return Promise.resolve(filteredVouchers) as Prisma.PrismaPromise<typeof filteredVouchers>;
-      });
-    });
     describe('balance sheet handler', () => {
       it('should generate payload', async () => {
         const { payload, statusMessage } = await balanceSheetHandler({
@@ -846,11 +911,250 @@ describe('company/[companyId]/report', () => {
         });
 
         expect(payload).toBeDefined();
-        const { details } = payload as FinancialReport;
+        const { general, details } = payload as FinancialReport;
         expect(details.length).toBeGreaterThan(0);
-        const cashInBunker = details.find((detail) => detail.code === '1100');
-        expect(cashInBunker).toBeDefined();
-        expect(cashInBunker?.curPeriodAmount).toBe(50000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 1100 現金及約當現金
+         */
+        const cashAndCashEquivalents = details.find((detail) => detail.code === '1100');
+        expect(cashAndCashEquivalents).toBeDefined();
+        expect(cashAndCashEquivalents?.curPeriodAmount).toBe(53000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 130X 存貨
+         */
+        const netAccountsReceivable = details.find((detail) => detail.code === '130X');
+        expect(netAccountsReceivable).toBeDefined();
+        expect(netAccountsReceivable?.curPeriodAmount).toBe(-54000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 預付款項
+         */
+        const prepayments = details.find((detail) => detail.code === '1410');
+        expect(prepayments).toBeDefined();
+        expect(prepayments?.curPeriodAmount).toBe(60000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 11XX 流動資產合計
+         */
+        const totalCurrentAssets = general.find((detail) => detail.code === '11XX');
+        expect(totalCurrentAssets).toBeDefined();
+        expect(totalCurrentAssets?.curPeriodAmount).toBe(273000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 15XX 非流動資產合計
+         */
+        const totalNonCurrentAssets = general.find((detail) => detail.code === '15XX');
+        expect(totalNonCurrentAssets).toBeDefined();
+        expect(totalNonCurrentAssets?.curPeriodAmount).toBe(100000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 1XXX 資產總計
+         */
+        const totalAssets = general.find((detail) => detail.code === '1XXX');
+        expect(totalAssets).toBeDefined();
+        expect(totalAssets?.curPeriodAmount).toBe(373000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 2100 短期借款
+         */
+        const currentBorrowings = details.find((detail) => detail.code === '2100');
+        expect(currentBorrowings).toBeDefined();
+        expect(currentBorrowings?.curPeriodAmount).toBe(50000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 2130 合約負債-流動
+         */
+        const currentContractLiabilities = details.find((detail) => detail.code === '2130');
+        expect(currentContractLiabilities).toBeDefined();
+        expect(currentContractLiabilities?.curPeriodAmount).toBe(30000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 2170 應付帳款(合計)
+         */
+        const accountsPayable = details.find((detail) => detail.code === '2170');
+        expect(accountsPayable).toBeDefined();
+        expect(accountsPayable?.curPeriodAmount).toBe(12000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 21XX 流動負債合計
+         */
+        const totalCurrentLiabilities = general.find((detail) => detail.code === '21XX');
+        expect(totalCurrentLiabilities).toBeDefined();
+        expect(totalCurrentLiabilities?.curPeriodAmount).toBe(92000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 2XXX 負債總計
+         */
+        const totalLiabilities = general.find((detail) => detail.code === '2XXX');
+        expect(totalLiabilities).toBeDefined();
+        expect(totalLiabilities?.curPeriodAmount).toBe(92000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 3151 累積盈虧
+         * @note beta版未顯示
+         */
+        // const retainedEarnings = details.find((detail) => detail.code === '3351');
+        // expect(retainedEarnings).toBeDefined();
+        // expect(retainedEarnings?.curPeriodAmount).toBe(4000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 3353 本期損益
+         * @note beta版未顯示
+         */
+        // const totalRetainedEarnings = details.find((detail) => detail.code === '3353');
+        // expect(totalRetainedEarnings).toBeDefined();
+        // expect(totalRetainedEarnings?.curPeriodAmount).toBe(77000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 3350 未分配盈餘（或待彌補虧損）
+         * @note 4000 + 77000 = 81000
+         */
+        const unappropriatedRetainedEarnings = details.find((detail) => detail.code === '3350');
+        expect(unappropriatedRetainedEarnings).toBeDefined();
+        expect(unappropriatedRetainedEarnings?.curPeriodAmount).toBe(81000);
+      });
+    });
+
+    describe('income statement handler', () => {
+      it('should calculate correct answer', async () => {
+        const { payload } = await incomeStatementHandler({
+          companyId: mockCompany.id,
+          startDate: mockStartDate,
+          endDate: mockEndDate,
+          language: 'en',
+        });
+
+        // Info: (20241017 - Murky) Payload 存在
+        expect(payload).toBeDefined();
+
+        const { general, details } = payload as FinancialReport;
+
+        // Info: (20241017 - Murky) General 與 details account 都有值
+        expect(general.length).toBeGreaterThan(0);
+        expect(details.length).toBeGreaterThan(0);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 4110 銷貨收入(總額)
+         */
+        const salesRevenueTotal = details.find((detail) => detail.code === '4110');
+        expect(salesRevenueTotal).toBeDefined();
+        expect(salesRevenueTotal?.curPeriodAmount).toBe(208000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 4000 營業收入合計
+         */
+        const totalOperatingRevenue = general.find((detail) => detail.code === '4000');
+        expect(totalOperatingRevenue).toBeDefined();
+        expect(totalOperatingRevenue?.curPeriodAmount).toBe(204000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 4100 銷貨收入(淨額)
+         * @note 目前沒有要顯示這個項目
+         */
+        // const netSalesRevenue = details.find((detail) => detail.code === '4100');
+        // expect(netSalesRevenue).toBeDefined();
+        // expect(netSalesRevenue?.curPeriodAmount).toBe(204000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 5110 銷貨成本合計
+         */
+        const totalCostOfSales = details.find((detail) => detail.code === '5110');
+        expect(totalCostOfSales).toBeDefined();
+        expect(totalCostOfSales?.curPeriodAmount).toBe(54000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 5000 營業成本合計
+         * @note 算錯成108000須糾正
+         */
+        const totalOperatingCost = general.find((detail) => detail.code === '5000');
+        expect(totalOperatingCost).toBeDefined();
+        expect(totalOperatingCost?.curPeriodAmount).toBe(54000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 5950 營業毛利(毛損)淨額
+         * @note 包含母子公司之間的 未實現予以實現的銷貨(損)益
+         */
+        const grossProfitFromOperation = general.find((detail) => detail.code === '5950');
+        expect(grossProfitFromOperation).toBeDefined();
+        expect(grossProfitFromOperation?.curPeriodAmount).toBe(150000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 6200 管理費用
+         */
+        const administrativeExpenses = general.find((detail) => detail.code === '6200');
+        expect(administrativeExpenses).toBeDefined();
+        expect(administrativeExpenses?.curPeriodAmount).toBe(76000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 6000 營業費用合計
+         */
+        const totalOperatingExpense = general.find((detail) => detail.code === '6000');
+        expect(totalOperatingExpense).toBeDefined();
+        expect(totalOperatingExpense?.curPeriodAmount).toBe(76000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 6900 營業利益
+         */
+        const netOperatingIncome = general.find((detail) => detail.code === '6900');
+        expect(netOperatingIncome).toBeDefined();
+        expect(netOperatingIncome?.curPeriodAmount).toBe(74000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 7100 利息收入(total)
+         */
+        const totalInterestIncome = general.find((detail) => detail.code === '7100');
+        expect(totalInterestIncome).toBeDefined();
+        expect(totalInterestIncome?.curPeriodAmount).toBe(3000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 7000 營業外收入及支出合計
+         */
+        const totalNonOperatingIncomeAndExpenses = general.find((detail) => detail.code === '7000');
+        expect(totalNonOperatingIncomeAndExpenses).toBeDefined();
+        expect(totalNonOperatingIncomeAndExpenses?.curPeriodAmount).toBe(3000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 8000 繼續營業單位本期淨利（淨損）
+         */
+        const profitFromContinuingOperations = general.find((detail) => detail.code === '8000');
+        expect(profitFromContinuingOperations).toBeDefined();
+        expect(profitFromContinuingOperations?.curPeriodAmount).toBe(77000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 8200 本期淨利
+         */
+        const profitLoss = general.find((detail) => detail.code === '8200');
+        expect(profitLoss).toBeDefined();
+        expect(profitLoss?.curPeriodAmount).toBe(77000);
       });
     });
   });
