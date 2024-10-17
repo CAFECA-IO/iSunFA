@@ -2,7 +2,7 @@ import { FiSearch } from 'react-icons/fi';
 
 const Search = () => {
   return (
-    <div className="flex grow items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+    <div className="flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
       <input
         type="text"
         placeholder="Search"
