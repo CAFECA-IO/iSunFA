@@ -2,7 +2,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 // import { AuthFunctionsKeys } from '@/interfaces/auth';
 // import { checkAuthorization } from '@/lib/utils/auth_check';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { validateRequest } from '@/lib/utils/request_validator';
@@ -10,102 +10,106 @@ import { APIName } from '@/constants/api_connection';
 
 import { loggerError } from '@/lib/utils/logger_back';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
-
-type ReportObject = IAccountReadyForFrontend[];
-
-type ReportReturnType = {
-  general: ReportObject;
-  detail: ReportObject;
-} | null;
+import {
+  getReportFilterByReportType,
+  transformAccountsMapToFilterSequence,
+  transformAccountsToMap,
+} from '@/pages/api/v2/company/[companyId]/report/route_utils';
+import { ReportSheetType } from '@/constants/report';
+import BalanceSheetGenerator from '@/lib/utils/report/balance_sheet_generator';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { FinancialReport } from '@/interfaces/report';
+import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
+import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_generator';
 
 type APIResponse = object | null;
 
 export async function balanceSheetHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
+  companyId,
   startDate,
   endDate,
   language,
   /* eslint-enable @typescript-eslint/no-unused-vars */
 }: {
+  companyId: number;
   startDate: number;
   endDate: number;
   language: string;
-}) {
-  const statusMessage: string = STATUS_MESSAGE.SUCCESS_GET;
+}): Promise<{
+  statusMessage: string;
+  payload: FinancialReport | null;
+}> {
+  // ToDo: (20241016 - Murky) Need integration test
 
-  // ToDo: (20241007 - Murky) negative number need to be in brackets
-  // ToDo: (20241007 - Murky) Maybe IAccountReadyForFrontEnd need to have "string" version of percentage
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: FinancialReport | null = null;
 
-  const general: ReportObject = [
-    {
-      code: '11XX',
-      name: '流動資產合計',
-      curPeriodAmount: 2194032910,
-      curPeriodAmountString: '2,194,032,910',
-      curPeriodPercentage: 40,
-      curPeriodPercentageString: '40',
-      prePeriodAmount: 2052896744,
-      prePeriodAmountString: '2,052,896,744',
-      prePeriodPercentage: 41,
-      prePeriodPercentageString: '41',
-      indent: 3,
-      children: [],
-    },
-  ];
+  const company = await getCompanyById(companyId);
+  if (company) {
+    /**
+     * Info: (20241016 - Murky)
+     * @description
+     * Report filter is for reshaping output of Financial Report for front end needed
+     */
+    const reportFilter = getReportFilterByReportType(ReportSheetType.BALANCE_SHEET);
 
-  const detail: ReportObject = [
-    {
-      code: '1100',
-      name: '現金及約當現金',
-      curPeriodAmount: 20000,
-      curPeriodAmountString: '20,000',
-      curPeriodPercentage: 10,
-      curPeriodPercentageString: '10',
-      prePeriodAmount: 10000,
-      prePeriodAmountString: '10,000',
-      prePeriodPercentage: 5,
-      prePeriodPercentageString: '5',
-      indent: 3,
-      children: [
-        {
-          code: '1101',
-          name: '庫存現金',
-          curPeriodAmount: 10000,
-          curPeriodAmountString: '10,000',
-          curPeriodPercentage: 5,
-          curPeriodPercentageString: '5',
-          prePeriodAmount: 5000,
-          prePeriodAmountString: '5,000',
-          prePeriodPercentage: 2.5,
-          prePeriodPercentageString: '2.5',
-          indent: 4,
-          children: [],
-        },
-        {
-          code: '1102',
-          name: '零用金∕週轉金',
-          curPeriodAmount: 10000,
-          curPeriodAmountString: '10,000',
-          curPeriodPercentage: 5,
-          curPeriodPercentageString: '5',
-          prePeriodAmount: 5000,
-          prePeriodAmountString: '5,000',
-          prePeriodPercentage: 2.5,
-          prePeriodPercentageString: '2.5',
-          indent: 4,
-          children: [],
-        },
-      ],
-    },
-  ];
+    /**
+     * Info: (20241016 - Murky)
+     * @description the V1 (alpha) version of balance sheet generator
+     */
+    const balanceSheetGenerator = new BalanceSheetGenerator(companyId, 0, endDate);
 
-  const payload: ReportReturnType = {
-    general,
-    detail,
-  };
+    const { content } = await balanceSheetGenerator.generateReport();
 
+    /**
+     * Info: (20241016 - Murky)
+     * @description Extracted content from the generated balance sheet report.
+     * @property {IAccountReadyForFrontend[]} accounts - The accounts that match general mapping
+     * @property otherInfo - Additional information for graph display in report
+     */
+    const { content: accounts, otherInfo } = content;
+
+    const accountsMap = transformAccountsToMap(accounts);
+
+    const generalFilteredAccounts = transformAccountsMapToFilterSequence({
+      filter: reportFilter.general,
+      accountsMap,
+    });
+
+    const detailFilteredAccounts = transformAccountsMapToFilterSequence({
+      filter: reportFilter.detail,
+      accountsMap,
+    });
+
+    const curFrom = startDate;
+    const curTo = endDate;
+
+    const preFrom = getTimestampOfSameDateOfLastYear(curFrom);
+    const preTo = getTimestampOfSameDateOfLastYear(curTo);
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = {
+      company: {
+        id: company.id,
+        code: company.taxId,
+        name: company.name,
+      },
+      reportType: ReportSheetType.BALANCE_SHEET,
+      preDate: {
+        from: preFrom,
+        to: preTo,
+      },
+      curDate: {
+        from: curFrom,
+        to: curTo,
+      },
+      details: detailFilteredAccounts,
+      general: generalFilteredAccounts,
+      otherInfo,
+    };
+  }
   return {
     statusMessage,
     payload,
@@ -115,88 +119,89 @@ export async function balanceSheetHandler({
 export async function incomeStatementHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
+  companyId,
   startDate,
   endDate,
   language,
   /* eslint-enable @typescript-eslint/no-unused-vars */
 }: {
+  companyId: number;
   startDate: number;
   endDate: number;
   language: string;
-}) {
-  const statusMessage: string = STATUS_MESSAGE.SUCCESS_GET;
+}): Promise<{
+  statusMessage: string;
+  payload: FinancialReport | null;
+}> {
+  // ToDo: (20241016 - Murky) Need integration test
 
-  // ToDo: (20241007 - Murky) negative number need to be in brackets
-  // ToDo: (20241007 - Murky) Maybe IAccountReadyForFrontEnd need to have "string" version of percentage
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: FinancialReport | null = null;
 
-  const general: ReportObject = [
-    {
-      code: '5950',
-      name: '營業毛利（毛損）淨額流動',
-      curPeriodAmount: 2194032910,
-      curPeriodAmountString: '2,194,032,910',
-      curPeriodPercentage: 40,
-      curPeriodPercentageString: '40',
-      prePeriodAmount: 2052896744,
-      prePeriodAmountString: '2,052,896,744',
-      prePeriodPercentage: 41,
-      prePeriodPercentageString: '41',
-      indent: 3,
-      children: [],
-    },
-  ];
+  const company = await getCompanyById(companyId);
+  if (company) {
+    /**
+     * Info: (20241016 - Murky)
+     * @description
+     * Report filter is for reshaping output of Financial Report for front end needed
+     */
+    const reportFilter = getReportFilterByReportType(ReportSheetType.INCOME_STATEMENT);
 
-  const detail: ReportObject = [
-    {
-      code: '4110',
-      name: '銷貨收入',
-      curPeriodAmount: 20000,
-      curPeriodAmountString: '20,000',
-      curPeriodPercentage: 10,
-      curPeriodPercentageString: '10',
-      prePeriodAmount: 10000,
-      prePeriodAmountString: '10,000',
-      prePeriodPercentage: 5,
-      prePeriodPercentageString: '5',
-      indent: 3,
-      children: [
-        {
-          code: '4111',
-          name: '銷貨收入',
-          curPeriodAmount: 10000,
-          curPeriodAmountString: '10,000',
-          curPeriodPercentage: 5,
-          curPeriodPercentageString: '5',
-          prePeriodAmount: 5000,
-          prePeriodAmountString: '5,000',
-          prePeriodPercentage: 2.5,
-          prePeriodPercentageString: '2.5',
-          indent: 4,
-          children: [],
-        },
-        {
-          code: '4112',
-          name: '天然氣銷貨收入（天然氣業）',
-          curPeriodAmount: 10000,
-          curPeriodAmountString: '10,000',
-          curPeriodPercentage: 5,
-          curPeriodPercentageString: '5',
-          prePeriodAmount: 5000,
-          prePeriodAmountString: '5,000',
-          prePeriodPercentage: 2.5,
-          prePeriodPercentageString: '2.5',
-          indent: 4,
-          children: [],
-        },
-      ],
-    },
-  ];
+    /**
+     * Info: (20241016 - Murky)
+     * @description the V1 (alpha) version of income statement generator
+     */
+    const incomeStatementGenerator = new IncomeStatementGenerator(companyId, startDate, endDate);
 
-  const payload: ReportReturnType = {
-    general,
-    detail,
-  };
+    const { content } = await incomeStatementGenerator.generateReport();
 
+    /**
+     * Info: (20241016 - Murky)
+     * @description Extracted content from the generated income statement report.
+     * @property {IAccountReadyForFrontend[]} accounts - The accounts that match general mapping
+     * @property otherInfo - Additional information for graph display in report
+     */
+    const { content: accounts, otherInfo } = content;
+
+    const accountsMap = transformAccountsToMap(accounts);
+
+    const generalFilteredAccounts = transformAccountsMapToFilterSequence({
+      filter: reportFilter.general,
+      accountsMap,
+    });
+
+    const detailFilteredAccounts = transformAccountsMapToFilterSequence({
+      filter: reportFilter.detail,
+      accountsMap,
+    });
+
+    const curFrom = startDate;
+    const curTo = endDate;
+
+    const preFrom = getTimestampOfSameDateOfLastYear(curFrom);
+    const preTo = getTimestampOfSameDateOfLastYear(curTo);
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = {
+      company: {
+        id: company.id,
+        code: company.taxId,
+        name: company.name,
+      },
+      reportType: ReportSheetType.INCOME_STATEMENT,
+      preDate: {
+        from: preFrom,
+        to: preTo,
+      },
+      curDate: {
+        from: curFrom,
+        to: curTo,
+      },
+      details: detailFilteredAccounts,
+      general: generalFilteredAccounts,
+      otherInfo,
+    };
+  }
   return {
     statusMessage,
     payload,
@@ -206,59 +211,93 @@ export async function incomeStatementHandler({
 export async function cashFlowHandler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
+  companyId,
   startDate,
   endDate,
   language,
   /* eslint-enable @typescript-eslint/no-unused-vars */
 }: {
+  companyId: number;
   startDate: number;
   endDate: number;
   language: string;
-}) {
-  const statusMessage: string = STATUS_MESSAGE.SUCCESS_GET;
+}): Promise<{
+  statusMessage: string;
+  payload: FinancialReport | null;
+}> {
+  // ToDo: (20241016 - Murky) Need integration test
 
-  // ToDo: (20241007 - Murky) negative number need to be in brackets
-  // ToDo: (20241007 - Murky) Maybe IAccountReadyForFrontEnd need to have "string" version of percentage
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: FinancialReport | null = null;
 
-  const general: ReportObject = [
-    {
-      code: 'A200105950',
-      name: '收益費損項目合計',
-      curPeriodAmount: 2194032910,
-      curPeriodAmountString: '2,194,032,910',
-      curPeriodPercentage: 40,
-      curPeriodPercentageString: '40',
-      prePeriodAmount: 2052896744,
-      prePeriodAmountString: '2,052,896,744',
-      prePeriodPercentage: 41,
-      prePeriodPercentageString: '41',
-      indent: 3,
-      children: [],
-    },
-  ];
+  const company = await getCompanyById(companyId);
+  if (company) {
+    /**
+     * Info: (20241016 - Murky)
+     * @description
+     * Report filter is for reshaping output of Financial Report for front end needed
+     */
+    const reportFilter = getReportFilterByReportType(ReportSheetType.CASH_FLOW_STATEMENT);
 
-  const detail: ReportObject = [
-    {
-      code: '4110',
-      name: '銷貨收入',
-      curPeriodAmount: 20000,
-      curPeriodAmountString: '20,000',
-      curPeriodPercentage: 10,
-      curPeriodPercentageString: '10',
-      prePeriodAmount: 10000,
-      prePeriodAmountString: '10,000',
-      prePeriodPercentage: 5,
-      prePeriodPercentageString: '5',
-      indent: 3,
-      children: [],
-    },
-  ];
+    /**
+     * Info: (20241016 - Murky)
+     * @description the V1 (alpha) version of cash flow generator
+     */
+    const cashFlowGenerator = await CashFlowStatementGenerator.createInstance(
+      companyId,
+      startDate,
+      endDate
+    );
 
-  const payload: ReportReturnType = {
-    general,
-    detail,
-  };
+    const { content } = await cashFlowGenerator.generateReport();
 
+    /**
+     * Info: (20241016 - Murky)
+     * @description Extracted content from the generated cash flow report.
+     * @property {IAccountReadyForFrontend[]} accounts - The accounts that match general mapping
+     * @property otherInfo - Additional information for graph display in report
+     */
+    const { content: accounts, otherInfo } = content;
+
+    const accountsMap = transformAccountsToMap(accounts);
+
+    const generalFilteredAccounts = transformAccountsMapToFilterSequence({
+      filter: reportFilter.general,
+      accountsMap,
+    });
+
+    const detailFilteredAccounts = transformAccountsMapToFilterSequence({
+      filter: reportFilter.detail,
+      accountsMap,
+    });
+
+    const curFrom = startDate;
+    const curTo = endDate;
+
+    const preFrom = getTimestampOfSameDateOfLastYear(curFrom);
+    const preTo = getTimestampOfSameDateOfLastYear(curTo);
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = {
+      company: {
+        id: company.id,
+        code: company.taxId,
+        name: company.name,
+      },
+      reportType: ReportSheetType.INCOME_STATEMENT,
+      preDate: {
+        from: preFrom,
+        to: preTo,
+      },
+      curDate: {
+        from: curFrom,
+        to: curTo,
+      },
+      details: detailFilteredAccounts,
+      general: generalFilteredAccounts,
+      otherInfo,
+    };
+  }
   return {
     statusMessage,
     payload,
@@ -268,15 +307,21 @@ export async function cashFlowHandler({
 export async function report401Handler({
   // ToDo: (20241007 - Murky) Use these param in function
   /* eslint-disable @typescript-eslint/no-unused-vars */
+  companyId,
   startDate,
   endDate,
   language,
   /* eslint-enable @typescript-eslint/no-unused-vars */
 }: {
+  companyId: number;
   startDate: number;
   endDate: number;
   language: string;
-}) {
+}): Promise<{
+  statusMessage: string;
+  payload: FinancialReport | null;
+}> {
+  // ToDo: (20241016 - Murky) Need to implement this
   const statusMessage: string = STATUS_MESSAGE.SUCCESS_UPDATE;
   const payload = null;
   return {
@@ -287,14 +332,16 @@ export async function report401Handler({
 
 type ReportHandlers = {
   [K in FinancialReportTypesKey]: ({
+    companyId,
     startDate,
     endDate,
     language,
   }: {
+    companyId: number;
     startDate: number;
     endDate: number;
     language: string;
-  }) => Promise<{ statusMessage: string; payload: ReportReturnType }>;
+  }) => Promise<{ statusMessage: string; payload: FinancialReport | null }>;
 };
 
 const reportHandlers: ReportHandlers = {
@@ -309,7 +356,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   let payload: object | null = null;
 
   const session = await getSession(req, res);
-  const { userId } = session;
+  const { userId, companyId } = session;
 
   // ToDo: (20240924 - Murky) We need to check auth
   const { query } = validateRequest(APIName.REPORT_GET_V2, req, userId);
@@ -320,6 +367,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
     const reportHandler = reportHandlers[reportType];
 
     ({ payload, statusMessage } = await reportHandler({
+      companyId,
       startDate,
       endDate,
       language,

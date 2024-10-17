@@ -17,7 +17,7 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: U | null = null;
   const session = await getSession(req, res);
-  const { userId, companyId } = session;
+  const { userId } = session;
   try {
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
@@ -27,8 +27,8 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
         'User ID is missing in session'
       );
     } else {
-      // ToDo: (20241015 - Jacky) Add role check by roleId for the user
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+      // ToDo: (20241015 - Jacky) Add role and company check by roleId for the user
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
       if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
         loggerError(
