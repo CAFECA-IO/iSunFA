@@ -940,7 +940,7 @@ describe('company/[companyId]/report', () => {
         language: 'zh',
         reportType: FinancialReportTypesKey.balance_sheet,
       };
-      req.body = {};
+      req.body = undefined;
 
       const { payload, statusMessage } = await handleGetRequest(req, res);
 

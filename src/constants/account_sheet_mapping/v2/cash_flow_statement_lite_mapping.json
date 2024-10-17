@@ -468,21 +468,6 @@
       "indent": 1
     },
     {
-      "code": "A33100",
-      "name": "收取之利息",
-      "indent": 1
-    },
-    {
-      "code": "A33200",
-      "name": "收取之股利",
-      "indent": 1
-    },
-    {
-      "code": "A33300",
-      "name": "支付之利息",
-      "indent": 1
-    },
-    {
       "code": "A33400",
       "name": "支付之股利",
       "indent": 1

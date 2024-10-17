@@ -676,6 +676,24 @@ export async function handlePrismaSavingLogic(
         formattedInvoice.date,
         eventType
       );
+      if (createdInvoice.certificateId !== 555) {
+        await prisma.voucherCertificate.create({
+          data: {
+            voucher: {
+              connect: {
+                id: createdVoucher.id,
+              },
+            },
+            certificate: {
+              connect: {
+                id: createdInvoice.certificateId,
+              },
+            },
+            createdAt: createdInvoice.createdAt,
+            updatedAt: createdInvoice.updatedAt,
+          },
+        });
+      }
 
       await createInvoiceVoucherJournal(
         journalIdBeCreated,
