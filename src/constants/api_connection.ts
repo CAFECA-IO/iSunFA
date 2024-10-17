@@ -87,9 +87,14 @@ export enum APIName {
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
   COMPANY_DELETE = 'COMPANY_DELETE',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
+  ROLE_LIST = 'ROLE_LIST',
+  CREATE_ROLE = 'CREATE_ROLE',
+  ROLE_SELECT = 'ROLE_SELECT',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
   ROLE_UPDATE = 'ROLE_UPDATE',
+  NEWS_LIST = 'NEWS_LIST',
+  CREATE_NEWS = 'CREATE_NEWS',
   KYC_UPLOAD = 'KYC_UPLOAD',
   ACCOUNT_GET_BY_ID = 'ACCOUNT_GET_BY_ID',
   CREATE_NEW_SUB_ACCOUNT = 'CREATE_NEW_SUB_ACCOUNT',
@@ -106,6 +111,7 @@ export enum APIName {
   PUSHER = 'PUSHER',
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
+  ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
 }
 
 export enum APIPath {
@@ -172,9 +178,14 @@ export enum APIPath {
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
   COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
+  ROLE_LIST = `${apiPrefixV2}/company/:companyId/role`,
+  CREATE_ROLE = `${apiPrefixV2}/company/:companyId/role`,
+  ROLE_SELECT = `${apiPrefixV2}/company/:companyId/role/select`,
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
+  NEWS_LIST = `${apiPrefix}/news`,
+  CREATE_NEWS = `${apiPrefix}/news`,
   KYC_UPLOAD = `${apiPrefix}/company/:companyId/kyc`,
   ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   CREATE_NEW_SUB_ACCOUNT = `${apiPrefix}/company/:companyId/account`,
@@ -191,6 +202,7 @@ export enum APIPath {
   PUSHER = `${apiPrefixV2}/pusher`,
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
+  ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
 }
 const createConfig = ({
   name,
@@ -467,6 +479,21 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ROLE_GET_BY_ID,
   }),
+  [APIName.ROLE_LIST]: createConfig({
+    name: APIName.ROLE_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.ROLE_LIST,
+  }),
+  [APIName.CREATE_ROLE]: createConfig({
+    name: APIName.CREATE_ROLE,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_ROLE,
+  }),
+  [APIName.ROLE_SELECT]: createConfig({
+    name: APIName.ROLE_SELECT,
+    method: HttpMethod.PUT,
+    path: APIPath.ROLE_SELECT,
+  }),
   [APIName.ROLE_DELETE]: createConfig({
     name: APIName.ROLE_DELETE,
     method: HttpMethod.DELETE,
@@ -476,6 +503,16 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ROLE_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.ROLE_UPDATE,
+  }),
+  [APIName.NEWS_LIST]: createConfig({
+    name: APIName.NEWS_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.NEWS_LIST,
+  }),
+  [APIName.CREATE_NEWS]: createConfig({
+    name: APIName.CREATE_NEWS,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_NEWS,
   }),
   [APIName.KYC_UPLOAD]: createConfig({
     name: APIName.KYC_UPLOAD,
@@ -565,5 +602,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REPORT_GET_V2,
     method: HttpMethod.GET,
     path: APIPath.REPORT_GET_V2,
+  }),
+  [APIName.ASSET_GET_BY_ID_V2]: createConfig({
+    name: APIName.ASSET_GET_BY_ID_V2,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_GET_BY_ID_V2,
   }),
 };

@@ -52,9 +52,14 @@ export type IAPIName =
   | 'COMPANY_GET_BY_ID'
   | 'COMPANY_DELETE'
   | 'COMPANY_UPDATE'
+  | 'ROLE_LIST'
+  | 'CREATE_ROLE'
+  | 'ROLE_SELECT'
   | 'ROLE_GET_BY_ID'
   | 'ROLE_DELETE'
   | 'ROLE_UPDATE'
+  | 'NEWS_LIST'
+  | 'CREATE_NEWS'
   | 'KYC_UPLOAD'
   | 'ACCOUNT_GET_BY_ID'
   | 'CREATE_NEW_SUB_ACCOUNT'
@@ -70,7 +75,8 @@ export type IAPIName =
   | 'PUSHER'
   | 'ENCRYPT'
   | 'DECRYPT'
-  | 'VOUCHER_GET_BY_ID_V2';
+  | 'VOUCHER_GET_BY_ID_V2'
+  | 'ASSET_GET_BY_ID_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
