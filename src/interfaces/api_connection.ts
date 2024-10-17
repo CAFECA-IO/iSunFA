@@ -76,7 +76,8 @@ export type IAPIName =
   | 'ENCRYPT'
   | 'DECRYPT'
   | 'VOUCHER_GET_BY_ID_V2'
-  | 'ASSET_GET_BY_ID_V2';
+  | 'ASSET_GET_BY_ID_V2'
+  | 'TRIAL_BALANCE_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
