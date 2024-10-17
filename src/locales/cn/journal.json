@@ -225,7 +225,8 @@
     "VOUCHER_NUMBER": "传票号码",
     "EXPORT_BTN": "汇出",
     "FROM_PLACEHOLDER": "从",
-    "TO_PLACEHOLDER": "到"
+    "TO_PLACEHOLDER": "到",
+    "NO_VOUCHER": "无传票资料"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",

@@ -615,4 +615,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ASK_AI_V2,
   }),
+  [APIName.VOUCHER_LIST_V2]: createConfig({
+    name: APIName.VOUCHER_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_LIST_V2,
+  }),
 };

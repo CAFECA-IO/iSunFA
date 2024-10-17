@@ -77,7 +77,8 @@ export type IAPIName =
   | 'DECRYPT'
   | 'VOUCHER_GET_BY_ID_V2'
   | 'ASSET_GET_BY_ID_V2'
-  | 'ASK_AI_V2';
+  | 'ASK_AI_V2'
+  | 'VOUCHER_LIST_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
