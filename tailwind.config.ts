@@ -9,6 +9,7 @@ module.exports = {
       scale: {
         80: '0.8',
         90: '0.9',
+        flip: '-1',
       },
       aspectRatio: {
         '1/1': '1 / 1',

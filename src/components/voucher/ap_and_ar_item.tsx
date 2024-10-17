@@ -23,7 +23,11 @@ const APandARItem: React.FC = () => {
   const remainAmount = 500000;
   const reverse = '240417-001';
 
-  const displayedDate = <CalendarIcon timestamp={date} />;
+  const displayedDate = (
+    <div className="flex items-center justify-center">
+      <CalendarIcon timestamp={date} />
+    </div>
+  );
 
   const displayedVoucherNo =
     voucherType === VoucherType.EXPENSE ? (

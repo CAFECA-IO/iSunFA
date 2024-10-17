@@ -101,7 +101,7 @@ const SideMenu = () => {
   return (
     <div className="bg-surface-neutral-main-background">
       {isSideMenuOpen ? (
-        <section className="relative flex h-screen w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
+        <section className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
           {/* Side Menu Icon */}
           <div>
             <button type="button" onClick={toggleSideMenu} className="p-10px">
@@ -226,7 +226,7 @@ const SideMenu = () => {
           </div>
         </section>
       ) : (
-        <section className="w-66px flex-none px-12px py-32px">
+        <section className="h-full w-66px flex-none px-12px py-32px">
           <button type="button" onClick={toggleSideMenu} className="p-10px">
             <FiLayout size={24} />
           </button>

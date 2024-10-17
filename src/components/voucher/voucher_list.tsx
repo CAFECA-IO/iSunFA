@@ -9,15 +9,16 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { IVoucherBeta, dummyVoucherList } from '@/interfaces/voucher';
+import { IVoucherBeta } from '@/interfaces/voucher';
 
-const VoucherList: React.FC = () => {
+interface IVoucherListProps {
+  voucherList: IVoucherBeta[];
+}
+
+const VoucherList: React.FC<IVoucherListProps> = ({ voucherList }) => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  // ToDo: (20240927 - Julian) data filter
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>(dummyVoucherList);
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
@@ -135,6 +136,9 @@ const VoucherList: React.FC = () => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
         <div className="table-row-group">{displayedVoucherList}</div>
+
+        {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
+        <div className="table-footer-group h-20px border-t bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary"></div>
       </div>
 
       {/* Info: (20240920 - Julian) Pagination */}
