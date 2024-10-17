@@ -811,7 +811,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {reportFinancial && reportFinancial.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -821,7 +822,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {reportFinancial && reportFinancial.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate}
+                    <br/>至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -967,7 +969,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {reportFinancial && reportFinancial.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}至{formattedCurToDate}
+                    {formattedCurFromDate}
+                    <br />至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -977,7 +980,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {reportFinancial && reportFinancial.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate}
+                    <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>

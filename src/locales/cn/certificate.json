@@ -1,0 +1,88 @@
+{
+  "LIST": {
+    "INVOICE_TOTAL_PRRICE": "发票总价",
+    "EXPORT_CERTIFICATES": "导出发票"
+  },
+  "TAB": {
+    "WITHOUT_VOUCHER": "无凭证的发票",
+    "WITH_VOUCHER": "有凭证的发票"
+  },
+  "TABLE": {
+    "DATE": "日期",
+    "INVOICE_NAME": "发票名称",
+    "INVOICE_NUMBER": "发票编号",
+    "COUNTERPARTY": "交易对象",
+    "INVOICE_TYPE": "发票类型",
+    "TAX": "税额",
+    "AMOUNT": "金额",
+    "DEDUCTABLE": "可抵扣税额",
+    "UPLOADER": "上传者",
+    "VOUCHER_NUMBER": "凭证编号"
+  },
+  "PAUSE": {
+    "TITLE": "您确定要取消上传吗？",
+    "CONTENT": "您确定要取消上传",
+    "YES": "是，取消上传",
+    "NO": "否，继续上传"
+  },
+  "DELETE": {
+    "TITLE": "您真的想删除这些发票吗？",
+    "CONTENT": "您确定要删除吗？",
+    "CONTENT_DELETE_MORE": "您确定要删除{{count}}个发票吗？",
+    "YES": "是，删除发票",
+    "NO": "取消",
+    "SUCCESS": "凭证已被删除。",
+    "ERROR": "出错了，请再试一次。"
+  },
+  "ERROR": {
+    "SELECT_CERTIFICATE": "选择发票失败",
+    "UPLOAD_CERTIFICATE": "上传发票失败",
+    "TOKEN_NOT_PROVIDED": "未提供令牌",
+    "NOTIFY_WEB": "通知网页失败",
+    "WENT_WRONG": "出错了，请再试一次。",
+    "UPLOAD_AND_NOTIFY": "上传并通知网页失败"
+  },
+  "WARNING": {
+    "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "发票已上传，但通知网页失败"
+  },
+  "TITLE": {
+    "UPLOAD": "上传发票",
+    "SELECT": "选择一个或多个发票",
+    "LIST": "发票列表"
+  },
+  "EDIT": {
+    "HEADER": "发票信息",
+    "TYPE": "进项/销项",
+    "DATE": "发票日期",
+    "INPUT": "进项",
+    "OUTPUT": "销项",
+    "INVOICE_NAME": "发票名称",
+    "INVOICE_NUMBER": "发票编号",
+    "PRICE_BEFORE_TAX": "税前价格",
+    "TAX": "税额",
+    "TAXABLE": "应税金额",
+    "TOTAL_PRICE": "总价（含税）",
+    "COUNTERPARTY": "交易对象（客户/供应商）",
+    "INVOICE_TYPE": "发票类型",
+    "DEDUCTABLE": "可抵扣税额",
+    "SUCCESS": "您的发票信息已更新。"
+  },
+  "COUNTERPARTY": {
+    "ADD_NEW": "新增客户/供应商",
+    "BOTH": "客户/供应商",
+    "CLIENT": "客户",
+    "SUPPLIER": "供应商",
+    "TITLE": "将此交易对象新增至客户/供应商列表",
+    "CONTENT": "{{counterparty}}不在您的客户/供应商列表中。您要将其新增吗？",
+    "YES": "是，新增",
+    "NO": "否，取消",
+    "SUCCESS": "新的客户/供应商已新增。",
+    "COMPANY_NAME": "公司名称",
+    "ENTER_NAME": "输入名称",
+    "TAX_NUMBER": "营业税号",
+    "ENTER_NUMBER": "输入编号",
+    "PARTNER_TYPE": "合作伙伴类型",
+    "NOTE": "备注",
+    "ENTER_TEXT": "输入文字"
+  }
+}

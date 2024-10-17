@@ -24,6 +24,8 @@ import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
 
+  private endSecondOfLastYear: number;
+
   private incomeStatementGenerator: IncomeStatementGenerator;
 
   private incomeStatementGeneratorFromTimeZeroToBeginOfYear: IncomeStatementGenerator;
@@ -34,8 +36,8 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
 
-    this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(startDateInSecond);
-
+    this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(endDateInSecond);
+    this.endSecondOfLastYear = this.startSecondOfYear - 1;
     this.incomeStatementGenerator = new IncomeStatementGenerator(
       companyId,
       startDateInSecond,
@@ -46,7 +48,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     this.incomeStatementGeneratorFromTimeZeroToBeginOfYear = new IncomeStatementGenerator(
       companyId,
       0,
-      this.startSecondOfYear
+      this.endSecondOfLastYear
     );
 
     // Info: (20241011 - Murky) For NetIncome

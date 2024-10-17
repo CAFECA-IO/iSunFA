@@ -86,8 +86,10 @@ const BalanceSheetList = () => {
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   // Info: (20241001 - Anna) 管理表格摺疊狀態(細項分類格式)
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
-  // Info: (20241003 - Anna) 管理表格摺疊狀態(展開組成科目)
-  const [isSubAccountsCollapsed, setIsSubAccountsCollapsed] = useState(true);
+  // Info: (20241017 - Anna) 管理表格摺疊狀態(某個項目的展開組成科目)
+  const [isSubAccountsCollapsed, setIsSubAccountsCollapsed] = useState<{ [key: string]: boolean }>(
+    {}
+  );
 
   // Info: (20241001 - Anna) 切換摺疊狀態(項目彙總格式)
   const toggleSummaryTable = () => {
@@ -97,9 +99,12 @@ const BalanceSheetList = () => {
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  // Info: (20241001 - Anna) 切換摺疊狀態(展開組成科目)
-  const toggleSubAccounts = () => {
-    setIsSubAccountsCollapsed(!isSubAccountsCollapsed);
+  // Info: (20241017 - Anna) 切換摺疊狀態(某個項目的展開組成科目)
+  const toggleSubAccounts = (code: string) => {
+    setIsSubAccountsCollapsed((prevState) => ({
+      ...prevState,
+      [code]: !prevState[code],
+    }));
   };
 
   useEffect(() => {
@@ -143,6 +148,19 @@ const BalanceSheetList = () => {
       setPreDate(previousDateString.date);
       setCurYear(currentYear);
       setPreYear(previousYear);
+    }
+  }, [reportFinancial]);
+
+  useEffect(() => {
+    if (reportFinancial && reportFinancial.details) {
+      const initialCollapseState: { [key: string]: boolean } = reportFinancial.details.reduce(
+        (acc, item) => {
+          acc[item.code] = true; // Info: (20241017 - Anna) 預設每個項目的展開狀態為摺疊
+          return acc;
+        },
+        {} as { [key: string]: boolean }
+      );
+      setIsSubAccountsCollapsed(initialCollapseState);
     }
   }, [reportFinancial]);
 
@@ -374,8 +392,10 @@ const BalanceSheetList = () => {
             <td className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm">
               {item.name}
               <CollapseButton
-                onClick={toggleSubAccounts}
-                isCollapsed={isSubAccountsCollapsed}
+                // Info: (20241017 - Anna) 指定 item 的 code 作為參數
+                onClick={() => toggleSubAccounts(item.code)}
+                // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
+                isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
                 buttonType="orange"
               />
             </td>
@@ -393,7 +413,7 @@ const BalanceSheetList = () => {
             </td>
           </tr>
           {/* Info: (20241003 - Anna) 如果展開，新增一行表格 */}
-          {!isSubAccountsCollapsed && (
+          {!isSubAccountsCollapsed[item.code] && (
             <tr key={`sub-accounts-${item.code}`}>
               <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
               <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">

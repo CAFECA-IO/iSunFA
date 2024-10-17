@@ -196,10 +196,10 @@ const BalanceDetailsButton: React.FC = () => {
                     <div className={`${tableCellStyles} border-r`}>{t('common:COMMON.TYPE')}</div>
                     <div className={`${tableCellStyles} border-r`}>{t('journal:VOUCHER.NOTE')}</div>
                     <div className={`${tableCellStyles} border-r`}>
-                      {t('journal:VOUCHER.CREDIT')}
+                      {t('journal:JOURNAL.CREDIT')}
                     </div>
                     <div className={`${tableCellStyles} border-r`}>
-                      {t('journal:VOUCHER.DEBIT')}
+                      {t('journal:JOURNAL.DEBIT')}
                     </div>
                     <div className={tableCellStyles}>
                       {t('journal:VOUCHER.VOUCHER_NO')} & {t('journal:VOUCHER.ISSUER')}

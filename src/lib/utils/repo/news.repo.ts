@@ -35,7 +35,7 @@ export async function listNews(
   type: NewsType = NewsType.FINANCIAL,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
-  sortOrder: SortOrder = SortOrder.DESC,
+  sortOrder: SortOrder = SortOrder.ASC,
   sortBy: SortBy = SortBy.CREATED_AT,
   startDateInSecond?: number,
   endDateInSecond?: number,

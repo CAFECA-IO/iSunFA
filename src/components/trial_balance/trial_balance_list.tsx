@@ -54,7 +54,6 @@ const TrialBalanceList = () => {
   return (
     <div className="flex flex-col">
       {displayedSelectArea}
-
       <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
@@ -110,7 +109,7 @@ const TrialBalanceList = () => {
             </div>
 
             <div
-              className={`table-cell w-77px bg-support-pink-100 ${tableCellStyles} ${sideBorderStyles}`}
+              className={`table-cell w-77px bg-support-pink-100 ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')}`}
             >
               {t('common:COMMON.ENDING')}
               {displayedCredit}
@@ -120,17 +119,15 @@ const TrialBalanceList = () => {
 
         <div className="table-row-group text-sm">{displayedVoucherList}</div>
       </div>
-
       <div className="h-px w-full bg-neutral-100"></div>
-
       {/* Anna複製主表格 */}
-      <div className="mb-10 mt-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`col-span-3 table-cell h-full ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+              className={`w-452px col-span-3 table-cell h-full ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
             >
-              {t('journal:ADD_ASSET_MODAL.TOTAL')}
+              {t('report_401:TAX_REPORT.TOTAL')}
             </div>
 
             <div
@@ -164,7 +161,7 @@ const TrialBalanceList = () => {
             </div>
 
             <div
-              className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles}`}
+              className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')}`}
             >
               {formatNumber(TrialBalanceData.total.endingCreditAmount)}
             </div>
@@ -172,7 +169,6 @@ const TrialBalanceList = () => {
         </div>
       </div>
       {/* Anna複製主表格結束 */}
-
       <div className="mx-auto">
         <Pagination
           currentPage={currentPage}

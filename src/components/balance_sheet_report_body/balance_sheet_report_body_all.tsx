@@ -13,7 +13,6 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import CollapseButton from '@/components/button/collapse_button';
-import BalanceDetailsButton from '@/components/button/balance_details_button';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -74,24 +73,16 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
 
-  // Info: (20241001 - Anna) 管理表格摺疊狀態(項目彙總格式)
+  // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
-  // Info: (20241001 - Anna) 管理表格摺疊狀態(細項分類格式)
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
-  // Info: (20241003 - Anna) 管理表格摺疊狀態(展開組成科目)
-  const [isSubAccountsCollapsed, setIsSubAccountsCollapsed] = useState(true);
-
-  // Info: (20241001 - Anna) 切換摺疊狀態(項目彙總格式)
+  // Info: (20241001 - Anna) 切換摺疊狀態
   const toggleSummaryTable = () => {
     setIsSummaryCollapsed(!isSummaryCollapsed);
   };
-  // Info: (20241001 - Anna) 切換摺疊狀態(細項分類格式)
+
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
-  };
-  // Info: (20241001 - Anna) 切換摺疊狀態(展開組成科目)
-  const toggleSubAccounts = () => {
-    setIsSubAccountsCollapsed(!isSubAccountsCollapsed);
   };
 
   useEffect(() => {
@@ -357,58 +348,23 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        <React.Fragment key={item.code}>
-          {/* Info: (20240723 - Shirley) it's ok to use index in the static data */}
-          <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
-              {item.code}
-            </td>
-            <td className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm">
-              {item.name}
-              <CollapseButton
-                onClick={toggleSubAccounts}
-                isCollapsed={isSubAccountsCollapsed}
-                buttonType="orange"
-              />
-            </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-              {item.curPeriodAmountString}
-            </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-              {item.curPeriodPercentage}
-            </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-              {item.prePeriodAmountString}
-            </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-              {item.prePeriodPercentage}
-            </td>
-          </tr>
-          {/* Info: (20241003 - Anna) 如果展開，新增一行表格 */}
-          {!isSubAccountsCollapsed && (
-            <tr key={`sub-accounts-${item.code}`}>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
-              <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">
-                <div className="flex w-full items-center justify-between">
-                  <span>110001 透過損益按公允價值衡量之⾦融資產－流動</span>
-                  <BalanceDetailsButton />
-                </div>
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                924,636
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                -
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                924,636
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                -
-              </td>
-            </tr>
-          )}
-        </React.Fragment>
+        // Info: (20240723 - Shirley) it's ok to use index in the static data
+        <tr key={item.code}>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+            {item.curPeriodPercentage}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+            {item.prePeriodPercentage}
+          </td>
+        </tr>
       );
     });
     return rows;
@@ -685,11 +641,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>一、項目彙總格式</p>
-            <CollapseButton
-              onClick={toggleSummaryTable}
-              isCollapsed={isSummaryCollapsed}
-              buttonType="default"
-            />
+            <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p>單位：新台幣元</p>
         </div>
@@ -703,13 +655,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   會計項目
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {preDate}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -759,13 +711,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {curDate}
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                {curDate}{' '}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -795,11 +747,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>二、細項分類格式</p>
-            <CollapseButton
-              onClick={toggleDetailTable}
-              isCollapsed={isDetailCollapsed}
-              buttonType="default"
-            />
+            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p>單位：新台幣元</p>
         </div>
@@ -813,13 +761,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                   會計項目
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {curDate}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                   %
                 </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                   {preDate}
                 </th>
                 <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -871,13 +819,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -928,13 +876,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -985,13 +933,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
@@ -1042,13 +990,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -1099,13 +1047,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
@@ -1213,13 +1161,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
                 會計項目
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
               </th>
-              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
+              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">

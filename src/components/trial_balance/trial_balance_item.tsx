@@ -117,7 +117,7 @@ const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => 
       </div>
       {/* Info: (20241009 - Anna) Ending Credit */}
       <div
-        className={`table-cell h-full w-77px border-r border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+        className={`table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600 ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')} ${sideBorderStyles.replace('border-r', '')}`}
       >
         {displayedEndingCreditAmount}
       </div>

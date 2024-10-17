@@ -234,6 +234,8 @@
   },
   "COMMON": {
     "OF": "之",
+    "TOTAL": "总共",
+    "DOCUMENT": "文件",
     "ISUNFA_TRIAL_VERSION": "iSunFA 试用版",
     "END_OF_TRIAL": "试用结束",
     "NEWEST": "最新的",
@@ -407,5 +409,17 @@
     "TITLE": "iSunFA",
     "DESCRIPTION": "融合区块链会计与人工智能审计的先进会计解决方案",
     "KEYWORDS": "iSunFA, 区块链, AI, 法务, 会计, 审计"
+  },
+  "FILTER_SECTION_TYPE": {
+      "TYPE": "类型",
+      "ALL": "全部",
+      "INVOICE": "发票",
+      "RECEIPT": "收据"
+  },
+  "SELECTION": {
+    "EXPORT": "导出",
+    "CERTIFICATES": "证书",
+    "ADD_NEW_VOUCHER": "新增传票",
+    "ADD_NEW_ASSET": "新增资产"
   }
 }

@@ -10,7 +10,7 @@ import {
 } from '@/lib/utils/formatter/admin.formatter';
 import {
   createCompanyAndRole,
-  getCompanyAndRoleByCompanyCode,
+  getCompanyAndRoleByTaxId,
   listCompanyAndRole,
 } from '@/lib/utils/repo/admin.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -41,8 +41,8 @@ async function handleGetRequest(
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
     } else {
-      const listedCompanyAndRole = await listCompanyAndRole(userId);
-      const companyAndRoleList = await formatCompanyAndRoleList(listedCompanyAndRole);
+      const paginatedCompanyAndRole = await listCompanyAndRole(userId);
+      const companyAndRoleList = formatCompanyAndRoleList(paginatedCompanyAndRole.data);
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
       payload = companyAndRoleList;
     }
@@ -75,7 +75,7 @@ async function handlePostRequest(
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
         // Info: (20240902 - Jacky) Check if company already exist in database
-        const getCompanyAndRole = await getCompanyAndRoleByCompanyCode(userId, code);
+        const getCompanyAndRole = await getCompanyAndRoleByTaxId(userId, code);
 
         if (getCompanyAndRole) {
           statusMessage = STATUS_MESSAGE.DUPLICATE_COMPANY;
