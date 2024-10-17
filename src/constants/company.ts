@@ -5,3 +5,8 @@ export enum CompanyTag {
   FINANCIAL = 'Financial',
   TAX = 'Tax',
 }
+
+export enum CompanyUpdateAction {
+  SET_TO_TOP = 'setToTop',
+  UPDATE_TAG = 'updateTag',
+}

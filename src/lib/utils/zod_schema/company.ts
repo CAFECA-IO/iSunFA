@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { CompanyTag } from '@/constants/company';
+import { CompanyTag, CompanyUpdateAction } from '@/constants/company';
 
 // Info: (20241016 - Jacky) Company list validator
 const companyListQueryValidator = z.object({
@@ -33,6 +33,51 @@ export const companyPostValidator: IZodValidator<
 > = {
   query: companyPostQueryValidator,
   body: companyPostBodyValidator,
+};
+
+// Info: (20241016 - Jacky) Company get validator
+const companyGetByIdQueryValidator = z.object({
+  companyId: z.number().int(),
+});
+const companyGetByIdBodyValidator = z.object({});
+
+export const companyGetByIdValidator: IZodValidator<
+  (typeof companyGetByIdQueryValidator)['shape'],
+  (typeof companyGetByIdBodyValidator)['shape']
+> = {
+  query: companyGetByIdQueryValidator,
+  body: companyGetByIdBodyValidator,
+};
+
+// Info: (20241016 - Jacky) Company put validator
+const companyPutQueryValidator = z.object({
+  companyId: z.number().int(),
+});
+const companyPutBodyValidator = z.object({
+  action: z.nativeEnum(CompanyUpdateAction),
+  tag: z.nativeEnum(CompanyTag).optional(),
+});
+
+export const companyPutValidator: IZodValidator<
+  (typeof companyPutQueryValidator)['shape'],
+  (typeof companyPutBodyValidator)['shape']
+> = {
+  query: companyPutQueryValidator,
+  body: companyPutBodyValidator,
+};
+
+// Info: (20241016 - Jacky) Company delete validator
+const companyDeleteQueryValidator = z.object({
+  companyId: z.number().int(),
+});
+const companyDeleteBodyValidator = z.object({});
+
+export const companyDeleteValidator: IZodValidator<
+  (typeof companyDeleteQueryValidator)['shape'],
+  (typeof companyDeleteBodyValidator)['shape']
+> = {
+  query: companyDeleteQueryValidator,
+  body: companyDeleteBodyValidator,
 };
 
 // Info: (20241015 - Jacky) Company select validator

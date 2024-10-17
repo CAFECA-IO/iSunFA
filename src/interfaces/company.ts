@@ -16,7 +16,12 @@ export interface ICompanyDetail extends ICompany {
   kycStatusDetail: string;
 }
 
-export interface ICompanyAndRole {
+export interface ICompanyAndRoleDetail {
   company: ICompanyDetail;
+  role: IRole;
+}
+
+export interface ICompanyAndRole {
+  company: ICompany;
   role: IRole;
 }

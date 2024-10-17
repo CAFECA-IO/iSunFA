@@ -123,7 +123,6 @@ export enum APIPath {
   USER_GET_BY_ID = `${apiPrefix}/user/:userId`,
   USER_UPDATE = `${apiPrefix}/user/:userId`,
   COMPANY_LIST = `${apiPrefix}/company`,
-  COMPANY_GET = `${apiPrefix}/company/:companyId`,
   COMPANY_ADD = `${apiPrefix}/company`,
   COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
   COMPANY_SELECT = `${apiPrefix}/company/:companyId/select`,
@@ -330,11 +329,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.COMPANY_LIST,
     method: HttpMethod.GET,
     path: APIPath.COMPANY_LIST,
-  }),
-  COMPANY_GET: createConfig({
-    name: APIName.COMPANY_GET,
-    method: HttpMethod.GET,
-    path: APIPath.COMPANY_GET,
   }),
   COMPANY_ADD: createConfig({
     name: APIName.COMPANY_ADD,

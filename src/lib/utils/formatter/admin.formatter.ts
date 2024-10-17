@@ -1,6 +1,6 @@
 import { IAdmin } from '@/interfaces/admin';
 import { Admin, Company, CompanyKYC, Role, User, UserAgreement, File } from '@prisma/client';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { ICompany, ICompanyAndRoleDetail } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
@@ -75,7 +75,7 @@ export function formatCompanyDetailAndRole(companyDetailAndRole: {
     imageFile: File | null;
   };
   role: Role;
-}): ICompanyAndRole {
+}): ICompanyAndRoleDetail {
   const formattedCompany = formatCompanyDetail(companyDetailAndRole.company);
   const formattedRole = companyDetailAndRole.role;
   return { company: formattedCompany, role: formattedRole };

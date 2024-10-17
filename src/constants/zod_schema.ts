@@ -8,8 +8,11 @@ import {
   certificatePutValidator,
 } from '@/lib/utils/zod_schema/certificate';
 import {
+  companyDeleteValidator,
+  companyGetByIdValidator,
   companyListValidator,
   companyPostValidator,
+  companyPutValidator,
   companySelectValidator,
 } from '@/lib/utils/zod_schema/company';
 import {
@@ -86,6 +89,9 @@ export const API_ZOD_SCHEMA = {
   [APIName.COMPANY_LIST]: companyListValidator,
   [APIName.COMPANY_ADD]: companyPostValidator,
   [APIName.COMPANY_SELECT]: companySelectValidator,
+  [APIName.COMPANY_GET_BY_ID]: companyGetByIdValidator,
+  [APIName.COMPANY_UPDATE]: companyPutValidator,
+  [APIName.COMPANY_DELETE]: companyDeleteValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
   [APIName.ROLE_LIST]: roleListValidator,
   [APIName.ROLE_SELECT]: roleSelectValidator,
