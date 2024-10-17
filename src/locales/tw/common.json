@@ -234,6 +234,8 @@
   },
   "COMMON": {
     "OF": "之",
+    "TOTAL": "總共",
+    "DOCUMENT": "文件",
     "ISUNFA_TRIAL_VERSION": "iSunFA 試用版",
     "END_OF_TRIAL": "試用結束",
     "NEWEST": "最新的",
@@ -403,5 +405,17 @@
     "TITLE": "iSunFA",
     "DESCRIPTION": "融合區塊鏈會計與人工智能審計的先進會計解決方案",
     "KEYWORDS": "iSunFA, 區塊鏈, AI, 法務, 會計, 審計"
+  },
+  "FILTER_SECTION_TYPE": {
+    "TYPE": "類型",
+    "ALL": "全部",
+    "INVOICE": "發票",
+    "RECEIPT": "收據"
+  },
+  "SELECTION": {
+    "EXPORT": "匯出",
+    "CERTIFICATES": "證書",
+    "ADD_NEW_VOUCHER": "新增傳票",
+    "ADD_NEW_ASSET": "新增資產"
   }
 }

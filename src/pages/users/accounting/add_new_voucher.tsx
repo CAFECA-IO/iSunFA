@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import NewVoucherForm from '@/components/voucher/new_voucher_form';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
+import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
+import AIAnalyzer from '@/components/ai_analyzer/ai_analyzer';
+import CertificateSelection from '@/components/certificate/certificate_selection';
 
 // Info: (20241009 - Julian) For layout testing, to be removed
 enum SidebarState {
@@ -16,6 +21,66 @@ const AddNewVoucherPage: React.FC = () => {
   const { t } = useTranslation('common');
 
   const [sidebarState, setSidebarState] = useState<SidebarState>(SidebarState.OPEN);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean | undefined>(undefined);
+  const [isAnalyzSuccess, setIsAnalyzSuccess] = useState<boolean>(false);
+  const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
+  const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+
+  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+
+  const handleSelect = useCallback(
+    (ids: number[], isSelected: boolean) => {
+      const updatedData = {
+        ...certificates,
+      };
+      ids.forEach((id) => {
+        updatedData[id] = {
+          ...updatedData[id],
+          isSelected,
+        };
+      });
+      setCertificates(updatedData);
+      setSelectedCertificates(
+        Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
+      );
+      setIsAnalyzing(selectedCertificates.length > 0 && isSelected);
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        setIsAnalyzSuccess(selectedCertificates.length > 0);
+      }, 2000);
+    },
+    [certificates]
+  );
+
+  const handleOpenSelectorModal = useCallback(() => {
+    setSelectedIds(selectedCertificates.map((item) => item.id));
+    setOpenSelectorModal(true);
+  }, [selectedCertificates]);
+
+  const onBack = useCallback(() => {
+    handleOpenSelectorModal();
+    setOpenUploaderModal(false);
+  }, []);
+
+  const handleApiResponse = useCallback((resData: ICertificate[]) => {
+    // Deprecated: (20240920 - tzuhan) Debugging purpose only
+    // eslint-disable-next-line no-console
+    console.log(`resData`, resData, `selectedCertificates`, selectedCertificates);
+    const data = resData.reduce(
+      (acc, item) => {
+        acc[item.id] = {
+          ...item,
+          isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
+          actions: [],
+        };
+        return acc;
+      },
+      {} as { [id: string]: ICertificateUI }
+    );
+    setCertificates(data);
+  }, []);
 
   const isSidebarCollapsed = sidebarState === SidebarState.COLLAPSED;
   const isSidebarOpen = sidebarState === SidebarState.OPEN;
@@ -75,7 +140,35 @@ const AddNewVoucherPage: React.FC = () => {
       <main
         className={`${isSidebarExpanded ? 'pl-560px' : isSidebarOpen ? 'pl-280px' : 'pl-0'} flex w-screen flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out`}
       >
-        <NewVoucherForm />
+        <div className="relative flex flex-col px-10">
+          {/* Info: (20240926 - tzuhan) AIAnalyzer */}
+          <AIAnalyzer isAnalyzing={isAnalyzing} isAnalyzSuccess={isAnalyzSuccess} />
+
+          {/* Info: (20240926 - tzuhan) CertificateSelection */}
+          <CertificateSelection
+            selectedCertificates={selectedCertificates}
+            setOpenModal={handleOpenSelectorModal}
+            isSelectable
+            isDeletable
+            className="my-8"
+          />
+          <CertificateSelectorModal
+            isOpen={openSelectorModal}
+            onClose={() => setOpenSelectorModal(false)}
+            openUploaderModal={() => setOpenUploaderModal(true)}
+            handleSelect={handleSelect}
+            handleApiResponse={handleApiResponse}
+            certificates={Object.values(certificates)}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+          />
+          <CertificateUploaderModal
+            isOpen={openUploaderModal}
+            onClose={() => setOpenUploaderModal(false)}
+            onBack={onBack}
+          />
+          <NewVoucherForm />
+        </div>
       </main>
     </>
   );
