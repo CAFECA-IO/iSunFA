@@ -2,6 +2,7 @@ import Announcement from '@/components/beta/dashboard/announcement';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MyCompanyList from '@/components/beta/dashboard/my_company_list';
 import PendingTasks from '@/components/beta/dashboard/pending_task';
+import ToDoList from '@/components/beta/dashboard/to_do_list';
 
 const DashboardBody = () => {
   return (
@@ -10,11 +11,7 @@ const DashboardBody = () => {
 
       <div className="flex flex-col gap-24px">
         <section className="flex flex-wrap items-start gap-24px">
-          <DashboardCardLayout>
-            <h3>To-do list</h3>
-            <p>Calendar not yet linked.</p>
-            <p>Link My Calendar</p>
-          </DashboardCardLayout>
+          <ToDoList />
 
           <MyCompanyList />
         </section>

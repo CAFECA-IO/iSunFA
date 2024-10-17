@@ -1,6 +1,6 @@
 import { IAdmin } from '@/interfaces/admin';
 import { Admin, Company, CompanyKYC, Role, User, UserAgreement, File } from '@prisma/client';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { ICompany, ICompanyAndRoleDetail } from '@/interfaces/company';
 import { IRole } from '@/interfaces/role';
 import { formatUser } from '@/lib/utils/formatter/user.formatter';
 import { formatCompany, formatCompanyDetail } from '@/lib/utils/formatter/company.formatter';
@@ -48,16 +48,14 @@ export async function formatAdmin(
   return formattedAdmin;
 }
 
-export async function formatCompanyAndRoleList(
+export function formatCompanyAndRoleList(
   listedCompanyAndRole: Array<{ company: Company & { imageFile: File | null }; role: Role }>
-): Promise<Array<{ company: ICompany; role: IRole }>> {
-  const formatPromises = listedCompanyAndRole.map(async (companyAndRole) => {
-    const formattedCompany = await formatCompany(companyAndRole.company);
+): Array<{ company: ICompany; role: IRole }> {
+  const formattedCompanyAndRoleList = listedCompanyAndRole.map((companyAndRole) => {
+    const formattedCompany = formatCompany(companyAndRole.company);
     const formattedRole = companyAndRole.role;
     return { company: formattedCompany, role: formattedRole };
   });
-  const formattedCompanyAndRoleList: Array<{ company: ICompany; role: IRole }> =
-    await Promise.all(formatPromises);
   return formattedCompanyAndRoleList;
 }
 
@@ -77,7 +75,7 @@ export function formatCompanyDetailAndRole(companyDetailAndRole: {
     imageFile: File | null;
   };
   role: Role;
-}): ICompanyAndRole {
+}): ICompanyAndRoleDetail {
   const formattedCompany = formatCompanyDetail(companyDetailAndRole.company);
   const formattedRole = companyDetailAndRole.role;
   return { company: formattedCompany, role: formattedRole };
