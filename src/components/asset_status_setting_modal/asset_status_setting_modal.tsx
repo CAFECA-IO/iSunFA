@@ -14,11 +14,11 @@ interface IAssetStatusSettingModal {
   defaultStatus: string;
 }
 
-const AssetStatusSettingModal = ({
+const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
   isModalVisible,
   modalVisibilityHandler,
   defaultStatus,
-}: IAssetStatusSettingModal) => {
+}) => {
   const { t } = useTranslation('common');
 
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -30,6 +30,10 @@ const AssetStatusSettingModal = ({
       setAssetStatus(defaultStatus);
     }
   }, [isModalVisible]);
+
+  useEffect(() => {
+    setAssetStatus(defaultStatus);
+  }, [defaultStatus]);
 
   // Info: (20240926 - Julian) 沒填日期時，禁用 Save 按鈕
   const saveBtnDisabled = selectedPeriod.startTimeStamp === 0 && selectedPeriod.endTimeStamp === 0;

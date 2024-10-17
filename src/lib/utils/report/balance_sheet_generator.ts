@@ -32,7 +32,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
-    super(companyId, 0, endDateInSecond, reportSheetType);
+    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
 
     this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(startDateInSecond);
 

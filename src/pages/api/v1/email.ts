@@ -16,7 +16,7 @@ export async function handlePostRequest(
     // Info: (20240823 - Julian) 設置郵件內容
     const mailOptions: SendMailOptions = {
       from: process.env.MAIL_CLIENT_ID,
-      to: process.env.MAIL_CLIENT_ID,
+      to: process.env.REACT_APP_RECEPIENT_EMAIL,
       subject: 'iSunFA Contact Form',
       text: req.body.comment, // Info: (20240823 - Julian) 純文字
       html: `<p>${req.body.comment}</p>`, // Info: (20240823 - Julian) HTML
@@ -28,16 +28,16 @@ export async function handlePostRequest(
 
     if (success) {
       // Info: (20240823 - Julian) 回應成功
-      statusMessage = 'Email sent successfully';
+      statusMessage = STATUS_MESSAGE.SUCCESS;
       payload = true;
     } else {
       // Info: (20240823 - Julian) 回應失敗
-      statusMessage = 'Email sent failed';
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       payload = false;
     }
   } catch (error) {
     // Info: (20240823 - Julian) 回應失敗
-    statusMessage = 'Email sent failed';
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     payload = false;
   }
 

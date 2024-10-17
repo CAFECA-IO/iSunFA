@@ -1,46 +1,26 @@
-import Image from 'next/image';
-
-interface CardLayoutProps {
-  children: React.ReactNode;
-}
-
-const CardLayout = ({ children }: CardLayoutProps) => {
-  return (
-    <div className="flex-auto basis-400px rounded-md bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS">
-      {children}
-    </div>
-  );
-};
+import Announcement from '@/components/beta/dashboard/announcement';
+import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
+import MyCompanyList from '@/components/beta/dashboard/my_company_list';
+import PendingTasks from '@/components/beta/dashboard/pending_task';
 
 const DashboardBody = () => {
   return (
     <div className="space-y-40px">
-      {/* Announcement */}
-      <section className="flex rounded-md px-24px py-16px shadow-Dropshadow_XS">
-        <Image src="/icons/announcement.svg" alt="announcement" width={24} height={24}></Image>
-        <p>
-          01/10 娛樂稅報繳及各類所得扣繳稅款繳納截止。01/15
-          營業稅報繳及印花稅總繳截止/貨物稅產製廠商報繳貨物稅截止。
-        </p>
-      </section>
+      <Announcement />
 
       <div className="flex flex-col gap-24px">
         <section className="flex flex-wrap items-start gap-24px">
-          <CardLayout>
+          <DashboardCardLayout>
             <h3>To-do list</h3>
             <p>Calendar not yet linked.</p>
             <p>Link My Calendar</p>
-          </CardLayout>
+          </DashboardCardLayout>
 
-          <CardLayout>
-            <h3>My Company List</h3>
-            <p>Company not yet created.</p>
-            <p>Please proceed to create a company.</p>
-          </CardLayout>
+          <MyCompanyList />
         </section>
 
         <section className="flex flex-wrap items-start gap-24px">
-          <CardLayout>
+          <DashboardCardLayout>
             <h3>Latest News</h3>
             <p>
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit eaque tempora
@@ -54,12 +34,9 @@ const DashboardBody = () => {
               ipsam tenetur molestias, distinctio delectus. Veritatis dolor recusandae quam rem
               eveniet deleniti exercitationem.
             </p>
-          </CardLayout>
+          </DashboardCardLayout>
 
-          <CardLayout>
-            <h3>Pending tasks</h3>
-            <p>No Data</p>
-          </CardLayout>
+          <PendingTasks />
         </section>
       </div>
     </div>

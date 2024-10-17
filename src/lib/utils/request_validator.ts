@@ -13,9 +13,9 @@ import { APIPath } from '@/constants/api_connection';
 //  apiName: APIName,
 //  req: NextApiRequest,
 //  res: NextApiResponse) {
-type API_ZodSchema = typeof API_ZOD_SCHEMA;
-type QueryType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['query']>;
-type BodyType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['body']>;
+export type API_ZodSchema = typeof API_ZOD_SCHEMA;
+export type QueryType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['query']>;
+export type BodyType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['body']>;
 
 export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
   apiName: T,
