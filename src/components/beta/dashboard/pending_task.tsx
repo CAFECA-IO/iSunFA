@@ -98,12 +98,6 @@ interface CompanyListProps {
 // const percentageForMissingCertificate = (countForMissingCertificate / total) * 100;
 // const percentageForUnpostedVoucher = (countForUnpostedVoucher / total) * 100;
 
-/* === Fake Data === */
-// Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
-const selectedCompany = '';
-const isSelectedCompanyExist = selectedCompany;
-const isPendingTasksTotalExist = false;
-
 const EmptyPendingTask = () => {
   return (
     <section className="flex flex-col gap-24px">
@@ -404,6 +398,12 @@ const PendingTasksTotal = () => {
 };
 
 const PendingTasks = () => {
+  /* === Fake Data === */
+  // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
+  const selectedCompany = '';
+  const isSelectedCompanyExist = selectedCompany;
+  const isPendingTasksTotalExist = false;
+
   if (isSelectedCompanyExist) {
     return (
       <DashboardCardLayout>
