@@ -11,4 +11,5 @@ export enum ToastId {
   UPLOAD_CERTIFICATE_ERROR = 'toast-upload-certificate-error',
   NOTIFY_WEB_ERROR = 'toast-notify-web-error',
   ADD_COUNTERPARTY_SUCCESS = 'toast-add-counterparty-success',
+  SAVE_CERTIFICATE_SUCCESS = 'toast-save-certificate-success',
 }

@@ -75,7 +75,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機日期
   function randomDate(start: Date, end: Date): number {
     const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-    return date.getTime();
+    return date.getTime() / 1000;
   }
 
   // function randomTaxID(): string {
@@ -152,7 +152,7 @@ export const generateRandomCounterParties = (num?: number): ICounterParty[] => {
   while (i <= maxCount) {
     const counterParty: ICounterParty = {
       id: i,
-      name: `CounterParty ${i.toString().padStart(6, '0')}`,
+      name: `CounterParty_${i.toString().padStart(6, '0')}`,
       taxId: randomNumber(),
       parterType: PARTER_TYPES.SUPPLIER,
       note: `Note for CounterParty ${i.toString().padStart(6, '0')}`,

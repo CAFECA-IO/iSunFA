@@ -64,8 +64,14 @@
     "TOTAL_PRICE": "總價（含稅）",
     "COUNTERPARTY": "交易對象（客戶/供應商）",
     "INVOICE_TYPE": "發票類型",
-    "DEDUCTABLE": "可扣抵稅額",
+    "DEDUCTIBLE": "可扣抵稅額",
     "SUCCESS": "您的發票資訊已更新。"
+  },
+  "TYPE": {
+    "TRIPLICATE": "三聯",
+    "DUPLICATE": "複聯",
+    "SPECIAL": "專用",
+    "UNIFORM_INVOICE": "統一發票"
   },
   "COUNTERPARTY": {
     "ADD_NEW": "新增客戶/供應商",
@@ -73,7 +79,7 @@
     "CLIENT": "客戶",
     "SUPPLIER": "供應商",
     "TITLE": "將此交易對象新增至客戶/供應商列表",
-    "CONTENT": "{{counterparty}}不在您的客戶/供應商列表中。您要將其新增嗎？",
+    "CONTENT": "{{counterparty}} 不在您的客戶/供應商列表中。您要將其新增嗎？",
     "YES": "是，新增",
     "NO": "否，取消",
     "SUCCESS": "新的客戶/供應商已新增。",
