@@ -297,7 +297,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         />
       )}
       <form
-        className={`md:max-h-96vh relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-w-800px`}
+        className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
         onSubmit={handleSave}
       >
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
