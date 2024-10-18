@@ -414,7 +414,11 @@
     "TYPE": "類型",
     "ALL": "全部",
     "INVOICE": "發票",
-    "RECEIPT": "收據"
+    "RECEIPT": "收據",
+    "ASSET":"資產",
+    "LIABILITY":"負債",
+    "EQUITY":"權益",
+    "NONE":""
   },
   "SELECTION": {
     "EXPORT": "匯出",

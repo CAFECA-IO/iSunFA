@@ -236,8 +236,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br /> 至{formattedCurToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -249,8 +249,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br /> 至{formattedPreToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -634,8 +634,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br /> 至{formattedCurToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -647,8 +647,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br /> 至{formattedPreToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -814,8 +814,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br /> 至{formattedCurToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -824,8 +824,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br /> 至{formattedPreToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate} 至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -970,8 +970,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate} <br /> 至{formattedCurToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -980,8 +980,8 @@ const IncomeStatementList = () => {
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate} <br /> 至{formattedPreToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
               </th>

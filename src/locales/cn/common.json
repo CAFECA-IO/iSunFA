@@ -411,10 +411,14 @@
     "KEYWORDS": "iSunFA, 区块链, AI, 法务, 会计, 审计"
   },
   "FILTER_SECTION_TYPE": {
-      "TYPE": "类型",
-      "ALL": "全部",
-      "INVOICE": "发票",
-      "RECEIPT": "收据"
+    "TYPE": "类型",
+    "ALL": "全部",
+    "INVOICE": "发票",
+    "RECEIPT": "收据",
+    "ASSET": "资产",
+    "LIABILITY": "负债",
+    "EQUITY": "权益",
+    "NONE": ""
   },
   "SELECTION": {
     "EXPORT": "导出",

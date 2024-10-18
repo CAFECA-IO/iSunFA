@@ -150,11 +150,11 @@ const CashFlowStatementList = () => {
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
               會計項目
             </th>
-            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
-              {curDate.from} <br /> 至{curDate.to}
+            <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
+              {curDate.from}至{curDate.to}
             </th>
-            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
-              {preDate.from} <br />至{preDate.to}
+            <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
+              {preDate.from}至{preDate.to}
             </th>
           </tr>
         </thead>

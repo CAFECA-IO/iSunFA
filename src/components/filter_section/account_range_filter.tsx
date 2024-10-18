@@ -47,14 +47,14 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
       <div className="flex w-1/2 items-center">
         <span className="mr-2">From</span>
         <SelectFilter
-          label=""
+          label="NONE"
           options={['Asset', 'Liability', 'Equity']}
           selectedValue={fromCategory}
           onChange={(value) => setFromCategory(value as 'Asset' | 'Liability' | 'Equity')}
           className="rounded-r-none" // Info: (20241015 - Anna) 移除右側圓角
         />
         <SelectFilter
-          label=""
+          label="NONE"
           options={getOptionsByCategory(fromCategory)}
           selectedValue={fromAccount}
           onChange={(value) => setFromAccount(value)}
@@ -67,14 +67,14 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
       <div className="flex w-1/2 items-center">
         <span className="mr-2">To</span>
         <SelectFilter
-          label=""
+          label="NONE"
           options={['Asset', 'Liability', 'Equity']}
           selectedValue={toCategory}
           onChange={(value) => setToCategory(value as 'Asset' | 'Liability' | 'Equity')}
           className="rounded-r-none" // Info: (20241015 - Anna) 移除右側圓角
         />
         <SelectFilter
-          label=""
+          label="NONE"
           options={getOptionsByCategory(toCategory)}
           selectedValue={toAccount}
           onChange={(value) => setToAccount(value)}

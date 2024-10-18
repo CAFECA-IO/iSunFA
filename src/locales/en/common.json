@@ -414,7 +414,11 @@
     "TYPE": "Type",
     "ALL": "All",
     "INVOICE": "Invoice",
-    "RECEIPT": "Receipt"
+    "RECEIPT": "Receipt",
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity",
+    "NONE": ""
   },
   "SELECTION": {
     "EXPORT": "Export",

@@ -103,7 +103,7 @@ const LedgerPageBody = () => {
           />
         </div>
         <div className="h-px w-full bg-neutral-100"></div>
-        {/* Info: (20240920 - Julian) Voucher List */}
+        {/* Info: (20241018 - Anna) Ledger List */}
         <LedgerList />
       </div>
     </div>
