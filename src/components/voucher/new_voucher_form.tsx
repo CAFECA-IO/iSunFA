@@ -699,7 +699,7 @@ const NewVoucherForm: React.FC = () => {
 
         {/* Info: (20240926 - Julian) Note */}
         <div className="col-span-2 flex flex-col gap-8px">
-           <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
+          <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
           <input
             id="note-input"
             type="text"

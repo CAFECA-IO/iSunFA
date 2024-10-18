@@ -2,7 +2,7 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
@@ -13,12 +13,19 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
+import CollapseButton from '@/components/button/collapse_button';
 
-interface ICashFlowStatementReportBodyAllProps {
-  reportId: string;
-}
+// Info: (20241017 - Anna) 不從父層拿reportId
+// interface ICashFlowStatementReportBodyAllProps {
+//   reportId: string;
+// }
 
-const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
+// Info: (20241017 - Anna) 不從父層拿reportId
+// const CashFlowStatementList = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
+const CashFlowStatementList = () => {
+  // Todo: (20241017 - Anna) 先reportId，為了看UI
+  const defaultReportId = '10000034';
+
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   const {
@@ -31,7 +38,9 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
     {
       params: {
         companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        // Info: (20241017 - Anna) 改用預設的reportId
+        // reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
       },
     },
     hasCompanyId
@@ -53,6 +62,17 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const [firstThought, setFirstThought] = useStateRef<string>('');
   const [secondThought, setSecondThought] = useStateRef<string>('');
   const [thirdThought, setThirdThought] = useStateRef<string>('');
+  // Info: (20241001 - Anna) 管理表格摺疊狀態
+  const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
+  const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
+  // Info: (20241001 - Anna) 切換摺疊狀態
+  const toggleSummaryTable = () => {
+    setIsSummaryCollapsed(!isSummaryCollapsed);
+  };
+
+  const toggleDetailTable = () => {
+    setIsDetailCollapsed(!isDetailCollapsed);
+  };
 
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
@@ -322,10 +342,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <div className="mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>一、項目彙總格式</p>
+            <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 0, 10)}
+        {!isSummaryCollapsed &&
+          reportFinancial &&
+          reportFinancial.general &&
+          renderTable(reportFinancial.general, 0, 10)}
       </section>
       {renderedFooter(1)}
     </div>
@@ -363,10 +387,14 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>二、細項分類格式</p>
+            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p>單位：新台幣元</p>
         </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 3)}
+        {!isDetailCollapsed &&
+          reportFinancial &&
+          reportFinancial.details &&
+          renderTable(reportFinancial.details, 0, 3)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -898,4 +926,4 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   );
 };
 
-export default CashFlowStatementReportBodyAll;
+export default CashFlowStatementList;
