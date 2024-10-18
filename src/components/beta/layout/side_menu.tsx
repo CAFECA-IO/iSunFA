@@ -62,7 +62,7 @@ const PanelLayout = ({
 
       {/* // Info: (20241014 - Liz) Panel : 面板上有各種 links 可以連結到其他頁面 */}
       {isPanelOpen && (
-        <div className="absolute left-full top-0 z-10 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
+        <div className="absolute left-full top-0 z-10 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
           {children}
         </div>
       )}
