@@ -226,10 +226,10 @@
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",
     "TO_PLACEHOLDER": "To",
-    "NO_VOUCHER": "No voucher data",
     "BALANCE": "Balance",
     "LEDGER": "Ledger",
-    "TRIAL_BALANCE": "Trial_Balance"
+    "TRIAL_BALANCE": "Trial_Balance",
+    "NO_VOUCHER": "No voucher data"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",

@@ -226,10 +226,10 @@
     "EXPORT_BTN": "匯出",
     "FROM_PLACEHOLDER": "從",
     "TO_PLACEHOLDER": "到",
-    "NO_VOUCHER": "無傳票資料",
     "BALANCE": "餘額",
     "LEDGER": "分類帳",
-    "TRIAL_BALANCE": "試算表"
+    "TRIAL_BALANCE": "試算表",
+    "NO_VOUCHER": "無傳票資料"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
