@@ -226,6 +226,9 @@
     "EXPORT_BTN": "汇出",
     "FROM_PLACEHOLDER": "从",
     "TO_PLACEHOLDER": "到",
+    "BALANCE": "余额",
+    "LEDGER": "分类帐",
+    "TRIAL_BALANCE": "试算表",
     "NO_VOUCHER": "无传票资料"
   },
   "ADD_NEW_VOUCHER": {

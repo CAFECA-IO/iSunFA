@@ -399,14 +399,16 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
-    const curDso =
+    const curDso = Math.abs(
       salesTotal.curPeriodAmount !== 0
         ? (accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR
-        : 0;
-    const preDso =
+        : 0
+    );
+    const preDso = Math.abs(
       salesTotal.prePeriodAmount !== 0
         ? (accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR
-        : 0;
+        : 0
+    );
     const dso = {
       curDso,
       preDso,
@@ -423,13 +425,14 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const curInventoryTurnoverDays =
+    const curInventoryTurnoverDays = Math.abs(
       operatingCost.curPeriodAmount !== 0
         ? ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
             2 /
             operatingCost.curPeriodAmount) *
-          DAY_IN_YEAR
-        : 0;
+            DAY_IN_YEAR
+        : 0
+    );
 
     // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
     const preInventoryTurnoverDays = 0;

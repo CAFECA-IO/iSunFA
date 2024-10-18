@@ -54,7 +54,7 @@ describe('company/[companyId]/voucher', () => {
         page: '1',
         pageSize: '8',
       };
-      req.body = undefined;
+      req.body = {};
 
       const { statusMessage } = await handleGetRequest(req, res);
 

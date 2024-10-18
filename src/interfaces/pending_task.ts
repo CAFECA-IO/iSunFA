@@ -1,27 +1,29 @@
 export interface IPendingTask {
-  id: number;
   companyId: number;
   missingCertificate: IMissingCertificate;
+  missingCertificatePercentage: number;
   unpostedVoucher: IUnpostedVoucher;
+  unpostedVoucherPercentage: number;
 }
 
 interface IMissingCertificate {
-  id: number;
   companyId: number;
+  companyName: string;
   count: number;
 }
 
 interface IUnpostedVoucher {
-  id: number;
   companyId: number;
+  companyName: string;
   count: number;
 }
 
 export interface IPendingTaskTotal {
-  id: number;
   userId: number;
   totalMissingCertificate: number;
+  totalMissingCertificatePercentage: number;
   missingCertificateList: IMissingCertificate[];
   totalUnpostedVoucher: number;
+  totalUnpostedVoucherPercentage: number;
   unpostedVoucherList: IUnpostedVoucher[];
 }

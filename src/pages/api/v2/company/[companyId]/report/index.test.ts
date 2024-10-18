@@ -12,7 +12,7 @@ import prisma from '@/client';
 import { Account, Company, LineItem, Prisma, PrismaPromise, Voucher } from '@prisma/client';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { FinancialReport } from '@/interfaces/report';
+import { BalanceSheetReport, FinancialReport } from '@/interfaces/report';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -940,8 +940,7 @@ describe('company/[companyId]/report', () => {
         language: 'zh',
         reportType: FinancialReportTypesKey.balance_sheet,
       };
-      req.body = undefined;
-
+      req.body = {};
       const { payload, statusMessage } = await handleGetRequest(req, res);
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
@@ -974,7 +973,7 @@ describe('company/[companyId]/report', () => {
         });
 
         expect(payload).toBeDefined();
-        const { general, details } = payload as FinancialReport;
+        const { general, details, otherInfo } = payload as BalanceSheetReport;
         expect(details.length).toBeGreaterThan(0);
 
         /**
@@ -1084,6 +1083,14 @@ describe('company/[companyId]/report', () => {
         // expect(totalRetainedEarnings?.curPeriodAmount).toBe(77000);
 
         /**
+         * Info: (20241018 - Murky)
+         * @description 3100 股本合計
+         */
+        const totalCapitalStock = general.find((detail) => detail.code === '3100');
+        expect(totalCapitalStock).toBeDefined();
+        expect(totalCapitalStock?.curPeriodAmount).toBe(200000);
+
+        /**
          * Info: (20241017 - Murky)
          * @description 3350 未分配盈餘（或待彌補虧損）
          * @note 4000 + 77000 = 81000
@@ -1091,6 +1098,20 @@ describe('company/[companyId]/report', () => {
         const unappropriatedRetainedEarnings = details.find((detail) => detail.code === '3350');
         expect(unappropriatedRetainedEarnings).toBeDefined();
         expect(unappropriatedRetainedEarnings?.curPeriodAmount).toBe(81000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 3XXX 權益總計
+         */
+        const totalEquity = general.find((detail) => detail.code === '3XXX');
+        expect(totalEquity).toBeDefined();
+        expect(totalEquity?.curPeriodAmount).toBe(281000);
+
+        // Info: (20241018 - Murky) Other Info
+        expect(otherInfo).toBeDefined();
+        const { dso } = otherInfo;
+        expect(dso).toBeDefined();
+        expect(dso.curDso).toBeCloseTo(365, 1);
       });
     });
 
@@ -1122,6 +1143,7 @@ describe('company/[companyId]/report', () => {
         const salesRevenueTotal = details.find((detail) => detail.code === '4110');
         expect(salesRevenueTotal).toBeDefined();
         expect(salesRevenueTotal?.curPeriodAmount).toBe(208000);
+        expect(salesRevenueTotal?.curPeriodPercentage).toBeCloseTo((208000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1130,6 +1152,7 @@ describe('company/[companyId]/report', () => {
         const totalOperatingRevenue = general.find((detail) => detail.code === '4000');
         expect(totalOperatingRevenue).toBeDefined();
         expect(totalOperatingRevenue?.curPeriodAmount).toBe(204000);
+        expect(totalOperatingRevenue?.curPeriodPercentage).toBeCloseTo((204000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1139,6 +1162,7 @@ describe('company/[companyId]/report', () => {
         // const netSalesRevenue = details.find((detail) => detail.code === '4100');
         // expect(netSalesRevenue).toBeDefined();
         // expect(netSalesRevenue?.curPeriodAmount).toBe(204000);
+        // expect(netSalesRevenue?.curPeriodPercentage).toBeCloseTo((204000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1147,7 +1171,7 @@ describe('company/[companyId]/report', () => {
         const totalCostOfSales = details.find((detail) => detail.code === '5110');
         expect(totalCostOfSales).toBeDefined();
         expect(totalCostOfSales?.curPeriodAmount).toBe(54000);
-
+        expect(totalCostOfSales?.curPeriodPercentage).toBeCloseTo((54000 / 204000) * 100, 0);
         /**
          * Info: (20241017 - Murky)
          * @description 5000 營業成本合計
@@ -1156,6 +1180,7 @@ describe('company/[companyId]/report', () => {
         const totalOperatingCost = general.find((detail) => detail.code === '5000');
         expect(totalOperatingCost).toBeDefined();
         expect(totalOperatingCost?.curPeriodAmount).toBe(54000);
+        expect(totalOperatingCost?.curPeriodPercentage).toBeCloseTo((54000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1165,6 +1190,10 @@ describe('company/[companyId]/report', () => {
         const grossProfitFromOperation = general.find((detail) => detail.code === '5950');
         expect(grossProfitFromOperation).toBeDefined();
         expect(grossProfitFromOperation?.curPeriodAmount).toBe(150000);
+        expect(grossProfitFromOperation?.curPeriodPercentage).toBeCloseTo(
+          (150000 / 204000) * 100,
+          0
+        );
 
         /**
          * Info: (20241017 - Murky)
@@ -1173,6 +1202,7 @@ describe('company/[companyId]/report', () => {
         const administrativeExpenses = general.find((detail) => detail.code === '6200');
         expect(administrativeExpenses).toBeDefined();
         expect(administrativeExpenses?.curPeriodAmount).toBe(76000);
+        expect(administrativeExpenses?.curPeriodPercentage).toBeCloseTo((76000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1181,6 +1211,7 @@ describe('company/[companyId]/report', () => {
         const totalOperatingExpense = general.find((detail) => detail.code === '6000');
         expect(totalOperatingExpense).toBeDefined();
         expect(totalOperatingExpense?.curPeriodAmount).toBe(76000);
+        expect(totalOperatingExpense?.curPeriodPercentage).toBeCloseTo((76000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1189,6 +1220,7 @@ describe('company/[companyId]/report', () => {
         const netOperatingIncome = general.find((detail) => detail.code === '6900');
         expect(netOperatingIncome).toBeDefined();
         expect(netOperatingIncome?.curPeriodAmount).toBe(74000);
+        expect(netOperatingIncome?.curPeriodPercentage).toBeCloseTo((74000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1197,6 +1229,7 @@ describe('company/[companyId]/report', () => {
         const totalInterestIncome = general.find((detail) => detail.code === '7100');
         expect(totalInterestIncome).toBeDefined();
         expect(totalInterestIncome?.curPeriodAmount).toBe(3000);
+        expect(totalInterestIncome?.curPeriodPercentage).toBeCloseTo((3000 / 204000) * 100, 0);
 
         /**
          * Info: (20241017 - Murky)
@@ -1205,6 +1238,10 @@ describe('company/[companyId]/report', () => {
         const totalNonOperatingIncomeAndExpenses = general.find((detail) => detail.code === '7000');
         expect(totalNonOperatingIncomeAndExpenses).toBeDefined();
         expect(totalNonOperatingIncomeAndExpenses?.curPeriodAmount).toBe(3000);
+        expect(totalNonOperatingIncomeAndExpenses?.curPeriodPercentage).toBeCloseTo(
+          (3000 / 204000) * 100,
+          0
+        );
 
         /**
          * Info: (20241017 - Murky)
@@ -1213,7 +1250,10 @@ describe('company/[companyId]/report', () => {
         const profitFromContinuingOperations = general.find((detail) => detail.code === '8000');
         expect(profitFromContinuingOperations).toBeDefined();
         expect(profitFromContinuingOperations?.curPeriodAmount).toBe(77000);
-
+        expect(profitFromContinuingOperations?.curPeriodPercentage).toBeCloseTo(
+          (77000 / 204000) * 100,
+          0
+        );
         /**
          * Info: (20241017 - Murky)
          * @description 8200 本期淨利
@@ -1221,6 +1261,7 @@ describe('company/[companyId]/report', () => {
         const profitLoss = general.find((detail) => detail.code === '8200');
         expect(profitLoss).toBeDefined();
         expect(profitLoss?.curPeriodAmount).toBe(77000);
+        expect(profitLoss?.curPeriodPercentage).toBeCloseTo((77000 / 204000) * 100, 0);
       });
     });
 
