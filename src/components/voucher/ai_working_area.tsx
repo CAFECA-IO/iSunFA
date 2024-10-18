@@ -7,7 +7,7 @@ import { GrRefresh } from 'react-icons/gr';
 // import { APIName } from '@/constants/api_connection';
 // import { ILineItem } from '@/interfaces/line_item';
 
-enum AIState {
+export enum AIState {
   RESTING = 'resting',
   WORKING = 'working',
   FINISH = 'finish',
@@ -23,9 +23,13 @@ enum AIState {
 //   };
 // }
 
-const AIWorkingArea: React.FC = () => {
-  const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
-  const [analyzeSuccess] = useState<boolean>(false);
+interface AIWorkingAreaProps {
+  aiState: AIState;
+  setAiState: (state: AIState) => void;
+  analyzeSuccess: boolean;
+}
+
+const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({ aiState, setAiState, analyzeSuccess }) => {
   const [, /* showPreview */ setShowPreview] = useState<boolean>(false);
 
   // ToDo: (20241017 - Julian) 施工中 🚧
