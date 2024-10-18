@@ -43,6 +43,7 @@ import {
   rolePostValidator,
   roleSelectValidator,
 } from '@/lib/utils/zod_schema/role';
+import { todoListValidator, todoPostValidator } from '@/lib/utils/zod_schema/todo';
 import {
   voucherCreateValidator,
   voucherDeleteValidatorV2,
@@ -103,6 +104,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.ROLE_SELECT]: roleSelectValidator,
   [APIName.CREATE_ROLE]: rolePostValidator,
   [APIName.CREATE_NEWS]: newsPostValidator,
+  [APIName.TODO_LIST]: todoListValidator,
+  [APIName.CREATE_TODO]: todoPostValidator,
   [APIName.NEWS_LIST]: newsListValidator,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteValidatorV2,
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
