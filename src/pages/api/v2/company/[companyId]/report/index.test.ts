@@ -54,7 +54,6 @@ describe('company/[companyId]/certificate', () => {
         language: 'zh',
         reportType: FinancialReportTypesKey.balance_sheet,
       };
-      req.body = {};
 
       const { payload, statusMessage } = await handleGetRequest(req, res);
 
