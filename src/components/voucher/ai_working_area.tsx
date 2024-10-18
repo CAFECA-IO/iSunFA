@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { IoWarningOutline, IoPauseCircleOutline } from 'react-icons/io5';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { GrRefresh } from 'react-icons/gr';
-// import APIHandler from '@/lib/utils/api_handler';
-// import { APIName } from '@/constants/api_connection';
-// import { ILineItem } from '@/interfaces/line_item';
 
 export enum AIState {
   RESTING = 'resting',
@@ -13,41 +10,21 @@ export enum AIState {
   FINISH = 'finish',
 }
 
-// interface IAIResultVoucher {
-//   voucherDate: number;
-//   type: string;
-//   note: string;
-//   counterPartyId: number;
-//   lineItemsInfo: {
-//     lineItems: ILineItem[];
-//   };
-// }
-
 interface AIWorkingAreaProps {
   aiState: AIState;
   setAiState: (state: AIState) => void;
   analyzeSuccess: boolean;
+  setIsShowAnalysisPreview: (isShow: boolean) => void;
+  fillUpClickHandler: () => void;
 }
 
-const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({ aiState, setAiState, analyzeSuccess }) => {
-  const [, /* showPreview */ setShowPreview] = useState<boolean>(false);
-
-  // ToDo: (20241017 - Julian) 施工中 🚧
-  /*   const { data: resultData, isLoading } = APIHandler<IAIResultVoucher>(
-    APIName.ASK_AI_V2,
-    {
-      // ToDo: (20241017 - Julian) Replace with real parameters
-      params: {
-        companyId: '111',
-        resultId: '123',
-      },
-      query: {
-        reason: 'voucher',
-      },
-    },
-    true
-  ); */
-
+const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
+  aiState,
+  setAiState,
+  analyzeSuccess,
+  setIsShowAnalysisPreview,
+  fillUpClickHandler,
+}) => {
   const gifSrc =
     aiState === AIState.RESTING ? '/animations/ai_resting.gif' : '/animations/ai_working.gif';
 
@@ -57,8 +34,9 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({ aiState, setAiState, anal
       <button
         type="button"
         className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-sm text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover"
-        onMouseEnter={() => setShowPreview(true)}
-        onMouseLeave={() => setShowPreview(false)}
+        onMouseEnter={() => setIsShowAnalysisPreview(true)}
+        onMouseLeave={() => setIsShowAnalysisPreview(false)}
+        onClick={fillUpClickHandler}
       >
         <HiOutlineSparkles size={16} />
         <p>Fill up your voucher</p>
@@ -100,12 +78,13 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({ aiState, setAiState, anal
       displayedAIFinishStr
     );
 
-  const displayedWarningStr = analyzeSuccess ? (
-    <div className="flex items-center gap-4px text-text-neutral-tertiary">
-      <IoWarningOutline size={16} />
-      <p className="text-xs">AI can make mistake, please double check important information.</p>
-    </div>
-  ) : null;
+  const displayedWarningStr =
+    analyzeSuccess && aiState === AIState.FINISH ? (
+      <div className="flex items-center gap-4px text-text-neutral-tertiary">
+        <IoWarningOutline size={16} />
+        <p className="text-xs">AI can make mistake, please double check important information.</p>
+      </div>
+    ) : null;
 
   return (
     <div className="flex w-full items-center justify-between rounded-md bg-surface-neutral-surface-lv2 pr-26px text-lg shadow-Dropshadow_S">

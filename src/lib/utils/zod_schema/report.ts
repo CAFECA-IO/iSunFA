@@ -10,10 +10,11 @@ const reportGetQueryValidatorV2 = z.object({
   reportType: z.nativeEnum(FinancialReportTypesKey),
 });
 
-const reportGetBodyValidatorV2 = z.string().nullish();
+const reportGetBodyValidatorV2 = z.object({});
+
 export const reportGetValidatorV2: IZodValidator<
   (typeof reportGetQueryValidatorV2)['shape'],
-  typeof reportGetBodyValidatorV2
+  (typeof reportGetBodyValidatorV2)['shape']
 > = {
   query: reportGetQueryValidatorV2,
   body: reportGetBodyValidatorV2,

@@ -38,11 +38,20 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
         );
       } else {
         const { query, body } = validateRequest(apiName, req, userId);
-        ({ statusMessage, payload } = await handler({
-          query: query || {},
-          body,
-          session,
-        }));
+        if (query !== null && body !== null) {
+          ({ statusMessage, payload } = await handler({
+            query,
+            body,
+            session,
+          }));
+        } else {
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+          loggerError(
+            userId,
+            `Validation Error for ${apiName} in middleware.ts`,
+            'Query or Body is missing'
+          );
+        }
       }
     }
   } catch (error) {

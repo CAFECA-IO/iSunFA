@@ -32,6 +32,8 @@ import file from '@/seed_json/file.json';
 import assets from '@/seed_json/asset.json';
 import assetVouchers from '@/seed_json/asset_voucher.json';
 import counterpartys from '@/seed_json/counterparty.json';
+import certificates from '@/seed_json/certificate.json';
+import voucherCertificates from '@/seed_json/voucher_certificate.json';
 
 const prisma = new PrismaClient();
 
@@ -104,6 +106,12 @@ async function createCompany() {
 async function createCompanyKYC() {
   await prisma.companyKYC.createMany({
     data: companyKYCs,
+  });
+}
+
+async function createCertificate() {
+  await prisma.certificate.createMany({
+    data: certificates,
   });
 }
 
@@ -199,6 +207,12 @@ async function createJournal() {
 async function createVoucher() {
   await prisma.voucher.createMany({
     data: vouchers,
+  });
+}
+
+async function createVoucherCertificate() {
+  await prisma.voucherCertificate.createMany({
+    data: voucherCertificates,
   });
 }
 
@@ -315,7 +329,9 @@ async function main() {
   });
 
   await createJournal();
+  await createCertificate();
   await createVoucher();
+  await createVoucherCertificate();
   await createAsset();
 
   await new Promise((resolve) => {

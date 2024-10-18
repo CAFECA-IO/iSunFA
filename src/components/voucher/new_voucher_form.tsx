@@ -10,7 +10,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
 import ReverseSection from '@/components/voucher/reverse_section';
-import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
@@ -27,17 +27,29 @@ import {
   WEEK_FULL_LIST,
   MONTH_ABR_LIST,
 } from '@/constants/display';
-import { VoucherType } from '@/constants/account';
+import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
 import CertificateSelection from '@/components/certificate/certificate_selection';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 enum RecurringUnit {
   MONTH = 'month',
   WEEK = 'week',
+}
+
+interface IAIResultVoucher {
+  voucherDate: number;
+  type: string;
+  note: string;
+  counterPartyId: number; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
+  lineItemsInfo: {
+    lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
+  };
 }
 
 const NewVoucherForm: React.FC = () => {
@@ -47,6 +59,42 @@ const NewVoucherForm: React.FC = () => {
   const { selectedCompany } = useUserCtx();
   const { getAccountListHandler } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+
+  const {
+    trigger: aiAnalyze,
+    data: resultData,
+    isLoading: isAIWorking,
+    success: analyzeSuccess,
+  } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_V2);
+
+  // ToDo: (20241017 - Julian) 施工中 🚧
+  const {
+    voucherDate: aiVoucherDate,
+    type: aiType,
+    note: aiNote,
+    counterPartyId: aiCounterPartyId,
+    lineItemsInfo: { lineItems: aiLineItems },
+  } = resultData ?? {
+    voucherDate: 0,
+    type: '',
+    note: '',
+    counterPartyId: 0,
+    lineItemsInfo: { lineItems: [] },
+  };
+
+  const aiDate = {
+    startTimeStamp: aiVoucherDate,
+    endTimeStamp: aiVoucherDate,
+  };
+
+  const aiTotalCredit = aiLineItems.reduce(
+    (acc, item) => (item.debit === false ? acc + item.amount : acc),
+    0
+  );
+  const aiTotalDebit = aiLineItems.reduce(
+    (acc, item) => (item.debit === true ? acc + item.amount : acc),
+    0
+  );
 
   // Info: (20241004 - Julian) 通用項目
   const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -104,7 +152,7 @@ const NewVoucherForm: React.FC = () => {
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
-  const [analyzeSuccess, setAnalyzeSuccess] = useState<boolean>(false);
+  const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
@@ -130,17 +178,36 @@ const NewVoucherForm: React.FC = () => {
       setSelectedCertificates(
         Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
       );
-      if (selectedCertificates.length > 0 && isSelected) {
-        // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
-        setAiState(AIState.WORKING);
-        setTimeout(() => {
-          setAiState(AIState.FINISH);
-          setAnalyzeSuccess(selectedCertificates.length > 0);
-        }, 2000);
-      }
     },
     [certificates]
   );
+
+  useEffect(() => {
+    if (selectedCertificates.length > 0 && selectedIds.length > 0) {
+      // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
+      setAiState(AIState.WORKING);
+      // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
+      aiAnalyze({
+        // ToDo: (20241017 - Julian) Replace with real parameters
+        params: {
+          companyId: '111',
+          resultId: '123',
+        },
+        query: {
+          reason: 'voucher',
+        },
+      });
+
+      if (!isAIWorking && resultData) {
+        setAiState(AIState.FINISH);
+      }
+
+      // setTimeout(() => {
+      //   setAiState(AIState.FINISH);
+      //   setAnalyzeSuccess(selectedCertificates.length > 0);
+      // }, 2000);
+    }
+  }, [selectedCertificates, selectedIds]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
@@ -351,9 +418,18 @@ const NewVoucherForm: React.FC = () => {
     setRecurringMenuOpen(!isRecurringMenuOpen);
   };
 
+  // Info: (20241018 - Julian) 欄位顯示
+  const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterPartyId);
+
   // Info: (20240926 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
-    return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+    const typeStr = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType];
+
+    if (typeStr) {
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
+    } else {
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+    }
   };
 
   const translateUnit = (unit: RecurringUnit) => {
@@ -393,12 +469,22 @@ const NewVoucherForm: React.FC = () => {
     messageModalVisibilityHandler();
   };
 
+  const fillUpWithAIResult = () => {
+    setDate(aiDate);
+    setType(aiType);
+    setNote(aiNote);
+    setCounterparty(aiCounterPartyId.toString());
+    setLineItems(aiLineItems);
+  };
+
   // ToDo: (20240926 - Julian) Save voucher function
   const saveVoucher = async () => {
     // Info: (20241004 - Julian) for debug
     // eslint-disable-next-line no-console
     console.log(
-      'Save voucher\nDate:',
+      'Save voucher\nCertificate:',
+      selectedCertificates,
+      '\nDate: ',
       date,
       '\nType:',
       type,
@@ -520,8 +606,10 @@ const NewVoucherForm: React.FC = () => {
       className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
     />
   ) : (
-    <p className={`truncate ${isShowCounterHint ? inputStyle.ERROR : inputStyle.NORMAL}`}>
-      {counterparty}
+    <p
+      className={`truncate ${isShowCounterHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : inputStyle.NORMAL}`}
+    >
+      {isShowAnalysisPreview ? aiCounterPartyId : counterparty}
     </p>
   );
 
@@ -655,7 +743,13 @@ const NewVoucherForm: React.FC = () => {
         onBack={handleBack}
       />
       {/* Info: (20240926 - Julian) AI analyze */}
-      <AIWorkingArea aiState={aiState} analyzeSuccess={analyzeSuccess} setAiState={setAiState} />
+      <AIWorkingArea
+        aiState={aiState}
+        analyzeSuccess={analyzeSuccess ?? false}
+        setAiState={setAiState}
+        setIsShowAnalysisPreview={setIsShowAnalysisPreview}
+        fillUpClickHandler={fillUpWithAIResult}
+      />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
       <CertificateSelection
         selectedCertificates={selectedCertificates}
@@ -675,9 +769,11 @@ const NewVoucherForm: React.FC = () => {
           </p>
           <DatePicker
             type={DatePickerType.TEXT_DATE}
-            period={date}
+            period={isShowAnalysisPreview ? aiDate : date}
             setFilteredPeriod={setDate}
-            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
+            btnClassName={
+              isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
+            }
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}
@@ -690,7 +786,11 @@ const NewVoucherForm: React.FC = () => {
             onClick={typeToggleHandler}
             className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
           >
-            <p className="text-base text-input-text-input-filled">{translateType(type)}</p>
+            <p
+              className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
+            >
+              {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
+            </p>
             <FaChevronDown size={20} />
             {/* Info: (20240926 - Julian) Type dropdown */}
             {typeDropdownMenu}
@@ -705,12 +805,12 @@ const NewVoucherForm: React.FC = () => {
             type="text"
             value={note}
             onChange={noteChangeHandler}
-            placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
+            placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
+            className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
-        {isCounterpartyRequired && (
+        {isShowCounter && (
           <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
             <p className="font-bold text-input-text-primary">
               {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
@@ -796,17 +896,25 @@ const NewVoucherForm: React.FC = () => {
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
-        <VoucherLineBlock
-          totalCredit={totalCredit}
-          totalDebit={totalDebit}
-          haveZeroLine={haveZeroLine}
-          isAccountingNull={isAccountingNull}
-          isVoucherLineEmpty={isVoucherLineEmpty}
-          lineItems={voucherLineItems}
-          setLineItems={setLineItems}
-          flagOfClear={flagOfClear}
-          flagOfSubmit={flagOfSubmit}
-        />
+        {isShowAnalysisPreview ? (
+          <VoucherLinePreview
+            totalCredit={aiTotalCredit}
+            totalDebit={aiTotalDebit}
+            lineItems={aiLineItems}
+          />
+        ) : (
+          <VoucherLineBlock
+            totalCredit={totalCredit}
+            totalDebit={totalDebit}
+            haveZeroLine={haveZeroLine}
+            isAccountingNull={isAccountingNull}
+            isVoucherLineEmpty={isVoucherLineEmpty}
+            lineItems={voucherLineItems}
+            setLineItems={setLineItems}
+            flagOfClear={flagOfClear}
+            flagOfSubmit={flagOfSubmit}
+          />
+        )}
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
