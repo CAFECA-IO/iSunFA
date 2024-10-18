@@ -135,10 +135,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         key={partner.id}
         type="button"
         onClick={counterPartyClickHandler}
-        className="flex w-full gap-2 px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+        className="flex w-full text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
       >
-        <p className="text-dropdown-text-primary">{partner.taxId}</p>
-        <p className="text-dropdown-text-secondary">{partner.name}</p>
+        <p className="w-100px border-r px-12px py-8px text-dropdown-text-primary">
+          {partner.taxId}
+        </p>
+        <p className="px-12px py-8px text-dropdown-text-secondary">{partner.name}</p>
       </button>
     );
   });
@@ -152,7 +154,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           : 'grid-rows-0'
       } rounded-sm shadow-dropmenu transition-all duration-150 ease-in-out`}
     >
-      <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+      <div className="flex max-h-150px flex-col overflow-y-auto rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary py-8px">
         {CounterPartyItems}
       </div>
     </div>
