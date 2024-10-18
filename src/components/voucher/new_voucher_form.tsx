@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
@@ -29,6 +29,11 @@ import {
 } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
+import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
+import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
+import CertificateSelection from '@/components/certificate/certificate_selection';
 
 enum RecurringUnit {
   MONTH = 'month',
@@ -96,6 +101,74 @@ const NewVoucherForm: React.FC = () => {
   const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
+
+  // Info: (20241018 - Tzuhan) AI 分析相關 state
+  const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  const [analyzeSuccess, setAnalyzeSuccess] = useState<boolean>(false);
+
+  // Info: (20241018 - Tzuhan) 選擇憑證相關 state
+  const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
+  const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+
+  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+
+  // Info: (20241018 - Tzuhan) 選擇憑證
+  const handleSelect = useCallback(
+    (ids: number[], isSelected: boolean) => {
+      const updatedData = {
+        ...certificates,
+      };
+      ids.forEach((id) => {
+        updatedData[id] = {
+          ...updatedData[id],
+          isSelected,
+        };
+      });
+      setCertificates(updatedData);
+      setSelectedCertificates(
+        Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
+      );
+      if (selectedCertificates.length > 0 && isSelected) {
+        // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
+        setAiState(AIState.WORKING);
+        setTimeout(() => {
+          setAiState(AIState.FINISH);
+          setAnalyzeSuccess(selectedCertificates.length > 0);
+        }, 2000);
+      }
+    },
+    [certificates]
+  );
+
+  // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
+  const handleOpenSelectorModal = useCallback(() => {
+    setSelectedIds(selectedCertificates.map((item) => item.id));
+    setOpenSelectorModal(true);
+  }, [selectedCertificates]);
+
+  // Info: (20241018 - Tzuhan) 選擇憑證返回上一步
+  const handleBack = useCallback(() => {
+    handleOpenSelectorModal();
+    setOpenUploaderModal(false);
+  }, []);
+
+  // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
+  const handleCertificateApiResponse = useCallback((resData: ICertificate[]) => {
+    const data = resData.reduce(
+      (acc, item) => {
+        acc[item.id] = {
+          ...item,
+          isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
+          actions: [],
+        };
+        return acc;
+      },
+      {} as { [id: string]: ICertificateUI }
+    );
+    setCertificates(data);
+  }, []);
 
   // Info: (20241004 - Julian) Type 下拉選單
   const {
@@ -565,157 +638,186 @@ const NewVoucherForm: React.FC = () => {
         });
 
   return (
-    <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
-      {/* Info: (20240926 - Julian) Date */}
-      <div id="voucher-date" className="flex flex-col gap-8px whitespace-nowrap">
-        <p className="font-bold text-input-text-primary">
-          {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
-          <span className="text-text-state-error">*</span>
-        </p>
-        <DatePicker
-          type={DatePickerType.TEXT_DATE}
-          period={date}
-          setFilteredPeriod={setDate}
-          btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
-        />
-      </div>
-      {/* Info: (20240926 - Julian) Type */}
-      <div className="flex flex-col gap-8px">
-        <p className="font-bold text-input-text-primary">
-          {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
-          <span className="text-text-state-error">*</span>
-        </p>
-        <div
-          onClick={typeToggleHandler}
-          className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
-        >
-          <p className="text-base text-input-text-input-filled">{translateType(type)}</p>
-          <FaChevronDown size={20} />
-          {/* Info: (20240926 - Julian) Type dropdown */}
-          {typeDropdownMenu}
-        </div>
-      </div>
-      {/* Info: (20240926 - Julian) Note */}
-      <div className="col-span-2 flex flex-col gap-8px">
-        <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
-        <input
-          id="note-input"
-          type="text"
-          value={note}
-          onChange={noteChangeHandler}
-          placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
-          className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
-        />
-      </div>
-      {/* Info: (20240926 - Julian) Counterparty */}
-      {isCounterpartyRequired && (
-        <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
+    <div className="relative flex flex-col items-center gap-40px p-40px">
+      <CertificateSelectorModal
+        isOpen={openSelectorModal}
+        onClose={() => setOpenSelectorModal(false)}
+        openUploaderModal={() => setOpenUploaderModal(true)}
+        handleSelect={handleSelect}
+        handleApiResponse={handleCertificateApiResponse}
+        certificates={Object.values(certificates)}
+        selectedIds={selectedIds}
+        setSelectedIds={setSelectedIds}
+      />
+      <CertificateUploaderModal
+        isOpen={openUploaderModal}
+        onClose={() => setOpenUploaderModal(false)}
+        onBack={handleBack}
+      />
+      {/* Info: (20240926 - Julian) AI analyze */}
+      <AIWorkingArea aiState={aiState} analyzeSuccess={analyzeSuccess} setAiState={setAiState} />
+      {/* ToDo: (20240926 - Julian) Uploaded certificates */}
+      <CertificateSelection
+        selectedCertificates={selectedCertificates}
+        setOpenModal={handleOpenSelectorModal}
+        isSelectable
+        isDeletable
+        className="my-8"
+      />
+
+      {/* Info: (20240926 - Julian) form */}
+      <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+        {/* Info: (20240926 - Julian) Date */}
+        <div id="voucher-date" className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
-            {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
+            {t('journal:ADD_NEW_VOUCHER.VOUCHER_DATE')}
+            <span className="text-text-state-error">*</span>
+          </p>
+          <DatePicker
+            type={DatePickerType.TEXT_DATE}
+            period={date}
+            setFilteredPeriod={setDate}
+            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
+          />
+        </div>
+        {/* Info: (20240926 - Julian) Type */}
+        <div className="flex flex-col gap-8px">
+          <p className="font-bold text-input-text-primary">
+            {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
           <div
-            ref={counterpartyRef}
-            onClick={counterSearchToggleHandler}
-            className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
+            onClick={typeToggleHandler}
+            className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
           >
-            {displayedCounterparty}
-            <div className="h-20px w-20px">
-              <FiSearch size={20} />
-            </div>
+            <p className="text-base text-input-text-input-filled">{translateType(type)}</p>
+            <FaChevronDown size={20} />
+            {/* Info: (20240926 - Julian) Type dropdown */}
+            {typeDropdownMenu}
           </div>
-          {/* Info: (20241004 - Julian) Counterparty drop menu */}
-          {counterpartyDropMenu}
         </div>
-      )}
-      {/* Info: (20241007 - Julian) Recurring */}
-      <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
-        {/* Info: (20241007 - Julian) switch */}
-        <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
-          <Toggle
-            id="recurring-toggle"
-            initialToggleState={isRecurring}
-            getToggledState={recurringToggleHandler}
-          />
-          <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
-        </div>
-        {/* Info: (20241007 - Julian) recurring period */}
-        <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
-          <DatePicker
-            type={DatePickerType.TEXT_PERIOD}
-            period={recurringPeriod}
-            setFilteredPeriod={setRecurringPeriod}
-            datePickerClassName="w-full"
-            btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
+        {/* Info: (20240926 - Julian) Note */}
+        <div className="col-span-2 flex flex-col gap-8px">
+          <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
+          <input
+            id="note-input"
+            type="text"
+            value={note}
+            onChange={noteChangeHandler}
+            placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
+            className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
           />
         </div>
-        {/* Info: (20241007 - Julian) recurring unit */}
-        <div
-          className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
-        >
-          {/* Info: (20241007 - Julian) recurring unit block */}
-          <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-            <p className="px-12px py-10px text-input-text-input-placeholder">
-              {t('journal:ADD_NEW_VOUCHER.EVERY')}
+        {/* Info: (20240926 - Julian) Counterparty */}
+        {isCounterpartyRequired && (
+          <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
+            <p className="font-bold text-input-text-primary">
+              {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
+              <span className="text-text-state-error">*</span>
             </p>
             <div
-              onClick={recurringUnitToggleHandler}
-              className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
+              ref={counterpartyRef}
+              onClick={counterSearchToggleHandler}
+              className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
             >
-              <p className="w-50px">{translateUnit(recurringUnit)}</p>
-              <FaChevronDown />
-              {/* Info: (20240926 - Julian) recurring unit dropdown */}
-              {recurringUnitMenu}
+              {displayedCounterparty}
+              <div className="h-20px w-20px">
+                <FiSearch size={20} />
+              </div>
+            </div>
+            {/* Info: (20241004 - Julian) Counterparty drop menu */}
+            {counterpartyDropMenu}
+          </div>
+        )}
+        {/* Info: (20241007 - Julian) Recurring */}
+        <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
+          {/* Info: (20241007 - Julian) switch */}
+          <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
+            <Toggle
+              id="recurring-toggle"
+              initialToggleState={isRecurring}
+              getToggledState={recurringToggleHandler}
+            />
+            <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+          </div>
+          {/* Info: (20241007 - Julian) recurring period */}
+          <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
+            <DatePicker
+              type={DatePickerType.TEXT_PERIOD}
+              period={recurringPeriod}
+              setFilteredPeriod={setRecurringPeriod}
+              datePickerClassName="w-full"
+              btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
+            />
+          </div>
+          {/* Info: (20241007 - Julian) recurring unit */}
+          <div
+            className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
+          >
+            {/* Info: (20241007 - Julian) recurring unit block */}
+            <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+              <p className="px-12px py-10px text-input-text-input-placeholder">
+                {t('journal:ADD_NEW_VOUCHER.EVERY')}
+              </p>
+              <div
+                onClick={recurringUnitToggleHandler}
+                className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
+              >
+                <p className="w-50px">{translateUnit(recurringUnit)}</p>
+                <FaChevronDown />
+                {/* Info: (20240926 - Julian) recurring unit dropdown */}
+                {recurringUnitMenu}
+              </div>
+            </div>
+            {/* Info: (20241007 - Julian) recurring unit checkbox */}
+            <div
+              className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
+            >
+              {recurringUnitCheckboxes}
             </div>
           </div>
-          {/* Info: (20241007 - Julian) recurring unit checkbox */}
-          <div
-            className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
-          >
-            {recurringUnitCheckboxes}
+        </div>
+        {/* Info: (20241009 - Julian) Asset */}
+        {isAssetRequired && (
+          <div className="col-span-2 flex flex-col">
+            <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
           </div>
+        )}
+        {/* Info: (20240926 - Julian) Reverse */}
+        {isReverseRequired && (
+          <div className="col-span-2 flex flex-col">
+            <ReverseSection
+              reverses={reverses}
+              setReverses={setReverses}
+              flagOfClear={flagOfClear}
+              flagOfSubmit={flagOfSubmit}
+            />
+          </div>
+        )}
+        {/* Info: (20240926 - Julian) Voucher line block */}
+        <VoucherLineBlock
+          totalCredit={totalCredit}
+          totalDebit={totalDebit}
+          haveZeroLine={haveZeroLine}
+          isAccountingNull={isAccountingNull}
+          isVoucherLineEmpty={isVoucherLineEmpty}
+          lineItems={voucherLineItems}
+          setLineItems={setLineItems}
+          flagOfClear={flagOfClear}
+          flagOfSubmit={flagOfSubmit}
+        />
+        {/* Info: (20240926 - Julian) buttons */}
+        <div className="col-span-2 ml-auto flex items-center gap-12px">
+          <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
+            {t('journal:JOURNAL.CLEAR_ALL')}
+          </Button>
+          <Button type="submit">
+            <p>{t('common:COMMON.SAVE')}</p>
+            <BiSave size={20} />
+          </Button>
         </div>
-      </div>
-      {/* Info: (20241009 - Julian) Asset */}
-      {isAssetRequired && (
-        <div className="col-span-2 flex flex-col">
-          <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
-        </div>
-      )}
-      {/* Info: (20240926 - Julian) Reverse */}
-      {isReverseRequired && (
-        <div className="col-span-2 flex flex-col">
-          <ReverseSection
-            reverses={reverses}
-            setReverses={setReverses}
-            flagOfClear={flagOfClear}
-            flagOfSubmit={flagOfSubmit}
-          />
-        </div>
-      )}
-      {/* Info: (20240926 - Julian) Voucher line block */}
-      <VoucherLineBlock
-        totalCredit={totalCredit}
-        totalDebit={totalDebit}
-        haveZeroLine={haveZeroLine}
-        isAccountingNull={isAccountingNull}
-        isVoucherLineEmpty={isVoucherLineEmpty}
-        lineItems={voucherLineItems}
-        setLineItems={setLineItems}
-        flagOfClear={flagOfClear}
-        flagOfSubmit={flagOfSubmit}
-      />
-      {/* Info: (20240926 - Julian) buttons */}
-      <div className="col-span-2 ml-auto flex items-center gap-12px">
-        <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
-          {t('journal:JOURNAL.CLEAR_ALL')}
-        </Button>
-        <Button type="submit">
-          <p>{t('common:COMMON.SAVE')}</p>
-          <BiSave size={20} />
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 
