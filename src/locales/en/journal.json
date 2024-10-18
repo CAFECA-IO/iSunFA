@@ -209,6 +209,9 @@
     "VOUCHER_DATE": "Voucher Date",
     "VOUCHER_NO": "Voucher No.",
     "NOTE": "Note",
+    "ACCOUNTING": "Accounting",
+    "CREDIT": "Credit",
+    "DEBIT": "Debit",
     "COUNTRYPARTY": "Country Party",
     "ISSUER": "Issuer",
     "RECEIVABLE_AMOUNT": "Receivable Amount",
@@ -223,6 +226,7 @@
     "EXPORT_BTN": "Export",
     "FROM_PLACEHOLDER": "From",
     "TO_PLACEHOLDER": "To",
+    "NO_VOUCHER": "No voucher data",
     "BALANCE": "Balance",
     "LEDGER": "Ledger",
     "TRIAL_BALANCE": "Trial_Balance"

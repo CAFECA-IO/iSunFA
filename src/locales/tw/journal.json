@@ -210,6 +210,9 @@
     "VOUCHER_NO": "傳票號碼",
     "NOTE": "備註",
     "COUNTRYPARTY": "交易對象",
+    "ACCOUNTING": "會計科目",
+    "CREDIT": "貸方",
+    "DEBIT": "借方",
     "ISSUER": "發行人",
     "RECEIVABLE_AMOUNT": "應收金額",
     "PAYABLE_AMOUNT": "應付金額",
@@ -223,6 +226,7 @@
     "EXPORT_BTN": "匯出",
     "FROM_PLACEHOLDER": "從",
     "TO_PLACEHOLDER": "到",
+    "NO_VOUCHER": "無傳票資料",
     "BALANCE": "餘額",
     "LEDGER": "分類帳",
     "TRIAL_BALANCE": "試算表"
