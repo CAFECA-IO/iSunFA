@@ -210,6 +210,9 @@
     "VOUCHER_NO": "传票号码",
     "NOTE": "备注",
     "COUNTRYPARTY": "交易对象",
+    "ACCOUNTING": "会计科目",
+    "CREDIT": "贷方",
+    "DEBIT": "借方",
     "ISSUER": "发行人",
     "RECEIVABLE_AMOUNT": "应收金额",
     "PAYABLE_AMOUNT": "应付金额",
@@ -225,7 +228,8 @@
     "TO_PLACEHOLDER": "到",
     "BALANCE": "余额",
     "LEDGER": "分类帐",
-    "TRIAL_BALANCE": "试算表"
+    "TRIAL_BALANCE": "试算表",
+    "NO_VOUCHER": "无传票资料"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",
