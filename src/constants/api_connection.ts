@@ -114,6 +114,7 @@ export enum APIName {
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
+  ASK_AI_V2 = 'ASK_AI_V2',
 }
 
 export enum APIPath {
@@ -206,6 +207,7 @@ export enum APIPath {
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
+  ASK_AI_V2 = `${apiPrefixV2}/company/:companyId/ask_ai/:resultId`,
 }
 const createConfig = ({
   name,
@@ -615,5 +617,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ASSET_GET_BY_ID_V2,
     method: HttpMethod.GET,
     path: APIPath.ASSET_GET_BY_ID_V2,
+  }),
+  [APIName.ASK_AI_V2]: createConfig({
+    name: APIName.ASK_AI_V2,
+    method: HttpMethod.GET,
+    path: APIPath.ASK_AI_V2,
+  }),
+  [APIName.VOUCHER_LIST_V2]: createConfig({
+    name: APIName.VOUCHER_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_LIST_V2,
   }),
 };

@@ -1,9 +1,10 @@
-import { useRouter } from 'next/router';
-import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/router';
+import { useTranslation } from 'next-i18next';
+import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import { ICertificateInfo } from '@/interfaces/certificate';
+import { ICertificateMeta } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
 import { IFile } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
@@ -21,45 +22,48 @@ import { MessageType } from '@/interfaces/message_modal';
 import { RxCross2 } from 'react-icons/rx';
 import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
 
-interface IFileWithUrl extends File {
+export interface ICertificateMetaWithFile extends ICertificateMeta {
   file: File;
-  name: string;
-  size: number;
-  type: string;
-  lastModified: number;
-  url: string;
 }
 
 const MobileUploadPage: React.FC = () => {
+  const { t } = useTranslation(['certificate', 'common']);
   const router = useRouter();
   const { query } = router;
   const [token, setToken] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [sentCount, setSentCount] = useState<number>(1);
   const [selectedCertificates, setSelectedCertificates, selectedCertificatesRef] = useStateRef<
-    IFileWithUrl[]
+    ICertificateMetaWithFile[]
   >([]);
-  const [uploadedCertificates, setUploadedCertificates] = useState<ICertificateInfo[]>([]);
+  const [uploadedCertificates, setUploadedCertificates] = useState<ICertificateMeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
   const { trigger: uploadFileAPI } = APIHandler<IFile[]>(APIName.PUBLIC_FILE_UPLOAD);
   const { trigger: pusherAPI } = APIHandler<void>(APIName.PUSHER);
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-  const [selectedCertificate, setSelectedCertificate] = useState<IFileWithUrl | null>(null);
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
+  const [selectedCertificate, setSelectedCertificate] = useState<ICertificateMetaWithFile | null>(
+    null
+  );
 
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (e.target.files) {
         const certificates = Array.from(e.target.files).map(
-          (file) =>
+          (file, index) =>
             ({
-              file, // Info: (20241009 - tzuhan) Store the original File object for FormData
+              id: sentCount * index,
               name: file.name, // Info: (20241009 - tzuhan)  File metadata
               size: file.size,
-              type: file.type,
-              lastModified: file.lastModified,
               url: URL.createObjectURL(file), // Info: (20241009 - tzuhan)  For displaying the image preview
-            }) as IFileWithUrl
+              progress: 0,
+              status: ProgressStatus.IN_PROGRESS,
+              file, // Info: (20241009 - tzuhan) Store the original File object for FormData
+            }) as ICertificateMetaWithFile
         );
         // Deprecated: (20241019 - tzuhan) 如果是拍照模式使用下列code就只能拍一張照片
         // .filter((file) => !selectedCertificatesRef.current.some((f) => f.name === file.name));
@@ -67,10 +71,10 @@ const MobileUploadPage: React.FC = () => {
       }
     } catch (error) {
       messageModalDataHandler({
-        title: 'Select File Error', // ToDo: (20241015 - Tzuhan) i18n
-        content: `${error ? (error as Error).message : 'Something went wrong'}`,
+        title: t('certificate:ERROR.SELECT_CERTIFICATE'), // ToDo: (20241015 - Tzuhan) i18n
+        content: `${error ? (error as Error).message : t('certificate:ERROR.WENT_WRONG')}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => {
           messageModalVisibilityHandler();
         },
@@ -79,7 +83,7 @@ const MobileUploadPage: React.FC = () => {
     }
   };
 
-  const handleRemoveFile = (file: IFileWithUrl) => {
+  const handleRemoveFile = (file: ICertificateMetaWithFile) => {
     if (selectedCertificate && selectedCertificate.name === file.name) {
       setSelectedCertificate(null);
     }
@@ -90,20 +94,16 @@ const MobileUploadPage: React.FC = () => {
   const uploadCertificates = async () => {
     setIsUploading(true);
     try {
-      const certificatesPayload = selectedCertificatesRef.current.map(
-        (obj, index) =>
-          ({
-            id: uploadedCertificates.length + index,
-            name: obj.name,
-            size: obj.size,
-            url: obj.url,
-            status: ProgressStatus.IN_PROGRESS,
-            progress: 0,
-          }) as ICertificateInfo
-      );
+      const certificatesPayload = [...selectedCertificatesRef.current];
 
       if (!token) {
-        throw new Error('Token is not provided');
+        toastHandler({
+          id: ToastId.TOKEN_NOT_PROVIDED,
+          type: ToastType.ERROR,
+          content: t('certificate:ERROR.TOKEN_NOT_PROVIDED'),
+          closeable: true,
+        });
+        return;
       }
 
       const { success: successPush } = await pusherAPI({
@@ -114,14 +114,19 @@ const MobileUploadPage: React.FC = () => {
       });
 
       if (successPush === false) {
-        throw new Error('Failed to send initial certificates via Pusher');
+        toastHandler({
+          id: ToastId.NOTIFY_WEB_ERROR,
+          type: ToastType.WARNING,
+          content: t('certificate:ERROR.NOTIFY_WEB'),
+          closeable: true,
+        });
       }
 
-      selectedCertificates.map(async (certificate, index) => {
+      selectedCertificates.map(async (certificate) => {
         const formData = new FormData();
         formData.append('file', certificate.file);
 
-        const { success, error } = await uploadFileAPI({
+        const { success } = await uploadFileAPI({
           query: {
             type: UploadType.MOBILE_UPLOAD,
             token: token as string,
@@ -129,18 +134,17 @@ const MobileUploadPage: React.FC = () => {
           body: formData,
         });
 
+        const uploadingCertificate = {
+          ...certificate,
+        };
+
         if (success === false) {
-          throw error ? (error as Error) : new Error('Failed to upload file');
+          uploadingCertificate.status = ProgressStatus.FAILED;
+          uploadingCertificate.progress = 0;
         }
 
-        const uploadingCertificate = {
-          id: uploadedCertificates.length + index,
-          name: certificate.name,
-          size: certificate.size,
-          url: certificate.url,
-          status: ProgressStatus.SUCCESS,
-          progress: 100,
-        } as ICertificateInfo;
+        uploadingCertificate.status = ProgressStatus.SUCCESS;
+        uploadingCertificate.progress = 100;
 
         const { success: successPushAgain } = await pusherAPI({
           body: {
@@ -150,16 +154,23 @@ const MobileUploadPage: React.FC = () => {
         });
 
         if (successPushAgain === false) {
-          messageModalDataHandler({
-            title: 'Fail to inform web but upload success', // ToDo: (20241015 - Tzuhan) i18n
-            content: 'Please refresh the page to see the uploaded certificates',
-            messageType: MessageType.WARNING,
-            submitBtnStr: 'Close',
-            submitBtnFunction: () => {
-              messageModalVisibilityHandler();
-            },
-          });
-          messageModalVisibilityHandler();
+          if (success) {
+            toastHandler({
+              id: ToastId.NOTIFY_WEB_ERROR,
+              type: ToastType.WARNING,
+              content: t('certificate:WARNING.SUCCESS_UPLOAD_BUT_NOTIFY_ERROR', {
+                name: certificate.name,
+              }),
+              closeable: true,
+            });
+          } else {
+            toastHandler({
+              id: ToastId.UPLOAD_CERTIFICATE_ERROR,
+              type: ToastType.ERROR,
+              content: t('certificate:ERROR.UPLOAD_AND_NOTIFY', { name: certificate.name }),
+              closeable: true,
+            });
+          }
         }
         setUploadedCertificates((prev) => [...prev, uploadingCertificate]);
       });
@@ -167,10 +178,10 @@ const MobileUploadPage: React.FC = () => {
       setSuccessUpload(false);
       setIsUploading(false);
       messageModalDataHandler({
-        title: 'Upload File Error', // ToDo: (20241015 - Tzuhan) i18n
-        content: `${error ? (error as Error).message : 'Something went wrong'}`,
+        title: t('certificate:ERROR.UPLOAD_CERTIFICATE'), // ToDo: (20241015 - Tzuhan) i18n
+        content: `${error ? (error as Error).message : t('certificate:ERROR.WENT_WRONG')}`,
         messageType: MessageType.ERROR,
-        submitBtnStr: 'Close',
+        submitBtnStr: t('common:COMMON.CLOSE'),
         submitBtnFunction: () => {
           messageModalVisibilityHandler();
         },
@@ -185,7 +196,7 @@ const MobileUploadPage: React.FC = () => {
     }
   };
 
-  const handleSelectCertificate = (certificate: IFileWithUrl) => {
+  const handleSelectCertificate = (certificate: ICertificateMetaWithFile) => {
     if (selectedCertificate && selectedCertificate.name === certificate.name) {
       setSelectedCertificate(null);
       return;
@@ -197,6 +208,7 @@ const MobileUploadPage: React.FC = () => {
     setIsUploading(false);
     setSelectedCertificates([]);
     setUploadedCertificates([]);
+    setSentCount((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -223,7 +235,7 @@ const MobileUploadPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>Upload Certificate - iSunFA</title>
+        <title>{t('certificate:TITLE.UPLOAD')} - iSunFA</title>
       </Head>
       <main
         // Deprecated: (20241019 - tzuhan) Debugging purpose
@@ -232,8 +244,11 @@ const MobileUploadPage: React.FC = () => {
       >
         <div className="flex h-100px shrink-0 items-center justify-between bg-surface-neutral-solid-dark p-2">
           <div className="ml-1 w-44px"></div>
-          <div className="p-2 text-stroke-neutral-invert">
-            Selected file: {selectedCertificates.length}
+          <div className="flex items-center justify-center gap-2">
+            <div className="p-2 text-stroke-neutral-invert">{t('certificate:TITLE.SELECT')}:</div>
+            <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
+              {selectedCertificates.length}
+            </div>
           </div>
           <Button
             id="camera-upload-image-button"
