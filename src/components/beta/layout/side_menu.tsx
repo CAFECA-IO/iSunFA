@@ -5,6 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType, ToastPosition } from '@/interfaces/toastify';
+// import { useUserCtx } from '@/contexts/user_context'; // ToDo: (20241018 - Liz) 準備串接真實資料
 
 interface CaptionLayoutProps {
   caption: string;
@@ -14,6 +17,8 @@ interface LinkLayoutProps {
   linkText: string;
   href?: string;
   disabled?: boolean;
+  isCompanyNeeded?: boolean;
+  toggleOverlay?: () => void;
 }
 
 interface PanelLayoutProps {
@@ -62,7 +67,7 @@ const PanelLayout = ({
 
       {/* // Info: (20241014 - Liz) Panel : 面板上有各種 links 可以連結到其他頁面 */}
       {isPanelOpen && (
-        <div className="absolute left-full top-0 z-10 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
+        <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
           {children}
         </div>
       )}
@@ -80,10 +85,56 @@ const CaptionLayout = ({ caption }: CaptionLayoutProps) => {
   );
 };
 
-const LinkLayout = ({ linkText, href, disabled = false }: LinkLayoutProps) => {
+const LinkLayout = ({
+  linkText,
+  href,
+  disabled = false,
+  isCompanyNeeded = false,
+  toggleOverlay = () => {},
+}: LinkLayoutProps) => {
+  const { toastHandler } = useModalContext();
+
+  // const { selectedCompany } = useUserCtx(); // ToDo: (20241018 - Liz) 準備串接真實資料
+
+  /* === Fake Data === */
+  const selectedCompany = '';
+  const isSelectedCompany = !!selectedCompany;
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isCompanyNeeded && !isSelectedCompany) {
+      // Info: (20241018 - Liz) 阻止導航
+      e.preventDefault();
+
+      toggleOverlay();
+
+      // ToDo: (20241018 - Liz) 要換成真實的「選擇公司」的 Link href
+      toastHandler({
+        id: 'company-needed',
+        type: ToastType.INFO,
+        content: (
+          <div className="flex items-center gap-32px">
+            <p className="text-sm text-text-neutral-primary">
+              Please select a company before proceeding with the operation.
+            </p>
+            <Link href={'/'} className="text-base font-semibold text-link-text-primary">
+              Company Link
+            </Link>
+          </div>
+        ),
+        closeable: true,
+        position: ToastPosition.TOP_CENTER,
+        onClose: () => {
+          // Info: (20241018 - Liz) 關閉 Toast 時順便關閉 Overlay
+          toggleOverlay();
+        },
+      });
+    }
+  };
+
   return (
     <Link
       href={href ?? temporaryLink}
+      onClick={handleClick}
       className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
     >
       {linkText}
@@ -91,7 +142,11 @@ const LinkLayout = ({ linkText, href, disabled = false }: LinkLayoutProps) => {
   );
 };
 
-const SideMenu = () => {
+interface SideMenuProps {
+  toggleOverlay?: () => void;
+}
+
+const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
 
   const toggleSideMenu = () => {
@@ -149,12 +204,12 @@ const SideMenu = () => {
 
             {/* // Info: (20241014 - Liz) Personnel Management */}
             <PanelLayout
+              disabled
               panelTitle="Personnel Management"
               iconSrc="/icons/personnel_management_icon.svg"
               iconSrcAlt="personnel_management_icon"
               iconWidth={23.95}
               iconHeight={24}
-              disabled
             >
               <div></div>
             </PanelLayout>
@@ -195,7 +250,12 @@ const SideMenu = () => {
             >
               <div className="flex flex-col gap-24px">
                 <CaptionLayout caption="Setting" />
-                <LinkLayout linkText="General Setting" />
+                <LinkLayout
+                  linkText="General Setting"
+                  href={ISUNFA_ROUTE.EXAMPLE}
+                  isCompanyNeeded
+                  toggleOverlay={toggleOverlay}
+                />
 
                 <CaptionLayout caption="Company setting" />
                 <LinkLayout linkText="Accounting Setting" />
