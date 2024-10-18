@@ -1,5 +1,5 @@
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
-import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -222,7 +222,7 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
       `${localToday.getMonth() + 1}`.padStart(2, '0') +
       `${localToday.getDate()}`.padStart(2, '0');
     const resultDate = result?.createdAt
-      ? new Date(timestampInSeconds(result?.createdAt)).getDate()
+      ? new Date(timestampInMilliSeconds(result?.createdAt)).getDate()
       : -1;
     const isYesterday = resultDate !== localToday.getDate();
     const latestNo = result?.no.slice(result.no.length - 3) || '0'; // Info: （ 20240522 - Murky）I want to slice the last 3 digits
