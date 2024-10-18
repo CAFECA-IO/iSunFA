@@ -1010,6 +1010,7 @@ module.exports = {
         '438px': '438px',
         '440px': '440px',
         '450px': '450px',
+        '452px': '452px',
         '475px': '475px',
         '479px': '479px',
         '480px': '480px',
@@ -1340,6 +1341,7 @@ module.exports = {
           '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
+        xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0px 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',

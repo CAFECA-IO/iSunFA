@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+// import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -13,10 +13,12 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import CollapseButton from '@/components/button/collapse_button';
+import BalanceDetailsButton from '@/components/button/balance_details_button';
 
-interface IBalanceSheetReportBodyAllProps {
-  reportId: string;
-}
+// Info: (20241017 - Anna) 不從父層拿reportId
+// interface IBalanceSheetReportBodyAllProps {
+//   reportId: string;
+// }
 
 const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
 
@@ -29,11 +31,16 @@ const COLOR_CLASSES = [
   'bg-[#9B8AFB]',
 ];
 
-const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
+// Info: (20241017 - Anna) 不從父層拿reportId
+// const BalanceSheetList = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
+const BalanceSheetList = () => {
   const { t } = useTranslation('common');
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  // Todo: (20241017 - Anna) 先reportId，為了看UI
+  // const defaultReportId = '10000083';
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -60,11 +67,17 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<BalanceSheetReport>(
-    APIName.REPORT_GET_BY_ID,
+    APIName.REPORT_GET_V2,
     {
       params: {
         companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        // Info: (20241017 - Anna) 改用預設的reportId
+        // reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        // reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+        startDate: '1704070800',
+        endDate: '1706745599',
+        language: 'en',
+        reportType: 'balance_sheet',
       },
     },
     hasCompanyId
@@ -73,16 +86,29 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
 
-  // Info: (20241001 - Anna) 管理表格摺疊狀態
+  // Info: (20241001 - Anna) 管理表格摺疊狀態(項目彙總格式)
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
+  // Info: (20241001 - Anna) 管理表格摺疊狀態(細項分類格式)
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
-  // Info: (20241001 - Anna) 切換摺疊狀態
+  // Info: (20241017 - Anna) 管理表格摺疊狀態(某個項目的展開組成科目)
+  const [isSubAccountsCollapsed, setIsSubAccountsCollapsed] = useState<{ [key: string]: boolean }>(
+    {}
+  );
+
+  // Info: (20241001 - Anna) 切換摺疊狀態(項目彙總格式)
   const toggleSummaryTable = () => {
     setIsSummaryCollapsed(!isSummaryCollapsed);
   };
-
+  // Info: (20241001 - Anna) 切換摺疊狀態(細項分類格式)
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
+  };
+  // Info: (20241017 - Anna) 切換摺疊狀態(某個項目的展開組成科目)
+  const toggleSubAccounts = (code: string) => {
+    setIsSubAccountsCollapsed((prevState) => ({
+      ...prevState,
+      [code]: !prevState[code],
+    }));
   };
 
   useEffect(() => {
@@ -126,6 +152,19 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       setPreDate(previousDateString.date);
       setCurYear(currentYear);
       setPreYear(previousYear);
+    }
+  }, [reportFinancial]);
+
+  useEffect(() => {
+    if (reportFinancial && reportFinancial.details) {
+      const initialCollapseState: { [key: string]: boolean } = reportFinancial.details.reduce(
+        (acc, item) => {
+          acc[item.code] = true; // Info: (20241017 - Anna) 預設每個項目的展開狀態為摺疊
+          return acc;
+        },
+        {} as { [key: string]: boolean }
+      );
+      setIsSubAccountsCollapsed(initialCollapseState);
     }
   }, [reportFinancial]);
 
@@ -348,23 +387,60 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       }
 
       return (
-        // Info: (20240723 - Shirley) it's ok to use index in the static data
-        <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
-          </td>
-        </tr>
+        <React.Fragment key={item.code}>
+          {/* Info: (20240723 - Shirley) it's ok to use index in the static data */}
+          <tr>
+            <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
+              {item.code}
+            </td>
+            <td className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm">
+              {item.name}
+              <CollapseButton
+                // Info: (20241017 - Anna) 指定 item 的 code 作為參數
+                onClick={() => toggleSubAccounts(item.code)}
+                // Info: (20241017 - Anna) 依據每個 item 的狀態決定是否展開
+                isCollapsed={isSubAccountsCollapsed[item.code] ?? true}
+                buttonType="orange"
+              />
+            </td>
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+              {item.curPeriodAmountString}
+            </td>
+            <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+              {item.curPeriodPercentage}
+            </td>
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+              {item.prePeriodAmountString}
+            </td>
+            <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+              {item.prePeriodPercentage}
+            </td>
+          </tr>
+          {/* Info: (20241003 - Anna) 如果展開，新增一行表格 */}
+          {!isSubAccountsCollapsed[item.code] && (
+            <tr key={`sub-accounts-${item.code}`}>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
+              <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">
+                <div className="flex w-full items-center justify-between">
+                  <span>110001 透過損益按公允價值衡量之⾦融資產－流動</span>
+                  <BalanceDetailsButton />
+                </div>
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                924,636
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                -
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                924,636
+              </td>
+              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                -
+              </td>
+            </tr>
+          )}
+        </React.Fragment>
       );
     });
     return rows;
@@ -641,7 +717,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>一、項目彙總格式</p>
-            <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
+            <CollapseButton
+              onClick={toggleSummaryTable}
+              isCollapsed={isSummaryCollapsed}
+              buttonType="default"
+            />
           </div>
           <p>單位：新台幣元</p>
         </div>
@@ -712,7 +792,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 會計項目
               </th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                {curDate}{' '}
+                {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
                 %
@@ -747,7 +827,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>二、細項分類格式</p>
-            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
+            <CollapseButton
+              onClick={toggleDetailTable}
+              isCollapsed={isDetailCollapsed}
+              buttonType="default"
+            />
           </div>
           <p>單位：新台幣元</p>
         </div>
@@ -933,13 +1017,13 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
                 會計項目
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {curDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
                 %
               </th>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
+              <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xs font-semibold">
                 {preDate}
               </th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-xs font-semibold">
@@ -1445,4 +1529,4 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   );
 };
 
-export default BalanceSheetReportBodyAll;
+export default BalanceSheetList;

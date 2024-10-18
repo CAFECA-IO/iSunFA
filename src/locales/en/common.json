@@ -294,7 +294,11 @@
     "COMPLETED": "Completed",
     "DAY": "Day",
     "SAVE": "Save",
-    "DELETE": "Delete"
+    "DELETE": "Delete",
+    "CODE": "Code",
+    "BEGINNING": "Beginning",
+    "MIDTERM": "Midterm",
+    "ENDING": "Ending"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
@@ -411,7 +415,11 @@
     "TYPE": "Type",
     "ALL": "All",
     "INVOICE": "Invoice",
-    "RECEIPT": "Receipt"
+    "RECEIPT": "Receipt",
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity",
+    "NONE": ""
   },
   "SELECTION": {
     "EXPORT": "Export",
