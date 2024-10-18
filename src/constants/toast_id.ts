@@ -5,4 +5,10 @@ export enum ToastId {
   PROJECT_STAGE_UPDATE = 'toast-project-stage-update',
   ADD_ASSET_SUCCESS = 'toast-add-asset-success',
   ADD_ASSET_ERROR = 'toast-add-asset-error',
+  DELETE_CERTIFICATE_SUCCESS = 'toast-delete-certificate-success',
+  DELETE_CERTIFICATE_ERROR = 'toast-delete-certificate-error',
+  TOKEN_NOT_PROVIDED = 'toast-token-not-provided',
+  UPLOAD_CERTIFICATE_ERROR = 'toast-upload-certificate-error',
+  NOTIFY_WEB_ERROR = 'toast-notify-web-error',
+  ADD_COUNTERPARTY_SUCCESS = 'toast-add-counterparty-success',
 }

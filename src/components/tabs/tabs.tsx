@@ -9,7 +9,7 @@ interface TabProps {
 
 const Tabs: React.FC<TabProps> = ({ tabs, activeTab, onTabClick, counts }) => {
   return (
-    <div className="my-20px inline-flex w-full items-center justify-center">
+    <div className="my-4 inline-flex w-full items-center justify-center">
       {tabs.map((tab, index) => (
         <button
           type="button"
@@ -23,7 +23,7 @@ const Tabs: React.FC<TabProps> = ({ tabs, activeTab, onTabClick, counts }) => {
             {tab}
           </p>
           <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-            {counts[index]}
+            {`${counts[index]} ${counts[index] > 0 ? '+' : ''}`}
           </div>
         </button>
       ))}

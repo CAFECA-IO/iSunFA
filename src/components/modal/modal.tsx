@@ -16,7 +16,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
       className="fixed inset-0 z-70 flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
-      <div className="relative flex max-h-450px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
+      <div className="relative flex max-h-900px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-95vh">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button
           type="button"

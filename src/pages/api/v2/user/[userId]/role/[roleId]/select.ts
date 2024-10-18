@@ -9,7 +9,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { getUserRoleByUserAndRoleId } from '@/lib/utils/repo/user_role.repo';
 import { setSession } from '@/lib/utils/session';
 
-const handleGetRequest: IHandleRequest<APIName.ROLE_SELECT, IRole> = async ({ query, session }) => {
+const handlePutRequest: IHandleRequest<APIName.ROLE_SELECT, IRole> = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IRole | null = null;
   const { userId, roleId } = query;
@@ -32,7 +32,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IRole | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ROLE_SELECT, req, res, handleGetRequest),
+  PUT: (req, res) => withRequestValidation(APIName.ROLE_SELECT, req, res, handlePutRequest),
 };
 
 export default async function handler(
