@@ -54,7 +54,8 @@ describe('company/[companyId]/voucher/[voucherId]', () => {
       req.query = {
         voucherId: mockVoucherId,
       };
-      req.body = undefined;
+
+      req.body = {};
 
       const { statusMessage } = await handleGetRequest(req, res);
 

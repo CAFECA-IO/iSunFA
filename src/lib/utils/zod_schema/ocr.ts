@@ -6,9 +6,12 @@ const ocrListQueryValidator = z.object({
   ocrType: z.nativeEnum(ocrTypes).or(z.undefined()),
 });
 
-const ocrListBodyValidator = z.undefined();
+const ocrListBodyValidator = z.object({});
 
-export const ocrListValidator: IZodValidator<(typeof ocrListQueryValidator)['shape']> = {
+export const ocrListValidator: IZodValidator<
+  (typeof ocrListQueryValidator)['shape'],
+  (typeof ocrListBodyValidator)['shape']
+> = {
   // Info: (20240911 - Murky) GET /ocr
   query: ocrListQueryValidator,
   body: ocrListBodyValidator,
@@ -34,10 +37,11 @@ const ocrResultGetByIdQueryValidator = z.object({
   ocrType: z.nativeEnum(ocrTypes).or(z.undefined()),
 });
 
-const ocrResultGetByIdBodyValidator = z.undefined();
+const ocrResultGetByIdBodyValidator = z.object({});
 
 export const ocrResultGetByIdValidator: IZodValidator<
-  (typeof ocrResultGetByIdQueryValidator)['shape']
+  (typeof ocrResultGetByIdQueryValidator)['shape'],
+  (typeof ocrResultGetByIdBodyValidator)['shape']
 > = {
   query: ocrResultGetByIdQueryValidator,
   body: ocrResultGetByIdBodyValidator,

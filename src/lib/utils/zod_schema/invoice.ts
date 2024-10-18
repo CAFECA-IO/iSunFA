@@ -51,10 +51,11 @@ const invoiceGetByIdQueryValidator = z.object({
   invoiceId: zodStringToNumber,
 });
 
-const invoiceGetByIdBodyValidator = z.undefined();
+const invoiceGetByIdBodyValidator = z.object({});
 
 export const invoiceGetByIdValidator: IZodValidator<
-  (typeof invoiceGetByIdQueryValidator)['shape']
+  (typeof invoiceGetByIdQueryValidator)['shape'],
+  (typeof invoiceGetByIdBodyValidator)['shape']
 > = {
   query: invoiceGetByIdQueryValidator,
   body: invoiceGetByIdBodyValidator,
