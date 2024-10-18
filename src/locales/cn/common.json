@@ -293,7 +293,8 @@
     "LOADING": "加载中...",
     "COMPLETED": "已完成",
     "DAY": "日",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "DELETE": "删除"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
