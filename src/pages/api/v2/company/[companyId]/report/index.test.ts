@@ -1084,6 +1084,14 @@ describe('company/[companyId]/report', () => {
         // expect(totalRetainedEarnings?.curPeriodAmount).toBe(77000);
 
         /**
+         * Info: (20241018 - Murky)
+         * @description 3100 股本合計
+         */
+        const totalCapitalStock = general.find((detail) => detail.code === '3100');
+        expect(totalCapitalStock).toBeDefined();
+        expect(totalCapitalStock?.curPeriodAmount).toBe(200000);
+
+        /**
          * Info: (20241017 - Murky)
          * @description 3350 未分配盈餘（或待彌補虧損）
          * @note 4000 + 77000 = 81000
@@ -1091,6 +1099,14 @@ describe('company/[companyId]/report', () => {
         const unappropriatedRetainedEarnings = details.find((detail) => detail.code === '3350');
         expect(unappropriatedRetainedEarnings).toBeDefined();
         expect(unappropriatedRetainedEarnings?.curPeriodAmount).toBe(81000);
+
+        /**
+         * Info: (20241017 - Murky)
+         * @description 3XXX 權益總計
+         */
+        const totalEquity = general.find((detail) => detail.code === '3XXX');
+        expect(totalEquity).toBeDefined();
+        expect(totalEquity?.curPeriodAmount).toBe(281000);
       });
     });
 
