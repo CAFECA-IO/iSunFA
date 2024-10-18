@@ -120,7 +120,7 @@ const TrialBalanceList = () => {
         <div className="table-row-group text-sm">{displayedVoucherList}</div>
       </div>
       <div className="h-px w-full bg-neutral-100"></div>
-      {/* Anna複製主表格 */}
+      {/* Info: (20241018 - Anna) 複製主表格開始 */}
       <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
@@ -168,7 +168,7 @@ const TrialBalanceList = () => {
           </div>
         </div>
       </div>
-      {/* Anna複製主表格結束 */}
+      {/* Info: (20241018 - Anna) 複製主表格結束 */}
       <div className="mx-auto">
         <Pagination
           currentPage={currentPage}

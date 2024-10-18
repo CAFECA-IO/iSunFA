@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+// import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -40,7 +40,7 @@ const BalanceSheetList = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   // Todo: (20241017 - Anna) 先reportId，為了看UI
-  const defaultReportId = '10000083';
+  // const defaultReportId = '10000083';
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -73,7 +73,7 @@ const BalanceSheetList = () => {
         companyId: selectedCompany?.id,
         // Info: (20241017 - Anna) 改用預設的reportId
         // reportId: reportId ?? NON_EXISTING_REPORT_ID,
-        reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+        // reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
         startDate: '1704070800',
         endDate: '1706745599',
         language: 'en',
