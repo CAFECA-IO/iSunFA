@@ -33,12 +33,17 @@ import {
   ocrResultGetByIdValidator,
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
+import {
+  companyPendingTaskValidator,
+  userPendingTaskValidator,
+} from '@/lib/utils/zod_schema/pending_task';
 import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
 import {
   roleListValidator,
   rolePostValidator,
   roleSelectValidator,
 } from '@/lib/utils/zod_schema/role';
+import { todoListValidator, todoPostValidator } from '@/lib/utils/zod_schema/todo';
 import {
   voucherCreateValidator,
   voucherDeleteValidatorV2,
@@ -92,11 +97,15 @@ export const API_ZOD_SCHEMA = {
   [APIName.COMPANY_GET_BY_ID]: companyGetByIdValidator,
   [APIName.COMPANY_UPDATE]: companyPutValidator,
   [APIName.COMPANY_DELETE]: companyDeleteValidator,
+  [APIName.USER_PENDING_TASK_GET]: userPendingTaskValidator,
+  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
   [APIName.ROLE_LIST]: roleListValidator,
   [APIName.ROLE_SELECT]: roleSelectValidator,
   [APIName.CREATE_ROLE]: rolePostValidator,
   [APIName.CREATE_NEWS]: newsPostValidator,
+  [APIName.TODO_LIST]: todoListValidator,
+  [APIName.CREATE_TODO]: todoPostValidator,
   [APIName.NEWS_LIST]: newsListValidator,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteValidatorV2,
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,

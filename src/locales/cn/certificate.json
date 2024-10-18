@@ -64,8 +64,14 @@
     "TOTAL_PRICE": "总价（含税）",
     "COUNTERPARTY": "交易对象（客户/供应商）",
     "INVOICE_TYPE": "发票类型",
-    "DEDUCTABLE": "可抵扣税额",
+    "DEDUCTIBLE": "可抵扣税额",
     "SUCCESS": "您的发票信息已更新。"
+  },
+  "TYPE": {
+    "TRIPLICATE": "三联",
+    "DUPLICATE": "复联",
+    "SPECIAL": "专用",
+    "UNIFORM_INVOICE": "统一发票"
   },
   "COUNTERPARTY": {
     "ADD_NEW": "新增客户/供应商",
@@ -73,7 +79,7 @@
     "CLIENT": "客户",
     "SUPPLIER": "供应商",
     "TITLE": "将此交易对象新增至客户/供应商列表",
-    "CONTENT": "{{counterparty}}不在您的客户/供应商列表中。您要将其新增吗？",
+    "CONTENT": "{{counterparty}} 不在您的客户/供应商列表中。您要将其新增吗？",
     "YES": "是，新增",
     "NO": "否，取消",
     "SUCCESS": "新的客户/供应商已新增。",

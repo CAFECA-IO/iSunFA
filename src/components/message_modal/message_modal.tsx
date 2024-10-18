@@ -35,7 +35,12 @@ const MessageModal = ({
   } = messageModalData;
 
   // Info: (20240514 - Julian) 如果沒有 backBtnFunction，則預設為關閉 modal
-  const backBtnClickHandler = backBtnFunction || modalVisibilityHandler;
+  const backBtnClickHandler = () => {
+    if (backBtnFunction) {
+      backBtnFunction();
+    }
+    modalVisibilityHandler();
+  };
 
   // Info: (20240425 - Julian) 執行 submitBtnFunction 後，關閉 modal
   const submitClickHandler = () => {

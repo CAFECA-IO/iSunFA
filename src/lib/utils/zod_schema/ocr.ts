@@ -6,11 +6,11 @@ const ocrListQueryValidator = z.object({
   ocrType: z.nativeEnum(ocrTypes).or(z.undefined()),
 });
 
-const ocrListBodyValidator = z.string().nullish();
+const ocrListBodyValidator = z.object({});
 
 export const ocrListValidator: IZodValidator<
   (typeof ocrListQueryValidator)['shape'],
-  typeof ocrListBodyValidator
+  (typeof ocrListBodyValidator)['shape']
 > = {
   // Info: (20240911 - Murky) GET /ocr
   query: ocrListQueryValidator,

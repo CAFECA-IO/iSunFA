@@ -64,8 +64,14 @@
     "TOTAL_PRICE": "Total Price (Including Tax)",
     "COUNTERPARTY": "Counterparty (Client/Supplier)",
     "INVOICE_TYPE": "Invoice Type",
-    "DEDUCTABLE": "Deductable",
+    "DEDUCTIBLE": "Deductible",
     "SUCCESS": "Your certificate information has been updated."
+  },
+  "TYPE": {
+    "TRIPLICATE": "Triplicate",
+    "DUPLICATE": "Duplicate",
+    "SPECIAL": "Special",
+    "UNIFORM_INVOICE": "Uniform Invoice"
   },
   "COUNTERPARTY": {
     "ADD_NEW": "Add New Client/Supplier",
@@ -79,7 +85,7 @@
     "SUCCESS": "New Client/Supplier has been added.",
     "COMPANY_NAME": "Company Name",
     "ENTER_NAME": "Enter Name",
-    "TAX_NUMBER": "Business Tax ID Number",
+    "TAX_NUMBER": "Business Tax/ Personal ID Number",
     "ENTER_NUMBER": "Enter Number",
     "PARTNER_TYPE": "Partner Type",
     "NOTE": "Note",

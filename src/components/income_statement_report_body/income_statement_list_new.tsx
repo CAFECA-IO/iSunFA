@@ -1,6 +1,6 @@
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+// import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
@@ -9,7 +9,8 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
-import IncomeStatementReportTableRow from './income_statement_report_table_row';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
+import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
 
 // Info: (20241017 - Anna) 不從父層拿reportId
 // interface IIncomeStatementReportBodyAllProps {
@@ -20,7 +21,7 @@ import IncomeStatementReportTableRow from './income_statement_report_table_row';
 // const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
 const IncomeStatementList = () => {
   // Todo: (20241017 - Anna) 先reportId，為了看UI
-  const defaultReportId = '10000033';
+  // const defaultReportId = '10000033';
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
@@ -41,13 +42,19 @@ const IncomeStatementList = () => {
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<FinancialReport>(
-    APIName.REPORT_GET_BY_ID,
+    APIName.REPORT_GET_V2,
     {
       params: {
         companyId: selectedCompany?.id,
         // Info: (20241017 - Anna) 改用預設的reportId
         // reportId: reportId ?? NON_EXISTING_REPORT_ID,
-        reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+        // reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+      },
+      query: {
+        startDate: 1704070800,
+        endDate: 1706745599,
+        language: 'en',
+        reportType: FinancialReportTypesKey.comprehensive_income_statement,
       },
     },
     hasCompanyId

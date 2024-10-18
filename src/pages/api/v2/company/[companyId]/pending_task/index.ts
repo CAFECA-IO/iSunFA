@@ -1,38 +1,82 @@
+import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
-import { NextApiRequest, NextApiResponse } from 'next';
 import { IPendingTask } from '@/interfaces/pending_task';
+import { formatApiResponse } from '@/lib/utils/common';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { APIName } from '@/constants/api_connection';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { getCompanyByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
+import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
+import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
 
-// ToDo: (20240924 - Jacky) Implement the logic to get the pending tasks data from the database
-async function handleGetRequest() {
+export async function getPendingTaskByCompanyId(
+  userId: number,
+  companyId: number
+): Promise<IPendingTask | null> {
+  let pendingTask: IPendingTask | null = null;
+
+  const company = await getCompanyByUserIdAndCompanyId(userId, companyId);
+  if (company) {
+    const [missingCertificateCount, unpostedVoucherCount] = await Promise.all([
+      countMissingCertificate(companyId),
+      countUnpostedVoucher(companyId),
+    ]);
+
+    const totalPendingTask = missingCertificateCount + unpostedVoucherCount;
+
+    let missingCertificatePercentage = 0;
+    let unpostedVoucherPercentage = 0;
+
+    if (totalPendingTask > 0) {
+      missingCertificatePercentage = parseFloat(
+        (missingCertificateCount / totalPendingTask).toFixed(2)
+      );
+      unpostedVoucherPercentage = parseFloat((unpostedVoucherCount / totalPendingTask).toFixed(2));
+    }
+
+    if (missingCertificatePercentage + unpostedVoucherPercentage > 1) {
+      missingCertificatePercentage = 1 - unpostedVoucherPercentage;
+    }
+
+    pendingTask = {
+      companyId,
+      missingCertificate: {
+        companyId: company.id,
+        companyName: company.name,
+        count: missingCertificateCount,
+      },
+      missingCertificatePercentage,
+      unpostedVoucher: {
+        companyId: company.id,
+        companyName: company.name,
+        count: unpostedVoucherCount,
+      },
+      unpostedVoucherPercentage,
+    };
+  }
+
+  return pendingTask;
+}
+
+const handleGetRequest: IHandleRequest<APIName.COMPANY_PENDING_TASK_GET, IPendingTask> = async ({
+  session,
+  query,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPendingTask | null = null;
 
-  // ToDo: (20240924 - Jacky) Get session data from the request
-  // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
-  // ToDo: (20240924 - Jacky) Implement the logic to get the pending tasks data from the database
-  // ToDo: (20240924 - Jacky) Format the pending tasks data to the IPendingTaskTotal interface
-
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  payload = {
-    id: 1,
-    companyId: 1,
-    missingCertificate: {
-      id: 1,
-      companyId: 1,
-      count: 2,
-    },
-    unpostedVoucher: {
-      id: 1,
-      companyId: 1,
-      count: 3,
-    },
-  };
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  // ToDo: (20241018 - Jacky) Get userId from query after new auth check
+  const { userId } = session;
+  const { companyId } = query;
+  const pendingTask = await getPendingTaskByCompanyId(userId, companyId);
+  if (pendingTask) {
+    payload = pendingTask;
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  }
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
@@ -40,7 +84,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPendingTask | null }>;
 } = {
-  GET: handleGetRequest,
+  GET: (req, res) =>
+    withRequestValidation(APIName.COMPANY_PENDING_TASK_GET, req, res, handleGetRequest),
 };
 
 export default async function handler(

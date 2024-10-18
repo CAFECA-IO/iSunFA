@@ -50,6 +50,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   });
   const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
   const [viewType, setViewType] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState<{ [tab: number]: boolean }>({
     0: false,
@@ -275,16 +276,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     });
   }, [data, activeTab]);
 
-  const onEdit = useCallback(
+  const openEditModalHandler = useCallback(
     (id: number) => {
-      // Deprecated: (20240923 - tzuhan) debugging purpose
-      // eslint-disable-next-line no-console
-      console.log('Edit selected id:', id);
-      if (id === editingId) {
-        setEditingId(null);
-      } else {
-        setEditingId(id);
-      }
+      setIsEditModalOpen(true);
+      setEditingId(id);
     },
     [editingId]
   );
@@ -351,11 +346,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, [certificateHandler]);
   return (
     <>
-      {editingId && (
+      {isEditModalOpen && (
         <CertificateEditModal
-          isOpen={!!editingId}
-          onClose={() => setEditingId(null)}
-          certificate={data[activeTab][editingId]}
+          isOpen={isEditModalOpen}
+          toggleIsEditModalOpen={setIsEditModalOpen}
+          certificate={editingId ? data[activeTab][editingId] : undefined}
           onSave={handleSave}
         />
       )}
@@ -422,7 +417,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               isSelectedAll={isSelectedAll[activeTab]}
               onDownload={onDownload}
               onRemove={onRemove}
-              onEdit={onEdit}
+              onEdit={openEditModalHandler}
             />
           </>
         ) : (

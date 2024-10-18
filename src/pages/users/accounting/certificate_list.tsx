@@ -3,10 +3,8 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
-import SideMenu from '@/components/upload_certificate/side_menu';
-import Header from '@/components/upload_certificate/header';
 import CertificateListBody from '@/components/certificate/certificate_list_body';
-// import Layout from '@/components/beta/layout/layout';// ToDo: (20241017 - tzuhan)
+import Layout from '@/components/beta/layout/layout';
 
 const CertificateListPage: React.FC = () => {
   const { t } = useTranslation('certificate');
@@ -19,20 +17,10 @@ const CertificateListPage: React.FC = () => {
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>{t('certificate:TITLE.LIST')} - iSunFA</title>
       </Head>
-      <div className="flex h-screen">
-        {/* Info: (20240919 - tzuhan) Side Menu */}
-        <SideMenu />
 
-        {/* Info: (20240919 - tzuhan) Main Content Area */}
-        <div className="flex flex-auto flex-col gap-40px overflow-hidden bg-surface-neutral-main-background px-56px py-32px">
-          {/* Info: (20240919 - tzuhan) Header */}
-          <Header title={t('certificate:TITLE.LIST')} />
-
-          {/* ToDo: (20241017 - tzuhan) <Layout> */}
-          <CertificateListBody />
-          {/* ToDo: (20241017 - tzuhan) </Layout> */}
-        </div>
-      </div>
+      <Layout isDashboard={false} pageTitle={t('certificate:TITLE.LIST')}>
+        <CertificateListBody />
+      </Layout>
     </>
   );
 };

@@ -51,6 +51,44 @@ export async function listAdminByCompanyId(companyId: number): Promise<
   return listedAdmin;
 }
 
+export async function listCompanyByUserId(userId: number): Promise<
+  {
+    company: Company;
+  }[]
+> {
+  const listedCompany = await prisma.admin.findMany({
+    where: {
+      userId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    orderBy: {
+      companyId: SortOrder.ASC,
+    },
+    select: {
+      company: true,
+    },
+  });
+  return listedCompany;
+}
+
+export async function getCompanyByUserIdAndCompanyId(
+  userId: number,
+  companyId: number
+): Promise<Company | null> {
+  const admin = await prisma.admin.findFirst({
+    where: {
+      userId,
+      companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    select: {
+      company: true,
+    },
+  });
+  const company = admin?.company ?? null;
+  return company;
+}
+
 export async function getAdminById(adminId: number): Promise<
   | (Admin & {
       company: Company & { imageFile: File | null };
