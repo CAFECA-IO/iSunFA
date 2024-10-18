@@ -293,7 +293,11 @@
     "LOADING": "載入中...",
     "COMPLETED": "已完成",
     "DAY": "日",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "CODE": "科目編號",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "結束日"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
@@ -410,7 +414,11 @@
     "TYPE": "類型",
     "ALL": "全部",
     "INVOICE": "發票",
-    "RECEIPT": "收據"
+    "RECEIPT": "收據",
+    "ASSET":"資產",
+    "LIABILITY":"負債",
+    "EQUITY":"權益",
+    "NONE":""
   },
   "SELECTION": {
     "EXPORT": "匯出",

@@ -11,11 +11,17 @@ import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
 import IncomeStatementReportTableRow from './income_statement_report_table_row';
 
-interface IIncomeStatementReportBodyAllProps {
-  reportId: string;
-}
+// Info: (20241017 - Anna) 不從父層拿reportId
+// interface IIncomeStatementReportBodyAllProps {
+//   reportId: string;
+// }
 
-const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
+// Info: (20241017 - Anna) 不從父層拿reportId
+// const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
+const IncomeStatementList = () => {
+  // Todo: (20241017 - Anna) 先reportId，為了看UI
+  const defaultReportId = '10000033';
+
   const { isAuthLoading, selectedCompany } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
@@ -39,7 +45,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     {
       params: {
         companyId: selectedCompany?.id,
-        reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        // Info: (20241017 - Anna) 改用預設的reportId
+        // reportId: reportId ?? NON_EXISTING_REPORT_ID,
+        reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
       },
     },
     hasCompanyId
@@ -817,7 +825,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               >
                 {reportFinancial && reportFinancial.company && (
                   <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}至{formattedPreToDate}
+                    {formattedPreFromDate} 至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -1070,4 +1078,4 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   );
 };
 
-export default IncomeStatementReportBodyAll;
+export default IncomeStatementList;
