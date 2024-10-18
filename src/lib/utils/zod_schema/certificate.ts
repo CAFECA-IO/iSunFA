@@ -21,7 +21,7 @@ const certificateListQueryValidator = z.object({
   searchQuery: z.string().optional(),
 });
 
-const certificateListBodyValidator = z.object({});
+const certificateListBodyValidator = z.undefined();
 
 export const certificateReturnValidator = z.object({
   id: z.number(),
@@ -53,8 +53,7 @@ export const certificateReturnValidator = z.object({
 export const certificateListReturnValidator = z.array(certificateReturnValidator);
 
 export const certificateListValidator: IZodValidator<
-  (typeof certificateListQueryValidator)['shape'],
-  (typeof certificateListBodyValidator)['shape']
+  (typeof certificateListQueryValidator)['shape']
 > = {
   query: certificateListQueryValidator,
   body: certificateListBodyValidator,
@@ -64,11 +63,10 @@ const certificateGetOneQueryValidator = z.object({
   certificateId: zodStringToNumber,
 });
 
-const certificateGetOneBodyValidator = z.object({});
+const certificateGetOneBodyValidator = z.undefined();
 
 export const certificateGetOneValidator: IZodValidator<
-  (typeof certificateGetOneQueryValidator)['shape'],
-  (typeof certificateGetOneBodyValidator)['shape']
+  (typeof certificateGetOneQueryValidator)['shape']
 > = {
   query: certificateGetOneQueryValidator,
   body: certificateGetOneBodyValidator,

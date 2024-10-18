@@ -13,12 +13,9 @@ const newsListQueryValidator = z.object({
   searchQuery: z.string().optional(),
 });
 
-const newsListBodyValidator = z.object({});
+const newsListBodyValidator = z.undefined();
 
-export const newsListValidator: IZodValidator<
-  (typeof newsListQueryValidator)['shape'],
-  (typeof newsListBodyValidator)['shape']
-> = {
+export const newsListValidator: IZodValidator<(typeof newsListQueryValidator)['shape']> = {
   query: newsListQueryValidator,
   body: newsListBodyValidator,
 };

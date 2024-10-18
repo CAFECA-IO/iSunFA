@@ -53,7 +53,6 @@ describe('company/[companyId]/certificate/[certificateId]', () => {
       req.query = {
         certificateId: '1',
       };
-      req.body = {};
 
       const { payload, statusMessage } = await handleGetRequest(req, res);
 
