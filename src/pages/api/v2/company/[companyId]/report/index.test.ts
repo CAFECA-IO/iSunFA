@@ -12,7 +12,7 @@ import prisma from '@/client';
 import { Account, Company, LineItem, Prisma, PrismaPromise, Voucher } from '@prisma/client';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { FinancialReport } from '@/interfaces/report';
+import { BalanceSheetReport, FinancialReport } from '@/interfaces/report';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -974,7 +974,7 @@ describe('company/[companyId]/report', () => {
         });
 
         expect(payload).toBeDefined();
-        const { general, details } = payload as FinancialReport;
+        const { general, details, otherInfo } = payload as BalanceSheetReport;
         expect(details.length).toBeGreaterThan(0);
 
         /**
@@ -1107,6 +1107,12 @@ describe('company/[companyId]/report', () => {
         const totalEquity = general.find((detail) => detail.code === '3XXX');
         expect(totalEquity).toBeDefined();
         expect(totalEquity?.curPeriodAmount).toBe(281000);
+
+        // Info: (20241018 - Murky) Other Info
+        expect(otherInfo).toBeDefined();
+        const { dso } = otherInfo;
+        expect(dso).toBeDefined();
+        expect(dso.curDso).toBeCloseTo(365, 1);
       });
     });
 
