@@ -39,9 +39,12 @@ const queryValidator = z.object({
 // };
 
 // Info: (20241017 - Jacky) If you don't want to validate body, you can use z.undefined()
-const bodyValidator = z.undefined();
+const bodyValidator = z.object({});
 
-export const zodExampleValidator: IZodValidator<(typeof queryValidator)['shape']> = {
+export const zodExampleValidator: IZodValidator<
+  (typeof queryValidator)['shape'],
+  (typeof bodyValidator)['shape']
+> = {
   query: queryValidator,
   body: bodyValidator,
 };

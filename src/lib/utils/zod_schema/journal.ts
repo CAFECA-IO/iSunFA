@@ -35,10 +35,11 @@ const journalGetByIdQueryValidator = z.object({
   journalId: zodStringToNumber,
 });
 
-const journalGetByIdBodyValidator = z.undefined();
+const journalGetByIdBodyValidator = z.object({});
 
 export const journalGetByIdValidator: IZodValidator<
-  (typeof journalGetByIdQueryValidator)['shape']
+  (typeof journalGetByIdQueryValidator)['shape'],
+  (typeof journalGetByIdBodyValidator)['shape']
 > = {
   query: journalGetByIdQueryValidator,
   body: journalGetByIdBodyValidator,
@@ -48,10 +49,12 @@ const journalDeleteQueryValidator = z.object({
   journalId: zodStringToNumber,
 });
 
-const journalDeleteBodyValidator = z.undefined();
+const journalDeleteBodyValidator = z.object({});
 
-export const journalDeleteValidator: IZodValidator<(typeof journalDeleteQueryValidator)['shape']> =
-  {
-    query: journalDeleteQueryValidator,
-    body: journalDeleteBodyValidator,
-  };
+export const journalDeleteValidator: IZodValidator<
+  (typeof journalDeleteQueryValidator)['shape'],
+  (typeof journalDeleteBodyValidator)['shape']
+> = {
+  query: journalDeleteQueryValidator,
+  body: journalDeleteBodyValidator,
+};
