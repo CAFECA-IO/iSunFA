@@ -1,9 +1,9 @@
 export const PUBLIC_COMPANY_ID = 1002;
 
 export enum CompanyTag {
-  ALL = 'All',
-  FINANCIAL = 'Financial',
-  TAX = 'Tax',
+  ALL = 'all',
+  FINANCIAL = 'financial',
+  TAX = 'tax',
 }
 
 export enum CompanyUpdateAction {

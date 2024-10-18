@@ -10,7 +10,7 @@ import { getCompanyByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
 import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
 
-async function getPendingTaskByCompanyId(
+export async function getPendingTaskByCompanyId(
   userId: number,
   companyId: number
 ): Promise<IPendingTask | null> {
@@ -24,12 +24,20 @@ async function getPendingTaskByCompanyId(
     ]);
 
     const totalPendingTask = missingCertificateCount + unpostedVoucherCount;
-    const missingCertificatePercentage = totalPendingTask
-      ? parseFloat((missingCertificateCount / totalPendingTask).toFixed(2))
-      : 0;
-    const unpostedVoucherPercentage = totalPendingTask
-      ? parseFloat((unpostedVoucherCount / totalPendingTask).toFixed(2))
-      : 0;
+
+    let missingCertificatePercentage = 0;
+    let unpostedVoucherPercentage = 0;
+
+    if (totalPendingTask > 0) {
+      missingCertificatePercentage = parseFloat(
+        (missingCertificateCount / totalPendingTask).toFixed(2)
+      );
+      unpostedVoucherPercentage = parseFloat((unpostedVoucherCount / totalPendingTask).toFixed(2));
+    }
+
+    if (missingCertificatePercentage + unpostedVoucherPercentage > 1) {
+      missingCertificatePercentage = 1 - unpostedVoucherPercentage;
+    }
 
     pendingTask = {
       companyId,
