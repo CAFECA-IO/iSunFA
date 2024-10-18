@@ -58,10 +58,11 @@ const voucherGetAllQueryValidatorV2 = z.object({
   searchQuery: z.string().optional(),
 });
 
-const voucherGetAllBodyValidatorV2 = z.undefined();
+const voucherGetAllBodyValidatorV2 = z.object({});
 
 export const voucherGetAllValidatorV2: IZodValidator<
-  (typeof voucherGetAllQueryValidatorV2)['shape']
+  (typeof voucherGetAllQueryValidatorV2)['shape'],
+  (typeof voucherGetAllBodyValidatorV2)['shape']
 > = {
   query: voucherGetAllQueryValidatorV2,
   body: voucherGetAllBodyValidatorV2,
@@ -114,10 +115,11 @@ const voucherGetOneQueryValidatorV2 = z.object({
   voucherId: zodStringToNumber,
 });
 
-const voucherGetOneBodyValidatorV2 = z.undefined();
+const voucherGetOneBodyValidatorV2 = z.object({});
 
 export const voucherGetOneValidatorV2: IZodValidator<
-  (typeof voucherGetOneQueryValidatorV2)['shape']
+  (typeof voucherGetOneQueryValidatorV2)['shape'],
+  (typeof voucherGetOneBodyValidatorV2)['shape']
 > = {
   query: voucherGetOneQueryValidatorV2,
   body: voucherGetOneBodyValidatorV2,

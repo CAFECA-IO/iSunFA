@@ -37,10 +37,11 @@ const askAIGetResultQueryValidatorV2 = z.object({
   reason: z.enum(['help', 'certificate', 'voucher']),
 });
 
-const askAIGetResultBodyValidatorV2 = z.undefined();
+const askAIGetResultBodyValidatorV2 = z.object({});
 
 export const askAIGetResultValidatorV2: IZodValidator<
-  (typeof askAIGetResultQueryValidatorV2)['shape']
+  (typeof askAIGetResultQueryValidatorV2)['shape'],
+  (typeof askAIGetResultBodyValidatorV2)['shape']
 > = {
   query: askAIGetResultQueryValidatorV2,
   body: askAIGetResultBodyValidatorV2,

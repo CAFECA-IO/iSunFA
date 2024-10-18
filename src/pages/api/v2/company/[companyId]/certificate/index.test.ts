@@ -57,6 +57,8 @@ describe('company/[companyId]/certificate', () => {
         pageSize: '8',
       };
 
+      req.body = {};
+
       const { payload, statusMessage } = await handleGetRequest(req, res);
       const { data } = payload as { data: unknown };
 

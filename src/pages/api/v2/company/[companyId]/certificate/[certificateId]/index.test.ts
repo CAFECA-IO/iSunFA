@@ -54,6 +54,8 @@ describe('company/[companyId]/certificate/[certificateId]', () => {
         certificateId: '1',
       };
 
+      req.body = {};
+
       const { payload, statusMessage } = await handleGetRequest(req, res);
 
       const parseData = certificateReturnValidator.safeParse(payload);
