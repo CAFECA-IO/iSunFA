@@ -433,3 +433,19 @@ export async function updateVoucherByJournalIdInPrisma(
 
   return newVoucher;
 }
+
+export async function countUnpostedVoucher(companyId: number) {
+  const missingCertificatesCount = await prisma.voucher.count({
+    where: {
+      companyId, // 指定公司 ID
+      NOT: {
+        voucherCertificates: {
+          some: {},
+        },
+      },
+      company: {},
+    },
+  });
+
+  return missingCertificatesCount;
+}
