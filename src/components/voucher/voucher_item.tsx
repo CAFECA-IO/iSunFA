@@ -14,23 +14,13 @@ interface IVoucherItemProps {
 }
 
 const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) => {
-  const {
-    date,
-    voucherNo,
-    voucherType,
-    note,
-    accounting,
-    credit,
-    debit,
-    counterparty,
-    issuer,
-    onRead,
-  } = voucher;
+  const { voucherDate, voucherNo, voucherType, note, counterParty, issuer, onRead, lineItemsInfo } =
+    voucher;
 
   const [isChecked, setIsChecked] = useState(false);
 
   // Info: (20240920 - Julian) 借貸總和
-  const total = credit.reduce((acc, cur) => acc + cur, 0);
+  const total = lineItemsInfo.sum.amount ?? 0;
 
   const displayedCheckbox = (
     <div className="relative top-20px px-8px">
@@ -45,7 +35,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) =
 
   const displayedDate = (
     <div className="relative top-10px flex justify-center">
-      <CalendarIcon timestamp={date} onRead={onRead} />
+      <CalendarIcon timestamp={voucherDate} onRead={onRead} />
     </div>
   );
 
@@ -69,12 +59,18 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) =
 
   const displayedNote = <p className="relative top-20px">{note}</p>;
 
+  const accounting = lineItemsInfo.lineItems.map((item) => item.account);
+  const credit = lineItemsInfo.lineItems.filter((item) => !item.debit).map((item) => item.amount);
+  const debit = lineItemsInfo.lineItems.filter((item) => item.debit).map((item) => item.amount);
+
   const displayedAccounting = (
     <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
       {accounting.map((account, index) => (
         // Deprecated: (20240924 - Julian) array index as key
         // eslint-disable-next-line react/no-array-index-key
-        <p key={index}>{account}</p>
+        <p key={index}>
+          {account?.code} - {account?.name}
+        </p>
       ))}
     </div>
   );
@@ -123,8 +119,8 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) =
 
   const displayedCounterparty = (
     <div className="relative top-20px flex flex-col items-center gap-4px">
-      <p className="text-text-neutral-tertiary">{counterparty.code}</p>
-      <p className="text-text-neutral-primary">{counterparty.name}</p>
+      <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+      <p className="text-text-neutral-primary">{counterParty.name}</p>
     </div>
   );
 
@@ -150,9 +146,9 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) =
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Credit */}
-      <div className="table-cell py-8px text-right">{displayedCredit}</div>
+      <div className="table-cell">{displayedCredit}</div>
       {/* Info: (20240920 - Julian) Debit */}
-      <div className="table-cell py-8px text-right">{displayedDebit}</div>
+      <div className="table-cell">{displayedDebit}</div>
       {/* Info: (20240920 - Julian) Counterparty */}
       <div className="table-cell">{displayedCounterparty}</div>
       {/* Info: (20240920 - Julian) Issuer */}

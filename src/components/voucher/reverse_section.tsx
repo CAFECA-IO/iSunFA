@@ -89,12 +89,12 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
       <div className="flex flex-1 items-center gap-24px">
         <div className="font-medium text-dropdown-text-primary">{selectedVoucher.voucherNo}</div>
         <div className="text-xs text-dropdown-text-secondary">
-          {selectedVoucher.counterparty.name}
+          {selectedVoucher.counterParty.name}
         </div>
       </div>
       <div className="font-medium text-text-neutral-primary">
         {/* ToDo: (20241009 - Julian) 須確認這欄的內容 */}
-        {numberWithCommas(selectedVoucher.debit.reduce((acc, cur) => acc + cur, 0))}{' '}
+        {numberWithCommas(selectedVoucher?.lineItemsInfo.sum.amount ?? 0)}{' '}
         <span className="text-dropdown-text-secondary">TWD</span>
       </div>
     </div>
@@ -123,10 +123,10 @@ const ReverseLine: React.FC<IReverseLineProps> = ({
             className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <div className="w-1/3 font-medium text-dropdown-text-primary">{voucher.voucherNo}</div>
-            <div className="w-1/3 text-dropdown-text-secondary">{voucher.counterparty.name}</div>
+            <div className="w-1/3 text-dropdown-text-secondary">{voucher.counterParty.name}</div>
             <div className="w-1/3 font-medium text-text-neutral-primary">
               {/* ToDo: (20241009 - Julian) 須確認這欄的內容 */}
-              {numberWithCommas(voucher.debit.reduce((acc, cur) => acc + cur, 0))}{' '}
+              {numberWithCommas(voucher.lineItemsInfo.sum.amount ?? 0)}{' '}
               <span className="text-dropdown-text-secondary">TWD</span>
             </div>
           </div>

@@ -13,6 +13,7 @@ import {
   createVoucherSalaryRecordFolderMapping,
 } from '@/lib/utils/repo/salary_record.repo';
 import { createVoucher } from '@/lib/utils/repo/beta_transition.repo';
+import { EventType } from '@/constants/account';
 
 function checkInput(salaryRecordsIdsList: number[], voucherType: string): boolean {
   return (
@@ -88,7 +89,12 @@ async function handlePostRequest(
       const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
       const now = Date.now();
       const nowTimestamp = timestampInSeconds(now);
-      const voucherData = await createVoucher(newVoucherNo, companyId, nowTimestamp);
+      const voucherData = await createVoucher(
+        newVoucherNo,
+        companyId,
+        nowTimestamp,
+        EventType.PAYMENT
+      );
       // Info: (20240715 - Gibbs) create line items
       await createLineItems(voucherType, voucherData.id, companyId, salaryRecordsIdsList);
       // Info: (20240715 - Gibbs) create folder

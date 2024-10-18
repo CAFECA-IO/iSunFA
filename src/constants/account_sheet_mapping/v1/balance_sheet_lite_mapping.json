@@ -1,0 +1,97 @@
+[
+  {
+    "code": "",
+    "name": "資產",
+    "indent": 0
+  },
+  {
+    "code": "11XX",
+    "name": "流動資產合計",
+    "indent": 1
+  },
+  {
+    "code": "15XX",
+    "name": "非流動資產合計",
+    "indent": 1
+  },
+  {
+    "code": "1XXX",
+    "name": "資產總計",
+    "indent": 0
+  },
+  {
+    "code": "",
+    "name": "負債及權益",
+    "indent": 0
+  },
+  {
+    "code": "",
+    "name": "負債",
+    "indent": 1
+  },
+  {
+    "code": "21XX",
+    "name": "流動負債合計",
+    "indent": 2
+  },
+  {
+    "code": "25XX",
+    "name": "非流動負債合計",
+    "indent": 2
+  },
+  {
+    "code": "2XXX",
+    "name": "負債總計",
+    "indent": 1
+  },
+  {
+    "code": "",
+    "name": "權益",
+    "indent": 1
+  },
+  {
+    "code": "",
+    "name": "歸屬於母公司業主之權益",
+    "indent": 2
+  },
+  {
+    "code": "3100",
+    "name": "股本合計",
+    "indent": 3
+  },
+  {
+    "code": "3200",
+    "name": "資本公積合計",
+    "indent": 3
+  },
+  {
+    "code": "3300",
+    "name": "保留盈餘合計",
+    "indent": 3
+  },
+  {
+    "code": "3400",
+    "name": "其他權益合計",
+    "indent": 3
+  },
+  {
+    "code": "31XX",
+    "name": "歸屬於母公司業主之權益總計",
+    "indent": 2
+  },
+  {
+    "code": "3600",
+    "name": "非控制權益",
+    "indent": 2
+  },
+  {
+    "code": "3XXX",
+    "name": "權益總額",
+    "indent": 1
+  },
+  {
+    "code": "3X2X",
+    "name": "負債及權益總計",
+    "indent": 0
+  }
+]
