@@ -7,142 +7,222 @@
   {
     "code": "",
     "name": "流動資產",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "1100",
     "name": "現金及約當現金",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1110",
     "name": "透過損益按公允價值衡量之⾦融資產－流動",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1120",
     "name": "透過其他綜合損益按公允價值衡量之金融資產－流動",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1136",
     "name": "按攤銷後成本衡量之金融資產－流動",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1139",
     "name": "避險之⾦融資產－流動",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1140",
+    "name": "合約資產－流動",
+    "indent": 2
+  },
+  {
+    "code": "1150",
+    "name": "應收票據淨額",
+    "indent": 2
+  },
+  {
+    "code": "1160",
+    "name": "應收票據－關係人淨額",
+    "indent": 2
   },
   {
     "code": "1170",
     "name": "應收帳款淨額",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1180",
     "name": "應收帳款－關係⼈淨額",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1190",
+    "name": "應收建造合約款",
+    "indent": 2
+  },
+  {
+    "code": "1195",
+    "name": "應收建造合約款－關係人",
+    "indent": 2
+  },
+  {
+    "code": "1196",
+    "name": "應收營業租賃款淨額",
+    "indent": 2
+  },
+  {
+    "code": "1197",
+    "name": "應收融資租賃款淨額",
+    "indent": 2
+  },
+  {
+    "code": "1198",
+    "name": "應收營業租賃款淨額－關係人",
+    "indent": 2
+  },
+  {
+    "code": "1199",
+    "name": "應收融資租賃款淨額－關係人",
+    "indent": 2
+  },
+  {
+    "code": "1200",
+    "name": "其他應收款",
+    "indent": 2
   },
   {
     "code": "1210",
     "name": "其他應收款－關係⼈",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1220",
+    "name": "本期所得稅資產",
+    "indent": 2
   },
   {
     "code": "130X",
     "name": "存貨",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1400",
+    "name": "生物資產－流動",
+    "indent": 2
+  },
+  {
+    "code": "1410",
+    "name": "預付款項",
+    "indent": 2
+  },
+  {
+    "code": "1450",
+    "name": "待分配予業主之非流動資產（或處分群組）淨額",
+    "indent": 2
+  },
+  {
+    "code": "1460",
+    "name": "待出售非流動資產(或處分群組)淨額",
+    "indent": 2
   },
   {
     "code": "1470",
     "name": "其他流動資產",
-    "indent": 0
-  },
-  {
-    "code": "1476",
-    "name": "其他金融資產－流動",
-    "indent": 0
-  },
-  {
-    "code": "1479",
-    "name": "其他金融資產－其他",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "11XX",
     "name": "流動資產合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "",
     "name": "非流動資產",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "1510",
     "name": "透過損益按公允價值衡量之⾦融資產－非流動",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1517",
     "name": "透過其他綜合損益按公允價值衡量之⾦融資產－非流動",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1535",
     "name": "按攤銷後成本衡量之金融資產－非流動",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1538",
+    "name": "避險之金融資產－非流動",
+    "indent": 2
+  },
+  {
+    "code": "1560",
+    "name": "合約資產－非流動",
+    "indent": 2
   },
   {
     "code": "1550",
     "name": "採用權益法之投資",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1600",
     "name": "不動產、廠房及設備",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1750",
+    "name": "礦產資源淨額",
+    "indent": 2
   },
   {
     "code": "1755",
     "name": "使⽤權資產",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1760",
+    "name": "投資性不動產淨額使⽤權資產",
+    "indent": 2
   },
   {
     "code": "1780",
     "name": "無形資產",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "1830",
+    "name": "生物資產－非流動",
+    "indent": 2
   },
   {
     "code": "1840",
     "name": "遞延所得稅資產",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1900",
     "name": "其他非流動資產",
-    "indent": 0
-  },
-  {
-    "code": "1920",
-    "name": "存出保證⾦",
-    "indent": 0
-  },
-  {
-    "code": "1990",
-    "name": "其他非流動資產－其他",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "15XX",
     "name": "非流動資產合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "1XXX",
     "name": "資產總計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "",
@@ -152,282 +232,427 @@
   {
     "code": "",
     "name": "負債",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "",
     "name": "流動負債",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "2100",
+    "name": "短期借款",
+    "indent": 3
+  },
+  {
+    "code": "2110",
+    "name": "應付短期票券",
+    "indent": 3
   },
   {
     "code": "2120",
     "name": "透過損益按公允價值衡量之金融負債－流動",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "2126",
     "name": "避險之⾦融負債－流動",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "2128",
+    "name": "按攤銷後成本衡量之金融負債－流動",
+    "indent": 3
+  },
+  {
+    "code": "2130",
+    "name": "合約負債－流動",
+    "indent": 3
+  },
+  {
+    "code": "2150",
+    "name": "應付票據",
+    "indent": 3
+  },
+  {
+    "code": "2160",
+    "name": "應付票據－關係人",
+    "indent": 3
   },
   {
     "code": "2170",
     "name": "應付帳款",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "2180",
     "name": "應付帳款－關係⼈",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "2190",
+    "name": "應付建造合約款",
+    "indent": 3
+  },
+  {
+    "code": "2195",
+    "name": "應付建造合約款－關係人",
+    "indent": 3
   },
   {
     "code": "2200",
     "name": "其他應付款",
-    "indent": 0
+    "indent": 3
   },
   {
-    "code": "2201",
-    "name": "應付薪資",
-    "indent": 0
-  },
-  {
-    "code": "2206",
-    "name": "應付員⼯紅利",
-    "indent": 0
-  },
-  {
-    "code": "2207",
-    "name": "應付董監事酬勞",
-    "indent": 0
-  },
-  {
-    "code": "2213",
-    "name": "應付設備款",
-    "indent": 0
-  },
-  {
-    "code": "2216",
-    "name": "應付股利",
-    "indent": 0
+    "code": "2220",
+    "name": "其他應付款項－關係人",
+    "indent": 3
   },
   {
     "code": "2230",
     "name": "本期所得稅負債",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "2250",
+    "name": "負債準備－流動",
+    "indent": 3
+  },
+  {
+    "code": "2260",
+    "name": "與待出售非流動資產直接相關(或處分群組)之負債",
+    "indent": 3
+  },
+  {
+    "code": "2265",
+    "name": "工程進度請款金額",
+    "indent": 3
+  },
+  {
+    "code": "2270",
+    "name": "與待分配予業主之非流動資產(或處分群組)直接相關之負債",
+    "indent": 3
+  },
+  {
+    "code": "2280",
+    "name": "租賃負債－流動",
+    "indent": 3
   },
   {
     "code": "2300",
     "name": "其他流動負債",
-    "indent": 0
-  },
-  {
-    "code": "2320",
-    "name": "一年或一營業週期內到期長期負債",
-    "indent": 0
-  },
-  {
-    "code": "2399",
-    "name": "其他流動負債－其他",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "21XX",
     "name": "流動負債合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "",
     "name": "非流動負債",
-    "indent": 0
+    "indent": 2
+  },
+  {
+    "code": "2500",
+    "name": "透過損益按公允價值衡量之金融負債－非流動",
+    "indent": 3
+  },
+  {
+    "code": "2511",
+    "name": "避險之金融負債－非流動",
+    "indent": 3
+  },
+  {
+    "code": "2520",
+    "name": "按攤銷後成本衡量之金融負債－非流動",
+    "indent": 3
+  },
+  {
+    "code": "2527",
+    "name": "合約負債－非流動",
+    "indent": 3
   },
   {
     "code": "2530",
     "name": "應付公司債",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "2540",
     "name": "長期借款",
-    "indent": 0
+    "indent": 3
   },
   {
-    "code": "2541",
-    "name": "銀行長期借款",
-    "indent": 0
+    "code": "2550",
+    "name": "負債準備－非流動",
+    "indent": 3
   },
   {
     "code": "2570",
     "name": "遞延所得稅負債",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "2580",
     "name": "租賃負債－非流動",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "2600",
     "name": "其他非流動負債",
-    "indent": 0
-  },
-  {
-    "code": "2640",
-    "name": "淨確定福利負債-非流動",
-    "indent": 0
-  },
-  {
-    "code": "2645",
-    "name": "存入保證金",
-    "indent": 0
-  },
-  {
-    "code": "2670",
-    "name": "其他非流動負債－其他",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "25XX",
     "name": "非流動負債合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "2XXX",
     "name": "負債總計",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "",
     "name": "權益",
-    "indent": 0
+    "indent": 1
   },
   {
     "code": "",
     "name": "歸屬於⺟公司業主之權益",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "",
     "name": "股本",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "3110",
     "name": "普通股股本",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "3120",
+    "name": "特別股股本",
+    "indent": 4
   },
   {
     "code": "3100",
     "name": "股本合計",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "3130",
+    "name": "債券換股權利證書",
+    "indent": 4
+  },
+  {
+    "code": "3140",
+    "name": "預收股本",
+    "indent": 4
+  },
+  {
+    "code": "3150",
+    "name": "待分配股票股利",
+    "indent": 4
+  },
+  {
+    "code": "3160",
+    "name": "特別股轉換普通股權利證書",
+    "indent": 4
+  },
+  {
+    "code": "3170",
+    "name": "待註銷股本",
+    "indent": 4
+  },
+  {
+    "code": "3110",
+    "name": "股本合計",
+    "indent": 3
+  },
+  {
+    "code": "",
+    "name": "權益─具證券性質之虛擬通貨股本合計",
+    "indent": 3
   },
   {
     "code": "",
     "name": "資本公積",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "3210",
     "name": "資本公積－發行溢價",
-    "indent": 0
+    "indent": 4
   },
   {
-    "code": "3211",
-    "name": "資本公積－普通股股票溢價",
-    "indent": 0
+    "code": "3220",
+    "name": "資本公積－庫藏股票交易",
+    "indent": 4
   },
   {
-    "code": "3213",
-    "name": "資本公積－轉換公司債轉換溢價",
-    "indent": 0
+    "code": "3225",
+    "name": "資本公積-買回具證券性質之虛擬通貨",
+    "indent": 4
   },
   {
     "code": "3230",
     "name": "資本公積－實際取得或處分子公司股權價格與帳面價值差額",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "3235",
     "name": "資本公積－認列對子公司所有權權益變動數",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "3240",
+    "name": "資本公積－處分資產增益",
+    "indent": 4
   },
   {
     "code": "3250",
     "name": "資本公積－受贈資產",
-    "indent": 0
-  },
-  {
-    "code": "3251",
-    "name": "資本公積－受領股東贈與",
-    "indent": 0
-  },
-  {
-    "code": "3252",
-    "name": "資本公積－其他受贈資產",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "3260",
     "name": "資本公積－採用權益法認列關聯企業及合資股權淨值之變動數",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "3265",
+    "name": "資本公積－採用權益法認列關聯企業及合資取得或處分子公司股權價格與帳面價值差額",
+    "indent": 4
   },
   {
     "code": "3270",
     "name": "資本公積－合併溢額",
-    "indent": 0
+    "indent": 4
+  },
+  {
+    "code": "3271",
+    "name": "資本公積－員工認股權",
+    "indent": 4
+  },
+  {
+    "code": "3272",
+    "name": "資本公積－認股權",
+    "indent": 4
   },
   {
     "code": "3273",
     "name": "資本公積－限制員工權利股票",
-    "indent": 0
+    "indent": 4
   },
   {
-    "code": "3200",
+    "code": "3280",
+    "name": "資本公積－其他",
+    "indent": 4
+  },
+  {
+    "code": "3220",
     "name": "資本公積合計",
-    "indent": 0
+    "indent": 4
   },
   {
     "code": "",
     "name": "保留盈餘",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "3310",
     "name": "法定盈餘公積",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "3320",
     "name": "特別盈餘公積",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "3350",
     "name": "未分配盈餘（或待彌補虧損）",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "3300",
     "name": "保留盈餘合計",
-    "indent": 0
+    "indent": 2
   },
   {
     "code": "",
     "name": "其他權益",
-    "indent": 0
+    "indent": 3
+  },
+  {
+    "code": "3410",
+    "name": "國外營運機構財務報表換算之兌換差額",
+    "indent": 4
+  },
+  {
+    "code": "3420",
+    "name": "透過其他綜合損益按公允價值衡量之金融資產未實現評價損益",
+    "indent": 4
+  },
+  {
+    "code": "3440",
+    "name": "指定按公允價值衡量之金融負債信用風險變動影響數",
+    "indent": 4
+  },
+  {
+    "code": "3445",
+    "name": "確定福利計畫再衡量數",
+    "indent": 4
+  },
+  {
+    "code": "3450",
+    "name": "避險工具之損益",
+    "indent": 4
+  },
+  {
+    "code": "3460",
+    "name": "不動產重估增值",
+    "indent": 4
+  },
+  {
+    "code": "3470",
+    "name": "與待出售非流動資產(或處分群組)直接相關之權益",
+    "indent": 4
+  },
+  {
+    "code": "3480",
+    "name": "與待分配予業主之非流動資產(或處分群組)直接相關之權益",
+    "indent": 4
+  },
+  {
+    "code": "3490",
+    "name": "其他權益－其他",
+    "indent": 4
   },
   {
     "code": "3400",
     "name": "其他權益合計",
-    "indent": 0
+    "indent": 3
   },
   {
     "code": "3500",
     "name": "庫藏股票",
-    "indent": 0
+    "indent": 3
   },
   {
-    "code": "31XX",
-    "name": "歸屬於⺟公司業主之權益合計",
-    "indent": 0
+    "code": "35XX",
+    "name": "共同控制下前手權益",
+    "indent": 3
+  },
+  {
+    "code": "355X",
+    "name": "合併前非屬共同控制股權",
+    "indent": 3
   },
   {
     "code": "36XX",
@@ -442,6 +667,11 @@
   {
     "code": "3X2X",
     "name": "負債及權益總計",
+    "indent": 0
+  },
+  {
+    "code": "3997",
+    "name": "待註銷股本股數",
     "indent": 0
   },
   {

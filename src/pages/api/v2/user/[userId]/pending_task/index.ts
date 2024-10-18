@@ -11,10 +11,10 @@ import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
 import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
 
 export async function getTotalPendingTaskForUser(userId: number): Promise<IPendingTaskTotal> {
-  // 獲取用戶擁有的所有公司
+  // Info: (20241018 - Jacky) 獲取用戶擁有的所有公司
   const listedCompany = await listCompanyByUserId(userId);
 
-  // 使用 Promise.all 同時計算每個公司的數據
+  // Info: (20241018 - Jacky) 使用 Promise.all 同時計算每個公司的數據
   const results = await Promise.all(
     listedCompany.map(async ({ company }) => {
       const [missingCertificateCount, unpostedVoucherCount] = await Promise.all([
@@ -37,7 +37,7 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
     })
   );
 
-  // 計算總數和列表
+  // Info: (20241018 - Jacky) 計算總數和列表
   const missingCertificateList = results.map((result) => result.missingCertificate);
   const unpostedVoucherList = results.map((result) => result.unpostedVoucher);
 
@@ -58,7 +58,7 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
     );
   }
 
-  // 確保百分比不會大於 1
+  // Info: (20241018 - Jacky) 確保百分比不會大於 1
   if (totalMissingCertificatePercentage + totalUnpostedVoucherPercentage > 1) {
     totalMissingCertificatePercentage = 1 - totalUnpostedVoucherPercentage;
   }

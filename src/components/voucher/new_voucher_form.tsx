@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
@@ -29,6 +29,11 @@ import {
 } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
+import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
+import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
+import CertificateSelection from '@/components/certificate/certificate_selection';
 
 enum RecurringUnit {
   MONTH = 'month',
@@ -96,6 +101,74 @@ const NewVoucherForm: React.FC = () => {
   const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
+
+  // Info: (20241018 - Tzuhan) AI 分析相關 state
+  const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  const [analyzeSuccess, setAnalyzeSuccess] = useState<boolean>(false);
+
+  // Info: (20241018 - Tzuhan) 選擇憑證相關 state
+  const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
+  const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+
+  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+
+  // Info: (20241018 - Tzuhan) 選擇憑證
+  const handleSelect = useCallback(
+    (ids: number[], isSelected: boolean) => {
+      const updatedData = {
+        ...certificates,
+      };
+      ids.forEach((id) => {
+        updatedData[id] = {
+          ...updatedData[id],
+          isSelected,
+        };
+      });
+      setCertificates(updatedData);
+      setSelectedCertificates(
+        Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
+      );
+      if (selectedCertificates.length > 0 && isSelected) {
+        // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
+        setAiState(AIState.WORKING);
+        setTimeout(() => {
+          setAiState(AIState.FINISH);
+          setAnalyzeSuccess(selectedCertificates.length > 0);
+        }, 2000);
+      }
+    },
+    [certificates]
+  );
+
+  // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
+  const handleOpenSelectorModal = useCallback(() => {
+    setSelectedIds(selectedCertificates.map((item) => item.id));
+    setOpenSelectorModal(true);
+  }, [selectedCertificates]);
+
+  // Info: (20241018 - Tzuhan) 選擇憑證返回上一步
+  const handleBack = useCallback(() => {
+    handleOpenSelectorModal();
+    setOpenUploaderModal(false);
+  }, []);
+
+  // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
+  const handleCertificateApiResponse = useCallback((resData: ICertificate[]) => {
+    const data = resData.reduce(
+      (acc, item) => {
+        acc[item.id] = {
+          ...item,
+          isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
+          actions: [],
+        };
+        return acc;
+      },
+      {} as { [id: string]: ICertificateUI }
+    );
+    setCertificates(data);
+  }, []);
 
   // Info: (20241004 - Julian) Type 下拉選單
   const {
@@ -566,14 +639,31 @@ const NewVoucherForm: React.FC = () => {
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
-      {/* ToDo: (20240926 - Julian) AI analyze */}
-      <div className="w-full bg-surface-brand-primary-moderate p-40px text-center text-white">
-        This is AI analyze
-      </div>
+      <CertificateSelectorModal
+        isOpen={openSelectorModal}
+        onClose={() => setOpenSelectorModal(false)}
+        openUploaderModal={() => setOpenUploaderModal(true)}
+        handleSelect={handleSelect}
+        handleApiResponse={handleCertificateApiResponse}
+        certificates={Object.values(certificates)}
+        selectedIds={selectedIds}
+        setSelectedIds={setSelectedIds}
+      />
+      <CertificateUploaderModal
+        isOpen={openUploaderModal}
+        onClose={() => setOpenUploaderModal(false)}
+        onBack={handleBack}
+      />
+      {/* Info: (20240926 - Julian) AI analyze */}
+      <AIWorkingArea aiState={aiState} analyzeSuccess={analyzeSuccess} setAiState={setAiState} />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
-      <div className="w-full bg-stroke-neutral-quaternary p-40px text-center text-white">
-        Uploaded certificates
-      </div>
+      <CertificateSelection
+        selectedCertificates={selectedCertificates}
+        setOpenModal={handleOpenSelectorModal}
+        isSelectable
+        isDeletable
+        className="my-8"
+      />
 
       {/* Info: (20240926 - Julian) form */}
       <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
@@ -606,6 +696,7 @@ const NewVoucherForm: React.FC = () => {
             {typeDropdownMenu}
           </div>
         </div>
+
         {/* Info: (20240926 - Julian) Note */}
         <div className="col-span-2 flex flex-col gap-8px">
           <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>

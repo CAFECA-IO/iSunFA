@@ -1,5 +1,18 @@
 import { ProgressStatus } from '@/constants/account';
 
+export enum PARTER_TYPES {
+  SUPPLIER = 'Supplier',
+  CLIENT = 'Client',
+  BOTH = 'Both',
+}
+export interface ICounterParty {
+  id: number;
+  name: string;
+  taxId: number;
+  parterType: PARTER_TYPES;
+  note: string;
+}
+
 // Info: (20240920 - tzuhan) 定義 ICertificate 接口
 export enum CERTIFICATE_TYPES {
   INPUT = 'Input',
@@ -13,32 +26,29 @@ export enum INVOICE_TYPES {
 }
 export interface ICertificate {
   id: number;
-  type: CERTIFICATE_TYPES;
-  invoiceType: INVOICE_TYPES;
-  date: string;
   invoiceName: string;
-  invoiceNumber: string;
   thumbnailUrl: string;
-  fromTo: string;
-  taxID: string;
-  businessTaxFormatCode: string;
-  deductible: boolean;
+  type: CERTIFICATE_TYPES;
+  date: number;
+  invoiceNumber: string;
   priceBeforeTax: number;
-  tax: number;
   taxRate: number;
+  taxPrice: number;
   totalPrice: number;
+  invoiceType: INVOICE_TYPES;
+  counterParty: ICounterParty;
+  deductible: boolean;
   voucherNo?: string;
   uploader: string;
 }
 
-export interface ICertificateInfo {
+export interface ICertificateMeta {
   id: number;
   name: string;
   size: number;
+  url: string;
   status: ProgressStatus;
   progress: number;
-  url: string;
-  file?: File;
 }
 
 export enum VIEW_TYPES {
@@ -63,19 +73,20 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
   const certificates: ICertificate[] = [];
 
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機日期
-  function randomDate(start: Date, end: Date): string {
+  function randomDate(start: Date, end: Date): number {
     const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-    return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date
-      .getDate()
-      .toString()
-      .padStart(2, '0')}`;
+    return date.getTime();
   }
 
-  // Info: (20240920 - tzuhan) 幫助函數: 生成隨機的 TaxID
-  function randomTaxID(): string {
-    return Math.floor(Math.random() * 1_000_000_000)
-      .toString()
-      .padStart(8, '0');
+  // function randomTaxID(): string {
+  //   return Math.floor(Math.random() * 1_000_000_000)
+  //     .toString()
+  //     .padStart(8, '0');
+  // }
+
+  // Info: (20240920 - tzuhan) 幫助函數: 生成隨機的 Number
+  function randomNumber(): number {
+    return Math.floor(Math.random() * 1_000_000_000);
   }
 
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機的 VoucherNo
@@ -99,22 +110,26 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
     const priceBeforeTax = randomPrice();
     const certificate: ICertificate = {
       id: i,
+      invoiceName: `Invoice ${i.toString().padStart(6, '0')}`,
+      thumbnailUrl: `images/demo_certifate.png`,
       type: Math.random() > 0.5 ? CERTIFICATE_TYPES.INPUT : CERTIFICATE_TYPES.OUTPUT, // Info: (20240920 - tzuhan) 隨機生成 Input/Output
+      date: randomDate(new Date(2020, 0, 1), new Date(2024, 11, 31)), // Info: (20240920 - tzuhan) 隨機生成 2020 到 2024 年之間的日期
+      invoiceNumber: generateRandomCode(),
+      priceBeforeTax,
+      taxRate, // Info: (20240920 - tzuhan) 隨機生成 5%, 10%, 15%
+      taxPrice: (taxRate / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算稅金
+      totalPrice: priceBeforeTax + (taxRate / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算總價
       invoiceType: [INVOICE_TYPES.TRIPLICATE, INVOICE_TYPES.DUPLICATE, INVOICE_TYPES.SPECIAL][
         Math.floor(Math.random() * 3)
       ], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
-      date: randomDate(new Date(2020, 0, 1), new Date(2024, 11, 31)), // Info: (20240920 - tzuhan) 隨機生成 2020 到 2024 年之間的日期
-      invoiceName: `Invoice ${i.toString().padStart(6, '0')}`,
-      invoiceNumber: generateRandomCode(),
-      thumbnailUrl: `images/demo_certifate.png`,
-      fromTo: `PX Mart`,
-      taxID: randomTaxID(),
-      businessTaxFormatCode: `23. Proof of Return or Discount for ...`,
+      counterParty: {
+        id: randomNumber(),
+        name: `PX Mart`,
+        taxId: randomNumber(),
+        parterType: PARTER_TYPES.SUPPLIER,
+        note: `Note for PX Mart`,
+      },
       deductible: Math.random() > 0.5 ? true : !true, // Info: (20240920 - tzuhan) 隨機生成 Yes/No
-      priceBeforeTax,
-      taxRate, // Info: (20240920 - tzuhan) 隨機生成 5%, 10%, 15%
-      tax: (taxRate / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算稅金
-      totalPrice: priceBeforeTax + (taxRate / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算總價
       voucherNo: randomVoucherNo(i),
       uploader: `Tzuhan`,
     };
@@ -123,4 +138,28 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
   }
 
   return certificates;
+};
+
+export const generateRandomCounterParties = (num?: number): ICounterParty[] => {
+  const maxCount = num ?? Math.floor(Math.random() * 100) + 1;
+  const counterParties: ICounterParty[] = [];
+
+  function randomNumber(): number {
+    return Math.floor(Math.random() * 1_000_000_000);
+  }
+
+  let i = 1;
+  while (i <= maxCount) {
+    const counterParty: ICounterParty = {
+      id: i,
+      name: `CounterParty ${i.toString().padStart(6, '0')}`,
+      taxId: randomNumber(),
+      parterType: PARTER_TYPES.SUPPLIER,
+      note: `Note for CounterParty ${i.toString().padStart(6, '0')}`,
+    };
+    counterParties.push(counterParty);
+    i += 1;
+  }
+
+  return counterParties;
 };

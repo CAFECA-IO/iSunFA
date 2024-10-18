@@ -16,11 +16,7 @@ import {
   IFinancialReportInDB,
   IncomeStatementOtherInfo,
 } from '@/interfaces/report';
-import {
-  formatNumberSeparateByComma,
-  getTimestampOfSameDateOfLastYear,
-  numberBeDashIfFalsy,
-} from '@/lib/utils/common';
+import { getTimestampOfSameDateOfLastYear, numberBeDashIfFalsy } from '@/lib/utils/common';
 
 export default abstract class FinancialReportGenerator extends ReportGenerator {
   protected lastPeriodStartDateInSecond: number;
@@ -160,8 +156,8 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
         const lastPeriodAccount = prePeriodContent[index];
         const curPeriodAmount = curPeriodAccount.amount || 0;
         const prePeriodAmount = lastPeriodAccount.amount || 0;
-        const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-        const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
+        const curPeriodAmountString = numberBeDashIfFalsy(curPeriodAmount);
+        const prePeriodAmountString = numberBeDashIfFalsy(prePeriodAmount);
         const curPeriodPercentage = curPeriodAccount?.percentage
           ? Math.round(curPeriodAccount.percentage * 100)
           : 0;
