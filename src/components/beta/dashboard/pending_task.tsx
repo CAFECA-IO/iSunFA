@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, type ChartData } from 'chart.js';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 // import { IPendingTask, IPendingTaskTotal } from '@/interfaces/pending_task';
 
@@ -19,13 +19,6 @@ interface CompanyListProps {
     count: number;
   }[];
 }
-
-/* === 規劃 Todo === */
-// ToDo: (20241016 - Liz) 從 user context 中打 API 取得選擇的公司(selectedCompany)
-// 如果有選擇公司，就顯示 PendingTasksForCompany 元件
-// 如果沒有選擇公司，就打 API 取得所有公司的 PendingTasksTotal
-// 如果 pendingTaskTotal 有值，就顯示 PendingTasksTotal 元件
-// 如果 pendingTaskTotal 沒有值，就顯示 EmptyPendingTask 元件
 
 /* === 研究資料格式 === */
 // ToDo: (20241016 - Liz) 已選擇的公司的待辦事項
@@ -98,7 +91,7 @@ interface CompanyListProps {
 // const percentageForMissingCertificate = (countForMissingCertificate / total) * 100;
 // const percentageForUnpostedVoucher = (countForUnpostedVoucher / total) * 100;
 
-const EmptyPendingTask = () => {
+const PendingTasksNoData = () => {
   return (
     <section className="flex flex-col gap-24px">
       <h3 className="text-xl font-bold text-text-neutral-secondary">Pending tasks</h3>
@@ -117,7 +110,7 @@ const DonutChart = ({
 }: DonutChartProps) => {
   const backgroundColorSwitch = isChartForTotal ? ['#FFB946', '#1C4E80'] : ['#D3F4E5', '#FED7D7'];
 
-  const data = {
+  const data: ChartData<'doughnut', number[], string> = {
     labels: ['Missing certificate', 'Unposted vouchers'],
     datasets: [
       {
@@ -128,17 +121,24 @@ const DonutChart = ({
     ],
   };
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false, // Disable the default legend
-      },
-    },
-    cutout: '20%', // This creates the donut hole
-  };
-
-  return <Doughnut data={data} options={options} />;
+  return (
+    <Doughnut
+      data={data}
+      options={{
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false, // Info: (20241018 - Liz) Disable the default legend
+          },
+          tooltip: {
+            // Info: (20241018 - Liz) 可以設定 tooltip 的顯示內容或者關閉
+            // enabled: false,
+          },
+        },
+        cutout: '20%', // Info: (20241018 - Liz) This creates the donut hole
+      }}
+    />
+  );
 };
 
 const PendingTasksForCompany = () => {
@@ -266,7 +266,7 @@ const CompanyList = ({ list }: CompanyListProps) => {
   );
 };
 
-const PendingTasksTotal = () => {
+const PendingTasksForAll = () => {
   // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
   const missingCertificateList = [
     { companyName: 'Company A', companyLogoSrc: '/images/fake_company_log_01.png', count: 50 },
@@ -398,13 +398,31 @@ const PendingTasksTotal = () => {
 };
 
 const PendingTasks = () => {
+  // Info: (20241018 - Liz) 元件顯示邏輯
+  // 沒有公司列表 : 顯示 PendingTaskNoData
+  // 有公司列表 且 有選擇公司 : 顯示 PendingTasksForCompany
+  // 有公司列表 且 沒有選擇公司 : 顯示 PendingTasksForAll
+
+  // ToDo: (20241018 - Liz) 串接真實資料
+  // 從 user context 中打 API 取得選擇的公司(selectedCompany)、所有公司的待辦事項(pendingTaskTotal)
+  // 依據 selectedCompany 是否有值，轉換為布林值 isSelectedCompany，判斷是否有選擇公司
+  // 依據 pendingTaskTotal 是否有值，轉換為布林值 hasCompanyList，判斷是否有公司列表
+
   /* === Fake Data === */
   // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
   const selectedCompany = '';
-  const isSelectedCompanyExist = selectedCompany;
-  const isPendingTasksTotalExist = false;
+  const isSelectedCompany = !!selectedCompany; // 強制轉為布林值
+  const hasCompanyList = true;
 
-  if (isSelectedCompanyExist) {
+  if (!hasCompanyList) {
+    return (
+      <DashboardCardLayout>
+        <PendingTasksNoData />
+      </DashboardCardLayout>
+    );
+  }
+
+  if (isSelectedCompany) {
     return (
       <DashboardCardLayout>
         <PendingTasksForCompany />
@@ -412,17 +430,9 @@ const PendingTasks = () => {
     );
   }
 
-  if (isPendingTasksTotalExist) {
-    return (
-      <DashboardCardLayout>
-        <PendingTasksTotal />
-      </DashboardCardLayout>
-    );
-  }
-
   return (
     <DashboardCardLayout>
-      <EmptyPendingTask />
+      <PendingTasksForAll />
     </DashboardCardLayout>
   );
 };
