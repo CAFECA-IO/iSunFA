@@ -41,11 +41,6 @@ export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
 
   if (!queryResult.success || !bodyResult.success) {
     // Info: (20240909 - Murky) It will return why error is caused, or what is the data if success
-    /* eslint-disable no-console */
-    console.error('Request validation failed');
-    console.log('Query:', query, 'Query type:', typeof query);
-    console.log(`Body:', ${JSON.stringify(body)}, 'Body type:', ${typeof body}`);
-    /* eslint-enable no-console */
     const errorFormat = {
       query: queryResult.error ? queryResult.error.format() : query.data,
       body: bodyResult.error ? bodyResult.error.format() : body.data,
