@@ -823,7 +823,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 {reportFinancial && reportFinancial.company && (
                   <p className="text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}
-                    <br/>至{formattedPreToDate}
+                    <br />至{formattedPreToDate}
                   </p>
                 )}
               </th>

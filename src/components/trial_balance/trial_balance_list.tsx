@@ -125,7 +125,7 @@ const TrialBalanceList = () => {
         <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`w-452px col-span-3 table-cell h-full ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
+              className={`col-span-3 table-cell h-full w-452px ${tableCellStyles} ${sideBorderStyles.replace('border-b', '')}`}
             >
               {t('report_401:TAX_REPORT.TOTAL')}
             </div>

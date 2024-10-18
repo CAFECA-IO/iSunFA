@@ -67,13 +67,17 @@ const BalanceSheetList = () => {
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<BalanceSheetReport>(
-    APIName.REPORT_GET_BY_ID,
+    APIName.REPORT_GET_V2,
     {
       params: {
         companyId: selectedCompany?.id,
         // Info: (20241017 - Anna) 改用預設的reportId
         // reportId: reportId ?? NON_EXISTING_REPORT_ID,
         reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+        startDate: '1704070800',
+        endDate: '1706745599',
+        language: 'en',
+        reportType: 'balance_sheet',
       },
     },
     hasCompanyId
