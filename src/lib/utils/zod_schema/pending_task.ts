@@ -6,10 +6,11 @@ const userPendingTaskQueryValidator = z.object({
   userId: z.number().int(),
 });
 
-const userPendingTaskBodyValidator = z.undefined();
+const userPendingTaskBodyValidator = z.object({});
 
 export const userPendingTaskValidator: IZodValidator<
-  (typeof userPendingTaskQueryValidator)['shape']
+  (typeof userPendingTaskQueryValidator)['shape'],
+  (typeof userPendingTaskBodyValidator)['shape']
 > = {
   query: userPendingTaskQueryValidator,
   body: userPendingTaskBodyValidator,
@@ -22,10 +23,11 @@ const companyPendingTaskQueryValidator = z.object({
   dueDate: z.number().int().optional(),
 });
 
-const companyPendingTaskBodyValidator = z.undefined();
+const companyPendingTaskBodyValidator = z.object({});
 
 export const companyPendingTaskValidator: IZodValidator<
-  (typeof companyPendingTaskQueryValidator)['shape']
+  (typeof companyPendingTaskQueryValidator)['shape'],
+  (typeof companyPendingTaskBodyValidator)['shape']
 > = {
   query: companyPendingTaskQueryValidator,
   body: companyPendingTaskBodyValidator,

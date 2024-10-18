@@ -56,7 +56,6 @@ const IncomeStatementList = () => {
         language: 'en',
         reportType: FinancialReportTypesKey.comprehensive_income_statement,
       },
-      body: undefined,
     },
     hasCompanyId
   );

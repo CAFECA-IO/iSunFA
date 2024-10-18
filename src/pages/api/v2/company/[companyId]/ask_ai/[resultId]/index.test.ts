@@ -51,6 +51,8 @@ describe('company/[companyId]/ask_ai/[resultId]', () => {
         resultId: '1',
       };
 
+      req.body = {};
+
       const { statusMessage } = await handleGetRequest(req, res);
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
@@ -62,6 +64,7 @@ describe('company/[companyId]/ask_ai/[resultId]', () => {
         resultId: '1',
       };
 
+      req.body = {};
       const { statusMessage } = await handleGetRequest(req, res);
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
