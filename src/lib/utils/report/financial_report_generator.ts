@@ -16,7 +16,7 @@ import {
   IFinancialReportInDB,
   IncomeStatementOtherInfo,
 } from '@/interfaces/report';
-import { formatNumberSeparateByComma, getTimestampOfSameDateOfLastYear } from '@/lib/utils/common';
+import { getTimestampOfSameDateOfLastYear, numberBeDashIfFalsy } from '@/lib/utils/common';
 
 export default abstract class FinancialReportGenerator extends ReportGenerator {
   protected lastPeriodStartDateInSecond: number;
@@ -140,47 +140,65 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     return lineItemsFromDB;
   }
 
-  public async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
+  private combineTwoFSReportArray(
+    curPeriodContent: IAccountForSheetDisplay[],
+    prePeriodContent: IAccountForSheetDisplay[]
+  ) {
     const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] = [];
-
-    this.curPeriodContent = await this.generateFinancialReportArray(true);
-
-    this.prePeriodContent = await this.generateFinancialReportArray(false);
-
     if (
-      this.curPeriodContent &&
-      this.prePeriodContent &&
-      this.curPeriodContent.length > 0 &&
-      this.prePeriodContent.length > 0 &&
-      this.curPeriodContent.length === this.prePeriodContent.length
+      curPeriodContent &&
+      prePeriodContent &&
+      curPeriodContent.length > 0 &&
+      prePeriodContent.length > 0 &&
+      curPeriodContent.length === prePeriodContent.length
     ) {
-      this.curPeriodContent.forEach((curPeriodAccount, index) => {
-        const lastPeriodAccount = this.prePeriodContent[index];
+      curPeriodContent.forEach((curPeriodAccount, index) => {
+        const lastPeriodAccount = prePeriodContent[index];
         const curPeriodAmount = curPeriodAccount.amount || 0;
         const prePeriodAmount = lastPeriodAccount.amount || 0;
-        const curPeriodAmountString = formatNumberSeparateByComma(curPeriodAmount);
-        const prePeriodAmountString = formatNumberSeparateByComma(prePeriodAmount);
+        const curPeriodAmountString = numberBeDashIfFalsy(curPeriodAmount);
+        const prePeriodAmountString = numberBeDashIfFalsy(prePeriodAmount);
         const curPeriodPercentage = curPeriodAccount?.percentage
           ? Math.round(curPeriodAccount.percentage * 100)
           : 0;
         const prePeriodPercentage = lastPeriodAccount?.percentage
           ? Math.round(lastPeriodAccount.percentage * 100)
           : 0;
+
+        const children = this.combineTwoFSReportArray(
+          curPeriodAccount.children,
+          lastPeriodAccount.children
+        );
+
+        const curPeriodPercentageString = numberBeDashIfFalsy(curPeriodPercentage);
+        const prePeriodPercentageString = numberBeDashIfFalsy(prePeriodPercentage);
         const accountReadyForFrontend: IAccountReadyForFrontend = {
           code: curPeriodAccount.code,
           name: curPeriodAccount.name,
           curPeriodAmount,
           curPeriodPercentage,
           curPeriodAmountString,
+          curPeriodPercentageString,
           prePeriodAmount,
           prePeriodPercentage,
           prePeriodAmountString,
+          prePeriodPercentageString,
           indent: curPeriodAccount.indent,
+          children,
         };
         curPeriodAccountReadyForFrontendArray.push(accountReadyForFrontend);
       });
     }
+    return curPeriodAccountReadyForFrontendArray;
+  }
 
+  public async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
+    this.curPeriodContent = await this.generateFinancialReportArray(true);
+
+    this.prePeriodContent = await this.generateFinancialReportArray(false);
+
+    const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] =
+      this.combineTwoFSReportArray(this.curPeriodContent, this.prePeriodContent);
     return curPeriodAccountReadyForFrontendArray;
   }
 

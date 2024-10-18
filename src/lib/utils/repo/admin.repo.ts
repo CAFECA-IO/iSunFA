@@ -11,7 +11,12 @@ import {
 } from '@prisma/client';
 import { ROLE_NAME, RoleName } from '@/constants/role_name';
 import { SortOrder } from '@/constants/sort';
-import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { loggerError } from '@/lib/utils/logger_back';
+import { CompanyTag } from '@/constants/company';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -44,6 +49,44 @@ export async function listAdminByCompanyId(companyId: number): Promise<
     },
   });
   return listedAdmin;
+}
+
+export async function listCompanyByUserId(userId: number): Promise<
+  {
+    company: Company;
+  }[]
+> {
+  const listedCompany = await prisma.admin.findMany({
+    where: {
+      userId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    orderBy: {
+      companyId: SortOrder.ASC,
+    },
+    select: {
+      company: true,
+    },
+  });
+  return listedCompany;
+}
+
+export async function getCompanyByUserIdAndCompanyId(
+  userId: number,
+  companyId: number
+): Promise<Company | null> {
+  const admin = await prisma.admin.findFirst({
+    where: {
+      userId,
+      companyId,
+      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+    },
+    select: {
+      company: true,
+    },
+  });
+  const company = admin?.company ?? null;
+  return company;
 }
 
 export async function getAdminById(adminId: number): Promise<
@@ -320,10 +363,24 @@ export async function deleteAdminListByCompanyId(companyId: number): Promise<num
 }
 
 export async function listCompanyAndRole(
-  userId: number
-): Promise<Array<{ company: Company & { imageFile: File | null }; role: Role }>> {
-  const listedCompanyRole: Array<{ company: Company & { imageFile: File | null }; role: Role }> =
-    await prisma.admin.findMany({
+  userId: number,
+  targetPage: number = DEFAULT_PAGE_NUMBER,
+  pageSize: number = DEFAULT_PAGE_LIMIT,
+  sortOrder: SortOrder = SortOrder.ASC
+): Promise<{
+  data: Array<{ company: Company & { imageFile: File | null }; role: Role }>;
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  sort: { sortBy: string; sortOrder: string }[];
+}> {
+  let companyRoleList: Array<{ company: Company & { imageFile: File | null }; role: Role }> = [];
+
+  try {
+    companyRoleList = await prisma.admin.findMany({
       where: {
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -343,7 +400,74 @@ export async function listCompanyAndRole(
         role: true,
       },
     });
-  return listedCompanyRole;
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'find many company roles in listCompanyAndRole failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related find many company roles in listCompanyAndRole in admin.repo.ts failed'
+    );
+  }
+
+  const totalCount = companyRoleList.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  if (targetPage < 1) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const skip = pageToOffset(targetPage, pageSize);
+
+  const paginatedCompanyRoles = companyRoleList.slice(skip, skip + pageSize);
+
+  const hasNextPage = skip + pageSize < totalCount;
+  const hasPreviousPage = targetPage > 1;
+  // ToDo: (20241017 - Jacky) Should enum the sort by, companyOrder
+  const sort: { sortBy: string; sortOrder: string }[] = [{ sortBy: 'companyId', sortOrder }];
+
+  return {
+    data: paginatedCompanyRoles,
+    page: targetPage,
+    totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sort,
+  };
+}
+
+export async function getCompanyAndRoleByUserIdAndCompanyId(
+  userId: number,
+  companyId: number
+): Promise<{
+  company: Company & { imageFile: File | null };
+  role: Role;
+} | null> {
+  let companyRole: {
+    company: Company & { imageFile: File | null };
+    role: Role;
+  } | null = null;
+  if (companyId > 0) {
+    companyRole = await prisma.admin.findFirst({
+      where: {
+        companyId,
+        userId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      select: {
+        company: {
+          include: {
+            imageFile: true,
+          },
+        },
+        role: true,
+      },
+    });
+  }
+  return companyRole;
 }
 
 export async function getCompanyDetailAndRoleByCompanyId(
@@ -403,9 +527,9 @@ export async function getCompanyDetailAndRoleByCompanyId(
   return companyDetail;
 }
 
-export async function getCompanyAndRoleByCompanyCode(
+export async function getCompanyAndRoleByTaxId(
   userId: number,
-  companyCode: string
+  taxId: string
 ): Promise<{
   company: Company;
   role: Role;
@@ -414,11 +538,11 @@ export async function getCompanyAndRoleByCompanyCode(
     company: Company;
     role: Role;
   } | null = null;
-  if (companyCode) {
+  if (taxId) {
     const companyRole = await prisma.admin.findFirst({
       where: {
         company: {
-          code: companyCode,
+          taxId,
         },
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
@@ -435,10 +559,10 @@ export async function getCompanyAndRoleByCompanyCode(
 
 export async function createCompanyAndRole(
   userId: number,
-  code: string,
+  taxId: string,
   name: string,
-  regional: string,
   imageFileId: number,
+  tag: CompanyTag = CompanyTag.ALL,
   email?: string
 ): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
   const nowTimestamp = getTimestampNow();
@@ -473,10 +597,9 @@ export async function createCompanyAndRole(
         user: userConnect,
         company: {
           create: {
-            code,
+            taxId,
             name,
-            regional,
-            kycStatus: false,
+            tag,
             imageFile: {
               connect: {
                 id: imageFileId,
@@ -507,23 +630,97 @@ export async function createCompanyAndRole(
   return newCompanyRoleList;
 }
 
+// ToDo: (20241017 - Jacky) Modify this function by order by companyOrder
+export async function setCompanyToTop(userId: number, companyId: number) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  let companyRole: { company: Company & { imageFile: File | null }; role: Role } | null = null;
+  // Info: (20241017 - Jacky) Get the max companyOrder
+  const getMaxOrderAdmin = await prisma.admin.aggregate({
+    where: {
+      userId,
+    },
+    _max: {
+      createdAt: true,
+    },
+  });
+
+  const {
+    _max: { createdAt: maxOrder },
+  } = getMaxOrderAdmin;
+
+  const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
+
+  if (admin) {
+    // Info: (20241017 - Jacky) Set the companyOrder to maxOrder + 1
+    companyRole = await prisma.admin.update({
+      where: {
+        id: admin.id,
+      },
+      data: {
+        createdAt: (maxOrder ?? 0) + 1,
+        updatedAt: nowTimestamp,
+      },
+      select: {
+        company: {
+          include: {
+            imageFile: true,
+          },
+        },
+        role: true,
+      },
+    });
+  }
+  return companyRole;
+}
+
+export async function updateCompanyTagById(
+  adminId: number,
+  tag: CompanyTag
+): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  // ToDo: (20241017 - Jacky) update company tag
+  const updatedCompany = await prisma.admin.update({
+    where: {
+      id: adminId,
+    },
+    data: {
+      email: tag,
+      updatedAt: nowTimestamp,
+    },
+    select: {
+      company: {
+        include: {
+          imageFile: true,
+        },
+      },
+      role: true,
+    },
+  });
+  return updatedCompany;
+}
+
 // Info (20240721 - Murky) For testing, real delete
 export async function deleteAdminByIdForTesting(
   adminId: number
-): Promise<Admin & { company: Company; user: User; role: Role }> {
+): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
   const where: Prisma.AdminWhereUniqueInput = {
     id: adminId,
   };
 
-  const include: Prisma.AdminInclude = {
-    user: true,
-    company: true,
+  const select = {
+    company: {
+      include: {
+        imageFile: true,
+      },
+    },
     role: true,
   };
 
   const deleteArgs = {
     where,
-    include,
+    select,
   };
   const deletedAdmin = await prisma.admin.delete(deleteArgs);
 

@@ -174,6 +174,13 @@
     "THU": "T",
     "FRI": "F",
     "SAT": "S",
+    "SUNDAY": "Sunday",
+    "MONDAY": "Monday",
+    "TUESDAY": "Tuesday",
+    "WEDNESDAY": "Wednesday",
+    "THURSDAY": "Thursday",
+    "FRIDAY": "Friday",
+    "SATURDAY": "Saturday",
     "JAN_ABR": "Jan",
     "FEB_ABR": "Feb",
     "MAR_ABR": "Mar",
@@ -227,6 +234,8 @@
   },
   "COMMON": {
     "OF": "of",
+    "TOTAL": "Total",
+    "DOCUMENT": "Document",
     "ISUNFA_TRIAL_VERSION": "iSunFA Trial Version",
     "END_OF_TRIAL": "End of trial",
     "NEWEST": "Newest",
@@ -237,6 +246,7 @@
     "FILTER": "Filter",
     "M": "M",
     "Y": "Y",
+    "D": "D",
     "V": "v",
     "OR": "OR",
     "ERROR_CODE": "Error Code: {{code}}",
@@ -267,19 +277,28 @@
     "BUSINESS_REGISTRATION_NUMBER": "Business Registration Number",
     "EMPTY": "Empty",
     "STATUS": "Status",
+    "WEEK": "Week",
     "MONTH": "Month",
     "YEAR": "Year",
     "SELECT": "Select",
+    "SELECT_ALL": "Select All",
     "NO_DATA": "No Data",
     "TOOLTIP_MESSAGE": "A message which appears when a cursor is positioned over an icon, image, hyperlink, or other element in a graphical user interface.",
     "PERIOD": "Period",
     "OK": "OK",
+    "FROM": "From",
     "TO": "to",
     "ANALYSIS_REPORTS": "Analysis Reports",
     "TRANSFER": "Transfer",
     "LOADING": "Loading...",
     "COMPLETED": "Completed",
-    "DAY": "Day"
+    "DAY": "Day",
+    "SAVE": "Save",
+    "DELETE": "Delete",
+    "CODE": "Code",
+    "BEGINNING": "Beginning",
+    "MIDTERM": "Midterm",
+    "ENDING": "Ending"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
@@ -391,5 +410,21 @@
     "TITLE": "iSunFA",
     "DESCRIPTION": "Comprehensive accounting solution that enhances efficiency and accuracy through blockchain and AI integration.",
     "KEYWORDS": "iSunFA, Blockchain, AI, Forensic, Accounting, Auditing"
+  },
+  "FILTER_SECTION_TYPE": {
+    "TYPE": "Type",
+    "ALL": "All",
+    "INVOICE": "Invoice",
+    "RECEIPT": "Receipt",
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity",
+    "NONE": ""
+  },
+  "SELECTION": {
+    "EXPORT": "Export",
+    "CERTIFICATES": "Certificates",
+    "ADD_NEW_VOUCHER": "Add New Voucher",
+    "ADD_NEW_ASSET": "Add New Asset"
   }
 }

@@ -1,0 +1,46 @@
+{
+  "ASSET": {
+    "ASSET_LIST_PAGE_TITLE": "资产清单",
+    "EXPORT_ASSET_LIST": "导出资产清单",
+    "ACQUISITION_DATE": "取得日期",
+    "TYPE": "类型",
+    "ASSET_NAME": "资产编号/名称",
+    "PURCHASE_PRICE": "购买价格",
+    "ACCUM_DEP": "累积折旧",
+    "RESIDUAL_VALUE": "残值",
+    "REMAINING_LIFE": "剩余使用年限",
+    "STATUS_SOLD": "已售出",
+    "STATUS_DONATED": "已捐赠",
+    "STATUS_SCRAPPED": "已报废",
+    "STATUS_MISSING": "已遗失",
+    "STATUS_NORMAL": "使用中"
+  },
+  "STATUS_SETTING_MODAL": {
+    "TITLE": "状态设定",
+    "SUBTITLE": "请输入资产信息",
+    "UPDATE_DATE": "更新日期",
+    "STATUS": "状态"
+  },
+  "ASSET_DETAIL_PAGE": {
+    "TITLE": "资产",
+    "DELETE_MESSAGE_TITLE": "您确定要删除此资产吗？",
+    "DELETE_MESSAGE_CONTENT": "与此资产相关的所有凭证也将被删除。",
+    "DELETE_MESSAGE_SUBMIT_BTN": "是的，删除资产。",
+    "DELETE_SUCCESS_TOAST": "资产已删除",
+    "UNDO": "复原",
+    "DAYS_UNIT": "天",
+    "STATUS_SETTING": "状态设定",
+    "TYPE": "资产类型",
+    "ACQUISITION_DATE": "取得日期",
+    "DEPRECIATION_START_DATE": "折旧开始日期",
+    "DEPRECIATION_METHOD": "折旧方法",
+    "USEFUL_LIFE": "使用年限",
+    "MONTH_UNIT": "个月",
+    "PURCHASE_PRICE": "购买价格",
+    "ACCUM_DEP": "累积折旧",
+    "RESIDUAL_VALUE": "残值",
+    "REMAINING_LIFE": "剩余使用年限",
+    "NOTE": "备注",
+    "VOUCHER": "凭证"
+  }
+}

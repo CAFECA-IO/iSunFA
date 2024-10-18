@@ -3,7 +3,12 @@ import { twMerge } from 'tailwind-merge';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { ALLOWED_ORIGINS, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { MILLISECONDS_IN_A_SECOND, MONTH_LIST } from '@/constants/display';
+import {
+  MILLISECONDS_IN_A_SECOND,
+  MONTH_LIST,
+  MONTH_SHORT_NAME,
+  MONTH_FULL_NAME,
+} from '@/constants/display';
 import version from '@/lib/version';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/constants/account';
 import { FileFolder } from '@/constants/file';
@@ -16,6 +21,21 @@ export const cn = (...inputs: ClassValue[]) => {
 
 export const getDomains = () => {
   return ALLOWED_ORIGINS;
+};
+
+// Info: (20240926 - Julian) 將時間戳轉換成年月日
+export const timestampToYMD = (timestamp: number) => {
+  const years = Math.floor(timestamp / (60 * 60 * 24 * 365));
+  const months = Math.floor((timestamp % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30));
+  const days = Math.floor(
+    ((timestamp % (60 * 60 * 24 * 365)) % (60 * 60 * 24 * 30)) / (60 * 60 * 24)
+  );
+
+  return {
+    years: years < 0 ? 0 : years,
+    months: months < 0 ? 0 : months,
+    days: days < 0 ? 0 : days,
+  };
 };
 
 export const numberWithCommas = (x: number | string) => {
@@ -59,38 +79,9 @@ export const timestampToString = (timestamp: number | undefined, separator: stri
   const second = `${date.getSeconds()}`.padStart(2, '0');
 
   const monthIndex = date.getMonth();
-  const monthNamesInShort = [
-    'Jan.',
-    'Feb.',
-    'Mar.',
-    'Apr.',
-    'May',
-    'Jun.',
-    'Jul.',
-    'Aug.',
-    'Sep.',
-    'Oct.',
-    'Nov.',
-    'Dec.',
-  ];
 
-  const monthFullName = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
-  const monthNameShort = monthNamesInShort[monthIndex];
-  const monthName = monthFullName[monthIndex];
+  const monthNameShort = MONTH_SHORT_NAME[monthIndex];
+  const monthName = MONTH_FULL_NAME[monthIndex];
   const dateOfLastYearString = `${year - 1}${separator}${month.toString().padStart(2, '0')}${separator}${day
     .toString()
     .padStart(2, '0')}`;
@@ -459,8 +450,11 @@ export function setTimestampToDayStart(timestamp: number) {
   return timestampInSeconds(date.getTime());
 }
 
-export function getTimestampOfFirstDateOfThisYear() {
-  const year = new Date().getFullYear();
+export function getTimestampOfFirstDateOfThisYear(currentDateInSecond?: number) {
+  const dateToGetYear = currentDateInSecond
+    ? new Date(timestampInMilliSeconds(currentDateInSecond))
+    : new Date();
+  const year = dateToGetYear.getFullYear();
   const date = new Date(year, 0, 1);
   const timestamp = date.getTime();
   const timestampInSecond = setTimestampToDayStart(timestamp);
@@ -647,4 +641,27 @@ export function throttle<F extends (
 export function generateUUID(): string {
   const randomUUID = Math.random().toString(36).substring(2, 12);
   return randomUUID;
+}
+
+/**
+ * Info: (20241007 - Murky)
+ * Return String version of number, comma will be added, add bracket if num is negative
+ * Return '-' if num is undefined, null or too small (-0.1~0.1)
+ * @param num - {number | null | undefined | string}
+ * number that be transform into string,
+ * if already string, than it will only be add comma than return
+ * @returns - {string} return number with comma and bracket
+ */
+export function numberBeDashIfFalsy(num: number | null | undefined | string) {
+  if (typeof num === 'string') {
+    return numberWithCommas(num);
+  }
+
+  if (num === null || num === undefined || (num < 0.1 && num > -0.1)) {
+    return '-';
+  }
+
+  const formattedNumber = numberWithCommas(Math.abs(num));
+
+  return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }

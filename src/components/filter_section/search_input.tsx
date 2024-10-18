@@ -10,11 +10,8 @@ interface SearchInputProps {
 const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }) => {
   const { t } = useTranslation(['common']);
   return (
-    <div className="mt-28px flex min-w-200px flex-1 flex-col">
-      <div className="relative flex-1">
-        <label htmlFor="search" className="text-sm font-medium text-gray-500">
-          {t('common:COMMON.SEARCH')}
-        </label>
+    <div className="flex min-w-200px flex-1 flex-col">
+      <div className="relative flex-1 text-sm font-medium">
         <input
           type="text"
           id="search"

@@ -79,14 +79,10 @@ export async function listLineItems({
       type,
     },
     voucher: {
-      journal: {
-        companyId,
-        invoice: {
-          date: {
-            gte: startDateInSecond,
-            lte: endDateInSecond,
-          },
-        },
+      companyId,
+      date: {
+        gte: startDateInSecond,
+        lte: endDateInSecond,
       },
     },
     AND: [deletedAtQuery, searchQueryArray],

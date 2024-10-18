@@ -8,8 +8,11 @@ import {
   IAccountReadyForFrontend,
 } from '@/interfaces/accounting_account';
 import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
-import { OPERATING_CASH_FLOW_INDIRECT_MAPPING } from '@/constants/cash_flow/operating_cash_flow';
-import { IVoucherFromPrismaIncludeJournalLineItems } from '@/interfaces/voucher';
+import {
+  OPERATING_CASH_FLOW_INDIRECT_MAPPING,
+  OPERATING_CASHFLOW_SPECIAL_ACCOUNTS,
+} from '@/constants/cash_flow/operating_cash_flow';
+import { IVoucherForCashFlow } from '@/interfaces/voucher';
 import { findManyVoucherWithCashInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { INVESTING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/investing_cash_flow';
 import { FINANCING_CASH_FLOW_DIRECT_MAPPING } from '@/constants/cash_flow/financing_cash_flow';
@@ -26,9 +29,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
 
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[];
+  private voucherRelatedToCash: IVoucherForCashFlow[];
 
-  private voucherLastPeriod: IVoucherFromPrismaIncludeJournalLineItems[];
+  private voucherLastPeriod: IVoucherForCashFlow[];
 
   private YEAR_RANGE = 5;
 
@@ -38,7 +41,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     companyId: number,
     startDateInSecond: number,
     endDateInSecond: number,
-    voucherRelatedToCash: IVoucherFromPrismaIncludeJournalLineItems[]
+    voucherRelatedToCash: IVoucherForCashFlow[]
   ) {
     const reportSheetType = ReportSheetType.CASH_FLOW_STATEMENT;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
@@ -54,13 +57,19 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       endDateInSecond
     );
     this.voucherRelatedToCash = voucherRelatedToCash.filter((voucher) => {
-      const laterThanStartDate = voucher.journal.createdAt >= startDateInSecond;
-      const earlierThanEndDate = voucher.journal.createdAt <= endDateInSecond;
+      const laterThanStartDate = voucher.date >= startDateInSecond;
+      const earlierThanEndDate = voucher.date <= endDateInSecond;
       return laterThanStartDate && earlierThanEndDate;
     });
+    // .map((voucher) => {
+    //   return {
+    //     ...voucher,
+    //     // invoiceVoucherJournals: voucher.invoiceVoucherJournals || [],
+    //   };
+    // });
 
     this.voucherLastPeriod = voucherRelatedToCash.filter((voucher) => {
-      const earlierThanStartDate = voucher.journal.createdAt < startDateInSecond;
+      const earlierThanStartDate = voucher.date < startDateInSecond;
       return earlierThanStartDate;
     });
   }
@@ -185,6 +194,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       indent: level,
       debit,
       percentage: null,
+      children: [],
     };
 
     const newReportSheetMapping = new Map<string, IAccountForSheetDisplay>([
@@ -238,12 +248,13 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: sum,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     return indirectOperatingCashFlow;
   }
 
-  private static getDebitCreditCodes(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
+  private static getDebitCreditCodes(voucher: IVoucherForCashFlow) {
     const debitCodes = new Set<string>();
     const creditCodes = new Set<string>();
 
@@ -269,7 +280,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return matchDebit && matchCredit && matchEither;
   }
 
-  private static sumDebitAndCreditAmount(voucher: IVoucherFromPrismaIncludeJournalLineItems) {
+  private static sumDebitAndCreditAmount(voucher: IVoucherForCashFlow) {
     let debitAmount = 0;
     let creditAmount = 0;
     voucher.lineItems.forEach((lineItem) => {
@@ -302,6 +313,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: null,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     let directCashFlow = 0;
@@ -328,6 +340,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         amount: total,
         indent: 1,
         percentage: null,
+        children: [],
       };
 
       directCashFlow += total;
@@ -337,6 +350,23 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       reportSheetMapping: result,
       directCashFlow,
     };
+  }
+
+  private getOperatingCashFlowSpecialAccounts(): Map<string, IAccountForSheetDisplay> {
+    const { reportSheetMapping, directCashFlow } = this.aggregateVouchers(
+      '',
+      OPERATING_CASHFLOW_SPECIAL_ACCOUNTS
+    );
+
+    reportSheetMapping.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code, {
+      code: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code,
+      name: SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.name,
+      amount: directCashFlow,
+      indent: 1,
+      percentage: null,
+      children: [],
+    });
+    return reportSheetMapping;
   }
 
   private getInvestingCashFlow(): Map<string, IAccountForSheetDisplay> {
@@ -350,6 +380,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: directCashFlow,
       indent: 1,
       percentage: null,
+      children: [],
     });
     return reportSheetMapping;
   }
@@ -365,6 +396,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: directCashFlow,
       indent: 1,
       percentage: null,
+      children: [],
     });
     return reportSheetMapping;
   }
@@ -372,31 +404,38 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   private static sumCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
     investingCashFlow: Map<string, IAccountForSheetDisplay>,
-    financingCashFlow: Map<string, IAccountForSheetDisplay>
+    financingCashFlow: Map<string, IAccountForSheetDisplay>,
+    operatingCashFlowSpecialAccounts: Map<string, IAccountForSheetDisplay>
   ): number {
     const cashFlowFromOperating =
       (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING.code)?.amount || 0) +
       (investingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code)?.amount || 0) +
-      (financingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.code)?.amount || 0);
+      (financingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FINANCING.code)?.amount || 0) +
+      (operatingCashFlowSpecialAccounts.get(
+        SPECIAL_ACCOUNTS.CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT.code
+      )?.amount || 0);
     return cashFlowFromOperating;
   }
 
   private concatCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>,
     investingCashFlow: Map<string, IAccountForSheetDisplay>,
-    financingCashFlow: Map<string, IAccountForSheetDisplay>
+    financingCashFlow: Map<string, IAccountForSheetDisplay>,
+    operatingCashFlowSpecialAccounts: Map<string, IAccountForSheetDisplay>
   ): Map<string, IAccountForSheetDisplay> {
     const { startCashBalance, endCashBalance } = this.getCashStartAndEndAmount();
     const cashFlowFromOperating = CashFlowStatementGenerator.sumCashFlow(
       indirectOperatingCashFlow,
       investingCashFlow,
-      financingCashFlow
+      financingCashFlow,
+      operatingCashFlowSpecialAccounts
     );
 
     const result = new Map<string, IAccountForSheetDisplay>([
       ...Array.from(indirectOperatingCashFlow),
       ...Array.from(investingCashFlow),
       ...Array.from(financingCashFlow),
+      ...Array.from(operatingCashFlowSpecialAccounts),
     ]);
 
     result.set(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_FOREIGN_EXCHANGE.code, {
@@ -405,6 +444,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: 0,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_INCREASE_THIS_PERIOD.code, {
@@ -413,6 +453,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: cashFlowFromOperating,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code, {
@@ -421,6 +462,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: startCashBalance,
       indent: 0,
       percentage: null,
+      children: [],
     });
 
     result.set(SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code, {
@@ -429,6 +471,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       amount: endCashBalance,
       indent: 0,
       percentage: null,
+      children: [],
     });
     return result;
   }
@@ -448,6 +491,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         amount: 0,
         indent: account.indent,
         percentage: 0,
+        children: [],
       };
     });
     return result;
@@ -482,6 +526,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   ): Promise<IAccountForSheetDisplay[]> {
     const indirectOperatingCashFlow = await this.getIndirectOperatingCashFlow(curPeriod);
 
+    const operatingCashFlowSpecialAccounts = this.getOperatingCashFlowSpecialAccounts();
+
     const investingCashFlow = this.getInvestingCashFlow();
 
     const financingCashFlow = this.getFinancingCashFlow();
@@ -489,7 +535,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const concatCashFlow = this.concatCashFlow(
       indirectOperatingCashFlow,
       investingCashFlow,
-      financingCashFlow
+      financingCashFlow,
+      operatingCashFlowSpecialAccounts
     );
 
     const result = CashFlowStatementGenerator.transformMapToArray(concatCashFlow);

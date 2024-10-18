@@ -4,15 +4,17 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IInvoice } from '@/interfaces/invoice';
 import { getSession } from '@/lib/utils/session';
-import { findUniqueInvoiceInPrisma, handlePrismaUpdateLogic } from '@/lib/utils/repo/invoice.repo';
 import { formatIInvoice } from '@/lib/utils/formatter/invoice.formatter';
-// import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { AICH_URI } from '@/constants/config';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
+import {
+  getInvoiceVoucherJournalByInvoiceId,
+  handlePrismaUpdateLogic,
+} from '@/lib/utils/repo/beta_transition.repo';
 
 async function uploadInvoiceToAICH(invoice: IInvoice) {
   let response: Response;
@@ -81,7 +83,7 @@ async function handleGetRequest(
       if (query) {
         const { invoiceId } = query;
         if (invoiceId > 0) {
-          const invoiceFromDB = await findUniqueInvoiceInPrisma(invoiceId, companyId);
+          const invoiceFromDB = await getInvoiceVoucherJournalByInvoiceId(companyId, invoiceId);
           if (invoiceFromDB) {
             statusMessage = STATUS_MESSAGE.SUCCESS;
             payload = formatIInvoice(invoiceFromDB);
@@ -122,11 +124,7 @@ async function handlePutRequest(
         const fetchResult = uploadInvoiceToAICH(invoice);
 
         const resultStatus: IAccountResultStatus = await getPayloadFromResponseJSON(fetchResult);
-        const journalIdBeUpdated = await handlePrismaUpdateLogic(
-          invoice,
-          resultStatus.resultId,
-          companyId
-        );
+        const journalIdBeUpdated = await handlePrismaUpdateLogic(invoice, resultStatus.resultId);
         statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
         payload = { journalId: journalIdBeUpdated, resultStatus };
       }

@@ -1,0 +1,46 @@
+{
+  "ASSET": {
+    "ASSET_LIST_PAGE_TITLE": "Asset List",
+    "EXPORT_ASSET_LIST": "Export Asset List",
+    "ACQUISITION_DATE": "Acquisition Date",
+    "TYPE": "Type",
+    "ASSET_NAME": "Asset No./Name",
+    "PURCHASE_PRICE": "Purchase Price",
+    "ACCUM_DEP": "Accum. Dep.",
+    "RESIDUAL_VALUE": "Residual Value",
+    "REMAINING_LIFE": "Remaining Useful Life",
+    "STATUS_SOLD": "Sold",
+    "STATUS_DONATED": "Donated",
+    "STATUS_SCRAPPED": "Scrapped",
+    "STATUS_MISSING": "Missing",
+    "STATUS_NORMAL": "Normal"
+  },
+  "STATUS_SETTING_MODAL": {
+    "TITLE": "Status Setting",
+    "SUBTITLE": "Please enter the information of asset",
+    "UPDATE_DATE": "Update Date",
+    "STATUS": "Status"
+  },
+  "ASSET_DETAIL_PAGE": {
+    "TITLE": "Asset",
+    "DELETE_MESSAGE_TITLE": "Are you sure you want to delete this asset?",
+    "DELETE_MESSAGE_CONTENT": "All the vouchers that are connected to this asset will be deleted too.",
+    "DELETE_MESSAGE_SUBMIT_BTN": "Yes, delete the asset.",
+    "DELETE_SUCCESS_TOAST": "Asset has been deleted",
+    "UNDO": "Undo",
+    "DAYS_UNIT": "Days",
+    "STATUS_SETTING": "Status Setting",
+    "TYPE": "Asset Type",
+    "ACQUISITION_DATE": "Acquisition Date",
+    "DEPRECIATION_START_DATE": "Depreciation Start Date",
+    "DEPRECIATION_METHOD": "Depreciation Method",
+    "USEFUL_LIFE": "Useful Life",
+    "MONTH_UNIT": "Month",
+    "PURCHASE_PRICE": "Purchase Price",
+    "ACCUM_DEP": "Accum. Dep.",
+    "RESIDUAL_VALUE": "Residual Value",
+    "REMAINING_LIFE": "Remaining Useful Life",
+    "NOTE": "Note",
+    "VOUCHER": "Voucher"
+  }
+}

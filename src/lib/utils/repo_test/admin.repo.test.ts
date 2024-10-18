@@ -1,149 +1,92 @@
-import { ROLE_NAME, RoleName } from '@/constants/role_name';
+import { ROLE_NAME } from '@/constants/role_name';
 import {
-  listAdminByCompanyId,
-  getAdminById,
-  getAdminByCompanyIdAndUserId,
-  getAdminByCompanyIdAndUserIdAndRoleName,
   createAdmin,
-  updateAdminById,
-  listCompanyAndRole,
   createCompanyAndRole,
-  getCompanyDetailAndRoleByCompanyId,
-  deleteAdminByIdForTesting,
   deleteAdminListByCompanyIdForTesting,
+  deleteAdminById,
+  getCompanyAndRoleByTaxId,
+  getCompanyAndRoleByUserIdAndCompanyId,
+  getCompanyByUserIdAndCompanyId,
+  getOwnerByCompanyId,
+  listCompanyByUserId,
+  setCompanyToTop,
+  updateCompanyTagById,
+  getAdminByCompanyIdAndUserId,
 } from '@/lib/utils/repo/admin.repo';
 import admins from '@/seed_json/admin.json';
 import { deleteCompanyByIdForTesting } from '@/lib/utils/repo/company.repo';
 import { FileFolder } from '@/constants/file';
 import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
+import { CompanyTag } from '@/constants/company';
 
-describe('Admin Repository Tests', () => {
+describe('Admin Repository Additional Tests', () => {
   const testAdminId = 1000;
   const testCompanyId = 1000;
   const testUserId = 1000;
   const testRoleId = 1000;
-  const roleName = ROLE_NAME.TEST;
 
-  describe('listAdminByCompanyId', () => {
-    it('should return a list of admins for a given company ID', async () => {
-      const adminList = await listAdminByCompanyId(testCompanyId);
-      expect(adminList).toBeDefined();
-      expect(adminList.length).toBeGreaterThan(0);
-      expect(adminList[0].companyId).toEqual(admins[0].companyId);
-      expect(adminList[0].userId).toEqual(admins[0].userId);
-      expect(adminList[0].role.id).toEqual(admins[0].roleId);
-      expect(adminList[0].status).toEqual(admins[0].status);
-      expect(typeof adminList[0].startDate).toBe('number');
+  describe('listCompanyByUserId', () => {
+    it('should return a list of companies for a given user ID', async () => {
+      const companyList = await listCompanyByUserId(testUserId);
+      expect(companyList).toBeDefined();
+      expect(companyList.length).toBeGreaterThan(0);
+      expect(companyList[0].company.id).toEqual(admins[0].companyId);
     });
   });
 
-  describe('getAdminById', () => {
-    it('should return an admin by its ID', async () => {
-      const admin = await getAdminById(testAdminId);
-      expect(admin).toBeDefined();
-      expect(admin!.companyId).toEqual(admins[0].companyId);
-      expect(admin!.userId).toEqual(admins[0].userId);
-      expect(admin!.roleId).toEqual(admins[0].roleId);
-      expect(admin!.status).toEqual(admins[0].status);
-      expect(admin!.startDate).toEqual(admins[0].startDate);
+  describe('getCompanyByUserIdAndCompanyId', () => {
+    it('should return a company by user ID and company ID', async () => {
+      const company = await getCompanyByUserIdAndCompanyId(testUserId, testCompanyId);
+      expect(company).toBeDefined();
+      expect(company?.id).toBe(testCompanyId);
     });
 
-    it('should throw an error if the admin is not found', async () => {
-      const nonExistentAdminId = -1;
-      const admin = await getAdminById(nonExistentAdminId);
-      expect(admin).toBeNull();
+    it('should return null if the company is not found', async () => {
+      const company = await getCompanyByUserIdAndCompanyId(testUserId, -1);
+      expect(company).toBeNull();
     });
   });
 
-  describe('getAdminByCompanyIdAndUserId', () => {
-    it('should return an admin by company ID and user ID', async () => {
-      const admin = await getAdminByCompanyIdAndUserId(testCompanyId, testUserId);
-      expect(admin).toBeDefined();
-      expect(admin?.companyId).toBe(testCompanyId);
-      expect(admin?.userId).toBe(testUserId);
+  describe('getOwnerByCompanyId', () => {
+    it('should return the owner of a company by company ID', async () => {
+      const owner = await getOwnerByCompanyId(testCompanyId);
+      expect(owner).toBeDefined();
+      expect(owner?.role.name).toBe(ROLE_NAME.OWNER);
     });
 
-    it('should return null if the admin is not found', async () => {
-      const admin = await getAdminByCompanyIdAndUserId(-1, -1);
-      expect(admin).toBeNull();
-    });
-  });
-
-  describe('getAdminByCompanyIdAndUserIdAndRoleName', () => {
-    it('should return an admin by company ID, user ID, and role name', async () => {
-      const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-        testCompanyId,
-        testUserId,
-        roleName
-      );
-      expect(admin).toBeDefined();
-      expect(admin!.companyId).toBe(testCompanyId);
-      expect(admin!.userId).toBe(testUserId);
-      expect(admin!.role.name).toBe(roleName);
-    });
-
-    it('should throw an error if the admin is not found', async () => {
-      const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-        9999,
-        9998,
-        'NON_EXISTENT_ROLE' as RoleName
-      );
-      expect(admin).toBeNull();
+    it('should return null if the owner is not found', async () => {
+      const owner = await getOwnerByCompanyId(-1);
+      expect(owner).toBeNull();
     });
   });
 
-  describe('createAdmin', () => {
-    it('should create a new admin', async () => {
+  describe('deleteAdminById', () => {
+    it('should delete an admin by its ID', async () => {
       const admin = await createAdmin(testUserId, testCompanyId, testRoleId);
-      await deleteAdminByIdForTesting(admin.id); // Clean up after test
-      expect(admin).toBeDefined();
-      expect(admin.userId).toBe(testUserId);
-      expect(admin.companyId).toBe(testCompanyId);
-      expect(admin.roleId).toBe(testRoleId);
+      const deletedAdmin = await deleteAdminById(admin.id);
+      expect(deletedAdmin).toBeDefined();
+      expect(deletedAdmin.id).toBe(admin.id);
     });
   });
 
-  describe('updateAdminById', () => {
-    it("should update an admin's details", async () => {
-      const status = false;
-      const admin = await updateAdminById(testAdminId, status);
-      await updateAdminById(testAdminId, admins[0].status, testRoleId); // Info: (20240704 - Jacky) Reset
-      expect(admin).toBeDefined();
-      expect(admin.id).toBe(testAdminId);
-      expect(admin.status).toBe(status);
-      expect(admin.role.name).toBe(roleName);
+  describe('getCompanyAndRoleByUserIdAndCompanyId', () => {
+    it('should return company and role by user ID and company ID', async () => {
+      const companyRole = await getCompanyAndRoleByUserIdAndCompanyId(testUserId, testCompanyId);
+      expect(companyRole).toBeDefined();
+      expect(companyRole?.company.id).toBe(testCompanyId);
+      expect(companyRole?.role).toBeDefined();
+    });
+
+    it('should return null if the company and role are not found', async () => {
+      const companyRole = await getCompanyAndRoleByUserIdAndCompanyId(testUserId, -1);
+      expect(companyRole).toBeNull();
     });
   });
 
-  describe('listCompanyAndRole', () => {
-    it('should list companies and roles for a given user ID', async () => {
-      const list = await listCompanyAndRole(testUserId);
-      expect(list).toBeDefined();
-      expect(list.length).toBeGreaterThan(0);
-      expect(list[0].company.id).toEqual(admins[0].companyId);
-      expect(list[0].role.id).toEqual(admins[0].roleId);
-    });
-  });
-
-  describe('getCompanyDetailAndRoleByCompanyId', () => {
-    it('should return company details and role by company ID', async () => {
-      const detail = await getCompanyDetailAndRoleByCompanyId(testUserId, testCompanyId);
-      expect(detail).toBeDefined();
-      expect(detail?.company.id).toBe(testCompanyId);
-      expect(detail?.role).toBeDefined();
-    });
-
-    it('should return null if the company details and role are not found', async () => {
-      const detail = await getCompanyDetailAndRoleByCompanyId(testUserId, -1);
-      expect(detail).toBeNull();
-    });
-  });
-
-  describe('createCompanyAndRole', () => {
-    it('should create a company and role for a given user', async () => {
-      const code = `TESTCODE-${Date.now()}`;
+  describe('getCompanyAndRoleByTaxId', () => {
+    it('should return company and role by user ID and tax ID', async () => {
+      const taxId = `TESTCODE-${Date.now()}`;
       const name = 'Test Company';
-      const regional = 'Test Regional';
       const testFile = await createFile({
         name: 'test',
         size: 100,
@@ -156,15 +99,53 @@ describe('Admin Repository Tests', () => {
       if (!testFile) {
         throw new Error('Failed to create a test file');
       }
-      const companyRole = await createCompanyAndRole(testUserId, code, name, regional, testFile.id);
+      const companyRole = await createCompanyAndRole(testUserId, taxId, name, testFile.id);
       await deleteAdminListByCompanyIdForTesting(companyRole.company.id);
       await deleteCompanyByIdForTesting(companyRole.company.id);
       await deleteFileByIdForTesting(testFile.id); // Clean up after test
       expect(companyRole).toBeDefined();
-      expect(companyRole.company.code).toBe(code);
-      expect(companyRole.company.name).toBe(name);
-      expect(companyRole.company.regional).toBe(regional);
-      expect(companyRole.role.name).toBe(ROLE_NAME.OWNER);
+      expect(companyRole?.company.taxId).toBe(taxId);
+      expect(companyRole?.role.name).toBe(ROLE_NAME.OWNER);
+    });
+
+    it('should return null if the company and role are not found', async () => {
+      const companyRole = await getCompanyAndRoleByTaxId(testUserId, 'NON_EXISTENT_TAX_ID');
+      expect(companyRole).toBeNull();
+    });
+  });
+
+  describe('setCompanyToTop', () => {
+    it('should set the company to the top for a given user ID and company ID', async () => {
+      const companyRole = await setCompanyToTop(testUserId, testCompanyId);
+      expect(companyRole).toBeDefined();
+      expect(companyRole?.company.id).toBe(testCompanyId);
+    });
+  });
+
+  describe('updateCompanyTagById', () => {
+    it('should update the company tag by admin ID', async () => {
+      const newTag = CompanyTag.ALL;
+      const updatedCompany = await updateCompanyTagById(testAdminId, newTag);
+      expect(updatedCompany).toBeDefined();
+      expect(updatedCompany.company.tag).toBe(newTag);
+    });
+  });
+  describe('getAdminByCompanyIdAndUserId', () => {
+    it('should return an admin by company ID and user ID', async () => {
+      const admin = await getAdminByCompanyIdAndUserId(testCompanyId, testUserId);
+      expect(admin).toBeDefined();
+      expect(admin?.company.id).toBe(testCompanyId);
+      expect(admin?.user.id).toBe(testUserId);
+    });
+
+    it('should return null if the admin is not found', async () => {
+      const admin = await getAdminByCompanyIdAndUserId(-1, testUserId);
+      expect(admin).toBeNull();
+    });
+
+    it('should return null if the user ID is invalid', async () => {
+      const admin = await getAdminByCompanyIdAndUserId(testCompanyId, -1);
+      expect(admin).toBeNull();
     });
   });
 });

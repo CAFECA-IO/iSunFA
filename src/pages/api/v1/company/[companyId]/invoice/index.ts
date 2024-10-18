@@ -1,13 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IInvoice } from '@/interfaces/invoice';
-import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { IResponseData } from '@/interfaces/response_data';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { formatApiResponse } from '@/lib/utils/common';
 import { AICH_URI } from '@/constants/config';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { isIAccountResultStatus } from '@/lib/utils/type_guard/account';
-import { handlePrismaSavingLogic } from '@/lib/utils/repo/invoice.repo';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
@@ -16,6 +14,7 @@ import { loggerError, loggerRequest } from '@/lib/utils/logger_back';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { EventType } from '@/constants/account';
+import { handlePrismaSavingLogic } from '@/lib/utils/repo/beta_transition.repo';
 
 // Info: (20240416 - Murky) Body傳進來會是any
 function formatInvoice(invoice: IInvoice) {
@@ -39,7 +38,7 @@ function formatInvoice(invoice: IInvoice) {
     contract: invoice.contract ? invoice.contract : null,
   };
   // Info: (20240416 - Murky) Check if invoices is array and is Invoice type
-  if (Array.isArray(formattedInvoice) || !isIInvoice(formattedInvoice)) {
+  if (Array.isArray(formattedInvoice)) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_INVOICE_BODY_TO_VOUCHER);
   }
   return formattedInvoice;
@@ -182,14 +181,14 @@ export default async function handler(
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } else {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
 
     const logger = loggerRequest(
       userId,
       APIPath[APIName.INVOICE_CREATE],
       req.method || 'unknown',
       401,
-      { message: 'Unauthorized access' },
+      { message: 'Forbidden' },
       req.headers['user-agent'] || 'unknown user-agent',
       req.socket.remoteAddress || 'unknown ip'
     );

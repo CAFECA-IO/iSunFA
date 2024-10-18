@@ -1,15 +1,16 @@
-import { IAPIName } from '@/interfaces/api_connection';
-import APIHandler from '@/lib/utils/api_handler';
 import React, { useState, useEffect, useCallback } from 'react';
-import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import Image from 'next/image';
+import APIHandler from '@/lib/utils/api_handler';
+import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { generateRandomCertificates, ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
 import ViewToggle from '@/components/filter_section/view_toggle';
-import Image from 'next/image';
-import { generateRandomCertificates, ICertificate } from '@/interfaces/certificate';
 
 interface FilterSectionProps {
+  className?: string;
   apiName: IAPIName;
   params?: Record<string, string | number | boolean>;
   types?: string[];
@@ -17,11 +18,12 @@ interface FilterSectionProps {
   sortingOptions?: string[];
   sortingByDate?: boolean;
   onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
-  viewType: 'grid' | 'list';
-  viewToggleHandler: (viewType: 'grid' | 'list') => void;
+  viewType?: VIEW_TYPES;
+  viewToggleHandler?: (viewType: VIEW_TYPES) => void;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
+  className,
   apiName,
   params,
   types = [],
@@ -101,12 +103,14 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {
-    fetchData();
+    if (typeof window !== 'undefined') {
+      fetchData();
+    }
   }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting, sorting]);
 
   return (
     <div
-      className="flex flex-wrap items-center justify-start space-x-4 rounded-lg bg-white p-4"
+      className={`flex flex-wrap items-end justify-start gap-4 ${className || ''}`}
       style={{ maxWidth: '100%' }}
     >
       {/* Info: (20240919 - tzuhan) 類型篩選 */}
@@ -135,7 +139,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
           period={selectedDateRange}
           setFilteredPeriod={setSelectedDateRange}
           type={DatePickerType.TEXT_PERIOD}
-          btnClassName="mt-28px"
+          btnClassName=""
         />
       </div>
 
@@ -143,13 +147,15 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       {/* Info: (20240919 - tzuhan) 顯示風格切換 */}
-      <ViewToggle viewType={viewType} onViewTypeChange={viewToggleHandler} />
+      {viewType && viewToggleHandler && (
+        <ViewToggle viewType={viewType} onViewTypeChange={viewToggleHandler} />
+      )}
 
       {/* Info: (20240919 - tzuhan) 排序選項 */}
       {sortingByDate ? (
         <button
           type="button"
-          className="mt-28px flex h-44px items-center space-x-2"
+          className="flex items-center space-x-2 pb-2"
           onClick={() => setSorting((prev) => !prev)}
         >
           <Image src="/elements/double_arrow_down.svg" alt="arrow_down" width={20} height={20} />

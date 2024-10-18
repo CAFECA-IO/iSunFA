@@ -3,7 +3,6 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { checkAuthorization } from '@/lib/utils/auth_check';
-import { listJournal } from '@/lib/utils/repo/journal.repo';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -12,6 +11,7 @@ import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
+import { listInvoiceVoucherJournal } from '@/lib/utils/repo/beta_transition.repo';
 
 async function handleGetRequest(
   req: NextApiRequest,
@@ -22,7 +22,6 @@ async function handleGetRequest(
 
   const session = await getSession(req, res);
   const { userId, companyId } = session;
-
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
@@ -36,25 +35,24 @@ async function handleGetRequest(
         const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
           query;
         try {
-          const uploadedPaginatedJournalList = await listJournal(
+          const uploadedPaginatedJournalList = await listInvoiceVoucherJournal(
             companyId,
             JOURNAL_EVENT.UPLOADED,
+            eventType,
             page,
             pageSize,
-            eventType,
             sortBy,
             sortOrder,
             startDate,
             endDate,
             searchQuery
           );
-
-          const upComingPaginatedJournalList = await listJournal(
+          const upComingPaginatedJournalList = await listInvoiceVoucherJournal(
             companyId,
             JOURNAL_EVENT.UPCOMING,
+            eventType,
             page,
             pageSize,
-            eventType,
             sortBy,
             sortOrder,
             startDate,

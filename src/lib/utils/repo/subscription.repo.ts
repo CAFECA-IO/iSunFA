@@ -20,6 +20,7 @@ export async function createSubscription(
     data: {
       companyId,
       planId,
+      autoRenewal: true,
       startDate: nowTimestamp,
       expiredDate,
       status,

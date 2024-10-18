@@ -9,6 +9,7 @@ module.exports = {
       scale: {
         80: '0.8',
         90: '0.9',
+        flip: '-1',
       },
       aspectRatio: {
         '1/1': '1 / 1',
@@ -502,6 +503,7 @@ module.exports = {
           'text-secondary': 'var(--card-text-secondary)',
           'text-tertiary': 'var(--card-text-tertiary)',
           'text-title': 'var(--card-text-title)',
+          'text-sub': 'var(--card-text-sub)',
           'text-white': 'var(--card-text-white)',
         },
 
@@ -698,6 +700,11 @@ module.exports = {
 
         green_light_left: 'url("/elements/green_light_left.svg")',
         green_light_right: 'url("/elements/green_light_right.svg")',
+
+        // Info: (20241004 - Liz) Beta
+        bg_select_role: 'url("/images/bg_select_role.png")',
+        bg_bookkeeper: 'url("/images/bg_bookkeeper.png")',
+        bg_educational_trial_version: 'url("/images/bg_educational_trial_version.png")',
       },
       zIndex: {
         '-10': '-10',
@@ -724,6 +731,7 @@ module.exports = {
         lg: ['18px', '28px'],
         xl: ['20px', '28px'],
         '2xl': ['24px', '32px'],
+        '28px': ['28px', '36px'],
         '3xl': ['30px', '36px'],
         '32px': ['32px', '36px'],
         '4xl': ['36px', '40px'],
@@ -733,6 +741,7 @@ module.exports = {
         '44px': ['44px', '52px'],
         '48px': ['48px', '52px'],
         '6xl': ['56px', '60px'],
+        '64px': ['64px', '68px'],
         '7xl': ['72px', 1],
         '8xl': ['96px', 1],
         '9xl': ['128px', 1],
@@ -766,14 +775,18 @@ module.exports = {
         iphonexr: '415px',
         iphone12promax: '431px',
 
+        xs: '450px', // mobile
         sm: '500px', // mobile
         md: '768px', // tablet
         lg: '1024px', // desktop
         xl: '1440px',
 
         tablet: '768px',
-        laptop: '1024px',
-        desktop: '1440px',
+        laptop: '1024px', // (1024*768)
+        desktop: '1440px', // (1440*900)
+
+        // Info: (20241007 - Liz) iSunFA 設計稿以 1280px 為基準 (1280*800)
+        screen1280: '1280px',
       },
       container: {
         center: true,
@@ -861,6 +874,7 @@ module.exports = {
 
         // '1px': '1px',
         // '2px': '2px',
+        '2.5px': '2.5px',
         // '3px': '3px',
         // '4px': '4px',
         // '5px': '5px',
@@ -914,6 +928,7 @@ module.exports = {
         '63px': '63px',
         '64px': '64px',
         '65px': '65px',
+        '66px': '66px',
         '69px': '69px',
         '70px': '70px',
         '71px': '71px',
@@ -934,6 +949,7 @@ module.exports = {
         '95px': '95px',
         '98px': '98px',
         // '100px': '100px',
+        '105px': '105px',
         '110px': '110px',
         // '120px': '120px',
         '122px': '122px',
@@ -941,12 +957,14 @@ module.exports = {
         '128px': '128px',
         '130px': '130px',
         '134px': '134px',
+        '136px': '136px',
         '140px': '140px',
         '150px': '150px',
         '160px': '160px',
         '170px': '170px',
         '177px': '177px',
         '180px': '180px',
+        '182px': '182px',
         '190px': '190px',
         '200px': '200px',
         '220px': '220px',
@@ -977,10 +995,12 @@ module.exports = {
         '360px': '360px',
         '370px': '370px',
         '372px': '372px',
+        '375px': '375px',
         '376px': '376px',
         '380px': '380px',
         '388px': '388px',
         '390px': '390px',
+        '392px': '392px',
         '400px': '400px',
         '410px': '410px',
         '420px': '420px',
@@ -990,6 +1010,7 @@ module.exports = {
         '438px': '438px',
         '440px': '440px',
         '450px': '450px',
+        '452px': '452px',
         '475px': '475px',
         '479px': '479px',
         '480px': '480px',
@@ -1015,6 +1036,8 @@ module.exports = {
         '640px': '640px',
         '650px': '650px',
         '660px': '660px',
+        '675px': '675px',
+        '678px': '678px',
         '700px': '700px',
         '726px': '726px',
         '750px': '750px',
@@ -1027,6 +1050,7 @@ module.exports = {
         '1000px': '1000px',
         '1100px': '1100px',
         '1200px': '1200px',
+        '1280px': '1280px',
         '1300px': '1300px',
         '1350px': '1350px',
         '1400px': '1400px',
@@ -1164,9 +1188,11 @@ module.exports = {
         '80%': '80%',
         '95%': '95%',
 
+        '60vh': '60vh',
         '80vh': '80vh',
         '90vh': '90vh',
         '95vh': '95vh',
+        '96vh': '96vh',
         '100vh': '100vh',
         '120vh': '120vh',
         '140vh': '140vh',
@@ -1275,6 +1301,10 @@ module.exports = {
       },
 
       boxShadow: {
+        'inset-lg': '4px -4px 7px 2px var(--shadow-lv-5) inset',
+        'inset-md': '0px 2px 7px 2px var(--shadow-lv-5) inset',
+        'inset-sm': '4px -4px 4px 0px var(--shadow-lv-1) inset',
+
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
@@ -1292,8 +1322,26 @@ module.exports = {
 
         scrollBtn:
           '0px 3px 7px 0px #3143621A, 0px 13px 13px 0px #31436217, 0px 30px 18px 0px #3143620D, 0px 53px 21px 0px #31436203, 0px 83px 23px 0px #31436200',
+
+        crossBtn: '0px 0px 7px 0px #FFA502B2',
+
+        Dropshadow_XS:
+          '0px 2px 5px var(--shadow-lv-5, rgba(49, 67, 98, 0.10)), 0px 6px 10px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 11px 13px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 28px 15px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 50px 17px var(--shadow-lv-1, rgba(49, 67, 98, 0.00))',
+
+        // Shadow/Down/Dropshadow_S
+        Dropshadow_S:
+          '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        // Shadow/Down/Dropshadow_M
+        Dropshadow_M:
+          '0px 166px 46px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        // Side menu
+        SideMenu:
+          '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
+        xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
         lg: '0 4px 10px rgba(0,0,0,0.7)',
         xl: '0px 4px 24px rgba(0, 0, 0, 0.40)',
         xlReverse: '0px -4px 24px rgba(0, 0, 0, 0.40)',
@@ -1341,6 +1389,7 @@ module.exports = {
       rotate: {
         135: '135deg',
         40: '40deg',
+        '-90': '-90deg',
       },
       backgroundSize: {
         150: '150%',
@@ -1371,15 +1420,64 @@ module.exports = {
           '0%': { transform: 'translateX(-80%)' },
           '100%': { transform: 'translateX(120%)' },
         },
+        // Info: (20240925 - Liz) 客製化動畫幀
+        'slide-in': {
+          '0%': { left: '-100%' },
+          '100%': { left: '5%' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'fade-in-out': {
+          '0%': { opacity: '0' },
+          '50%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
       },
       animation: {
         slideBottomToTop: 'slideBottomToTop 1s ease-out forwards',
         spinFast: 'spin 1s linear infinite',
         loading: 'loading 1.5s infinite',
+        // Info: (20240925 - Liz) 客製化動畫 使用方式是 animate-fade-in
+        'slide-in-back': 'slide-in 1s linear backwards', // Info: (20241001 - Liz) 1s 代表動畫時間
+        'fade-in-out': 'fade-in-out 3s ease-in-out forwards',
+        'fade-in-1': 'fade-in 2s ease-in forwards', // Info: (20241001 - Liz) forwards 代表動畫結束後保持最後的狀態
+        'fade-in-2': 'fade-in 2s ease-in 1s forwards', // Info: (20241001 - Liz) 動畫將在渲染或觸發動畫後 1 秒開始
+        wiggle: 'wiggle 1s ease-in-out infinite', // Info: (20241001 - Liz) 1s 代表動畫時間，ease-in-out 代表動畫速度，infinite 代表無限循環
+
+        marquee: 'marquee 30s linear infinite',
+        marqueePaused: 'marquee 30s linear infinite paused',
       },
 
       content: {
         checked: '"✔"',
+      },
+      gridTemplateColumns: {
+        'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
+        'dynamic-fill': 'repeat(auto-fill, minmax(200px, 1fr))',
+        13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
+      },
+      gridAutoRows: {
+        'min-content': 'min-content',
+      },
+      gridColumnEnd: {
+        13: '13',
+        14: '14',
+        15: '15',
+        16: '16',
+        17: '17',
+      },
+      skew: {
+        20: '20deg', // Info: (20241004 - Liz) 用來創造平行四邊形，例如: skew-x-20
       },
     },
   },

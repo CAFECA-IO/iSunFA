@@ -174,6 +174,13 @@
     "THU": "四",
     "FRI": "五",
     "SAT": "六",
+    "SUNDAY": "周日",
+    "MONDAY": "周一",
+    "TUESDAY": "周二",
+    "WEDNESDAY": "周三",
+    "THURSDAY": "周四",
+    "FRIDAY": "周五",
+    "SATURDAY": "周六",
     "JAN_ABR": "一月",
     "FEB_ABR": "二月",
     "MAR_ABR": "三月",
@@ -227,6 +234,8 @@
   },
   "COMMON": {
     "OF": "之",
+    "TOTAL": "总共",
+    "DOCUMENT": "文件",
     "ISUNFA_TRIAL_VERSION": "iSunFA 试用版",
     "END_OF_TRIAL": "试用结束",
     "NEWEST": "最新的",
@@ -237,6 +246,7 @@
     "FILTER": "筛选",
     "M": "月",
     "Y": "年",
+    "D": "日",
     "V": "v",
     "OR": "或",
     "ERROR_CODE": "错误代码: {{code}}",
@@ -267,19 +277,28 @@
     "BUSINESS_REGISTRATION_NUMBER": "商业登记号码",
     "EMPTY": "无资料",
     "STATUS": "状态",
+    "WEEK": "周",
     "MONTH": "月",
     "YEAR": "年",
     "SELECT": "选择",
+    "SELECT_ALL": "全选",
     "NO_DATA": "没有数据",
     "TOOLTIP_MESSAGE": "当游标位于图形使用者介面中的图示、图像、超连结或其他元素上时出现的讯息。",
     "PERIOD": "期间",
     "OK": "好",
+    "FROM": "从",
     "TO": "至",
     "ANALYSIS_REPORTS": "分析报告",
     "TRANSFER": "移转",
     "LOADING": "加载中...",
     "COMPLETED": "已完成",
-    "DAY": "日"
+    "DAY": "日",
+    "SAVE": "保存",
+    "DELETE": "删除",
+    "CODE": "科目编号",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "结束日"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
@@ -391,5 +410,21 @@
     "TITLE": "iSunFA",
     "DESCRIPTION": "融合区块链会计与人工智能审计的先进会计解决方案",
     "KEYWORDS": "iSunFA, 区块链, AI, 法务, 会计, 审计"
+  },
+  "FILTER_SECTION_TYPE": {
+    "TYPE": "类型",
+    "ALL": "全部",
+    "INVOICE": "发票",
+    "RECEIPT": "收据",
+    "ASSET": "资产",
+    "LIABILITY": "负债",
+    "EQUITY": "权益",
+    "NONE": ""
+  },
+  "SELECTION": {
+    "EXPORT": "导出",
+    "CERTIFICATES": "证书",
+    "ADD_NEW_VOUCHER": "新增传票",
+    "ADD_NEW_ASSET": "新增资产"
   }
 }

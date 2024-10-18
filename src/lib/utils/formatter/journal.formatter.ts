@@ -1,117 +1,86 @@
-import { IInvoice } from '@/interfaces/invoice';
-import {
-  IJournal,
-  IJournalFromPrismaIncludeProjectContractInvoiceVoucher,
-  IJournalListItem,
-} from '@/interfaces/journal';
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
-import {
-  convertStringToEventType,
-  convertStringToPaymentPeriodType,
-  convertStringToPaymentStatusType,
-} from '@/lib/utils/type_guard/account';
+import { IJournal, IJournalListItem } from '@/interfaces/journal';
 import { sumLineItemsAndReturnBiggest } from '@/lib/utils/line_item';
 import { assertIsJournalEvent } from '@/lib/utils/type_guard/journal';
-import { FileFolder } from '@/constants/file';
-import { transformOCRImageIDToURL } from '@/lib/utils/common';
+import {
+  Account,
+  Certificate,
+  File,
+  Invoice,
+  InvoiceVoucherJournal,
+  Journal,
+  LineItem,
+  Voucher,
+} from '@prisma/client';
+import { formatIInvoice } from './invoice.formatter';
 
 export function formatSingleIJournalListItem(
-  journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
+  invoiceVoucherJournal: InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  }
 ): IJournalListItem {
-  const { credit, debit } = sumLineItemsAndReturnBiggest(journalFromPrisma?.voucher?.lineItems);
+  const { credit, debit } = sumLineItemsAndReturnBiggest(invoiceVoucherJournal?.voucher?.lineItems);
 
-  assertIsJournalEvent(journalFromPrisma.event);
+  assertIsJournalEvent(invoiceVoucherJournal.voucher?.status);
   return {
-    id: journalFromPrisma.id,
-    date: journalFromPrisma.createdAt,
-    type: journalFromPrisma.invoice?.eventType,
-    particulars: journalFromPrisma.invoice?.description,
-    fromTo: journalFromPrisma.invoice?.vendorOrSupplier,
-    event: journalFromPrisma.event,
+    id: invoiceVoucherJournal.journalId,
+    date: invoiceVoucherJournal.invoice?.date || invoiceVoucherJournal.createdAt,
+    type: invoiceVoucherJournal.voucher?.type,
+    particulars: invoiceVoucherJournal.description,
+    fromTo: invoiceVoucherJournal.vendorOrSupplier,
+    event: invoiceVoucherJournal.voucher.status,
     account: [debit, credit],
-    projectName: journalFromPrisma.project?.name,
-    projectImageId: journalFromPrisma.project?.imageFile?.name,
-    voucherId: journalFromPrisma.voucher?.id,
-    voucherNo: journalFromPrisma.voucher?.no,
+    projectName: '',
+    projectImageId: '',
+    voucherId: invoiceVoucherJournal.voucher?.id,
+    voucherNo: invoiceVoucherJournal.voucher?.no,
   };
 }
 
 export function formatIJournalListItems(
-  journalsFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher[]
+  journalsFromPrisma: (InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: Invoice | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  })[]
 ): IJournalListItem[] {
-  const journalLineItems = journalsFromPrisma.map((journalFromPrisma) => {
-    return formatSingleIJournalListItem(journalFromPrisma);
+  const journalLineItems = journalsFromPrisma.map((invoiceVoucherJournal) => {
+    return formatSingleIJournalListItem(invoiceVoucherJournal);
   });
   return journalLineItems;
 }
 
 export function formatIJournal(
-  journalFromPrisma: IJournalFromPrismaIncludeProjectContractInvoiceVoucher
+  invoiceVoucherJournal: InvoiceVoucherJournal & {
+    journal: Journal | null;
+    invoice: (Invoice & { certificate: Certificate & { file: File } }) | null;
+    voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
+  }
 ): IJournal {
-  const projectName = journalFromPrisma?.project?.name;
-  const { projectId } = journalFromPrisma;
-  const contractName = journalFromPrisma?.contract?.name;
-  const { contractId } = journalFromPrisma;
-
-  const imageName = journalFromPrisma.invoice?.imageFile?.name || '';
-  const imageUrl = transformOCRImageIDToURL(FileFolder.INVOICE, 0, imageName);
-
-  const invoice: IInvoice = journalFromPrisma.invoice
-    ? {
-        journalId: journalFromPrisma.id,
-        date: journalFromPrisma.invoice.date,
-        eventType: convertStringToEventType(journalFromPrisma.invoice.eventType),
-        paymentReason: journalFromPrisma.invoice.paymentReason,
-        description: journalFromPrisma.invoice.description,
-        vendorOrSupplier: journalFromPrisma.invoice.vendorOrSupplier,
-        projectId,
-        project: projectName || null,
-        contractId,
-        contract: contractName || null,
-        payment: {
-          isRevenue: journalFromPrisma.invoice.payment.isRevenue,
-          price: journalFromPrisma.invoice.payment.price,
-          hasTax: journalFromPrisma.invoice.payment.hasTax,
-          taxPercentage: journalFromPrisma.invoice.payment.taxPercentage,
-          hasFee: journalFromPrisma.invoice.payment.hasFee,
-          fee: journalFromPrisma.invoice.payment.fee,
-          method: journalFromPrisma.invoice.payment.method,
-          period: convertStringToPaymentPeriodType(journalFromPrisma.invoice.payment.period),
-          installmentPeriod: journalFromPrisma.invoice.payment.installmentPeriod,
-          alreadyPaid: journalFromPrisma.invoice.payment.alreadyPaid,
-          status: convertStringToPaymentStatusType(journalFromPrisma.invoice.payment.status),
-          progress: journalFromPrisma.invoice.payment.progress,
-        },
-      }
-    : ({} as IInvoice);
-
-  const voucher: IVoucherDataForSavingToDB = journalFromPrisma.voucher
-    ? {
-        journalId: journalFromPrisma.id,
-        lineItems: journalFromPrisma.voucher.lineItems.map((lineItem) => {
-          return {
-            lineItemIndex: lineItem.id.toString(),
-            amount: lineItem.amount,
-            debit: lineItem.debit,
-            account: `${lineItem.account.code} - ${lineItem.account.name}`,
-            description: lineItem.description,
-            accountId: lineItem.account.id,
-          };
-        }),
-      }
-    : ({} as IVoucherDataForSavingToDB);
-
-  assertIsJournalEvent(journalFromPrisma.event);
+  assertIsJournalEvent(invoiceVoucherJournal.voucher?.status);
   return {
-    id: journalFromPrisma.id,
-    tokenContract: journalFromPrisma.tokenContract || '',
-    tokenId: journalFromPrisma.tokenId || '',
-    aichResultId: journalFromPrisma.aichResultId || '',
-    projectId: projectId || 0,
-    contractId: contractId || 0,
-    imageUrl: imageUrl || '',
-    event: journalFromPrisma.event,
-    invoice,
-    voucher,
+    id: invoiceVoucherJournal.journalId,
+    tokenContract: '',
+    tokenId: '',
+    aichResultId: invoiceVoucherJournal.journal?.aichResultId || '',
+    projectId: 0,
+    contractId: 0,
+    imageUrl: invoiceVoucherJournal.invoice?.certificate.file.url || '',
+    event: invoiceVoucherJournal.voucher.status,
+    invoice: formatIInvoice(invoiceVoucherJournal),
+    voucher: {
+      journalId: invoiceVoucherJournal.journalId,
+      lineItems: invoiceVoucherJournal.voucher.lineItems.map((lineItem) => {
+        return {
+          lineItemIndex: lineItem.id.toString(),
+          amount: lineItem.amount,
+          debit: lineItem.debit,
+          account: `${lineItem.account.code} - ${lineItem.account.name}`,
+          description: lineItem.description,
+          accountId: lineItem.account.id,
+        };
+      }),
+    },
   };
 }

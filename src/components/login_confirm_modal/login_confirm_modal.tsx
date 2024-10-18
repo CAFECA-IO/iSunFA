@@ -6,6 +6,8 @@ import PrivacyPolicy from '@/components/login_confirm_modal/privacy_policy';
 import { useUserCtx } from '@/contexts/user_context';
 import { Hash } from '@/constants/hash';
 import { Button } from '@/components/button/button';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useRouter } from 'next/router';
 
 interface ILoginConfirmProps {
   id: string;
@@ -28,6 +30,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
 }) => {
   const { t } = useTranslation('common');
   const { handleUserAgree, signOut } = useUserCtx();
+  const router = useRouter();
 
   const onAgree = async () => {
     if (id === 'agree-to-our-terms-of-service') {
@@ -38,6 +41,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
     if (id === 'agree-to-our-privacy-policy') {
       tosModalVisibilityHandler(false);
       await handleUserAgree(Hash.HASH_FOR_PRIVACY_POLICY);
+      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
     }
   };
   const onCancel = () => {

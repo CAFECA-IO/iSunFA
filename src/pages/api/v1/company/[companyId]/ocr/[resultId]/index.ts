@@ -8,7 +8,6 @@ import {
   transformBytesToFileSizeString,
 } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { isIInvoice } from '@/lib/utils/type_guard/invoice';
 import { IContract } from '@/interfaces/contract';
 import { deleteOcrByResultId, getOcrByResultId } from '@/lib/utils/repo/ocr.repo';
 import { IOCR } from '@/interfaces/ocr';
@@ -18,7 +17,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { loggerError } from '@/lib/utils/logger_back';
 import { ocrTypes } from '@/constants/ocr';
 import { validateRequest } from '@/lib/utils/request_validator';
 import { APIName } from '@/constants/api_connection';
@@ -112,11 +111,6 @@ export async function handleGetRequest(resultId: string, ocrType: ocrTypes = ocr
         if (ocrResult) {
           let newOcr: IInvoice | null = setOCRResultJournalId(ocrResult, null);
           newOcr = formatOCRResultDate(newOcr);
-
-          if (!isIInvoice(newOcr)) {
-            loggerBack.info('ocr/[resultId]: OCR result(newOcr) is not an invoice type');
-            newOcr = null;
-          }
 
           ocrResult = newOcr;
         }

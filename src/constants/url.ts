@@ -15,11 +15,25 @@ export const ISUNFA_ROUTE = {
   TERMS_OF_SERVICE: '/terms-of-service',
   PRIVACY_POLICY: '/privacy-policy',
   LOGIN: '/users/login',
+  // Info: (20241015 - Liz) Beta routes
+  BETA_LOGIN: '/beta/login',
+  EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
+  SELECT_ROLE: '/beta/select_role',
+  JOB_RECORD: '/beta/job_record',
+  BETA_DASHBOARD: '/beta/dashboard',
+  BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
+
   DASHBOARD: '/users/dashboard',
   KYC: '/users/kyc',
   SALARY: '/users/salary',
   SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
   ACCOUNTING: '/users/accounting',
+  ADD_NEW_VOUCHER: '/users/accounting/add_new_voucher',
+  VOUCHER_LIST: '/users/accounting/voucher_list',
+  PAYABLE_RECEIVABLE_LIST: '/users/accounting/payable_receivable_list',
+  CERTIFICATE_LIST: '/users/accounting/certificate_list',
+  ASSET_LIST: '/users/asset',
+
   SELECT_COMPANY: '/users/select_company',
   JOURNAL_LIST: '/users/accounting/journal_list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
@@ -33,6 +47,7 @@ export const ISUNFA_ROUTE = {
   USERS_FINANCIAL_REPORTS_BALANCE_SHEET: `/users/reports/financials?report_type=${FinancialReportTypesKey.balance_sheet}`,
   USERS_FINANCIAL_REPORTS_INCOME_STATEMENT: `/users/reports/financials?report_type=${FinancialReportTypesKey.comprehensive_income_statement}`,
   USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
+  UPLOAD: `mobile_upload`,
 };
 
 export const EXTERNAL_API = {

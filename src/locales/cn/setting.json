@@ -21,7 +21,6 @@
     "MY_NEW_ACCOUNTING_TITLE": "我的新会计科目",
     "NAME": "科目名称",
     "CODE_NAME": "科目编号和名称",
-    "CODE": "科目编号",
     "ACTION": "操作",
     "ADD_NEW_ACCOUNTING_TITLE": "新增会计科目",
     "ACCOUNTING_TYPE": "科目类型",
@@ -40,6 +39,9 @@
     "SUCCESSFULLY_UPDATED_ACCOUNT": "会计科目更新成功",
     "FAILED_TO_UPDATE_ACCOUNT": "更新科目失败，请稍后重试。",
     "FAILED_TO_GET_ACCOUNT_DATA": "取得科目资料失败，请稍后重试。",
-    "FAIL_UPDATE_COMPANY_NAME": "无法更新公司名称。错误代码：{{updateTeamCode}}"
+    "FAIL_UPDATE_COMPANY_NAME": "无法更新公司名称。错误代码：{{updateTeamCode}}",
+    "ASSET": "资产",
+    "OTHERCOMPREHENSIVEINCOME": "其他综合損益",
+    "COST": "成本"
   }
 }

@@ -1,10 +1,9 @@
 export interface ICompanySetting {
   id: number;
   companyId: number;
-  autoRenewal: boolean;
-  notifyTiming: number;
-  notifyChannel: string;
-  reminderFreq: number;
-  createdAt: number;
-  updatedAt: number;
+  taxSerialNumber: string;
+  representativeName: string;
+  country: string;
+  phone: string;
+  address: string;
 }

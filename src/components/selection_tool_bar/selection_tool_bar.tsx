@@ -1,54 +1,64 @@
+import { ICertificateUI } from '@/interfaces/certificate';
 import React from 'react';
+import { FaPlus } from 'react-icons/fa6';
 import { FiDownload, FiTrash2 } from 'react-icons/fi';
+import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface SelectionToolbarProps {
-  items: { id: number }[]; // Info: (20240920 - tzuhan) 項目列表
-  selectedItemIds: number[]; // Info: (20240920 - tzuhan) 選中的項目 ID 列表
+  className?: string;
+  active: boolean; // Info: (20240920 - tzuhan) 是否打開
+  isSelectable: boolean; // Info: (20240920 - tzuhan) 是否可選擇
+  onActiveChange: (active: boolean) => void; // Info: (20240920 - tzuhan) 當打開狀態變更時的回調函數
+  items: ICertificateUI[]; // Info: (20240920 - tzuhan) 項目列表
+  itemType?: string;
+  subtitle?: string;
+  totalPrice?: number;
+  currency?: string;
+  selectedCount: number; // Info: (20240920 - tzuhan) 選中的項目數量
   totalCount: number; // Info: (20240920 - tzuhan) 總項目數量
-  onSelectionChange: (selectedIds: number[]) => void; // Info: (20240920 - tzuhan) 當選擇變更時的回調函數
+  handleSelect: (ids: number[], isSelected: boolean) => void;
   operations?: ('ADD_VOUCHER' | 'ADD_ASSET' | 'DELETE')[]; // Info: (20240920 - tzuhan) 操作列表
-  onAddVoucher: () => void; // Info: (20240920 - tzuhan) 添加新的憑證的回調函數
-  onAddAsset: () => void; // Info: (20240920 - tzuhan) 添加新資產的回調函數
-  onDelete: () => void; // Info: (20240920 - tzuhan) 添加刪除的回調函數
+  onAddVoucher?: () => void; // Info: (20240920 - tzuhan) 添加新的憑證的回調函數
+  onAddAsset?: () => void; // Info: (20240920 - tzuhan) 添加新資產的回調函數
+  onDelete?: () => void; // Info: (20240920 - tzuhan) 添加刪除的回調函數
+  onDownload?: () => void; // Info: (20240923 - tzuhan) 添加下載的回調函數
 }
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
+  className,
+  active,
+  isSelectable,
+  onActiveChange,
   items,
-  selectedItemIds,
+  itemType,
+  subtitle,
+  totalPrice,
+  currency,
+  selectedCount,
   totalCount,
-  onSelectionChange,
+  handleSelect,
   operations = [],
   onAddVoucher,
   onAddAsset,
   onDelete,
+  onDownload,
 }) => {
-  const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
-  const selectedCount = selectedItemIds.length;
-
-  // Info: (20240920 - tzuhan) 刪除選中項目
-  const handleDelete = () => {
-    onDelete();
-    const newSelected: number[] = []; // Info: (20240920 - tzuhan) 刪除後清空選擇
-    onSelectionChange(newSelected);
-  };
-
-  // Info: (20240920 - tzuhan) 下載選中項目
-  const handleDownload = () => {
-    // TODO: (20240920 - tzuhan) 下載選中的項目
-    // Deprecated: (20240920 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Download selected items:', selectedItemIds);
-  };
-
+  const { t } = useTranslation('common');
   // Info: (20240920 - tzuhan) 全選操作
   const handleSelectAll = () => {
-    const allIds = items.map((item) => item.id);
-    onSelectionChange(allIds);
+    handleSelect(
+      items.map((item) => item.id),
+      true
+    );
   };
 
   // Info: (20240920 - tzuhan) 取消全選
   const handleUnselectAll = () => {
-    onSelectionChange([]);
+    handleSelect(
+      items.map((item) => item.id),
+      false
+    );
   };
 
   // Info: (20240920 - tzuhan) 取消操作
@@ -56,80 +66,97 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
     // Deprecated: (20240920 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('Cancel operation');
-    onSelectionChange([]);
-    setActiveSelection(false);
+    handleUnselectAll();
+    onActiveChange(false);
   };
 
   return (
-    <div className="px-4">
-      {activeSelection ? (
-        <div className="flex items-center justify-between">
+    <div className={`flex items-center justify-between ${className || ''}`}>
+      {active ? (
+        <>
           {/* Info: (20240920 - tzuhan) 左側選擇計數顯示 */}
-          <div className="font-medium text-gray-700">
-            (Select {selectedCount}/{totalCount})
+          <div className="font-medium text-text-neutral-secondary">
+            {`(${t('common:COMMON.SELECT')} ${selectedCount}/${totalCount})`}
           </div>
 
           {/* Info: (20240920 - tzuhan) 中間操作按鈕 */}
           <div className="flex items-center space-x-4 text-blue-500">
-            {operations.includes('DELETE') && (
-              <button
+            {onDownload && (
+              <Button
                 type="button"
-                className={`rounded border border-tabs-stroke-default bg-tabs-surface-active p-2.5 text-stroke-neutral-solid-light hover:bg-tabs-surface-active hover:text-stroke-neutral-solid-light`}
-                onClick={handleDelete}
+                variant="tertiaryOutline"
+                className="py-1.5"
+                onClick={onDownload}
               >
-                <FiTrash2 />
-              </button>
+                <FiDownload />
+                <div>{`${t('common:SELECTION.EXPORT')} ${itemType ? t(`common:SELECTION.${itemType.toUpperCase()}`) : ''}`}</div>
+              </Button>
             )}
-            <button
-              type="button"
-              className={`rounded border border-tabs-stroke-default bg-tabs-surface-active p-2.5 text-stroke-neutral-solid-light hover:bg-tabs-surface-active hover:text-stroke-neutral-solid-light`}
-              onClick={handleDownload}
-            >
-              <FiDownload />
-            </button>
-            {operations.includes('ADD_VOUCHER') && (
-              <button
+            {operations.includes('ADD_VOUCHER') && onAddVoucher && (
+              <Button
                 type="button"
-                className="rounded border border-button-stroke-secondary px-4 py-2 text-button-text-secondary focus:outline-none"
+                variant="tertiary"
+                className="h-36px py-1.5"
                 onClick={onAddVoucher}
               >
-                Add New Voucher
-              </button>
+                <FaPlus />
+                <div>{t('common:SELECTION.ADD_NEW_VOUCHER')}</div>
+              </Button>
             )}
-            {operations.includes('ADD_ASSET') && (
-              <button
+            {operations.includes('ADD_ASSET') && onAddAsset && (
+              <Button
                 type="button"
-                className="rounded border border-button-stroke-secondary px-4 py-2 text-button-text-secondary focus:outline-none"
+                variant="tertiary"
+                className="h-36px py-1.5"
                 onClick={onAddAsset}
               >
-                Add New Asset
-              </button>
+                <FaPlus />
+                <div>{t('common:SELECTION.ADD_NEW_ASSET')}</div>
+              </Button>
+            )}
+            {operations.includes('DELETE') && onDelete && (
+              <Button type="button" variant="tertiary" className="h-36px p-2.5" onClick={onDelete}>
+                <FiTrash2 />
+              </Button>
             )}
 
             {/* Info: (20240920 - tzuhan) 右側選擇控制連結 */}
             <div className="m-2.5 flex space-x-4">
               <button type="button" className="hover:underline" onClick={handleSelectAll}>
-                Select All
-              </button>
-              <button type="button" className="hover:underline" onClick={handleUnselectAll}>
-                Unselect All
+                {t('common:COMMON.SELECT_ALL')}
               </button>
               <button type="button" className="hover:underline" onClick={handleCancel}>
-                Cancel
+                {t('common:COMMON.CANCEL')}
               </button>
             </div>
           </div>
-        </div>
+        </>
       ) : (
-        <div className="flex h-42px items-center justify-end space-x-4 text-blue-500">
-          <button
-            type="button"
-            className="hover:underline"
-            onClick={() => setActiveSelection((prev) => !prev)}
-          >
-            Select
-          </button>
-        </div>
+        <>
+          {/* Info: (20240920 - tzuhan) 左側選擇計數顯示 */}
+          {subtitle && currency && totalPrice && (
+            <div className="font-medium text-text-neutral-tertiary">
+              <span>{subtitle} </span>
+              <span className="text-black">{totalPrice} </span>
+              <span>{currency}</span>
+            </div>
+          )}
+          <div className="flex h-42px items-center justify-end space-x-4 text-link-text-primary">
+            <Button type="button" variant="tertiaryOutline" className="py-1.5" onClick={onDownload}>
+              <FiDownload />
+              <div>{`${t('common:SELECTION.EXPORT')} ${itemType ? t(`common:SELECTION.${itemType.toUpperCase()}`) : ''}`}</div>
+            </Button>
+            {isSelectable && (
+              <button
+                type="button"
+                className="hover:underline"
+                onClick={onActiveChange.bind(null, true)}
+              >
+                {t('common:COMMON.SELECT')}
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

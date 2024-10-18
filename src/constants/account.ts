@@ -2,6 +2,7 @@
 // Info: (20240416 - Murky) type
 export enum ProgressStatus {
   SUCCESS = 'success',
+  FAILED = 'failed',
   IN_PROGRESS = 'inProgress',
   NOT_FOUND = 'notFound',
   ALREADY_UPLOAD = 'alreadyUpload',
@@ -305,6 +306,18 @@ export const SPECIAL_ACCOUNTS: {
     rootCode: '3350',
     level: 3,
   },
+  ACCUMULATED_PROFIT_AND_LOSS: {
+    system: 'IFRS',
+    type: AccountType.EQUITY,
+    debit: false,
+    liquidity: false,
+    code: '3351',
+    name: '累積盈虧',
+    forUser: true,
+    parentCode: '3350',
+    rootCode: '3350',
+    level: 3,
+  },
   OTHER_EQUITY_OTHER: {
     system: 'IFRS',
     type: AccountType.EQUITY,
@@ -495,6 +508,22 @@ export const SPECIAL_ACCOUNTS: {
     forUser: false,
     parentCode: 'AAAA',
     rootCode: 'AAAA',
+    level: 0,
+  },
+  /**
+   * Info: (20241017 - Murky)
+   * @description this is for marking special account, not rear account
+   */
+  CASH_FLOW_FROM_OPERATING_SPECIAL_ACCOUNT: {
+    system: 'IFRS',
+    type: AccountType.CASH_FLOW,
+    debit: false,
+    liquidity: true,
+    code: '$$$$',
+    name: '特殊營業活動之淨現金流入（流出）',
+    forUser: false,
+    parentCode: '$$$$',
+    rootCode: '$$$$',
     level: 0,
   },
   CASH_FLOW_FROM_INVESTING: {

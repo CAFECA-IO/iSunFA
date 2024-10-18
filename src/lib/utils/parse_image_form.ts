@@ -8,9 +8,17 @@ import loggerBack from '@/lib/utils/logger_back';
 
 export const parseForm = async (
   req: NextApiRequest,
-  subDir: FileFolder = FileFolder.TMP // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
+  subDir: FileFolder = FileFolder.TMP, // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
+  subSubDir?: string // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，則使用subSubDir
 ) => {
-  const uploadDir = getFileFolder(subDir);
+  let uploadDir = getFileFolder(subDir);
+
+  // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，更新 uploadDir
+  if (subSubDir) {
+    uploadDir = path.join(uploadDir, subSubDir);
+    await fs.mkdir(uploadDir, { recursive: true }); // Info: (202410008 - Tzuhan) 確保該目錄存在
+  }
+
   const options = {
     ...FORMIDABLE_OPTIONS,
     uploadDir,

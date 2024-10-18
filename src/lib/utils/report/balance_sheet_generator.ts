@@ -17,28 +17,44 @@ import IncomeStatementGenerator from '@/lib/utils/report/income_statement_genera
 import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
-import { timestampToString } from '@/lib/utils/common';
+import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
+  private startSecondOfYear: number;
+
+  private endSecondOfLastYear: number;
+
   private incomeStatementGenerator: IncomeStatementGenerator;
 
-  private incomeStatementGeneratorFromTimeZero: IncomeStatementGenerator;
+  private incomeStatementGeneratorFromTimeZeroToBeginOfYear: IncomeStatementGenerator;
+
+  private incomeStatementGeneratorFromBeginOfYearToEndDate: IncomeStatementGenerator;
 
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
-    super(companyId, 0, endDateInSecond, reportSheetType);
+    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
 
+    this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(endDateInSecond);
+    this.endSecondOfLastYear = this.startSecondOfYear - 1;
     this.incomeStatementGenerator = new IncomeStatementGenerator(
       companyId,
       startDateInSecond,
       endDateInSecond
     );
 
-    this.incomeStatementGeneratorFromTimeZero = new IncomeStatementGenerator(
+    // Info: (20241011 - Murky) For Accumulate Profit and Loss
+    this.incomeStatementGeneratorFromTimeZeroToBeginOfYear = new IncomeStatementGenerator(
       companyId,
       0,
+      this.endSecondOfLastYear
+    );
+
+    // Info: (20241011 - Murky) For NetIncome
+    this.incomeStatementGeneratorFromBeginOfYearToEndDate = new IncomeStatementGenerator(
+      companyId,
+      this.startSecondOfYear,
       endDateInSecond
     );
   }
@@ -48,14 +64,29 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private async closeAccountFromIncomeStatement(
     curPeriod: boolean
   ): Promise<ILineItemIncludeAccount[]> {
-    const incomeStatementContent =
-      await this.incomeStatementGeneratorFromTimeZero.generateIAccountReadyForFrontendArray();
+    const currentYearISContent =
+      await this.incomeStatementGeneratorFromBeginOfYearToEndDate.generateIAccountReadyForFrontendArray();
 
+    const beforeISContent =
+      await this.incomeStatementGeneratorFromTimeZeroToBeginOfYear.generateIAccountReadyForFrontendArray();
+
+    // Info: (20241011 - Murky) net income 是本期範圍內的營收
     const netIncome =
-      incomeStatementContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
+      currentYearISContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
-    const otherComprehensiveIncome =
-      incomeStatementContent.find(
+
+    // Info: (20241011 - Murky) Accumulate Profit and loss是本期以前的營收
+    const accumulateProfitAndLoss =
+      beforeISContent.find((account) => account.code === SPECIAL_ACCOUNTS.NET_INCOME.code) ||
+      EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const currentOtherComprehensiveIncome =
+      currentYearISContent.find(
+        (account) => account.code === SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
+      ) || EMPTY_I_ACCOUNT_READY_FRONTEND;
+
+    const beforeOtherComprehensiveIncome =
+      beforeISContent.find(
         (account) => account.code === SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
       ) || EMPTY_I_ACCOUNT_READY_FRONTEND;
 
@@ -64,50 +95,105 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const netIncomeAccount = await findUniqueAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.NET_INCOME.code
     );
+
     const otherComprehensiveIncomeAccount = await findUniqueAccountByCodeInPrisma(
       SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.code
     );
 
+    const netIncomeInEquity = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code
+    );
+
+    const accumulateProfitAndLossInEquity = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code
+    );
+
+    const otherEquityOther = await findUniqueAccountByCodeInPrisma(
+      SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code
+    );
+
     closeAccount.push({
-      id: -1,
+      id: netIncomeInEquity?.id || -1,
       amount: curPeriod ? netIncome.curPeriodAmount : netIncome.prePeriodAmount,
-      description: SPECIAL_ACCOUNTS.NET_INCOME.name,
-      debit: SPECIAL_ACCOUNTS.NET_INCOME.debit,
-      accountId: netIncomeAccount?.id || -1,
+      description: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.name,
+      debit: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.debit,
+      accountId: netIncomeInEquity?.id || -1,
       voucherId: -1,
       createdAt: 1,
       updatedAt: 1,
       deletedAt: null,
-      account: netIncomeAccount || {
-        ...SPECIAL_ACCOUNTS.NET_INCOME,
-        id: -1,
-        companyId: this.companyId,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-      },
+      account: netIncomeAccount
+        ? {
+            ...netIncomeAccount,
+            code: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.code,
+            debit: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.debit,
+          }
+        : {
+            ...SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY,
+            id: -1,
+            companyId: this.companyId,
+            createdAt: 1,
+            updatedAt: 1,
+            deletedAt: null,
+          },
     });
 
     closeAccount.push({
-      id: -1,
+      id: accumulateProfitAndLossInEquity?.id || -1,
       amount: curPeriod
-        ? otherComprehensiveIncome.curPeriodAmount
-        : otherComprehensiveIncome.prePeriodAmount,
-      description: SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.name,
-      debit: SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME.debit,
-      accountId: otherComprehensiveIncomeAccount?.id || -1,
+        ? accumulateProfitAndLoss.curPeriodAmount
+        : accumulateProfitAndLoss.prePeriodAmount,
+      description: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.name,
+      debit: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.debit,
+      accountId: accumulateProfitAndLossInEquity?.id || -1,
       voucherId: -1,
       createdAt: 1,
       updatedAt: 1,
       deletedAt: null,
-      account: otherComprehensiveIncomeAccount || {
-        ...SPECIAL_ACCOUNTS.OTHER_COMPREHENSIVE_INCOME,
-        id: -1,
-        companyId: this.companyId,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-      },
+      account: netIncomeAccount
+        ? {
+            ...netIncomeAccount,
+            code: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.code,
+            debit: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.debit,
+          }
+        : {
+            ...SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS,
+            id: -1,
+            companyId: this.companyId,
+            createdAt: 1,
+            updatedAt: 1,
+            deletedAt: null,
+          },
+    });
+
+    closeAccount.push({
+      id: otherEquityOther?.id || -1,
+      amount: curPeriod
+        ? currentOtherComprehensiveIncome.curPeriodAmount +
+          beforeOtherComprehensiveIncome.curPeriodAmount
+        : beforeOtherComprehensiveIncome.prePeriodAmount +
+          beforeOtherComprehensiveIncome.prePeriodAmount,
+      description: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.name,
+      debit: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.debit,
+      accountId: otherEquityOther?.id || -1,
+      voucherId: -1,
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
+      account: otherComprehensiveIncomeAccount
+        ? {
+            ...otherComprehensiveIncomeAccount,
+            code: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.code,
+            debit: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.debit,
+          }
+        : {
+            ...SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER,
+            id: -1,
+            companyId: this.companyId,
+            createdAt: 1,
+            updatedAt: 1,
+            deletedAt: null,
+          },
     });
 
     return closeAccount;
@@ -118,12 +204,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     // Info: (20240801 - Murky) 暫時關閉本期損益和其他其他綜合損益權益
     const closeAccount = await this.closeAccountFromIncomeStatement(curPeriod);
+
     lineItemsFromDB = lineItemsFromDB.concat(closeAccount);
 
     const accountForest = await this.getAccountForestByReportSheet();
 
     const lineItemsMap = transformLineItemsFromDBToMap(lineItemsFromDB);
-
     const updatedAccountForest = updateAccountAmounts(accountForest, lineItemsMap);
 
     return updatedAccountForest;
@@ -152,7 +238,6 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
     BalanceSheetGenerator.calculateLiabilityAndEquity(accountForest);
     const accountMap = transformForestToMap(accountForest);
-
     return accountMap;
   }
 
@@ -314,14 +399,16 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
-    const curDso =
+    const curDso = Math.abs(
       salesTotal.curPeriodAmount !== 0
         ? (accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR
-        : 0;
-    const preDso =
+        : 0
+    );
+    const preDso = Math.abs(
       salesTotal.prePeriodAmount !== 0
         ? (accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR
-        : 0;
+        : 0
+    );
     const dso = {
       curDso,
       preDso,
@@ -338,13 +425,14 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const curInventoryTurnoverDays =
+    const curInventoryTurnoverDays = Math.abs(
       operatingCost.curPeriodAmount !== 0
         ? ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
             2 /
             operatingCost.curPeriodAmount) *
-          DAY_IN_YEAR
-        : 0;
+            DAY_IN_YEAR
+        : 0
+    );
 
     // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
     const preInventoryTurnoverDays = 0;

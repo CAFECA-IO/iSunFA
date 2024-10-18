@@ -1,60 +1,51 @@
+import React, { useState } from 'react';
 import Image from 'next/image';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
+import { VoucherType } from '@/constants/account';
+import { IVoucherBeta } from '@/interfaces/voucher';
 
-enum VoucherType {
-  RECEIVED = 'Received',
-  PAYMENT = 'Payment',
-  TRANSFER = 'Transfer',
+interface IVoucherItemProps {
+  voucher: IVoucherBeta;
+  isCheckBoxOpen: boolean;
 }
 
-const VoucherItem = () => {
-  // ToDo: (20240920 - Julian) dummy data
-  const date: number = new Date().getTime() / 1000;
-  const voucherNo: string = '20240920-0001';
-  const voucherType: VoucherType = VoucherType.RECEIVED;
-  const note: string = 'Printer-0001';
-  const accounting: string[] = [
-    '1141 Accounts receivable',
-    '1141 Accounts receivable',
-    '1141 Accounts receivable',
-  ];
-  const credit: number[] = [100200];
-  const debit: number[] = [100000, 200];
-  const counterparty = {
-    code: '59373022',
-    name: 'PX Mart',
-  };
-  const issuer = {
-    avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
-    name: 'Julian',
-  };
+const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) => {
+  const { voucherDate, voucherNo, voucherType, note, counterParty, issuer, onRead, lineItemsInfo } =
+    voucher;
+
+  const [isChecked, setIsChecked] = useState(false);
 
   // Info: (20240920 - Julian) 借貸總和
-  const total = credit.reduce((acc, cur) => acc + cur, 0);
+  const total = lineItemsInfo.sum.amount ?? 0;
 
   const displayedCheckbox = (
     <div className="relative top-20px px-8px">
-      <input type="checkbox" className={checkboxStyle} />
+      <input
+        type="checkbox"
+        className={checkboxStyle}
+        checked={isChecked}
+        onChange={() => setIsChecked(!isChecked)}
+      />
     </div>
   );
 
   const displayedDate = (
-    <div className="relative top-10px">
-      <CalendarIcon timestamp={date} />
+    <div className="relative top-10px flex justify-center">
+      <CalendarIcon timestamp={voucherDate} onRead={onRead} />
     </div>
   );
 
   const displayedVoucherNo =
-    voucherType === VoucherType.RECEIVED ? (
+    voucherType === VoucherType.RECEIVE ? (
       <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-error-dark" />
         <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
       </div>
-    ) : voucherType === VoucherType.PAYMENT ? (
+    ) : voucherType === VoucherType.EXPENSE ? (
       <div className="relative top-20px mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-success-dark" />
         <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
@@ -68,10 +59,18 @@ const VoucherItem = () => {
 
   const displayedNote = <p className="relative top-20px">{note}</p>;
 
+  const accounting = lineItemsInfo.lineItems.map((item) => item.account);
+  const credit = lineItemsInfo.lineItems.filter((item) => !item.debit).map((item) => item.amount);
+  const debit = lineItemsInfo.lineItems.filter((item) => item.debit).map((item) => item.amount);
+
   const displayedAccounting = (
-    <div className="relative top-20px flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
-      {accounting.map((account) => (
-        <p key={account}>{account}</p>
+    <div className="flex flex-col items-center gap-4px py-12px font-semibold text-text-neutral-tertiary">
+      {accounting.map((account, index) => (
+        // Deprecated: (20240924 - Julian) array index as key
+        // eslint-disable-next-line react/no-array-index-key
+        <p key={index}>
+          {account?.code} - {account?.name}
+        </p>
       ))}
     </div>
   );
@@ -120,8 +119,8 @@ const VoucherItem = () => {
 
   const displayedCounterparty = (
     <div className="relative top-20px flex flex-col items-center gap-4px">
-      <p className="text-text-neutral-tertiary">{counterparty.code}</p>
-      <p className="text-text-neutral-primary">{counterparty.name}</p>
+      <p className="text-text-neutral-tertiary">{counterParty.companyId}</p>
+      <p className="text-text-neutral-primary">{counterParty.name}</p>
     </div>
   );
 
@@ -133,9 +132,11 @@ const VoucherItem = () => {
   );
 
   return (
-    <div className="table-row font-medium">
+    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240920 - Julian) Select */}
-      <div className="table-cell text-center">{displayedCheckbox}</div>
+      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
+        {displayedCheckbox}
+      </div>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
       {/* Info: (20240920 - Julian) Voucher No */}
@@ -145,9 +146,9 @@ const VoucherItem = () => {
       {/* Info: (20240920 - Julian) Accounting */}
       <div className="table-cell">{displayedAccounting}</div>
       {/* Info: (20240920 - Julian) Credit */}
-      <div className="table-cell py-8px text-right">{displayedCredit}</div>
+      <div className="table-cell">{displayedCredit}</div>
       {/* Info: (20240920 - Julian) Debit */}
-      <div className="table-cell py-8px text-right">{displayedDebit}</div>
+      <div className="table-cell">{displayedDebit}</div>
       {/* Info: (20240920 - Julian) Counterparty */}
       <div className="table-cell">{displayedCounterparty}</div>
       {/* Info: (20240920 - Julian) Issuer */}

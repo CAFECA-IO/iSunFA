@@ -1,13 +1,26 @@
 [
   {
     "id": 1000,
-    "companyId": 1000,
     "planId": 1000,
-    "startDate": 1635724800,
-    "expiredDate": 1667260800,
+    "companyId": 1000,
+    "autoRenewal": true,
     "status": true,
-    "createdAt": 1635724800,
-    "updatedAt": 1635724800,
+    "startDate": 1672531200,
+    "expiredDate": 1704067200,
+    "createdAt": 1672531200,
+    "updatedAt": 1672531200,
+    "deletedAt": null
+  },
+  {
+    "id": 1001,
+    "planId": 1000,
+    "companyId": 1000,
+    "autoRenewal": false,
+    "status": false,
+    "startDate": 1672531200,
+    "expiredDate": 1704067200,
+    "createdAt": 1672531200,
+    "updatedAt": 1672531200,
     "deletedAt": null
   }
 ]

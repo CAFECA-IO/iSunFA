@@ -54,9 +54,8 @@ export async function getCompanyWithOwner(companyId: number): Promise<
 
 export async function updateCompanyById(
   companyId: number,
-  code?: string,
+  taxId?: string,
   name?: string,
-  regional?: string,
   imageId?: number
 ): Promise<Company & { imageFile: File | null }> {
   const now = Date.now();
@@ -67,9 +66,8 @@ export async function updateCompanyById(
       id: companyId,
     },
     data: {
-      code,
+      taxId,
       name,
-      regional,
       updatedAt: nowTimestamp,
       imageFileId: imageId,
     },
@@ -87,7 +85,7 @@ export async function deleteCompanyById(
 
   const where: Prisma.CompanyWhereUniqueInput = {
     id: companyId,
-    deletedAt: null,
+    OR: [{ deletedAt: 0 }, { deletedAt: null }],
   };
 
   const data: Prisma.CompanyUpdateInput = {

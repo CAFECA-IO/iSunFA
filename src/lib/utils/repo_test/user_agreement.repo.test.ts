@@ -1,4 +1,7 @@
-import { createUserAgreement, deleteUserAgreement } from '@/lib/utils/repo/user_agreement.repo';
+import {
+  createUserAgreement,
+  deleteUserAgreementForTesting,
+} from '@/lib/utils/repo/user_agreement.repo';
 import { UserAgreement } from '@prisma/client';
 
 describe('User Agreement Repository Tests', () => {
@@ -8,7 +11,7 @@ describe('User Agreement Repository Tests', () => {
   describe('createUserAgreement', () => {
     it('should create a new user agreement', async () => {
       const userAgreement: UserAgreement = await createUserAgreement(testUserId, testAgreementHash);
-      await deleteUserAgreement(testUserId, testAgreementHash);
+      await deleteUserAgreementForTesting(testUserId, testAgreementHash);
       expect(userAgreement).toBeDefined();
       expect(userAgreement.userId).toBe(testUserId);
       expect(userAgreement.agreementHash).toBe(testAgreementHash);

@@ -19,6 +19,36 @@ export const MONTH_LIST = [
   'common:DATE_PICKER.DEC',
 ];
 
+export const MONTH_FULL_NAME = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export const MONTH_SHORT_NAME = [
+  'Jan.',
+  'Feb.',
+  'Mar.',
+  'Apr.',
+  'May',
+  'Jun.',
+  'Jul.',
+  'Aug.',
+  'Sep.',
+  'Oct.',
+  'Nov.',
+  'Dec.',
+];
+
 export const MONTH_FULL_LIST_SHORT = [
   'Jan',
   'Feb',
@@ -59,12 +89,31 @@ export const WEEK_LIST = [
   'common:DATE_PICKER.SAT',
 ];
 
+export const WEEK_FULL_LIST = [
+  'common:DATE_PICKER.SUNDAY',
+  'common:DATE_PICKER.MONDAY',
+  'common:DATE_PICKER.TUESDAY',
+  'common:DATE_PICKER.WEDNESDAY',
+  'common:DATE_PICKER.THURSDAY',
+  'common:DATE_PICKER.FRIDAY',
+  'common:DATE_PICKER.SATURDAY',
+];
+
 export const default30DayPeriodInSec = {
   startTimeStamp: 0,
   endTimeStamp: 0,
 };
 
 export const MILLISECONDS_IN_A_SECOND = 1000;
+
+// Info: (20241009 - Julian) input CSS style
+export const inputStyle = {
+  NORMAL:
+    'border-input-stroke-input divide-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
+  ERROR:
+    'border-input-text-error divide-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
+  PREVIEW: 'text-text-brand-primary-lv1 placeholder:text-text-brand-primary-lv1',
+};
 
 // Info: (20240429 - Julian) checkbox CSS style
 export const checkboxStyle =

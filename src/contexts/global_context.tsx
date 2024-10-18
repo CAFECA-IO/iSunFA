@@ -6,7 +6,7 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import ConfirmModal from '@/components/confirm_modal/confirm_modal';
-import AddAssetModal from '@/components/add_asset_modal/add_asset_modal';
+import AddAssetModal from '@/components/asset/add_asset_modal';
 import CameraScanner from '@/components/camera_scanner/camera_scanner';
 import PreviewInvoiceModal from '@/components/preview_invoice_modal/preview_invoice_modal';
 import {
@@ -40,6 +40,8 @@ import TransferCompanyModal from '@/components/transfer_company_modal/transfer_c
 import { UploadType } from '@/constants/file';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 import { useModalContext } from '@/contexts/modal_context';
+import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
+import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
 
 interface IGlobalContext {
   width: number;
@@ -110,6 +112,13 @@ interface IGlobalContext {
   isTransferCompanyModalVisible: boolean;
   transferCompanyModalVisibilityHandler: () => void;
 
+  isExportVoucherModalVisible: boolean;
+  exportVoucherModalVisibilityHandler: () => void;
+
+  isAssetStatusSettingModalVisible: boolean;
+  assetStatusSettingModalVisibilityHandler: () => void;
+  assetStatusSettingModalDataHandler: (status: string) => void;
+
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
 
@@ -124,8 +133,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const router = useRouter();
   const { pathname } = router;
 
-  const { signedIn, selectedCompany, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy } =
-    useUserCtx();
+  const { isSignIn, selectedCompany, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
@@ -202,6 +210,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
     useState(false);
+
+  const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
+
+  const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
+  const [defaultStatus, setDefaultStatus] = useState('');
 
   const { width, height } = windowSize;
 
@@ -334,8 +347,20 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsPrivacyPolicyConfirmModalVisible(visibility);
   };
 
+  const exportVoucherModalVisibilityHandler = () => {
+    setIsExportVoucherModalVisible(!isExportVoucherModalVisible);
+  };
+
+  const assetStatusSettingModalVisibilityHandler = () => {
+    setIsAssetStatusSettingModalVisible(!isAssetStatusSettingModalVisible);
+  };
+
+  const assetStatusSettingModalDataHandler = (status: string) => {
+    setDefaultStatus(status);
+  };
+
   useEffect(() => {
-    if (!signedIn) return;
+    if (!isSignIn) return;
 
     if (reportGeneratedStatus) {
       toastHandler({
@@ -377,14 +402,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     //     autoClose: false,
     //   });
     // }
-  }, [reportPendingStatus, reportGeneratedStatus, signedIn, pathname]);
+  }, [reportPendingStatus, reportGeneratedStatus, isSignIn, pathname]);
 
   useEffect(() => {
-    if (signedIn) {
-      if (!isAgreeInfoCollection || !isAgreeTosNPrivacyPolicy) {
+    if (isSignIn) {
+      if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
         if (router.pathname !== ISUNFA_ROUTE.LOGIN) router.push(ISUNFA_ROUTE.LOGIN);
-        if (!isAgreeInfoCollection) termsOfServiceConfirmModalVisibilityHandler(true);
-        if (isAgreeInfoCollection && !isAgreeTosNPrivacyPolicy) {
+        if (!isAgreeTermsOfService) termsOfServiceConfirmModalVisibilityHandler(true);
+        if (isAgreeTermsOfService && !isAgreePrivacyPolicy) {
           privacyPolicyConfirmModalVisibilityHandler(true);
         }
       } else {
@@ -392,10 +417,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         privacyPolicyConfirmModalVisibilityHandler(false);
       }
     }
-  }, [pathname, signedIn, isAgreeInfoCollection, isAgreeTosNPrivacyPolicy]);
+  }, [pathname, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
 
   useEffect(() => {
-    if (signedIn) {
+    if (isSignIn) {
       if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
         eliminateToast(ToastId.ALPHA_TEST_REMINDER);
         if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
@@ -442,7 +467,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       //   eliminateToast(ToastId.ALPHA_TEST_REMINDER);
       // }
     }
-  }, [pathname, signedIn]);
+  }, [pathname, isSignIn]);
 
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 
@@ -502,6 +527,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
 
+      isExportVoucherModalVisible,
+      exportVoucherModalVisibilityHandler,
+
+      isAssetStatusSettingModalVisible,
+      assetStatusSettingModalVisibilityHandler,
+      assetStatusSettingModalDataHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -558,6 +590,13 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
+
+      isExportVoucherModalVisible,
+      exportVoucherModalVisibilityHandler,
+
+      isAssetStatusSettingModalVisible,
+      assetStatusSettingModalVisibilityHandler,
+      assetStatusSettingModalDataHandler,
 
       termsOfServiceConfirmModalVisibilityHandler,
     ]
@@ -706,6 +745,18 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         infoModalVisibilityHandler={termsOfServiceConfirmModalVisibilityHandler}
         tosModalVisibilityHandler={privacyPolicyConfirmModalVisibilityHandler}
       />
+
+      <ExportVoucherModal
+        isModalVisible={isExportVoucherModalVisible}
+        modalVisibilityHandler={exportVoucherModalVisibilityHandler}
+      />
+
+      <AssetStatusSettingModal
+        isModalVisible={isAssetStatusSettingModalVisible}
+        modalVisibilityHandler={assetStatusSettingModalVisibilityHandler}
+        defaultStatus={defaultStatus}
+      />
+
       {children}
     </GlobalContext.Provider>
   );

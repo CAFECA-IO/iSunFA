@@ -23,13 +23,17 @@ import subscriptions from '@/seed_json/subscription.json';
 import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
 import invitations from '@/seed_json/invitation.json';
-import clients from '@/seed_json/client.json';
 import journals from '@/seed_json/journal.json';
 import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
 import file from '@/seed_json/file.json';
+import assets from '@/seed_json/asset.json';
+import assetVouchers from '@/seed_json/asset_voucher.json';
+import counterpartys from '@/seed_json/counterparty.json';
+import certificates from '@/seed_json/certificate.json';
+import voucherCertificates from '@/seed_json/voucher_certificate.json';
 
 const prisma = new PrismaClient();
 
@@ -105,9 +109,9 @@ async function createCompanyKYC() {
   });
 }
 
-async function createClient() {
-  await prisma.client.createMany({
-    data: clients,
+async function createCertificate() {
+  await prisma.certificate.createMany({
+    data: certificates,
   });
 }
 
@@ -206,6 +210,12 @@ async function createVoucher() {
   });
 }
 
+async function createVoucherCertificate() {
+  await prisma.voucherCertificate.createMany({
+    data: voucherCertificates,
+  });
+}
+
 async function createLineItem(lineItem: {
   amount: number;
   description: string;
@@ -251,6 +261,24 @@ async function createLineItems() {
   await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
 }
 
+async function createAsset() {
+  await prisma.asset.createMany({
+    data: assets,
+  });
+}
+
+async function createAssetVoucher() {
+  await prisma.assetVoucher.createMany({
+    data: assetVouchers,
+  });
+}
+
+async function createCounterparty() {
+  await prisma.counterparty.createMany({
+    data: counterpartys,
+  });
+}
+
 async function main() {
   await createFile();
   await createCompany();
@@ -261,10 +289,9 @@ async function main() {
     setTimeout(resolve, 3000);
   });
   await createUser();
-
+  await createCounterparty();
   await createRole();
   await createCompanyKYC();
-  await createClient();
   await createAccount();
   await createAdmin();
   await createDepartment();
@@ -302,7 +329,10 @@ async function main() {
   });
 
   await createJournal();
+  await createCertificate();
   await createVoucher();
+  await createVoucherCertificate();
+  await createAsset();
 
   await new Promise((resolve) => {
     setTimeout(resolve, 3000);
@@ -310,6 +340,7 @@ async function main() {
   await createLineItems();
   await createSalaryRecord();
   await createVoucherSalaryRecordFolder();
+  await createAssetVoucher();
 }
 
 main()

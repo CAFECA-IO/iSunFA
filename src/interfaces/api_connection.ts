@@ -11,8 +11,9 @@ export type IAPIName =
   | 'EMAIL'
   | 'USER_GET_BY_ID'
   | 'USER_UPDATE'
+  | 'USER_PENDING_TASK_GET'
+  | 'COMPANY_PENDING_TASK_GET'
   | 'COMPANY_LIST'
-  | 'COMPANY_GET'
   | 'COMPANY_ADD'
   | 'COMPANY_ADD_BY_INVITATION_CODE'
   | 'COMPANY_SELECT'
@@ -41,30 +42,46 @@ export type IAPIName =
   | 'JOURNAL_DELETE'
   | 'REPORT_LIST'
   | 'REPORT_GET_BY_ID'
+  | 'REPORT_GET_V2'
   | 'REPORT_GENERATE'
   | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
+  | 'PUBLIC_FILE_UPLOAD'
   | 'FILE_DELETE'
   | 'FILE_GET'
   | 'COMPANY_GET_BY_ID'
   | 'COMPANY_DELETE'
   | 'COMPANY_UPDATE'
+  | 'ROLE_LIST'
+  | 'CREATE_ROLE'
+  | 'ROLE_SELECT'
   | 'ROLE_GET_BY_ID'
   | 'ROLE_DELETE'
   | 'ROLE_UPDATE'
+  | 'NEWS_LIST'
+  | 'CREATE_NEWS'
   | 'KYC_UPLOAD'
   | 'ACCOUNT_GET_BY_ID'
   | 'CREATE_NEW_SUB_ACCOUNT'
   | 'UPDATE_ACCOUNT_INFO_BY_ID'
   | 'DELETE_ACCOUNT_BY_ID'
   | 'TRANSFER_OWNER'
+  | 'TODO_LIST'
+  | 'CREATE_TODO'
   | 'PROJECT_LIST'
   | 'CREATE_PROJECT'
   | 'GET_PROJECT_BY_ID'
   | 'UPDATE_PROJECT_BY_ID'
   | 'PUBLIC_KEY_GET'
-  | 'CERTIFICATE_LIST';
+  | 'CERTIFICATE_LIST'
+  | 'PUSHER'
+  | 'ENCRYPT'
+  | 'DECRYPT'
+  | 'VOUCHER_GET_BY_ID_V2'
+  | 'ASSET_GET_BY_ID_V2'
+  | 'ASK_AI_V2'
+  | 'VOUCHER_LIST_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
@@ -75,7 +92,8 @@ export type IAPIInput = {
     | FormData
     | IVoucher
     | IFinancialReportRequest
-    | ICompanyKYCForm;
+    | ICompanyKYCForm
+    | string;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
 };

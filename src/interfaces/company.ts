@@ -2,11 +2,10 @@ import { IRole } from '@/interfaces/role';
 
 export interface ICompany {
   id: number;
-  code: string;
-  regional: string;
-  name: string;
-  kycStatus: boolean;
   imageId: string;
+  name: string;
+  taxId: string;
+  tag: string;
   startDate: number;
   createdAt: number;
   updatedAt: number;
@@ -17,7 +16,12 @@ export interface ICompanyDetail extends ICompany {
   kycStatusDetail: string;
 }
 
-export interface ICompanyAndRole {
+export interface ICompanyAndRoleDetail {
   company: ICompanyDetail;
+  role: IRole;
+}
+
+export interface ICompanyAndRole {
+  company: ICompany;
   role: IRole;
 }

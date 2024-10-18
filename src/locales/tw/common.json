@@ -174,6 +174,13 @@
     "THU": "四",
     "FRI": "五",
     "SAT": "六",
+    "SUNDAY": "週日",
+    "MONDAY": "週一",
+    "TUESDAY": "週二",
+    "WEDNESDAY": "週三",
+    "THURSDAY": "週四",
+    "FRIDAY": "週五",
+    "SATURDAY": "週六",
     "JAN_ABR": "一月",
     "FEB_ABR": "二月",
     "MAR_ABR": "三月",
@@ -227,6 +234,8 @@
   },
   "COMMON": {
     "OF": "之",
+    "TOTAL": "總共",
+    "DOCUMENT": "文件",
     "ISUNFA_TRIAL_VERSION": "iSunFA 試用版",
     "END_OF_TRIAL": "試用結束",
     "NEWEST": "最新的",
@@ -237,6 +246,7 @@
     "FILTER": "篩選",
     "M": "月",
     "Y": "年",
+    "D": "日",
     "V": "v",
     "OR": "或",
     "ERROR_CODE": "錯誤代碼: {{code}}",
@@ -267,19 +277,28 @@
     "BUSINESS_REGISTRATION_NUMBER": "商業登記號碼",
     "EMPTY": "無資料",
     "STATUS": "狀態",
+    "WEEK": "週",
     "MONTH": "月",
     "YEAR": "年",
     "SELECT": "選擇",
+    "SELECT_ALL": "全選",
     "NO_DATA": "沒有數據",
     "TOOLTIP_MESSAGE": "當遊標位於圖形使用者介面中的圖示、圖像、超連結或其他元素上時出現的訊息。",
     "PERIOD": "期間",
     "OK": "好",
+    "FROM": "從",
     "TO": "至",
     "ANALYSIS_REPORTS": "分析報告",
     "TRANSFER": "移轉",
     "LOADING": "載入中...",
     "COMPLETED": "已完成",
-    "DAY": "日"
+    "DAY": "日",
+    "SAVE": "保存",
+    "DELETE": "刪除",
+    "CODE": "科目編號",
+    "BEGINNING": "起始日",
+    "MIDTERM": "期中",
+    "ENDING": "結束日"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
@@ -391,5 +410,21 @@
     "TITLE": "iSunFA",
     "DESCRIPTION": "融合區塊鏈會計與人工智能審計的先進會計解決方案",
     "KEYWORDS": "iSunFA, 區塊鏈, AI, 法務, 會計, 審計"
+  },
+  "FILTER_SECTION_TYPE": {
+    "TYPE": "類型",
+    "ALL": "全部",
+    "INVOICE": "發票",
+    "RECEIPT": "收據",
+    "ASSET":"資產",
+    "LIABILITY":"負債",
+    "EQUITY":"權益",
+    "NONE":""
+  },
+  "SELECTION": {
+    "EXPORT": "匯出",
+    "CERTIFICATES": "證書",
+    "ADD_NEW_VOUCHER": "新增傳票",
+    "ADD_NEW_ASSET": "新增資產"
   }
 }

@@ -38,6 +38,7 @@ export interface IAccountForSheetDisplay {
   amount: number | null;
   percentage: number | null;
   indent: number;
+  children: IAccountForSheetDisplay[];
   debit?: boolean;
 }
 
@@ -47,10 +48,13 @@ export interface IAccountReadyForFrontend {
   curPeriodAmount: number;
   curPeriodAmountString: string;
   curPeriodPercentage: number;
+  curPeriodPercentageString: string;
   prePeriodAmount: number;
   prePeriodAmountString: string;
   prePeriodPercentage: number;
+  prePeriodPercentageString: string;
   indent: number;
+  children: IAccountReadyForFrontend[];
 }
 
 export type IAccountQueryArgs = {

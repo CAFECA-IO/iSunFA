@@ -10,9 +10,7 @@ export function formatUser(
   const agreementList = user.userAgreements.map((userAgreement) => userAgreement.agreementHash);
   const formattedUser: IUser = {
     ...user,
-    fullName: user.fullName ?? '',
     email: user.email ?? '',
-    phone: user.phone ?? '',
     imageId: user?.imageFile?.url ?? '',
     agreementList,
   };
