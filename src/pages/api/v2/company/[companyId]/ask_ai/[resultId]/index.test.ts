@@ -50,7 +50,6 @@ describe('company/[companyId]/ask_ai/[resultId]', () => {
         reason: 'certificate',
         resultId: '1',
       };
-      req.body = {};
 
       const { statusMessage } = await handleGetRequest(req, res);
 
@@ -62,7 +61,6 @@ describe('company/[companyId]/ask_ai/[resultId]', () => {
         reason: 'voucher',
         resultId: '1',
       };
-      req.body = {};
 
       const { statusMessage } = await handleGetRequest(req, res);
 

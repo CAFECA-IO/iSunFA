@@ -9,12 +9,9 @@ const companyListQueryValidator = z.object({
   pageSize: z.number().int().optional(),
 });
 
-const companyListBodyValidator = z.object({});
+const companyListBodyValidator = z.undefined();
 
-export const companyListValidator: IZodValidator<
-  (typeof companyListQueryValidator)['shape'],
-  (typeof companyListBodyValidator)['shape']
-> = {
+export const companyListValidator: IZodValidator<(typeof companyListQueryValidator)['shape']> = {
   query: companyListQueryValidator,
   body: companyListBodyValidator,
 };
@@ -39,11 +36,10 @@ export const companyPostValidator: IZodValidator<
 const companyGetByIdQueryValidator = z.object({
   companyId: z.number().int(),
 });
-const companyGetByIdBodyValidator = z.object({});
+const companyGetByIdBodyValidator = z.undefined();
 
 export const companyGetByIdValidator: IZodValidator<
-  (typeof companyGetByIdQueryValidator)['shape'],
-  (typeof companyGetByIdBodyValidator)['shape']
+  (typeof companyGetByIdQueryValidator)['shape']
 > = {
   query: companyGetByIdQueryValidator,
   body: companyGetByIdBodyValidator,
@@ -84,12 +80,10 @@ export const companyDeleteValidator: IZodValidator<
 const companySelectQueryValidator = z.object({
   companyId: z.number().int(),
 });
-const companySelectBodyValidator = z.object({});
+const companySelectBodyValidator = z.undefined();
 
-export const companySelectValidator: IZodValidator<
-  (typeof companySelectQueryValidator)['shape'],
-  (typeof companySelectBodyValidator)['shape']
-> = {
-  query: companySelectQueryValidator,
-  body: companySelectBodyValidator,
-};
+export const companySelectValidator: IZodValidator<(typeof companySelectQueryValidator)['shape']> =
+  {
+    query: companySelectQueryValidator,
+    body: companySelectBodyValidator,
+  };
