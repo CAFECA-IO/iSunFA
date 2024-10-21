@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { NON_EXISTING_REPORT_ID } from '@/constants/config';
+// import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
@@ -13,7 +13,9 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import CollapseButton from '@/components/button/collapse_button';
+import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import BalanceDetailsButton from '@/components/button/balance_details_button';
+import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
 // Info: (20241017 - Anna) 不從父層拿reportId
 // interface IBalanceSheetReportBodyAllProps {
@@ -40,7 +42,7 @@ const BalanceSheetList = () => {
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
 
   // Todo: (20241017 - Anna) 先reportId，為了看UI
-  const defaultReportId = '10000083';
+  // const defaultReportId = '10000083';
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -67,13 +69,19 @@ const BalanceSheetList = () => {
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
   } = APIHandler<BalanceSheetReport>(
-    APIName.REPORT_GET_BY_ID,
+    APIName.REPORT_GET_V2,
     {
       params: {
         companyId: selectedCompany?.id,
         // Info: (20241017 - Anna) 改用預設的reportId
         // reportId: reportId ?? NON_EXISTING_REPORT_ID,
-        reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+        // reportId: defaultReportId ?? NON_EXISTING_REPORT_ID,
+      },
+      query: {
+        startDate: 1704070800,
+        endDate: 1706745599,
+        language: 'en',
+        reportType: FinancialReportTypesKey.balance_sheet,
       },
     },
     hasCompanyId
@@ -367,7 +375,8 @@ const BalanceSheetList = () => {
     return rows;
   };
 
-  const rowsForPage3 = (items: Array<FinancialReportItem>) => {
+  // Info: (20241021 - Anna) 要記得改interface
+  const rowsForPage3 = (items: Array<IAccountReadyForFrontend>) => {
     const rows = items.slice(0, 13).map((item) => {
       if (!item.code) {
         return (
@@ -403,39 +412,43 @@ const BalanceSheetList = () => {
               {item.curPeriodAmountString}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-              {item.curPeriodPercentage}
+              {item.curPeriodPercentageString}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
               {item.prePeriodAmountString}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-              {item.prePeriodPercentage}
+              {item.prePeriodPercentageString}
             </td>
           </tr>
-          {/* Info: (20241003 - Anna) 如果展開，新增一行表格 */}
-          {!isSubAccountsCollapsed[item.code] && (
-            <tr key={`sub-accounts-${item.code}`}>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
-              <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">
-                <div className="flex w-full items-center justify-between">
-                  <span>110001 透過損益按公允價值衡量之⾦融資產－流動</span>
-                  <BalanceDetailsButton />
-                </div>
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                924,636
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                -
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                924,636
-              </td>
-              <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                -
-              </td>
-            </tr>
-          )}
+          {/* Info: (20241003 - Anna) 如果展開，新增子科目表格 */}
+          {!isSubAccountsCollapsed[item.code] &&
+            item.children.map((child) => (
+              <tr key={`sub-accounts-${child.code}`}>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-sm"></td>
+                <td className="items-center border border-stroke-brand-secondary-soft p-10px text-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="justify-start">
+                      <span>{child.code}</span>
+                      <span className="ml-2">{child.name}</span>
+                    </div>
+                    <BalanceDetailsButton />
+                  </div>
+                </td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                  {child.curPeriodAmountString}
+                </td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                  {child.curPeriodPercentageString}
+                </td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                  {child.prePeriodAmountString}
+                </td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                  {child.prePeriodPercentageString}
+                </td>
+              </tr>
+            ))}
         </React.Fragment>
       );
     });
