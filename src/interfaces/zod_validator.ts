@@ -1,3 +1,4 @@
+import { APIName } from '@/constants/api_connection';
 import { z } from 'zod';
 // Info: (20240909 - Murky) This interface is specifically for validator of api
 
@@ -12,4 +13,27 @@ export interface IZodValidator<
 > {
   query: T extends z.ZodRawShape ? z.ZodObject<T> : z.ZodUndefined;
   body: U extends z.ZodRawShape ? z.ZodObject<U> : z.ZodUndefined;
+}
+
+/**
+ * Info: (20241021 - Murky)
+ * @description This interface is specifically for validator of api output,
+ * can be used to validate the input from backend too
+ */
+export interface ZodValidateConfig<T extends z.ZodTypeAny> {
+  /**
+   * Info: (20241021 - Murky)
+   * data that need to be validated
+   */
+  dto: unknown;
+  /**
+   * Info: (20241021 - Murky)
+   * Zod Schema that used to validate the dto
+   */
+  schema: T;
+  /**
+   * Info: (20241021 - Murky)
+   * API name that used to log the error message
+   */
+  apiName: APIName;
 }

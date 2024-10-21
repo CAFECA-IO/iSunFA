@@ -3,6 +3,8 @@ import { NextApiRequest } from 'next';
 import { z } from 'zod';
 import { loggerRequest } from '@/lib/utils/logger_back';
 import { APIPath } from '@/constants/api_connection';
+import { ZodValidateConfig } from '@/interfaces/zod_validator';
+import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
  * it will cause error when not implement all the keys
@@ -66,4 +68,41 @@ export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
   }
 
   return payload;
+}
+
+/**
+ * Info: (20241021 - Murky)
+ * @description This function is used to validate the response sending from the backend
+ * @note Reference https://laniewski.me/blog/2023-11-19-api-response-validation-with-zod/
+ * @example
+ * const schema = z.object({
+ *  id: z.number()
+ * })
+ *
+ * export type AccountDetailsResponse = z.infer<typeof schema>;
+ *
+ * function validate(dto: unknown): AccountDetailsResponse {
+    return validateSchema({ dto, schema, apiName: 'APIName.GET_ACCOUNT' });
+  }
+ *
+ * export async function getAccountDetails(): Promise<AccountDetailsResponse> {
+ *    const response = await apiClient.get("/api/v1/account/details");
+ *    return validate(response.data);
+ * }
+ */
+export function validateApiResponse<T extends z.ZodTypeAny>(
+  config: ZodValidateConfig<T>
+): z.infer<T> {
+  const { data, success, error } = config.schema.safeParse(config.dto);
+
+  if (success) {
+    return data;
+  } else {
+    // ToDo: (20241021 - Murky) No logger used here, since this function need to be used in the frontend too
+    throw new ApiValidationError(`API response validation failed for API: ${config.apiName}`, {
+      dto: config.dto,
+      zodErrorMessage: error.message,
+      issues: error.issues,
+    });
+  }
 }
