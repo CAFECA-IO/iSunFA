@@ -68,12 +68,12 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="space-y-2">
         <>
-          <div className="text-text-neutral-tertiary">{certificate.taxID}</div>
-          <div className="text-text-neutral-primary">{certificate.fromTo}</div>
+          <div className="text-text-neutral-tertiary">{certificate.counterParty.taxId}</div>
+          <div className="text-text-neutral-primary">{certificate.counterParty.name}</div>
         </>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="max-w-120px">
-        <div className="text-text-neutral-primary">{certificate.businessTaxFormatCode}</div>
+        <div className="text-text-neutral-primary">{certificate.invoiceType}</div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="min-w-100px">
         <div className="text-text-neutral-primary">Taxable {certificate.taxRate}%</div>

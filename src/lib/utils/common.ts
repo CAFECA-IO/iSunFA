@@ -23,6 +23,21 @@ export const getDomains = () => {
   return ALLOWED_ORIGINS;
 };
 
+// Info: (20240926 - Julian) 將時間戳轉換成年月日
+export const timestampToYMD = (timestamp: number) => {
+  const years = Math.floor(timestamp / (60 * 60 * 24 * 365));
+  const months = Math.floor((timestamp % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30));
+  const days = Math.floor(
+    ((timestamp % (60 * 60 * 24 * 365)) % (60 * 60 * 24 * 30)) / (60 * 60 * 24)
+  );
+
+  return {
+    years: years < 0 ? 0 : years,
+    months: months < 0 ? 0 : months,
+    days: days < 0 ? 0 : days,
+  };
+};
+
 export const numberWithCommas = (x: number | string) => {
   return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 };

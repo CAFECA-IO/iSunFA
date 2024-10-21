@@ -177,7 +177,7 @@ const AccountingTitleTable = ({ accountingTitleData, actionType }: IAccountingTi
       <div className="table-header-group bg-stroke-brand-secondary-moderate text-lg text-text-neutral-invert">
         {/* Info: (20240717 - Julian) Desktop Table Header Row */}
         <div className="hidden lg:table-row">
-          <div className="table-cell w-1/10 py-12px">{t('setting:SETTING.CODE')}</div>
+          <div className="table-cell w-1/10 py-12px">{t('common:COMMON.CODE')}</div>
           <div className="table-cell w-6/10 py-12px">{t('setting:SETTING.NAME')}</div>
           <div className="table-cell w-3/10 py-12px">{t('common:COMMON.OPERATIONS')}</div>
         </div>

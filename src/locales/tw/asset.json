@@ -20,5 +20,27 @@
     "SUBTITLE": "請輸入資產資訊",
     "UPDATE_DATE": "更新日期",
     "STATUS": "狀態"
+  },
+  "ASSET_DETAIL_PAGE": {
+    "TITLE": "資產",
+    "DELETE_MESSAGE_TITLE": "您確定要刪除此資產嗎？",
+    "DELETE_MESSAGE_CONTENT": "與此資產相關的所有憑證也將被刪除。",
+    "DELETE_MESSAGE_SUBMIT_BTN": "是的，刪除資產。",
+    "DELETE_SUCCESS_TOAST": "資產已刪除",
+    "UNDO": "復原",
+    "DAYS_UNIT": "天",
+    "STATUS_SETTING": "狀態設定",
+    "TYPE": "資產類型",
+    "ACQUISITION_DATE": "取得日期",
+    "DEPRECIATION_START_DATE": "折舊開始日期",
+    "DEPRECIATION_METHOD": "折舊方法",
+    "USEFUL_LIFE": "使用年限",
+    "MONTH_UNIT": "個月",
+    "PURCHASE_PRICE": "購買價格",
+    "ACCUM_DEP": "累積折舊",
+    "RESIDUAL_VALUE": "殘值",
+    "REMAINING_LIFE": "剩餘使用年限",
+    "NOTE": "備註",
+    "VOUCHER": "憑證"
   }
 }

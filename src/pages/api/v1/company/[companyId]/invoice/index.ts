@@ -12,7 +12,7 @@ import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { InvoiceType } from '@/constants/invoice';
 import { loggerError, loggerRequest } from '@/lib/utils/logger_back';
 import { APIName, APIPath } from '@/constants/api_connection';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { EventType } from '@/constants/account';
 import { handlePrismaSavingLogic } from '@/lib/utils/repo/beta_transition.repo';
 

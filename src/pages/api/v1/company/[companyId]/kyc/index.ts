@@ -8,7 +8,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { createCompanyKYC } from '@/lib/utils/repo/company_kyc.repo';
 import { isCompanyKYC, isCompanyKYCForm } from '@/lib/utils/type_guard/company_kyc';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
 

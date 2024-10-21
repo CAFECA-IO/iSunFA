@@ -29,7 +29,7 @@ const Dashboard = () => {
         />
       </Head>
 
-      <Layout>
+      <Layout isDashboard>
         <DashboardBody />
       </Layout>
     </>

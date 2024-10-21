@@ -4,98 +4,64 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { INews } from '@/interfaces/news';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { createNews, listNews, listNewsSimple } from '@/lib/utils/repo/news.repo';
 
-// ToDo: (20240924 - Jacky) Implement the logic to get the news data from the database
-async function handleGetRequest() {
+const handleGetRequest: IHandleRequest<
+  APIName.NEWS_LIST,
+  INews[] | IPaginatedData<INews[]>
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<INews[]> | null = null;
+  let payload: INews[] | IPaginatedData<INews[]> | null = null;
 
-  // ToDo: (20240924 - Jacky) Get session data from the request
-  // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
-  // ToDo: (20240924 - Jacky) Implement the logic to get the news data from the database
-  // ToDo: (20240924 - Jacky) Format the news data to the INews interface
+  let newsList: INews[] | IPaginatedData<INews[]> | null;
+  const { simple, type, targetPage, pageSize } = query;
+  if (simple) {
+    newsList = await listNewsSimple(type, pageSize);
+  } else {
+    newsList = await listNews(type, targetPage, pageSize);
+  }
 
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  payload = {
-    data: [
-      {
-        id: 1,
-        title: 'Breaking News',
-        content: 'This is the content of the breaking news.',
-        type: 'Breaking',
-        createdAt: 11111,
-        updatedAt: 11111,
-      },
-      {
-        id: 2,
-        title: 'Tech News',
-        content: 'This is the content of the tech news.',
-        type: 'Technology',
-        createdAt: 11111,
-        updatedAt: 111111,
-      },
-    ],
-    page: 1,
-    totalPages: 5,
-    totalCount: 23,
-    pageSize: 5,
-    hasNextPage: true,
-    hasPreviousPage: false,
-    sort: [
-      {
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      },
-    ],
-  };
+  payload = newsList;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
   return { statusMessage, payload };
-}
+};
 
-// ToDo: (20240924 - Jacky) Implement the logic to create a new news item in the database
-async function handlePostRequest() {
+const handlePostRequest: IHandleRequest<APIName.CREATE_NEWS, INews> = async ({ body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews | null = null;
 
-  // ToDo: (20240924 - Jacky) Get session data from the request
-  // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
-  // ToDo: (20240924 - Jacky) Validate the request body
-  // ToDo: (20240924 - Jacky) Implement the logic to create a new news item in the database
-  // ToDo: (20240924 - Jacky) Format the news data to the INews interface
+  const { title, content, type } = body;
+  const createdNews = await createNews(title, content, type);
 
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  const newNews: INews = {
-    id: 3,
-    title: 'req.body.title',
-    content: 'req.body.content',
-    type: 'req.body.type',
-    createdAt: 82717,
-    updatedAt: 75275,
-  };
-
-  payload = newNews;
+  payload = createdNews;
   statusMessage = STATUS_MESSAGE.CREATED;
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IPaginatedData<INews[]> | INews | null }>;
+  ) => Promise<{
+    statusMessage: string;
+    payload: IPaginatedData<INews[]> | INews | INews[] | null;
+  }>;
 } = {
-  GET: handleGetRequest,
-  POST: handlePostRequest,
+  GET: (req, res) => withRequestValidation(APIName.NEWS_LIST, req, res, handleGetRequest),
+  POST: (req, res) => withRequestValidation(APIName.CREATE_NEWS, req, res, handlePostRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<INews[]> | INews | null>>
+  res: NextApiResponse<IResponseData<IPaginatedData<INews[]> | INews | INews[] | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<INews[]> | INews | null = null;
+  let payload: IPaginatedData<INews[]> | INews | INews[] | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -109,10 +75,9 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IPaginatedData<INews[]> | INews | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<
+      IPaginatedData<INews[]> | INews | INews[] | null
+    >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

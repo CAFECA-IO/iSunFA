@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1000,
+        "companyId": 1000,
+        "fileId": 1000,
+        "createdAt": 1672531200,
+        "updatedAt": 1672531200,
+        "deletedAt": null
+    },
+    {
+        "id": 1001,
+        "companyId": 1000,
+        "fileId": 1001,
+        "createdAt": 1672531200,
+        "updatedAt": 1672531200,
+        "deletedAt": null
+    },
+    {
+        "id": 1002,
+        "companyId": 1000,
+        "fileId": 1002,
+        "createdAt": 1672531200,
+        "updatedAt": 1672531200,
+        "deletedAt": null
+    }
+]

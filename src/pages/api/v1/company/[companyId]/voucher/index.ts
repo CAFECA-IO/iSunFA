@@ -16,7 +16,7 @@ import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 import { loggerError } from '@/lib/utils/logger_back';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { getInvoiceVoucherJournalByJournalId } from '@/lib/utils/repo/beta_transition.repo';
 

@@ -6,7 +6,7 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { getSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { mockCertificateList } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
 type APIResponse = object | null;

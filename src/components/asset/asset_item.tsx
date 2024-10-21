@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
+import { timestampToYMD } from '@/lib/utils/common';
 
 interface IAssetItem {
   id: number;
@@ -89,21 +90,6 @@ const AssetItem = () => {
     </p>
   );
 
-  // Info: (20240926 - Julian) 將時間戳轉換成年月日
-  const timestampToYMD = (timestamp: number) => {
-    const years = Math.floor(timestamp / (60 * 60 * 24 * 365));
-    const months = Math.floor((timestamp % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30));
-    const days = Math.floor(
-      ((timestamp % (60 * 60 * 24 * 365)) % (60 * 60 * 24 * 30)) / (60 * 60 * 24)
-    );
-
-    return {
-      years: years < 0 ? 0 : years,
-      months: months < 0 ? 0 : months,
-      days: days < 0 ? 0 : days,
-    };
-  };
-
   const remainingYears = timestampToYMD(remainingLife).years;
   const remainingMonths = timestampToYMD(remainingLife).months;
   const remainingDays = timestampToYMD(remainingLife).days;
@@ -134,15 +120,18 @@ const AssetItem = () => {
         <div className="flex items-center gap-4px">
           {/* Info: (20240925 - Julian) Years */}
           <p className="text-text-neutral-primary">
-            {remainingYears} <span className="text-text-neutral-tertiary">Y</span>
+            {remainingYears}{' '}
+            <span className="text-text-neutral-tertiary">{t('common:COMMON.Y')}</span>
           </p>
           {/* Info: (20240925 - Julian) Months */}
           <p className="text-text-neutral-primary">
-            {remainingMonths} <span className="text-text-neutral-tertiary">M</span>
+            {remainingMonths}{' '}
+            <span className="text-text-neutral-tertiary">{t('common:COMMON.M')}</span>
           </p>
           {/* Info: (20240925 - Julian) Days */}
           <p className="text-text-neutral-primary">
-            {remainingDays} <span className="text-text-neutral-tertiary">D</span>
+            {remainingDays}{' '}
+            <span className="text-text-neutral-tertiary">{t('common:COMMON.D')}</span>
           </p>
         </div>
         {/* Info: (20240925 - Julian) process bar */}

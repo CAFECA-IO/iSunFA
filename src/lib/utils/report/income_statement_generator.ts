@@ -38,6 +38,48 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     return updatedAccountForest;
   }
 
+  private static calculatePercentageByOperatingRevenue(
+    accountMap: Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  ): Map<
+    string,
+    {
+      accountNode: IAccountNode;
+      percentage: number;
+    }
+  > {
+    const operatingRevenue = accountMap.get(SPECIAL_ACCOUNTS.OPERATING_INCOME.code);
+    if (!operatingRevenue) {
+      throw new Error(
+        'Operating Revenue not found in accountMap in calculatePercentageByOperatingRevenue'
+      );
+    }
+
+    const operatingRevenueAmount = operatingRevenue.accountNode.amount;
+    const updatedAccountMap = new Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >();
+
+    accountMap.forEach((value, key) => {
+      updatedAccountMap.set(key, {
+        accountNode: value.accountNode,
+        percentage:
+          operatingRevenueAmount === 0 ? 0 : value.accountNode.amount / operatingRevenueAmount,
+      });
+    });
+
+    return updatedAccountMap;
+  }
+
   public override async generateFinancialReportMap(curPeriod: boolean): Promise<
     Map<
       string,
@@ -48,7 +90,13 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     >
   > {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
-    const accountMap = transformForestToMap(accountForest);
+    let accountMap = transformForestToMap(accountForest);
+
+    /**
+     * Info: (20241018 - Murky)
+     * @description Income Statement 的百分比應該是要用營業收入計算，先從這邊patch, 之後要Refactor transformForestToMap
+     */
+    accountMap = IncomeStatementGenerator.calculatePercentageByOperatingRevenue(accountMap);
     return accountMap;
   }
 

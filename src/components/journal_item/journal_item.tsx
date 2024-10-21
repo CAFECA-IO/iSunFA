@@ -142,7 +142,7 @@ const JournalItem = ({
   };
 
   const debitItem = lineItems
-    ? lineItems.filter((item) => item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => item.debit)[0] ?? defaultItem)
     : defaultItem;
   const debit = {
     account: debitItem.account,
@@ -150,7 +150,7 @@ const JournalItem = ({
   };
 
   const creditItem = lineItems
-    ? lineItems.filter((item) => !item.debit)[0] ?? defaultItem
+    ? (lineItems.filter((item) => !item.debit)[0] ?? defaultItem)
     : defaultItem;
   const credit = {
     account: creditItem.account,
@@ -269,7 +269,9 @@ const JournalItem = ({
       {/* Info: (20240418 - Julian) 日期 */}
       <td className="border-x border-stroke-neutral-quaternary">
         {/* Info: (20240418 - Julian) 將日期畫成日曆的 icon */}
-        <CalendarIcon timestamp={createdTimestamp} />
+        <div className="flex items-center justify-center">
+          <CalendarIcon timestamp={createdTimestamp} />
+        </div>
       </td>
       {/* Info: (20240418 - Julian) 類型 */}
       <td className="collapse px-16px md:visible">{displayedType}</td>
@@ -302,7 +304,7 @@ const JournalItem = ({
       {/* Info: (20240418 - Julian) Link */}
       <Link
         href={`${ISUNFA_ROUTE.ACCOUNTING}/${journalId}`}
-        className="absolute left-46px h-80px w-95%"
+        className="absolute left-0 h-80px w-full"
       ></Link>
       {event === JOURNAL_EVENT.UPCOMING && (
         <Operations companyId={companyId} journalId={journalId} onDelete={onDelete} />
@@ -390,7 +392,7 @@ export const JournalItemMobile = ({
   return (
     <tr
       key={id}
-      className="relative border-b border-stroke-neutral-quaternary text-center text-text-neutral-tertiary"
+      className="relative h-60px border-b border-stroke-neutral-quaternary text-center text-text-neutral-tertiary"
     >
       {/* Info: (20240418 - Julian) 選取方塊 */}
       <td className="align-middle md:w-50px">
@@ -408,7 +410,9 @@ export const JournalItemMobile = ({
       {/* Info: (20240418 - Julian) 日期 */}
       <td className="border-x border-stroke-neutral-quaternary align-middle">
         {/* Info: (20240418 - Julian) 將日期畫成日曆的 icon */}
-        <CalendarIcon timestamp={createdTimestamp} />
+        <div className="flex items-center justify-center">
+          <CalendarIcon timestamp={createdTimestamp} />
+        </div>
       </td>
       {/* Info: (20240418 - Julian) 重要資訊 */}
       <td className="align-middle">
@@ -432,6 +436,11 @@ export const JournalItemMobile = ({
           <Operations companyId={companyId} journalId={id} onDelete={onDelete} />
         )}
       </td>
+      {/* Info: (20240418 - Julian) Link */}
+      <Link
+        href={`${ISUNFA_ROUTE.ACCOUNTING}/${id}`}
+        className="absolute left-0 h-60px w-full"
+      ></Link>
     </tr>
   );
 };

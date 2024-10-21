@@ -25,7 +25,9 @@ import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND, WAIT_FOR_REPORT_DATA } from '@/constants/display';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import Toggle from '@/components/toggle/toggle';
 import PrintButton from '@/components/button/print_button';
+import DownloadButton from '@/components/button/download_button';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -216,6 +218,11 @@ const ViewFinancialSection = ({
         });
       }
     }
+  };
+  const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
+  // Info: (20241003 - Anna) 處理 toggle 開關
+  const subAccountsToggleHandler: () => void = () => {
+    setSubAccountsToggle((prevState) => !prevState);
   };
   // Info: (20240807 - Anna) 還沒有Token Contract資訊，先隱藏
   // const copyTokenContract = () => {
@@ -512,9 +519,31 @@ const ViewFinancialSection = ({
             translatedReportType
           )}
         </div>
+      </div>
+      <div
+        className={`mx-10 mt-10 flex items-center px-px pb-6 max-md:flex-wrap lg:mx-40 ${reportTypesName.id !== FinancialReportTypesKey.balance_sheet ? 'justify-end' : 'justify-between'}`}
+      >
+        {/* Info: (20241002 - Anna) 只在 BalanceSheetReport 顯示 Toggle */}
+        {reportTypesName.id === FinancialReportTypesKey.balance_sheet && (
+          <div className="flex gap-4">
+            <Toggle
+              id="subAccounts-toggle"
+              initialToggleState={subAccountsToggle}
+              getToggledState={subAccountsToggleHandler}
+              toggleStateFromParent={subAccountsToggle}
+            />
+            <span className="text-neutral-600">Display Sub-Accounts</span>
+          </div>
+        )}
+
         <div className="my-auto flex flex-col justify-center self-stretch">
           <div className="flex gap-3">
-            <Button
+            {/* Info: (20241002 - Anna) 拿掉「分享按鈕」，改為「下載按鈕」 */}
+            <DownloadButton
+              onClick={downloadClickHandler}
+              disabled={!reportLink || isLoading || isInvalidReport}
+            />
+            {/* <Button
               // TODO: (20240507 - Shirley) [Beta] yet to dev
               disabled
               variant={'tertiary'}
@@ -536,7 +565,7 @@ const ViewFinancialSection = ({
                   ></path>
                 </svg>
               </div>
-            </Button>
+            </Button> */}
             {/* Info: (20240930 - Anna) 列印按鈕獨立出組件，並且在這裡使用 */}
             <PrintButton
               onClick={downloadClickHandler}

@@ -4,9 +4,10 @@ import { useTranslation } from 'next-i18next';
 import { LuTrash2 } from 'react-icons/lu';
 import { FiBookOpen } from 'react-icons/fi';
 import { AccountType } from '@/constants/account';
-import { useAccountingCtx } from '@/contexts/accounting_context';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { numberWithCommas } from '@/lib/utils/common';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface IVoucherLineItemProps {
   flagOfClear: boolean;
@@ -34,7 +35,6 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   creditChangeHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { accountList } = useAccountingCtx();
 
   const inputStyle = {
     NORMAL:
@@ -43,12 +43,31 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       'border-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
   };
 
+  const queryCondition = {
+    limit: 100, // Info: (20241018 - Julian) 限制每次取出 100 筆
+    forUser: true,
+    sortBy: 'code', // Info: (20241018 - Julian) 依 code 排序
+    sortOrder: 'asc',
+  };
+
+  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
+    APIName.ACCOUNT_LIST,
+    {
+      params: {
+        companyId: 1,
+      },
+      query: queryCondition,
+    },
+    false,
+    true
+  );
+
   // Info: (20241007 - Julian) Account state
   const [accountTitle, setAccountTitle] = useState<string>(
     t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
   );
   const [searchKeyword, setSearchKeyword] = useState<string>('');
-  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>(accountList);
+  const [accountList, setAccountList] = useState<IAccount[]>([]);
 
   // Info: (20241007 - Julian) input state
   const [particulars, setParticulars] = useState<string>('');
@@ -75,22 +94,20 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setComponentVisible: setIsAccountEditing,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20241001 - Julian) 搜尋 Account
   useEffect(() => {
-    const filteredList = accountList.filter((account) => {
-      // Info: (20241001 - Julian) 編號(數字)搜尋: 字首符合
-      if (searchKeyword.match(/^\d+$/)) {
-        const codeMatch = account.code.toLowerCase().startsWith(searchKeyword.toLowerCase());
-        return codeMatch;
-      } else if (searchKeyword !== '') {
-        // Info: (20241001 - Julian) 名稱搜尋: 部分符合
-        const nameMatch = account.name.toLowerCase().includes(searchKeyword.toLowerCase());
-        return nameMatch;
-      }
-      return true;
+    getAccountList({
+      query: {
+        ...queryCondition,
+        searchKey: searchKeyword, // Info: (20241018 - Julian) 搜尋關鍵字
+      },
     });
-    setFilteredAccountList(filteredList);
-  }, [searchKeyword, accountList]);
+  }, [searchKeyword]);
+
+  useEffect(() => {
+    if (accountTitleList) {
+      setAccountList(accountTitleList.data);
+    }
+  }, [accountTitleList]);
 
   useEffect(() => {
     // Info: (20241004 - Julian) 查詢會計科目關鍵字時聚焦
@@ -186,7 +203,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   const accountTitleMenu = accountTypeList.map((value) => {
     // Info: (20241004 - Julian) 子項目
-    const childAccountList = filteredAccountList.filter((account) => account.type === value);
+    const childAccountList = accountList.filter((account) => account.type === value);
     const childAccountMenu = childAccountList.map((account) => {
       const accountClickHandler = () => {
         setAccountTitle(`${account.code} ${account.name}`);

@@ -43,11 +43,11 @@ const UploadArea: React.FC<UploadAreaProps> = ({ isDisabled, withScanner, toggle
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`my-4 flex items-center rounded-lg border border-dashed py-10 ${
+      className={`flex items-center justify-center rounded-lg border border-dashed py-10 ${
         !isDisabled && isDragOver
           ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
           : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
-      } justify-center ${isDisabled ? 'cursor-not-allowed border-drag-n-drop-stroke-disable bg-drag-n-drop-surface-disable' : 'hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover'}`}
+      } ${isDisabled ? 'cursor-not-allowed border-drag-n-drop-stroke-disable bg-drag-n-drop-surface-disable' : 'hover:border-drag-n-drop-stroke-focus hover:bg-drag-n-drop-surface-hover'}`}
     >
       <button
         type="button"

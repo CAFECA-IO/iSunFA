@@ -311,7 +311,7 @@ model Certificate {
   deletedAt Int? @map("deleted_at")
 
   invoices Invoice[]
-  voucherCertificate VoucherCertificate[]
+  voucherCertificates VoucherCertificate[]
 
   company         Company           @relation(fields: [companyId], references: [id])
   file            File              @relation(fields: [fileId], references: [id])

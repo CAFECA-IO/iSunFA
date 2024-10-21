@@ -2,7 +2,7 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
@@ -13,7 +13,6 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
-import CollapseButton from '@/components/button/collapse_button';
 
 interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
@@ -54,17 +53,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
   const [firstThought, setFirstThought] = useStateRef<string>('');
   const [secondThought, setSecondThought] = useStateRef<string>('');
   const [thirdThought, setThirdThought] = useStateRef<string>('');
-  // Info: (20241001 - Anna) 管理表格摺疊狀態
-  const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
-  const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
-  // Info: (20241001 - Anna) 切換摺疊狀態
-  const toggleSummaryTable = () => {
-    setIsSummaryCollapsed(!isSummaryCollapsed);
-  };
-
-  const toggleDetailTable = () => {
-    setIsDetailCollapsed(!isDetailCollapsed);
-  };
 
   useEffect(() => {
     if (getReportFinancialSuccess === true && reportFinancial) {
@@ -142,10 +130,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-xs font-semibold">
               會計項目
             </th>
-            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
+            <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
               {curDate.from}至{curDate.to}
             </th>
-            <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
+            <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-xxs font-semibold">
               {preDate.from}至{preDate.to}
             </th>
           </tr>
@@ -334,14 +322,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <div className="mb-16px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>一、項目彙總格式</p>
-            <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p>單位：新台幣元</p>
         </div>
-        {!isSummaryCollapsed &&
-          reportFinancial &&
-          reportFinancial.general &&
-          renderTable(reportFinancial.general, 0, 10)}
+        {reportFinancial && reportFinancial.general && renderTable(reportFinancial.general, 0, 10)}
       </section>
       {renderedFooter(1)}
     </div>
@@ -379,14 +363,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p>二、細項分類格式</p>
-            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p>單位：新台幣元</p>
         </div>
-        {!isDetailCollapsed &&
-          reportFinancial &&
-          reportFinancial.details &&
-          renderTable(reportFinancial.details, 0, 3)}
+        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 3)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image

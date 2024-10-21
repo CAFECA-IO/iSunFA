@@ -112,6 +112,7 @@ export const inputStyle = {
     'border-input-stroke-input divide-input-stroke-input text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder',
   ERROR:
     'border-input-text-error divide-input-text-error text-input-text-error placeholder:text-input-text-error disabled:text-input-text-error',
+  PREVIEW: 'text-text-brand-primary-lv1 placeholder:text-text-brand-primary-lv1',
 };
 
 // Info: (20240429 - Julian) checkbox CSS style
