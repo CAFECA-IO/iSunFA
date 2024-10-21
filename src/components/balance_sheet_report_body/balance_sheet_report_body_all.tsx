@@ -295,42 +295,42 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     return rows;
   };
 
-  const rowsForPage2part1 = (items: Array<FinancialReportItem>) => {
-    const rows = items.slice(0, 2).map((item) => {
-      if (!item.code) {
-        return (
-          <tr key={item.code}>
-            <td
-              colSpan={6}
-              className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
-            >
-              {item.name}
-            </td>
-          </tr>
-        );
-      }
-      return (
-        // Info: (20240723 - Shirley) it's ok to use index in the static data
-        <tr key={item.code}>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
-          </td>
-          <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
-          </td>
-        </tr>
-      );
-    });
-    return rows;
-  };
+  // const rowsForPage2part1 = (items: Array<FinancialReportItem>) => {
+  //   const rows = items.slice(0, 2).map((item) => {
+  //     if (!item.code) {
+  //       return (
+  //         <tr key={item.code}>
+  //           <td
+  //             colSpan={6}
+  //             className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
+  //           >
+  //             {item.name}
+  //           </td>
+  //         </tr>
+  //       );
+  //     }
+  //     return (
+  //       // Info: (20240723 - Shirley) it's ok to use index in the static data
+  //       <tr key={item.code}>
+  //         <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
+  //         <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
+  //         <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+  //           {item.curPeriodAmountString}
+  //         </td>
+  //         <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+  //           {item.curPeriodPercentage}
+  //         </td>
+  //         <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
+  //           {item.prePeriodAmountString}
+  //         </td>
+  //         <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
+  //           {item.prePeriodPercentage}
+  //         </td>
+  //       </tr>
+  //     );
+  //   });
+  //   return rows;
+  // };
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 13).map((item) => {
@@ -743,46 +743,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             height={300}
           />
         </div>
-
-        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <div className="flex items-center">
-            <p>二、細項分類格式</p>
-            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
-          </div>
-          <p>單位：新台幣元</p>
-        </div>
-        {!isDetailCollapsed && (
-          <table className="w-full border-collapse bg-white">
-            <thead>
-              <tr>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  代號
-                </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold">
-                  會計項目
-                </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                  {curDate}
-                </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-                <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
-                  {preDate}
-                </th>
-                <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportFinancial &&
-                reportFinancial.details &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'details') &&
-                rowsForPage2part1(reportFinancial.details)}
-            </tbody>
-          </table>
-        )}
       </section>
       {renderedFooter(2)}
     </div>
@@ -807,7 +767,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       </header>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>二、細項分類格式</p>
+          <div className="flex items-center">
+            <p>二、細項分類格式</p>
+            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
+          </div>
           <p>單位：新台幣元</p>
         </div>
         <table className="w-full border-collapse bg-white">
