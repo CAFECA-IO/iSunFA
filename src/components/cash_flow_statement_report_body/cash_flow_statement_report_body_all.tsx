@@ -161,10 +161,22 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                   {value.name}
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                  {value.curPeriodAmount}
+                  {
+                    value.curPeriodAmount === 0
+                      ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
+                      : value.curPeriodAmount < 0
+                        ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info: (20241021 - Anna) 負數，顯示括號和千分位
+                        : value.curPeriodAmount.toLocaleString() // Info: (20241021 - Anna) 正數，顯示千分位
+                  }
                 </td>
                 <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                  {value.prePeriodAmount}
+                  {
+                    value.prePeriodAmount === 0
+                      ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
+                      : value.prePeriodAmount < 0
+                        ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})` // Info: (20241021 - Anna) 負數，顯示括號和千分位
+                        : value.prePeriodAmount.toLocaleString() // Info: (20241021 - Anna) 正數，顯示千分位
+                  }
                 </td>
               </tr>
             );
@@ -224,14 +236,22 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               營業活動現金流入
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[
-                currentYear
-              ]?.operatingCashFlow.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[
+                      currentYear
+                    ]?.operatingCashFlow.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[
-                previousYear
-              ]?.operatingCashFlow.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[
+                      previousYear
+                    ]?.operatingCashFlow.toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -239,10 +259,18 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               不動產、廠房及設備
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -250,10 +278,22 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               無形資產支出
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[
+                      currentYear
+                    ]?.intangibleAsset.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[
+                      previousYear
+                    ]?.intangibleAsset.toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -261,10 +301,18 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               自由現金流量
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
             <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
+              {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash === 0
+                ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash < 0
+                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
             </td>
           </tr>
         </tbody>
@@ -359,14 +407,6 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             height={300}
           />
         </div>
-
-        <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
-          <div className="flex items-center">
-            <p>二、細項分類格式</p>
-          </div>
-          <p>單位：新台幣元</p>
-        </div>
-        {reportFinancial && reportFinancial.details && renderTable(reportFinancial.details, 0, 3)}
 
         <div className="relative bottom-20 right-0 -z-10">
           <Image
@@ -638,7 +678,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                       key={year}
                       className="border border-stroke-brand-secondary-soft p-10px text-end"
                     >
-                      {value.toLocaleString()}
+                      {
+                        value === 0
+                          ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
+                          : value < 0
+                            ? `(${Math.abs(value).toLocaleString()})` // Info: (20241021 - Anna) 負數，顯示括號和千分位
+                            : value.toLocaleString() // Info: (20241021 - Anna) 正數，顯示千分位
+                      }
                     </td>
                   ))}
                 </tr>
@@ -652,9 +698,21 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                         key={year}
                         className="border border-stroke-brand-secondary-soft p-10px text-end"
                       >
-                        {reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
-                          year
-                        ].toLocaleString()}
+                        {
+                          reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                            year
+                          ] === 0
+                            ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                            : reportFinancial.otherInfo.operatingStabilized
+                                  .amortizationDepreciation[year] < 0
+                              ? `(${Math.abs(
+                                  reportFinancial.otherInfo.operatingStabilized
+                                    .amortizationDepreciation[year]
+                                ).toLocaleString()})` // Info: (20241021 - Anna) 負數用括號並加千分位
+                              : reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                                  year
+                                ].toLocaleString() // Info: (20241021 - Anna) 正數顯示千分位
+                        }
                       </td>
                     )
                   )}
@@ -667,7 +725,13 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                         key={year}
                         className="border border-stroke-brand-secondary-soft p-10px text-end"
                       >
-                        {value.toLocaleString()}
+                        {
+                          value === 0
+                            ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
+                            : value < 0
+                              ? `(${Math.abs(value).toLocaleString()})` // Info: (20241021 - Anna) 負數，顯示括號和千分位
+                              : value.toLocaleString() // Info: (20241021 - Anna) 正數，顯示千分位
+                        }
                       </td>
                     )
                   )}
@@ -696,7 +760,12 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
                       key={year}
                       className="border border-stroke-brand-secondary-soft p-10px text-end"
                     >
-                      {value.toLocaleString()}
+                      {value === 0
+                        ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                        : value < 0
+                          ? `(${Math.abs(value).toLocaleString()})` // Info: (20241021 - Anna) 負數用括號並加千分位
+                          : value.toLocaleString()}{' '}
+                      {/* Info: (20241021 - Anna) 正數，顯示千分位 */}
                     </td>
                   ))}
                 </tr>
