@@ -29,7 +29,7 @@ import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { bufferToBlob, findFileByName, readFile } from '@/lib/utils/parse_image_form';
 import { findFileById } from '@/lib/utils/repo/file.repo';
 import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
 export async function readImageFromFilePath(

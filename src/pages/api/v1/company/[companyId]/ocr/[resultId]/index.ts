@@ -19,7 +19,7 @@ import { getAichUrl } from '@/lib/utils/aich';
 import { AICH_APIS_TYPES } from '@/constants/aich';
 import { loggerError } from '@/lib/utils/logger_back';
 import { ocrTypes } from '@/constants/ocr';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
 // Info: (20240522 - Murky) This OCR now can only be used on Invoice
