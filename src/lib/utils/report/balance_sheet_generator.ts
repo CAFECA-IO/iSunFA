@@ -226,6 +226,47 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     }
   }
 
+  private static calculatePercentageByOperatingRevenue(
+    accountMap: Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  ): Map<
+    string,
+    {
+      accountNode: IAccountNode;
+      percentage: number;
+    }
+  > {
+    const totalAsset = accountMap.get(SPECIAL_ACCOUNTS.ASSET_TOTAL.code);
+    if (!totalAsset) {
+      throw new Error(
+        'totalAsset not found in accountMap in calculatePercentageByOperatingRevenue in BalanceSheetGenerator'
+      );
+    }
+
+    const totalAssetAmount = totalAsset.accountNode.amount;
+    const updatedAccountMap = new Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >();
+
+    accountMap.forEach((value, key) => {
+      updatedAccountMap.set(key, {
+        accountNode: value.accountNode,
+        percentage: totalAssetAmount === 0 ? 0 : value.accountNode.amount / totalAssetAmount,
+      });
+    });
+
+    return updatedAccountMap;
+  }
+
   public override async generateFinancialReportMap(curPeriod: boolean): Promise<
     Map<
       string,
@@ -237,7 +278,13 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   > {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
     BalanceSheetGenerator.calculateLiabilityAndEquity(accountForest);
-    const accountMap = transformForestToMap(accountForest);
+
+    let accountMap = transformForestToMap(accountForest);
+    /**
+     * Info: (20241018 - Murky)
+     * @description 百分比應該用資產或 "負債與權益" 做基底，先從這邊patch, 之後要Refactor transformForestToMap
+     */
+    accountMap = BalanceSheetGenerator.calculatePercentageByOperatingRevenue(accountMap);
     return accountMap;
   }
 
@@ -401,12 +448,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     const curDso = Math.abs(
       salesTotal.curPeriodAmount !== 0
-        ? (accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR
+        ? Math.round((accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR)
         : 0
     );
     const preDso = Math.abs(
       salesTotal.prePeriodAmount !== 0
-        ? (accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR
+        ? Math.round((accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR)
         : 0
     );
     const dso = {
@@ -427,10 +474,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
     const curInventoryTurnoverDays = Math.abs(
       operatingCost.curPeriodAmount !== 0
-        ? ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
-            2 /
-            operatingCost.curPeriodAmount) *
-            DAY_IN_YEAR
+        ? Math.round(
+            ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
+              2 /
+              operatingCost.curPeriodAmount) *
+              DAY_IN_YEAR
+          )
         : 0
     );
 

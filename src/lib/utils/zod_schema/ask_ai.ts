@@ -1,6 +1,5 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z } from 'zod';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 const askAIPostQueryValidatorV2 = z.object({
   reason: z.enum(['help', 'certificate', 'voucher']),
@@ -33,7 +32,7 @@ export const askAIPostValidatorV2: IZodValidator<
 };
 
 const askAIGetResultQueryValidatorV2 = z.object({
-  resultId: zodStringToNumber,
+  resultId: z.string(),
   reason: z.enum(['help', 'certificate', 'voucher']),
 });
 
