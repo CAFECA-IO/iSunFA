@@ -79,7 +79,7 @@ export async function uploadImageToAICH(imageBlob: Blob, imageName: string) {
   const formData = createImageFormData(imageBlob, imageName);
 
   let response: Response | undefined;
-  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_OCR);
+  const uploadUrl = getAichUrl(AICH_APIS_TYPES.UPLOAD_INVOICE);
   try {
     response = await fetch(uploadUrl, {
       method: 'POST',
@@ -254,7 +254,7 @@ export async function fetchStatus(aichResultId: string) {
 
   if (aichResultId.length > 0) {
     try {
-      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_OCR_RESULT_ID, aichResultId);
+      const fetchUrl = getAichUrl(AICH_APIS_TYPES.GET_INVOICE_RESULT_ID, aichResultId);
       const result = await fetch(fetchUrl);
 
       if (!result.ok) {
