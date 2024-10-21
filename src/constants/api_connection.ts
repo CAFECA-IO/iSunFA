@@ -116,7 +116,6 @@ export enum APIName {
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
-  ASK_AI_V2 = 'ASK_AI_V2',
 }
 
 export enum APIPath {
@@ -157,8 +156,8 @@ export enum APIPath {
   INVOICE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
   AI_ASK_STATUS = `${apiPrefix}/company/:companyId/ask_ai/:resultId/status`,
   AI_ASK_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
-  AI_ASK_V2 = `${apiPrefix}/company/:companyId/ask_ai`,
-  AI_ASK_RESULT_V2 = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
+  AI_ASK_V2 = `${apiPrefixV2}/company/:companyId/ask_ai`,
+  AI_ASK_RESULT_V2 = `${apiPrefixV2}/company/:companyId/ask_ai/:resultId`,
   VOUCHER_CREATE = `${apiPrefix}/company/:companyId/voucher`,
   VOUCHER_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
@@ -211,7 +210,6 @@ export enum APIPath {
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
-  ASK_AI_V2 = `${apiPrefixV2}/company/:companyId/ask_ai/:resultId`,
 }
 const createConfig = ({
   name,
@@ -632,14 +630,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ASSET_GET_BY_ID_V2,
   }),
-  [APIName.ASK_AI_V2]: createConfig({
-    name: APIName.ASK_AI_V2,
-    method: HttpMethod.GET,
-    path: APIPath.ASK_AI_V2,
-  }),
   [APIName.VOUCHER_LIST_V2]: createConfig({
     name: APIName.VOUCHER_LIST_V2,
     method: HttpMethod.GET,
     path: APIPath.VOUCHER_LIST_V2,
+  }),
+  [APIName.AI_ASK_V2]: createConfig({
+    name: APIName.AI_ASK_V2,
+    method: HttpMethod.POST,
+    path: APIPath.AI_ASK_V2,
+  }),
+  [APIName.AI_ASK_RESULT_V2]: createConfig({
+    name: APIName.AI_ASK_RESULT_V2,
+    method: HttpMethod.GET,
+    path: APIPath.AI_ASK_RESULT_V2,
   }),
 };

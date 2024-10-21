@@ -8,6 +8,7 @@ export enum AIState {
   RESTING = 'resting',
   WORKING = 'working',
   FINISH = 'finish',
+  FAILED = 'failed',
 }
 
 interface AIWorkingAreaProps {
@@ -28,33 +29,6 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
   const gifSrc =
     aiState === AIState.RESTING ? '/animations/ai_resting.gif' : '/animations/ai_working.gif';
 
-  const displayedAIFinishStr = analyzeSuccess ? (
-    <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
-      <p>AI has done scanning. Click here to allow AI</p>
-      <button
-        type="button"
-        className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-sm text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover"
-        onMouseEnter={() => setIsShowAnalysisPreview(true)}
-        onMouseLeave={() => setIsShowAnalysisPreview(false)}
-        onClick={fillUpClickHandler}
-      >
-        <HiOutlineSparkles size={16} />
-        <p>Fill up your voucher</p>
-      </button>
-    </div>
-  ) : (
-    <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
-      <p>AI didn’t find any valid data from your certificate, please enter manually or</p>
-      <button
-        type="button"
-        className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover"
-      >
-        <GrRefresh size={20} className="scale-x-flip" />
-        <p>Try again</p>
-      </button>
-    </div>
-  );
-
   const displayedAIStateStr =
     aiState === AIState.RESTING ? (
       // Info: (20241017 - Julian) AI Resting
@@ -74,9 +48,32 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
           <p>Stop scanning</p>
         </button>
       </div>
-    ) : (
-      displayedAIFinishStr
-    );
+    ) : aiState === AIState.FAILED ? (
+      <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
+        <p>AI didn’t find any valid data from your certificate, please enter manually or</p>
+        <button
+          type="button"
+          className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover"
+        >
+          <GrRefresh size={20} className="scale-x-flip" />
+          <p>Try again</p>
+        </button>
+      </div>
+    ) : analyzeSuccess && AIState.FINISH ? (
+      <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
+        <p>AI has done scanning. Click here to allow AI</p>
+        <button
+          type="button"
+          className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-sm text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover"
+          onMouseEnter={() => setIsShowAnalysisPreview(true)}
+          onMouseLeave={() => setIsShowAnalysisPreview(false)}
+          onClick={fillUpClickHandler}
+        >
+          <HiOutlineSparkles size={16} />
+          <p>Fill up your voucher</p>
+        </button>
+      </div>
+    ) : null;
 
   const displayedWarningStr =
     analyzeSuccess && aiState === AIState.FINISH ? (
