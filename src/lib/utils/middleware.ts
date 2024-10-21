@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 
 export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEMA, U>(
   apiName: T,
