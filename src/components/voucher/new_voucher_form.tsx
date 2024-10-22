@@ -42,6 +42,7 @@ enum RecurringUnit {
   WEEK = 'week',
 }
 
+// ToDo: (20241021 - Julian) 確認完後移動到 interfaces
 interface IAIResultVoucher {
   voucherDate: number;
   type: string;
@@ -52,6 +53,14 @@ interface IAIResultVoucher {
   };
 }
 
+const dummyAIResult: IAIResultVoucher = {
+  voucherDate: 0,
+  type: '',
+  note: '',
+  counterPartyId: 0,
+  lineItemsInfo: { lineItems: [] },
+};
+
 const NewVoucherForm: React.FC = () => {
   const { t } = useTranslation('common');
   const router = useRouter();
@@ -61,31 +70,30 @@ const NewVoucherForm: React.FC = () => {
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const {
-    trigger: aiAnalyze,
+    trigger: askAI,
+    success: askSuccess,
+    data: askData,
+  } = APIHandler<{
+    reason: string;
+    resultId: string;
+  }>(APIName.ASK_AI_V2);
+
+  const {
+    trigger: getAIResult,
     data: resultData,
     isLoading: isAIWorking,
     success: analyzeSuccess,
-  } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_V2);
+  } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
 
-  // ToDo: (20241017 - Julian) 施工中 🚧
   const {
     voucherDate: aiVoucherDate,
     type: aiType,
     note: aiNote,
     counterPartyId: aiCounterPartyId,
     lineItemsInfo: { lineItems: aiLineItems },
-  } = resultData ?? {
-    voucherDate: 0,
-    type: '',
-    note: '',
-    counterPartyId: 0,
-    lineItemsInfo: { lineItems: [] },
-  };
+  } = resultData ?? dummyAIResult;
 
-  const aiDate = {
-    startTimeStamp: aiVoucherDate,
-    endTimeStamp: aiVoucherDate,
-  };
+  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
   const aiTotalCredit = aiLineItems.reduce(
     (acc, item) => (item.debit === false ? acc + item.amount : acc),
@@ -152,6 +160,7 @@ const NewVoucherForm: React.FC = () => {
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
+  const [isAIStart, setIsAIStart] = useState<boolean>(false);
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
@@ -186,28 +195,47 @@ const NewVoucherForm: React.FC = () => {
     if (selectedCertificates.length > 0 && selectedIds.length > 0) {
       // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
       setAiState(AIState.WORKING);
+      setIsAIStart(true);
+      // Info: (20241021 - Julian) 呼叫 ask AI
+      askAI({
+        params: { companyId: selectedCompany?.id },
+        query: { reason: 'voucher' },
+        body: { certificateId: selectedIds[0] },
+      });
+    }
+  }, [selectedCertificates, selectedIds]);
+
+  useEffect(() => {
+    if (askSuccess && askData) {
       // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
-      aiAnalyze({
-        // ToDo: (20241017 - Julian) Replace with real parameters
+      getAIResult({
         params: {
-          companyId: '111',
-          resultId: '123',
+          companyId: selectedCompany?.id,
+          resultId: 222, // ToDo: (20241021 - Julian) Replace with askData.resultId
         },
         query: {
           reason: 'voucher',
         },
       });
+    } else if (isAIStart && !askSuccess) {
+      // Info: (20241021 - Julian) AI 分析失敗
+      setAiState(AIState.FAILED);
+    }
+  }, [askSuccess, askData]);
 
+  // Info: (20241021 - Julian) AI 分析結果
+  useEffect(() => {
+    if (isAIStart) {
       if (!isAIWorking && resultData) {
         setAiState(AIState.FINISH);
+      } else if (!isAIWorking && !resultData) {
+        setAiState(AIState.FAILED);
       }
-
-      // setTimeout(() => {
-      //   setAiState(AIState.FINISH);
-      //   setAnalyzeSuccess(selectedCertificates.length > 0);
-      // }, 2000);
+    } else if (!isAIWorking && !analyzeSuccess) {
+      // Info: (20241021 - Julian) AI 分析失敗
+      setAiState(AIState.FAILED);
     }
-  }, [selectedCertificates, selectedIds]);
+  }, [isAIWorking, resultData]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
@@ -474,7 +502,8 @@ const NewVoucherForm: React.FC = () => {
     setType(aiType);
     setNote(aiNote);
     setCounterparty(aiCounterPartyId.toString());
-    setLineItems(aiLineItems);
+    // ToDo: (20241021 - Julian) 等 API 格式確認後再處理
+    //  setLineItems(aiLineItems);
   };
 
   // ToDo: (20240926 - Julian) Save voucher function
