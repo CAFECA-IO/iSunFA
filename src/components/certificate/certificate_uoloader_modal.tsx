@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
-import UploadArea from '@/components/upload_area/upload_area';
 import { ProgressStatus } from '@/constants/account';
-import UploadFileItem, { UploadFile } from '@/components/upload_certificate/upload_file_item';
+import UploadFileItem, { IUploadFile } from '@/components/upload_certificate/upload_file_item';
 import { GoArrowLeft } from 'react-icons/go';
 import CircularProgressBar from '@/components/certificate/circular_progress_bar';
+import UploadAreaInvoice from '@/components/upload_area/upload_area_invoice';
 
 interface CertificateUploaderModalProps {
   isOpen: boolean;
@@ -19,13 +19,13 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   onClose,
   onBack,
 }) => {
-  const [files, setFiles] = useState<UploadFile[]>([
+  const [files, setFiles] = useState<IUploadFile[]>([
     { name: 'preline-ui.xls', size: 7, progress: 20, status: ProgressStatus.IN_PROGRESS },
     { name: 'preline-ui.xls', size: 7, progress: 50, status: ProgressStatus.IN_PROGRESS },
     { name: 'preline-ui.xls', size: 7, progress: 80, status: ProgressStatus.IN_PROGRESS },
   ]);
 
-  const updateFileStatus = (prevFiles: UploadFile[], index: number) =>
+  const updateFileStatus = (prevFiles: IUploadFile[], index: number) =>
     prevFiles.map((file, i) => {
       return i === index
         ? {
@@ -49,6 +49,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
 
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/0">
       <div className="relative flex max-h-450px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
@@ -72,7 +73,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         <p className="flex justify-center text-card-text-secondary">
           Upload the certificates you want to attach with the voucher
         </p>
-        <UploadArea withScanner isDisabled={false} />
+        <UploadAreaInvoice withScanner isDisabled={false} setFiles={setFiles} />
         <div className="h-60 rounded-t-lg border border-file-uploading-stroke-outline p-4">
           <div className="h-full overflow-auto">
             {files.length > 0 ? (

@@ -416,15 +416,18 @@
     "ALL": "全部",
     "INVOICE": "發票",
     "RECEIPT": "收據",
-    "ASSET":"資產",
-    "LIABILITY":"負債",
-    "EQUITY":"權益",
-    "NONE":""
+    "ASSET": "資產",
+    "LIABILITY": "負債",
+    "EQUITY": "權益",
+    "NONE": ""
   },
   "SELECTION": {
     "EXPORT": "匯出",
     "CERTIFICATES": "證書",
     "ADD_NEW_VOUCHER": "新增傳票",
     "ADD_NEW_ASSET": "新增資產"
+  },
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
   }
 }

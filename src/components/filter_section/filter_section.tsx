@@ -3,11 +3,12 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { generateRandomCertificates, ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
+import { ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
 import ViewToggle from '@/components/filter_section/view_toggle';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface FilterSectionProps {
   className?: string;
@@ -17,7 +18,16 @@ interface FilterSectionProps {
   statuses?: string[];
   sortingOptions?: string[];
   sortingByDate?: boolean;
-  onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
+  onApiResponse?: (
+    data: IPaginatedData<{
+      totalInvoicePrice: number;
+      unRead: {
+        withVoucher: number;
+        withoutVoucher: number;
+      };
+      certificates: ICertificate[];
+    }>
+  ) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: VIEW_TYPES;
   viewToggleHandler?: (viewType: VIEW_TYPES) => void;
 }
@@ -49,7 +59,16 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     sortingOptions.length > 0 ? sortingOptions[0] : undefined
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { trigger } = APIHandler<ICertificate[]>(apiName);
+  const { trigger } = APIHandler<
+    IPaginatedData<{
+      totalInvoicePrice: number;
+      unRead: {
+        withVoucher: number;
+        withoutVoucher: number;
+      };
+      certificates: ICertificate[];
+    }>
+  >(apiName);
   const [sorting, setSorting] = useState<boolean>();
 
   // Info: (20240919 - tzuhan) 發送 API 請求
@@ -74,17 +93,15 @@ const FilterSection: React.FC<FilterSectionProps> = ({
           sort: selectedSorting || sorting ? 'desc' : 'asc',
         },
       });
-      /* Deprecated: (20240920 - tzuhan) Debugging purpose only
-      // Info: (20240920 - tzuhan) 回傳 API 回應資料
-      if (success && onApiResponse) onApiResponse(data!);
+      if (success && onApiResponse && data) onApiResponse(data);
       if (!success) {
+        // ToDo: (20241021 - tzuhan) handle failed
         // Deprecated: (20240919 - tzuhan) Debugging purpose only
         // eslint-disable-next-line no-console
         console.error('API Request Failed:', code);
       }
-      */
-      if (onApiResponse) onApiResponse(generateRandomCertificates());
     } catch (error) {
+      // ToDo: (20241021 - tzuhan) handle error
       // Deprecated: (20240919 - tzuhan) Debugging purpose only
       // eslint-disable-next-line no-console
       console.error('API Request error:', error);

@@ -6,9 +6,15 @@ interface UploadAreaProps {
   isDisabled: boolean;
   withScanner: boolean;
   toggleQRCode?: () => void;
+  handleUpload: (file: File) => Promise<void>;
 }
 
-const UploadArea: React.FC<UploadAreaProps> = ({ isDisabled, withScanner, toggleQRCode }) => {
+const UploadArea: React.FC<UploadAreaProps> = ({
+  isDisabled,
+  withScanner,
+  toggleQRCode,
+  handleUpload,
+}) => {
   const { t } = useTranslation(['common', 'journal']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
@@ -32,8 +38,15 @@ const UploadArea: React.FC<UploadAreaProps> = ({ isDisabled, withScanner, toggle
       event.stopPropagation();
       return;
     }
-    const droppedFile = event.dataTransfer.files[0];
-    if (droppedFile) {
+
+    const { files } = event.dataTransfer;
+    if (files && files.length > 0) {
+      Array.from(files).map(async (droppedFile: File) => {
+        if (droppedFile) {
+          await handleUpload(droppedFile);
+        }
+        return null;
+      });
       setIsDragOver(false);
     }
   };

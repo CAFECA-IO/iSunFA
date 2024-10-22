@@ -38,8 +38,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       >
         {/* Info: (20240924 - Tzuhan) 縮略圖 */}
         <Image
-          src={data.thumbnailUrl}
-          alt={`Certificate ${data.invoiceName}`}
+          src={data.file.url}
+          alt={`Certificate ${data.invoice.name}`}
           height={136}
           width={93}
           className="mx-auto h-134px w-90px overflow-hidden object-cover"
@@ -47,8 +47,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
 
         {/* Info: (20240924 - Tzuhan) 發票號碼和日期 */}
         <div className="mt-2 text-center">
-          <div className="text-sm font-medium">{data.invoiceNumber}</div>
-          <div className="mt-1 text-xs text-gray-500">{data.date}</div>
+          <div className="text-sm font-medium">{data.invoice.no}</div>
+          <div className="mt-1 text-xs text-gray-500">{data.invoice.date}</div>
         </div>
       </div>
 

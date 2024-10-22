@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import { Button } from '@/components/button/button';
-import { PARTER_TYPES } from '@/interfaces/certificate';
+import { PARTER_TYPES } from '@/interfaces/counterparty';
 import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';
@@ -11,7 +11,7 @@ import { inputStyle } from '@/constants/display';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
-  onSave: (data: { name: string; taxId: number; parterType: PARTER_TYPES; note: string }) => void;
+  onSave: (data: { name: string; taxId: number; type: PARTER_TYPES; note: string }) => void;
   name?: string;
   taxId?: number;
 }
@@ -92,7 +92,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     if (disabled) {
       setShowHint(true);
     } else {
-      onSave({ name: inputName, taxId: inputTaxId, parterType: inputType, note: inputNote || '' });
+      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote || '' });
     }
   };
 

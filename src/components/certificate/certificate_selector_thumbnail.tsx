@@ -50,7 +50,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
       >
         <div className={`relative h-136px w-85px ${!isSelected || !isSelectable ? 'group' : ''}`}>
           <Image
-            src={certificate.thumbnailUrl}
+            src={certificate.file.url}
             alt="AI"
             width={85}
             height={136}
@@ -75,7 +75,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
             </div>
           </div>
         </div>
-        <p className="text-xs font-medium text-text-neutral-primary">{certificate.invoiceName}</p>
+        <p className="text-xs font-medium text-text-neutral-primary">{certificate.invoice.name}</p>
       </div>
     </>
   );

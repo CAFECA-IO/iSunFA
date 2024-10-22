@@ -81,7 +81,12 @@ export type IAPIName =
   | 'VOUCHER_GET_BY_ID_V2'
   | 'ASSET_GET_BY_ID_V2'
   | 'ASK_AI_V2'
-  | 'VOUCHER_LIST_V2';
+  | 'VOUCHER_LIST_V2'
+  | 'CERTIFICATE_LIST_V2'
+  | 'CERTIFICATE_GET_V2'
+  | 'CERTIFICATE_POST_V2'
+  | 'CERTIFICATE_PUT_V2'
+  | 'CERTIFICATE_DELETE_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
