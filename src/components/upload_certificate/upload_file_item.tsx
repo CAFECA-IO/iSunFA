@@ -6,7 +6,7 @@ import { FiPauseCircle, FiPlay, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'react-i18next';
 
-export interface UploadFile {
+export interface IUploadFile {
   name: string;
   size: number; // Info: (20240919 - tzuhan) 文件大小（KB）
   progress: number; // Info: (20240919 - tzuhan) 上傳進度（0-100）
@@ -14,7 +14,7 @@ export interface UploadFile {
 }
 
 interface UploadFileItemProps {
-  file: UploadFile;
+  file: IUploadFile;
   onPauseToggle: () => void;
   onDelete: () => void;
   withoutImage?: boolean;

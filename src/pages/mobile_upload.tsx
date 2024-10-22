@@ -24,6 +24,7 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 export interface ICertificateMetaWithFile extends ICertificateMeta {
   file: File;
@@ -107,6 +108,10 @@ const MobileUploadPage: React.FC = () => {
       }
 
       const { success: successPush } = await pusherAPI({
+        query: {
+          channel: PRIVATE_CHANNEL.CERTIFICATE,
+          event: CERTIFICATE_EVENT.UPLOAD,
+        },
         body: {
           token: token as string,
           certificates: certificatesPayload,
@@ -147,6 +152,9 @@ const MobileUploadPage: React.FC = () => {
         uploadingCertificate.progress = 100;
 
         const { success: successPushAgain } = await pusherAPI({
+          query: {
+            channel: PRIVATE_CHANNEL.CERTIFICATE,
+          },
           body: {
             token: token as string,
             certificates: [uploadingCertificate],

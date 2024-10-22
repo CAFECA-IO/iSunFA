@@ -14,7 +14,7 @@ import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/vouch
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
-import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
+import { ICounterParty, dummyCounterparty } from '@/interfaces/counterparty';
 import { IAssetItem } from '@/interfaces/asset';
 import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { useUserCtx } from '@/contexts/user_context';
@@ -30,12 +30,15 @@ import {
 import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import { ICertificate, ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { getPusherInstance } from '@/lib/pusherClient';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 enum RecurringUnit {
   MONTH = 'month',
@@ -47,7 +50,7 @@ interface IAIResultVoucher {
   voucherDate: number;
   type: string;
   note: string;
-  counterPartyId: number; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
+  counterPartyId: number; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterParty (至少要有 company id 和 name)
   lineItemsInfo: {
     lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
   };
@@ -141,7 +144,7 @@ const NewVoucherForm: React.FC = () => {
     t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')
   );
   const [filteredCounterparty, setFilteredCounterparty] =
-    useState<ICounterparty[]>(dummyCounterparty);
+    useState<ICounterParty[]>(dummyCounterparty);
 
   // Info: (20241011 - Julian) 資產相關 state
   const [assets, setAssets] = useState<IAssetItem[]>([]);
@@ -250,20 +253,33 @@ const NewVoucherForm: React.FC = () => {
   }, []);
 
   // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
-  const handleCertificateApiResponse = useCallback((resData: ICertificate[]) => {
-    const data = resData.reduce(
-      (acc, item) => {
-        acc[item.id] = {
-          ...item,
-          isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
-          actions: [],
+  const handleCertificateApiResponse = useCallback(
+    (
+      resData: IPaginatedData<{
+        totalInvoicePrice: number;
+        unRead: {
+          withVoucher: number;
+          withoutVoucher: number;
         };
-        return acc;
-      },
-      {} as { [id: string]: ICertificateUI }
-    );
-    setCertificates(data);
-  }, []);
+        certificates: ICertificate[];
+      }>
+    ) => {
+      const { data } = resData;
+      const certificatesData = data.certificates.reduce(
+        (acc, item) => {
+          acc[item.id] = {
+            ...item,
+            isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
+            actions: [],
+          };
+          return acc;
+        },
+        {} as { [id: string]: ICertificateUI }
+      );
+      setCertificates(certificatesData);
+    },
+    []
+  );
 
   // Info: (20241004 - Julian) Type 下拉選單
   const {
@@ -370,8 +386,8 @@ const NewVoucherForm: React.FC = () => {
     const filteredList = dummyCounterparty.filter((counter) => {
       // Info: (20241004 - Julian) 編號(數字)搜尋: 字首符合
       if (counterKeyword.match(/^\d+$/)) {
-        const codeMatch = counter.code.toLowerCase().startsWith(counterKeyword.toLowerCase());
-        return codeMatch;
+        const taxIdMatch = counter.taxId.toString().startsWith(counterKeyword.toLowerCase());
+        return taxIdMatch;
       } else if (counterKeyword !== '') {
         // Info: (20241004 - Julian) 名稱搜尋: 部分符合
         const nameMatch = counter.name.toLowerCase().includes(counterKeyword.toLowerCase());
@@ -646,7 +662,7 @@ const NewVoucherForm: React.FC = () => {
     filteredCounterparty && filteredCounterparty.length > 0 ? (
       filteredCounterparty.map((counter) => {
         const counterClickHandler = () => {
-          setCounterparty(`${counter.code} ${counter.name}`);
+          setCounterparty(`${counter.taxId} ${counter.name}`);
           setCounterMenuOpen(false);
         };
 
@@ -657,7 +673,7 @@ const NewVoucherForm: React.FC = () => {
             onClick={counterClickHandler}
             className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
           >
-            <p className="text-dropdown-text-primary">{counter.code}</p>
+            <p className="text-dropdown-text-primary">{counter.taxId}</p>
             <p className="text-dropdown-text-secondary">{counter.name}</p>
           </button>
         );
@@ -753,6 +769,32 @@ const NewVoucherForm: React.FC = () => {
             </div>
           );
         });
+
+  const certificateUpdateHandler = useCallback((message: { certificate: ICertificate }) => {
+    const newCertificates = {
+      ...certificates,
+    };
+    newCertificates[message.certificate.id] = {
+      ...message.certificate,
+      isSelected: false,
+      actions: !message.certificate.voucherNo
+        ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
+        : [OPERATIONS.DOWNLOAD],
+    };
+    setCertificates(newCertificates);
+  }, []);
+
+  useEffect(() => {
+    const pusher = getPusherInstance();
+    const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
+
+    channel.bind(CERTIFICATE_EVENT.UPDATE, certificateUpdateHandler);
+
+    return () => {
+      channel.unbind(CERTIFICATE_EVENT.UPDATE, certificateUpdateHandler);
+      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
+    };
+  }, []);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">

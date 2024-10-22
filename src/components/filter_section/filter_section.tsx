@@ -3,21 +3,40 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { generateRandomCertificates, ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
+import { ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
 import ViewToggle from '@/components/filter_section/view_toggle';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { SortOrder } from '@/constants/sort';
+import { CertificateSortBy } from '@/constants/certificate';
 
 interface FilterSectionProps {
   className?: string;
   apiName: IAPIName;
   params?: Record<string, string | number | boolean>;
+  page?: number;
+  hasBeenUsed: boolean;
+  pageSize?: number;
   types?: string[];
   statuses?: string[];
   sortingOptions?: string[];
   sortingByDate?: boolean;
-  onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
+  onApiResponse?: (
+    data: IPaginatedData<{
+      totalInvoicePrice: number;
+      unRead: {
+        withVoucher: number;
+        withoutVoucher: number;
+      };
+      certificates: ICertificate[];
+    }>
+  ) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: VIEW_TYPES;
   viewToggleHandler?: (viewType: VIEW_TYPES) => void;
 }
@@ -26,6 +45,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   className,
   apiName,
   params,
+  page = 1,
+  hasBeenUsed = false,
+  pageSize = DEFAULT_PAGE_LIMIT,
   types = [],
   statuses = [],
   sortingOptions = [],
@@ -34,6 +56,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   viewType,
   viewToggleHandler,
 }) => {
+  const { toastHandler } = useModalContext();
   const [selectedType, setSelectedType] = useState<string | undefined>(
     types.length > 0 ? types[0] : undefined
   );
@@ -49,7 +72,17 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     sortingOptions.length > 0 ? sortingOptions[0] : undefined
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { trigger } = APIHandler<ICertificate[]>(apiName);
+  // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
+  const { trigger } = APIHandler<
+    IPaginatedData<{
+      totalInvoicePrice: number;
+      unRead: {
+        withVoucher: number;
+        withoutVoucher: number;
+      };
+      certificates: ICertificate[];
+    }>
+  >(apiName);
   const [sorting, setSorting] = useState<boolean>();
 
   // Info: (20240919 - tzuhan) 發送 API 請求
@@ -57,37 +90,42 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     try {
       if (isLoading) return;
       setIsLoading(true);
-      // Deprecated: (20240920 - tzuhan) Debugging purpose only
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_LIST_V2 API 的地方，以及query參數的組合
       const { success, code, data } = await trigger({
         params,
         query: {
+          page,
+          pageSize,
+          hasBeenUsed,
           type: selectedType,
-          status: selectedStatus,
-          startTimeStamp: !selectedDateRange.startTimeStamp
+          status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
+          sortBy: CertificateSortBy.CREATE_AT,
+          sortOrder: selectedSorting || sorting ? SortOrder.DESC : SortOrder.ASC,
+          startDate: !selectedDateRange.startTimeStamp
             ? undefined
             : selectedDateRange.startTimeStamp,
-          endTimeStamp: !selectedDateRange.endTimeStamp
-            ? undefined
-            : selectedDateRange.endTimeStamp,
-          search: searchQuery,
-          sort: selectedSorting || sorting ? 'desc' : 'asc',
+          endDate: !selectedDateRange.endTimeStamp ? undefined : selectedDateRange.endTimeStamp,
+          searchQuery,
         },
       });
-      /* Deprecated: (20240920 - tzuhan) Debugging purpose only
-      // Info: (20240920 - tzuhan) 回傳 API 回應資料
-      if (success && onApiResponse) onApiResponse(data!);
+      if (success && onApiResponse && data) onApiResponse(data);
       if (!success) {
-        // Deprecated: (20240919 - tzuhan) Debugging purpose only
-        // eslint-disable-next-line no-console
-        console.error('API Request Failed:', code);
+        // ToDo: (20241021 - tzuhan) handle error
+        toastHandler({
+          id: ToastId.API_REQUEST_FAILED,
+          type: ToastType.ERROR,
+          content: `API Request Failed: ${code}`,
+          closeable: true,
+        });
       }
-      */
-      if (onApiResponse) onApiResponse(generateRandomCertificates());
     } catch (error) {
-      // Deprecated: (20240919 - tzuhan) Debugging purpose only
-      // eslint-disable-next-line no-console
-      console.error('API Request error:', error);
+      // ToDo: (20241021 - tzuhan) handle error
+      toastHandler({
+        id: ToastId.API_REQUEST_FAILED,
+        type: ToastType.ERROR,
+        content: `API Request error: ${(error as Error).message}`,
+        closeable: true,
+      });
     } finally {
       setIsLoading(false);
     }

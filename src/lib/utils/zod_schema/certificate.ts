@@ -14,6 +14,7 @@ const certificateListQueryValidator = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   hasBeenUsed: z.boolean().optional(),
+  // type: z.string(), // Info: (20241022 - tzuhan) @Murky, 需要新增 type: z.enum(['All', 'Invoice', 'Receipt']),
   sortBy: z.nativeEnum(CertificateSortBy).optional(),
   sortOrder: z.nativeEnum(SortOrder).optional(),
   startDate: zodTimestampInSeconds(true, 0),

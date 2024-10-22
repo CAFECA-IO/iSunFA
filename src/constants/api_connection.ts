@@ -659,4 +659,29 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_ACCOUNTING_SETTING,
   }),
+  [APIName.CERTIFICATE_LIST_V2]: createConfig({
+    name: APIName.CERTIFICATE_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.CERTIFICATE_GET_V2]: createConfig({
+    name: APIName.CERTIFICATE_GET_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_GET_V2,
+  }),
+  [APIName.CERTIFICATE_POST_V2]: createConfig({
+    name: APIName.CERTIFICATE_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.CERTIFICATE_POST_V2,
+  }),
+  [APIName.CERTIFICATE_PUT_V2]: createConfig({
+    name: APIName.CERTIFICATE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.CERTIFICATE_DELETE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
 };
