@@ -82,7 +82,10 @@ export type IAPIName =
   | 'ASSET_GET_BY_ID_V2'
   | 'VOUCHER_LIST_V2'
   | 'ASK_AI_V2'
-  | 'ASK_AI_RESULT_V2';
+  | 'ASK_AI_RESULT_V2'
+  | 'VOUCHER_LIST_V2'
+  | 'GET_ACCOUNTING_SETTING'
+  | 'UPDATE_ACCOUNTING_SETTING';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

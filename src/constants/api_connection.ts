@@ -116,6 +116,8 @@ export enum APIName {
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
+  GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
+  UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
 }
 
 export enum APIPath {
@@ -210,6 +212,8 @@ export enum APIPath {
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
+  GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
 }
 const createConfig = ({
   name,
@@ -644,5 +648,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ASK_AI_RESULT_V2,
     method: HttpMethod.GET,
     path: APIPath.ASK_AI_RESULT_V2,
+  }),
+  [APIName.GET_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.GET_ACCOUNTING_SETTING,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNTING_SETTING,
+  }),
+  [APIName.UPDATE_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.UPDATE_ACCOUNTING_SETTING,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNTING_SETTING,
   }),
 };

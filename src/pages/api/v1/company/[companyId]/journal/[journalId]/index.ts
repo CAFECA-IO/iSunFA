@@ -7,7 +7,7 @@ import { formatIJournal } from '@/lib/utils/formatter/journal.formatter';
 import { getSession } from '@/lib/utils/session';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import {
   deleteInvoiceVoucherJournal,

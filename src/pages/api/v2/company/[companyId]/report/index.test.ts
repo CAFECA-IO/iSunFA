@@ -12,7 +12,7 @@ import prisma from '@/client';
 import { Account, Company, LineItem, Prisma, PrismaPromise, Voucher } from '@prisma/client';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import { timestampInSeconds } from '@/lib/utils/common';
-import { BalanceSheetReport, FinancialReport } from '@/interfaces/report';
+import { BalanceSheetReport, FinancialReport, IncomeStatementReport } from '@/interfaces/report';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -991,6 +991,7 @@ describe('company/[companyId]/report', () => {
         const netAccountsReceivable = details.find((detail) => detail.code === '130X');
         expect(netAccountsReceivable).toBeDefined();
         expect(netAccountsReceivable?.curPeriodAmount).toBe(-54000);
+        expect(netAccountsReceivable?.curPeriodPercentage).toBeCloseTo((-54000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total assets
 
         /**
          * Info: (20241017 - Murky)
@@ -999,6 +1000,7 @@ describe('company/[companyId]/report', () => {
         const prepayments = details.find((detail) => detail.code === '1410');
         expect(prepayments).toBeDefined();
         expect(prepayments?.curPeriodAmount).toBe(60000);
+        expect(prepayments?.curPeriodPercentage).toBeCloseTo((60000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total assets
 
         /**
          * Info: (20241017 - Murky)
@@ -1007,6 +1009,7 @@ describe('company/[companyId]/report', () => {
         const totalCurrentAssets = general.find((detail) => detail.code === '11XX');
         expect(totalCurrentAssets).toBeDefined();
         expect(totalCurrentAssets?.curPeriodAmount).toBe(273000);
+        expect(totalCurrentAssets?.curPeriodPercentage).toBeCloseTo((273000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total assets
 
         /**
          * Info: (20241017 - Murky)
@@ -1015,6 +1018,7 @@ describe('company/[companyId]/report', () => {
         const totalNonCurrentAssets = general.find((detail) => detail.code === '15XX');
         expect(totalNonCurrentAssets).toBeDefined();
         expect(totalNonCurrentAssets?.curPeriodAmount).toBe(100000);
+        expect(totalNonCurrentAssets?.curPeriodPercentage).toBeCloseTo((100000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total assets
 
         /**
          * Info: (20241017 - Murky)
@@ -1023,6 +1027,7 @@ describe('company/[companyId]/report', () => {
         const totalAssets = general.find((detail) => detail.code === '1XXX');
         expect(totalAssets).toBeDefined();
         expect(totalAssets?.curPeriodAmount).toBe(373000);
+        expect(totalAssets?.curPeriodPercentage).toBe(100);
 
         /**
          * Info: (20241017 - Murky)
@@ -1031,6 +1036,7 @@ describe('company/[companyId]/report', () => {
         const currentBorrowings = details.find((detail) => detail.code === '2100');
         expect(currentBorrowings).toBeDefined();
         expect(currentBorrowings?.curPeriodAmount).toBe(50000);
+        expect(currentBorrowings?.curPeriodPercentage).toBeCloseTo((50000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1039,6 +1045,10 @@ describe('company/[companyId]/report', () => {
         const currentContractLiabilities = details.find((detail) => detail.code === '2130');
         expect(currentContractLiabilities).toBeDefined();
         expect(currentContractLiabilities?.curPeriodAmount).toBe(30000);
+        expect(currentContractLiabilities?.curPeriodPercentage).toBeCloseTo(
+          (30000 / 373000) * 100,
+          0
+        ); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1047,6 +1057,7 @@ describe('company/[companyId]/report', () => {
         const accountsPayable = details.find((detail) => detail.code === '2170');
         expect(accountsPayable).toBeDefined();
         expect(accountsPayable?.curPeriodAmount).toBe(12000);
+        expect(accountsPayable?.curPeriodPercentage).toBeCloseTo((12000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1055,6 +1066,7 @@ describe('company/[companyId]/report', () => {
         const totalCurrentLiabilities = general.find((detail) => detail.code === '21XX');
         expect(totalCurrentLiabilities).toBeDefined();
         expect(totalCurrentLiabilities?.curPeriodAmount).toBe(92000);
+        expect(totalCurrentLiabilities?.curPeriodPercentage).toBeCloseTo((92000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1063,6 +1075,7 @@ describe('company/[companyId]/report', () => {
         const totalLiabilities = general.find((detail) => detail.code === '2XXX');
         expect(totalLiabilities).toBeDefined();
         expect(totalLiabilities?.curPeriodAmount).toBe(92000);
+        expect(totalLiabilities?.curPeriodPercentage).toBeCloseTo((92000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1089,6 +1102,7 @@ describe('company/[companyId]/report', () => {
         const totalCapitalStock = general.find((detail) => detail.code === '3100');
         expect(totalCapitalStock).toBeDefined();
         expect(totalCapitalStock?.curPeriodAmount).toBe(200000);
+        expect(totalCapitalStock?.curPeriodPercentage).toBeCloseTo((200000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1098,6 +1112,10 @@ describe('company/[companyId]/report', () => {
         const unappropriatedRetainedEarnings = details.find((detail) => detail.code === '3350');
         expect(unappropriatedRetainedEarnings).toBeDefined();
         expect(unappropriatedRetainedEarnings?.curPeriodAmount).toBe(81000);
+        expect(unappropriatedRetainedEarnings?.curPeriodPercentage).toBeCloseTo(
+          (81000 / 373000) * 100,
+          0
+        ); // Info: (20241021 - Murky) divide by total asset
 
         /**
          * Info: (20241017 - Murky)
@@ -1106,6 +1124,7 @@ describe('company/[companyId]/report', () => {
         const totalEquity = general.find((detail) => detail.code === '3XXX');
         expect(totalEquity).toBeDefined();
         expect(totalEquity?.curPeriodAmount).toBe(281000);
+        expect(totalEquity?.curPeriodPercentage).toBeCloseTo((281000 / 373000) * 100, 0); // Info: (20241021 - Murky) divide by total asset
 
         // Info: (20241018 - Murky) Other Info
         expect(otherInfo).toBeDefined();
@@ -1130,7 +1149,7 @@ describe('company/[companyId]/report', () => {
         // Info: (20241017 - Murky) Payload 存在
         expect(payload).toBeDefined();
 
-        const { general, details } = payload as FinancialReport;
+        const { general, details, otherInfo } = payload as IncomeStatementReport;
 
         // Info: (20241017 - Murky) General 與 details account 都有值
         expect(general.length).toBeGreaterThan(0);
@@ -1262,6 +1281,13 @@ describe('company/[companyId]/report', () => {
         expect(profitLoss).toBeDefined();
         expect(profitLoss?.curPeriodAmount).toBe(77000);
         expect(profitLoss?.curPeriodPercentage).toBeCloseTo((77000 / 204000) * 100, 0);
+
+        // Info: (20241018 - Murky) Other Info
+        expect(otherInfo).toBeDefined();
+        const { revenueAndExpenseRatio } = otherInfo;
+        const { curRatio } = revenueAndExpenseRatio.ratio;
+        expect(curRatio).toBeDefined();
+        expect(curRatio).toBeCloseTo(1.57, 1);
       });
     });
 
