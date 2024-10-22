@@ -342,7 +342,7 @@ const NewVoucherForm: React.FC = () => {
     const filteredList = dummyCounterparty.filter((counter) => {
       // Info: (20241004 - Julian) 編號(數字)搜尋: 字首符合
       if (counterKeyword.match(/^\d+$/)) {
-        const codeMatch = counter.code.toLowerCase().startsWith(counterKeyword.toLowerCase());
+        const codeMatch = counter.taxId.toLowerCase().startsWith(counterKeyword.toLowerCase());
         return codeMatch;
       } else if (counterKeyword !== '') {
         // Info: (20241004 - Julian) 名稱搜尋: 部分符合
@@ -617,7 +617,7 @@ const NewVoucherForm: React.FC = () => {
     filteredCounterparty && filteredCounterparty.length > 0 ? (
       filteredCounterparty.map((counter) => {
         const counterClickHandler = () => {
-          setCounterparty(`${counter.code} ${counter.name}`);
+          setCounterparty(`${counter.taxId} ${counter.name}`);
           setCounterMenuOpen(false);
         };
 
@@ -628,7 +628,7 @@ const NewVoucherForm: React.FC = () => {
             onClick={counterClickHandler}
             className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
           >
-            <p className="text-dropdown-text-primary">{counter.code}</p>
+            <p className="text-dropdown-text-primary">{counter.taxId}</p>
             <p className="text-dropdown-text-secondary">{counter.name}</p>
           </button>
         );
