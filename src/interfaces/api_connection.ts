@@ -85,7 +85,8 @@ export type IAPIName =
   | 'ASK_AI_RESULT_V2'
   | 'VOUCHER_LIST_V2'
   | 'GET_ACCOUNTING_SETTING'
-  | 'UPDATE_ACCOUNTING_SETTING';
+  | 'UPDATE_ACCOUNTING_SETTING'
+  | 'TRIAL_BALANCE_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

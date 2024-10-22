@@ -58,6 +58,7 @@ import {
   accountingSettingGetValidator,
   accountingSettingPutValidator,
 } from '@/lib/utils/zod_schema/accounting_setting';
+import { trialBalanceListValidator } from '@/lib/utils/zod_schema/trial_balance';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -118,4 +119,5 @@ export const API_ZOD_SCHEMA = {
   [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
   [APIName.GET_ACCOUNTING_SETTING]: accountingSettingGetValidator,
   [APIName.UPDATE_ACCOUNTING_SETTING]: accountingSettingPutValidator,
+  [APIName.TRIAL_BALANCE_LIST]: trialBalanceListValidator,
 };
