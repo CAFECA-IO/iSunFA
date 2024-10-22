@@ -7,6 +7,8 @@ import { IoArrowForward } from 'react-icons/io5';
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
 import { FiSearch } from 'react-icons/fi';
+import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
+// import FilterSection from '@/components/filter_section/filter_section'; // ToDo: (20241022 - Liz) 使用共用元件代替 Search
 
 enum CompanyTypeTag {
   Financial = 'Financial',
@@ -211,9 +213,14 @@ const MyCompanyListPageBody = () => {
 
   const isDataEmpty = companyList.length === 0;
 
+  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCompanies, setFilteredCompanies] = useState(companyList);
+
+  const toggleCreateCompanyModal = () => {
+    setIsCreateCompanyModalOpen((prev) => !prev);
+  };
 
   const itemsPerPage = 5;
   const totalItems = filteredCompanies.length;
@@ -272,6 +279,7 @@ const MyCompanyListPageBody = () => {
         <div className="flex items-center gap-16px">
           <button
             type="button"
+            onClick={toggleCreateCompanyModal}
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <TbSquarePlus2 size={20} />
@@ -301,6 +309,9 @@ const MyCompanyListPageBody = () => {
           />
         </>
       )}
+
+      {/* Modal */}
+      {isCreateCompanyModalOpen && <CreateCompanyModal toggleModal={toggleCreateCompanyModal} />}
     </main>
   );
 };
