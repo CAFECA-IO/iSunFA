@@ -97,7 +97,7 @@ describe('Counterparty Repository', () => {
         Counterparties[1].taxId,
         Counterparties[1].type,
         Counterparties[1].note
-      ); // Rollback the changes
+      ); // Info: (20241022 - Jacky) Rollback the changes
       expect(updatedCounterparty).toBeDefined();
       expect(updatedCounterparty.name).toBe(newName);
       expect(updatedCounterparty.taxId).toBe(newTaxId);
