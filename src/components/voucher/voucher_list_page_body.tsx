@@ -51,13 +51,14 @@ const VoucherListPageBody: React.FC = () => {
 
   const tabClick = (index: number) => setActiveTab(index);
 
-  const displayVoucherList = voucherList ? (
-    <VoucherList voucherList={voucherList} />
-  ) : (
-    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-      <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
-    </div>
-  );
+  const displayVoucherList =
+    voucherList && voucherList.length > 0 ? (
+      <VoucherList voucherList={voucherList} />
+    ) : (
+      <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+        <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
+      </div>
+    );
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
