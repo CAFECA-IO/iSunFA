@@ -102,7 +102,7 @@ const ConfirmModal = ({
     data: AIResult,
     success: AIResultSuccess,
     code: AIResultCode,
-  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.AI_ASK_RESULT);
+  } = APIHandler<{ lineItems: ILineItem[] }>(APIName.ASK_AI_RESULT);
   // Info: (20240527 - Julian) Get journal by id (上半部資料)
   const { trigger: getJournalById } = APIHandler<IJournal>(APIName.JOURNAL_GET_BY_ID);
   // Info: (20240527 - Julian) 建立傳票

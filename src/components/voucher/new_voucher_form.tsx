@@ -76,14 +76,14 @@ const NewVoucherForm: React.FC = () => {
   } = APIHandler<{
     reason: string;
     resultId: string;
-  }>(APIName.AI_ASK_V2);
+  }>(APIName.ASK_AI_V2);
 
   const {
     trigger: getAIResult,
     data: resultData,
     isLoading: isAIWorking,
     success: analyzeSuccess,
-  } = APIHandler<IAIResultVoucher>(APIName.AI_ASK_RESULT_V2);
+  } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
 
   const {
     voucherDate: aiVoucherDate,

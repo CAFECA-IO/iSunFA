@@ -60,10 +60,10 @@ export enum APIName {
   INVOICE_CREATE = 'INVOICE_CREATE',
   INVOICE_UPDATE = 'INVOICE_UPDATE',
   INVOICE_GET_BY_ID = 'INVOICE_GET_BY_ID',
-  AI_ASK_STATUS = 'AI_ASK_STATUS',
-  AI_ASK_RESULT = 'AI_ASK_RESULT',
-  AI_ASK_V2 = 'AI_ASK_V2',
-  AI_ASK_RESULT_V2 = 'AI_ASK_RESULT_V2',
+  ASK_AI_STATUS = 'ASK_AI_STATUS',
+  ASK_AI_RESULT = 'ASK_AI_RESULT',
+  ASK_AI_V2 = 'ASK_AI_V2',
+  ASK_AI_RESULT_V2 = 'ASK_AI_RESULT_V2',
   VOUCHER_CREATE = 'VOUCHER_CREATE',
   VOUCHER_UPDATE = 'VOUCHER_UPDATE',
   VOUCHER_LIST_V2 = 'VOUCHER_LIST_V2',
@@ -154,10 +154,10 @@ export enum APIPath {
   INVOICE_CREATE = `${apiPrefix}/company/:companyId/invoice`,
   INVOICE_UPDATE = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
   INVOICE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
-  AI_ASK_STATUS = `${apiPrefix}/company/:companyId/ask_ai/:resultId/status`,
-  AI_ASK_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
-  AI_ASK_V2 = `${apiPrefixV2}/company/:companyId/ask_ai`,
-  AI_ASK_RESULT_V2 = `${apiPrefixV2}/company/:companyId/ask_ai/:resultId`,
+  ASK_AI_STATUS = `${apiPrefix}/company/:companyId/ask_ai/:resultId/status`,
+  ASK_AI_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
+  ASK_AI_V2 = `${apiPrefixV2}/company/:companyId/ask_ai`,
+  ASK_AI_RESULT_V2 = `${apiPrefixV2}/company/:companyId/ask_ai/:resultId`,
   VOUCHER_CREATE = `${apiPrefix}/company/:companyId/voucher`,
   VOUCHER_UPDATE = `${apiPrefix}/company/:companyId/voucher/:voucherId`,
   VOUCHER_LIST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
@@ -310,15 +310,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.INVOICE_GET_BY_ID,
   }),
-  [APIName.AI_ASK_STATUS]: createConfig({
-    name: APIName.AI_ASK_STATUS,
+  [APIName.ASK_AI_STATUS]: createConfig({
+    name: APIName.ASK_AI_STATUS,
     method: HttpMethod.GET,
-    path: APIPath.AI_ASK_STATUS,
+    path: APIPath.ASK_AI_STATUS,
   }),
-  [APIName.AI_ASK_RESULT]: createConfig({
-    name: APIName.AI_ASK_RESULT,
+  [APIName.ASK_AI_RESULT]: createConfig({
+    name: APIName.ASK_AI_RESULT,
     method: HttpMethod.GET,
-    path: APIPath.AI_ASK_RESULT,
+    path: APIPath.ASK_AI_RESULT,
   }),
   [APIName.VOUCHER_CREATE]: createConfig({
     name: APIName.VOUCHER_CREATE,
@@ -635,14 +635,14 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.VOUCHER_LIST_V2,
   }),
-  [APIName.AI_ASK_V2]: createConfig({
-    name: APIName.AI_ASK_V2,
+  [APIName.ASK_AI_V2]: createConfig({
+    name: APIName.ASK_AI_V2,
     method: HttpMethod.POST,
-    path: APIPath.AI_ASK_V2,
+    path: APIPath.ASK_AI_V2,
   }),
-  [APIName.AI_ASK_RESULT_V2]: createConfig({
-    name: APIName.AI_ASK_RESULT_V2,
+  [APIName.ASK_AI_RESULT_V2]: createConfig({
+    name: APIName.ASK_AI_RESULT_V2,
     method: HttpMethod.GET,
-    path: APIPath.AI_ASK_RESULT_V2,
+    path: APIPath.ASK_AI_RESULT_V2,
   }),
 };

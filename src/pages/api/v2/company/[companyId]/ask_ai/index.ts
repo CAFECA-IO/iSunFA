@@ -119,7 +119,7 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
   const { userId } = await getSession(req, res);
 
   // Info: (20241004 - Murky) Validate the request and extract query and body
-  const { query, body } = validateRequest(APIName.AI_ASK_V2, req, userId);
+  const { query, body } = validateRequest(APIName.ASK_AI_V2, req, userId);
 
   // Info: (20241004 - Murky) If query and body are valid, call the appropriate postHandler
   if (query && body) {

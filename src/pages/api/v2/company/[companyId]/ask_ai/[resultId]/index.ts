@@ -117,7 +117,7 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   const { userId } = await getSession(req, res);
 
   // Info: (20241004 - Murky) Validate the request and extract query parameters
-  const { query } = validateRequest(APIName.AI_ASK_RESULT_V2, req, userId);
+  const { query } = validateRequest(APIName.ASK_AI_RESULT_V2, req, userId);
 
   // Info: (20241004 - Murky) If query is valid, call the appropriate handler
   if (query && query.reason) {
