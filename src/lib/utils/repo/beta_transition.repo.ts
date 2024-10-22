@@ -663,19 +663,22 @@ export async function handlePrismaSavingLogic(
         contractId,
         companyId
       );
+
       const createdInvoice = await createInvoice(
         formattedInvoice,
-        journalIdBeCreated,
+        companyId,
         ocrIdInDB?.imageFileId
       );
 
       const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
+
       const createdVoucher = await createVoucher(
         newVoucherNo,
         companyId,
         formattedInvoice.date,
         eventType
       );
+
       if (createdInvoice.certificateId !== 555) {
         await prisma.voucherCertificate.create({
           data: {
@@ -703,6 +706,7 @@ export async function handlePrismaSavingLogic(
         vendorOrSupplier,
         createdVoucher.id
       );
+
       // Info: (20240524 - Murky) 更新ocr的狀態, 等到其他db操作都沒有錯誤後才更新
       if (ocrIdInDB?.id) {
         await updateOcrStatusInPrisma(ocrIdInDB.id, ProgressStatus.HAS_BEEN_USED);
