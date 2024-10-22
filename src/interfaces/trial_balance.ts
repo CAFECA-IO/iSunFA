@@ -26,6 +26,11 @@ export interface ITrialBalanceTotal {
   updateAt: number;
 }
 
+export interface ITrialBalanceData {
+  items: TrialBalanceItem[];
+  total: ITrialBalanceTotal;
+}
+
 export interface ITrialBalancePayload {
   currencyAlias: string;
   items: IPaginatedData<TrialBalanceItem[]>;
