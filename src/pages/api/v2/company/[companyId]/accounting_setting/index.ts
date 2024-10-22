@@ -3,70 +3,70 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
+import {
+  createAccountingSetting,
+  getAccountingSettingByCompanyId,
+  updateAccountingSettingById,
+} from '@/lib/utils/repo/accounting_setting.repo';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { formatAccountingSetting } from '@/lib/utils/formatter/accounting_setting.formatter';
 
-// ToDo: (20240924 - Jacky) Implement the logic to get the accounting settings data from the database
-async function handleGetRequest() {
+const handleGetRequest: IHandleRequest<
+  APIName.GET_ACCOUNTING_SETTING,
+  IAccountingSetting
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountingSetting | null = null;
 
-  // ToDo: (20240924 - Jacky) Get session data from the request
-  // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
-  // ToDo: (20240924 - Jacky) Implement the logic to get the accounting settings data from the database
-  // ToDo: (20240924 - Jacky) Format the accounting settings data to the IAccountingSetting interface
+  const { companyId } = query;
 
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  payload = {
-    id: 1,
-    companyId: 1,
-    taxSettings: {
-      salesTax: { taxable: true, rate: 0.07 },
-      purchaseTax: { taxable: true, rate: 0.05 },
-      returnPeriodicity: 'Monthly',
-    },
-    currency: 'USD',
-    shortcutList: [
-      {
-        action: {
-          name: 'Save',
-          description: 'Save the current document',
-          fieldList: [{ name: 'Ctrl', value: 'S' }],
-        },
-        keyList: ['Ctrl', 'S'],
-      },
-    ],
-  };
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+  if (accountingSetting) {
+    payload = formatAccountingSetting(accountingSetting);
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  } else {
+    const createdAccountingSetting = await createAccountingSetting(companyId);
+    if (createdAccountingSetting) {
+      payload = formatAccountingSetting(createdAccountingSetting);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    } else {
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    }
+  }
 
   return { statusMessage, payload };
-}
+};
 
-// ToDo: (20240924 - Jacky) Implement the logic to update an existing accounting setting in the database
-async function handlePutRequest(req: NextApiRequest) {
+const handlePutRequest: IHandleRequest<
+  APIName.UPDATE_ACCOUNTING_SETTING,
+  IAccountingSetting
+> = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountingSetting | null = null;
 
-  // ToDo: (20240924 - Jacky) Get session data from the request
-  // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
-  // ToDo: (20240924 - Jacky) Validate the request body
-  // ToDo: (20240924 - Jacky) Implement the logic to update an existing accounting setting in the database
-  // ToDo: (20240924 - Jacky) Format the accounting settings data to the IAccountingSetting interface
+  const { companyId } = query;
+  const accountingSetting = body;
 
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  const { companyId, taxSettings, currency, shortcutList } = req.body;
+  try {
+    const updatedAccountingSetting = await updateAccountingSettingById(
+      companyId,
+      accountingSetting
+    );
 
-  const updatedAccountingSetting: IAccountingSetting = {
-    id: 123,
-    companyId,
-    taxSettings,
-    currency,
-    shortcutList,
-  };
-
-  payload = updatedAccountingSetting;
-  statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    if (updatedAccountingSetting) {
+      payload = formatAccountingSetting(updatedAccountingSetting);
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    } else {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    }
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  }
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
@@ -74,8 +74,10 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IAccountingSetting | null }>;
 } = {
-  GET: handleGetRequest,
-  PUT: handlePutRequest,
+  GET: (req, res) =>
+    withRequestValidation(APIName.GET_ACCOUNTING_SETTING, req, res, handleGetRequest),
+  PUT: (req, res) =>
+    withRequestValidation(APIName.UPDATE_ACCOUNTING_SETTING, req, res, handlePutRequest),
 };
 
 export default async function handler(

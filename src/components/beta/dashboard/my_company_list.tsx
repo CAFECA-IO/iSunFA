@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import DashboardCardLayout, { MoreLink } from '@/components/beta/dashboard/dashboard_card_layout';
+import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
+import MoreLink from '@/components/beta/dashboard/more_link';
 import { ICompany } from '@/interfaces/company';
 
 // ToDo: (20241016 - Liz) 從 user context 中打 API 取得公司列表、判斷是否為空

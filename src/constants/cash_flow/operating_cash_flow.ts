@@ -1,6 +1,5 @@
-import { IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
+import { IDirectCashFlowMapping, IOperatingCashFlowMapping } from '@/interfaces/cash_flow';
 import {
-  absoluteNetIncome,
   adjustAssetIncreaseFromNetIncome,
   adjustLiabilityIncreaseFromNetIncome,
   adjustNonCashExpenseFromNetIncome,
@@ -10,8 +9,104 @@ import {
   removeInterestOrDividendRevenueFromNetIncome,
   removeInvestAndFinancialExpenseFromNetIncome,
 } from '@/lib/utils/account/common';
+import { CASH_AND_CASH_EQUIVALENTS_REGEX } from '@/constants/cash_flow/common_cash_flow';
 
-// Info: (20240708 - Murky) Indirect Cash flow from operating activities
+/**
+ * Info: (20241017 - Murky)
+ * @description 特殊需要使用voucher抓取數字的放在這邊
+ */
+export const OPERATING_CASHFLOW_SPECIAL_ACCOUNTS: Map<string, IDirectCashFlowMapping> = new Map([
+  // Info: (20241017 - Murky) 下面三個放在籌資活動
+  // [
+  //   'A33100',
+  //   {
+  //     name: '收取之利息',
+  //     cashInflow: true,
+  //     voucherPattern: {
+  //       debit: {
+  //         type: 'CODE',
+  //         codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
+  //       },
+  //       credit: {
+  //         type: 'CODE',
+  //         codes: new Set([/^710/, /^1174/, /^1183/]), // Info: (20241017 - Murky) 710x代表利息收入系列科目
+  //       },
+  //     },
+  //   },
+  // ],
+  // [
+  //   'A33200',
+  //   {
+  //     name: '收取之股利',
+  //     cashInflow: true,
+  //     voucherPattern: {
+  //       debit: {
+  //         type: 'CODE',
+  //         codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
+  //       },
+  //       credit: {
+  //         type: 'CODE',
+  //         codes: new Set([/^7130/]),
+  //       },
+  //     },
+  //   },
+  // ],
+  // [
+  //   'A33300',
+  //   {
+  //     name: '支付之利息',
+  //     cashInflow: false,
+  //     voucherPattern: {
+  //       debit: {
+  //         type: 'CODE',
+  //         codes: new Set([/^2203/, /^7510/]),
+  //       },
+  //       credit: {
+  //         type: 'CODE',
+  //         codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
+  //       },
+  //     },
+  //   },
+  // ],
+  [
+    'A33400',
+    {
+      name: '支付之股利',
+      cashInflow: false,
+      voucherPattern: {
+        debit: {
+          type: 'CODE',
+          codes: new Set([/^3150/, /^2216/]),
+        },
+        credit: {
+          type: 'CODE',
+          codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
+        },
+      },
+    },
+  ],
+  [
+    'A33500',
+    /**
+     * Info: (20241017 - Murky)
+     * @important 這邊暫時只抓取支付的所得稅
+     */
+    {
+      name: '退還（支付）之所得稅',
+      cashInflow: false,
+      voucherPattern: {
+        debit: {
+          type: 'CODE',
+          codes: new Set([/^7950/, /^2560/, /^2230/]), // Info: (20241017 - Murky) 所得稅費用或是本期所得稅負債(流動與非流動)
+        },
+        credit: {
+          type: 'CODE',
+          codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
+        },
+      },
+    },
+  ],
+]);
 
 export const OPERATING_REVENUE_AND_EXPENSE_MAPPING: Map<string, IOperatingCashFlowMapping> =
   new Map([
@@ -747,24 +842,24 @@ export const OPERATING_CASH_FLOW_INDIRECT_MAPPING: Map<string, IOperatingCashFlo
     //     operatingFunction: noAdjustNetIncome
     // }],
     // Info: (20240708 - Murky) 這個項目放在籌資活動
-    [
-      'A33400',
-      {
-        fromCode: [],
-        name: '支付之股利',
-        debit: true,
-        operatingFunction: absoluteNetIncome,
-      },
-    ],
+    // [
+    //   'A33400',
+    //   {
+    //     fromCode: [],
+    //     name: '支付之股利',
+    //     debit: true,
+    //     operatingFunction: absoluteNetIncome,
+    //   },
+    // ],
     // Info: (20240708 - Murky) 這個項目需要特別直接算出來
-    [
-      'A33500',
-      {
-        fromCode: [],
-        name: '退還（支付）之所得稅',
-        debit: true,
-        operatingFunction: absoluteNetIncome,
-      },
-    ],
+    // [
+    //   'A33500',
+    //   {
+    //     fromCode: [],
+    //     name: '退還（支付）之所得稅',
+    //     debit: true,
+    //     operatingFunction: absoluteNetIncome,
+    //   },
+    // ],
   ]
 );

@@ -9,7 +9,7 @@ import { AICH_URI } from '@/constants/config';
 import { IAccountResultStatus } from '@/interfaces/accounting_account';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import {
   getInvoiceVoucherJournalByInvoiceId,

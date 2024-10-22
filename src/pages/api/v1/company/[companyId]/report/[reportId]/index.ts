@@ -18,9 +18,7 @@ import {
   CashFlowStatementOtherInfo,
 } from '@/interfaces/report';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
-import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/balance_sheet_lite_mapping.json';
-import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/cash_flow_statement_lite_mapping.json';
-import incomeStatementLiteMapping from '@/constants/account_sheet_mapping/income_statement_lite_mapping.json';
+import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/v1/balance_sheet_lite_mapping.json';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { Company } from '@prisma/client';
@@ -29,6 +27,8 @@ import {
   isCashFlowStatementOtherInfo,
   isIncomeStatementOtherInfo,
 } from '@/lib/utils/type_guard/report';
+import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/v1/cash_flow_statement_lite_mapping.json';
+import incomeStatementLiteMapping from '@/constants/account_sheet_mapping/v1/income_statement_lite_mapping.json';
 
 function formatGetRequestQueryParams(req: NextApiRequest) {
   const { reportId } = req.query;

@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { checkAuthorization } from '@/lib/utils/auth_check';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 
 export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEMA, U>(
   apiName: T,
@@ -17,7 +17,7 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: U | null = null;
   const session = await getSession(req, res);
-  const { userId, companyId } = session;
+  const { userId } = session;
   try {
     if (!userId) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
@@ -27,8 +27,8 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
         'User ID is missing in session'
       );
     } else {
-      // ToDo: (20241015 - Jacky) Add role check by roleId for the user
-      const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+      // ToDo: (20241015 - Jacky) Add role and company check by roleId for the user
+      const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
       if (!isAuth) {
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
         loggerError(
@@ -38,11 +38,20 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
         );
       } else {
         const { query, body } = validateRequest(apiName, req, userId);
-        ({ statusMessage, payload } = await handler({
-          query: query || {},
-          body,
-          session,
-        }));
+        if (query !== null && body !== null) {
+          ({ statusMessage, payload } = await handler({
+            query,
+            body,
+            session,
+          }));
+        } else {
+          statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+          loggerError(
+            userId,
+            `Validation Error for ${apiName} in middleware.ts`,
+            'Query or Body is missing'
+          );
+        }
       }
     }
   } catch (error) {

@@ -65,7 +65,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, labels }) => {
           },
           ticks: {
             color: '#304872',
-            callback: (value, index) => labels[index].split('\n'),
+            callback: (value, index) => labels[index].split(' '),
             maxRotation: 0,
             minRotation: 0,
             autoSkip: false,

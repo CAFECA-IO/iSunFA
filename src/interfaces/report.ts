@@ -164,8 +164,8 @@ export interface FinancialReport {
     to: number;
   };
   reportType: ReportSheetType;
-  general: FinancialReportItem[];
-  details: FinancialReportItem[];
+  general: IAccountReadyForFrontend[];
+  details: IAccountReadyForFrontend[];
   otherInfo: unknown;
 }
 

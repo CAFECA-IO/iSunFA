@@ -391,7 +391,7 @@ const VoucherDetailPage: React.FC = () => {
         {/* Info: (20240919 - tzuhan) Main Content Area */}
         <div className="flex flex-1 flex-col bg-surface-neutral-main-background">
           {/* Info: (20240919 - tzuhan) Header */}
-          <Header />
+          <Header title={pageTitle} />
 
           {/* Info: (20240919 - tzuhan) Main Content */}
           <div className="overflow-y-auto px-40px pb-32px pt-10px">

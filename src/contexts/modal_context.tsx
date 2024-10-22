@@ -57,19 +57,19 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
     } = props;
 
     const bodyStyle =
-      'before:absolute before:h-100vh before:w-5px before:top-0 before:left-0 md:w-400px w-100vw md:scale-100 scale-75 text-sm font-barlow pointer-events-auto';
+      'before:absolute before:h-100vh before:w-10px before:top-0 before:left-0 flex items-center gap-12px px-14px md:w-max w-100vw md:scale-100 scale-75 text-sm font-barlow pointer-events-auto';
 
     const toastId = id;
     const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
 
     // Info:(20240513 - Julian) 如果 closeable 為 false，則 autoClose、closeOnClick、draggable 都會被設為 false
-    const autoClose = closeable ? isAutoClose ?? 5000 : false; // Info:(20240513 - Julian) default autoClose 5000ms
+    const autoClose = closeable ? (isAutoClose ?? 5000) : false; // Info:(20240513 - Julian) default autoClose 5000ms
 
     const closeOnClick = closeable; // Info:(20240513 - Julian) default closeOnClick true
     const draggable = closeable; // Info:(20240513 - Julian) default draggable true
     const closeButton = closeable
       ? () => (
-          <div className="h-20px w-20px">
+          <div className="flex items-center justify-center p-10px">
             <RxCross2 size={16} className="text-button-text-secondary" />
           </div>
         )

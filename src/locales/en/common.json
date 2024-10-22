@@ -234,6 +234,8 @@
   },
   "COMMON": {
     "OF": "of",
+    "TOTAL": "Total",
+    "DOCUMENT": "Document",
     "ISUNFA_TRIAL_VERSION": "iSunFA Trial Version",
     "END_OF_TRIAL": "End of trial",
     "NEWEST": "Newest",
@@ -291,7 +293,12 @@
     "LOADING": "Loading...",
     "COMPLETED": "Completed",
     "DAY": "Day",
-    "SAVE": "Save"
+    "SAVE": "Save",
+    "DELETE": "Delete",
+    "CODE": "Code",
+    "BEGINNING": "Beginning",
+    "MIDTERM": "Midterm",
+    "ENDING": "Ending"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
@@ -403,5 +410,21 @@
     "TITLE": "iSunFA",
     "DESCRIPTION": "Comprehensive accounting solution that enhances efficiency and accuracy through blockchain and AI integration.",
     "KEYWORDS": "iSunFA, Blockchain, AI, Forensic, Accounting, Auditing"
+  },
+  "FILTER_SECTION_TYPE": {
+    "TYPE": "Type",
+    "ALL": "All",
+    "INVOICE": "Invoice",
+    "RECEIPT": "Receipt",
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "EQUITY": "Equity",
+    "NONE": ""
+  },
+  "SELECTION": {
+    "EXPORT": "Export",
+    "CERTIFICATES": "Certificates",
+    "ADD_NEW_VOUCHER": "Add New Voucher",
+    "ADD_NEW_ASSET": "Add New Asset"
   }
 }

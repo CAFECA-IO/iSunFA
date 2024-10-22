@@ -198,7 +198,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     data: accountTitleList,
     success: accountSuccess,
   } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
-  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.AI_ASK_STATUS);
+  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
   const {
     trigger: listUnprocessedOCR,
     error: listError,

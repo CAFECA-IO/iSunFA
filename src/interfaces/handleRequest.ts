@@ -1,5 +1,5 @@
 import { API_ZOD_SCHEMA } from '@/constants/zod_schema';
-import { BodyType, QueryType } from '@/lib/utils/request_validator';
+import { BodyType, QueryType } from '@/lib/utils/validator';
 import { ISessionData } from '@/interfaces/session_data';
 
 export interface IHandleRequest<T extends keyof typeof API_ZOD_SCHEMA, U> {

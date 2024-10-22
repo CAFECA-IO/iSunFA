@@ -9,7 +9,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { getSession } from '@/lib/utils/session';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { listInvoiceVoucherJournal } from '@/lib/utils/repo/beta_transition.repo';
 

@@ -12,7 +12,7 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { isVoucherAmountGreaterOrEqualThenPaymentAmount } from '@/lib/utils/voucher';
 import { loggerError } from '@/lib/utils/logger_back';
-import { validateRequest } from '@/lib/utils/request_validator';
+import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
 type ApiResponseType = IVoucherDataForAPIResponse | null;

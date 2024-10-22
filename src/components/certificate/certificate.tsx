@@ -5,6 +5,7 @@ import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 
 interface CertificateProps {
+  activeTab: number;
   data: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
   viewType: VIEW_TYPES; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
@@ -18,6 +19,7 @@ interface CertificateProps {
 // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
 
 const Certificate: React.FC<CertificateProps> = ({
+  activeTab,
   data,
   viewType,
   activeSelection,
@@ -36,6 +38,7 @@ const Certificate: React.FC<CertificateProps> = ({
     <>
       {viewType === VIEW_TYPES.LIST && (
         <CertificateTable
+          activeTab={activeTab}
           data={data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
@@ -55,8 +58,10 @@ const Certificate: React.FC<CertificateProps> = ({
       )}
 
       {/* Info: (20240919 - tzuhan) 分頁組件 */}
-      <div className="mt-4 flex justify-center">
+      <div className="flex justify-center">
         <Pagination
+          className="mt-4"
+          totalCount={totalItems}
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}

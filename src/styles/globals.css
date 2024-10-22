@@ -48,6 +48,7 @@
     --neutral-700: #1d283a;
     --neutral-800: #131a27;
     --neutral-900: #090d13;
+    --neutral-light: #7f8a9d;
     --neutral-white: #ffffff;
     --orange-100: #ffe9c2;
     --orange-200: #ffd892;
@@ -276,7 +277,8 @@
     --text-neutral-link: var(--support-baby-600);
     --text-neutral-link-hover: var(--support-baby-300);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-600);
+    --text-neutral-primary: var(--neutral-light);
+    --text-input-filled: var(--neutral-600);
     --text-neutral-secondary: var(--neutral-400);
     --text-neutral-solid-dark: var(--neutral-600);
     --text-neutral-solid-light: var(--neutral-25);
@@ -533,7 +535,7 @@
     --input-text-disable: var(--text-neutral-mute);
     --input-text-error: var(--text-state-error);
     --input-text-highlight: var(--text-brand-primary-lv2);
-    --input-text-input-filled: var(--text-neutral-primary);
+    --input-text-input-filled: var(--text-input-filled);
     --input-text-input-hover: var(--button-stroke-secondary);
     --input-text-input-placeholder: var(--text-neutral-mute);
     --input-text-primary: var(--text-neutral-primary);
@@ -702,7 +704,7 @@
     --text-neutral-link: var(--support-baby-400);
     --text-neutral-link-hover: var(--support-baby-400);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-25);
+    --text-neutral-primary: var(--neutral-light);
     --text-neutral-secondary: var(--neutral-50);
     --text-neutral-solid-dark: var(--neutral-600);
     --text-neutral-solid-light: var(--neutral-25);
@@ -959,7 +961,7 @@
     --input-text-disable: var(--text-neutral-mute);
     --input-text-error: var(--text-state-error);
     --input-text-highlight: var(--text-brand-primary-lv2);
-    --input-text-input-filled: var(--text-neutral-primary);
+    --input-text-input-filled: var(--text-input-filled);
     --input-text-input-hover: var(--button-stroke-secondary);
     --input-text-input-placeholder: var(--text-neutral-mute);
     --input-text-primary: var(--text-neutral-primary);
@@ -1269,6 +1271,10 @@ input[type='checkbox']:checked::before {
 
 .safe-area-adjustment {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.items-center {
+  align-items: center !important;
 }
 
 @media (max-width: 769px) {

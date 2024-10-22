@@ -24,6 +24,8 @@ import { findUniqueAccountByCodeInPrisma } from '@/lib/utils/repo/account.repo';
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
 
+  private endSecondOfLastYear: number;
+
   private incomeStatementGenerator: IncomeStatementGenerator;
 
   private incomeStatementGeneratorFromTimeZeroToBeginOfYear: IncomeStatementGenerator;
@@ -34,8 +36,8 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
     super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
 
-    this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(startDateInSecond);
-
+    this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(endDateInSecond);
+    this.endSecondOfLastYear = this.startSecondOfYear - 1;
     this.incomeStatementGenerator = new IncomeStatementGenerator(
       companyId,
       startDateInSecond,
@@ -46,7 +48,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     this.incomeStatementGeneratorFromTimeZeroToBeginOfYear = new IncomeStatementGenerator(
       companyId,
       0,
-      this.startSecondOfYear
+      this.endSecondOfLastYear
     );
 
     // Info: (20241011 - Murky) For NetIncome
@@ -224,6 +226,47 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     }
   }
 
+  private static calculatePercentageByOperatingRevenue(
+    accountMap: Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >
+  ): Map<
+    string,
+    {
+      accountNode: IAccountNode;
+      percentage: number;
+    }
+  > {
+    const totalAsset = accountMap.get(SPECIAL_ACCOUNTS.ASSET_TOTAL.code);
+    if (!totalAsset) {
+      throw new Error(
+        'totalAsset not found in accountMap in calculatePercentageByOperatingRevenue in BalanceSheetGenerator'
+      );
+    }
+
+    const totalAssetAmount = totalAsset.accountNode.amount;
+    const updatedAccountMap = new Map<
+      string,
+      {
+        accountNode: IAccountNode;
+        percentage: number;
+      }
+    >();
+
+    accountMap.forEach((value, key) => {
+      updatedAccountMap.set(key, {
+        accountNode: value.accountNode,
+        percentage: totalAssetAmount === 0 ? 0 : value.accountNode.amount / totalAssetAmount,
+      });
+    });
+
+    return updatedAccountMap;
+  }
+
   public override async generateFinancialReportMap(curPeriod: boolean): Promise<
     Map<
       string,
@@ -235,7 +278,13 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   > {
     const accountForest = await this.generateFinancialReportTree(curPeriod);
     BalanceSheetGenerator.calculateLiabilityAndEquity(accountForest);
-    const accountMap = transformForestToMap(accountForest);
+
+    let accountMap = transformForestToMap(accountForest);
+    /**
+     * Info: (20241018 - Murky)
+     * @description 百分比應該用資產或 "負債與權益" 做基底，先從這邊patch, 之後要Refactor transformForestToMap
+     */
+    accountMap = BalanceSheetGenerator.calculatePercentageByOperatingRevenue(accountMap);
     return accountMap;
   }
 
@@ -397,14 +446,16 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
-    const curDso =
+    const curDso = Math.abs(
       salesTotal.curPeriodAmount !== 0
-        ? (accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR
-        : 0;
-    const preDso =
+        ? Math.round((accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR)
+        : 0
+    );
+    const preDso = Math.abs(
       salesTotal.prePeriodAmount !== 0
-        ? (accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR
-        : 0;
+        ? Math.round((accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR)
+        : 0
+    );
     const dso = {
       curDso,
       preDso,
@@ -421,13 +472,16 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const curInventoryTurnoverDays =
+    const curInventoryTurnoverDays = Math.abs(
       operatingCost.curPeriodAmount !== 0
-        ? ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
-            2 /
-            operatingCost.curPeriodAmount) *
-          DAY_IN_YEAR
-        : 0;
+        ? Math.round(
+            ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
+              2 /
+              operatingCost.curPeriodAmount) *
+              DAY_IN_YEAR
+          )
+        : 0
+    );
 
     // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
     const preInventoryTurnoverDays = 0;

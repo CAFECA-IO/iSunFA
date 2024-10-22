@@ -1,0 +1,12 @@
+[
+    {
+        "id": 1001,
+        "companyId": 1001,
+        "salesTaxTaxable": false,
+        "salesTaxRate": 0.00,
+        "purchaseTaxTaxable": true,
+        "purchaseTaxRate": 0.10,
+        "returnPeriodicity": "quarterly",
+        "currency": "EUR"
+    }
+]

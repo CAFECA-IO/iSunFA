@@ -85,7 +85,7 @@ export async function deleteCompanyById(
 
   const where: Prisma.CompanyWhereUniqueInput = {
     id: companyId,
-    deletedAt: null,
+    OR: [{ deletedAt: 0 }, { deletedAt: null }],
   };
 
   const data: Prisma.CompanyUpdateInput = {

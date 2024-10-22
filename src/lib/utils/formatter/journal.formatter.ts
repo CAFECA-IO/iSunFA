@@ -11,7 +11,10 @@ import {
   LineItem,
   Voucher,
 } from '@prisma/client';
-import { formatIInvoice } from './invoice.formatter';
+// import { parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
+import { FileFolder } from '@/constants/file';
+import { formatIInvoice } from '@/lib/utils/formatter/invoice.formatter';
+import { transformOCRImageIDToURL } from '@/lib/utils/common';
 
 export function formatSingleIJournalListItem(
   invoiceVoucherJournal: InvoiceVoucherJournal & {
@@ -59,6 +62,11 @@ export function formatIJournal(
   }
 ): IJournal {
   assertIsJournalEvent(invoiceVoucherJournal.voucher?.status);
+  const imageUrl = transformOCRImageIDToURL(
+    FileFolder.INVOICE,
+    invoiceVoucherJournal.journal?.companyId || 0,
+    invoiceVoucherJournal.invoice?.certificate.file.id || 0
+  );
   return {
     id: invoiceVoucherJournal.journalId,
     tokenContract: '',
@@ -66,7 +74,7 @@ export function formatIJournal(
     aichResultId: invoiceVoucherJournal.journal?.aichResultId || '',
     projectId: 0,
     contractId: 0,
-    imageUrl: invoiceVoucherJournal.invoice?.certificate.file.url || '',
+    imageUrl,
     event: invoiceVoucherJournal.voucher.status,
     invoice: formatIInvoice(invoiceVoucherJournal),
     voucher: {

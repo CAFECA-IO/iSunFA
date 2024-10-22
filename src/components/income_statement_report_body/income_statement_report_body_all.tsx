@@ -9,6 +9,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
+import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from './income_statement_report_table_row';
 
 interface IIncomeStatementReportBodyAllProps {
@@ -75,18 +76,23 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const otherInfo = reportFinancial?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
-  const curPeriodTotal =
+  const curPeriodTotal = numberBeDashIfFalsy(
     (otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || 0) +
-    (otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || 0);
-  const prePeriodTotal =
+      (otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || 0) +
+      (otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || 0)
+  ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
+  const prePeriodTotal = numberBeDashIfFalsy(
     (otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || 0) +
-    (otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || 0);
+      (otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || 0) +
+      (otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || 0)
+  ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
+
   /* Info: (20240730 - Anna) 提取 curRatio 、 preRatio 、revenueToRD */
   const curRatio = otherInfo?.revenueAndExpenseRatio.ratio.curRatio || 0;
   const preRatio = otherInfo?.revenueAndExpenseRatio.ratio.preRatio || 0;
   const revenueToRD = otherInfo?.revenueToRD;
   /* Info: (20240730 - Anna) 格式化數字為千分位 */
-  const formatNumber = (num: number) => num.toLocaleString();
+  // const formatNumber = (num: number) => num.toLocaleString();
   /* Info: (20240730 - Anna) 轉換和格式化日期 */
   const curDateFrom = new Date(reportFinancial.curDate.from * 1000);
   const curDateTo = new Date(reportFinancial.curDate.to * 1000);
@@ -228,9 +234,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}
-                    <br />至{formattedCurToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -242,9 +247,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}
-                    <br />至{formattedPreToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -628,9 +632,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedCurFromDate}
-                    <br />至{formattedCurToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
               </th>
@@ -642,9 +645,8 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
-                    {formattedPreFromDate}
-                    <br />至{formattedPreToDate}
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
+                    {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
               </th>
@@ -810,7 +812,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
@@ -820,7 +822,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}
@@ -928,10 +930,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 投入費用和成本合計
               </td>
               <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                {formatNumber(curPeriodTotal)}
+                {curPeriodTotal}
               </td>
               <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
-                {formatNumber(prePeriodTotal)}
+                {prePeriodTotal}
               </td>
             </tr>
           </tbody>
@@ -966,7 +968,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedCurFromDate}至{formattedCurToDate}
                   </p>
                 )}
@@ -976,7 +978,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 style={{ whiteSpace: 'nowrap' }}
               >
                 {reportFinancial && reportFinancial.company && (
-                  <p className="text-center font-barlow text-xs font-semibold leading-5">
+                  <p className="whitespace-nowrap text-center font-barlow text-xs font-semibold leading-5">
                     {formattedPreFromDate}至{formattedPreToDate}
                   </p>
                 )}

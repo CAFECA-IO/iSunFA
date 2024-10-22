@@ -324,7 +324,7 @@ export function isStringNumberPair(value: unknown): value is { [key: string]: st
 export function transformOCRImageIDToURL(
   fileFolder: FileFolder,
   companyId: number,
-  imageId: string
+  imageId: string | number
 ): string {
   return `/api/v1/company/${companyId}/image/${imageId}?fileType=${fileFolder}`;
 }
