@@ -43,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     } else {
       const { channel, event } = req.query;
+      // Info: (20241022 - tzuhan) @Murky, 這裡是讓這隻API可以接收不同的channel和event，並且做不同的處理
       switch (channel) {
         case PRIVATE_CHANNEL.CERTIFICATE:
           statusMessage = await handerCertificteChannel(event as string, req.body);

@@ -7,6 +7,7 @@ import { Button } from '@/components/button/button';
 import { useTranslation } from 'react-i18next';
 
 export interface IUploadFile {
+  id?: number;
   name: string;
   size: number; // Info: (20240919 - tzuhan) 文件大小（KB）
   progress: number; // Info: (20240919 - tzuhan) 上傳進度（0-100）

@@ -33,6 +33,7 @@ export enum TAX_TYPE {
   TAX_FREE = 'tax free',
 }
 
+// Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來更新 IInvoiceBeta 的介面，需要確認是否有遺漏或錯誤
 export interface IInvoiceBeta {
   id: number;
   // certificateId: number; // Info: (20241021 - tzuhan) @Jacky

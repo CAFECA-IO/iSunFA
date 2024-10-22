@@ -3,7 +3,7 @@ import { FLOW_TYPES, FORM_TYPES, IInvoiceBeta, TAX_TYPE } from '@/interfaces/inv
 import { IFileUIBeta } from '@/interfaces/file';
 import { PARTER_TYPES } from '@/interfaces/counterparty';
 
-// Info: (20240920 - tzuhan) 定義 ICertificate 接口
+// Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
   id: number;
   companyId: number;

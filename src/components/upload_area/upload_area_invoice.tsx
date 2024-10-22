@@ -10,6 +10,7 @@ import { ToastId } from '@/constants/toast_id';
 import UploadArea from '@/components/upload_area/upload_area';
 import { IUploadFile } from '@/components/upload_certificate/upload_file_item';
 import { ProgressStatus } from '@/constants/account';
+import { ICertificate } from '@/interfaces/certificate';
 
 interface UploadAreaInvoiceProps {
   companyId?: number;
@@ -29,7 +30,8 @@ const UploadAreaInvoice: React.FC<UploadAreaInvoiceProps> = ({
   const { t } = useTranslation('certificate');
   const { toastHandler } = useModalContext();
   const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
-  const { trigger: createCertificateAPI } = APIHandler<IFile>(APIName.CERTIFICATE_POST_V2);
+  // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_POST_V2 API 需要的回傳資料格式
+  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const handleUpload = useCallback(async (file: File) => {
     if (!companyId) return;
@@ -50,33 +52,36 @@ const UploadAreaInvoice: React.FC<UploadAreaInvoiceProps> = ({
           ];
         });
       }
-      const { success, data: fileId } = await uploadFileAPI({
+      const { success, data: fileMeta } = await uploadFileAPI({
         params: {
           companyId,
         },
+        // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 FILE_UPLOAD API 的地方，以及query參數的組合
         query: {
-          type: UploadType.INVOICE,
+          type: UploadType.INVOICE, // Info: (20241022 - tzuhan) @Murky, 這個是我新增的，請確認是否正確
           targetId: selectedCompanyIdStr,
         },
         body: formData,
       });
-      if (success && fileId) {
+      if (success && fileMeta) {
         if (setFiles) {
           setFiles((prevFiles) => {
             const files = {
               ...prevFiles,
             };
             const index = files.findIndex((f) => f.name === file.name);
+            files[index].id = fileMeta.id;
             files[index].progress = 50;
             return files;
           });
         }
+        // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_POST_V2 API 的地方，以及params、body參數的組合
         const { success: successCreated } = await createCertificateAPI({
           params: {
             companyId,
           },
           body: {
-            fileId,
+            fileId: fileMeta.id,
           },
         });
         if (setFiles) {
