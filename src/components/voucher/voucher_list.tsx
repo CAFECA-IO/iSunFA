@@ -4,7 +4,6 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
-import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
@@ -20,14 +19,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({ voucherList }) => {
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
-
-  // ToDo: (20240920 - Julian) dummy data
-  const totalPage = 10;
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
@@ -139,15 +134,6 @@ const VoucherList: React.FC<IVoucherListProps> = ({ voucherList }) => {
 
         {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
         <div className="table-footer-group h-20px border-t bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary"></div>
-      </div>
-
-      {/* Info: (20240920 - Julian) Pagination */}
-      <div className="mx-auto">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPage}
-          setCurrentPage={setCurrentPage}
-        />
       </div>
     </div>
   );

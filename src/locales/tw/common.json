@@ -416,10 +416,13 @@
     "ALL": "全部",
     "INVOICE": "發票",
     "RECEIPT": "收據",
-    "ASSET":"資產",
-    "LIABILITY":"負債",
-    "EQUITY":"權益",
-    "NONE":""
+    "ASSET": "資產",
+    "LIABILITY": "負債",
+    "EQUITY": "權益",
+    "NONE": "",
+    "PAYMENT": "支付",
+    "INCOME": "收入",
+    "TRANSFER": "移轉"
   },
   "SELECTION": {
     "EXPORT": "匯出",

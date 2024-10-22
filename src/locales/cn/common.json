@@ -419,7 +419,10 @@
     "ASSET": "资产",
     "LIABILITY": "负债",
     "EQUITY": "权益",
-    "NONE": ""
+    "NONE": "",
+    "PAYMENT": "支付",
+    "INCOME": "收入",
+    "TRANSFER": "移转"
   },
   "SELECTION": {
     "EXPORT": "导出",
