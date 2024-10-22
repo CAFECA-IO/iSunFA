@@ -16,6 +16,9 @@ import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import BalanceDetailsButton from '@/components/button/balance_details_button';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
+// Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
+const ASSETS_LIABILITIES_EQUITY_COLOR = ['bg-[#FD6F8E]', 'bg-[#53B1FD]', 'bg-[#9B8AFB]'];
+
 const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
 
 const COLOR_CLASSES = [
@@ -260,13 +263,13 @@ const BalanceSheetList = () => {
             {item.curPeriodAmountString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentageString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentageString}
           </td>
         </tr>
       );
@@ -481,9 +484,9 @@ const BalanceSheetList = () => {
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -497,9 +500,9 @@ const BalanceSheetList = () => {
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
