@@ -2,6 +2,9 @@ import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
+import Layout from '@/components/beta/layout/layout';
+import MyCompanyListPageBody from '@/components/beta/my_company_list_page/my_company_list_page_body';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const MyCompanyListPage = () => {
   const { t } = useTranslation(['common']);
@@ -27,7 +30,13 @@ const MyCompanyListPage = () => {
         />
       </Head>
 
-      <div>My Company List Page</div>
+      <Layout
+        isDashboard={false}
+        pageTitle={t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
+        goBackUrl={ISUNFA_ROUTE.BETA_DASHBOARD}
+      >
+        <MyCompanyListPageBody />
+      </Layout>
     </>
   );
 };

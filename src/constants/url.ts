@@ -22,6 +22,7 @@ export const ISUNFA_ROUTE = {
   JOB_RECORD: '/beta/job_record',
   BETA_DASHBOARD: '/beta/dashboard',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
+  MY_COMPANY_LIST_PAGE: '/beta/my_company_list_page',
 
   DASHBOARD: '/users/dashboard',
   KYC: '/users/kyc',
