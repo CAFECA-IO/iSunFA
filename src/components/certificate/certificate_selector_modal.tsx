@@ -71,7 +71,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           onApiResponse={handleApiResponse}
           types={['All', 'Invoice', 'Receipt']}
         />
-        <div className="px-4">
+        <div className="mt-12px px-4">
           <div className="flex items-center justify-between">
             <div className="font-medium text-text-neutral-secondary">
               (Select {selectedIds.length}/{certificates.length})

@@ -95,8 +95,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.ZOD_EXAMPLE]: zodExampleValidator,
 
   // Info: (20241016 - Jacky) V2 Validators
-  [APIName.AI_ASK_RESULT_V2]: askAIGetResultValidatorV2,
-  [APIName.AI_ASK_V2]: askAIPostValidatorV2,
+  [APIName.ASK_AI_RESULT_V2]: askAIGetResultValidatorV2,
+  [APIName.ASK_AI_V2]: askAIPostValidatorV2,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
