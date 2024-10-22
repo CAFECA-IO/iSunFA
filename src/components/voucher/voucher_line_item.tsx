@@ -303,7 +303,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         onChange={debitInputChangeHandler}
         placeholder="0"
         disabled={isDebitDisabled}
-        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none`}
+        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none disabled:bg-input-surface-input-disable`}
       />
       {/* Info: (20240927 - Julian) Credit */}
       <input
@@ -311,7 +311,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         onChange={creditInputChangeHandler}
         placeholder="0"
         disabled={isCreditDisabled}
-        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none`}
+        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none disabled:bg-input-surface-input-disable`}
       />
       {/* Info: (20240927 - Julian) Delete button */}
       <div className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover">
