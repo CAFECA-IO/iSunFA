@@ -84,7 +84,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
     ) : null;
 
   return (
-    <div className="flex w-full items-center justify-between rounded-md bg-surface-neutral-surface-lv2 pr-26px text-lg shadow-Dropshadow_S">
+    <div className="sticky top-0 z-60 flex w-full items-center justify-between rounded-md bg-surface-neutral-surface-lv2 pr-26px text-lg shadow-Dropshadow_S">
       {/* Info: (20241017 - Julian) AI GIF */}
       <div>
         <Image src={gifSrc} alt="AI Analyze" width={160} height={120} />
