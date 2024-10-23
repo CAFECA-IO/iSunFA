@@ -206,8 +206,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     }
   }, [reportFinancial]);
 
-  // Info: (20241023 - Anna) 顯示 Skeleton 或報告資料
-  if (!hasFetchedOnce || getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
+  // Info: (20241023 - Anna) 顯示圖片或報告資料
+  if (!hasFetchedOnce && !getReportFinancialIsLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+      </div>
+    );
+  } else if (getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
