@@ -1,15 +1,22 @@
 import { z } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { SortOrder } from '@/constants/sort';
+import {
+  zodStringToNumberWithDefault,
+  zodTimestampInSecondsNoDefault,
+} from '@/lib/utils/zod_schema/common';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { TrialBalanceSortBy } from '@/constants/trial_balance';
 
 // Info: (20241022 - Shirley) Trial balance list validator
 const trialBalanceListQueryValidator = z.object({
-  startDate: z.number().int(),
-  endDate: z.number().int(),
-  sortBy: z.string().optional().default('createAt'),
+  startDate: zodTimestampInSecondsNoDefault(),
+  endDate: zodTimestampInSecondsNoDefault(),
+  sortBy: z.nativeEnum(TrialBalanceSortBy).optional().default(TrialBalanceSortBy.CREATED_AT),
   sortOrder: z.nativeEnum(SortOrder).optional().default(SortOrder.DESC),
-  page: z.number().int().optional().default(1),
-  pageSize: z.number().int().optional().default(Infinity),
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
 const trialBalanceListBodyValidator = z.object({});

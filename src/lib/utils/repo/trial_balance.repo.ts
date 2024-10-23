@@ -8,6 +8,14 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { SortBy } from '@/constants/journal';
 import { ITrialBalancePayload } from '@/interfaces/trial_balance';
 
+/* Info: (20241023 - Shirley) Trial balance repository 實作
+WI:
+company id in account -> ...
+
+WII: (preferred)
+company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
+*/
+
 interface LineItem {
   id: number;
   amount: number;
@@ -173,6 +181,9 @@ export async function listTrialBalance(
         rootAccounts.push(accountMap[account.code]);
       }
     });
+
+    // eslint-disable-next-line no-console
+    console.log('rootAccounts', rootAccounts);
 
     // Info: (20241022 - Shirley)計算試算表項目
     const calculateTrialBalance = (account: AccountWithSub): AccountWithSubResult => {
