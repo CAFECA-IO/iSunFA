@@ -3,6 +3,7 @@ import { JOURNAL_EVENT } from '@/constants/journal';
 import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
 import { Prisma } from '@prisma/client';
+import type { IEventEntity } from '@/interfaces/event';
 
 export interface IVoucherMetaData {
   date: number;
@@ -393,15 +394,39 @@ export interface IVoucherEntity {
   /**
    * Info: (20241022 - Murky)
    * @description the time this voucher be created, not selected by user
+   * @note need to be in seconds
    */
   createdAt: number;
 
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds
+   */
   updatedAt: number;
 
   /**
    * Info: (20241022 - Murky)
    * @description null if not deleted, timestamp if deleted
+   * @note need to be in seconds
    * @todo Need to write isDeleted function, and guard other function
    */
   deletedAt: number | null;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description array of voucher event that "originalVoucher" is this voucher
+   */
+  originalEvents: IEventEntity[];
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description array of voucher event that "resultVoucher" is this voucher
+   */
+  resultEvents: IEventEntity[];
+  // ToDo: (20241023 - Murky) Asset
+  // ToDo: (20241023 - Murky) LineItems
+  // ToDo: (20241023 - Murky) UserVoucher => isRead
+  // ToDo: (20241023 - Murky) Issuer => User
+  // ToDo: (20241023 - Murky) CounterParty => Company
+  // ToDo: (20241023 - Murky) company => Company
 }

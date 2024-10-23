@@ -3,6 +3,7 @@ import { EventType } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { Voucher as PrismaVoucher } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
+import type { IEventEntity } from '@/interfaces/event';
 
 /**
  * Info: (20241023 - Murky)
@@ -19,6 +20,8 @@ export function initVoucherEntity(
     no: string;
     date: number;
     type: EventType;
+    originalEvents?: IEventEntity[];
+    resultEvents?: IEventEntity[];
   }
 ): IVoucherEntity {
   const nowInSecond = getTimestampNow();
@@ -36,6 +39,8 @@ export function initVoucherEntity(
     createdAt: dto.createdAt || nowInSecond,
     updatedAt: dto.updatedAt || nowInSecond,
     deletedAt: dto.deletedAt || null,
+    originalEvents: dto.originalEvents || [],
+    resultEvents: dto.resultEvents || [],
   };
   return voucherEntity;
 }
