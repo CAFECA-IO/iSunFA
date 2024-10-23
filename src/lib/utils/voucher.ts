@@ -1,4 +1,44 @@
-import { IVoucherDataForSavingToDB } from '@/interfaces/voucher';
+import { IVoucherDataForSavingToDB, IVoucherEntity } from '@/interfaces/voucher';
+import { EventType } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
+import { Voucher as PrismaVoucher } from '@prisma/client';
+import { getTimestampNow } from '@/lib/utils/common';
+
+/**
+ * Info: (20241023 - Murky)
+ * @note Used to create a new voucher entity directly from scratch,
+ * @note please use parsePrismaVoucherToVoucherEntity instead to convert PrismaVoucher to VoucherEntity
+ */
+export function initVoucherEntity(
+  dto: Partial<PrismaVoucher> & {
+    issuerId: number;
+    counterPartyId: number;
+    companyId: number;
+    status: JOURNAL_EVENT;
+    editable: boolean;
+    no: string;
+    date: number;
+    type: EventType;
+  }
+): IVoucherEntity {
+  const nowInSecond = getTimestampNow();
+  const voucherEntity: IVoucherEntity = {
+    id: dto.id || -1,
+    issuerId: dto.issuerId,
+    counterPartyId: dto.counterPartyId,
+    companyId: dto.companyId,
+    status: dto.status,
+    editable: dto.editable,
+    no: dto.no,
+    date: dto.date,
+    type: dto.type,
+    note: dto.note || null,
+    createdAt: dto.createdAt || nowInSecond,
+    updatedAt: dto.updatedAt || nowInSecond,
+    deletedAt: dto.deletedAt || null,
+  };
+  return voucherEntity;
+}
 
 export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
   voucher: IVoucherDataForSavingToDB,

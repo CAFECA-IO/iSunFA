@@ -1,4 +1,5 @@
-import { VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
 import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
 import { Prisma } from '@prisma/client';
@@ -21,7 +22,7 @@ export interface IVoucher {
   voucherIndex: string;
   invoiceIndex: string; // 改在這裡
   metaData: IVoucherMetaData[];
-  lineItems: ILineItem[];
+  // lineItems: ILineItem[];
 }
 
 export interface IVoucherDataForAPIResponse {
@@ -320,3 +321,87 @@ export const dummyVoucherList: IVoucherBeta[] = [
     },
   },
 ];
+
+/**
+ * Info: (20241023 - Murky)
+ * @description For voucher api passing data
+ * @note Use  parsePrismaVoucherToVoucherEntity to convert PrismaVoucher to VoucherEntity
+ * @note Use initVoucherEntity to create a new VoucherEntity from scratch
+ */
+export interface IVoucherEntity {
+  /**
+   * Info: (20241022 - Murky)
+   * @description id in database,-1 if not yet saved in database
+   */
+  id: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description userId, who created this voucher
+   */
+  issuerId: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description companyId, 交易對象
+   */
+  counterPartyId: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description  Which company this voucher be created
+   */
+  companyId: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description uploaded / upcoming
+   */
+  status: JOURNAL_EVENT;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description Is this voucher editable
+   * @todo Need to write isEditable function, and guard other function
+   */
+  editable: boolean;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description voucher sequence number
+   */
+  no: string;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description voucher date, the date user selected
+   */
+  date: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description payment or transfer or receiving
+   */
+  type: EventType;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description voucher note for user to take note
+   */
+  note: string | null;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description the time this voucher be created, not selected by user
+   */
+  createdAt: number;
+
+  updatedAt: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description null if not deleted, timestamp if deleted
+   * @todo Need to write isDeleted function, and guard other function
+   */
+  deletedAt: number | null;
+}
