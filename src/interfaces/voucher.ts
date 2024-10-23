@@ -26,7 +26,7 @@ export interface IVoucher {
   voucherIndex: string;
   invoiceIndex: string; // 改在這裡
   metaData: IVoucherMetaData[];
-  // lineItems: ILineItem[];
+  lineItems: ILineItem[];
 }
 
 export interface IVoucherDataForAPIResponse {
