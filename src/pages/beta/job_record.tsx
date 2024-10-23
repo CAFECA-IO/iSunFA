@@ -94,7 +94,7 @@ const JobRecordCard = ({
 };
 
 const JobRecordPage = () => {
-  const { t } = useTranslation(['kyc']);
+  const { t } = useTranslation(['common']);
   const { signOut } = useUserCtx();
 
   return (
@@ -103,7 +103,7 @@ const JobRecordPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('kyc:CREATED_ROLES.CREATED_ROLES')}</title>
+        <title>{t('common:CREATED_ROLES.CREATED_ROLES')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

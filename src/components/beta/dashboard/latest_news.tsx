@@ -1,73 +1,41 @@
 import React, { useState } from 'react';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { RiCoinsFill } from 'react-icons/ri';
-import { TbDatabaseSmile } from 'react-icons/tb';
-import { FiUserCheck } from 'react-icons/fi';
-import Link from 'next/link';
+// import Link from 'next/link';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import TabsForLatestNews from '@/components/beta/latest_news_page/tabs_for_latest_news';
+import NewsList from '@/components/beta/latest_news_page/news_list';
 
-interface TabsProps {
-  activeTab: React.SetStateAction<number>;
-  setActiveTab: React.Dispatch<React.SetStateAction<number>>;
-}
-const Tabs = ({ activeTab, setActiveTab }: TabsProps) => {
-  const tabs = [
-    { id: 0, name: 'Financial', icon: <RiCoinsFill size={20} /> },
-    { id: 1, name: 'System', icon: <TbDatabaseSmile size={20} /> },
-    { id: 2, name: 'Matching', icon: <FiUserCheck size={20} /> },
-  ];
+// interface NewsListProps {
+//   list: {
+//     id: string;
+//     title: string;
+//     href: string;
+//     date: string;
+//   }[];
+// }
+// const NewsList = ({ list }: NewsListProps) => {
+//   return (
+//     <section className="flex flex-col gap-24px">
+//       {list.map((news) => (
+//         <div
+//           key={news.id}
+//           className="flex items-center justify-between gap-16px rounded-xs bg-surface-brand-primary-10 p-8px"
+//         >
+//           <p className="flex-none text-sm font-normal text-text-neutral-mute">{news.date}</p>
 
-  const handleTabClick = (tabId: number) => {
-    setActiveTab(tabId);
-  };
+//           <p className="flex-auto truncate text-base font-semibold text-surface-brand-secondary">
+//             {news.title}
+//           </p>
 
-  return (
-    <div className="flex justify-between">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => handleTabClick(tab.id)}
-          className={`flex items-center gap-8px border-b-2 px-12px py-8px ${tab.id === activeTab ? 'border-b-tabs-stroke-active text-tabs-text-active' : 'border-b-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover'}`}
-        >
-          {tab.icon}
-          <p className="text-base font-medium">{tab.name}</p>
-        </button>
-      ))}
-    </div>
-  );
-};
-
-interface NewsListProps {
-  list: {
-    id: string;
-    title: string;
-    href: string;
-    date: string;
-  }[];
-}
-const NewsList = ({ list }: NewsListProps) => {
-  return (
-    <section className="flex flex-col gap-24px">
-      {list.map((news) => (
-        <div
-          key={news.id}
-          className="flex items-center justify-between gap-16px rounded-xs bg-surface-brand-primary-10 p-8px"
-        >
-          <p className="flex-none text-sm font-normal text-text-neutral-mute">{news.date}</p>
-
-          <p className="flex-auto truncate text-base font-semibold text-surface-brand-secondary">
-            {news.title}
-          </p>
-
-          <Link href={news.href} className="flex-none text-sm font-semibold text-link-text-primary">
-            See More
-          </Link>
-        </div>
-      ))}
-    </section>
-  );
-};
+//           <Link href={news.href} className="flex-none text-sm font-semibold text-link-text-primary">
+//             See More
+//           </Link>
+//         </div>
+//       ))}
+//     </section>
+//   );
+// };
 
 const LatestNews = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -194,11 +162,11 @@ const LatestNews = () => {
       <section className="flex flex-col gap-24px">
         <section className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-text-neutral-secondary">Latest News</h1>
-          <MoreLink href={'/'} />
+          <MoreLink href={ISUNFA_ROUTE.LATEST_NEWS_PAGE} />
         </section>
 
         {/* Tab */}
-        <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <TabsForLatestNews activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* News List */}
         <NewsList list={newsList} />
