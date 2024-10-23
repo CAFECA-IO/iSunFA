@@ -419,7 +419,10 @@
     "ASSET": "Asset",
     "LIABILITY": "Liability",
     "EQUITY": "Equity",
-    "NONE": ""
+    "NONE": "",
+    "PAYMENT": "Payment",
+    "INCOME": "Income",
+    "TRANSFER": "Transfer"
   },
   "SELECTION": {
     "EXPORT": "Export",

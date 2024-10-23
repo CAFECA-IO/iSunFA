@@ -69,7 +69,7 @@ export const mockVouchersReturn = [
       updatedAt: 1000000,
     },
     counterParty: {
-      // Info: (20240927 - Murky) ICustomerVendor
+      // Info: (20240927 - Murky) ICounterparty
       id: 1001,
       companyId: 1001,
       name: 'Cool LLC',
