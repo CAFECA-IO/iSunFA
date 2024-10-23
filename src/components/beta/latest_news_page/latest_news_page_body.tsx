@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 // import FilterSection from '@/components/filter_section/filter_section'; // ToDo: (20241023 - Liz) 使用共用元件代替 Search
 import Pagination from '@/components/pagination/pagination';
 import TabsForLatestNews from '@/components/beta/latest_news_page/tabs_for_latest_news';
 import NewsList from '@/components/beta/latest_news_page/news_list';
+import { useRouter } from 'next/router';
 
 /* === Fake Data === */
 // Deprecated: (20241023 - Liz) 這是假資料，之後會改成從 user context 打 API 拿資料
@@ -67,6 +68,18 @@ const FINANCIAL_NEWS = [
     href: '/',
     date: '2024/09/04',
   },
+  {
+    id: 'financial-11',
+    title: '新聞11',
+    href: '/',
+    date: '2024/09/03',
+  },
+  {
+    id: 'financial-12',
+    title: '新聞12',
+    href: '/',
+    date: '2024/09/02',
+  },
 ];
 
 const SYSTEM_NEWS = [
@@ -130,6 +143,18 @@ const SYSTEM_NEWS = [
     href: '/',
     date: '2024/09/04',
   },
+  {
+    id: 'system-11',
+    title: 'iSunFA V.14.09 新功能上線',
+    href: '/',
+    date: '2024/09/03',
+  },
+  {
+    id: 'system-12',
+    title: 'iSunFA V.14.09 新功能上線',
+    href: '/',
+    date: '2024/09/02',
+  },
 ];
 
 const MATCHING_NEWS = [
@@ -159,39 +184,51 @@ const MATCHING_NEWS = [
   },
   {
     id: 'system-5',
-    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 5',
     href: '/',
     date: '2024/09/09',
   },
   {
     id: 'system-6',
-    title: 'iSunFA V.14.09 新功能上線',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 6',
     href: '/',
     date: '2024/09/08',
   },
   {
     id: 'system-7',
-    title: 'iSunFA V.14.09 新功能上線',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 7',
     href: '/',
     date: '2024/09/07',
   },
   {
     id: 'system-8',
-    title: 'iSunFA V.14.09 新功能上線',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 8',
     href: '/',
     date: '2024/09/06',
   },
   {
     id: 'system-9',
-    title: 'iSunFA V.14.09 新功能上線',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 9',
     href: '/',
     date: '2024/09/05',
   },
   {
     id: 'system-10',
-    title: 'iSunFA V.14.09 新功能上線',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 10',
     href: '/',
     date: '2024/09/04',
+  },
+  {
+    id: 'system-11',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 11',
+    href: '/',
+    date: '2024/09/03',
+  },
+  {
+    id: 'system-12',
+    title: 'Netflix 上傳相關憑證，徵求記帳士開立傳票 12',
+    href: '/',
+    date: '2024/09/02',
   },
 ];
 
@@ -205,15 +242,38 @@ const LatestNewsPageBody = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [matchingNews, setMatchingNews] = useState(MATCHING_NEWS);
 
-  // Deprecated: (20241023 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('currentPage', currentPage);
+  const router = useRouter();
 
-  const resetCurrentPage = () => {
-    setCurrentPage(1);
+  const resetUrlPage = () => {
+    const query = { ...router.query, page: '1' }; // 將 page 設為 1
+    router.push(
+      {
+        pathname: router.pathname, // 保持目前的 path
+        query, // 更新 query 參數
+      },
+      undefined,
+      { shallow: true }
+    ); // 使用 shallow 避免重新整理頁面
   };
 
-  const itemsPerPage = 5;
+  interface PaginationRef {
+    resetTargetPage: () => void;
+  }
+  const paginationRef = useRef<PaginationRef>(null);
+
+  const resetPagination = () => {
+    if (paginationRef.current) {
+      paginationRef.current.resetTargetPage();
+    }
+  };
+
+  const resetPage = () => {
+    setCurrentPage(1);
+    resetPagination();
+    resetUrlPage();
+  };
+
+  const itemsPerPage = 10;
   const totalItemsForFinancialNews = financialNews.length;
   const totalPagesForFinancialNews = Math.ceil(totalItemsForFinancialNews / itemsPerPage);
   const slicedFinancialNews = financialNews.slice(
@@ -257,7 +317,7 @@ const LatestNewsPageBody = () => {
   }
 
   return (
-    <main className="flex h-full flex-col gap-40px border-2 border-lime-400">
+    <main className="flex min-h-full flex-col gap-40px">
       <section className="h-44px bg-gray-500">
         Date Picker & Search (Todo : use common components)
       </section>
@@ -266,12 +326,15 @@ const LatestNewsPageBody = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isPageStyle
-        callBack={resetCurrentPage}
+        callBack={resetPage}
       />
 
-      <NewsList list={newsList} isPageStyle />
+      <div className="flex-auto">
+        <NewsList list={newsList} isPageStyle />
+      </div>
 
       <Pagination
+        ref={paginationRef}
         currentPage={currentPage}
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
