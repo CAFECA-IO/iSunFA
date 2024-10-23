@@ -235,25 +235,28 @@ const MATCHING_NEWS = [
 const LatestNewsPageBody = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
+  // Deprecated: (20241023 - Liz) incomplete
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [financialNews, setFinancialNews] = useState(FINANCIAL_NEWS);
+  // Deprecated: (20241023 - Liz) incomplete
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [systemNews, setSystemNews] = useState(SYSTEM_NEWS);
+  // Deprecated: (20241023 - Liz) incomplete
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [matchingNews, setMatchingNews] = useState(MATCHING_NEWS);
 
   const router = useRouter();
 
   const resetUrlPage = () => {
-    const query = { ...router.query, page: '1' }; // 將 page 設為 1
+    const query = { ...router.query, page: '1' }; // Info: (20241023 - Liz) 將 page 設為 1
     router.push(
       {
-        pathname: router.pathname, // 保持目前的 path
-        query, // 更新 query 參數
+        pathname: router.pathname, // Info: (20241023 - Liz) 保持目前的 path
+        query, // Info: (20241023 - Liz) 更新 query 參數
       },
       undefined,
       { shallow: true }
-    ); // 使用 shallow 避免重新整理頁面
+    ); // Info: (20241023 - Liz) 使用 shallow 避免重新整理頁面
   };
 
   interface PaginationRef {
