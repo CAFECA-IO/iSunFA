@@ -18,6 +18,9 @@ interface IBalanceSheetReportBodyAllProps {
   reportId: string;
 }
 
+// Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
+const ASSETS_LIABILITIES_EQUITY_COLOR = ['bg-[#FD6F8E]', 'bg-[#53B1FD]', 'bg-[#9B8AFB]'];
+
 const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
 
 const COLOR_CLASSES = [
@@ -240,16 +243,34 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {
+              item.curPeriodAmount === 0
+                ? '-' // Info: (20241022 - Anna) 如果數字是 0，顯示 "-"
+                : item.curPeriodAmount < 0
+                  ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})` // Info: (20241022 - Anna) 負數，顯示括號和千分位
+                  : item.curPeriodAmount.toLocaleString() // Info: (20241022 - Anna) 正數，顯示千分位
+            }
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -278,59 +299,38 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
     });
     return rows;
   };
-
-  // const rowsForPage2part1 = (items: Array<FinancialReportItem>) => {
-  //   const rows = items.slice(0, 2).map((item) => {
-  //     if (!item.code) {
-  //       return (
-  //         <tr key={item.code}>
-  //           <td
-  //             colSpan={6}
-  //             className="border border-stroke-brand-secondary-soft p-10px text-sm font-bold"
-  //           >
-  //             {item.name}
-  //           </td>
-  //         </tr>
-  //       );
-  //     }
-  //     return (
-  //       // Info: (20240723 - Shirley) it's ok to use index in the static data
-  //       <tr key={item.code}>
-  //         <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
-  //         <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
-  //         <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-  //           {item.curPeriodAmountString}
-  //         </td>
-  //         <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-  //           {item.curPeriodPercentage}
-  //         </td>
-  //         <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-  //           {item.prePeriodAmountString}
-  //         </td>
-  //         <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-  //           {item.prePeriodPercentage}
-  //         </td>
-  //       </tr>
-  //     );
-  //   });
-  //   return rows;
-  // };
 
   const rowsForPage3 = (items: Array<FinancialReportItem>) => {
     const rows = items.slice(0, 13).map((item) => {
@@ -353,16 +353,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -391,16 +407,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -429,16 +461,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -467,16 +515,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -505,16 +569,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -543,16 +623,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -581,16 +677,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.code}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-sm">{item.name}</td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.curPeriodAmountString}
+            {item.curPeriodAmount === 0
+              ? '-'
+              : item.curPeriodAmount < 0
+                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
+                : item.curPeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentage === 0
+              ? '-'
+              : item.curPeriodPercentage < 0
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
+                : `${item.curPeriodPercentage.toLocaleString()}%`}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
-            {item.prePeriodAmountString}
+            {item.prePeriodAmount === 0
+              ? '-'
+              : item.prePeriodAmount < 0
+                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
+                : item.prePeriodAmount.toLocaleString()}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentage === 0
+              ? '-'
+              : item.prePeriodPercentage < 0
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
+                : `${item.prePeriodPercentage.toLocaleString()}%`}
           </td>
         </tr>
       );
@@ -1189,7 +1301,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
                     <span className="w-200px">{label}</span>
                   </li>
@@ -1205,7 +1317,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
                     <span className="w-200px">{label}</span>
                   </li>
