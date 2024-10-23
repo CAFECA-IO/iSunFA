@@ -54,6 +54,10 @@ import {
   voucherWasReadValidatorV2,
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
+import {
+  accountingSettingGetValidator,
+  accountingSettingPutValidator,
+} from '@/lib/utils/zod_schema/accounting_setting';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -84,8 +88,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.ZOD_EXAMPLE]: zodExampleValidator,
 
   // Info: (20241016 - Jacky) V2 Validators
-  [APIName.AI_ASK_RESULT_V2]: askAIGetResultValidatorV2,
-  [APIName.AI_ASK_V2]: askAIPostValidatorV2,
+  [APIName.ASK_AI_RESULT_V2]: askAIGetResultValidatorV2,
+  [APIName.ASK_AI_V2]: askAIPostValidatorV2,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
@@ -112,4 +116,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
   [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
+  [APIName.GET_ACCOUNTING_SETTING]: accountingSettingGetValidator,
+  [APIName.UPDATE_ACCOUNTING_SETTING]: accountingSettingPutValidator,
 };
