@@ -13,20 +13,19 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { SortOrder } from '@/constants/sort';
-import { CertificateSortBy } from '@/constants/certificate';
+import { SortOrder, SortBy } from '@/constants/sort';
+import { useTranslation } from 'next-i18next';
 
 interface FilterSectionProps {
   className?: string;
   apiName: IAPIName;
   params?: Record<string, string | number | boolean>;
-  page?: number;
+  page: number;
   hasBeenUsed: boolean;
-  pageSize?: number;
+  pageSize: number;
   types?: string[];
   statuses?: string[];
-  sortingOptions?: string[];
-  sortingByDate?: boolean;
+  sortingOptions?: SortBy[];
   onApiResponse?: (
     data: IPaginatedData<{
       totalInvoicePrice: number;
@@ -39,6 +38,10 @@ interface FilterSectionProps {
   ) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: VIEW_TYPES;
   viewToggleHandler?: (viewType: VIEW_TYPES) => void;
+  dateSort?: SortOrder | null;
+  amountSort?: SortOrder | null;
+  voucherSort?: SortOrder | null;
+  setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
@@ -51,11 +54,15 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   types = [],
   statuses = [],
   sortingOptions = [],
-  sortingByDate = false,
   onApiResponse,
   viewType,
   viewToggleHandler,
+  dateSort,
+  amountSort,
+  voucherSort,
+  setDateSort,
 }) => {
+  const { t } = useTranslation(['certificate', 'common']);
   const { toastHandler } = useModalContext();
   const [selectedType, setSelectedType] = useState<string | undefined>(
     types.length > 0 ? types[0] : undefined
@@ -72,6 +79,13 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     sortingOptions.length > 0 ? sortingOptions[0] : undefined
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedSortOptions, setSelectedSortOptions] = useState<{
+    [key: string]: {
+      by: string;
+      order: SortOrder;
+    };
+  }>({});
+
   // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
   const { trigger } = APIHandler<
     IPaginatedData<{
@@ -83,7 +97,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       certificates: ICertificate[];
     }>
   >(apiName);
-  const [sorting, setSorting] = useState<boolean>();
 
   // Info: (20240919 - tzuhan) 發送 API 請求
   const fetchData = useCallback(async () => {
@@ -99,8 +112,8 @@ const FilterSection: React.FC<FilterSectionProps> = ({
           hasBeenUsed,
           type: selectedType,
           status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
-          sortBy: CertificateSortBy.CREATE_AT,
-          sortOrder: selectedSorting || sorting ? SortOrder.DESC : SortOrder.ASC,
+          // Info: (20241022 - tzuhan) @Murky, 這裡排序需要可以多種方式排序，所以需要修改
+          sortOption: JSON.stringify(selectedSortOptions),
           startDate: !selectedDateRange.startTimeStamp
             ? undefined
             : selectedDateRange.startTimeStamp,
@@ -135,16 +148,76 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     selectedStatus,
     selectedDateRange,
     searchQuery,
-    selectedSorting,
-    sorting,
+    selectedSortOptions,
+    page,
   ]);
+
+  const handleSort = () => {
+    if (setDateSort) {
+      if (selectedSortOptions[SortBy.DATE]) {
+        setDateSort(
+          selectedSortOptions[SortBy.DATE].order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC
+        );
+      } else {
+        setDateSort(SortOrder.DESC);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (dateSort) {
+      setSelectedSortOptions((prev) => ({
+        ...prev,
+        [SortBy.DATE]: {
+          by: SortBy.DATE,
+          order: dateSort,
+        },
+      }));
+    } else {
+      setSelectedSortOptions((prev) => {
+        const rest = { ...prev };
+        delete rest[SortBy.DATE];
+        return rest;
+      });
+    }
+    if (amountSort) {
+      setSelectedSortOptions((prev) => ({
+        ...prev,
+        [SortBy.AMOUNT]: {
+          by: SortBy.AMOUNT,
+          order: amountSort,
+        },
+      }));
+    } else {
+      setSelectedSortOptions((prev) => {
+        const rest = { ...prev };
+        delete rest[SortBy.AMOUNT];
+        return rest;
+      });
+    }
+    if (voucherSort) {
+      setSelectedSortOptions((prev) => ({
+        ...prev,
+        [SortBy.VOUCHER_NUMBER]: {
+          by: SortBy.VOUCHER_NUMBER,
+          order: voucherSort,
+        },
+      }));
+    } else {
+      setSelectedSortOptions((prev) => {
+        const rest = { ...prev };
+        delete rest[SortBy.VOUCHER_NUMBER];
+        return rest;
+      });
+    }
+  }, [dateSort, amountSort, voucherSort]);
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {
     if (typeof window !== 'undefined') {
       fetchData();
     }
-  }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting, sorting]);
+  }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSortOptions, page]);
 
   return (
     <div
@@ -190,14 +263,14 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       )}
 
       {/* Info: (20240919 - tzuhan) 排序選項 */}
-      {sortingByDate ? (
-        <button
-          type="button"
-          className="flex items-center space-x-2 pb-2"
-          onClick={() => setSorting((prev) => !prev)}
-        >
+      {selectedSortOptions[SortBy.DATE] ? (
+        <button type="button" className="flex items-center space-x-2 pb-2" onClick={handleSort}>
           <Image src="/elements/double_arrow_down.svg" alt="arrow_down" width={20} height={20} />
-          <div className="leading-none">Newest</div>
+          <div className="leading-none">
+            {selectedSortOptions[SortBy.DATE].order === SortOrder.DESC
+              ? t('common:SORTING.NEWEST')
+              : t('common:SORTING.ORDEST')}
+          </div>
         </button>
       ) : (
         sortingOptions.length > 0 && (

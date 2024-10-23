@@ -32,12 +32,12 @@ import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
-import CertificateUploaderModal from '@/components/certificate/certificate_uoloader_modal';
+import CertificateUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { getPusherInstance } from '@/lib/pusherClient';
+import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 enum RecurringUnit {
@@ -770,13 +770,14 @@ const NewVoucherForm: React.FC = () => {
           );
         });
 
-  const certificateUpdateHandler = useCallback((message: { certificate: ICertificate }) => {
+  const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
     const newCertificates = {
       ...certificates,
     };
     newCertificates[message.certificate.id] = {
       ...message.certificate,
       isSelected: false,
+      unRead: true,
       actions: !message.certificate.voucherNo
         ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
         : [OPERATIONS.DOWNLOAD],
@@ -784,14 +785,15 @@ const NewVoucherForm: React.FC = () => {
     setCertificates(newCertificates);
   }, []);
 
+  // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
   useEffect(() => {
     const pusher = getPusherInstance();
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
 
-    channel.bind(CERTIFICATE_EVENT.UPDATE, certificateUpdateHandler);
+    channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
-      channel.unbind(CERTIFICATE_EVENT.UPDATE, certificateUpdateHandler);
+      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
   }, []);

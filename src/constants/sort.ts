@@ -14,3 +14,11 @@ export enum SortOrder {
   ASC = 'asc',
   DESC = 'desc',
 }
+
+export enum SortBy {
+  DATE = 'Date',
+  DATE_CREATED = 'Date Created',
+  DATE_UPDATED = 'Date Updated',
+  VOUCHER_NUMBER = 'Voucher No.',
+  AMOUNT = 'Amount',
+}

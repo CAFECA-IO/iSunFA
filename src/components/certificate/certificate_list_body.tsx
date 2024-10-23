@@ -1,17 +1,22 @@
 import React, { useCallback, useState, useEffect } from 'react';
+import Image from 'next/image';
 import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import {
-  ICertificate,
-  ICertificateMeta,
-  ICertificateUI,
-  OPERATIONS,
-  VIEW_TYPES,
-} from '@/interfaces/certificate';
+import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
+import { getPusherInstance } from '@/lib/utils/pusher_client';
+import { sanitizeFileName } from '@/lib/utils/file';
+import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
+import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { IFileUIBeta } from '@/interfaces/file';
+import { ProgressStatus } from '@/constants/account';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { SortOrder } from '@/constants/sort';
+import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
-import { getPusherInstance } from '@/lib/pusherClient';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
@@ -20,13 +25,7 @@ import Certificate from '@/components/certificate/certificate';
 import CertificateEditModal from '@/components/certificate/certificate_edit_modal';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
-import Image from 'next/image';
-import { useModalContext } from '@/contexts/modal_context';
-import { MessageType } from '@/interfaces/message_modal';
-import { ToastId } from '@/constants/toast_id';
-import { ToastType } from '@/interfaces/toastify';
-import { IPaginatedData } from '@/interfaces/pagination';
-import UploadAreaInvoice from '@/components/upload_area/upload_area_invoice';
+import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 
 interface CertificateListBodyProps {}
 
@@ -54,10 +53,16 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
-  // TODO: (20241016 - tzuhan) remove test data
-  const [uploadingCertificates, setUploadingCertificates] = useState<{
-    [id: number]: ICertificateMeta;
+  const [mobileUploadFiles, setMobileUploadFiles] = useState<{
+    [name: string]: IFileUIBeta;
   }>({});
+  const [desktopUploadFiles, setDesktopUploadFiles] = useState<IFileUIBeta[]>([]);
+  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
+  const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
+  const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const handleApiResponse = useCallback(
     (
@@ -72,6 +77,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     ) => {
       setTotalInvoicePrice(resData.data.totalInvoicePrice);
       setUnRead(resData.data.unRead);
+      setTotalPages(resData.totalPages);
+      setTotalCount(resData.totalCount);
       const certificateData = resData.data.certificates.reduce(
         (acc, item) => {
           acc[item.id] = {
@@ -238,9 +245,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     console.log('Save selected id:', certificate);
   }, []);
 
-  const certificateHandler = useCallback(
-    async (message: { token: string; certificate: ICertificateMeta }) => {
-      const { token: receivedToken, certificate: certificateData } = message;
+  const mobileUploadFileHandler = useCallback(
+    async (message: { token: string; file: IFileUIBeta }) => {
+      const { token: receivedToken, file } = message;
       // Deprecated: (20241011 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(
@@ -249,26 +256,40 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       );
 
       if (receivedToken === tokenRef.current) {
-        const updatedCertificates = {
-          ...uploadingCertificates,
+        const files = {
+          ...mobileUploadFiles,
         };
-        updatedCertificates[certificateData.id] = certificateData;
-        setUploadingCertificates(updatedCertificates);
+        files[sanitizeFileName(file.name)] = { ...file };
+        if (file.status === ProgressStatus.SUCCESS) {
+          files[sanitizeFileName(file.name)].progress = 50;
+          files[sanitizeFileName(file.name)].status = ProgressStatus.IN_PROGRESS;
+        }
+        setMobileUploadFiles(files);
         // Deprecated: (20241011 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
-        console.log(`uploadingCertificates:`, uploadingCertificates);
+        console.log(`mobileUploadFiles:`, mobileUploadFiles);
       }
     },
-    [tokenRef, setUploadingCertificates]
+    [tokenRef, setMobileUploadFiles]
   );
 
-  const certificateUpdateHandler = useCallback((message: { certificate: ICertificate }) => {
+  const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
+    const { certificate: newCertificate } = message;
+    if (
+      (newCertificate.voucherNo && activeTab === 0) ||
+      (!newCertificate.voucherNo && activeTab === 1) ||
+      newCertificate.companyId !== companyId
+    ) {
+      return;
+    }
+
     const newCertificates = {
       ...data,
     };
     newCertificates[message.certificate.id] = {
       ...message.certificate,
       isSelected: false,
+      unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
       actions: !message.certificate.voucherNo
         ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
         : [OPERATIONS.DOWNLOAD],
@@ -300,12 +321,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     const pusher = getPusherInstance();
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
 
-    channel.bind(CERTIFICATE_EVENT.UPLOAD, certificateHandler);
-    channel.bind(CERTIFICATE_EVENT.UPDATE, certificateUpdateHandler);
+    channel.bind(CERTIFICATE_EVENT.UPLOAD, mobileUploadFileHandler);
+    // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
+    channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
 
     return () => {
-      channel.unbind(CERTIFICATE_EVENT.UPLOAD, certificateHandler);
-      channel.unbind(CERTIFICATE_EVENT.UPDATE, certificateUpdateHandler);
+      channel.unbind(CERTIFICATE_EVENT.UPLOAD, mobileUploadFileHandler);
+      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
   }, []);
@@ -333,7 +355,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         className={`flex grow flex-col gap-4 ${data && Object.values(data).length > 0 ? 'overflow-y-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
-        <UploadAreaInvoice isDisabled={false} withScanner toggleQRCode={toggleQRCode} />
+        <InvoiceUpload
+          isDisabled={false}
+          withScanner
+          toggleQRCode={toggleQRCode}
+          setFiles={setDesktopUploadFiles}
+          showErrorMessage={false}
+        />
         {/* Info: (20240919 - tzuhan) Tabs */}
         <Tabs
           tabs={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
@@ -346,11 +374,17 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         <FilterSection
           className="mt-2"
           apiName={APIName.CERTIFICATE_LIST_V2}
+          onApiResponse={handleApiResponse}
+          page={page}
+          pageSize={DEFAULT_PAGE_LIMIT}
           types={['All', 'Invoice', 'Receipt']}
           hasBeenUsed={activeTab === 1}
-          onApiResponse={handleApiResponse}
           viewType={viewType}
           viewToggleHandler={setViewType}
+          dateSort={dateSort}
+          amountSort={amountSort}
+          voucherSort={voucherSort}
+          setDateSort={setDateSort}
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}
@@ -377,7 +411,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             />
             <Certificate
               activeTab={activeTab}
-              data={Object.values(data)}
+              page={page}
+              setPage={setPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              certificates={Object.values(data)}
               viewType={viewType}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
@@ -385,6 +423,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               onDownload={onDownload}
               onRemove={onRemove}
               onEdit={openEditModalHandler}
+              dateSort={dateSort}
+              amountSort={amountSort}
+              voucherSort={voucherSort}
+              setDateSort={setDateSort}
+              setAmountSort={setAmountSort}
+              setVoucherSort={setVoucherSort}
             />
           </>
         ) : (
@@ -394,7 +438,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         )}
       </div>
       {/* Info: (20240926- tzuhan) Floating Upload Popup */}
-      <FloatingUploadPopup uploadingCertificates={Object.values(uploadingCertificates)} />
+      <FloatingUploadPopup
+        companyId={companyId}
+        mobileUploadFiles={Object.values(mobileUploadFiles)}
+        desktopUploadFiles={desktopUploadFiles}
+      />
     </>
   );
 };

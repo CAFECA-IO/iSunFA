@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { ProgressStatus } from '@/constants/account';
-import UploadFileItem, { IUploadFile } from '@/components/upload_certificate/upload_file_item';
+import UploadFileItem from '@/components/upload_certificate/upload_file_item';
 import { GoArrowLeft } from 'react-icons/go';
 import CircularProgressBar from '@/components/certificate/circular_progress_bar';
-import UploadAreaInvoice from '@/components/upload_area/upload_area_invoice';
+import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
+import { IFileUIBeta } from '@/interfaces/file';
 
 interface CertificateUploaderModalProps {
   isOpen: boolean;
@@ -19,13 +20,9 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   onClose,
   onBack,
 }) => {
-  const [files, setFiles] = useState<IUploadFile[]>([
-    { name: 'preline-ui.xls', size: 7, progress: 20, status: ProgressStatus.IN_PROGRESS },
-    { name: 'preline-ui.xls', size: 7, progress: 50, status: ProgressStatus.IN_PROGRESS },
-    { name: 'preline-ui.xls', size: 7, progress: 80, status: ProgressStatus.IN_PROGRESS },
-  ]);
+  const [files, setFiles] = useState<IFileUIBeta[]>([]);
 
-  const updateFileStatus = (prevFiles: IUploadFile[], index: number) =>
+  const updateFileStatus = (prevFiles: IFileUIBeta[], index: number) =>
     prevFiles.map((file, i) => {
       return i === index
         ? {
@@ -73,7 +70,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
         <p className="flex justify-center text-card-text-secondary">
           Upload the certificates you want to attach with the voucher
         </p>
-        <UploadAreaInvoice withScanner isDisabled={false} setFiles={setFiles} />
+        <InvoiceUpload withScanner isDisabled={false} setFiles={setFiles} showErrorMessage />
         <div className="h-60 rounded-t-lg border border-file-uploading-stroke-outline p-4">
           <div className="h-full overflow-auto">
             {files.length > 0 ? (

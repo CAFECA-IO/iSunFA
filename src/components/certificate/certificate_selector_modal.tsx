@@ -78,6 +78,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         </p>
         <FilterSection
           apiName={APIName.CERTIFICATE_LIST_V2}
+          page={1}
           pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           hasBeenUsed={false}
           onApiResponse={handleApiResponse}

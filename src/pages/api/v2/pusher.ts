@@ -1,24 +1,24 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICertificateMeta } from '@/interfaces/certificate';
+import { IFileUIBeta } from '@/interfaces/file';
 import { formatApiResponse } from '@/lib/utils/common';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getPusherInstance } from '@/lib/pusher'; // Info: (20241009-tzuhan) 使用封裝好的 Pusher singleton instance
+import { getPusherInstance } from '@/lib/utils/pusher'; // Info: (20241009-tzuhan) 使用封裝好的 Pusher singleton instance
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 const handerCertificteChannel = async (event: string, data: object) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   switch (event) {
     case CERTIFICATE_EVENT.UPLOAD: {
-      const { token, certificates } = data as { token: string; certificates: ICertificateMeta[] };
+      const { token, files } = data as { token: string; files: IFileUIBeta[] };
 
-      if (!token || !certificates || !Array.isArray(certificates)) {
+      if (!token || !files || !Array.isArray(files)) {
         statusMessage = STATUS_MESSAGE.BAD_REQUEST;
       } else {
         const pusher = getPusherInstance();
-        const certificatePromises = certificates.map(async (certificate: ICertificateMeta) => {
+        const certificatePromises = files.map(async (file: IFileUIBeta) => {
           return pusher.trigger(PRIVATE_CHANNEL.CERTIFICATE, CERTIFICATE_EVENT.UPLOAD, {
-            certificate,
             token,
+            file,
           });
         });
 

@@ -1,13 +1,14 @@
-import { ProgressStatus } from '@/constants/account';
 import { FLOW_TYPES, FORM_TYPES, IInvoiceBeta, TAX_TYPE } from '@/interfaces/invoice';
 import { IFileUIBeta } from '@/interfaces/file';
 import { PARTER_TYPES } from '@/interfaces/counterparty';
+import { ProgressStatus } from '@/constants/account';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
   id: number;
   companyId: number;
   file: IFileUIBeta;
+  unRead?: boolean;
   invoice: IInvoiceBeta;
   voucherNo: string | null;
 
@@ -16,15 +17,6 @@ export interface ICertificate {
 
   createdAt: number;
   updatedAt: number;
-}
-
-export interface ICertificateMeta {
-  id: number;
-  name: string;
-  size: number;
-  url: string;
-  status: ProgressStatus;
-  progress: number;
 }
 
 export enum VIEW_TYPES {
@@ -93,6 +85,8 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
         name: 'fileName',
         size: 10234,
         url: `images/demo_certifate.png`,
+        progress: 100,
+        status: ProgressStatus.SUCCESS,
       },
 
       invoice: {

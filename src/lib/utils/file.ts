@@ -19,6 +19,10 @@ import {
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
+export const sanitizeFileName = (fileName: string): string => {
+  return encodeURIComponent(fileName);
+};
+
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
     try {
