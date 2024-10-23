@@ -74,6 +74,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const [inputNo, setInputNo] = useState<string>('');
   const [inputName, setInputName] = useState<string>('');
   const [inputAmount, setInputAmount] = useState<number>(1);
+  const [inputResidualValue, setInputResidualValue] = useState<number>(0);
   const [inputTotal, setInputTotal] = useState<number>(0);
   const [acquisitionDate, setAcquisitionDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [depreciationStartDate, setDepreciationStartDate] =
@@ -86,6 +87,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241015 - Julian) 提示訊息
   const [isShowTypeHint, setIsShowTypeHint] = useState<boolean>(false);
+  const [isShowResidualValueHint, setIsShowResidualValueHint] = useState<boolean>(false);
   const [isShowTotalHint, setIsShowTotalHint] = useState<boolean>(false);
   const [isShowAcquisitionDateHint, setIsShowAcquisitionDateHint] = useState<boolean>(false);
   const [isShowDepreciationStartDateHint, setIsShowDepreciationStartDateHint] =
@@ -102,44 +104,59 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setInputNo('');
       setInputName('');
       setInputAmount(1);
+      setInputResidualValue(0);
       setInputTotal(0);
       setAcquisitionDate(default30DayPeriodInSec);
       setDepreciationStartDate(default30DayPeriodInSec);
       setInputUsefulLife(0);
       setSelectedDepreciationMethod(DepreciationMethod.STRAIGHT_LINE);
       setInputNote('');
+
+      setIsShowTypeHint(false);
+      setIsShowResidualValueHint(false);
+      setIsShowTotalHint(false);
+      setIsShowAcquisitionDateHint(false);
+      setIsShowDepreciationStartDateHint(false);
+      setIsShowUsefulLifeHint(false);
+      setIsLandCost(false);
     }
   }, [isModalVisible]);
 
   useEffect(() => {
-    if (isShowTypeHint && accountTitle !== t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
+    if (accountTitle !== t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
       setIsShowTypeHint(false);
     }
-  }, [accountTitle, isShowTypeHint]);
+  }, [accountTitle]);
 
   useEffect(() => {
-    if (isShowTotalHint && inputTotal > 0) {
+    if (inputResidualValue > 0) {
+      setIsShowResidualValueHint(false);
+    }
+  }, [inputResidualValue]);
+
+  useEffect(() => {
+    if (inputTotal > 0) {
       setIsShowTotalHint(false);
     }
-  }, [inputTotal, isShowTotalHint]);
+  }, [inputTotal]);
 
   useEffect(() => {
-    if (isShowAcquisitionDateHint && acquisitionDate.startTimeStamp > 0) {
+    if (acquisitionDate.startTimeStamp > 0) {
       setIsShowAcquisitionDateHint(false);
     }
-  }, [acquisitionDate, isShowAcquisitionDateHint]);
+  }, [acquisitionDate]);
 
   useEffect(() => {
-    if (isShowDepreciationStartDateHint && depreciationStartDate.startTimeStamp > 0) {
+    if (depreciationStartDate.startTimeStamp > 0) {
       setIsShowDepreciationStartDateHint(false);
     }
-  }, [depreciationStartDate, isShowDepreciationStartDateHint]);
+  }, [depreciationStartDate]);
 
   useEffect(() => {
-    if (isShowUsefulLifeHint && inputUsefulLife > 0) {
+    if (inputUsefulLife > 0) {
       setIsShowUsefulLifeHint(false);
     }
-  }, [inputUsefulLife, isShowUsefulLifeHint]);
+  }, [inputUsefulLife]);
 
   // Info: (20241015 - Julian) 搜尋 Account
   useEffect(() => {
@@ -171,6 +188,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   }, [isAccountEditing]);
 
   useEffect(() => {
+    // Info: (20241021 - Julian) 如果為 1602 - 土地成本，則不需要年限及折舊方法、折舊開始日期
     if (accountTitle.includes('1602')) {
       setIsLandCost(true);
     } else {
@@ -218,14 +236,15 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       inputName,
       '\nAmount:',
       inputAmount,
+      '\nResidual Value:',
+      inputResidualValue,
       '\nTotal Price:',
       inputTotal,
       '\nAcquisition Date:',
       acquisitionDate,
       isLandCost ? '' : `\nDepreciation Start Date: ${depreciationStartDate}`,
       isLandCost ? '' : `\nUseful Life: ${inputUsefulLife} month`,
-      '\nDepreciation Method:',
-      selectedDepreciationMethod,
+      isLandCost ? '' : `\nDepreciation Method: ${selectedDepreciationMethod}`,
       '\nNote:',
       inputNote
     );
@@ -233,7 +252,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     toastHandler({
       id: ToastId.ADD_ASSET_SUCCESS,
       type: ToastType.SUCCESS,
-      content: t('journal:ADD_ASSET_MODAL.TOAST_SUCCESS'),
+      content: t('asset:ADD_ASSET_MODAL.TOAST_SUCCESS'),
       closeable: true,
     });
   };
@@ -247,6 +266,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       accountRef.current?.scrollIntoView({ behavior: 'smooth' });
     } else if (inputTotal === 0) {
       setIsShowTotalHint(true);
+    } else if (inputResidualValue === 0) {
+      setIsShowResidualValueHint(true);
     } else if (acquisitionDate.startTimeStamp === 0) {
       setIsShowAcquisitionDateHint(true);
     } else if (depreciationStartDate.startTimeStamp === 0 && isLandCost === false) {
@@ -258,10 +279,10 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     } else {
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: t('journal:ADD_ASSET_MODAL.CONFIRM_MESSAGE_TITLE'),
-        content: t('journal:ADD_ASSET_MODAL.CONFIRM_MESSAGE_CONTENT'),
+        title: t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_TITLE'),
+        content: t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_CONTENT'),
         backBtnStr: t('common:COMMON.CANCEL'),
-        submitBtnStr: t('journal:ADD_ASSET_MODAL.CONFIRM_MESSAGE_BTN'),
+        submitBtnStr: t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_BTN'),
         submitBtnFunction: () => {
           addNewAsset();
           modalVisibilityHandler();
@@ -273,7 +294,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   const translateMethod = (method: DepreciationMethod) => {
     const key = method.toUpperCase().replace(/ /g, '_');
-    return t(`journal:ADD_ASSET_MODAL.${key}`);
+    return t(`asset:ADD_ASSET_MODAL.${key}`);
   };
 
   const accountingItems =
@@ -354,11 +375,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         <div className="relative flex flex-col items-center px-20px py-16px">
           {/* Info: (20241015 - Julian) desktop title */}
           <h1 className="whitespace-nowrap text-xl font-bold text-card-text-primary">
-            {t('journal:ADD_ASSET_MODAL.TITLE')}
+            {t('asset:ADD_ASSET_MODAL.TITLE')}
           </h1>
-          <p className="text-sm text-card-text-secondary">
-            {t('journal:ADD_ASSET_MODAL.SUBTITLE')}
-          </p>
+          <p className="text-sm text-card-text-secondary">{t('asset:ADD_ASSET_MODAL.SUBTITLE')}</p>
           {/* Info: (20241015 - Julian) close button */}
           <button
             type="button"
@@ -379,7 +398,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Asset Type */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
+                {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
               <div ref={accountRef} className="relative w-full">
@@ -398,13 +417,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Asset no */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.ASSET_NO')}{' '}
+                {t('asset:ADD_ASSET_MODAL.ASSET_NO')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
               <input
                 id="input-no"
                 type="text"
-                placeholder={t('journal:ADD_ASSET_MODAL.ASSET_NO_PLACEHOLDER')}
+                placeholder={t('asset:ADD_ASSET_MODAL.ASSET_NO_PLACEHOLDER')}
                 value={inputNo}
                 onChange={assetNoChangeHandler}
                 required
@@ -414,13 +433,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Asset name */}
             <div className="flex w-full flex-col items-start gap-y-8px">
               <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.ASSET_NAME')}{' '}
+                {t('asset:ADD_ASSET_MODAL.ASSET_NAME')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
               <input
                 id="input-name"
                 type="text"
-                placeholder={t('journal:ADD_ASSET_MODAL.ASSET_NAME_PLACEHOLDER')}
+                placeholder={t('asset:ADD_ASSET_MODAL.ASSET_NAME_PLACEHOLDER')}
                 value={inputName}
                 onChange={nameChangeHandler}
                 required
@@ -429,7 +448,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             </div>
             {/* Info: (20241015 - Julian) Amount */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.AMOUNT')}</p>
+              <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.AMOUNT')}</p>
               <input
                 id="input-amount"
                 type="number"
@@ -443,7 +462,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Total Price */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.TOTAL_PRICE')}{' '}
+                {t('asset:ADD_ASSET_MODAL.TOTAL_PRICE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
               <div
@@ -472,12 +491,44 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 </div>
               </div>
             </div>
+            {/* Info: (20241021 - Julian) Residual Value */}
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+              <p className="font-semibold">
+                {t('asset:ADD_ASSET_MODAL.RESIDUAL_VALUE')}{' '}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <div
+                className={`flex h-46px w-full items-center justify-between divide-x ${isShowResidualValueHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+              >
+                <NumericInput
+                  id="input-residual-value"
+                  name="input-residual-value"
+                  value={inputResidualValue}
+                  setValue={setInputResidualValue}
+                  isDecimal
+                  hasComma
+                  required
+                  min={1}
+                  className="flex-1 bg-transparent px-10px text-right outline-none"
+                />
+                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
+                  <Image
+                    src="/currencies/twd.svg"
+                    width={16}
+                    height={16}
+                    alt="twd_icon"
+                    className="rounded-full"
+                  />
+                  <p>{t('common:COMMON.TWD')}</p>
+                </div>
+              </div>
+            </div>
             {/* Info: (20241015 - Julian) Acquisition Date */}
             <div
               className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
             >
               <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
+                {t('asset:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
               <DatePicker
@@ -491,7 +542,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px">
                 <p className="font-semibold">
-                  {t('journal:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
+                  {t('asset:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
                 <DatePicker
@@ -507,7 +558,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
                 <p className="font-semibold">
-                  {t('journal:ADD_ASSET_MODAL.USEFUL_LIFE')}{' '}
+                  {t('asset:ADD_ASSET_MODAL.USEFUL_LIFE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div
@@ -530,33 +581,35 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               </div>
             ) : null}
             {/* Info: (20241015 - Julian) Depreciation Method */}
-            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
-              <div
-                onClick={toggleMethodMenu}
-                className="relative flex h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input px-12px text-base font-medium text-input-text-input-filled hover:cursor-pointer"
-              >
-                <p>{translateMethod(selectedDepreciationMethod)}</p>
-                <FaChevronDown />
+            {!isLandCost ? (
+              <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+                <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
                 <div
-                  ref={methodRef}
-                  className={`absolute left-0 top-50px grid w-full overflow-hidden ${
-                    isMethodVisible ? 'grid-rows-1' : 'grid-rows-0'
-                  } drop-shadow transition-all duration-150 ease-in-out`}
+                  onClick={toggleMethodMenu}
+                  className="relative flex h-46px w-full items-center justify-between rounded-sm border border-input-stroke-input px-12px text-base font-medium text-input-text-input-filled hover:cursor-pointer"
                 >
-                  <div className="flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
-                    {depreciationMethodMenu}
+                  <p>{translateMethod(selectedDepreciationMethod)}</p>
+                  <FaChevronDown />
+                  <div
+                    ref={methodRef}
+                    className={`absolute left-0 top-50px grid w-full overflow-hidden ${
+                      isMethodVisible ? 'grid-rows-1' : 'grid-rows-0'
+                    } drop-shadow transition-all duration-150 ease-in-out`}
+                  >
+                    <div className="flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+                      {depreciationMethodMenu}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : null}
             {/* Info: (20241015 - Julian) Note */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('journal:ADD_ASSET_MODAL.NOTE')}</p>
+              <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.NOTE')}</p>
               <input
                 id="input-note"
                 type="text"
-                placeholder={t('journal:ADD_ASSET_MODAL.NOTE_PLACEHOLDER')}
+                placeholder={t('asset:ADD_ASSET_MODAL.NOTE_PLACEHOLDER')}
                 value={inputNote}
                 onChange={noteChangeHandler}
                 className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
