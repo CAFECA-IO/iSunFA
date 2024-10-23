@@ -1328,18 +1328,18 @@ module.exports = {
         Dropshadow_XS:
           '0px 2px 5px var(--shadow-lv-5, rgba(49, 67, 98, 0.10)), 0px 6px 10px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 11px 13px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 28px 15px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 50px 17px var(--shadow-lv-1, rgba(49, 67, 98, 0.00))',
 
-        // Shadow/Down/Dropshadow_S
+        // Info: (20241023 - Liz) Shadow/Down/Dropshadow_S
         Dropshadow_S:
           '0px 83px 23px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 53px 21px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 30px 18px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 13px 13px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 3px 7px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
 
-        // /* Drop Shadow/sm */
+        // Info: (20241023 - Liz) /* Drop Shadow/sm */
         Dropshadow_SM: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
 
-        // Shadow/Down/Dropshadow_M
+        // Info: (20241023 - Liz) Shadow/Down/Dropshadow_M
         Dropshadow_M:
           '0px 166px 46px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 106px 42px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 60px 36px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 27px 27px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 7px 15px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
 
-        // Side menu
+        // Info: (20241023 - Liz) Side menu
         SideMenu:
           '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
