@@ -10,7 +10,7 @@ import type { IVoucherEntity } from '@/interfaces/voucher';
 export interface IEventEntity {
   /**
    * Info: (20241023 - Murky)
-   * @description id in database,-1 if not yet saved in database
+   * @description id in database,0 if not yet saved in database
    */
   id: number;
 

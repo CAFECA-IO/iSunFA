@@ -25,7 +25,7 @@ export function initEventEntity(
   const nowInSecond = getTimestampNow();
 
   const eventEntity: IEventEntity = {
-    id: dto.id || -1,
+    id: dto.id || 0,
     eventType: dto.eventType,
     frequency: dto.frequency,
     startDate: dto.startDate,

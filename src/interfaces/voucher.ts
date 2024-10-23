@@ -1,9 +1,12 @@
 import { EventType, VoucherType } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
+import type { ILineItemEntity } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
 import { Prisma } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
+import type { ICompanyEntity } from '@/interfaces/company';
+import { ICounterPartyEntity } from '@/interfaces/counterparty';
 
 export interface IVoucherMetaData {
   date: number;
@@ -332,7 +335,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
 export interface IVoucherEntity {
   /**
    * Info: (20241022 - Murky)
-   * @description id in database,-1 if not yet saved in database
+   * @description id in database, 0 if not yet saved in database
    */
   id: number;
 
@@ -423,10 +426,27 @@ export interface IVoucherEntity {
    * @description array of voucher event that "resultVoucher" is this voucher
    */
   resultEvents: IEventEntity[];
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description indicate each line of this voucher, to represent the amount of money of each account in this voucher
+   */
+  lineItems: ILineItemEntity[];
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description which company create this voucher
+   */
+  company?: ICompanyEntity;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description this voucher is caused by which company
+   */
+  counterParty?: ICounterPartyEntity;
+
   // ToDo: (20241023 - Murky) Asset
-  // ToDo: (20241023 - Murky) LineItems
   // ToDo: (20241023 - Murky) UserVoucher => isRead
   // ToDo: (20241023 - Murky) Issuer => User
-  // ToDo: (20241023 - Murky) CounterParty => Company
-  // ToDo: (20241023 - Murky) company => Company
+  // ToDo: (20241023 - Murky) Certificate
 }

@@ -97,6 +97,10 @@ export type IAccountQueryArgs = {
  * @note use initAccountEntity to create a new IAccountEntity from scratch
  */
 export interface IAccountEntity {
+  /**
+   * Info: (20241023 - Murky)
+   * @description account id from database, 0 means not created in database yet
+   */
   id: number;
   companyId: number;
   /**
