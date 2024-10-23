@@ -21,6 +21,9 @@ interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
 }
 
+// Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
+const ASSETS_LIABILITIES_EQUITY_COLOR = ['bg-[#FD6F8E]', 'bg-[#53B1FD]', 'bg-[#9B8AFB]'];
+
 const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
 
 const COLOR_CLASSES = [
@@ -73,7 +76,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   // Info: (20241023 - Anna) 將 getBalanceSheetReport 包裝為 useCallback 並加入 setSelectedDateRange 作為依賴項
   // Info: (20241023 - Anna) 檢查selectedDateRange存在，避免無效API請求
   const getBalanceSheetReport = useCallback(async () => {
-    if (!hasCompanyId || !selectedDateRange) return;
+    if (!hasCompanyId || !selectedDateRange || selectedDateRange.endTimeStamp === 0) {
+      return;
+    }
 
     // Info: (20241023 - Anna) 如果日期範圍與上次相同，且已經成功請求過，則跳過 API 請求
     if (
@@ -304,13 +309,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
             {item.curPeriodAmountString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentageString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentageString}
           </td>
         </tr>
       );
@@ -525,9 +530,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -541,9 +546,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
