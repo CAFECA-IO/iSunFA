@@ -442,5 +442,9 @@
 
   "MY_COMPANY_LIST_PAGE": {
     "MY_COMPANY_LIST": "My Company List"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "Latest News"
   }
 }

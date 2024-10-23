@@ -442,5 +442,9 @@
 
   "MY_COMPANY_LIST_PAGE": {
     "MY_COMPANY_LIST": "我的公司列表"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "最新消息"
   }
 }
