@@ -498,7 +498,7 @@
     --dropdown-surface-scrollbar: var(--surface-neutral-depth);
     --dropdown-text-disable: var(--text-neutral-mute);
     --dropdown-text-head: var(--text-brand-secondary-lv2);
-    --dropdown-text-input-filled: var(--text-neutral-primary);
+    --dropdown-text-input-filled: var(--text-input-filled);
     --dropdown-text-input-hover: var(--button-text-primary);
     --dropdown-text-input-placeholder: var(--text-neutral-mute);
     --dropdown-text-primary: var(--text-neutral-primary);
