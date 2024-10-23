@@ -2,6 +2,7 @@ import prisma from '@/client';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
+import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 
 export async function createAccountingSetting(companyId: number) {
   let accountingSetting = null;
@@ -10,12 +11,12 @@ export async function createAccountingSetting(companyId: number) {
     accountingSetting = await prisma.accountingSetting.create({
       data: {
         companyId,
-        salesTaxTaxable: true,
-        salesTaxRate: 0.05,
-        purchaseTaxTaxable: true,
-        purchaseTaxRate: 0.05,
-        returnPeriodicity: 'monthly',
-        currency: 'USD',
+        salesTaxTaxable: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_TAXABLE,
+        salesTaxRate: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_RATE,
+        purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
+        purchaseTaxRate: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_RATE,
+        returnPeriodicity: DEFAULT_ACCOUNTING_SETTING.RETURN_PERIODICITY,
+        currency: DEFAULT_ACCOUNTING_SETTING.CURRENCY,
       },
       include: { shortcuts: true },
     });
