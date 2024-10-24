@@ -481,7 +481,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
             <p className="text-xs font-bold leading-5">細項分類格式</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="text-xs font-bold leading-5">單位：新台幣元 每股盈餘單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
