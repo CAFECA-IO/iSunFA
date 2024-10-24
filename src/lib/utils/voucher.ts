@@ -4,8 +4,10 @@ import { JOURNAL_EVENT } from '@/constants/journal';
 import { Voucher as PrismaVoucher } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import type { IEventEntity } from '@/interfaces/event';
-import { ILineItemEntity } from '@/interfaces/line_item';
-import { ICertificateEntity } from '@/interfaces/certificate';
+import type { ILineItemEntity } from '@/interfaces/line_item';
+import type { ICertificateEntity } from '@/interfaces/certificate';
+import type { IUserEntity } from '@/interfaces/user';
+import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 
 /**
  * Info: (20241023 - Murky)
@@ -28,6 +30,8 @@ export function initVoucherEntity(
     aiResultId?: string;
     aiStatus?: string;
     certificates?: ICertificateEntity[];
+    issuer?: IUserEntity;
+    readByUsers?: IUserVoucherEntity[];
   }
 ): IVoucherEntity {
   const nowInSecond = getTimestampNow();
@@ -51,6 +55,8 @@ export function initVoucherEntity(
     resultEvents: dto.resultEvents || [],
     lineItems: dto.lineItems || [],
     certificates: dto.certificates || [],
+    issuer: dto.issuer,
+    readByUsers: dto.readByUsers || [],
   };
   return voucherEntity;
 }

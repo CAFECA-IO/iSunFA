@@ -6,9 +6,11 @@ import { IPayment } from '@/interfaces/payment';
 import { Prisma } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import type { ICounterPartyEntity } from '@/interfaces/counterparty';
 import type { IAssetEntity } from '@/interfaces/asset';
-import { ICertificateEntity } from './certificate';
+import type { ICertificateEntity } from '@/interfaces/certificate';
+import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
+import type { IUserEntity } from '@/interfaces/user';
 
 export interface IVoucherMetaData {
   date: number;
@@ -476,6 +478,16 @@ export interface IVoucherEntity {
 
   // ToDo: (20241023 - Murky) Certificate
   certificates: ICertificateEntity[];
-  // ToDo: (20241023 - Murky) Issuer => User
-  // ToDo: (20241023 - Murky) UserVoucher => isRead
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Who created this voucher
+   */
+  issuer?: IUserEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Who read this voucher
+   */
+  readByUsers: IUserVoucherEntity[];
 }
