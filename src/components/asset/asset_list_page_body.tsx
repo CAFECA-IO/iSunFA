@@ -5,13 +5,13 @@ import Pagination from '@/components/pagination/pagination';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
-import { FREE_COMPANY_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { AssetStatus, AccountCodesOfAsset } from '@/constants/asset';
 import { useTranslation } from 'next-i18next';
-import APIHandler from '@/lib/utils/api_handler';
 import { IAssetItem } from '@/interfaces/asset';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { Button } from '@/components/button/button';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
@@ -23,19 +23,12 @@ const AssetListPageBody: React.FC = () => {
   // ToDo: (20241024 - Julian) add filter query
 
   const [currentPage, setCurrentPage] = useState(1);
-
-  const { data: assetData } = APIHandler<{ data: IAssetItem[]; totalPages: number }>(
-    APIName.ASSET_LIST_V2,
-    { params },
-    true
-  );
+  const [totalPage, setTotalPage] = useState(1);
+  const [assetList, setAssetList] = useState<IAssetItem[]>([]);
 
   useEffect(() => {
     getAccountListHandler(companyId);
   }, [companyId]);
-
-  const assetList = assetData?.data ?? [];
-  const totalPage = assetData?.totalPages ?? 1;
 
   // Info: (20241024 - Julian) 資產類別列表
   const assetTypeList = accountList
@@ -45,6 +38,12 @@ const AssetListPageBody: React.FC = () => {
   // Info: (20241024 - Julian) 資產狀態列表
   const assetStatusList = Object.values(AssetStatus);
 
+  const handleApiResponse = (resData: IPaginatedData<IAssetItem[]>) => {
+    setAssetList(resData.data);
+    setTotalPage(resData.totalPages);
+    setCurrentPage(resData.page);
+  };
+
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
       {/* Info: (20240925 - Julian) Asset List */}
@@ -53,8 +52,11 @@ const AssetListPageBody: React.FC = () => {
         <FilterSection
           params={params}
           apiName={APIName.ASSET_LIST_V2}
+          onApiResponse={handleApiResponse}
           types={['All', ...assetTypeList]}
           statuses={['All', ...assetStatusList]}
+          page={currentPage}
+          pageSize={DEFAULT_PAGE_LIMIT}
         />
         <div className="flex flex-col gap-16px">
           {/* Info: (20240925 - Julian) Export Asset button */}
@@ -70,7 +72,13 @@ const AssetListPageBody: React.FC = () => {
           </div>
 
           {/* Info: (20240925 - Julian) Asset List */}
-          <AssetList assetList={assetList} />
+          {assetList && assetList.length > 0 ? (
+            <AssetList assetList={assetList} />
+          ) : (
+            <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+              <p>{t('asset:ASSET_DETAIL_PAGE.NO_ASSET')}</p>
+            </div>
+          )}
 
           {/* Info: (20240925 - Julian) Pagination */}
           <div className="mx-auto">
