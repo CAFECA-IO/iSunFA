@@ -8,7 +8,7 @@ import {
 import { CRYPTO_FOLDER_PATH } from '@/constants/crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { File } from '@prisma/client';
+import { File, File as PrismaFile } from '@prisma/client';
 import {
   arrayBufferToBuffer,
   bufferToArrayBuffer,
@@ -18,6 +18,8 @@ import {
 } from '@/lib/utils/crypto';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IFileEntity } from '@/interfaces/file';
+import { getTimestampNow } from './common';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -99,4 +101,36 @@ export async function decryptImageFile({
   }
 
   return decryptedBuffer;
+}
+
+/**
+ * Info: (20241023 - Murky)
+ * @description create a new IFileEntity object from scratch
+ */
+export function initFileEntity(
+  dto: Partial<PrismaFile> & {
+    name: string;
+    size: number;
+    mimeType: string;
+    type: FileFolder;
+    url: string;
+    buffer?: Buffer;
+  }
+): IFileEntity {
+  const nowInSecond = getTimestampNow();
+
+  const fileEntity: IFileEntity = {
+    id: dto.id || 0,
+    name: dto.name,
+    size: dto.size,
+    mimeType: dto.mimeType,
+    type: dto.type,
+    url: dto.url,
+    createdAt: dto.createdAt || nowInSecond,
+    updatedAt: dto.updatedAt || nowInSecond,
+    deletedAt: dto.deletedAt || null,
+    buffer: dto.buffer,
+  };
+
+  return fileEntity;
 }

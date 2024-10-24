@@ -4,11 +4,28 @@ import { ReportSheetType } from '@/constants/report';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortOrder } from '@/constants/sort';
 
+/**
+ * Info: (20241023 - Murky)
+ * @description this account interface specifies for front usage
+ */
 export interface IAccount {
   id: number;
   companyId: number;
+  /**
+   * Info: (20241023 - Murky)
+   * @enum {string} system - IFRS, GAAP
+   */
   system: string;
+  /**
+   * Info: (20241023 - Murky)
+   * @enum {string} type -  AccountType (check constants/account.ts)
+   */
   type: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description false will be credit
+   */
   debit: boolean;
   liquidity: boolean;
   code: string;
@@ -72,3 +89,97 @@ export type IAccountQueryArgs = {
   searchKey?: string;
   isDeleted?: boolean;
 };
+
+/**
+ * Info: (20241023 - Murky)
+ * @description this account interface specifies for backend usage
+ * @note use parsePrismaAccountToAccountEntity to convert Prisma.Account to IAccountEntity
+ * @note use initAccountEntity to create a new IAccountEntity from scratch
+ */
+export interface IAccountEntity {
+  /**
+   * Info: (20241023 - Murky)
+   * @description account id from database, 0 means not created in database yet
+   */
+  id: number;
+  companyId: number;
+  /**
+   * Info: (20241023 - Murky)
+   * @enum {string} system - IFRS, GAAP
+   */
+  system: string;
+  /**
+   * Info: (20241023 - Murky)
+   * @enum {string} type -  AccountType (check constants/account.ts)
+   */
+  type: AccountType;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description false will be credit
+   */
+  debit: boolean;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description true means current, false means non-current
+   */
+  liquidity: boolean;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description account code from XBRL
+   */
+  code: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description account name from XBRL
+   */
+  name: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description forUser only apply to account that is the leaf of accounting ranking tree or created by user
+   */
+  forUser: boolean;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description parentCode is the code of account which this account is belong to
+   */
+  parentCode: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description rootCode is the code of account which is for extract all the account that belong to the same root, but not in used in beta
+   */
+  rootCode?: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description level is for the account hierarchy level in accounting tree
+   */
+  level: number;
+
+  createdAt: number;
+  updatedAt: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description deletedAt will be null if the account is not deleted
+   */
+  deletedAt: number | null;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description parent is the account that this account is belong to in accounting tree
+   */
+  parent?: IAccountEntity;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description root is to extract all the account that belong to the same root, but not in used in beta
+   */
+  root?: IAccountEntity;
+}

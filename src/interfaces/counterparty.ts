@@ -1,8 +1,5 @@
-export enum CounterpartyType {
-  CLIENT = 'CLIENT',
-  SUPPLIER = 'SUPPLIER',
-  BOTH = 'BOTH',
-}
+import { CounterpartyType } from '@/constants/counterparty';
+import type { ICompanyEntity } from '@/interfaces/company';
 
 export interface ICounterparty {
   id: number;
@@ -47,3 +44,109 @@ export const dummyCounterparty: ICounterparty[] = [
     updatedAt: 1425272725,
   },
 ];
+
+export const generateRandomCounterParties = (num?: number): ICounterparty[] => {
+  const maxCount = num ?? Math.floor(Math.random() * 100) + 1;
+  const counterParties: ICounterparty[] = [];
+
+  function randomNumber(): number {
+    return Math.floor(Math.random() * 1_000_000_000);
+  }
+
+  function randomTaxID(): string {
+    return Math.floor(Math.random() * 1_000_000_000)
+      .toString()
+      .padStart(8, '0');
+  }
+
+  function randomDate(start: Date, end: Date): number {
+    const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return date.getTime() / 1000;
+  }
+
+  let i = 1;
+  while (i <= maxCount) {
+    const counterParty: ICounterparty = {
+      id: i,
+      companyId: randomNumber(),
+      name: `CounterParty_${i.toString().padStart(6, '0')}`,
+      taxId: randomTaxID(),
+      type: CounterpartyType.SUPPLIER,
+      note: `Note for CounterParty ${i.toString().padStart(6, '0')}`,
+      createdAt: randomDate(new Date(2020, 1, 1), new Date()),
+      updatedAt: randomDate(new Date(2020, 1, 1), new Date()),
+    };
+    counterParties.push(counterParty);
+    i += 1;
+  }
+
+  return counterParties;
+};
+
+/**
+ * Info: (20241023 - Murky)
+ * @description counter party entity interface specific for backend
+ * @note use parsePrismaCounterPartyToCounterPartyEntity to convert Prisma.CounterParty to ICounterPartyEntity
+ * @note use initCounterPartyEntity to create a new ICounterPartyEntity from scratch
+ */
+export interface ICounterPartyEntity {
+  /**
+   * Info: (20241023 - Murky)
+   * @description id in database, 0 if not yet saved in database
+   */
+  id: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description id of company, this company is our company
+   */
+  companyId: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description name of counter party
+   */
+  name: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description tax id of counter party(統一編號)
+   */
+  taxId: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description counter party is supplier or customer
+   */
+  type: CounterpartyType;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description note for user to input
+   */
+  note: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds
+   */
+  createdAt: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds
+   */
+  updatedAt: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds, null if not deleted
+   */
+  deletedAt: number | null;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description company means our company
+   */
+  company?: ICompanyEntity;
+}

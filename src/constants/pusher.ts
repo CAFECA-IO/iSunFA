@@ -7,6 +7,7 @@ export enum PRIVATE_CHANNEL {
 
 export enum CERTIFICATE_EVENT {
   UPLOAD = 'certificate-upload',
+  CREATE = 'certificate-create',
   UPDATE = 'certificate-update',
   ANALYSIS = 'certificate-analysis',
   DELETE = 'certificate-delete',

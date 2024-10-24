@@ -1,6 +1,8 @@
+import { z } from 'zod';
 import { KYCStatus } from '@/constants/kyc';
-import { ICompany, ICompanyDetail } from '@/interfaces/company';
-import { Admin, Company, CompanyKYC, File } from '@prisma/client';
+import { ICompany, ICompanyDetail, ICompanyEntity } from '@/interfaces/company';
+import { Admin, Company, CompanyKYC, File, Company as PrismaCompany } from '@prisma/client';
+import { FormatterError } from '@/lib/utils/error/formatter_error';
 
 export async function formatCompanyList(
   companyList: (Company & {
@@ -47,4 +49,33 @@ export function formatCompanyDetail(
     kycStatusDetail: companyKYCs[0]?.status ?? KYCStatus.NOT_STARTED,
   };
   return formattedCompanyDetail;
+}
+
+/**
+ * Info: (20241023 - Murky)
+ * @description convert Prisma.Company to ICompanyEntity
+ */
+export function parsePrismaCompanyToCompanyEntity(dto: PrismaCompany): ICompanyEntity {
+  const companyEntitySchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    taxId: z.string(),
+    // Deprecated: (20241023 - Murky) - tag will be removed after 20241030
+    // tag: z.string(),
+    startDate: z.number(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+    deletedAt: z.number().nullable(),
+  });
+
+  const { data, success, error } = companyEntitySchema.safeParse(dto);
+
+  if (!success) {
+    throw new FormatterError('CompanyEntity format prisma data error', {
+      dto,
+      zodErrorMessage: error.message,
+      issues: error.errors,
+    });
+  }
+  return data;
 }

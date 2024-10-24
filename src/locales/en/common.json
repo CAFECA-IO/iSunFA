@@ -430,7 +430,9 @@
     "ADD_NEW_VOUCHER": "Add New Voucher",
     "ADD_NEW_ASSET": "Add New Asset"
   },
-
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
+  },
   "SELECT_ROLE": {
     "SELECT_ROLE_ISUNFA": "Select Role - iSunFA"
   },

@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Pagination from '@/components/pagination/pagination';
-import { ICertificateUI, VIEW_TYPES } from '@/interfaces/certificate';
+import { ICertificateUI } from '@/interfaces/certificate';
+import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
+import { SortOrder } from '@/constants/sort';
+import { InvoiceTabs } from '@/constants/certificate';
 
 interface CertificateProps {
-  activeTab: number;
-  data: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
-  viewType: VIEW_TYPES; // Info: (20240923 - tzuhan) 顯示模式
+  activeTab: InvoiceTabs;
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  totalCount: number;
+  totalPages: number;
+  certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
+  viewType: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
   isSelectedAll: boolean;
   onRemove: (id: number) => void;
   onDownload: (id: number) => void;
   onEdit: (id: number) => void;
+  dateSort: SortOrder | null;
+  amountSort: SortOrder | null;
+  voucherSort: SortOrder | null;
+  setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
 }
 
 // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
 
 const Certificate: React.FC<CertificateProps> = ({
   activeTab,
-  data,
+  page,
+  setPage,
+  totalCount,
+  totalPages,
+  certificates,
   viewType,
   activeSelection,
   handleSelect,
@@ -28,27 +45,50 @@ const Certificate: React.FC<CertificateProps> = ({
   onRemove,
   onDownload,
   onEdit,
+  dateSort,
+  amountSort,
+  voucherSort,
+  setDateSort,
+  setAmountSort,
+  setVoucherSort,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Info: (20240919 - tzuhan) 每頁顯示的項目數
-  const totalItems = data.length; // Info: (20240919 - tzuhan) 總項目數，實際情況中可以來自 API
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const [certificatesReOrdered, setCertificatesReOrdered] =
+    useState<ICertificateUI[]>(certificates);
+
+  useEffect(() => {
+    const unReadCertificates: ICertificateUI[] = [];
+    const readCertificates: ICertificateUI[] = [];
+    certificates.forEach((certificate) => {
+      if (certificate.unRead) {
+        unReadCertificates.push(certificate);
+      } else {
+        readCertificates.push(certificate);
+      }
+    });
+    setCertificatesReOrdered([...unReadCertificates, ...readCertificates]);
+  }, [certificates]);
 
   return (
     <>
-      {viewType === VIEW_TYPES.LIST && (
+      {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
         <CertificateTable
           activeTab={activeTab}
-          data={data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+          certificates={certificatesReOrdered}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           isSelectedAll={isSelectedAll}
           onEdit={onEdit}
+          dateSort={dateSort}
+          amountSort={amountSort}
+          voucherSort={voucherSort}
+          setDateSort={setDateSort}
+          setAmountSort={setAmountSort}
+          setVoucherSort={setVoucherSort}
         />
       )}
-      {viewType === VIEW_TYPES.GRID && (
+      {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
         <CertificateGrid
-          data={data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+          certificates={certificatesReOrdered}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           onDownload={onDownload}
@@ -61,10 +101,10 @@ const Certificate: React.FC<CertificateProps> = ({
       <div className="flex justify-center">
         <Pagination
           className="mt-4"
-          totalCount={totalItems}
-          currentPage={currentPage}
+          totalCount={totalCount}
+          currentPage={page}
           totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
+          setCurrentPage={setPage}
         />
       </div>
     </>

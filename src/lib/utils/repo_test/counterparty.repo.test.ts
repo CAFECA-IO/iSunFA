@@ -8,7 +8,7 @@ import {
   deleteCounterpartyForTesting,
 } from '@/lib/utils/repo/counterparty.repo';
 import Counterparties from '@/seed_json/counterparty.json';
-import { CounterpartyType } from '@/interfaces/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 
 describe('Counterparty Repository', () => {
   const testCompanyId = 1000;

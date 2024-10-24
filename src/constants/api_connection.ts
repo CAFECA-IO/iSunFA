@@ -128,6 +128,8 @@ export enum APIName {
   ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
   USER_SETTING_GET = 'USER_SETTING_GET',
   USER_SETTING_UPDATE = 'USER_SETTING_UPDATE',
+  GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
+  UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
 }
 
 export enum APIPath {
@@ -234,6 +236,8 @@ export enum APIPath {
   ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
   USER_SETTING_UPDATE = `${apiPrefixV2}/user/:userId/setting`,
+  GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
 }
 const createConfig = ({
   name,
@@ -694,6 +698,31 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ACCOUNTING_SETTING_UPDATE,
   }),
+  [APIName.CERTIFICATE_LIST_V2]: createConfig({
+    name: APIName.CERTIFICATE_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.CERTIFICATE_GET_V2]: createConfig({
+    name: APIName.CERTIFICATE_GET_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_GET_V2,
+  }),
+  [APIName.CERTIFICATE_POST_V2]: createConfig({
+    name: APIName.CERTIFICATE_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.CERTIFICATE_POST_V2,
+  }),
+  [APIName.CERTIFICATE_PUT_V2]: createConfig({
+    name: APIName.CERTIFICATE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.CERTIFICATE_DELETE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
   [APIName.COUNTERPARTY_LIST]: createConfig({
     name: APIName.COUNTERPARTY_LIST,
     method: HttpMethod.GET,
@@ -728,5 +757,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_SETTING_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.USER_SETTING_UPDATE,
+  }),
+  [APIName.GET_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.GET_ACCOUNTING_SETTING,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNTING_SETTING,
+  }),
+  [APIName.UPDATE_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.UPDATE_ACCOUNTING_SETTING,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNTING_SETTING,
   }),
 };

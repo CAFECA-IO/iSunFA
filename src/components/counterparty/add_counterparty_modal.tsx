@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import NumericInput from '@/components/numeric_input/numeric_input';
 import { Button } from '@/components/button/button';
-import { PARTER_TYPES } from '@/interfaces/certificate';
+import { CounterpartyType } from '@/constants/counterparty';
 import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';
@@ -11,9 +10,9 @@ import { inputStyle } from '@/constants/display';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
-  onSave: (data: { name: string; taxId: number; parterType: PARTER_TYPES; note: string }) => void;
+  onSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void;
   name?: string;
-  taxId?: number;
+  taxId?: string;
 }
 
 const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
@@ -24,8 +23,8 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const [inputName, setInputName] = useState<string>(name || '');
-  const [inputTaxId, setInputTaxId] = useState<number>(taxId || 0);
-  const [inputType, setInputType] = useState<null | PARTER_TYPES>(null);
+  const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
+  const [inputType, setInputType] = useState<null | CounterpartyType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
 
@@ -43,26 +42,28 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     setTypeMenuOpen(true);
   };
 
-  const typeItems = [PARTER_TYPES.BOTH, PARTER_TYPES.CLIENT, PARTER_TYPES.SUPPLIER].map((type) => {
-    const accountClickHandler = () => {
-      setInputType(type);
-      setTypeMenuOpen(false);
-      setIsTypeSelecting(false);
-    };
+  const typeItems = [CounterpartyType.BOTH, CounterpartyType.CLIENT, CounterpartyType.SUPPLIER].map(
+    (type) => {
+      const accountClickHandler = () => {
+        setInputType(type);
+        setTypeMenuOpen(false);
+        setIsTypeSelecting(false);
+      };
 
-    return (
-      <button
-        key={type}
-        type="button"
-        onClick={accountClickHandler}
-        className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-      >
-        <p className="text-dropdown-text-secondary">
-          {t(`certificate:COUNTERPARTY.${type.toUpperCase()}`)}
-        </p>
-      </button>
-    );
-  });
+      return (
+        <button
+          key={type}
+          type="button"
+          onClick={accountClickHandler}
+          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+        >
+          <p className="text-dropdown-text-secondary">
+            {t(`certificate:COUNTERPARTY.${type.toUpperCase()}`)}
+          </p>
+        </button>
+      );
+    }
+  );
 
   const displayedTypeMenu = (
     <div
@@ -81,6 +82,10 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     setInputName(event.target.value);
   };
 
+  const taxIdChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputTaxId(event.target.value);
+  };
+
   const noteChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputNote(event.target.value);
   };
@@ -92,7 +97,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     if (disabled) {
       setShowHint(true);
     } else {
-      onSave({ name: inputName, taxId: inputTaxId, parterType: inputType, note: inputNote || '' });
+      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote || '' });
     }
   };
 
@@ -117,7 +122,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
           <div className="flex flex-col gap-4">
             {/* Info: (20241018 - tzuhan) name */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-              <div id="price" className="absolute -top-20"></div>
+              <div id="counterparty-name" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:COUNTERPARTY.COMPANY_NAME')}
                 <span className="text-text-state-error">*</span>
@@ -135,23 +140,22 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
               </div>
             </div>
 
-            {/* Info: (20240924 - tzuhan) Tax Number */}
+            {/* Info: (20240924 - tzuhan) Tax Id */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-              <div id="price" className="absolute -top-20"></div>
+              <div id="counterpart-taxid" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:COUNTERPARTY.TAX_NUMBER')}
                 <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center">
-                <NumericInput
-                  className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
-                  id="input-partner-tax-id"
-                  name="input-partner-tax-id"
+                <input
+                  id="input-parter-tax-id"
+                  type="text"
+                  placeholder={t('certificate:COUNTERPARTY.INVOICE_NUMBER')}
                   value={inputTaxId}
-                  setValue={setInputTaxId}
-                  isDecimal={false}
-                  hasComma={false}
+                  onChange={taxIdChangeHandler}
                   required
+                  className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-input-text-input-filled outline-none"
                 />
               </div>
             </div>
