@@ -3,6 +3,7 @@ import Image from 'next/image';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
 import { ICompany } from '@/interfaces/company';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 // ToDo: (20241016 - Liz) 從 user context 中打 API 取得公司列表、判斷是否為空
 const isCompanyListEmpty = false;
@@ -86,7 +87,7 @@ const MyCompanyList = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-text-neutral-secondary">My Company List</h3>
 
-          <MoreLink href="/" />
+          <MoreLink href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE} />
         </div>
 
         {isCompanyListEmpty ? <EmptyCompanyList /> : <CompanyList />}

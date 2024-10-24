@@ -1,21 +1,13 @@
 import Head from 'next/head';
-import { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import Introduction from '@/components/beta/select_role/introduction';
-import RoleCard from '@/components/beta/select_role/role_card';
-import PreviewModal from '@/components/beta/select_role/preview_modal';
-import { RoleId } from '@/constants/role';
+import Layout from '@/components/beta/layout/layout';
+import MyCompanyListPageBody from '@/components/beta/my_company_list_page/my_company_list_page_body';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
-const SelectRolePage = () => {
+const MyCompanyListPage = () => {
   const { t } = useTranslation(['common']);
-  const [showingRole, setShowingRole] = useState<RoleId | null>(null);
-  const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
-
-  const togglePreviewModal = () => {
-    setIsPreviewModalVisible((prev) => !prev);
-  };
 
   return (
     <>
@@ -23,7 +15,7 @@ const SelectRolePage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:SELECT_ROLE.SELECT_ROLE_ISUNFA')}</title>
+        <title>{t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -38,17 +30,13 @@ const SelectRolePage = () => {
         />
       </Head>
 
-      <main className="relative h-screen overflow-hidden">
-        <div className="h-75%">
-          <Introduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
-        </div>
-
-        <div className="mx-100px mb-40px">
-          <RoleCard showingRole={showingRole} setShowingRole={setShowingRole} />
-        </div>
-
-        {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
-      </main>
+      <Layout
+        isDashboard={false}
+        pageTitle={t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
+        goBackUrl={ISUNFA_ROUTE.BETA_DASHBOARD}
+      >
+        <MyCompanyListPageBody />
+      </Layout>
     </>
   );
 };
@@ -71,4 +59,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default SelectRolePage;
+export default MyCompanyListPage;

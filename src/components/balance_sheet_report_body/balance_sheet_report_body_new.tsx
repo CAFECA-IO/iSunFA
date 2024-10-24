@@ -101,7 +101,7 @@ const BalanceSheetPageBody = () => {
         </div>
 
         {/* Info: (20241017 - Anna) Balance Sheet List */}
-        <BalanceSheetList />
+        <BalanceSheetList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );

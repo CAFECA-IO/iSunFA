@@ -419,12 +419,35 @@
     "ASSET": "Asset",
     "LIABILITY": "Liability",
     "EQUITY": "Equity",
-    "NONE": ""
+    "NONE": "",
+    "PAYMENT": "Payment",
+    "INCOME": "Income",
+    "TRANSFER": "Transfer"
   },
   "SELECTION": {
     "EXPORT": "Export",
     "CERTIFICATES": "Certificates",
     "ADD_NEW_VOUCHER": "Add New Voucher",
     "ADD_NEW_ASSET": "Add New Asset"
+  },
+
+  "SELECT_ROLE": {
+    "SELECT_ROLE_ISUNFA": "Select Role - iSunFA"
+  },
+
+  "CREATED_ROLES": {
+    "CREATED_ROLES": "Created Roles"
+  },
+
+  "BETA_DASHBOARD": {
+    "DASHBOARD": "Dashboard"
+  },
+
+  "MY_COMPANY_LIST_PAGE": {
+    "MY_COMPANY_LIST": "My Company List"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "Latest News"
   }
 }

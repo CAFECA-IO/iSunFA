@@ -9,11 +9,15 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 // import { useUserCtx } from '@/contexts/user_context'; // ToDo: (20241018 - Liz) 準備串接真實資料
 
-interface CaptionLayoutProps {
+interface SideMenuProps {
+  toggleOverlay?: () => void;
+}
+
+interface CaptionProps {
   caption: string;
 }
 
-interface LinkLayoutProps {
+interface SubMenuItemProps {
   linkText: string;
   href?: string;
   disabled?: boolean;
@@ -30,6 +34,8 @@ interface PanelLayoutProps {
   children: React.ReactNode;
   disabled?: boolean;
 }
+
+const TEMPORARY_LINK = ISUNFA_ROUTE.BETA_DASHBOARD;
 
 const PanelLayout = ({
   panelTitle,
@@ -67,7 +73,10 @@ const PanelLayout = ({
 
       {/* // Info: (20241014 - Liz) Panel : 面板上有各種 links 可以連結到其他頁面 */}
       {isPanelOpen && (
-        <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
+        <div
+          onClick={togglePanel} // Info: (20241022 - Liz) 點擊此 Panel 會關閉 Panel
+          className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent"
+        >
           {children}
         </div>
       )}
@@ -75,9 +84,7 @@ const PanelLayout = ({
   );
 };
 
-const temporaryLink = ISUNFA_ROUTE.BETA_DASHBOARD;
-
-const CaptionLayout = ({ caption }: CaptionLayoutProps) => {
+const Caption = ({ caption }: CaptionProps) => {
   return (
     <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
       {caption}
@@ -85,13 +92,13 @@ const CaptionLayout = ({ caption }: CaptionLayoutProps) => {
   );
 };
 
-const LinkLayout = ({
+const SubMenuItem = ({
   linkText,
   href,
   disabled = false,
   isCompanyNeeded = false,
   toggleOverlay = () => {},
-}: LinkLayoutProps) => {
+}: SubMenuItemProps) => {
   const { toastHandler } = useModalContext();
 
   // const { selectedCompany } = useUserCtx(); // ToDo: (20241018 - Liz) 準備串接真實資料
@@ -104,8 +111,6 @@ const LinkLayout = ({
     if (isCompanyNeeded && !isSelectedCompany) {
       // Info: (20241018 - Liz) 阻止導航
       e.preventDefault();
-
-      toggleOverlay();
 
       // ToDo: (20241018 - Liz) 要換成真實的「選擇公司」的 Link href
       toastHandler({
@@ -123,6 +128,10 @@ const LinkLayout = ({
         ),
         closeable: true,
         position: ToastPosition.TOP_CENTER,
+        onOpen: () => {
+          // Info: (20241018 - Liz) 開啟 Toast 時順便開啟 Overlay
+          toggleOverlay();
+        },
         onClose: () => {
           // Info: (20241018 - Liz) 關閉 Toast 時順便關閉 Overlay
           toggleOverlay();
@@ -133,7 +142,7 @@ const LinkLayout = ({
 
   return (
     <Link
-      href={href ?? temporaryLink}
+      href={href ?? TEMPORARY_LINK}
       onClick={handleClick}
       className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
     >
@@ -141,10 +150,6 @@ const LinkLayout = ({
     </Link>
   );
 };
-
-interface SideMenuProps {
-  toggleOverlay?: () => void;
-}
 
 const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
@@ -175,16 +180,16 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
               iconHeight={23.85}
             >
               <div className="flex flex-col gap-24px">
-                <CaptionLayout caption="Accounting" />
-                <LinkLayout linkText="Adding Voucher" href={ISUNFA_ROUTE.ADD_NEW_VOUCHER} />
-                <LinkLayout linkText="Voucher List" href={ISUNFA_ROUTE.VOUCHER_LIST} />
-                <LinkLayout
+                <Caption caption="Accounting" />
+                <SubMenuItem linkText="Adding Voucher" href={ISUNFA_ROUTE.ADD_NEW_VOUCHER} />
+                <SubMenuItem linkText="Voucher List" href={ISUNFA_ROUTE.VOUCHER_LIST} />
+                <SubMenuItem
                   linkText="Payable/Receivable List"
                   href={ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST}
                 />
 
-                <CaptionLayout caption="Certificates" />
-                <LinkLayout linkText="Upload Certificate" href={ISUNFA_ROUTE.CERTIFICATE_LIST} />
+                <Caption caption="Certificates" />
+                <SubMenuItem linkText="Upload Certificate" href={ISUNFA_ROUTE.CERTIFICATE_LIST} />
               </div>
             </PanelLayout>
 
@@ -197,8 +202,8 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
               iconHeight={24}
             >
               <div className="flex flex-col gap-24px">
-                <CaptionLayout caption="Asset" />
-                <LinkLayout linkText="Asset List" href={ISUNFA_ROUTE.ASSET_LIST} />
+                <Caption caption="Asset" />
+                <SubMenuItem linkText="Asset List" href={ISUNFA_ROUTE.ASSET_LIST} />
               </div>
             </PanelLayout>
 
@@ -223,20 +228,20 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
               iconHeight={23.85}
             >
               <div className="flex flex-col gap-24px">
-                <CaptionLayout caption="Financial Report" />
-                <LinkLayout linkText="Balance Sheet" />
-                <LinkLayout linkText="Income Statement" />
-                <LinkLayout linkText="Statement of Cash Flows" />
+                <Caption caption="Financial Report" />
+                <SubMenuItem linkText="Balance Sheet" />
+                <SubMenuItem linkText="Income Statement" />
+                <SubMenuItem linkText="Statement of Cash Flows" />
 
-                <CaptionLayout caption="Tax Report" />
-                <LinkLayout linkText="Business Tax Return (401)" />
+                <Caption caption="Tax Report" />
+                <SubMenuItem linkText="Business Tax Return (401)" />
 
-                <CaptionLayout caption="Daily Report" />
-                <LinkLayout linkText="Ledger" />
-                <LinkLayout linkText="Trial Balance" />
+                <Caption caption="Daily Report" />
+                <SubMenuItem linkText="Ledger" />
+                <SubMenuItem linkText="Trial Balance" />
 
-                <CaptionLayout caption="Embed code" />
-                <LinkLayout linkText="Generate Embed Code" />
+                <Caption caption="Embed code" />
+                <SubMenuItem linkText="Generate Embed Code" />
               </div>
             </PanelLayout>
 
@@ -249,28 +254,28 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
               iconHeight={23.73}
             >
               <div className="flex flex-col gap-24px">
-                <CaptionLayout caption="Setting" />
-                <LinkLayout
+                <Caption caption="Setting" />
+                <SubMenuItem
                   linkText="General Setting"
                   href={ISUNFA_ROUTE.EXAMPLE}
                   isCompanyNeeded
                   toggleOverlay={toggleOverlay}
                 />
 
-                <CaptionLayout caption="Company setting" />
-                <LinkLayout linkText="Accounting Setting" />
-                <LinkLayout linkText="Clients/Suppliers Management" />
+                <Caption caption="Company setting" />
+                <SubMenuItem linkText="Accounting Setting" href={ISUNFA_ROUTE.EXAMPLE} />
+                <SubMenuItem linkText="Clients/Suppliers Management" />
               </div>
             </PanelLayout>
 
             {/* // Info: (20241015 - Liz) 回到儀表板 */}
-            <button
-              type="button"
+            <Link
+              href={ISUNFA_ROUTE.BETA_DASHBOARD}
               className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
             >
               <Image src="/icons/dashboard.svg" alt="dashboard_icon" width={24} height={24}></Image>
               <p>Back to dashboard</p>
-            </button>
+            </Link>
           </div>
 
           {/* Side Menu Footer */}

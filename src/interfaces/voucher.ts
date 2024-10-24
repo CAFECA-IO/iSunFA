@@ -320,3 +320,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
     },
   },
 ];
+
+export interface IVoucherUI extends IVoucherBeta {
+  isSelected: boolean;
+}
