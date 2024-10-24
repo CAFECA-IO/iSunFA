@@ -2,39 +2,21 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
-import { timestampToYMD } from '@/lib/utils/common';
+import { numberWithCommas, timestampToYMD } from '@/lib/utils/common';
+import { IAssetItemUI } from '@/interfaces/asset';
+import { checkboxStyle } from '@/constants/display';
 
-interface IAssetItem {
-  id: number;
-  acquisitionDate: number;
-  assetType: string;
-  assetNumber: string;
-  assetName: string;
-  purchasePrice: number;
-  accumulatedDepreciation: number;
-  residualValue: number;
-  remainingLife: number;
-  assetStatus: AssetStatus;
+interface IAssetItemProps {
+  assetData: IAssetItemUI;
+  selectHandler: (id: number) => void;
+  isCheckBoxOpen: boolean;
 }
 
-// ToDo: (20240925 - Julian) dummy data
-const dummyData: IAssetItem = {
-  id: 1,
-  acquisitionDate: 1632511200,
-  assetType: '123 Machinery',
-  assetNumber: 'A-000010',
-  assetName: 'MackBook',
-  purchasePrice: 100000,
-  accumulatedDepreciation: 5000,
-  residualValue: 5000,
-  remainingLife: 61580800,
-  assetStatus: AssetStatus.NORMAL,
-};
-
-const AssetItem = () => {
+const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isCheckBoxOpen }) => {
   const { t } = useTranslation('common');
 
   const {
+    id: assetId,
     acquisitionDate,
     assetType,
     assetNumber,
@@ -44,7 +26,13 @@ const AssetItem = () => {
     residualValue,
     remainingLife,
     assetStatus,
-  } = dummyData;
+    currencyAlias,
+    isSelected,
+  } = assetData;
+
+  const unit = currencyAlias === 'TWD' ? t('common:COMMON.TWD') : currencyAlias;
+  const assetTypeCode = assetType.split(' ')[0];
+  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
 
   const displayedDate = (
     <div className="flex items-center justify-center">
@@ -52,8 +40,8 @@ const AssetItem = () => {
     </div>
   );
 
-  const assetTypeCode = assetType.split(' ')[0];
-  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
+  // Info: (20241024 - Julian) checkbox click handler
+  const checkboxHandler = () => selectHandler(assetId);
 
   const displayedAssetType = (
     <p className="text-text-neutral-primary">
@@ -71,22 +59,22 @@ const AssetItem = () => {
 
   const displayedPurchasePrice = (
     <p>
-      {purchasePrice}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      {numberWithCommas(purchasePrice)}
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedDepreciation = (
     <p>
-      {accumulatedDepreciation}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      {numberWithCommas(accumulatedDepreciation)}
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedResidual = (
     <p>
-      {residualValue}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      {numberWithCommas(residualValue)}
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
@@ -145,6 +133,17 @@ const AssetItem = () => {
 
   return (
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+      {/* Info: (20240920 - Julian) Select */}
+      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
+        <div className="relative top-20px px-8px">
+          <input
+            type="checkbox"
+            className={checkboxStyle}
+            checked={isSelected}
+            onChange={checkboxHandler}
+          />
+        </div>
+      </div>
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}

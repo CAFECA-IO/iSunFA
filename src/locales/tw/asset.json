@@ -67,6 +67,7 @@
     "RESIDUAL_VALUE": "殘值",
     "REMAINING_LIFE": "剩餘使用年限",
     "NOTE": "備註",
-    "VOUCHER": "憑證"
+    "VOUCHER": "憑證",
+    "NO_ASSET": "無資產"
   }
 }

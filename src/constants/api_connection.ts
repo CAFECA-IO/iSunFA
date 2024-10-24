@@ -123,6 +123,7 @@ export enum APIName {
   PUSHER = 'PUSHER',
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
+  ASSET_LIST_V2 = 'ASSET_LIST_V2',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
   ACCOUNTING_SETTING_GET = 'ACCOUNTING_SETTING_GET',
   ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
@@ -231,6 +232,7 @@ export enum APIPath {
   PUSHER = `${apiPrefixV2}/pusher`,
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
+  ASSET_LIST_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
@@ -747,6 +749,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.COUNTERPARTY_DELETE,
     method: HttpMethod.DELETE,
     path: APIPath.COUNTERPARTY_DELETE,
+  }),
+  [APIName.ASSET_LIST_V2]: createConfig({
+    name: APIName.ASSET_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_LIST_V2,
   }),
   [APIName.USER_SETTING_GET]: createConfig({
     name: APIName.USER_SETTING_GET,
