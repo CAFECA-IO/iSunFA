@@ -2,17 +2,21 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
-import { timestampToYMD } from '@/lib/utils/common';
-import { IAssetItem } from '@/interfaces/asset';
+import { numberWithCommas, timestampToYMD } from '@/lib/utils/common';
+import { IAssetItemUI } from '@/interfaces/asset';
+import { checkboxStyle } from '@/constants/display';
 
 interface IAssetItemProps {
-  assetData: IAssetItem;
+  assetData: IAssetItemUI;
+  selectHandler: (id: number) => void;
+  isCheckBoxOpen: boolean;
 }
 
-const AssetItem: React.FC<IAssetItemProps> = ({ assetData }) => {
+const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isCheckBoxOpen }) => {
   const { t } = useTranslation('common');
 
   const {
+    id: assetId,
     acquisitionDate,
     assetType,
     assetNumber,
@@ -23,9 +27,12 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData }) => {
     remainingLife,
     assetStatus,
     currencyAlias,
+    isSelected,
   } = assetData;
 
   const unit = currencyAlias === 'TWD' ? t('common:COMMON.TWD') : currencyAlias;
+  const assetTypeCode = assetType.split(' ')[0];
+  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
 
   const displayedDate = (
     <div className="flex items-center justify-center">
@@ -33,8 +40,8 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData }) => {
     </div>
   );
 
-  const assetTypeCode = assetType.split(' ')[0];
-  const assetTypeTitle = assetType.split(' ').slice(1).join(' ');
+  // Info: (20241024 - Julian) checkbox click handler
+  const checkboxHandler = () => selectHandler(assetId);
 
   const displayedAssetType = (
     <p className="text-text-neutral-primary">
@@ -52,21 +59,21 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData }) => {
 
   const displayedPurchasePrice = (
     <p>
-      {purchasePrice}
+      {numberWithCommas(purchasePrice)}
       <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedDepreciation = (
     <p>
-      {accumulatedDepreciation}
+      {numberWithCommas(accumulatedDepreciation)}
       <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedResidual = (
     <p>
-      {residualValue}
+      {numberWithCommas(residualValue)}
       <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
@@ -126,6 +133,17 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData }) => {
 
   return (
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+      {/* Info: (20240920 - Julian) Select */}
+      <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
+        <div className="relative top-20px px-8px">
+          <input
+            type="checkbox"
+            className={checkboxStyle}
+            checked={isSelected}
+            onChange={checkboxHandler}
+          />
+        </div>
+      </div>
       {/* Info: (20240925 - Julian) Issued Date */}
       <div className="table-cell py-10px align-middle">{displayedDate}</div>
       {/* Info: (20240925 - Julian) Asset Type */}

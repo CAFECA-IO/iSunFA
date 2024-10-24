@@ -129,6 +129,11 @@ export const mockAssetItem: IAssetItem = {
   deletedAt: null,
 };
 
+// Info: (20241024 - Julian) For UI
+export interface IAssetItemUI extends IAssetItem {
+  isSelected: boolean;
+}
+
 export const mockAssetDetails: IAssetDetails = {
   ...mockAssetItem,
   depreciationStart: 1632511200,
