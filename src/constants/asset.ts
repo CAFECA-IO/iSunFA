@@ -6,6 +6,31 @@ export enum AssetStatus {
   NORMAL = 'normal',
 }
 
+/**
+ * Info: (20241024 - Murky)
+ * @description Asset type that is based on property, plant, equipment
+ * @note value is Account Code of asset
+ * @shirley 目前我只有寫一個type，不確定要有哪些type
+ */
+export enum AssetEntityType {
+  LAND = '1602',
+}
+
+/**
+ * Info: (20241024 - Murky)
+ * @description How Asset is depreciated, used in Asset table `depreciationMethod`
+ * @Shirley 目前我只有寫一個type，可以增加更多
+ */
+export enum AssetDepreciationMethod {
+  /**
+   * Info: (20241024 - Murky)
+   * @description 直線法
+   */
+  STRAIGHT_LINE = 'straight_line',
+  // DOUBLE_DECLINING = 'double_declining',
+  // UNITS_OF_PRODUCTION = 'units_of_production',
+}
+
 export const AccountCodesOfAsset = [
   '1602', // Info: (20241007 - Julian) 土地成本
   '1606', // Info: (20241007 - Julian) 土地改良物成本

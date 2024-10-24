@@ -7,6 +7,7 @@ import loggerBack from '@/lib/utils/logger_back';
 import { isEnumValue } from '@/lib/utils/type_guard/common';
 import { formatApiResponse } from '@/lib/utils/common';
 import { decrypt } from '@/lib/utils/pusher_token';
+import { randomInt } from 'crypto';
 
 export const config = {
   api: {
@@ -16,7 +17,7 @@ export const config = {
 
 async function handlePostRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  const payload: null = null;
+  let payload: number | null = null;
 
   try {
     const { type, token } = req.query;
@@ -37,7 +38,7 @@ async function handlePostRequest(req: NextApiRequest) {
     // Deprecated: (20241011-tzuhan) Debugging purpose
     // eslint-disable-next-line no-console
     console.log(`API POST companyId(${companyId}) parsedForm: `, parsedForm);
-
+    payload = randomInt(10000000, 19999999);
     statusMessage = STATUS_MESSAGE.SUCCESS;
   } catch (_error) {
     const error = _error as Error;
@@ -52,17 +53,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: null }>;
+  ) => Promise<{ statusMessage: string; payload: null | number }>;
 } = {
   POST: handlePostRequest,
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<null>>
+  res: NextApiResponse<IResponseData<null | number>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: null = null;
+  let payload: null | number = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -78,7 +79,7 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<null | number>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

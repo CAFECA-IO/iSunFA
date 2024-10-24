@@ -43,6 +43,10 @@
     "UPLOAD_AND_NOTIFY": "上传并通知网页失败"
   },
   "WARNING": {
+    "UPLOAD_FAILED": "上传失败",
+    "UPLOAD_FAILED_NOTIFY": "有一些文件未成功上传，您要取消上传吗？",
+    "UPLOAD_CANCEL": "是，取消上传",
+    "UPLOAD_CONTINUE": "否，继续上传",
     "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "发票已上传，但通知网页失败"
   },
   "TITLE": {

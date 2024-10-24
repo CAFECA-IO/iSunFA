@@ -14,9 +14,23 @@ import { MessageType } from '@/interfaces/message_modal';
 
 interface IVoucherListProps {
   voucherList: IVoucherBeta[];
+  creditSort: null | SortOrder;
+  setCreditSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
+  debitSort: null | SortOrder;
+  setDebitSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
+  dateSort: null | SortOrder;
+  setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
 }
 
-const VoucherList: React.FC<IVoucherListProps> = ({ voucherList }) => {
+const VoucherList: React.FC<IVoucherListProps> = ({
+  voucherList,
+  creditSort,
+  setCreditSort,
+  debitSort,
+  setDebitSort,
+  dateSort,
+  setDateSort,
+}) => {
   const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
@@ -38,9 +52,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({ voucherList }) => {
   const [selectedVoucherList, setSelectedVoucherList] = useState<IVoucherUI[]>([]);
 
   // Info: (20240920 - Julian) 排序狀態
-  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
-  const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
+  // const [dateSort, setDateSort] = useState<null | SortOrder>(null);
+  // const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
+  // const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';

@@ -6,14 +6,10 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
-import {
-  CERTIFICATE_TYPES,
-  generateRandomCounterParties,
-  ICertificateUI,
-  ICounterParty,
-  INVOICE_TYPES,
-  PARTER_TYPES,
-} from '@/interfaces/certificate';
+import { InvoiceType, InvoiceTransactionDirection } from '@/constants/invoice';
+import { generateRandomCounterParties, ICounterparty } from '@/interfaces/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { inputStyle } from '@/constants/display';
@@ -29,13 +25,15 @@ import { LuTrash2 } from 'react-icons/lu';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
+  companyId?: number;
   toggleIsEditModalOpen: (open: boolean) => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   certificate?: ICertificateUI;
-  onSave: (data: ICertificateUI) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
+  onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
 }
 
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
+  companyId,
   toggleIsEditModalOpen,
   certificate,
   onSave,
@@ -46,22 +44,22 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const { t } = useTranslation(['certificate', 'common']);
   const counterPartyList = generateRandomCounterParties(10);
   const [filteredCounterPartyList, setFilteredCounterPartyList] =
-    useState<ICounterParty[]>(counterPartyList);
-  const [counterParty, setCounterParty] = useState(certificate.counterParty);
-  const [type, setType] = useState(certificate.type);
+    useState<ICounterparty[]>(counterPartyList);
+  const [counterParty, setCounterParty] = useState(certificate.invoice.counterParty);
+  const [type, setType] = useState(certificate.invoice.inputOrOutput);
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.date,
+    startTimeStamp: certificate.invoice.date,
     endTimeStamp: 0,
   });
-  const [invoiceNumber, setInvoiceNumber] = useState(certificate.invoiceNumber);
-  const [priceBeforeTax, setPriceBeforeTax] = useState(certificate.priceBeforeTax);
-  const [taxRate, setTaxRate] = useState(certificate.taxRate);
-  const [taxPrice, setTaxPrice] = useState(certificate.taxPrice);
-  const [totalPrice, setTotalPrice] = useState(certificate.totalPrice);
+  const [certificateNo, setCertificateNo] = useState(certificate.invoice.no);
+  const [priceBeforeTax, setPriceBeforeTax] = useState(certificate.invoice.priceBeforeTax);
+  const [taxRatio, setTaxRatio] = useState(certificate.invoice.taxRatio);
+  const [taxPrice, setTaxPrice] = useState(certificate.invoice.taxPrice);
+  const [totalPrice, setTotalPrice] = useState(certificate.invoice.totalPrice);
   const [searchName, setSearchName] = useState<string>('');
-  const [searchTaxId, setSearchTaxId] = useState<number>(0);
-  const [invoiceType, setInvoiceType] = useState(certificate.invoiceType);
-  const [deductible, setDeductible] = useState(certificate.deductible);
+  const [searchTaxId, setSearchTaxId] = useState<string>('');
+  const [invoiceType, setInvoiceType] = useState(certificate.invoice.type);
+  const [deductible, setDeductible] = useState(certificate.invoice.deductible);
   const {
     isMessageModalVisible,
     messageModalDataHandler,
@@ -70,12 +68,12 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   } = useModalContext();
   const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
   const isFormValid =
-    priceBeforeTax > 0 && totalPrice > 0 && counterParty !== null && invoiceNumber !== '';
+    priceBeforeTax > 0 && totalPrice > 0 && counterParty !== null && certificateNo !== '';
 
   const {
-    targetRef: taxRateMenuRef,
-    componentVisible: isTaxRateMenuOpen,
-    setComponentVisible: setIsTaxRateMenuOpen,
+    targetRef: taxRatioMenuRef,
+    componentVisible: isTaxRatioMenuOpen,
+    setComponentVisible: setIsTaxRatioMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
 
   const {
@@ -85,9 +83,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   } = useOuterClick<HTMLUListElement>(false);
 
   const selectTaxHandler = (value: number) => {
-    setTaxRate(value);
+    setTaxRatio(value);
     setTaxPrice(Math.round((priceBeforeTax * value) / 100));
-    setIsTaxRateMenuOpen(false);
+    setIsTaxRatioMenuOpen(false);
   };
 
   // Info: (20241017 - tzuhan) 參考 AddAssetModal
@@ -116,7 +114,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     setIsCounterPartyEditing(false);
     setCounterPartyMenuOpen(false);
     setSearchName('');
-    setSearchTaxId(0);
+    setSearchTaxId('');
   };
 
   const CounterPartyItems = filteredCounterPartyList.map((partner) => {
@@ -127,7 +125,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       setIsCounterPartyEditing(false);
       // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
       setSearchName('');
-      setSearchTaxId(0);
+      setSearchTaxId('');
     };
 
     return (
@@ -184,7 +182,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     if (isMessageModalVisible) return;
     setCounterPartyMenuOpen(true);
     if (e.target.id === 'counterparty-taxid') {
-      setSearchTaxId(Number(e.target.value));
+      setSearchTaxId(e.target.value);
     }
     if (e.target.id === 'counterparty-name') {
       setSearchName(e.target.value);
@@ -244,18 +242,21 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   // Info: (20240924 - tzuhan) 處理保存
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const updatedData = {
+    const updatedData: ICertificate = {
       ...certificate,
-      type,
-      date: date.startTimeStamp,
-      invoiceNumber,
-      priceBeforeTax,
-      taxRate,
-      taxPrice,
-      totalPrice,
-      counterParty,
-      invoiceType,
-      deductible,
+      invoice: {
+        ...certificate.invoice,
+        inputOrOutput: type,
+        date: date.startTimeStamp,
+        no: certificateNo,
+        priceBeforeTax,
+        taxRatio,
+        taxPrice,
+        totalPrice,
+        counterParty,
+        type: invoiceType,
+        deductible,
+      },
     };
     onSave(updatedData);
     toastHandler({
@@ -269,13 +270,17 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   const handleAddCounterParty = (data: {
     name: string;
-    taxId: number;
-    parterType: PARTER_TYPES;
+    taxId: string;
+    type: CounterpartyType;
     note: string;
   }) => {
+    if (!companyId) return;
     filteredCounterPartyList.push({
       ...data,
       id: filteredCounterPartyList.length + 1,
+      companyId,
+      createdAt: new Date().getTime() / 1000,
+      updatedAt: new Date().getTime() / 1000,
     });
     toastHandler({
       id: ToastId.ADD_COUNTERPARTY_SUCCESS,
@@ -313,7 +318,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
         <div className="flex w-full flex-col items-center">
           <h2 className="flex justify-center gap-2 text-xl font-semibold">
-            {certificate.invoiceName}
+            {certificate.invoice.name}
             <Image alt="edit" src="/elements/edit.svg" width={16} height={16} />
           </h2>
           <p className="text-xs text-card-text-secondary">{t('certificate:EDIT.HEADER')}</p>
@@ -322,7 +327,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
           {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
           <Image
             className="h-400px w-250px items-start"
-            src={certificate.thumbnailUrl}
+            src={certificate.file.url}
             width={250}
             height={400}
             alt="certificate"
@@ -347,7 +352,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     name="invoice-type"
                     className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
                     defaultChecked
-                    onClick={() => setType(CERTIFICATE_TYPES.INPUT)}
+                    onClick={() => setType(InvoiceTransactionDirection.INPUT)}
                   />
                   <p>{t('certificate:EDIT.INPUT')}</p>
                 </label>
@@ -360,7 +365,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     id="invoice-output"
                     name="invoice-type"
                     className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                    onClick={() => setType(CERTIFICATE_TYPES.OUTPUT)}
+                    onClick={() => setType(InvoiceTransactionDirection.OUTPUT)}
                   />
                   <p>{t('certificate:EDIT.OUTPUT')}</p>
                 </label>
@@ -392,8 +397,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <input
                   id="invoiceno-id"
                   type="text"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  value={certificateNo}
+                  onChange={(e) => setCertificateNo(e.target.value)}
                   className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                   placeholder="0"
                 />
@@ -439,18 +444,18 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               <div className="flex w-full items-center gap-2">
                 <div
                   id="tax-rate-menu"
-                  onClick={() => setIsTaxRateMenuOpen(!isTaxRateMenuOpen)}
-                  className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${isTaxRateMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                  onClick={() => setIsTaxRatioMenuOpen(!isTaxRatioMenuOpen)}
+                  className={`group relative flex h-46px w-full cursor-pointer md:w-220px ${isTaxRatioMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                 >
                   <p className="text-input-text-input-filled">
-                    {t('certificate:EDIT.TAXABLE')} {taxRate}%
+                    {t('certificate:EDIT.TAXABLE')} {taxRatio}%
                   </p>
                   <IoIosArrowDown />
                   <div
-                    className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRateMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                    className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isTaxRatioMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                   >
                     <ul
-                      ref={taxRateMenuRef}
+                      ref={taxRatioMenuRef}
                       className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary p-8px"
                     >
                       {[5, 10, 15].map((value) => (
@@ -556,7 +561,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <div className="flex w-full items-center">
                   <div
                     id="invoice-type-menu"
-                    onClick={() => setIsInvoiceTypeMenuOpen(!isTaxRateMenuOpen)}
+                    onClick={() => setIsInvoiceTypeMenuOpen(!isTaxRatioMenuOpen)}
                     className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
                     <p>
@@ -572,9 +577,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                         className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                       >
                         {[
-                          INVOICE_TYPES.TRIPLICATE,
-                          INVOICE_TYPES.DUPLICATE,
-                          INVOICE_TYPES.SPECIAL,
+                          // Info: (20241024 - Murky) @tzuhan 這邊我改用invoice 原生的type, special 改用PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC
+                          InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+                          InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+                          InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
                         ].map((value) => (
                           <li
                             key={`taxable-${value}`}

@@ -1,7 +1,52 @@
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
-import { IAccountForSheetDisplay, IAccountNode } from '@/interfaces/accounting_account';
+import {
+  IAccountForSheetDisplay,
+  IAccountNode,
+  IAccountEntity,
+} from '@/interfaces/accounting_account';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
-import { Account } from '@prisma/client';
+import { AccountType } from '@/constants/account';
+import { Account as PrismaAccount } from '@prisma/client';
+import { getTimestampNow } from '@/lib/utils/common';
+
+export function initAccountEntity(
+  dto: Partial<PrismaAccount> & {
+    companyId: number;
+    system: string;
+    type: AccountType;
+    debit: boolean;
+    liquidity: boolean;
+    code: string;
+    name: string;
+    forUser: boolean;
+    parentCode: string;
+    level: number;
+    parent?: IAccountEntity;
+    root?: IAccountEntity;
+  }
+): IAccountEntity {
+  const nowInSecond = getTimestampNow();
+  const accountEntity: IAccountEntity = {
+    id: dto.id || 0,
+    companyId: dto.companyId,
+    system: dto.system,
+    type: dto.type,
+    debit: dto.debit,
+    liquidity: dto.liquidity,
+    code: dto.code,
+    name: dto.name,
+    forUser: dto.forUser,
+    level: dto.level,
+    parentCode: dto.parentCode,
+    rootCode: dto.rootCode,
+    parent: dto.parent,
+    root: dto.root,
+    createdAt: dto.createdAt || nowInSecond,
+    updatedAt: dto.updatedAt || nowInSecond,
+    deletedAt: dto.deletedAt || null,
+  };
+  return accountEntity;
+}
 
 export function transformLineItemsFromDBToMap(
   lineItemsFromDB: ILineItemIncludeAccount[]
@@ -19,7 +64,7 @@ export function transformLineItemsFromDBToMap(
   return lineItems;
 }
 
-function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> {
+function transformAccountsToMap(accounts: PrismaAccount[]): Map<string, IAccountNode> {
   const accountMap = new Map<string, IAccountNode>();
 
   accounts.forEach((account) => {
@@ -33,7 +78,7 @@ function transformAccountsToMap(accounts: Account[]): Map<string, IAccountNode> 
   return accountMap;
 }
 
-export function buildAccountForest(accounts: Account[]): IAccountNode[] {
+export function buildAccountForest(accounts: PrismaAccount[]): IAccountNode[] {
   const accountMap = transformAccountsToMap(accounts);
   const rootAccounts: IAccountNode[] = [];
 

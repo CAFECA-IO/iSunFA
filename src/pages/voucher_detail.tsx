@@ -7,12 +7,8 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { ILocale } from '@/interfaces/locale';
 import SideMenu from '@/components/upload_certificate/side_menu';
 import Header from '@/components/upload_certificate/header';
-import {
-  generateRandomCertificates,
-  ICertificate,
-  ICertificateUI,
-  OPERATIONS,
-} from '@/interfaces/certificate';
+import { generateRandomCertificates, ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
@@ -195,7 +191,10 @@ const VoucherDetailPage: React.FC = () => {
   const selectedCertificates: ICertificateUI[] = generateRandomCertificates(
     certificates.length
   ).map((certificate) => {
-    const actions = [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE];
+    const actions = [
+      CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+      CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+    ];
     return {
       ...certificate,
       isSelected: false,

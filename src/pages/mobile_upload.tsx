@@ -4,9 +4,8 @@ import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
-import { ICertificateMeta } from '@/interfaces/certificate';
+import { IFileUIBeta } from '@/interfaces/file';
 import { APIName } from '@/constants/api_connection';
-import { IFile } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
 import { UploadType } from '@/constants/file';
 import useStateRef from 'react-usestateref';
@@ -24,8 +23,9 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
-export interface ICertificateMetaWithFile extends ICertificateMeta {
+export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
 }
 
@@ -35,35 +35,33 @@ const MobileUploadPage: React.FC = () => {
   const { query } = router;
   const [token, setToken] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [sentCount, setSentCount] = useState<number>(1);
   const [selectedCertificates, setSelectedCertificates, selectedCertificatesRef] = useStateRef<
-    ICertificateMetaWithFile[]
+    IFileUIBetaWithFile[]
   >([]);
-  const [uploadedCertificates, setUploadedCertificates] = useState<ICertificateMeta[]>([]);
+  const [uploadedCertificates, setUploadedCertificates] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
-  const { trigger: uploadFileAPI } = APIHandler<IFile[]>(APIName.PUBLIC_FILE_UPLOAD);
+  // Info: (20241023 - tzuhan) @Murky, <...> 裡面是 public file upload API 期望的回傳格式，希望回傳 fileId
+  const { trigger: uploadFileAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
   const { trigger: pusherAPI } = APIHandler<void>(APIName.PUSHER);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const [selectedCertificate, setSelectedCertificate] = useState<ICertificateMetaWithFile | null>(
-    null
-  );
+  const [selectedCertificate, setSelectedCertificate] = useState<IFileUIBetaWithFile | null>(null);
 
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (e.target.files) {
         const certificates = Array.from(e.target.files).map(
-          (file, index) =>
+          (file) =>
             ({
-              id: sentCount * index,
+              id: null,
               name: file.name, // Info: (20241009 - tzuhan)  File metadata
               size: file.size,
               url: URL.createObjectURL(file), // Info: (20241009 - tzuhan)  For displaying the image preview
               progress: 0,
               status: ProgressStatus.IN_PROGRESS,
               file, // Info: (20241009 - tzuhan) Store the original File object for FormData
-            }) as ICertificateMetaWithFile
+            }) as IFileUIBetaWithFile
         );
         // Deprecated: (20241019 - tzuhan) 如果是拍照模式使用下列code就只能拍一張照片
         // .filter((file) => !selectedCertificatesRef.current.some((f) => f.name === file.name));
@@ -83,7 +81,7 @@ const MobileUploadPage: React.FC = () => {
     }
   };
 
-  const handleRemoveFile = (file: ICertificateMetaWithFile) => {
+  const handleRemoveFile = (file: IFileUIBetaWithFile) => {
     if (selectedCertificate && selectedCertificate.name === file.name) {
       setSelectedCertificate(null);
     }
@@ -107,9 +105,13 @@ const MobileUploadPage: React.FC = () => {
       }
 
       const { success: successPush } = await pusherAPI({
+        query: {
+          channel: PRIVATE_CHANNEL.CERTIFICATE,
+          event: CERTIFICATE_EVENT.UPLOAD,
+        },
         body: {
           token: token as string,
-          certificates: certificatesPayload,
+          files: certificatesPayload,
         },
       });
 
@@ -126,7 +128,7 @@ const MobileUploadPage: React.FC = () => {
         const formData = new FormData();
         formData.append('file', certificate.file);
 
-        const { success } = await uploadFileAPI({
+        const { success, data: filedId } = await uploadFileAPI({
           query: {
             type: UploadType.MOBILE_UPLOAD,
             token: token as string,
@@ -138,18 +140,22 @@ const MobileUploadPage: React.FC = () => {
           ...certificate,
         };
 
-        if (success === false) {
+        if (success && filedId) {
+          uploadingCertificate.id = filedId;
+          uploadingCertificate.status = ProgressStatus.SUCCESS;
+          uploadingCertificate.progress = 100;
+        } else {
           uploadingCertificate.status = ProgressStatus.FAILED;
           uploadingCertificate.progress = 0;
         }
 
-        uploadingCertificate.status = ProgressStatus.SUCCESS;
-        uploadingCertificate.progress = 100;
-
         const { success: successPushAgain } = await pusherAPI({
+          query: {
+            channel: PRIVATE_CHANNEL.CERTIFICATE,
+          },
           body: {
             token: token as string,
-            certificates: [uploadingCertificate],
+            files: [uploadingCertificate],
           },
         });
 
@@ -196,7 +202,7 @@ const MobileUploadPage: React.FC = () => {
     }
   };
 
-  const handleSelectCertificate = (certificate: ICertificateMetaWithFile) => {
+  const handleSelectCertificate = (certificate: IFileUIBetaWithFile) => {
     if (selectedCertificate && selectedCertificate.name === certificate.name) {
       setSelectedCertificate(null);
       return;
@@ -208,7 +214,6 @@ const MobileUploadPage: React.FC = () => {
     setIsUploading(false);
     setSelectedCertificates([]);
     setUploadedCertificates([]);
-    setSentCount((prev) => prev + 1);
   };
 
   useEffect(() => {
