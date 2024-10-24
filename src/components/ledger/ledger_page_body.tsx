@@ -4,8 +4,10 @@ import AccountRangeFilter from '@/components/filter_section/account_range_filter
 import { radioButtonStyle } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { useTranslation } from 'next-i18next';
 
 const LedgerPageBody = () => {
+  const { t } = useTranslation(['common', 'journal']);
   // Info: (20241015 - Anna) dummy data
   const assetOptions = ['1141 Accounts receivable', '1100 Cash', '1150 Inventory'];
   const liabilityOptions = ['2100 Accounts payable', '2200 Notes payable'];
@@ -31,7 +33,9 @@ const LedgerPageBody = () => {
         {/* Info: (20241015 - Anna) 篩選器 */}
         <div>
           {/* Info: (20241015 - Anna) 日期篩選器 */}
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">Ledger Period</p>
+          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
+            {t('journal:LEDGER.LEDGER_PERIOD')}
+          </p>
           <div className="flex min-w-250px flex-1 flex-col">
             <DatePicker
               period={selectedDateRange}
