@@ -38,6 +38,8 @@ export enum APIName {
   COMPANY_GET = 'COMPANY_GET',
   COMPANY_ADD_BY_INVITATION_CODE = 'COMPANY_ADD_BY_INVITATION_CODE',
   COMPANY_SELECT = 'COMPANY_SELECT',
+  COMPANY_SETTING_GET = 'COMPANY_SETTING_GET',
+  COMPANY_SETTING_UPDATE = 'COMPANY_SETTING_UPDATE',
   CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
@@ -102,6 +104,7 @@ export enum APIName {
   ROLE_UPDATE = 'ROLE_UPDATE',
   NEWS_LIST = 'NEWS_LIST',
   CREATE_NEWS = 'CREATE_NEWS',
+  NEWS_GET_BY_ID = 'NEWS_GET_BY_ID',
   KYC_UPLOAD = 'KYC_UPLOAD',
   ACCOUNT_GET_BY_ID = 'ACCOUNT_GET_BY_ID',
   CREATE_NEW_SUB_ACCOUNT = 'CREATE_NEW_SUB_ACCOUNT',
@@ -121,6 +124,10 @@ export enum APIName {
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
+  ACCOUNTING_SETTING_GET = 'ACCOUNTING_SETTING_GET',
+  ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
+  USER_SETTING_GET = 'USER_SETTING_GET',
+  USER_SETTING_UPDATE = 'USER_SETTING_UPDATE',
   GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
   UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
 }
@@ -140,6 +147,8 @@ export enum APIPath {
   COMPANY_ADD = `${apiPrefix}/company`,
   COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
   COMPANY_SELECT = `${apiPrefix}/company/:companyId/select`,
+  COMPANY_SETTING_GET = `${apiPrefix}/company/:companyId/setting`,
+  COMPANY_SETTING_UPDATE = `${apiPrefix}/company/:companyId/setting`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -203,6 +212,7 @@ export enum APIPath {
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
   NEWS_LIST = `${apiPrefix}/news`,
   CREATE_NEWS = `${apiPrefix}/news`,
+  NEWS_GET_BY_ID = `${apiPrefix}/news/:newsId`,
   KYC_UPLOAD = `${apiPrefix}/company/:companyId/kyc`,
   ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   CREATE_NEW_SUB_ACCOUNT = `${apiPrefix}/company/:companyId/account`,
@@ -222,6 +232,10 @@ export enum APIPath {
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
+  ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
+  USER_SETTING_UPDATE = `${apiPrefixV2}/user/:userId/setting`,
   GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
 }
@@ -500,6 +514,16 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.DELETE,
     path: APIPath.COMPANY_DELETE,
   }),
+  [APIName.COMPANY_SETTING_GET]: createConfig({
+    name: APIName.COMPANY_SETTING_GET,
+    method: HttpMethod.GET,
+    path: APIPath.COMPANY_SETTING_GET,
+  }),
+  [APIName.COMPANY_SETTING_UPDATE]: createConfig({
+    name: APIName.COMPANY_SETTING_UPDATE,
+    method: HttpMethod.PUT,
+    path: APIPath.COMPANY_SETTING_UPDATE,
+  }),
   [APIName.ROLE_GET_BY_ID]: createConfig({
     name: APIName.ROLE_GET_BY_ID,
     method: HttpMethod.GET,
@@ -539,6 +563,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CREATE_NEWS,
     method: HttpMethod.POST,
     path: APIPath.CREATE_NEWS,
+  }),
+  [APIName.NEWS_GET_BY_ID]: createConfig({
+    name: APIName.NEWS_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.NEWS_GET_BY_ID,
   }),
   [APIName.KYC_UPLOAD]: createConfig({
     name: APIName.KYC_UPLOAD,
@@ -659,15 +688,40 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ASK_AI_RESULT_V2,
   }),
-  [APIName.GET_ACCOUNTING_SETTING]: createConfig({
-    name: APIName.GET_ACCOUNTING_SETTING,
+  [APIName.ACCOUNTING_SETTING_GET]: createConfig({
+    name: APIName.ACCOUNTING_SETTING_GET,
     method: HttpMethod.GET,
-    path: APIPath.GET_ACCOUNTING_SETTING,
+    path: APIPath.ACCOUNTING_SETTING_GET,
   }),
-  [APIName.UPDATE_ACCOUNTING_SETTING]: createConfig({
-    name: APIName.UPDATE_ACCOUNTING_SETTING,
+  [APIName.ACCOUNTING_SETTING_UPDATE]: createConfig({
+    name: APIName.ACCOUNTING_SETTING_UPDATE,
     method: HttpMethod.PUT,
-    path: APIPath.UPDATE_ACCOUNTING_SETTING,
+    path: APIPath.ACCOUNTING_SETTING_UPDATE,
+  }),
+  [APIName.CERTIFICATE_LIST_V2]: createConfig({
+    name: APIName.CERTIFICATE_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.CERTIFICATE_GET_V2]: createConfig({
+    name: APIName.CERTIFICATE_GET_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_GET_V2,
+  }),
+  [APIName.CERTIFICATE_POST_V2]: createConfig({
+    name: APIName.CERTIFICATE_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.CERTIFICATE_POST_V2,
+  }),
+  [APIName.CERTIFICATE_PUT_V2]: createConfig({
+    name: APIName.CERTIFICATE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.CERTIFICATE_DELETE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.CERTIFICATE_PUT_V2,
   }),
   [APIName.COUNTERPARTY_LIST]: createConfig({
     name: APIName.COUNTERPARTY_LIST,
@@ -693,5 +747,25 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.COUNTERPARTY_DELETE,
     method: HttpMethod.DELETE,
     path: APIPath.COUNTERPARTY_DELETE,
+  }),
+  [APIName.USER_SETTING_GET]: createConfig({
+    name: APIName.USER_SETTING_GET,
+    method: HttpMethod.GET,
+    path: APIPath.USER_SETTING_GET,
+  }),
+  [APIName.USER_SETTING_UPDATE]: createConfig({
+    name: APIName.USER_SETTING_UPDATE,
+    method: HttpMethod.PUT,
+    path: APIPath.USER_SETTING_UPDATE,
+  }),
+  [APIName.GET_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.GET_ACCOUNTING_SETTING,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNTING_SETTING,
+  }),
+  [APIName.UPDATE_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.UPDATE_ACCOUNTING_SETTING,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNTING_SETTING,
   }),
 };

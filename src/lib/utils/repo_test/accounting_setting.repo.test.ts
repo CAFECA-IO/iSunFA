@@ -21,7 +21,7 @@ describe('Accounting Setting Repository', () => {
       expect(accountingSetting!.purchaseTaxTaxable).toBe(true);
       expect(accountingSetting!.purchaseTaxRate).toBe(0.05);
       expect(accountingSetting!.returnPeriodicity).toBe('monthly');
-      expect(accountingSetting!.currency).toBe('USD');
+      expect(accountingSetting!.currency).toBe('TWD');
     });
   });
 

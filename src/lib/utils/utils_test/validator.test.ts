@@ -1,30 +1,64 @@
 import { APIName } from '@/constants/api_connection';
-import { z } from 'zod';
-import { validateApiResponse } from '@/lib/utils/validator';
+import { NextApiRequest } from 'next';
+import { validateRequest } from '@/lib/utils/validator';
 
 describe('lib/utils/validate.ts', () => {
-  describe('validateResponse', () => {
-    const mockSchema = z.object({
-      id: z.number(),
+  describe('validateRequest', () => {
+    const mockRequest = {
+      query: { name: 'test', age: '20', email: '123@123.io', password: '11144425', testEnum: 'A' },
+      body: {},
+      method: 'GET',
+      headers: { 'user-agent': 'jest' },
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as NextApiRequest;
+
+    it('should validate and format query and body correctly', () => {
+      const apiName = APIName.ZOD_EXAMPLE;
+      const result = validateRequest(apiName, mockRequest, 1);
+      expect(result).toEqual({
+        query: { name: 'test', age: 20, email: '123@123.io', password: '11144425', testEnum: 'A' },
+        body: {},
+      });
     });
 
-    it('should return the response if the response is valid', () => {
-      const dto = { id: 1 };
-      const result = validateApiResponse({ dto, schema: mockSchema, apiName: APIName.ZOD_EXAMPLE });
-      expect(result).toEqual(dto);
+    it('should return null for invalid query', () => {
+      const invalidRequest = {
+        ...mockRequest,
+        query: { id: 'invalid' },
+      } as unknown as NextApiRequest;
+      const apiName = APIName.ZOD_EXAMPLE;
+      const result = validateRequest(apiName, invalidRequest, 1);
+      expect(result).toEqual({
+        query: null,
+        body: null,
+      });
     });
 
-    it('should filter out the response if the response has extra info', () => {
-      const dto = { id: 1, extra: 'extra' };
-      const result = validateApiResponse({ dto, schema: mockSchema, apiName: APIName.ZOD_EXAMPLE });
-      expect(result).toEqual({ id: 1 });
-      expect(result).not.toEqual(dto);
+    it('should return null for invalid body', () => {
+      const invalidRequest = {
+        ...mockRequest,
+        query: { age: 123 },
+      } as unknown as NextApiRequest;
+      const apiName = APIName.ZOD_EXAMPLE;
+      const result = validateRequest(apiName, invalidRequest, 1);
+      expect(result).toEqual({
+        query: null,
+        body: null,
+      });
     });
 
-    it('should throw an error if the response is invalid', () => {
-      const dto = { id: 'string' };
-      expect(() =>
-        validateApiResponse({ dto, schema: mockSchema, apiName: APIName.ZOD_EXAMPLE })).toThrow();
+    it('should log error and return null if validation fails', () => {
+      const invalidRequest = {
+        ...mockRequest,
+        query: { id: 'invalid' },
+        body: { name: 123 },
+      } as unknown as NextApiRequest;
+      const apiName = APIName.ZOD_EXAMPLE;
+      const result = validateRequest(apiName, invalidRequest, 1);
+      expect(result).toEqual({
+        query: null,
+        body: null,
+      });
     });
   });
 });

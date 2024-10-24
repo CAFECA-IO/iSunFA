@@ -1,4 +1,5 @@
-import { ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
+import { ICertificateUI } from '@/interfaces/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
@@ -38,8 +39,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       >
         {/* Info: (20240924 - Tzuhan) 縮略圖 */}
         <Image
-          src={data.thumbnailUrl}
-          alt={`Certificate ${data.invoiceName}`}
+          src={data.file.url}
+          alt={`Certificate ${data.invoice.name}`}
           height={136}
           width={93}
           className="mx-auto h-134px w-90px overflow-hidden object-cover"
@@ -47,8 +48,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
 
         {/* Info: (20240924 - Tzuhan) 發票號碼和日期 */}
         <div className="mt-2 text-center">
-          <div className="text-sm font-medium">{data.invoiceNumber}</div>
-          <div className="mt-1 text-xs text-gray-500">{data.date}</div>
+          <div className="text-sm font-medium">{data.invoice.no}</div>
+          <div className="mt-1 text-xs text-gray-500">{data.invoice.date}</div>
         </div>
       </div>
 
@@ -80,7 +81,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
           onMouseLeave={() => setIsMenuOpen(false)}
         >
           <ul>
-            {data.actions.includes(OPERATIONS.DOWNLOAD) && (
+            {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD) && (
               <li
                 className="pointer-events-auto flex cursor-pointer items-center rounded-t-sm p-2 px-4"
                 onClick={onDownload.bind(null, data.id)}
@@ -91,7 +92,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
                 Download
               </li>
             )}
-            {data.actions.includes(OPERATIONS.REMOVE) && (
+            {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.REMOVE) && (
               <li
                 className="pointer-events-auto flex cursor-pointer items-center rounded-b-sm p-2 px-4"
                 onClick={onRemove.bind(null, data.id)}

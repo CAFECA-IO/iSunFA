@@ -5,7 +5,6 @@ export interface IUserSetting {
   notificationSetting: INotificationSetting;
   createdAt: number;
   updatedAt: number;
-  deletedAt: number;
 }
 interface INotificationSetting {
   systemNotification: boolean;
