@@ -272,5 +272,8 @@
     "DELETE_MESSAGE_SUBMIT_BTN": "是的，删除传票",
     "DELETE_SUCCESS_TOAST": "传票已删除。",
     "UNDO": "复原"
+  },
+  "LEDGER": {
+    "LEDGER_PERIOD": "分类帐期间"
   }
 }

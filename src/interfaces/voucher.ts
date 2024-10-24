@@ -6,8 +6,11 @@ import { IPayment } from '@/interfaces/payment';
 import { Prisma } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
-import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import type { ICounterPartyEntity } from '@/interfaces/counterparty';
 import type { IAssetEntity } from '@/interfaces/asset';
+import type { ICertificateEntity } from '@/interfaces/certificate';
+import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
+import type { IUserEntity } from '@/interfaces/user';
 
 export interface IVoucherMetaData {
   date: number;
@@ -458,7 +461,33 @@ export interface IVoucherEntity {
    * undefined if not related to any asset
    */
   asset?: IAssetEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description aich result id
+   * @note database has not yet created this column
+   */
+  aiResultId?: string;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description aich result status
+   * @note database has not yet created this column
+   */
+  aiStatus?: string;
+
   // ToDo: (20241023 - Murky) Certificate
-  // ToDo: (20241023 - Murky) Issuer => User
-  // ToDo: (20241023 - Murky) UserVoucher => isRead
+  certificates: ICertificateEntity[];
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Who created this voucher
+   */
+  issuer?: IUserEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Who read this voucher
+   */
+  readByUsers: IUserVoucherEntity[];
 }

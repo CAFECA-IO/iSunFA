@@ -25,7 +25,7 @@ const CashFlowStatementPageBody = () => {
           />
         </div>
         {/* Info: (20240920 - Julian) Voucher List */}
-        <CashFlowStatementList />
+        <CashFlowStatementList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );

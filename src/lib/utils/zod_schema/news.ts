@@ -39,16 +39,16 @@ export const newsPostValidator: IZodValidator<
   body: newsPostBodyValidator,
 };
 
-// Info: (20241015 - Jacky) News select validator
-const newsSelectQueryValidator = z.object({
+// Info: (20241024 - Jacky) News get by id validator
+const newsGetByIdQueryValidator = z.object({
   newsId: z.number().int(),
 });
-const newsSelectBodyValidator = z.object({});
+const newsGetByIdBodyValidator = z.object({});
 
-export const newsSelectValidator: IZodValidator<
-  (typeof newsSelectQueryValidator)['shape'],
-  (typeof newsSelectBodyValidator)['shape']
+export const newsGetValidator: IZodValidator<
+  (typeof newsGetByIdQueryValidator)['shape'],
+  (typeof newsGetByIdBodyValidator)['shape']
 > = {
-  query: newsSelectQueryValidator,
-  body: newsSelectBodyValidator,
+  query: newsGetByIdQueryValidator,
+  body: newsGetByIdBodyValidator,
 };

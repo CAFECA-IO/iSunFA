@@ -148,3 +148,30 @@ export const importsCategories = {
   [InvoiceType.FOREIGN_TAX_EXEMPT_GOODS]: 'taxExemptGoods',
   [InvoiceType.FOREIGN_SERVICE_PAYMENT]: 'foreignServices',
 };
+
+/**
+ * Info: (20241024 - Murky)
+ * @direction Invoice 發生是因為產生收益還是費損
+ * @enum [INPUT, OUTPUT] INPUT/OUTPUT
+ */
+export enum InvoiceTransactionDirection {
+  INPUT = 'input',
+  OUTPUT = 'output',
+}
+
+/**
+ * Info: (20241024 - Murky)
+ * @description 發票是應稅還是免稅, 零稅率包含在應稅
+ */
+export enum InvoiceTaxType {
+  /**
+   * Info: (20241024 - Murky)
+   * @note 包含零稅率
+   */
+  TAXABLE = 'taxable',
+  /**
+   * Info: (20241024 - Murky)
+   * @note ex: 離島機場免稅商店
+   */
+  TAX_FREE = 'tax free',
+}

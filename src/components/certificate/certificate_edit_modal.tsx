@@ -6,8 +6,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
-import { FLOW_TYPES } from '@/interfaces/invoice';
-import { InvoiceType } from '@/constants/invoice';
+import { InvoiceType, InvoiceTransactionDirection } from '@/constants/invoice';
 import { generateRandomCounterParties, ICounterparty } from '@/interfaces/counterparty';
 import { CounterpartyType } from '@/constants/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -353,7 +352,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     name="invoice-type"
                     className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
                     defaultChecked
-                    onClick={() => setType(FLOW_TYPES.INPUT)}
+                    onClick={() => setType(InvoiceTransactionDirection.INPUT)}
                   />
                   <p>{t('certificate:EDIT.INPUT')}</p>
                 </label>
@@ -366,7 +365,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     id="invoice-output"
                     name="invoice-type"
                     className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                    onClick={() => setType(FLOW_TYPES.OUTPUT)}
+                    onClick={() => setType(InvoiceTransactionDirection.OUTPUT)}
                   />
                   <p>{t('certificate:EDIT.OUTPUT')}</p>
                 </label>

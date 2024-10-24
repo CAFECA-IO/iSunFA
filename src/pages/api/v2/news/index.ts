@@ -13,15 +13,24 @@ const handleGetRequest: IHandleRequest<
   APIName.NEWS_LIST,
   INews[] | IPaginatedData<INews[]>
 > = async ({ query }) => {
+  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews[] | IPaginatedData<INews[]> | null = null;
 
   let newsList: INews[] | IPaginatedData<INews[]> | null;
-  const { simple, type, targetPage, pageSize } = query;
+  const { simple, type, targetPage, pageSize, startDateInSecond, endDateInSecond, searchQuery } =
+    query;
   if (simple) {
     newsList = await listNewsSimple(type, pageSize);
   } else {
-    newsList = await listNews(type, targetPage, pageSize);
+    newsList = await listNews(
+      type,
+      targetPage,
+      pageSize,
+      startDateInSecond,
+      endDateInSecond,
+      searchQuery
+    );
   }
 
   payload = newsList;

@@ -474,18 +474,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ItemDetail = (
-    <div id="3" className="relative overflow-y-hidden">
+    <div id="2" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>細項分類格式</p>
-            <CollapseButton
-              onClick={toggleDetailTable}
-              isCollapsed={isDetailCollapsed}
-              buttonType="default"
-            />
+            <p className="text-xs font-bold leading-5">細項分類格式</p>
+            <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>單位：新台幣元</p>
+          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
@@ -523,10 +519,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ProportionalTable = (
-    <div id="10" className="relative overflow-y-hidden">
+    <div id="3" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>三、資產負債比例表</p>
+          <p>資產負債比例表</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
@@ -575,10 +571,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const AssetItem = (
-    <div id="11" className="relative overflow-y-hidden">
+    <div id="4" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>四、資產分布圖</p>
+          <p>資產分布圖</p>
         </div>
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-5">
@@ -628,10 +624,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const TurnoverDay = (
-    <div id="12" className="relative overflow-y-hidden">
+    <div id="5" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>五、應收帳款週轉天數</p>
+          <p>應收帳款週轉天數</p>
           <p>單位：天</p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -655,7 +651,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
           </tbody>
         </table>
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
-          <p>六、存貨週轉天數</p>
+          <p>存貨週轉天數</p>
           <p>單位：天</p>
         </div>
         <table className="w-full border-collapse bg-white">

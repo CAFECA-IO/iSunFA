@@ -33,6 +33,11 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     originalEvents: z.array(z.any()).optional(),
     resultEvents: z.array(z.any()).optional(),
     lineItems: z.array(z.any()).optional(),
+    aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+    aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+    certificates: z.array(z.any()).optional(),
+    issuer: z.any().optional(),
+    readByUsers: z.array(z.any()).optional(),
   });
   const { data, success, error } = zodVoucherEntityParser.safeParse(dto);
 
@@ -49,6 +54,8 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     originalEvents: data.originalEvents || [],
     resultEvents: data.resultEvents || [],
     lineItems: data.lineItems || [],
+    certificates: data.certificates || [],
+    readByUsers: data.readByUsers || [],
   };
 
   return voucherEntity;
