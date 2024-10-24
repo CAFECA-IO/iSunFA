@@ -1,9 +1,3 @@
-export enum CounterpartyType {
-  CLIENT = 'CLIENT',
-  SUPPLIER = 'SUPPLIER',
-  BOTH = 'BOTH',
-}
-
 import { CounterPartyEntityType } from '@/constants/counterparty';
 import type { ICompanyEntity } from '@/interfaces/company';
 
@@ -24,7 +18,7 @@ export const dummyCounterparty: ICounterparty[] = [
     companyId: 124,
     name: 'Beta Industries',
     taxId: '987-654-321',
-    type: CounterpartyType.CLIENT,
+    type: CounterPartyEntityType.CLIENT,
     note: 'New customer',
     createdAt: 1425272725,
     updatedAt: 1425272725,
@@ -34,7 +28,7 @@ export const dummyCounterparty: ICounterparty[] = [
     companyId: 125,
     name: 'Gamma Enterprises',
     taxId: '456-789-123',
-    type: CounterpartyType.SUPPLIER,
+    type: CounterPartyEntityType.SUPPLIER,
     note: 'Occasional vendor',
     createdAt: 1425272725,
     updatedAt: 1425272725,
@@ -44,7 +38,7 @@ export const dummyCounterparty: ICounterparty[] = [
     companyId: 126,
     name: 'Delta Solutions',
     taxId: '321-654-987',
-    type: CounterpartyType.CLIENT,
+    type: CounterPartyEntityType.CLIENT,
     note: 'Frequent customer',
     createdAt: 1425272725,
     updatedAt: 1425272725,

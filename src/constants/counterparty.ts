@@ -7,10 +7,16 @@ export enum CounterPartyEntityType {
    * Info: (20241023 - Murky)
    * @description we are buyer, they are seller
    */
-  SUPPLIER = 'supplier',
+  SUPPLIER = 'SUPPLIER',
   /**
    * Info: (20241023 - Murky)
    * @description we are seller, they are buyer
    */
-  CUSTOMER = 'customer',
+  CLIENT = 'CLIENT',
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description we are both supplier and client
+   */
+  BOTH = 'BOTH',
 }

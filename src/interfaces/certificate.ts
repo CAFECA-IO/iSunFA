@@ -56,11 +56,6 @@ export interface ICertificateMeta {
   progress: number;
 }
 
-export enum VIEW_TYPES {
-  GRID = 'grid',
-  LIST = 'list',
-}
-
 export enum OPERATIONS {
   DOWNLOAD = 'Download',
   REMOVE = 'Remove',

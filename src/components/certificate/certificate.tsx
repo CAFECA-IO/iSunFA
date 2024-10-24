@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import Pagination from '@/components/pagination/pagination';
-import { ICertificateUI, VIEW_TYPES } from '@/interfaces/certificate';
+import { ICertificateUI } from '@/interfaces/certificate';
+import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 
 interface CertificateProps {
   activeTab: number;
   data: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
-  viewType: VIEW_TYPES; // Info: (20240923 - tzuhan) 顯示模式
+  viewType: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
   isSelectedAll: boolean;
@@ -36,7 +37,7 @@ const Certificate: React.FC<CertificateProps> = ({
 
   return (
     <>
-      {viewType === VIEW_TYPES.LIST && (
+      {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
         <CertificateTable
           activeTab={activeTab}
           data={data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
@@ -46,7 +47,7 @@ const Certificate: React.FC<CertificateProps> = ({
           onEdit={onEdit}
         />
       )}
-      {viewType === VIEW_TYPES.GRID && (
+      {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
         <CertificateGrid
           data={data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
           activeSelection={activeSelection}

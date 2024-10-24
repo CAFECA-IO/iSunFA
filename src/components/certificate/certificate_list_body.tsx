@@ -7,8 +7,8 @@ import {
   ICertificateMeta,
   ICertificateUI,
   OPERATIONS,
-  VIEW_TYPES,
 } from '@/interfaces/certificate';
+import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { getPusherInstance } from '@/lib/pusherClient';
@@ -49,7 +49,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     1: 0,
   });
   const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
-  const [viewType, setViewType] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
+  const [viewType, setViewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState<{ [tab: number]: boolean }>({
