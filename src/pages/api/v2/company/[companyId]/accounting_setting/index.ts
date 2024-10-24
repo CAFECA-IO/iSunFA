@@ -14,7 +14,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { formatAccountingSetting } from '@/lib/utils/formatter/accounting_setting.formatter';
 
 const handleGetRequest: IHandleRequest<
-  APIName.GET_ACCOUNTING_SETTING,
+  APIName.ACCOUNTING_SETTING_GET,
   IAccountingSetting
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -40,7 +40,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePutRequest: IHandleRequest<
-  APIName.UPDATE_ACCOUNTING_SETTING,
+  APIName.ACCOUNTING_SETTING_UPDATE,
   IAccountingSetting
 > = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -75,9 +75,9 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: IAccountingSetting | null }>;
 } = {
   GET: (req, res) =>
-    withRequestValidation(APIName.GET_ACCOUNTING_SETTING, req, res, handleGetRequest),
+    withRequestValidation(APIName.ACCOUNTING_SETTING_GET, req, res, handleGetRequest),
   PUT: (req, res) =>
-    withRequestValidation(APIName.UPDATE_ACCOUNTING_SETTING, req, res, handlePutRequest),
+    withRequestValidation(APIName.ACCOUNTING_SETTING_UPDATE, req, res, handlePutRequest),
 };
 
 export default async function handler(

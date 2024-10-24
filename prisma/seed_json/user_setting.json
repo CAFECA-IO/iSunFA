@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1000,
+        "userId": 1000,
+        "firstName": "John",
+        "lastName": "Doe",
+        "country": "USA",
+        "language": "English",
+        "phone": "+1234567890",
+        "systemNotification": true,
+        "updateAndSubscriptionNotification": false,
+        "emailNotification": true,
+        "createdAt": 1672531199,
+        "updatedAt": 1672531199,
+        "deletedAt": null
+    },
+    {
+        "id": 1001,
+        "userId": 1001,
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "country": "Canada",
+        "language": "French",
+        "phone": "+1987654321",
+        "systemNotification": false,
+        "updateAndSubscriptionNotification": true,
+        "emailNotification": false,
+        "createdAt": 1672531200,
+        "updatedAt": 1672531200,
+        "deletedAt": null
+    }
+]
