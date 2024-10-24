@@ -6,7 +6,6 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { sanitizeFileName } from '@/lib/utils/file';
 import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
@@ -28,6 +27,10 @@ import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 
 interface CertificateListBodyProps {}
+
+const sanitizeFileName = (fileName: string): string => {
+  return encodeURIComponent(fileName);
+};
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation('certificate');
