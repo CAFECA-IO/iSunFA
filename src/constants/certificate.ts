@@ -14,3 +14,8 @@ export enum CERTIFICATE_USER_INTERACT_OPERATION {
   DOWNLOAD = 'Download',
   REMOVE = 'Remove',
 }
+
+export enum InvoiceTabs {
+  WITHOUT_VOUCHER = 'withoutVoucher',
+  WITH_VOUCHER = 'withVoucher',
+}

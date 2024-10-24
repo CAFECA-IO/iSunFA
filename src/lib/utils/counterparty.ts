@@ -1,7 +1,7 @@
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { Counterparty as PrismaCounterParty } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
-import { CounterPartyEntityType } from '@/constants/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 import { ICompanyEntity } from '@/interfaces/company';
 
 export function initCounterPartyEntity(
@@ -9,7 +9,7 @@ export function initCounterPartyEntity(
     companyId: number;
     name: string;
     taxId: string;
-    type: CounterPartyEntityType;
+    type: CounterpartyType;
     company?: ICompanyEntity;
   }
 ): ICounterPartyEntity {

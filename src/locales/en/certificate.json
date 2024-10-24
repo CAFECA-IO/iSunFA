@@ -43,6 +43,10 @@
     "UPLOAD_AND_NOTIFY": "Failed to upload and notify web"
   },
   "WARNING": {
+    "UPLOAD_FAILED": "Uploading fail",
+    "UPLOAD_FAILED_NOTIFY": "There are some files haven't been uploaded successfully, do you want to cancel uploading?",
+    "UPLOAD_CANCEL": "Yes, Cancel Uploading",
+    "UPLOAD_CONTINUE": "No, Keep Uploading",
     "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "Certificates have been uploaded, but failed to notify web"
   },
   "TITLE": {

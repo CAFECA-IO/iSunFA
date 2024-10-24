@@ -3,7 +3,7 @@
  * @description which is the counter party relation from our company perspective
  * @enum - [SUPPLER, CLIENT, BOTH]
  */
-export enum CounterPartyEntityType {
+export enum CounterpartyType {
   /**
    * Info: (20241023 - Murky)
    * @description we are buyer, they are seller

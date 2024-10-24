@@ -1,4 +1,4 @@
-import { CounterPartyEntityType } from '@/constants/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 import type { ICompanyEntity } from '@/interfaces/company';
 
 export interface ICounterparty {
@@ -18,7 +18,7 @@ export const dummyCounterparty: ICounterparty[] = [
     companyId: 124,
     name: 'Beta Industries',
     taxId: '987-654-321',
-    type: CounterPartyEntityType.CLIENT,
+    type: CounterpartyType.CLIENT,
     note: 'New customer',
     createdAt: 1425272725,
     updatedAt: 1425272725,
@@ -28,7 +28,7 @@ export const dummyCounterparty: ICounterparty[] = [
     companyId: 125,
     name: 'Gamma Enterprises',
     taxId: '456-789-123',
-    type: CounterPartyEntityType.SUPPLIER,
+    type: CounterpartyType.SUPPLIER,
     note: 'Occasional vendor',
     createdAt: 1425272725,
     updatedAt: 1425272725,
@@ -38,12 +38,50 @@ export const dummyCounterparty: ICounterparty[] = [
     companyId: 126,
     name: 'Delta Solutions',
     taxId: '321-654-987',
-    type: CounterPartyEntityType.CLIENT,
+    type: CounterpartyType.CLIENT,
     note: 'Frequent customer',
     createdAt: 1425272725,
     updatedAt: 1425272725,
   },
 ];
+
+export const generateRandomCounterParties = (num?: number): ICounterparty[] => {
+  const maxCount = num ?? Math.floor(Math.random() * 100) + 1;
+  const counterParties: ICounterparty[] = [];
+
+  function randomNumber(): number {
+    return Math.floor(Math.random() * 1_000_000_000);
+  }
+
+  function randomTaxID(): string {
+    return Math.floor(Math.random() * 1_000_000_000)
+      .toString()
+      .padStart(8, '0');
+  }
+
+  function randomDate(start: Date, end: Date): number {
+    const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return date.getTime() / 1000;
+  }
+
+  let i = 1;
+  while (i <= maxCount) {
+    const counterParty: ICounterparty = {
+      id: i,
+      companyId: randomNumber(),
+      name: `CounterParty_${i.toString().padStart(6, '0')}`,
+      taxId: randomTaxID(),
+      type: CounterpartyType.SUPPLIER,
+      note: `Note for CounterParty ${i.toString().padStart(6, '0')}`,
+      createdAt: randomDate(new Date(2020, 1, 1), new Date()),
+      updatedAt: randomDate(new Date(2020, 1, 1), new Date()),
+    };
+    counterParties.push(counterParty);
+    i += 1;
+  }
+
+  return counterParties;
+};
 
 /**
  * Info: (20241023 - Murky)
@@ -80,7 +118,7 @@ export interface ICounterPartyEntity {
    * Info: (20241023 - Murky)
    * @description counter party is supplier or customer
    */
-  type: CounterPartyEntityType;
+  type: CounterpartyType;
 
   /**
    * Info: (20241023 - Murky)

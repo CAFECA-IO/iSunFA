@@ -2,7 +2,7 @@ import { Counterparty as PrismaCounterParty } from '@prisma/client';
 import { z } from 'zod';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
-import { CounterPartyEntityType } from '@/constants/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 
 /**
  * Info: (20241023 - Murky)
@@ -18,7 +18,7 @@ export function parsePrismaCounterPartyToCounterPartyEntity(
     name: z.string(),
     code: z.string(),
     taxId: z.string(),
-    type: z.nativeEnum(CounterPartyEntityType),
+    type: z.nativeEnum(CounterpartyType),
     note: z.string(),
     createdAt: z.number(),
     updatedAt: z.number(),

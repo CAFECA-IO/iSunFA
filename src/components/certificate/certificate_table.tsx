@@ -1,36 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'next-i18next';
 import CertificateItem from '@/components/certificate/certificate_item';
 import { ICertificateUI } from '@/interfaces/certificate';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
+import { InvoiceTabs } from '@/constants/certificate';
 
 interface CertificateTableProps {
-  activeTab: number;
-  data: ICertificateUI[]; // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
+  activeTab: InvoiceTabs;
+  certificates: ICertificateUI[];
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態 // Info: (20240923 - tzuhan) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - tzuhan) 當選擇變更時的回調函數
   isSelectedAll: boolean;
   onEdit: (id: number) => void;
+  dateSort: SortOrder | null;
+  amountSort: SortOrder | null;
+  voucherSort: SortOrder | null;
+  setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
 }
-
-// Deprecated: (20240919 - tzuhan) will be replaced by actual data type
 
 const CertificateTable: React.FC<CertificateTableProps> = ({
   activeTab,
   activeSelection,
-  data,
+  certificates,
   handleSelect,
   isSelectedAll,
   onEdit,
+  dateSort,
+  amountSort,
+  voucherSort,
+  setDateSort,
+  setAmountSort,
+  setVoucherSort,
 }) => {
   const { t } = useTranslation('certificate');
-  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
-  const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  // Info: (20240924 - tzuhan) Get from Julian VoucherList
-
   const displayedIssuedDate = SortingButton({
     string: t('certificate:TABLE.DATE'),
     sortOrder: dateSort,
@@ -88,14 +94,14 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
             </div>
             <div className="table-cell border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
-              {activeTab === 1 && displayedVoucherNumber}
+              {activeTab === InvoiceTabs.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
         </div>
 
         <div className="table-row-group">
           {/* Deprecated: (20240919 - tzuhan) Example of dynamic rows, should map actual data here */}
-          {data.map((certificate, index) => (
+          {certificates.map((certificate, index) => (
             <CertificateItem
               activeSelection={activeSelection}
               handleSelect={handleSelect}

@@ -8,13 +8,13 @@ import {
   deleteCounterpartyForTesting,
 } from '@/lib/utils/repo/counterparty.repo';
 import Counterparties from '@/seed_json/counterparty.json';
-import { CounterPartyEntityType } from '@/constants/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 
 describe('Counterparty Repository', () => {
   const testCompanyId = 1000;
   const testName = 'Test Counterparty';
   const testTaxId = '123456789';
-  const testType = CounterPartyEntityType.CLIENT;
+  const testType = CounterpartyType.CLIENT;
   const testNote = 'Test Note';
 
   describe('createCounterparty', () => {
