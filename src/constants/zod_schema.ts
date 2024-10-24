@@ -65,6 +65,10 @@ import {
   counterpartyPutValidator,
   counterpartyDeleteValidator,
 } from '@/lib/utils/zod_schema/counterparty';
+import {
+  userSettingGetValidator,
+  userSettingPutValidator,
+} from '@/lib/utils/zod_schema/user_setting';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -128,6 +132,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
   [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
-  [APIName.GET_ACCOUNTING_SETTING]: accountingSettingGetValidator,
-  [APIName.UPDATE_ACCOUNTING_SETTING]: accountingSettingPutValidator,
+  [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetValidator,
+  [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutValidator,
+  [APIName.USER_SETTING_GET]: userSettingGetValidator,
+  [APIName.USER_SETTING_UPDATE]: userSettingPutValidator,
 };
