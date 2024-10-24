@@ -6,6 +6,8 @@ import { APIName } from '@/constants/api_connection';
 import SelectionPannl from '@/components/certificate/certificate_selection_pannel';
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { InvoiceTabs, InvoiceTyps } from '@/constants/certificate';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
@@ -15,7 +17,16 @@ interface CertificateSelectorModalProps {
 
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
-  handleApiResponse: (data: ICertificate[]) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
+  handleApiResponse: (
+    data: IPaginatedData<{
+      totalInvoicePrice: number;
+      unRead: {
+        withVoucher: number;
+        withoutVoucher: number;
+      };
+      certificates: ICertificate[];
+    }>
+  ) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
 }
 
@@ -67,9 +78,12 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           Choosing the certificates you want to attach with the voucher
         </p>
         <FilterSection
-          apiName={APIName.CERTIFICATE_LIST}
+          apiName={APIName.CERTIFICATE_LIST_V2}
+          page={1}
+          pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
+          tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
-          types={['All', 'Invoice', 'Receipt']}
+          types={Object.values(InvoiceTyps)}
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">

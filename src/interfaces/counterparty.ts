@@ -47,3 +47,41 @@ export const dummyCounterparty: ICounterparty[] = [
     updatedAt: 1425272725,
   },
 ];
+
+export const generateRandomCounterParties = (num?: number): ICounterparty[] => {
+  const maxCount = num ?? Math.floor(Math.random() * 100) + 1;
+  const counterParties: ICounterparty[] = [];
+
+  function randomNumber(): number {
+    return Math.floor(Math.random() * 1_000_000_000);
+  }
+
+  function randomTaxID(): string {
+    return Math.floor(Math.random() * 1_000_000_000)
+      .toString()
+      .padStart(8, '0');
+  }
+
+  function randomDate(start: Date, end: Date): number {
+    const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return date.getTime() / 1000;
+  }
+
+  let i = 1;
+  while (i <= maxCount) {
+    const counterParty: ICounterparty = {
+      id: i,
+      companyId: randomNumber(),
+      name: `CounterParty_${i.toString().padStart(6, '0')}`,
+      taxId: randomTaxID(),
+      type: CounterpartyType.SUPPLIER,
+      note: `Note for CounterParty ${i.toString().padStart(6, '0')}`,
+      createdAt: randomDate(new Date(2020, 1, 1), new Date()),
+      updatedAt: randomDate(new Date(2020, 1, 1), new Date()),
+    };
+    counterParties.push(counterParty);
+    i += 1;
+  }
+
+  return counterParties;
+};

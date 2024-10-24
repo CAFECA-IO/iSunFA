@@ -9,7 +9,10 @@ export enum ToastId {
   DELETE_CERTIFICATE_ERROR = 'toast-delete-certificate-error',
   TOKEN_NOT_PROVIDED = 'toast-token-not-provided',
   UPLOAD_CERTIFICATE_ERROR = 'toast-upload-certificate-error',
+  UPLOAD_FILE_SUCCESS = 'toast-upload-file-success',
+  UPLOAD_FILE_ERROR = 'toast-upload-file-error',
   NOTIFY_WEB_ERROR = 'toast-notify-web-error',
   ADD_COUNTERPARTY_SUCCESS = 'toast-add-counterparty-success',
   SAVE_CERTIFICATE_SUCCESS = 'toast-save-certificate-success',
+  API_REQUEST_FAILED = 'toast-api-request-failed',
 }

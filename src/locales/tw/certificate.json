@@ -46,6 +46,10 @@
     "SUCCESS_UPLOAD_BUT_NOTIFY_ERROR": "發票已上傳，但通知網頁失敗"
   },
   "TITLE": {
+    "UPLOAD_FAILED": "上傳失敗",
+    "UPLOAD_FAILED_NOTIFY": "有一些文件未成功上傳，您要取消上傳嗎？",
+    "UPLOAD_CANCEL": "是，取消上傳",
+    "UPLOAD_CONTINUE": "否，繼續上傳",
     "UPLOAD": "上傳發票",
     "SELECT": "選擇一個或多個發票",
     "LIST": "發票列表"

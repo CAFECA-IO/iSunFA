@@ -430,7 +430,9 @@
     "ADD_NEW_VOUCHER": "新增传票",
     "ADD_NEW_ASSET": "新增资产"
   },
-
+  "TOAST": {
+    "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
+  },
   "SELECT_ROLE": {
     "SELECT_ROLE_ISUNFA": "选择角色 - iSunFA"
   },
