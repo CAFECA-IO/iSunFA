@@ -35,11 +35,11 @@ export async function listNews(
   type: NewsType = NewsType.FINANCIAL,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
-  sortOrder: SortOrder = SortOrder.ASC,
-  sortBy: SortBy = SortBy.CREATED_AT,
   startDateInSecond?: number,
   endDateInSecond?: number,
-  searchQuery?: string
+  searchQuery?: string,
+  sortOrder: SortOrder = SortOrder.ASC,
+  sortBy: SortBy = SortBy.CREATED_AT
 ) {
   let newsList: News[] = [];
   const where: Prisma.NewsWhereInput = {
@@ -122,6 +122,23 @@ export async function listNewsSimple(
   }
 
   return newsList;
+}
+
+export async function getNewsById(newsId: number): Promise<News | null> {
+  let news: News | null = null;
+
+  try {
+    news = await prisma.news.findUnique({
+      where: {
+        id: newsId,
+      },
+    });
+  } catch (error) {
+    const logError = loggerError(0, 'find unique news in getNewsById failed', error as Error);
+    logError.error('Prisma related find unique news in getNewsById in news.repo.ts failed');
+  }
+
+  return news;
 }
 
 export async function deleteNewsForTesting(newsId: number) {

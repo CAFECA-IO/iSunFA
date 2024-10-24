@@ -104,6 +104,7 @@ export enum APIName {
   ROLE_UPDATE = 'ROLE_UPDATE',
   NEWS_LIST = 'NEWS_LIST',
   CREATE_NEWS = 'CREATE_NEWS',
+  NEWS_GET_BY_ID = 'NEWS_GET_BY_ID',
   KYC_UPLOAD = 'KYC_UPLOAD',
   ACCOUNT_GET_BY_ID = 'ACCOUNT_GET_BY_ID',
   CREATE_NEW_SUB_ACCOUNT = 'CREATE_NEW_SUB_ACCOUNT',
@@ -209,6 +210,7 @@ export enum APIPath {
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
   NEWS_LIST = `${apiPrefix}/news`,
   CREATE_NEWS = `${apiPrefix}/news`,
+  NEWS_GET_BY_ID = `${apiPrefix}/news/:newsId`,
   KYC_UPLOAD = `${apiPrefix}/company/:companyId/kyc`,
   ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
   CREATE_NEW_SUB_ACCOUNT = `${apiPrefix}/company/:companyId/account`,
@@ -557,6 +559,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CREATE_NEWS,
     method: HttpMethod.POST,
     path: APIPath.CREATE_NEWS,
+  }),
+  [APIName.NEWS_GET_BY_ID]: createConfig({
+    name: APIName.NEWS_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.NEWS_GET_BY_ID,
   }),
   [APIName.KYC_UPLOAD]: createConfig({
     name: APIName.KYC_UPLOAD,

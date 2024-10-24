@@ -1,12 +1,13 @@
+import { SortBy } from '@/constants/journal';
+import { NewsType } from '@/constants/news';
+import { SortOrder } from '@/constants/sort';
 import {
   createNews,
   deleteNewsForTesting,
   listNews,
   listNewsSimple,
+  getNewsById,
 } from '@/lib/utils/repo/news.repo';
-import { NewsType } from '@/constants/news';
-import { SortOrder } from '@/constants/sort';
-import { SortBy } from '@/constants/journal';
 import { getTimestampNow } from '@/lib/utils/common';
 
 describe('News Repository', () => {
@@ -39,11 +40,11 @@ describe('News Repository', () => {
         type,
         targetPage,
         pageSize,
-        sortOrder,
-        sortBy,
         startDateInSecond,
         endDateInSecond,
-        searchQuery
+        searchQuery,
+        sortOrder,
+        sortBy
       );
 
       expect(newsList).toBeDefined();
@@ -67,6 +68,27 @@ describe('News Repository', () => {
       expect(newsList).toBeDefined();
       expect(Array.isArray(newsList)).toBe(true);
       expect(newsList.length).toBeLessThanOrEqual(pageSize);
+    });
+  });
+
+  describe('getNewsById', () => {
+    it('should return a news item by ID', async () => {
+      const title = 'Test News Title';
+      const content = 'Test News Content';
+      const type = NewsType.FINANCIAL;
+      const createdNews = await createNews(title, content, type);
+      const news = await getNewsById(createdNews!.id);
+      await deleteNewsForTesting(createdNews!.id);
+      expect(news).toBeDefined();
+      expect(news!.id).toBe(createdNews!.id);
+      expect(news!.title).toBe(title);
+      expect(news!.content).toBe(content);
+      expect(news!.type).toBe(type);
+    });
+
+    it('should return null if news item does not exist', async () => {
+      const news = await getNewsById(999999); // Assuming this ID does not exist
+      expect(news).toBeNull();
     });
   });
 });

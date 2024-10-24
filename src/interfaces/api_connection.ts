@@ -70,6 +70,7 @@ export type IAPIName =
   | 'ROLE_UPDATE'
   | 'NEWS_LIST'
   | 'CREATE_NEWS'
+  | 'NEWS_GET_BY_ID'
   | 'KYC_UPLOAD'
   | 'ACCOUNT_GET_BY_ID'
   | 'CREATE_NEW_SUB_ACCOUNT'

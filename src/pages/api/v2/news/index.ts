@@ -17,11 +17,19 @@ const handleGetRequest: IHandleRequest<
   let payload: INews[] | IPaginatedData<INews[]> | null = null;
 
   let newsList: INews[] | IPaginatedData<INews[]> | null;
-  const { simple, type, targetPage, pageSize } = query;
+  const { simple, type, targetPage, pageSize, startDateInSecond, endDateInSecond, searchQuery } =
+    query;
   if (simple) {
     newsList = await listNewsSimple(type, pageSize);
   } else {
-    newsList = await listNews(type, targetPage, pageSize);
+    newsList = await listNews(
+      type,
+      targetPage,
+      pageSize,
+      startDateInSecond,
+      endDateInSecond,
+      searchQuery
+    );
   }
 
   payload = newsList;
