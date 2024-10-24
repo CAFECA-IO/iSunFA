@@ -83,7 +83,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
-          types={[InvoiceTyps.ALL, InvoiceTyps.INVOICE, InvoiceTyps.RECEIPT]}
+          types={Object.values(InvoiceTyps)}
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">

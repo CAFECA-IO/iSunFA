@@ -403,7 +403,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
-          types={[InvoiceTyps.ALL, InvoiceTyps.INVOICE, InvoiceTyps.RECEIPT]}
+          types={Object.values(InvoiceTyps)}
           viewType={viewType}
           viewToggleHandler={setViewType}
           dateSort={dateSort}
