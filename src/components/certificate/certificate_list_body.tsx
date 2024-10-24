@@ -2,12 +2,8 @@ import React, { useCallback, useState, useEffect } from 'react';
 import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import {
-  ICertificate,
-  ICertificateMeta,
-  ICertificateUI,
-  OPERATIONS,
-} from '@/interfaces/certificate';
+import { ICertificate, ICertificateMeta, ICertificateUI } from '@/interfaces/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -107,7 +103,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             [item.id]: {
               ...item,
               isSelected: false,
-              actions: [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE],
+              actions: [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ],
             },
           };
           sumInvoiceTotalPrice[0] += item.totalPrice;
@@ -117,7 +116,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             [item.id]: {
               ...item,
               isSelected: false,
-              actions: [OPERATIONS.DOWNLOAD],
+              actions: [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
             },
           };
           sumInvoiceTotalPrice[1] += item.totalPrice;

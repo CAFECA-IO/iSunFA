@@ -1,4 +1,5 @@
-import { ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
+import { ICertificateUI } from '@/interfaces/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
@@ -80,7 +81,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
           onMouseLeave={() => setIsMenuOpen(false)}
         >
           <ul>
-            {data.actions.includes(OPERATIONS.DOWNLOAD) && (
+            {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD) && (
               <li
                 className="pointer-events-auto flex cursor-pointer items-center rounded-t-sm p-2 px-4"
                 onClick={onDownload.bind(null, data.id)}
@@ -91,7 +92,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
                 Download
               </li>
             )}
-            {data.actions.includes(OPERATIONS.REMOVE) && (
+            {data.actions.includes(CERTIFICATE_USER_INTERACT_OPERATION.REMOVE) && (
               <li
                 className="pointer-events-auto flex cursor-pointer items-center rounded-b-sm p-2 px-4"
                 onClick={onRemove.bind(null, data.id)}
