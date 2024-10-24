@@ -1,9 +1,9 @@
-import { FLOW_TYPES, IInvoiceBeta, TAX_TYPE } from '@/interfaces/invoice';
+import { IInvoiceBeta } from '@/interfaces/invoice';
 import { IFileUIBeta } from '@/interfaces/file';
 import { generateRandomCounterParties } from '@/interfaces/counterparty';
 import { ProgressStatus } from '@/constants/account';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
-import { InvoiceType } from '@/constants/invoice';
+import { InvoiceType, InvoiceTransactionDirection, InvoiceTaxType } from '@/constants/invoice';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
@@ -77,7 +77,10 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
 
       invoice: {
         id: randomNumber(),
-        inputOrOutput: Math.random() > 0.5 ? FLOW_TYPES.INPUT : FLOW_TYPES.OUTPUT, // Info: (20240920 - tzuhan) 隨機生成 Input/Output
+        inputOrOutput:
+          Math.random() > 0.5
+            ? InvoiceTransactionDirection.INPUT
+            : InvoiceTransactionDirection.OUTPUT, // Info: (20240920 - tzuhan) 隨機生成 Input/Output
         name: `Invoice ${i.toString().padStart(6, '0')}`,
         date: randomDate(new Date(2020, 0, 1), new Date(2024, 11, 31)), // Info: (20240920 - tzuhan) 隨機生成 2020 到 2024 年之間的日期
         no: generateRandomCode(),
@@ -91,7 +94,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
         uploader: `Tzuhan`,
 
         currencyAlias: 'TWD',
-        taxType: TAX_TYPE.TAXABLE,
+        taxType: InvoiceTaxType.TAXABLE,
         createdAt: new Date().getTime() / 1000,
         updatedAt: new Date().getTime() / 1000,
       },
