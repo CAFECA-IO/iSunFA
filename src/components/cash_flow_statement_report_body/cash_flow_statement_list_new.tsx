@@ -27,7 +27,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 追蹤是否已經成功請求過一次 API
 
-  // Info: (20241024 - Anna) 使用 APIHandler 串同一支 API
+  // Info: (20241024 - Anna) 使用 APIHandler 串 API
   const {
     data: reportFinancial,
     code: getReportFinancialCode,
