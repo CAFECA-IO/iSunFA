@@ -1,3 +1,4 @@
+// ToDo: (20241024 - Murky) enum 和 function 要移動到別的地方
 import { ProgressStatus } from '@/constants/account';
 
 export enum PARTER_TYPES {
@@ -24,6 +25,10 @@ export enum INVOICE_TYPES {
   DUPLICATE = 'Duplicate',
   SPECIAL = 'Special',
 }
+/**
+ * Info: (20241024 - Murky)
+ * @description Certificate Interface for front-end
+ */
 export interface ICertificate {
   id: number;
   invoiceName: string;

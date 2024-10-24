@@ -7,6 +7,7 @@ import { Prisma } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import type { IAssetEntity } from '@/interfaces/asset';
 
 export interface IVoucherMetaData {
   date: number;
@@ -24,7 +25,7 @@ export interface IVoucherMetaData {
 
 export interface IVoucher {
   voucherIndex: string;
-  invoiceIndex: string; // 改在這裡
+  invoiceIndex: string;
   metaData: IVoucherMetaData[];
   lineItems: ILineItem[];
 }
@@ -417,13 +418,15 @@ export interface IVoucherEntity {
 
   /**
    * Info: (20241023 - Murky)
-   * @description array of voucher event that "originalVoucher" is this voucher
+   * @description array of voucher event that "originalVoucher" is this voucher,
+   * empty if this voucher is related to nothing
    */
   originalEvents: IEventEntity[];
 
   /**
    * Info: (20241023 - Murky)
    * @description array of voucher event that "resultVoucher" is this voucher
+   * , empty if this voucher is related to nothing
    */
   resultEvents: IEventEntity[];
 
@@ -445,8 +448,13 @@ export interface IVoucherEntity {
    */
   counterParty?: ICounterPartyEntity;
 
-  // ToDo: (20241023 - Murky) Asset
-  // ToDo: (20241023 - Murky) UserVoucher => isRead
-  // ToDo: (20241023 - Murky) Issuer => User
+  /**
+   * Info: (20241024 - Murky)
+   * @description Asset that related to this voucher,
+   * undefined if not related to any asset
+   */
+  asset?: IAssetEntity;
   // ToDo: (20241023 - Murky) Certificate
+  // ToDo: (20241023 - Murky) Issuer => User
+  // ToDo: (20241023 - Murky) UserVoucher => isRead
 }
