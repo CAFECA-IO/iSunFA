@@ -188,7 +188,7 @@
     "ACCOUNTING": "會計科目",
     "CREDIT": "貸方",
     "DEBIT": "借方",
-    "ISSUER": "發行人",
+    "ISSUER": "製單人",
     "RECEIVABLE_AMOUNT": "應收金額",
     "PAYABLE_AMOUNT": "應付金額",
     "RECEIVED_AMOUNT": "已收金額",

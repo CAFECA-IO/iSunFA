@@ -3,35 +3,13 @@ import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
 import { timestampToYMD } from '@/lib/utils/common';
+import { IAssetItem } from '@/interfaces/asset';
 
-interface IAssetItem {
-  id: number;
-  acquisitionDate: number;
-  assetType: string;
-  assetNumber: string;
-  assetName: string;
-  purchasePrice: number;
-  accumulatedDepreciation: number;
-  residualValue: number;
-  remainingLife: number;
-  assetStatus: AssetStatus;
+interface IAssetItemProps {
+  assetData: IAssetItem;
 }
 
-// ToDo: (20240925 - Julian) dummy data
-const dummyData: IAssetItem = {
-  id: 1,
-  acquisitionDate: 1632511200,
-  assetType: '123 Machinery',
-  assetNumber: 'A-000010',
-  assetName: 'MackBook',
-  purchasePrice: 100000,
-  accumulatedDepreciation: 5000,
-  residualValue: 5000,
-  remainingLife: 61580800,
-  assetStatus: AssetStatus.NORMAL,
-};
-
-const AssetItem = () => {
+const AssetItem: React.FC<IAssetItemProps> = ({ assetData }) => {
   const { t } = useTranslation('common');
 
   const {
@@ -44,7 +22,10 @@ const AssetItem = () => {
     residualValue,
     remainingLife,
     assetStatus,
-  } = dummyData;
+    currencyAlias,
+  } = assetData;
+
+  const unit = currencyAlias === 'TWD' ? t('common:COMMON.TWD') : currencyAlias;
 
   const displayedDate = (
     <div className="flex items-center justify-center">
@@ -72,21 +53,21 @@ const AssetItem = () => {
   const displayedPurchasePrice = (
     <p>
       {purchasePrice}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedDepreciation = (
     <p>
       {accumulatedDepreciation}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
   const displayedResidual = (
     <p>
       {residualValue}
-      <span className="text-text-neutral-tertiary"> TWD</span>
+      <span className="text-text-neutral-tertiary"> {unit}</span>
     </p>
   );
 
