@@ -36,6 +36,7 @@ import certificates from '@/seed_json/certificate.json';
 import voucherCertificates from '@/seed_json/voucher_certificate.json';
 import accountingSettings from '@/seed_json/accounting_setting.json';
 import userSettings from '@/seed_json/user_setting.json';
+import companySettings from '@/seed_json/company_setting.json';
 
 const prisma = new PrismaClient();
 
@@ -293,6 +294,12 @@ async function createUserSetting() {
   });
 }
 
+async function createCompanySetting() {
+  await prisma.companySetting.createMany({
+    data: companySettings,
+  });
+}
+
 async function main() {
   await createFile();
   await createCompany();
@@ -305,6 +312,7 @@ async function main() {
   await createUser();
   await createCounterparty();
   await createAccountingSetting();
+  await createCompanySetting();
   await createUserSetting();
   await createRole();
   await createCompanyKYC();
