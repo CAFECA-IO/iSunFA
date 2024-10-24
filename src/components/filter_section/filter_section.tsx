@@ -20,6 +20,7 @@ interface FilterSectionProps {
   onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: VIEW_TYPES;
   viewToggleHandler?: (viewType: VIEW_TYPES) => void;
+  extraQuery?: Record<string, string | number | boolean>; // Info: (20241022 - Julian) 額外查詢條件
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
@@ -33,6 +34,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   onApiResponse,
   viewType,
   viewToggleHandler,
+  extraQuery,
 }) => {
   const [selectedType, setSelectedType] = useState<string | undefined>(
     types.length > 0 ? types[0] : undefined
@@ -72,6 +74,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
             : selectedDateRange.endTimeStamp,
           search: searchQuery,
           sort: selectedSorting || sorting ? 'desc' : 'asc',
+          ...extraQuery,
         },
       });
       /* Deprecated: (20240920 - tzuhan) Debugging purpose only
@@ -99,6 +102,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     searchQuery,
     selectedSorting,
     sorting,
+    extraQuery,
   ]);
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
@@ -106,7 +110,15 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     if (typeof window !== 'undefined') {
       fetchData();
     }
-  }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSorting, sorting]);
+  }, [
+    selectedType,
+    selectedStatus,
+    selectedDateRange,
+    searchQuery,
+    selectedSorting,
+    sorting,
+    extraQuery,
+  ]);
 
   return (
     <div

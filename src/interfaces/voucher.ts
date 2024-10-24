@@ -327,6 +327,10 @@ export const dummyVoucherList: IVoucherBeta[] = [
   },
 ];
 
+export interface IVoucherUI extends IVoucherBeta {
+  isSelected: boolean;
+}
+
 /**
  * Info: (20241023 - Murky)
  * @description For voucher api passing data

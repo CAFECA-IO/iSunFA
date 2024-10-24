@@ -27,20 +27,20 @@ const Notification = () => {
       {isPanelOpen && (
         <div className="absolute right-0 top-full z-10 w-400px translate-y-6 rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
           <p className="p-16px font-medium text-text-neutral-primary">
-            Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum
-            quibusdam quos voluptatem......
+            This is a test notification, in order to test whether the notification message panel is
+            successfully displayed.
           </p>
           <p className="p-16px font-medium text-text-neutral-tertiary">
-            Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum
-            quibusdam quos voluptatem......
+            This is a test notification, in order to test whether the notification message panel is
+            successfully displayed.
           </p>
           <p className="p-16px font-medium text-text-neutral-tertiary">
-            Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum
-            quibusdam quos voluptatem......
+            This is a test notification, in order to test whether the notification message panel is
+            successfully displayed.
           </p>
           <p className="p-16px font-medium text-text-neutral-tertiary">
-            Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum
-            quibusdam quos voluptatem......
+            This is a test notification, in order to test whether the notification message panel is
+            successfully displayed.
           </p>
         </div>
       )}

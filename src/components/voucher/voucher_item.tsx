@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -6,32 +6,32 @@ import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
-import { IVoucherBeta } from '@/interfaces/voucher';
+import { IVoucherUI } from '@/interfaces/voucher';
 
 interface IVoucherItemProps {
-  voucher: IVoucherBeta;
-  isCheckBoxOpen: boolean;
+  voucher: IVoucherUI;
+  selectHandler: (id: number) => void;
+  isCheckBoxOpen: boolean; // Info: (20241022 - Julian) checkbox 是否顯示
 }
 
-const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) => {
-  const { voucherDate, voucherNo, voucherType, note, counterParty, issuer, onRead, lineItemsInfo } =
-    voucher;
-
-  const [isChecked, setIsChecked] = useState(false);
+const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCheckBoxOpen }) => {
+  const {
+    voucherDate,
+    voucherNo,
+    voucherType,
+    note,
+    counterParty,
+    issuer,
+    onRead,
+    lineItemsInfo,
+    isSelected,
+  } = voucher;
 
   // Info: (20240920 - Julian) 借貸總和
   const total = lineItemsInfo.sum.amount ?? 0;
 
-  const displayedCheckbox = (
-    <div className="relative top-20px px-8px">
-      <input
-        type="checkbox"
-        className={checkboxStyle}
-        checked={isChecked}
-        onChange={() => setIsChecked(!isChecked)}
-      />
-    </div>
-  );
+  // Info: (20241022 - Julian) checkbox click handler
+  const checkboxHandler = () => selectHandler(voucher.id);
 
   const displayedDate = (
     <div className="relative top-10px flex justify-center">
@@ -135,7 +135,14 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, isCheckBoxOpen }) =
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
       {/* Info: (20240920 - Julian) Select */}
       <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
-        {displayedCheckbox}
+        <div className="relative top-20px px-8px">
+          <input
+            type="checkbox"
+            className={checkboxStyle}
+            checked={isSelected}
+            onChange={checkboxHandler}
+          />
+        </div>
       </div>
       {/* Info: (20240920 - Julian) Issued Date */}
       <div className="table-cell text-center">{displayedDate}</div>
