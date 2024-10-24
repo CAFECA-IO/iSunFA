@@ -121,8 +121,10 @@ export enum APIName {
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
-  GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
-  UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
+  ACCOUNTING_SETTING_GET = 'ACCOUNTING_SETTING_GET',
+  ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
+  USER_SETTING_GET = 'USER_SETTING_GET',
+  USER_SETTING_UPDATE = 'USER_SETTING_UPDATE',
 }
 
 export enum APIPath {
@@ -222,8 +224,10 @@ export enum APIPath {
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
-  GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
-  UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
+  USER_SETTING_UPDATE = `${apiPrefixV2}/user/:userId/setting`,
 }
 const createConfig = ({
   name,
@@ -659,15 +663,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ASK_AI_RESULT_V2,
   }),
-  [APIName.GET_ACCOUNTING_SETTING]: createConfig({
-    name: APIName.GET_ACCOUNTING_SETTING,
+  [APIName.ACCOUNTING_SETTING_GET]: createConfig({
+    name: APIName.ACCOUNTING_SETTING_GET,
     method: HttpMethod.GET,
-    path: APIPath.GET_ACCOUNTING_SETTING,
+    path: APIPath.ACCOUNTING_SETTING_GET,
   }),
-  [APIName.UPDATE_ACCOUNTING_SETTING]: createConfig({
-    name: APIName.UPDATE_ACCOUNTING_SETTING,
+  [APIName.ACCOUNTING_SETTING_UPDATE]: createConfig({
+    name: APIName.ACCOUNTING_SETTING_UPDATE,
     method: HttpMethod.PUT,
-    path: APIPath.UPDATE_ACCOUNTING_SETTING,
+    path: APIPath.ACCOUNTING_SETTING_UPDATE,
   }),
   [APIName.CERTIFICATE_LIST_V2]: createConfig({
     name: APIName.CERTIFICATE_LIST_V2,
@@ -718,5 +722,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.COUNTERPARTY_DELETE,
     method: HttpMethod.DELETE,
     path: APIPath.COUNTERPARTY_DELETE,
+  }),
+  [APIName.USER_SETTING_GET]: createConfig({
+    name: APIName.USER_SETTING_GET,
+    method: HttpMethod.GET,
+    path: APIPath.USER_SETTING_GET,
+  }),
+  [APIName.USER_SETTING_UPDATE]: createConfig({
+    name: APIName.USER_SETTING_UPDATE,
+    method: HttpMethod.PUT,
+    path: APIPath.USER_SETTING_UPDATE,
   }),
 };
