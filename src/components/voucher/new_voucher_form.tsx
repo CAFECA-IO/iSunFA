@@ -30,7 +30,7 @@ import {
 import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
-import { ICertificate, ICertificateUI, OPERATIONS } from '@/interfaces/certificate';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import CertificateSelection from '@/components/certificate/certificate_selection';
@@ -39,6 +39,7 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 
 enum RecurringUnit {
   MONTH = 'month',
@@ -779,8 +780,8 @@ const NewVoucherForm: React.FC = () => {
       isSelected: false,
       unRead: true,
       actions: !message.certificate.voucherNo
-        ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
-        : [OPERATIONS.DOWNLOAD],
+        ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
+        : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
     };
     setCertificates(newCertificates);
   }, []);

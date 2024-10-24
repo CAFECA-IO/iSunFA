@@ -3,7 +3,7 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { VIEW_TYPES } from '@/interfaces/certificate';
+import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
@@ -27,8 +27,8 @@ interface FilterSectionProps<T> {
   statuses?: string[];
   sortingOptions?: SortBy[];
   onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
-  viewType?: VIEW_TYPES;
-  viewToggleHandler?: (viewType: VIEW_TYPES) => void;
+  viewType?: DISPLAY_LIST_VIEW_TYPE;
+  viewToggleHandler?: (viewType: DISPLAY_LIST_VIEW_TYPE) => void;
   dateSort?: SortOrder | null;
   setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   otherSorts?: {

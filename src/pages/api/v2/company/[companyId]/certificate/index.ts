@@ -19,6 +19,7 @@ type APIResponse =
   | null;
 
 export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload:
     | object

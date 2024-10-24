@@ -7,7 +7,8 @@ import SelectionPannl from '@/components/certificate/certificate_selection_panne
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { InvoiceTabs, InvoiceTyps } from '@/constants/certificate';
+import { InvoiceTabs } from '@/constants/certificate';
+import { InvoiceType } from '@/constants/invoice';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
-          types={Object.values(InvoiceTyps)}
+          types={Object.values(InvoiceType)}
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">

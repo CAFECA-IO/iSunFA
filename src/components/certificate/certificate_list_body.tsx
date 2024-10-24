@@ -4,9 +4,11 @@ import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
+import { CERTIFICATE_USER_INTERACT_OPERATION, InvoiceTabs } from '@/constants/certificate';
+import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { ICertificate, ICertificateUI, OPERATIONS, VIEW_TYPES } from '@/interfaces/certificate';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -25,7 +27,7 @@ import CertificateEditModal from '@/components/certificate/certificate_edit_moda
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
-import { InvoiceTabs, InvoiceTyps } from '@/constants/certificate';
+import { InvoiceType } from '@/constants/invoice';
 
 interface CertificateListBodyProps {}
 
@@ -54,7 +56,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     withoutVoucher: 0,
   });
   const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
-  const [viewType, setViewType] = useState<VIEW_TYPES>(VIEW_TYPES.LIST);
+  const [viewType, setViewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
@@ -93,8 +95,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             isSelected: false,
             actions:
               activeTab === InvoiceTabs.WITHOUT_VOUCHER
-                ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
-                : [OPERATIONS.DOWNLOAD],
+                ? [
+                    CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                    CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+                  ]
+                : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
           };
           return acc;
         },
@@ -300,8 +305,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       isSelected: false,
       unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
       actions: !message.certificate.voucherNo
-        ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
-        : [OPERATIONS.DOWNLOAD],
+        ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
+        : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
     };
     setData(newCertificates);
   }, []);
@@ -403,7 +408,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
-          types={Object.values(InvoiceTyps)}
+          types={Object.values(InvoiceType)}
           viewType={viewType}
           viewToggleHandler={setViewType}
           dateSort={dateSort}

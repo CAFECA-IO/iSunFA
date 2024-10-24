@@ -1,7 +1,16 @@
-import { VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
 import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
+import type { ILineItemEntity } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
 import { Prisma } from '@prisma/client';
+import type { IEventEntity } from '@/interfaces/event';
+import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICounterPartyEntity } from '@/interfaces/counterparty';
+import type { IAssetEntity } from '@/interfaces/asset';
+import type { ICertificateEntity } from '@/interfaces/certificate';
+import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
+import type { IUserEntity } from '@/interfaces/user';
 
 export interface IVoucherMetaData {
   date: number;
@@ -19,7 +28,7 @@ export interface IVoucherMetaData {
 
 export interface IVoucher {
   voucherIndex: string;
-  invoiceIndex: string; // 改在這裡
+  invoiceIndex: string;
   metaData: IVoucherMetaData[];
   lineItems: ILineItem[];
 }
@@ -323,4 +332,162 @@ export const dummyVoucherList: IVoucherBeta[] = [
 
 export interface IVoucherUI extends IVoucherBeta {
   isSelected: boolean;
+}
+
+/**
+ * Info: (20241023 - Murky)
+ * @description For voucher api passing data
+ * @note Use  parsePrismaVoucherToVoucherEntity to convert PrismaVoucher to VoucherEntity
+ * @note Use initVoucherEntity to create a new VoucherEntity from scratch
+ */
+export interface IVoucherEntity {
+  /**
+   * Info: (20241022 - Murky)
+   * @description id in database, 0 if not yet saved in database
+   */
+  id: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description userId, who created this voucher
+   */
+  issuerId: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description companyId, 交易對象
+   */
+  counterPartyId: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description  Which company this voucher be created
+   */
+  companyId: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description uploaded / upcoming
+   */
+  status: JOURNAL_EVENT;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description Is this voucher editable
+   * @todo Need to write isEditable function, and guard other function
+   */
+  editable: boolean;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description voucher sequence number
+   */
+  no: string;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description voucher date, the date user selected
+   */
+  date: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description payment or transfer or receiving
+   */
+  type: EventType;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description voucher note for user to take note
+   */
+  note: string | null;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description the time this voucher be created, not selected by user
+   * @note need to be in seconds
+   */
+  createdAt: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds
+   */
+  updatedAt: number;
+
+  /**
+   * Info: (20241022 - Murky)
+   * @description null if not deleted, timestamp if deleted
+   * @note need to be in seconds
+   * @todo Need to write isDeleted function, and guard other function
+   */
+  deletedAt: number | null;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description array of voucher event that "originalVoucher" is this voucher,
+   * empty if this voucher is related to nothing
+   */
+  originalEvents: IEventEntity[];
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description array of voucher event that "resultVoucher" is this voucher
+   * , empty if this voucher is related to nothing
+   */
+  resultEvents: IEventEntity[];
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description indicate each line of this voucher, to represent the amount of money of each account in this voucher
+   */
+  lineItems: ILineItemEntity[];
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description which company create this voucher
+   */
+  company?: ICompanyEntity;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description this voucher is caused by which company
+   */
+  counterParty?: ICounterPartyEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Asset that related to this voucher,
+   * undefined if not related to any asset
+   */
+  asset?: IAssetEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description aich result id
+   * @note database has not yet created this column
+   */
+  aiResultId?: string;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description aich result status
+   * @note database has not yet created this column
+   */
+  aiStatus?: string;
+
+  // ToDo: (20241023 - Murky) Certificate
+  certificates: ICertificateEntity[];
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Who created this voucher
+   */
+  issuer?: IUserEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Who read this voucher
+   */
+  readByUsers: IUserVoucherEntity[];
 }

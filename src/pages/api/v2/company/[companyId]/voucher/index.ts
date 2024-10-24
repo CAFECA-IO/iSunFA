@@ -10,6 +10,7 @@ import { APIName } from '@/constants/api_connection';
 import { mockVouchersReturn } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
 
 export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
+  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
   const session = await getSession(req, res);

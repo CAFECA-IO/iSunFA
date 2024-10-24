@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
-import { CounterpartyType } from '@/interfaces/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';

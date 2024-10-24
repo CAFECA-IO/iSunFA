@@ -6,12 +6,9 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
-import { FLOW_TYPES, FORM_TYPES } from '@/interfaces/invoice';
-import {
-  CounterpartyType,
-  generateRandomCounterParties,
-  ICounterparty,
-} from '@/interfaces/counterparty';
+import { InvoiceType, InvoiceTransactionDirection } from '@/constants/invoice';
+import { generateRandomCounterParties, ICounterparty } from '@/interfaces/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -355,7 +352,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     name="invoice-type"
                     className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
                     defaultChecked
-                    onClick={() => setType(FLOW_TYPES.INPUT)}
+                    onClick={() => setType(InvoiceTransactionDirection.INPUT)}
                   />
                   <p>{t('certificate:EDIT.INPUT')}</p>
                 </label>
@@ -368,7 +365,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     id="invoice-output"
                     name="invoice-type"
                     className="relative h-16px w-16px appearance-none rounded-full border border-checkbox-stroke-unselected bg-white outline-none after:absolute after:left-1/2 after:top-1/2 after:-ml-5px after:-mt-5px after:hidden after:h-10px after:w-10px after:rounded-full after:bg-checkbox-stroke-unselected checked:after:block"
-                    onClick={() => setType(FLOW_TYPES.OUTPUT)}
+                    onClick={() => setType(InvoiceTransactionDirection.OUTPUT)}
                   />
                   <p>{t('certificate:EDIT.OUTPUT')}</p>
                 </label>
@@ -579,19 +576,22 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                         ref={invoiceTypeMenuRef}
                         className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                       >
-                        {[FORM_TYPES.TRIPLICATE, FORM_TYPES.DUPLICATE, FORM_TYPES.SPECIAL].map(
-                          (value) => (
-                            <li
-                              key={`taxable-${value}`}
-                              value={value}
-                              className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                              onClick={() => setInvoiceType(value)}
-                            >
-                              {t(`certificate:TYPE.${value.toUpperCase()}`)}{' '}
-                              {t('certificate:TYPE.UNIFORM_INVOICE')}
-                            </li>
-                          )
-                        )}
+                        {[
+                          // Info: (20241024 - Murky) @tzuhan 這邊我改用invoice 原生的type, special 改用PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC
+                          InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+                          InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+                          InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
+                        ].map((value) => (
+                          <li
+                            key={`taxable-${value}`}
+                            value={value}
+                            className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
+                            onClick={() => setInvoiceType(value)}
+                          >
+                            {t(`certificate:TYPE.${value.toUpperCase()}`)}{' '}
+                            {t('certificate:TYPE.UNIFORM_INVOICE')}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   </div>
