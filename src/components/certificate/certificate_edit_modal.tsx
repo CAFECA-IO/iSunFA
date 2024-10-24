@@ -11,9 +11,9 @@ import {
   generateRandomCounterParties,
   ICertificateUI,
   ICounterParty,
-  INVOICE_TYPES,
-  PARTER_TYPES,
 } from '@/interfaces/certificate';
+import { InvoiceType } from '@/constants/invoice';
+import { CounterPartyEntityType } from '@/constants/counterparty';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { inputStyle } from '@/constants/display';
@@ -270,7 +270,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const handleAddCounterParty = (data: {
     name: string;
     taxId: number;
-    parterType: PARTER_TYPES;
+    parterType: CounterPartyEntityType;
     note: string;
   }) => {
     filteredCounterPartyList.push({
@@ -572,9 +572,10 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                         className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                       >
                         {[
-                          INVOICE_TYPES.TRIPLICATE,
-                          INVOICE_TYPES.DUPLICATE,
-                          INVOICE_TYPES.SPECIAL,
+                          // Info: (20241024 - Murky) @tzuhan 這邊我改用invoice 原生的type, special 改用PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC
+                          InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+                          InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+                          InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
                         ].map((value) => (
                           <li
                             key={`taxable-${value}`}

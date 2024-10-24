@@ -1,31 +1,27 @@
 // ToDo: (20241024 - Murky) enum 和 function 要移動到別的地方
 import { ProgressStatus } from '@/constants/account';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
+import { CounterPartyEntityType } from '@/constants/counterparty';
+import { InvoiceType } from '@/constants/invoice';
 
-export enum PARTER_TYPES {
-  SUPPLIER = 'Supplier',
-  CLIENT = 'Client',
-  BOTH = 'Both',
-}
 export interface ICounterParty {
   id: number;
   name: string;
   taxId: number;
-  parterType: PARTER_TYPES;
+  parterType: CounterPartyEntityType;
   note: string;
 }
 
-// Info: (20240920 - tzuhan) 定義 ICertificate 接口
+/*
+ * Info: (20240920 - tzuhan)
+ * 定義 ICertificate 接口
+ * 這個值來自於invoice
+ */
 export enum CERTIFICATE_TYPES {
   INPUT = 'Input',
   OUTPUT = 'Output',
 }
 
-export enum INVOICE_TYPES {
-  TRIPLICATE = 'Triplicate',
-  DUPLICATE = 'Duplicate',
-  SPECIAL = 'Special',
-}
 /**
  * Info: (20241024 - Murky)
  * @description Certificate Interface for front-end
@@ -41,7 +37,7 @@ export interface ICertificate {
   taxRate: number;
   taxPrice: number;
   totalPrice: number;
-  invoiceType: INVOICE_TYPES;
+  invoiceType: InvoiceType;
   counterParty: ICounterParty;
   deductible: boolean;
   voucherNo?: string;
@@ -115,14 +111,17 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
       taxRate, // Info: (20240920 - tzuhan) 隨機生成 5%, 10%, 15%
       taxPrice: (taxRate / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算稅金
       totalPrice: priceBeforeTax + (taxRate / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算總價
-      invoiceType: [INVOICE_TYPES.TRIPLICATE, INVOICE_TYPES.DUPLICATE, INVOICE_TYPES.SPECIAL][
-        Math.floor(Math.random() * 3)
-      ], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
+      // Info: (20241024 - Murky) @Tzuhan 這邊我改成用Invoice本身的invoice type, special 我先用 PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC
+      invoiceType: [
+        InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+        InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+        InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
+      ][Math.floor(Math.random() * 3)], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
       counterParty: {
         id: randomNumber(),
         name: `PX Mart`,
         taxId: randomNumber(),
-        parterType: PARTER_TYPES.SUPPLIER,
+        parterType: CounterPartyEntityType.SUPPLIER,
         note: `Note for PX Mart`,
       },
       deductible: Math.random() > 0.5 ? true : !true, // Info: (20240920 - tzuhan) 隨機生成 Yes/No
@@ -150,7 +149,7 @@ export const generateRandomCounterParties = (num?: number): ICounterParty[] => {
       id: i,
       name: `CounterParty_${i.toString().padStart(6, '0')}`,
       taxId: randomNumber(),
-      parterType: PARTER_TYPES.SUPPLIER,
+      parterType: CounterPartyEntityType.SUPPLIER,
       note: `Note for CounterParty ${i.toString().padStart(6, '0')}`,
     };
     counterParties.push(counterParty);

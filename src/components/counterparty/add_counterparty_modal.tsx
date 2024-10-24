@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import { Button } from '@/components/button/button';
-import { PARTER_TYPES } from '@/interfaces/certificate';
+import { CounterPartyEntityType } from '@/constants/counterparty';
 import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';
@@ -11,7 +11,12 @@ import { inputStyle } from '@/constants/display';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
-  onSave: (data: { name: string; taxId: number; parterType: PARTER_TYPES; note: string }) => void;
+  onSave: (data: {
+    name: string;
+    taxId: number;
+    parterType: CounterPartyEntityType;
+    note: string;
+  }) => void;
   name?: string;
   taxId?: number;
 }
@@ -25,7 +30,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   const { t } = useTranslation(['common', 'certificate']);
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<number>(taxId || 0);
-  const [inputType, setInputType] = useState<null | PARTER_TYPES>(null);
+  const [inputType, setInputType] = useState<null | CounterPartyEntityType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
 
@@ -43,7 +48,11 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     setTypeMenuOpen(true);
   };
 
-  const typeItems = [PARTER_TYPES.BOTH, PARTER_TYPES.CLIENT, PARTER_TYPES.SUPPLIER].map((type) => {
+  const typeItems = [
+    CounterPartyEntityType.BOTH,
+    CounterPartyEntityType.CLIENT,
+    CounterPartyEntityType.SUPPLIER,
+  ].map((type) => {
     const accountClickHandler = () => {
       setInputType(type);
       setTypeMenuOpen(false);

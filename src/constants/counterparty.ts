@@ -1,6 +1,7 @@
 /**
  * Info: (20241023 - Murky)
  * @description which is the counter party relation from our company perspective
+ * @enum - [SUPPLER, CLIENT, BOTH]
  */
 export enum CounterPartyEntityType {
   /**
