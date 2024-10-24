@@ -45,22 +45,28 @@ export const CompanySettingSchema = z
   .object({
     id: z.number(),
     companyId: z.number(),
-    companyName: z.string().nullable().default(''), // 处理 null 转为空字符串
-    companyTaxId: z.string().nullable().default(''),
+    company: z.object({
+      name: z.string(),
+      taxId: z.string(),
+    }),
     taxSerialNumber: z.string().nullable().default(''),
     representativeName: z.string().nullable().default(''),
     country: z.string().nullable().default(''),
     phone: z.string().nullable().default(''),
     address: z.string().nullable().default(''),
+    createdAt: z.number(),
+    updatedAt: z.number(),
   })
   .transform((companySetting) => ({
     id: companySetting.id,
     companyId: companySetting.companyId,
-    companyName: companySetting.companyName || '',
-    companyTaxId: companySetting.companyTaxId || '',
+    companyName: companySetting.company.name || '',
+    companyTaxId: companySetting.company.taxId || '',
     taxSerialNumber: companySetting.taxSerialNumber || '',
     representativeName: companySetting.representativeName || '',
     country: companySetting.country || '',
     phone: companySetting.phone || '',
     address: companySetting.address || '',
+    createdAt: companySetting.createdAt,
+    updatedAt: companySetting.updatedAt,
   }));
