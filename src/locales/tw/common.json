@@ -419,6 +419,9 @@
     "ASSET": "資產",
     "LIABILITY": "負債",
     "EQUITY": "權益",
+    "PAYMENT": "支付",
+    "INCOME": "收入",
+    "TRANSFER": "移轉",
     "NONE": ""
   },
   "SELECTION": {
@@ -429,5 +432,24 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
+  },
+  "SELECT_ROLE": {
+    "SELECT_ROLE_ISUNFA": "選擇角色 - iSunFA"
+  },
+
+  "CREATED_ROLES": {
+    "CREATED_ROLES": "已建立角色"
+  },
+
+  "BETA_DASHBOARD": {
+    "DASHBOARD": "儀表板"
+  },
+
+  "MY_COMPANY_LIST_PAGE": {
+    "MY_COMPANY_LIST": "我的公司列表"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "最新消息"
   }
 }

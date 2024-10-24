@@ -4,9 +4,10 @@ import { ICertificateUI, VIEW_TYPES } from '@/interfaces/certificate';
 import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
+import { InvoiceTabs } from '@/constants/certificate';
 
 interface CertificateProps {
-  activeTab: number;
+  activeTab: InvoiceTabs;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   totalCount: number;

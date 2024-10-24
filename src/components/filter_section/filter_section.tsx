@@ -3,7 +3,7 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
+import { VIEW_TYPES } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
@@ -16,41 +16,34 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortOrder, SortBy } from '@/constants/sort';
 import { useTranslation } from 'next-i18next';
 
-interface FilterSectionProps {
+interface FilterSectionProps<T> {
   className?: string;
   apiName: IAPIName;
-  params?: Record<string, string | number | boolean>;
+  params?: Record<string, string | number | boolean | undefined>;
   page: number;
-  hasBeenUsed: boolean;
   pageSize: number;
+  tab?: string;
   types?: string[];
   statuses?: string[];
   sortingOptions?: SortBy[];
-  onApiResponse?: (
-    data: IPaginatedData<{
-      totalInvoicePrice: number;
-      unRead: {
-        withVoucher: number;
-        withoutVoucher: number;
-      };
-      certificates: ICertificate[];
-    }>
-  ) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
+  onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: VIEW_TYPES;
   viewToggleHandler?: (viewType: VIEW_TYPES) => void;
   dateSort?: SortOrder | null;
-  amountSort?: SortOrder | null;
-  voucherSort?: SortOrder | null;
   setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  otherSorts?: {
+    sort: SortBy;
+    sortOrder: SortOrder;
+  }[];
 }
 
-const FilterSection: React.FC<FilterSectionProps> = ({
+const FilterSection = <T,>({
   className,
   apiName,
   params,
   page = 1,
-  hasBeenUsed = false,
   pageSize = DEFAULT_PAGE_LIMIT,
+  tab,
   types = [],
   statuses = [],
   sortingOptions = [],
@@ -58,10 +51,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   viewType,
   viewToggleHandler,
   dateSort,
-  amountSort,
-  voucherSort,
   setDateSort,
-}) => {
+  otherSorts,
+}: FilterSectionProps<T>) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { toastHandler } = useModalContext();
   const [selectedType, setSelectedType] = useState<string | undefined>(
@@ -87,16 +79,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   }>({});
 
   // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
-  const { trigger } = APIHandler<
-    IPaginatedData<{
-      totalInvoicePrice: number;
-      unRead: {
-        withVoucher: number;
-        withoutVoucher: number;
-      };
-      certificates: ICertificate[];
-    }>
-  >(apiName);
+  const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
 
   // Info: (20240919 - tzuhan) 發送 API 請求
   const fetchData = useCallback(async () => {
@@ -109,7 +92,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         query: {
           page,
           pageSize,
-          hasBeenUsed,
+          tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
           type: selectedType,
           status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
           // Info: (20241022 - tzuhan) @Murky, 這裡排序需要可以多種方式排序，所以需要修改
@@ -180,37 +163,19 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         return rest;
       });
     }
-    if (amountSort) {
-      setSelectedSortOptions((prev) => ({
-        ...prev,
-        [SortBy.AMOUNT]: {
-          by: SortBy.AMOUNT,
-          order: amountSort,
-        },
-      }));
-    } else {
-      setSelectedSortOptions((prev) => {
-        const rest = { ...prev };
-        delete rest[SortBy.AMOUNT];
-        return rest;
+    if (otherSorts) {
+      otherSorts.forEach(({ sort, sortOrder }) => {
+        if (sort === SortBy.DATE) return;
+        setSelectedSortOptions((prev) => ({
+          ...prev,
+          [sort]: {
+            by: sort,
+            order: sortOrder,
+          },
+        }));
       });
     }
-    if (voucherSort) {
-      setSelectedSortOptions((prev) => ({
-        ...prev,
-        [SortBy.VOUCHER_NUMBER]: {
-          by: SortBy.VOUCHER_NUMBER,
-          order: voucherSort,
-        },
-      }));
-    } else {
-      setSelectedSortOptions((prev) => {
-        const rest = { ...prev };
-        delete rest[SortBy.VOUCHER_NUMBER];
-        return rest;
-      });
-    }
-  }, [dateSort, amountSort, voucherSort]);
+  }, [dateSort, otherSorts]);
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {

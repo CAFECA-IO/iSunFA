@@ -17,7 +17,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <SideMenu toggleOverlay={toggleOverlay} />
 
       <div className="relative flex flex-auto flex-col bg-surface-neutral-main-background">

@@ -8,9 +8,9 @@ import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
 import { FLOW_TYPES, FORM_TYPES } from '@/interfaces/invoice';
 import {
-  PARTER_TYPES,
+  CounterpartyType,
   generateRandomCounterParties,
-  ICounterParty,
+  ICounterparty,
 } from '@/interfaces/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -28,6 +28,7 @@ import { LuTrash2 } from 'react-icons/lu';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
+  companyId?: number;
   toggleIsEditModalOpen: (open: boolean) => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   certificate?: ICertificateUI;
   onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
@@ -35,6 +36,7 @@ interface CertificateEditModalProps {
 
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
+  companyId,
   toggleIsEditModalOpen,
   certificate,
   onSave,
@@ -45,7 +47,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const { t } = useTranslation(['certificate', 'common']);
   const counterPartyList = generateRandomCounterParties(10);
   const [filteredCounterPartyList, setFilteredCounterPartyList] =
-    useState<ICounterParty[]>(counterPartyList);
+    useState<ICounterparty[]>(counterPartyList);
   const [counterParty, setCounterParty] = useState(certificate.invoice.counterParty);
   const [type, setType] = useState(certificate.invoice.inputOrOutput);
   const [date, setDate] = useState<IDatePeriod>({
@@ -58,7 +60,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const [taxPrice, setTaxPrice] = useState(certificate.invoice.taxPrice);
   const [totalPrice, setTotalPrice] = useState(certificate.invoice.totalPrice);
   const [searchName, setSearchName] = useState<string>('');
-  const [searchTaxId, setSearchTaxId] = useState<number>(0);
+  const [searchTaxId, setSearchTaxId] = useState<string>('');
   const [invoiceType, setInvoiceType] = useState(certificate.invoice.type);
   const [deductible, setDeductible] = useState(certificate.invoice.deductible);
   const {
@@ -115,7 +117,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     setIsCounterPartyEditing(false);
     setCounterPartyMenuOpen(false);
     setSearchName('');
-    setSearchTaxId(0);
+    setSearchTaxId('');
   };
 
   const CounterPartyItems = filteredCounterPartyList.map((partner) => {
@@ -126,7 +128,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       setIsCounterPartyEditing(false);
       // Info: (20241017 - Tzuhan) 重置搜尋關鍵字
       setSearchName('');
-      setSearchTaxId(0);
+      setSearchTaxId('');
     };
 
     return (
@@ -183,7 +185,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     if (isMessageModalVisible) return;
     setCounterPartyMenuOpen(true);
     if (e.target.id === 'counterparty-taxid') {
-      setSearchTaxId(Number(e.target.value));
+      setSearchTaxId(e.target.value);
     }
     if (e.target.id === 'counterparty-name') {
       setSearchName(e.target.value);
@@ -271,13 +273,17 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   const handleAddCounterParty = (data: {
     name: string;
-    taxId: number;
-    type: PARTER_TYPES;
+    taxId: string;
+    type: CounterpartyType;
     note: string;
   }) => {
+    if (!companyId) return;
     filteredCounterPartyList.push({
       ...data,
       id: filteredCounterPartyList.length + 1,
+      companyId,
+      createdAt: new Date().getTime() / 1000,
+      updatedAt: new Date().getTime() / 1000,
     });
     toastHandler({
       id: ToastId.ADD_COUNTERPARTY_SUCCESS,

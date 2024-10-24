@@ -1,6 +1,6 @@
 import { FLOW_TYPES, FORM_TYPES, IInvoiceBeta, TAX_TYPE } from '@/interfaces/invoice';
 import { IFileUIBeta } from '@/interfaces/file';
-import { PARTER_TYPES } from '@/interfaces/counterparty';
+import { generateRandomCounterParties } from '@/interfaces/counterparty';
 import { ProgressStatus } from '@/constants/account';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
@@ -45,12 +45,6 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
     const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
     return date.getTime() / 1000;
   }
-
-  // function randomTaxID(): string {
-  //   return Math.floor(Math.random() * 1_000_000_000)
-  //     .toString()
-  //     .padStart(8, '0');
-  // }
 
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機的 Number
   function randomNumber(): number {
@@ -102,13 +96,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
         type: [FORM_TYPES.TRIPLICATE, FORM_TYPES.DUPLICATE, FORM_TYPES.SPECIAL][
           Math.floor(Math.random() * 3)
         ], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
-        counterParty: {
-          id: randomNumber(),
-          name: `PX Mart`,
-          taxId: randomNumber(),
-          type: PARTER_TYPES.SUPPLIER,
-          note: `Note for PX Mart`,
-        },
+        counterParty: generateRandomCounterParties(1)[0],
         deductible: Math.random() > 0.5 ? true : !true, // Info: (20240920 - tzuhan) 隨機生成 Yes/No
         uploader: `Tzuhan`,
 

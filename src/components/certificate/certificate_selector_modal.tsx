@@ -7,6 +7,7 @@ import SelectionPannl from '@/components/certificate/certificate_selection_panne
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { InvoiceTabs, InvoiceTyps } from '@/constants/certificate';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
@@ -80,9 +81,9 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           apiName={APIName.CERTIFICATE_LIST_V2}
           page={1}
           pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
-          hasBeenUsed={false}
+          tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
-          types={['All', 'Invoice', 'Receipt']}
+          types={[InvoiceTyps.ALL, InvoiceTyps.INVOICE, InvoiceTyps.RECEIPT]}
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">

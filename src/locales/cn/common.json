@@ -419,7 +419,10 @@
     "ASSET": "资产",
     "LIABILITY": "负债",
     "EQUITY": "权益",
-    "NONE": ""
+    "NONE": "",
+    "PAYMENT": "支付",
+    "INCOME": "收入",
+    "TRANSFER": "移转"
   },
   "SELECTION": {
     "EXPORT": "导出",
@@ -429,5 +432,24 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
+  },
+  "SELECT_ROLE": {
+    "SELECT_ROLE_ISUNFA": "选择角色 - iSunFA"
+  },
+
+  "CREATED_ROLES": {
+    "CREATED_ROLES": "已建立角色"
+  },
+
+  "BETA_DASHBOARD": {
+    "DASHBOARD": "仪表板"
+  },
+
+  "MY_COMPANY_LIST_PAGE": {
+    "MY_COMPANY_LIST": "我的公司列表"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "最新消息"
   }
 }

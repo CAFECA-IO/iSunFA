@@ -21,4 +21,6 @@ export enum SortBy {
   DATE_UPDATED = 'Date Updated',
   VOUCHER_NUMBER = 'Voucher No.',
   AMOUNT = 'Amount',
+  CREDIT = 'Credit',
+  DEBIT = 'Debit',
 }

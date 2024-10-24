@@ -5,9 +5,10 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
+import { InvoiceTabs } from '@/constants/certificate';
 
 interface CertificateTableProps {
-  activeTab: number;
+  activeTab: InvoiceTabs;
   certificates: ICertificateUI[];
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態 // Info: (20240923 - tzuhan) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - tzuhan) 當選擇變更時的回調函數
@@ -93,7 +94,7 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
             </div>
             <div className="table-cell border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
-              {activeTab === 1 && displayedVoucherNumber}
+              {activeTab === InvoiceTabs.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
         </div>

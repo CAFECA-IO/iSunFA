@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
+import FilterSection from '@/components/filter_section/filter_section';
+import Pagination from '@/components/pagination/pagination';
+import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
-import APIHandler from '@/lib/utils/api_handler';
+// import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IVoucherBeta } from '@/interfaces/voucher';
+import { useUserCtx } from '@/contexts/user_context';
+import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 enum VoucherTabs {
   UPLOADED = 'Uploaded Voucher',
@@ -15,40 +22,88 @@ enum VoucherTabs {
 
 const VoucherListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
-  const [activeTab, setActiveTab] = useState(0);
+  const { selectedCompany } = useUserCtx();
+
+  const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [unRead, setUnRead] = useState<{
+    uploadedVoucher: number;
+    upcomingEvents: number;
+  }>({
+    uploadedVoucher: 0,
+    upcomingEvents: 0,
+  });
+  const [dateSort, setDateSort] = useState<null | SortOrder>(null);
+  const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
+  const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
+  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
+
+  useEffect(() => {
+    setOtherSorts([
+      ...(creditSort ? [{ sort: SortBy.CREDIT, sortOrder: creditSort }] : []),
+      ...(debitSort ? [{ sort: SortBy.DEBIT, sortOrder: debitSort }] : []),
+    ]);
+  }, [creditSort, debitSort]);
+  // const [currentPage, setCurrentPage] = useState(1);
+
+  // ToDo: (20240920 - Julian) dummy data
+  // const totalPage = 10;
+  // const voucherTabCount = [0, 1];
 
   const voucherTab = Object.values(VoucherTabs);
-  const voucherTabCount = [0, 1];
+  const voucherTypeList = Object.keys(EventType).map((key) => key.toLowerCase());
 
-  const tabClick = (index: number) => {
-    setActiveTab(index);
+  // const tabQueryStr = activeTab.toLowerCase();
+  const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
+
+  // const { data: voucherData } = APIHandler<{ data: IVoucherBeta[] }>(
+  //   APIName.VOUCHER_LIST_V2,
+  //   {
+  //     params,
+  //     query: { strategy: tabQueryStr },
+  //   },
+  //   true
+  // );
+  const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
+  const handleApiResponse = (
+    data: IPaginatedData<{
+      unRead: {
+        uploadedVoucher: number;
+        upcomingEvents: number;
+      };
+      vouchers: IVoucherBeta[];
+    }>
+  ) => {
+    setUnRead(data.data.unRead);
+    setTotalPages(data.totalPages);
+    setTotalCount(data.totalCount);
+    setVoucherList(data.data.vouchers);
   };
 
-  const tabQueryStr = Object.keys(VoucherTabs)[activeTab].toLowerCase();
+  // Info: (20241024 - Tzuhan) 已更新 FilterSection 的 props 包含了你列出的額外查詢條件
+  // Info: (20241022 - Julian) 額外查詢條件
+  // const extraQuery = { strategy: tabQueryStr, page: currentPage };
 
-  const { data: voucherData } = APIHandler<{ data: IVoucherBeta[] }>(
-    APIName.VOUCHER_LIST_V2,
-    {
-      // ToDo: (20241017 - Julian) Replace with real parameters
-      params: {
-        companyId: '111',
-      },
-      query: {
-        strategy: tabQueryStr,
-      },
-    },
-    true
-  );
+  const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
 
-  const voucherList = voucherData?.data ?? [];
-
-  const displayVoucherList = voucherList ? (
-    <VoucherList voucherList={voucherList} />
-  ) : (
-    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-      <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
-    </div>
-  );
+  const displayVoucherList =
+    voucherList && voucherList.length > 0 ? (
+      <VoucherList
+        voucherList={voucherList}
+        dateSort={dateSort}
+        creditSort={creditSort}
+        debitSort={debitSort}
+        setDateSort={setDateSort}
+        setCreditSort={setCreditSort}
+        setDebitSort={setDebitSort}
+      />
+    ) : (
+      <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+        <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
+      </div>
+    );
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
@@ -66,14 +121,35 @@ const VoucherListPageBody: React.FC = () => {
           tabs={voucherTab}
           activeTab={activeTab}
           onTabClick={tabClick}
-          counts={voucherTabCount}
+          counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}
         />
-        {/* ToDo: (20240920 - Julian) Filter: 通用元件 */}
-        <div className="flex h-72px w-full flex-col items-center justify-center bg-text-neutral-secondary text-white">
-          This is filter
-        </div>
+        {/* ToDo: (20241022 - Julian) Filter Section */}
+        <FilterSection<{
+          unRead: {
+            uploadedVoucher: number;
+            upcomingEvents: number;
+          };
+          vouchers: IVoucherBeta[];
+        }>
+          params={params}
+          apiName={APIName.VOUCHER_LIST_V2}
+          onApiResponse={handleApiResponse}
+          page={page}
+          pageSize={DEFAULT_PAGE_LIMIT}
+          tab={activeTab}
+          types={voucherTypeList}
+          dateSort={dateSort}
+          otherSorts={otherSorts}
+        />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}
+        {/* Info: (20240920 - Julian) Pagination */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          setCurrentPage={setPage}
+          totalCount={totalCount}
+        />
       </div>
     </div>
   );

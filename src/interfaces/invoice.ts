@@ -1,6 +1,6 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
-import { ICounterParty } from './counterparty';
+import { ICounterparty } from '@/interfaces/counterparty';
 
 // Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
 export interface IInvoice {
@@ -54,5 +54,5 @@ export interface IInvoiceBeta {
 
   name: string; // Info: (20241021 - tzuhan) @Jacky @Murky, UI 需要，目前DB沒有
   uploader: string; // Info:(20241021 - tzuhan) @Jacky @Murkyy, 需要上傳者的資訊，目前DB沒有，可以在call create cerificate的時候透過userId存
-  counterParty: ICounterParty;
+  counterParty: ICounterparty;
 }

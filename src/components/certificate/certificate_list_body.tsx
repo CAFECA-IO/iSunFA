@@ -13,7 +13,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { IFileUIBeta } from '@/interfaces/file';
 import { ProgressStatus } from '@/constants/account';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { SortOrder } from '@/constants/sort';
+import { SortBy, SortOrder } from '@/constants/sort';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -25,6 +25,7 @@ import CertificateEditModal from '@/components/certificate/certificate_edit_moda
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
+import { InvoiceTabs, InvoiceTyps } from '@/constants/certificate';
 
 interface CertificateListBodyProps {}
 
@@ -36,12 +37,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation('certificate');
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id;
+  const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
   const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   const [data, setData] = useState<{ [id: string]: ICertificateUI }>({});
   const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
   const [unRead, setUnRead] = useState<{
@@ -63,6 +65,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
+  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -82,13 +85,16 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setUnRead(resData.data.unRead);
       setTotalPages(resData.totalPages);
       setTotalCount(resData.totalCount);
+
       const certificateData = resData.data.certificates.reduce(
         (acc, item) => {
           acc[item.id] = {
             ...item,
             isSelected: false,
             actions:
-              activeTab === 0 ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE] : [OPERATIONS.DOWNLOAD],
+              activeTab === InvoiceTabs.WITHOUT_VOUCHER
+                ? [OPERATIONS.DOWNLOAD, OPERATIONS.REMOVE]
+                : [OPERATIONS.DOWNLOAD],
           };
           return acc;
         },
@@ -96,7 +102,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       );
       setData(certificateData);
     },
-    []
+    [activeTab]
   );
 
   const handleSelect = useCallback(
@@ -279,8 +285,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
     const { certificate: newCertificate } = message;
     if (
-      (newCertificate.voucherNo && activeTab === 0) ||
-      (!newCertificate.voucherNo && activeTab === 1) ||
+      (newCertificate.voucherNo && activeTab === InvoiceTabs.WITHOUT_VOUCHER) ||
+      (!newCertificate.voucherNo && activeTab === InvoiceTabs.WITH_VOUCHER) ||
       newCertificate.companyId !== companyId
     ) {
       return;
@@ -317,6 +323,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, []);
 
   useEffect(() => {
+    setOtherSorts([
+      ...(amountSort ? [{ sort: SortBy.AMOUNT, sortOrder: amountSort }] : []),
+      ...(voucherSort ? [{ sort: SortBy.VOUCHER_NUMBER, sortOrder: voucherSort }] : []),
+    ]);
+  }, [amountSort, voucherSort]);
+
+  useEffect(() => {
     getToken();
   }, [getToken]);
 
@@ -340,6 +353,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       {isEditModalOpen && (
         <CertificateEditModal
           isOpen={isEditModalOpen}
+          companyId={companyId}
           toggleIsEditModalOpen={setIsEditModalOpen}
           certificate={editingId ? data[editingId] : undefined}
           onSave={handleSave}
@@ -369,25 +383,31 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         <Tabs
           tabs={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
-          onTabClick={(index: number) => setActiveTab(index)}
+          onTabClick={(tab: string) => setActiveTab(tab as InvoiceTabs)}
           counts={[unRead.withoutVoucher, unRead.withVoucher]}
         />
 
         {/* Info: (20240919 - tzuhan) Filter Section */}
-        <FilterSection
+        <FilterSection<{
+          totalInvoicePrice: number;
+          unRead: {
+            withVoucher: number;
+            withoutVoucher: number;
+          };
+          certificates: ICertificate[];
+        }>
           className="mt-2"
+          params={params}
           apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          types={['All', 'Invoice', 'Receipt']}
-          hasBeenUsed={activeTab === 1}
+          tab={activeTab}
+          types={[InvoiceTyps.ALL, InvoiceTyps.INVOICE, InvoiceTyps.RECEIPT]}
           viewType={viewType}
           viewToggleHandler={setViewType}
           dateSort={dateSort}
-          amountSort={amountSort}
-          voucherSort={voucherSort}
-          setDateSort={setDateSort}
+          otherSorts={otherSorts}
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}
@@ -396,7 +416,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
-              isSelectable={activeTab === 0}
+              isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(data)}
               itemType="Certificates"
@@ -406,7 +426,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               selectedCount={filterSelectedIds().length}
               totalCount={Object.values(data).length || 0}
               handleSelect={handleSelect}
-              operations={activeTab === 1 ? [] : ['ADD_VOUCHER', 'DELETE']}
+              operations={activeTab === InvoiceTabs.WITH_VOUCHER ? [] : ['ADD_VOUCHER', 'DELETE']}
               onAddVoucher={handleAddVoucher}
               onAddAsset={handleAddAsset}
               onDelete={handleDelete}

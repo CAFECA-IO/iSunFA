@@ -14,7 +14,7 @@ import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/vouch
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
-import { ICounterParty, dummyCounterparty } from '@/interfaces/counterparty';
+import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
 import { IAssetItem } from '@/interfaces/asset';
 import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { useUserCtx } from '@/contexts/user_context';
@@ -50,7 +50,7 @@ interface IAIResultVoucher {
   voucherDate: number;
   type: string;
   note: string;
-  counterPartyId: number; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterParty (至少要有 company id 和 name)
+  counterPartyId: number; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
   lineItemsInfo: {
     lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
   };
@@ -144,7 +144,7 @@ const NewVoucherForm: React.FC = () => {
     t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')
   );
   const [filteredCounterparty, setFilteredCounterparty] =
-    useState<ICounterParty[]>(dummyCounterparty);
+    useState<ICounterparty[]>(dummyCounterparty);
 
   // Info: (20241011 - Julian) 資產相關 state
   const [assets, setAssets] = useState<IAssetItem[]>([]);
@@ -386,7 +386,7 @@ const NewVoucherForm: React.FC = () => {
     const filteredList = dummyCounterparty.filter((counter) => {
       // Info: (20241004 - Julian) 編號(數字)搜尋: 字首符合
       if (counterKeyword.match(/^\d+$/)) {
-        const taxIdMatch = counter.taxId.toString().startsWith(counterKeyword.toLowerCase());
+        const taxIdMatch = counter.taxId.toLowerCase().startsWith(counterKeyword.toLowerCase());
         return taxIdMatch;
       } else if (counterKeyword !== '') {
         // Info: (20241004 - Julian) 名稱搜尋: 部分符合

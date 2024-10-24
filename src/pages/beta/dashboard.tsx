@@ -6,7 +6,7 @@ import Layout from '@/components/beta/layout/layout';
 import DashboardBody from '@/components/beta/dashboard/dashboard_body';
 
 const Dashboard = () => {
-  const { t } = useTranslation(['common', 'kyc']);
+  const { t } = useTranslation(['common']);
 
   return (
     <>
@@ -14,7 +14,7 @@ const Dashboard = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('kyc:DASHBOARD.DASHBOARD')}</title>
+        <title>{t('common:BETA_DASHBOARD.DASHBOARD')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."

@@ -3,7 +3,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { BalanceSheetReport } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import PieChart from '@/components/balance_sheet_report_body/pie_chart';
 import PieChartAssets from '@/components/balance_sheet_report_body/pie_chart_assets';
 import useStateRef from 'react-usestateref';
@@ -15,6 +15,14 @@ import CollapseButton from '@/components/button/collapse_button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import BalanceDetailsButton from '@/components/button/balance_details_button';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import { IDatePeriod } from '@/interfaces/date_period';
+
+interface BalanceSheetListProps {
+  selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
+}
+
+// Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
+const ASSETS_LIABILITIES_EQUITY_COLOR = ['bg-[#FD6F8E]', 'bg-[#53B1FD]', 'bg-[#9B8AFB]'];
 
 const COLORS = ['#FD6F8E', '#6CDEA0', '#F670C7', '#FD853A', '#53B1FD', '#9B8AFB'];
 
@@ -27,8 +35,13 @@ const COLOR_CLASSES = [
   'bg-[#9B8AFB]',
 ];
 
-const BalanceSheetList = () => {
+const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
   const { t } = useTranslation('common');
+
+  // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+  // Info: (20241023 - Anna) 使用 useRef 追蹤之前的日期範圍
+  const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
@@ -57,21 +70,56 @@ const BalanceSheetList = () => {
     code: getReportFinancialCode,
     success: getReportFinancialSuccess,
     isLoading: getReportFinancialIsLoading,
-  } = APIHandler<BalanceSheetReport>(
-    APIName.REPORT_GET_V2,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-      },
-      query: {
-        startDate: 1704070800,
-        endDate: 1706745599,
-        language: 'en',
-        reportType: FinancialReportTypesKey.balance_sheet,
-      },
-    },
-    hasCompanyId
-  );
+    trigger,
+  } = APIHandler<BalanceSheetReport>(APIName.REPORT_GET_V2);
+
+  // Info: (20241023 - Anna) 將 getBalanceSheetReport 包裝為 useCallback 並加入 setSelectedDateRange 作為依賴項
+  // Info: (20241023 - Anna) 檢查selectedDateRange存在，避免無效API請求
+  const getBalanceSheetReport = useCallback(async () => {
+    if (!hasCompanyId || !selectedDateRange || selectedDateRange.endTimeStamp === 0) {
+      return;
+    }
+
+    // Info: (20241023 - Anna) 如果日期範圍與上次相同，且已經成功請求過，則跳過 API 請求
+    if (
+      prevSelectedDateRange.current &&
+      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+      hasFetchedOnce
+    ) {
+      return;
+    }
+
+    try {
+      const response = await trigger({
+        params: {
+          companyId: selectedCompany?.id,
+        },
+        query: {
+          startDate: selectedDateRange.startTimeStamp,
+          endDate: selectedDateRange.endTimeStamp,
+          language: 'en',
+          reportType: FinancialReportTypesKey.balance_sheet,
+        },
+      });
+
+      if (response.success) {
+        // Info: (20241023 - Anna) 設定已成功請求過 API
+        setHasFetchedOnce(true);
+        prevSelectedDateRange.current = selectedDateRange;
+      }
+    } catch (error) {
+      (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
+    } finally {
+      (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
+    }
+  }, [hasCompanyId, selectedCompany?.id, selectedDateRange, trigger]);
+
+  // Info: (20241023 - Anna) 在 useEffect 中依賴 getBalanceSheetReport，當日期範圍變更時觸發 API 請求
+  useEffect(() => {
+    if (!selectedDateRange) return; // Info: (20241023 - Anna) 如果尚未選擇日期區間，不觸發請求
+    getBalanceSheetReport();
+  }, [getBalanceSheetReport, selectedDateRange]);
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
   const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
@@ -158,7 +206,14 @@ const BalanceSheetList = () => {
     }
   }, [reportFinancial]);
 
-  if (getReportFinancialIsLoading === undefined || getReportFinancialIsLoading) {
+  // Info: (20241023 - Anna) 顯示圖片或報告資料
+  if (!hasFetchedOnce && !getReportFinancialIsLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+      </div>
+    );
+  } else if (getReportFinancialIsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
@@ -260,13 +315,13 @@ const BalanceSheetList = () => {
             {item.curPeriodAmountString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.curPeriodPercentage}
+            {item.curPeriodPercentageString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
           <td className="border border-stroke-brand-secondary-soft p-10px text-center text-sm">
-            {item.prePeriodPercentage}
+            {item.prePeriodPercentageString}
           </td>
         </tr>
       );
@@ -481,9 +536,9 @@ const BalanceSheetList = () => {
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -497,9 +552,9 @@ const BalanceSheetList = () => {
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span>{label}</span>
+                    <span className="w-200px">{label}</span>
                   </li>
                 ))}
               </ul>
