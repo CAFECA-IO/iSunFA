@@ -127,6 +127,7 @@ const FilterSection = <T,>({
     }
   }, [
     isLoading,
+    tab,
     selectedType,
     selectedStatus,
     selectedDateRange,
@@ -182,7 +183,16 @@ const FilterSection = <T,>({
     if (typeof window !== 'undefined') {
       fetchData();
     }
-  }, [selectedType, selectedStatus, selectedDateRange, searchQuery, selectedSortOptions, page]);
+  }, [
+    page,
+    pageSize,
+    tab,
+    selectedType,
+    selectedStatus,
+    selectedDateRange,
+    searchQuery,
+    selectedSortOptions,
+  ]);
 
   return (
     <div

@@ -407,6 +407,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           viewType={viewType}
           viewToggleHandler={setViewType}
           dateSort={dateSort}
+          // setDateSort={setDateSort} // Info: (20241024 - tzuhan) UI 更新後不再需要
           otherSorts={otherSorts}
         />
 
