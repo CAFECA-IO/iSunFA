@@ -8,6 +8,7 @@ import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import type { IAssetEntity } from '@/interfaces/asset';
+import { ICertificateEntity } from './certificate';
 
 export interface IVoucherMetaData {
   date: number;
@@ -458,7 +459,23 @@ export interface IVoucherEntity {
    * undefined if not related to any asset
    */
   asset?: IAssetEntity;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description aich result id
+   * @note database has not yet created this column
+   */
+  aiResultId?: string;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description aich result status
+   * @note database has not yet created this column
+   */
+  aiStatus?: string;
+
   // ToDo: (20241023 - Murky) Certificate
+  certificates: ICertificateEntity[];
   // ToDo: (20241023 - Murky) Issuer => User
   // ToDo: (20241023 - Murky) UserVoucher => isRead
 }

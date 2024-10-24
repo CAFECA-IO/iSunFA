@@ -5,6 +5,7 @@ import { Voucher as PrismaVoucher } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import type { IEventEntity } from '@/interfaces/event';
 import { ILineItemEntity } from '@/interfaces/line_item';
+import { ICertificateEntity } from '@/interfaces/certificate';
 
 /**
  * Info: (20241023 - Murky)
@@ -24,6 +25,9 @@ export function initVoucherEntity(
     originalEvents?: IEventEntity[];
     resultEvents?: IEventEntity[];
     lineItems?: ILineItemEntity[];
+    aiResultId?: string;
+    aiStatus?: string;
+    certificates?: ICertificateEntity[];
   }
 ): IVoucherEntity {
   const nowInSecond = getTimestampNow();
@@ -38,12 +42,15 @@ export function initVoucherEntity(
     date: dto.date,
     type: dto.type,
     note: dto.note || null,
+    aiResultId: dto.aiResultId,
+    aiStatus: dto.aiStatus,
     createdAt: dto.createdAt || nowInSecond,
     updatedAt: dto.updatedAt || nowInSecond,
     deletedAt: dto.deletedAt || null,
     originalEvents: dto.originalEvents || [],
     resultEvents: dto.resultEvents || [],
     lineItems: dto.lineItems || [],
+    certificates: dto.certificates || [],
   };
   return voucherEntity;
 }
