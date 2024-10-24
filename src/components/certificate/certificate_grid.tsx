@@ -3,7 +3,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateThumbnail from '@/components/certificate/certificate_thumbnail';
 
 interface CertificateGridProps {
-  data: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
+  certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onRemove: (id: number) => void;
@@ -12,7 +12,7 @@ interface CertificateGridProps {
 }
 
 const CertificateGrid: React.FC<CertificateGridProps> = ({
-  data,
+  certificates,
   activeSelection,
   handleSelect,
   onRemove,
@@ -21,7 +21,7 @@ const CertificateGrid: React.FC<CertificateGridProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-dynamic-fit place-items-center gap-4">
-      {data.map((certificate) => (
+      {certificates.map((certificate) => (
         <CertificateThumbnail
           data={certificate}
           activeSelection={activeSelection}

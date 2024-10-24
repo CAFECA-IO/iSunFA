@@ -7,13 +7,14 @@ import {
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { CertificateSortBy } from '@/constants/certificate';
+import { CertificateSortBy } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { SortOrder } from '@/constants/sort';
 
 const certificateListQueryValidator = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   hasBeenUsed: z.boolean().optional(),
+  // type: z.string(), // Info: (20241022 - tzuhan) @Murky, 需要新增 type: z.enum(['All', 'Invoice', 'Receipt']),
   sortBy: z.nativeEnum(CertificateSortBy).optional(),
   sortOrder: z.nativeEnum(SortOrder).optional(),
   startDate: zodTimestampInSeconds(true, 0),

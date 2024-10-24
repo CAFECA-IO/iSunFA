@@ -4,6 +4,24 @@ export const DEFAULT_DISPLAYED_USER_NAME = 'User';
 export const NO_DATA_FOR_DEMO = false;
 export const LAYOUT_BREAKPOINT = 1024;
 
+/**
+ * Info: (20241024 - Murky)
+ * @description Is the list is display by grid with icon or list with words,
+ * used on voucher display or certificate display ...etc
+ */
+export enum DISPLAY_LIST_VIEW_TYPE {
+  /**
+   * Info: (20241024 - Murky)
+   * @description Display by grid with icon
+   */
+  GRID = 'grid',
+  /**
+   * Info: (20241024 - Murky)
+   * @description Display by list with words
+   */
+  LIST = 'list',
+}
+
 export const MONTH_LIST = [
   'common:DATE_PICKER.JAN',
   'common:DATE_PICKER.FEB',
