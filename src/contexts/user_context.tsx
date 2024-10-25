@@ -108,9 +108,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   } | null>(null);
   const isRouteChanging = useRef(false);
 
-  const { trigger: signOutAPI } = APIHandler<void>(APIName.SIGN_OUT, {
-    body: { credential: credentialRef.current },
-  });
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
   const { trigger: getStatusInfoAPI } = APIHandler<{ user: IUser; company: ICompany }>(
@@ -254,7 +251,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await signOutAPI(); // Info: (20241004 - Liz) 打 API 清除後端 session
     await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
     redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面
