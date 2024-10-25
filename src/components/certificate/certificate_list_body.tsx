@@ -326,6 +326,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleEditItem = useCallback(async (certificate: ICertificate) => {
     try {
+      // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
       const { success, data: updatedCertificate } = await updateCertificateAPI({
         params: { companyId, certificateId: certificate.id },
         body: certificate,
