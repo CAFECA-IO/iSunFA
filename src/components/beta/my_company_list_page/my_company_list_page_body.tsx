@@ -16,7 +16,7 @@ enum CompanyTypeTag {
   All = 'ALL',
 }
 
-const Empty = () => {
+const NoData = () => {
   return (
     <section className="flex flex-auto flex-col items-center justify-center gap-16px">
       <Image src={'/images/empty.svg'} alt="empty" width={120} height={134.787}></Image>
@@ -211,7 +211,7 @@ const MyCompanyListPageBody = () => {
     },
   ];
 
-  const isDataEmpty = companyList.length === 0;
+  const isNoData = companyList.length === 0;
 
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -296,8 +296,8 @@ const MyCompanyListPageBody = () => {
         </div>
       </section>
 
-      {isDataEmpty ? (
-        <Empty />
+      {isNoData ? (
+        <NoData />
       ) : (
         <>
           <CompanyList companyList={slicedCompanyList} />
