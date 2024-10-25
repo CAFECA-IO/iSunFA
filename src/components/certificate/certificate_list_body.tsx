@@ -223,10 +223,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, []);
 
   const handleDeleteSelectedItems = useCallback(() => {
-    // 找出所有選中的項目 ID
+    // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
     const selectedIds = Object.keys(data).filter((id) => data[id].isSelected);
 
-    // 如果有選中的項目，顯示刪除確認模態框
+    // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
     if (selectedIds.length > 0) {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
@@ -235,7 +235,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
           try {
-            // 批量刪除選中的項目
+            // Info: (20241025 - tzuhan) 批量刪除選中的項目
             // Deprecated: (20240923 - tzuhan) debugging purpose
             // eslint-disable-next-line no-console
             console.log('Remove multiple ids:', selectedIds);
@@ -246,10 +246,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             });
             const promises = selectedIds.map((id) => deleteCertificateAPI(args(id)));
 
-            // 這裡應執行實際的刪除邏輯
+            // Info: (20241025 - tzuhan) 這裡應執行實際的刪除邏輯
             await Promise.all(promises);
 
-            // 顯示刪除成功的提示
+            // Info: (20241025 - tzuhan) 顯示刪除成功的提示
             toastHandler({
               id: ToastId.DELETE_CERTIFICATE_SUCCESS,
               type: ToastType.SUCCESS,
@@ -257,7 +257,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               closeable: true,
             });
           } catch (error) {
-            // 顯示錯誤提示
+            // Info: (20241025 - tzuhan) 顯示錯誤提示
             toastHandler({
               id: ToastId.DELETE_CERTIFICATE_ERROR,
               type: ToastType.ERROR,
@@ -269,13 +269,14 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         backBtnStr: t('certificate:DELETE.NO'),
       });
 
-      // 顯示確認刪除的模態框
+      // Info: (20241025 - tzuhan) 顯示確認刪除的模態框
       messageModalVisibilityHandler();
     }
   }, [data, activeTab, t, messageModalDataHandler, messageModalVisibilityHandler, toastHandler]);
 
   const handleDownloadItem = useCallback((id: number) => {
     const { file } = data[id];
+    // Deprecated: (20241025 - tzuhan) debugging purpose
     // eslint-disable-next-line no-console
     console.log('id', id, 'data', data, 'Download file:', file);
     const link = document.createElement('a');
