@@ -7,6 +7,7 @@ import { EventType } from '@/constants/account';
 import { SortOrder } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
+import { VoucherV2Action } from '@/constants/voucher';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -79,6 +80,7 @@ export const voucherGetAllValidatorV2: IZodValidator<
 // Info: (20240927 - Murky) POST voucher v2 validator
 const voucherPostQueryValidatorV2 = z.object({});
 const voucherPostBodyValidatorV2 = z.object({
+  actions: z.array(z.nativeEnum(VoucherV2Action)),
   certificateIds: z.array(z.number().int()),
   voucherDate: z.number().int(),
   type: z.nativeEnum(EventType),
@@ -161,9 +163,7 @@ export const voucherDeleteValidatorV2: IZodValidator<
   body: voucherDeleteBodyValidatorV2,
 };
 
-export const voucherRequestValidatorsV2: {
-  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
-} = {
+export const voucherRequestValidatorsV2 = {
   GET_ONE: voucherGetOneValidatorV2,
   GET_LIST: voucherGetAllValidatorV2,
   PUT: voucherPutValidatorV2,

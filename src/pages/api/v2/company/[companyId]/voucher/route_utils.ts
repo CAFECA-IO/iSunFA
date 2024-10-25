@@ -1,3 +1,145 @@
+import { EventEntityFrequency, EventEntityType } from '@/constants/event';
+import { VoucherV2Action } from '@/constants/voucher';
+import { IEventEntity } from '@/interfaces/event';
+import { ILineItemEntity } from '@/interfaces/line_item';
+import { IVoucherEntity } from '@/interfaces/voucher';
+import { initEventEntity } from '@/lib/utils/event';
+import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
+import { initLineItemEntity } from '@/lib/utils/line_item';
+import { Logger } from 'pino';
+import { Voucher as PrismaVoucher } from '@prisma/client';
+/**
+ * Info: (20241025 - Murky)
+ * @description all function need for voucher Post
+ */
+export const voucherAPIPostUtils = {
+  /**
+   * Info: (20241025 - Murky)
+   * @description determine if certain command is need to be done
+   */
+  isDoAction: ({ actions, command }: { actions: VoucherV2Action[]; command: VoucherV2Action }) => {
+    return actions.includes(command);
+  },
+  isArrayHasItems: (item: unknown[]) => {
+    return item.length > 0;
+  },
+
+  isItemExist: (item: unknown) => {
+    return !!item;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @todo implement check voucher exist by voucherId from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isVoucherExistById: async (voucherId: number) => {
+    return true;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @todo implement get voucher from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initVoucherFromPrisma: async (voucherId: number) => {
+    // ToDo: (20241025 - Murky) implement get voucher from prisma logic
+    const voucherDto = {} as PrismaVoucher;
+    const voucher = parsePrismaVoucherToVoucherEntity(voucherDto);
+    return voucher;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description init revert event (but not yet save to database)
+   * @param options - voucherRevertOthers, voucherBeReverted, nowInSecond
+   * @param options.voucherRevertOthers - IVoucherEntity, voucher that revert other voucher
+   * @param options.voucherBeReverted - IVoucherEntity, voucher that be reverted
+   * @param options.nowInSecond - number, current time in second
+   */
+  initEventByRevertVoucher: ({
+    voucherRevertOther,
+    voucherBeReverted,
+    nowInSecond,
+  }: {
+    voucherRevertOther: IVoucherEntity;
+    voucherBeReverted: IVoucherEntity;
+    nowInSecond: number;
+  }) => {
+    const revertEvent: IEventEntity = initEventEntity({
+      eventType: EventEntityType.REVERT,
+      frequency: EventEntityFrequency.ONCE,
+      startDate: nowInSecond,
+      endDate: nowInSecond,
+      associateVouchers: [
+        {
+          originalVoucher: voucherBeReverted,
+          resultVoucher: voucherRevertOther,
+        },
+      ],
+    });
+    return revertEvent;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description check all vouchers exist by voucherIds in prisma
+   */
+  areAllVouchersExistById: async (voucherIds: number[]): Promise<boolean> => {
+    const results = await Promise.all(
+      voucherIds.map(async (id) => voucherAPIPostUtils.isVoucherExistById(id))
+    );
+    return results.every((result) => result === true);
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description init lineItemEntities from lineItems in body
+   */
+  initLineItemEntities: (
+    lineItems: {
+      debit: boolean;
+      description: string;
+      amount: number;
+      accountId: number;
+    }[]
+  ) => {
+    const lineItemEntities: ILineItemEntity[] = lineItems.map((lineItem) => {
+      return initLineItemEntity({
+        amount: lineItem.amount,
+        debit: lineItem.debit,
+        description: lineItem.description,
+        accountId: lineItem.accountId,
+      });
+    });
+
+    return lineItemEntities;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description throw StatusMessage as Error, but it can log the errorMessage
+   * @param logger - pino Logger
+   * @param options - errorMessage and statusMessage
+   * @param options.errorMessage - string, message you want to log
+   * @param options.statusMessage - string, status message you want to throw
+   * @throws Error - statusMessage
+   */
+  throwErrorAndLog: (
+    logger: Logger,
+    {
+      errorMessage,
+      statusMessage,
+    }: {
+      errorMessage: string;
+      statusMessage: string;
+    }
+  ) => {
+    logger.error(errorMessage);
+    throw new Error(statusMessage);
+  },
+};
+
 /**
  * Info: (20240927 - Murky)
  * This file is not router, but all small function for voucher/index and voucher/read

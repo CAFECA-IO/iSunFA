@@ -1,12 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import {
   handleGetRequest,
   handlePostRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-
-let req: jest.Mocked<NextApiRequest>;
-let res: jest.Mocked<NextApiResponse>;
+import { VoucherV2Action } from '@/constants/voucher';
+import { EventType } from '@/constants/account';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -27,20 +25,7 @@ jest.mock('../../../../../../lib/utils/logger_back', () => ({
   }),
 }));
 
-beforeEach(() => {
-  req = {
-    headers: {},
-    query: {},
-    method: '',
-    socket: {},
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiRequest>;
-
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
-});
+beforeEach(() => {});
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -49,14 +34,30 @@ afterEach(() => {
 describe('company/[companyId]/voucher', () => {
   describe('GET Voucher List', () => {
     it('should pass', async () => {
-      req.query = {
-        strategy: 'upcoming',
-        page: '1',
-        pageSize: '8',
+      const query = {
+        pageSize: 1,
+        strategy: 'upcoming' as 'upcoming' | 'uploaded' | 'payment' | 'receiving',
+        page: 1,
+        startDate: 1,
+        endDate: 1,
       };
-      req.body = {};
+      const body = {};
+      const session = {
+        userId: 1001,
+        companyId: 1001,
+        roleId: 1001,
+        cookie: {
+          httpOnly: false,
+          path: 'string',
+          secure: false,
+        },
+      };
 
-      const { statusMessage } = await handleGetRequest(req, res);
+      const { statusMessage } = await handleGetRequest({
+        query,
+        body,
+        session,
+      });
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_LIST);
     });
@@ -64,11 +65,12 @@ describe('company/[companyId]/voucher', () => {
 
   describe('POST Voucher', () => {
     it('should pass', async () => {
-      req.query = {};
-      req.body = {
+      const query = {};
+      const body = {
+        actions: [VoucherV2Action.ADD_ASSET],
         certificateIds: [1001, 1002],
         voucherDate: 10000000,
-        type: 'payment',
+        type: EventType.PAYMENT,
         note: 'this is note',
         counterPartyId: 1001,
         lineItems: [
@@ -100,7 +102,22 @@ describe('company/[companyId]/voucher', () => {
           },
         ],
       };
-      const { statusMessage } = await handlePostRequest(req, res);
+
+      const session = {
+        userId: 1001,
+        companyId: 1001,
+        roleId: 1001,
+        cookie: {
+          httpOnly: false,
+          path: 'string',
+          secure: false,
+        },
+      };
+      const { statusMessage } = await handlePostRequest({
+        query,
+        body,
+        session,
+      });
 
       expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
     });

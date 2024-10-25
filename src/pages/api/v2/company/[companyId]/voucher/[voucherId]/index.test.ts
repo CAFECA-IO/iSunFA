@@ -5,6 +5,7 @@ import {
   handlePutRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { VoucherV2Action } from '@/constants/voucher';
 
 let req: jest.Mocked<NextApiRequest>;
 let res: jest.Mocked<NextApiResponse>;
@@ -69,6 +70,7 @@ describe('company/[companyId]/voucher/[voucherId]', () => {
         voucherId: mockVoucherId,
       };
       req.body = {
+        actions: [VoucherV2Action.ADD_ASSET],
         certificateIds: [1001, 1002],
         voucherDate: 10000000,
         type: 'payment',
