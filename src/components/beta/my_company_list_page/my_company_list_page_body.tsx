@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import Pagination from '@/components/pagination/pagination';
 import { TbSquarePlus2, TbCodeCircle } from 'react-icons/tb';
@@ -8,9 +8,10 @@ import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
 import { FiSearch } from 'react-icons/fi';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
+import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
 // import FilterSection from '@/components/filter_section/filter_section'; // ToDo: (20241022 - Liz) 使用共用元件代替 Search
 
-enum CompanyTypeTag {
+enum CompanyType {
   Financial = 'Financial',
   Tax = 'Tax',
   All = 'ALL',
@@ -29,29 +30,30 @@ const NoData = () => {
   );
 };
 
-interface CompanyTypeTagProps {
-  type: CompanyTypeTag;
+interface WorkTagProps {
+  type: CompanyType;
+  handleChangeTag: () => void;
 }
 
-const TypeTag = ({ type }: CompanyTypeTagProps) => {
+const WorkTag = ({ type, handleChangeTag }: WorkTagProps) => {
   let backgroundColor = '';
   let textColor = '';
   let icon = null;
 
   switch (type) {
-    case CompanyTypeTag.Financial:
+    case CompanyType.Financial:
       backgroundColor = 'bg-badge-surface-strong-secondary';
       textColor = 'text-badge-text-invert';
       icon = <RiCoinsFill size={16} />;
       break;
 
-    case CompanyTypeTag.Tax:
+    case CompanyType.Tax:
       backgroundColor = 'bg-badge-surface-strong-primary';
       textColor = 'text-badge-text-invert';
       icon = <RiCheckboxMultipleLine size={16} />;
       break;
 
-    case CompanyTypeTag.All:
+    case CompanyType.All:
       backgroundColor = 'bg-badge-surface-soft-secondary';
       textColor = 'text-badge-text-secondary-solid';
       icon = <LuFileCheck size={16} />;
@@ -65,12 +67,14 @@ const TypeTag = ({ type }: CompanyTypeTagProps) => {
   }
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={handleChangeTag}
       className={`flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
     >
       {icon}
       <p className="px-4px">{type}</p>
-    </div>
+    </button>
   );
 };
 
@@ -78,13 +82,20 @@ interface CompanyListProps {
   companyList: {
     id: number;
     name: string;
-    type: CompanyTypeTag;
+    type: CompanyType;
     logoSrc: string;
     alt: string;
   }[];
+  toggleChangeTagModal: () => void;
+  setCompanyName: Dispatch<SetStateAction<string>>;
 }
 
-const CompanyList = ({ companyList }: CompanyListProps) => {
+const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: CompanyListProps) => {
+  const handleChangeTag = (companyName: string) => {
+    setCompanyName(companyName);
+    toggleChangeTagModal();
+  };
+
   return (
     <section className="flex flex-auto flex-col gap-8px">
       {companyList.map((company) => (
@@ -106,7 +117,7 @@ const CompanyList = ({ companyList }: CompanyListProps) => {
           </div>
 
           <div className="flex w-90px justify-center">
-            <TypeTag type={company.type} />
+            <WorkTag type={company.type} handleChangeTag={() => handleChangeTag(company.name)} />
           </div>
 
           <button
@@ -124,100 +135,106 @@ const CompanyList = ({ companyList }: CompanyListProps) => {
 
 const MyCompanyListPageBody = () => {
   // ToDo: (20241022 - Liz) 這裡是假資料，之後會改成從 API 取得資料。
-  const companyList = [
+  const COMPANY_LIST = [
     {
       id: 1,
       name: 'Company A',
-      type: CompanyTypeTag.Financial,
+      type: CompanyType.Financial,
       logoSrc: '/images/fake_company_log_01.png',
       alt: 'fake_company_log_01',
     },
     {
       id: 2,
       name: 'Company B',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_02.png',
       alt: 'fake_company_log_02',
     },
     {
       id: 3,
       name: 'Company C',
-      type: CompanyTypeTag.All,
+      type: CompanyType.All,
       logoSrc: '/images/fake_company_log_03.png',
       alt: 'fake_company_log_03',
     },
     {
       id: 4,
       name: 'Company Special Liz',
-      type: CompanyTypeTag.Financial,
+      type: CompanyType.Financial,
       logoSrc: '/images/fake_company_log_01.png',
       alt: 'fake_company_log_01',
     },
     {
       id: 5,
       name: 'Company Super Liz',
-      type: CompanyTypeTag.Financial,
+      type: CompanyType.Financial,
       logoSrc: '/images/fake_company_log_02.png',
       alt: 'fake_company_log_02',
     },
     {
       id: 6,
       name: 'Company Liz 6',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_03.png',
       alt: 'fake_company_log_03',
     },
     {
       id: 7,
       name: 'Company Liz 7',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_01.png',
       alt: 'fake_company_log_01',
     },
     {
       id: 8,
       name: 'Company Liz 8',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_02.png',
       alt: 'fake_company_log_02',
     },
     {
       id: 9,
       name: 'Company Liz 9',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_03.png',
       alt: 'fake_company_log_03',
     },
     {
       id: 10,
       name: 'Company Liz 10',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_01.png',
       alt: 'fake_company_log_01',
     },
     {
       id: 11,
       name: 'Company Liz 11',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_02.png',
       alt: 'fake_company_log_02',
     },
     {
       id: 12,
       name: 'Company Liz 12',
-      type: CompanyTypeTag.Tax,
+      type: CompanyType.Tax,
       logoSrc: '/images/fake_company_log_03.png',
       alt: 'fake_company_log_03',
     },
   ];
 
-  const isNoData = companyList.length === 0;
+  const isNoData = COMPANY_LIST.length === 0;
 
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
+  const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
+  const [companyName, setCompanyName] = useState<string>('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCompanies, setFilteredCompanies] = useState(companyList);
+  const [filteredCompanies, setFilteredCompanies] = useState(COMPANY_LIST);
 
+  const toggleChangeTagModal = () => {
+    setIsChangeTagModalOpen((prev) => !prev);
+  };
   const toggleCreateCompanyModal = () => {
     setIsCreateCompanyModalOpen((prev) => !prev);
   };
@@ -236,14 +253,14 @@ const MyCompanyListPageBody = () => {
     setSearchTerm(e.target.value);
 
     if (e.target.value === '') {
-      setFilteredCompanies(companyList);
+      setFilteredCompanies(COMPANY_LIST);
       setCurrentPage(1);
     }
   };
 
   // Info: (20241022 - Liz) 這是搜尋功能。按下按鈕，根據輸入值來搜尋公司名稱。
   const handleSearch = () => {
-    const filtered = companyList.filter((company) => {
+    const filtered = COMPANY_LIST.filter((company) => {
       return company.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
     setFilteredCompanies(filtered);
@@ -300,7 +317,11 @@ const MyCompanyListPageBody = () => {
         <NoData />
       ) : (
         <>
-          <CompanyList companyList={slicedCompanyList} />
+          <CompanyList
+            companyList={slicedCompanyList}
+            toggleChangeTagModal={toggleChangeTagModal}
+            setCompanyName={setCompanyName}
+          />
           <Pagination
             totalCount={totalItems}
             totalPages={totalPages}
@@ -312,6 +333,10 @@ const MyCompanyListPageBody = () => {
 
       {/* Modal */}
       {isCreateCompanyModalOpen && <CreateCompanyModal toggleModal={toggleCreateCompanyModal} />}
+
+      {isChangeTagModalOpen && (
+        <ChangeTagModal toggleModal={toggleChangeTagModal} companyName={companyName} />
+      )}
     </main>
   );
 };
