@@ -512,6 +512,9 @@
   },
 
   "LATEST_NEWS_PAGE": {
-    "LATEST_NEWS": "最新消息"
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL_NEWS": "财经新闻",
+    "SYSTEM_NEWS": "系统新闻",
+    "MATCH_NEWS": "媒合资讯"
   }
 }

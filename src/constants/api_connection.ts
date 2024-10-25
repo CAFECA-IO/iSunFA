@@ -97,6 +97,7 @@ export enum APIName {
   COMPANY_DELETE = 'COMPANY_DELETE',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
   ROLE_LIST = 'ROLE_LIST',
+  USER_ROLE_LIST = 'USER_ROLE_LIST',
   CREATE_ROLE = 'CREATE_ROLE',
   ROLE_SELECT = 'ROLE_SELECT',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
@@ -129,6 +130,7 @@ export enum APIName {
   ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
   USER_SETTING_GET = 'USER_SETTING_GET',
   USER_SETTING_UPDATE = 'USER_SETTING_UPDATE',
+  USER_ACTION_LOG_LIST = 'USER_ACTION_LOG_LIST',
   GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
   UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
 }
@@ -206,6 +208,7 @@ export enum APIPath {
   COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
   ROLE_LIST = `${apiPrefixV2}/company/:companyId/role`,
+  USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   CREATE_ROLE = `${apiPrefixV2}/company/:companyId/role`,
   ROLE_SELECT = `${apiPrefixV2}/company/:companyId/role/select`,
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
@@ -238,6 +241,7 @@ export enum APIPath {
   ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
   USER_SETTING_UPDATE = `${apiPrefixV2}/user/:userId/setting`,
+  USER_ACTION_LOG_LIST = `${apiPrefixV2}/user/:userId/action_log`,
   GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
 }
@@ -536,6 +540,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ROLE_LIST,
   }),
+  [APIName.USER_ROLE_LIST]: createConfig({
+    name: APIName.USER_ROLE_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.USER_ROLE_LIST,
+  }),
   [APIName.CREATE_ROLE]: createConfig({
     name: APIName.CREATE_ROLE,
     method: HttpMethod.POST,
@@ -764,6 +773,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_SETTING_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.USER_SETTING_UPDATE,
+  }),
+  [APIName.USER_ACTION_LOG_LIST]: createConfig({
+    name: APIName.USER_ACTION_LOG_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.USER_ACTION_LOG_LIST,
   }),
   [APIName.GET_ACCOUNTING_SETTING]: createConfig({
     name: APIName.GET_ACCOUNTING_SETTING,

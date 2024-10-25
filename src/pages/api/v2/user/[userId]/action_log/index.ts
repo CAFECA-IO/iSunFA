@@ -4,53 +4,32 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IUserActionLog } from '@/interfaces/user_action_log';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { listUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
+import { UserActionLogActionType } from '@/constants/user_action_log';
+import { paginatedUserActionLogSchema } from '@/lib/utils/zod_schema/user_action_log';
 
 // ToDo: (20240924 - Jacky) Implement the logic to get the user action logs data from the database
-async function handleGetRequest() {
+const handleGetRequest: IHandleRequest<
+  APIName.USER_ACTION_LOG_LIST,
+  IPaginatedData<IUserActionLog[]>
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<IUserActionLog[]> | null = null;
 
-  // ToDo: (20240924 - Jacky) Get session data from the request
-  // ToDo: (20240924 - Jacky) Check if the user is authorized to access this API
-  // ToDo: (20240924 - Jacky) Implement the logic to get the user action logs data from the database
-  // ToDo: (20240924 - Jacky) Format the user action logs data to the IUserActionLog interface
+  const { userId } = query;
+  const listedUserActionLog = await listUserActionLog(userId, UserActionLogActionType.LOGIN);
+  const userActionLogList = paginatedUserActionLogSchema.safeParse(listedUserActionLog);
 
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  payload = {
-    data: [
-      {
-        id: 1,
-        sessionId: 'abc123',
-        userId: 1,
-        actionType: 'LOGIN',
-        actionDescription: 'User logged in',
-        actionTime: Date.now(),
-        ipAddress: '192.168.1.1',
-        userAgent: 'Mozilla/5.0',
-        apiEndpoint: '/api/login',
-        httpMethod: 'POST',
-        requestPayload: { username: 'user1' },
-        httpStatusCode: 200,
-        statusMessage: 'Success',
-      },
-    ],
-    page: 1,
-    totalPages: 5,
-    totalCount: 23,
-    pageSize: 5,
-    hasNextPage: true,
-    hasPreviousPage: false,
-    sort: [
-      {
-        sortBy: 'actionTime',
-        sortOrder: 'desc',
-      },
-    ],
-  };
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  if (userActionLogList.success) {
+    payload = userActionLogList.data;
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  }
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
@@ -58,7 +37,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IPaginatedData<IUserActionLog[]> | null }>;
 } = {
-  GET: handleGetRequest,
+  GET: (req, res) =>
+    withRequestValidation(APIName.USER_ACTION_LOG_LIST, req, res, handleGetRequest),
 };
 
 export default async function handler(
