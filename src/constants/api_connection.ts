@@ -235,7 +235,7 @@ export enum APIPath {
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
   ASSET_LIST_V2 = `${apiPrefixV2}/company/:companyId/asset`,
-  ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset`,
+  ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
