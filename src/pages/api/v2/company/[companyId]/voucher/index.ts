@@ -2,22 +2,20 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { getSession } from '@/lib/utils/session';
 import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
-import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { mockVouchersReturn } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
+import { withRequestValidation } from '@/lib/utils/middleware';
 
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
-  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
+import { IHandleRequest } from '@/interfaces/handleRequest';
+
+export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, object> = async ({
+  query,
+}) => {
+  // ToDo: (20240927 - Murky) Remember to add auth check
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
-  const session = await getSession(req, res);
-  const { userId } = session;
-  const { query } = validateRequest(APIName.VOUCHER_LIST_V2, req, userId);
-
-  // ToDo: (20240927 - Murky) Remember to add auth check
   if (query) {
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     payload = {
@@ -40,21 +38,14 @@ export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse
   return {
     statusMessage,
     payload,
-    userId,
   };
-}
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  /**
-   * Info: (20240927 - Murky)
-   * Post voucher has conditional situation when posting,
-   * it might have recurring event, asset connecting, reverse voucher connect
-   * if not that situation, front end can provide  undefined recurring event, or empty array for asset connecting, reverse voucher connect
-   */
+};
+
+export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> = async ({
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const session = await getSession(req, res);
-  const { userId } = session;
-  const { body } = validateRequest(APIName.VOUCHER_POST_V2, req, userId);
   const mockPostedVoucherId = 1002;
 
   // ToDo: (20240927 - Murky) Remember to add auth check
@@ -62,12 +53,12 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
     statusMessage = STATUS_MESSAGE.CREATED;
     payload = mockPostedVoucherId;
   }
+
   return {
     statusMessage,
     payload,
-    userId,
   };
-}
+};
 
 type APIResponse = object | number | null;
 
@@ -78,11 +69,10 @@ const methodHandlers: {
   ) => Promise<{
     statusMessage: string;
     payload: APIResponse;
-    userId: number;
   }>;
 } = {
-  GET: handleGetRequest,
-  POST: handlePostRequest,
+  GET: (req, res) => withRequestValidation(APIName.VOUCHER_LIST_V2, req, res, handleGetRequest),
+  POST: (req, res) => withRequestValidation(APIName.VOUCHER_POST_V2, req, res, handlePostRequest),
 };
 
 export default async function handler(
@@ -91,12 +81,12 @@ export default async function handler(
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: APIResponse = null;
-  let userId: number = -1;
+  const userId: number = -1;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
     if (handleRequest) {
-      ({ statusMessage, payload, userId } = await handleRequest(req, res));
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
