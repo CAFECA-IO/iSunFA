@@ -10,6 +10,7 @@ import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { IAssetDetails, mockAssetDetails } from '@/interfaces/asset';
 import { numberWithCommas, timestampToString, timestampToYMD } from '@/lib/utils/common';
@@ -18,21 +19,22 @@ import { APIName } from '@/constants/api_connection';
 import { AssetStatus } from '@/constants/asset';
 import { ToastType } from '@/interfaces/toastify';
 import { ASSET_DELETE_TERM } from '@/constants/common';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
-const AssetDetailPage: React.FC = () => {
+const AssetDetailPage: React.FC<{ assetId: number }> = ({ assetId }) => {
   const { t } = useTranslation('common');
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
   const { assetStatusSettingModalDataHandler, assetStatusSettingModalVisibilityHandler } =
     useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
 
   const { data: assetData, isLoading } = APIHandler<IAssetDetails>(
     APIName.ASSET_GET_BY_ID_V2,
     {
-      // ToDo: (20241016 - Julian) Replace with real parameters
       params: {
-        companyId: '111',
-        assetId: '123',
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+        assetId,
       },
     },
     true
@@ -40,7 +42,6 @@ const AssetDetailPage: React.FC = () => {
 
   // ToDo: (20241016 - Julian) Get asset details from API
   const {
-    id: assetId,
     assetName,
     assetNumber,
     assetType,

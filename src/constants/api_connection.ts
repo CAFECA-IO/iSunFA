@@ -133,6 +133,8 @@ export enum APIName {
   USER_ACTION_LOG_LIST = 'USER_ACTION_LOG_LIST',
   GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
   UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
+  CREATE_ASSET_V2 = 'CREATE_ASSET_V2',
+  DELETE_ASSET_V2 = 'DELETE_ASSET_V2',
 }
 
 export enum APIPath {
@@ -244,6 +246,8 @@ export enum APIPath {
   USER_ACTION_LOG_LIST = `${apiPrefixV2}/user/:userId/action_log`,
   GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  CREATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset`,
+  DELETE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
 }
 const createConfig = ({
   name,
@@ -788,5 +792,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.UPDATE_ACCOUNTING_SETTING,
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_ACCOUNTING_SETTING,
+  }),
+  [APIName.CREATE_ASSET_V2]: createConfig({
+    name: APIName.CREATE_ASSET_V2,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_ASSET_V2,
+  }),
+  [APIName.DELETE_ASSET_V2]: createConfig({
+    name: APIName.DELETE_ASSET_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_ASSET_V2,
   }),
 };
