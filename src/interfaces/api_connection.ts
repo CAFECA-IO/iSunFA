@@ -1,6 +1,7 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
 import { ICompanyKYCForm } from './company_kyc';
+import { ICertificate } from './certificate';
 
 export type IAPIName =
   | 'AGREE_TO_TERMS'
@@ -118,6 +119,7 @@ export type IAPIInput = {
     | IVoucher
     | IFinancialReportRequest
     | ICompanyKYCForm
+    | ICertificate
     | string;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };

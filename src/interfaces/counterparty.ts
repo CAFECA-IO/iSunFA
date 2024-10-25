@@ -61,7 +61,7 @@ export const generateRandomCounterParties = (num?: number): ICounterparty[] => {
 
   function randomDate(start: Date, end: Date): number {
     const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-    return date.getTime() / 1000;
+    return Math.floor(date.getTime() / 1000);
   }
 
   let i = 1;

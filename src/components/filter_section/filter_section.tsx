@@ -90,6 +90,7 @@ const FilterSection = <T,>({
       const { success, code, data } = await trigger({
         params,
         query: {
+          // Info: (20241025 - tzuhan) @Shirly, @Murky 這裡是共同處理 List all assets / get all certificate / get all voucher / list news / list reports 的地方，需要協助確認query格式，特別幫我注意一下sortOption，需要修改可以提
           page,
           pageSize,
           tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
