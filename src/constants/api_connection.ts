@@ -128,6 +128,7 @@ export enum APIName {
   ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
   USER_SETTING_GET = 'USER_SETTING_GET',
   USER_SETTING_UPDATE = 'USER_SETTING_UPDATE',
+  USER_ACTION_LOG_LIST = 'USER_ACTION_LOG_LIST',
 }
 
 export enum APIPath {
@@ -234,6 +235,7 @@ export enum APIPath {
   ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
   USER_SETTING_UPDATE = `${apiPrefixV2}/user/:userId/setting`,
+  USER_ACTION_LOG_LIST = `${apiPrefixV2}/user/:userId/action_log`,
 }
 const createConfig = ({
   name,
@@ -728,5 +730,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_SETTING_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.USER_SETTING_UPDATE,
+  }),
+  [APIName.USER_ACTION_LOG_LIST]: createConfig({
+    name: APIName.USER_ACTION_LOG_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.USER_ACTION_LOG_LIST,
   }),
 };
