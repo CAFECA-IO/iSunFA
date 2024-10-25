@@ -93,3 +93,19 @@ export const companySelectValidator: IZodValidator<
   query: companySelectQueryValidator,
   body: companySelectBodyValidator,
 };
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init company entity or parsed prisma company
+ */
+export const companyEntityValidator = z.object({
+  id: z.number(),
+  name: z.string(),
+  taxId: z.string(),
+  // Deprecated: (20241023 - Murky) - tag will be removed after 20241030
+  // tag: z.string(),
+  startDate: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});

@@ -1,11 +1,12 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import { iLineItemBodyValidatorV2, iLineItemValidator } from '@/lib/utils/zod_schema/lineItem';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType } from '@/constants/account';
 import { SortOrder } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
+import { JOURNAL_EVENT } from '@/constants/journal';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -35,6 +36,13 @@ export const voucherUpdateValidator: IZodValidator<
 > = {
   query: voucherUpdateQueryValidator,
   body: voucherCreateBodyValidator,
+};
+
+export const voucherRequestValidatorsV1: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  POST: voucherCreateValidator,
+  PUT: voucherUpdateValidator,
 };
 
 /**
@@ -152,3 +160,43 @@ export const voucherDeleteValidatorV2: IZodValidator<
   query: voucherDeleteQueryValidatorV2,
   body: voucherDeleteBodyValidatorV2,
 };
+
+export const voucherRequestValidatorsV2: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  GET_ONE: voucherGetOneValidatorV2,
+  GET_LIST: voucherGetAllValidatorV2,
+  PUT: voucherPutValidatorV2,
+  POST: voucherPostValidatorV2,
+  DELETE: voucherDeleteValidatorV2,
+  WAS_READ: voucherWasReadValidatorV2,
+};
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init voucher entity or parsed prisma voucher
+ * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
+ */
+export const voucherEntityValidator = z.object({
+  id: z.number(),
+  issuerId: z.number(),
+  counterPartyId: z.number(),
+  companyId: z.number(),
+  status: z.nativeEnum(JOURNAL_EVENT),
+  editable: z.boolean(),
+  no: z.string(),
+  date: z.number(),
+  type: z.nativeEnum(EventType),
+  note: z.string().nullable(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  originalEvents: z.array(z.any()).optional(),
+  resultEvents: z.array(z.any()).optional(),
+  lineItems: z.array(z.any()).optional(),
+  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  certificates: z.array(z.any()).optional(),
+  issuer: z.any().optional(),
+  readByUsers: z.array(z.any()).optional(),
+});

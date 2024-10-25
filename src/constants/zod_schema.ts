@@ -1,12 +1,6 @@
 import { APIName } from '@/constants/api_connection';
-import { askAIGetResultValidatorV2, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
-import {
-  certificateDeleteValidator,
-  certificateGetOneValidator,
-  certificateListValidator,
-  certificatePostValidator,
-  certificatePutValidator,
-} from '@/lib/utils/zod_schema/certificate';
+import { askAIGetAllValidatorsV2 } from '@/lib/utils/zod_schema/ask_ai';
+import { certificateRequestValidators } from '@/lib/utils/zod_schema/certificate';
 import {
   companyDeleteValidator,
   companyGetByIdValidator,
@@ -15,33 +9,20 @@ import {
   companyPutValidator,
   companySelectValidator,
 } from '@/lib/utils/zod_schema/company';
-import {
-  invoiceCreateValidator,
-  invoiceGetByIdValidator,
-  invoiceUpdateValidator,
-} from '@/lib/utils/zod_schema/invoice';
-import {
-  journalDeleteValidator,
-  journalGetByIdValidator,
-  journalListValidator,
-} from '@/lib/utils/zod_schema/journal';
-import { kycUploadValidator } from '@/lib/utils/zod_schema/kyc';
+import { invoiceRequestValidators } from '@/lib/utils/zod_schema/invoice';
+import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
+import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
 import {
   newsGetValidator,
   newsListValidator,
   newsPostValidator,
 } from '@/lib/utils/zod_schema/news';
-import {
-  ocrDeleteValidator,
-  ocrListValidator,
-  ocrResultGetByIdValidator,
-  ocrUploadValidator,
-} from '@/lib/utils/zod_schema/ocr';
+import { ocrRequestValidators } from '@/lib/utils/zod_schema/ocr';
 import {
   companyPendingTaskValidator,
   userPendingTaskValidator,
 } from '@/lib/utils/zod_schema/pending_task';
-import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
+import { reportRequestValidatorsV2 } from '@/lib/utils/zod_schema/report';
 import {
   roleListValidator,
   rolePostValidator,
@@ -49,15 +30,10 @@ import {
 } from '@/lib/utils/zod_schema/role';
 import { todoListValidator, todoPostValidator } from '@/lib/utils/zod_schema/todo';
 import {
-  voucherCreateValidator,
-  voucherDeleteValidatorV2,
-  voucherGetAllValidatorV2,
-  voucherGetOneValidatorV2,
-  voucherPostValidatorV2,
-  voucherUpdateValidator,
-  voucherWasReadValidatorV2,
+  voucherRequestValidatorsV1,
+  voucherRequestValidatorsV2,
 } from '@/lib/utils/zod_schema/voucher';
-import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
+import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
 import {
   accountingSettingGetValidator,
   accountingSettingPutValidator,
@@ -91,29 +67,29 @@ import {
 
 export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
-  [APIName.INVOICE_CREATE]: invoiceCreateValidator,
-  [APIName.INVOICE_GET_BY_ID]: invoiceGetByIdValidator,
-  [APIName.INVOICE_UPDATE]: invoiceUpdateValidator,
-  [APIName.JOURNAL_DELETE]: journalDeleteValidator,
-  [APIName.JOURNAL_GET_BY_ID]: journalGetByIdValidator,
-  [APIName.JOURNAL_LIST]: journalListValidator,
-  [APIName.KYC_UPLOAD]: kycUploadValidator,
-  [APIName.OCR_DELETE]: ocrDeleteValidator,
-  [APIName.OCR_LIST]: ocrListValidator,
-  [APIName.OCR_RESULT_GET_BY_ID]: ocrResultGetByIdValidator,
-  [APIName.OCR_UPLOAD]: ocrUploadValidator,
-  [APIName.VOUCHER_CREATE]: voucherCreateValidator,
-  [APIName.VOUCHER_UPDATE]: voucherUpdateValidator,
-  [APIName.ZOD_EXAMPLE]: zodExampleValidator,
+  [APIName.INVOICE_CREATE]: invoiceRequestValidators.POST,
+  [APIName.INVOICE_GET_BY_ID]: invoiceRequestValidators.GET_ONE,
+  [APIName.INVOICE_UPDATE]: invoiceRequestValidators.PUT,
+  [APIName.JOURNAL_DELETE]: journalRequestValidators.DELETE,
+  [APIName.JOURNAL_GET_BY_ID]: journalRequestValidators.GET_ONE,
+  [APIName.JOURNAL_LIST]: journalRequestValidators.GET_LIST,
+  [APIName.KYC_UPLOAD]: kycRequestValidators.POST,
+  [APIName.OCR_DELETE]: ocrRequestValidators.DELETE,
+  [APIName.OCR_LIST]: ocrRequestValidators.GET_LIST,
+  [APIName.OCR_RESULT_GET_BY_ID]: ocrRequestValidators.GET_ONE,
+  [APIName.OCR_UPLOAD]: ocrRequestValidators.POST,
+  [APIName.VOUCHER_CREATE]: voucherRequestValidatorsV1.POST,
+  [APIName.VOUCHER_UPDATE]: voucherRequestValidatorsV1.PUT,
+  [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
-  [APIName.ASK_AI_RESULT_V2]: askAIGetResultValidatorV2,
-  [APIName.ASK_AI_V2]: askAIPostValidatorV2,
-  [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
-  [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
-  [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
-  [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
-  [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
+  [APIName.ASK_AI_RESULT_V2]: askAIGetAllValidatorsV2.GET,
+  [APIName.ASK_AI_V2]: askAIGetAllValidatorsV2.POST,
+  [APIName.CERTIFICATE_DELETE_V2]: certificateRequestValidators.DELETE,
+  [APIName.CERTIFICATE_GET_V2]: certificateRequestValidators.GET_ONE,
+  [APIName.CERTIFICATE_LIST_V2]: certificateRequestValidators.GET_LIST,
+  [APIName.CERTIFICATE_POST_V2]: certificateRequestValidators.POST,
+  [APIName.CERTIFICATE_PUT_V2]: certificateRequestValidators.PUT,
   [APIName.COMPANY_LIST]: companyListValidator,
   [APIName.COMPANY_ADD]: companyPostValidator,
   [APIName.COMPANY_SELECT]: companySelectValidator,
@@ -129,7 +105,7 @@ export const API_ZOD_SCHEMA = {
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteValidator,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskValidator,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskValidator,
-  [APIName.REPORT_GET_V2]: reportGetValidatorV2,
+  [APIName.REPORT_GET_V2]: reportRequestValidatorsV2.GET_ONE,
   [APIName.ROLE_LIST]: roleListValidator,
   [APIName.ROLE_SELECT]: roleSelectValidator,
   [APIName.CREATE_ROLE]: rolePostValidator,
@@ -138,11 +114,11 @@ export const API_ZOD_SCHEMA = {
   [APIName.NEWS_GET_BY_ID]: newsGetValidator,
   [APIName.TODO_LIST]: todoListValidator,
   [APIName.CREATE_TODO]: todoPostValidator,
-  [APIName.VOUCHER_DELETE_V2]: voucherDeleteValidatorV2,
-  [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
-  [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
-  [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
-  [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
+  [APIName.VOUCHER_DELETE_V2]: voucherRequestValidatorsV2.DELETE,
+  [APIName.VOUCHER_GET_BY_ID_V2]: voucherRequestValidatorsV2.GET_ONE,
+  [APIName.VOUCHER_LIST_V2]: voucherRequestValidatorsV2.GET_LIST,
+  [APIName.VOUCHER_POST_V2]: voucherRequestValidatorsV2.POST,
+  [APIName.VOUCHER_WAS_READ_V2]: voucherRequestValidatorsV2.WAS_READ,
   [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetValidator,
   [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutValidator,
   [APIName.USER_SETTING_GET]: userSettingGetValidator,
