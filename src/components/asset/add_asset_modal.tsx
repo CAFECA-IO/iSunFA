@@ -14,9 +14,13 @@ import { ToastType } from '@/interfaces/toastify';
 import { IAccount } from '@/interfaces/accounting_account';
 import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { ToastId } from '@/constants/toast_id';
 import { default30DayPeriodInSec, inputStyle } from '@/constants/display';
 import { AccountCodesOfAsset } from '@/constants/asset';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -37,6 +41,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { accountList } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
+
+  const { trigger, success, isLoading, error } = APIHandler(APIName.ASSET_GET_BY_ID_V2);
+
+  // Info: (20241025 - Julian) 取得資產相關的會計科目
   const assetAccountList = accountList.filter((account) => {
     return AccountCodesOfAsset.includes(account.code);
   });
@@ -225,37 +234,64 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     setMethodVisible(!isMethodVisible);
   };
 
-  // ToDo: (20241015 - Julian) API call
   const addNewAsset = async () => {
-    // eslint-disable-next-line no-console
-    console.log(
-      'Add new asset!',
-      '\nAsset No:',
-      inputNo,
-      '\nAsset Name:',
-      inputName,
-      '\nAmount:',
-      inputAmount,
-      '\nResidual Value:',
-      inputResidualValue,
-      '\nTotal Price:',
-      inputTotal,
-      '\nAcquisition Date:',
-      acquisitionDate,
-      isLandCost ? '' : `\nDepreciation Start Date: ${depreciationStartDate}`,
-      isLandCost ? '' : `\nUseful Life: ${inputUsefulLife} month`,
-      isLandCost ? '' : `\nDepreciation Method: ${selectedDepreciationMethod}`,
-      '\nNote:',
-      inputNote
-    );
+    const generalBody = {
+      assetName: inputName,
+      assetType: accountTitle,
+      assetNumber: inputNo,
+      acquisitionDate: acquisitionDate.startTimeStamp,
+      purchasePrice: inputTotal,
+      currencyAlias: 'TWD',
+      amount: inputAmount,
+      depreciationStart: depreciationStartDate.startTimeStamp,
+      depreciationMethod: selectedDepreciationMethod,
+      usefulLife: inputUsefulLife,
+      note: inputNote,
+    };
 
-    toastHandler({
-      id: ToastId.ADD_ASSET_SUCCESS,
-      type: ToastType.SUCCESS,
-      content: t('asset:ADD_ASSET_MODAL.TOAST_SUCCESS'),
-      closeable: true,
+    // Info: (20241025 - Julian) 土地成本不會有折舊日期、折舊方法和使用年限
+    const landBody = {
+      assetName: inputName,
+      assetType: accountTitle,
+      assetNumber: inputNo,
+      acquisitionDate: acquisitionDate.startTimeStamp,
+      purchasePrice: inputTotal,
+      currencyAlias: 'TWD',
+      amount: inputAmount,
+      note: inputNote,
+    };
+
+    trigger({
+      params: {
+        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      },
+      body: isLandCost ? landBody : generalBody,
     });
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (success) {
+        modalVisibilityHandler();
+
+        // Info: (20241025 - Julian) 顯示成功 toast 訊息
+        toastHandler({
+          id: ToastId.ADD_ASSET_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('asset:ADD_ASSET_MODAL.TOAST_SUCCESS'),
+          closeable: true,
+        });
+      } else if (error) {
+        // Info: (20241025 - Julian) 顯示錯誤 toast 訊息
+        toastHandler({
+          id: ToastId.ADD_ASSET_ERROR,
+          type: ToastType.ERROR,
+          content: t('asset:ADD_ASSET_MODAL.TOAST_ERROR'),
+          closeable: true,
+        });
+      }
+    }
+  }, [success, isLoading, error]);
 
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
