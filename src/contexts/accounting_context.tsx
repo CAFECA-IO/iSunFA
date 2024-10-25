@@ -3,6 +3,7 @@ import { APIName } from '@/constants/api_connection';
 import { EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
+import { IAssetDetails } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IVoucher } from '@/interfaces/voucher';
@@ -60,11 +61,6 @@ export const accountTitleMap: AccountTitleMap = {
 };
 
 interface IAccountingContext {
-  // Info: (20240430 - Julian)
-  // tempJournalList: IJournal[];
-  // addTempJournal: (journal: IJournal) => void;
-  // duplicateTempJournal: (id: string) => void;
-  // removeTempJournal: (id: string) => void;
   OCRList: IOCR[];
   OCRListStatus: { listSuccess: boolean | undefined; listCode: string | undefined };
   updateOCRListHandler: (companyId: number | undefined, update: boolean) => void;
@@ -136,15 +132,15 @@ interface IAccountingContext {
   pendingOCRList: IOCRItem[];
   pendingOCRListFromBrowser: IOCRItem[];
   excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
+
+  // Info: (20241025 - Julian) 暫存的資產列表 (用於新增資產顯示)
+  temporaryAssetList: IAssetDetails[];
+  addTemporaryAssetHandler: (asset: IAssetDetails) => void;
+  deleteTemporaryAssetHandler: (assetId: number) => void;
+  clearTemporaryAssetHandler: () => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
-  // Info: (20240430 - Julian)
-  // tempJournalList: [],
-  // addTempJournal: () => {},
-  // duplicateTempJournal: () => {},
-  // removeTempJournal: () => {},
-
   OCRList: [],
   OCRListStatus: { listSuccess: undefined, listCode: undefined },
   updateOCRListHandler: () => {},
@@ -187,6 +183,11 @@ const initialAccountingContext: IAccountingContext = {
   pendingOCRList: [],
   pendingOCRListFromBrowser: [],
   excludeUploadIdentifier: () => [],
+
+  temporaryAssetList: [],
+  addTemporaryAssetHandler: () => {},
+  deleteTemporaryAssetHandler: () => {},
+  clearTemporaryAssetHandler: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -245,6 +246,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [isDBReady, setIsDBReady] = useState(false);
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
   const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
+
+  const [temporaryAssetList, setTemporaryAssetList] = useState<IAssetDetails[]>([]);
 
   const getAccountListHandler = (
     companyId: number,
@@ -723,40 +726,20 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [voucherPreview]
   );
 
-  // Info: (20240430 - Julian) ------------ 目前已經取消暫存日記帳的功能，預計刪除以下程式碼 ------------ [Start]
-  // const [tempJournalList, setTempJournalList] = useState<IJournal[]>([]);
+  // Info: (20241025 - Julian) 新增項目到暫存資產列表
+  const addTemporaryAssetHandler = (asset: IAssetDetails) => {
+    setTemporaryAssetList((prev) => [...prev, asset]);
+  };
 
-  // // Info: (20240426 - Julian) 新增暫存日記帳
-  // const addTempJournal = useCallback(
-  //   (journal: IJournal) => {
-  //     setTempJournalList([...tempJournalList, journal]);
-  //   },
-  //   [tempJournalList]
-  // );
+  // Info: (20241025 - Julian) 刪除暫存資產列表中的項目
+  const deleteTemporaryAssetHandler = (assetId: number) => {
+    setTemporaryAssetList((prev) => prev.filter((asset) => asset.id !== assetId));
+  };
 
-  // // Info: (20240426 - Julian) 複製暫存日記帳
-  // const duplicateTempJournal = useCallback(
-  //   (id: string) => {
-  //     const targetJournal = tempJournalList.find((item) => item.id === id);
-  //     const newId = `${targetJournal?.basicInfo.description}_${Date.now()}_copy`;
-
-  //     if (targetJournal) {
-  //       const duplicatedJournal = { ...targetJournal, id: newId };
-  //       setTempJournalList([...tempJournalList, duplicatedJournal]);
-  //     }
-  //   },
-  //   [tempJournalList]
-  // );
-
-  // // Info: (20240426 - Julian) 移除暫存日記帳
-  // const removeTempJournal = useCallback(
-  //   (id: string) => {
-  //     const newJournalList = tempJournalList.filter((item) => item.id !== id);
-  //     setTempJournalList(newJournalList);
-  //   },
-  //   [tempJournalList]
-  // );
-  // ------------ 目前已經取消暫存日記帳的功能，預計刪除以上程式碼 ------------ [End]
+  // Info: (20241025 - Julian) 清空暫存資產列表
+  const clearTemporaryAssetHandler = () => {
+    setTemporaryAssetList([]);
+  };
 
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {
@@ -819,6 +802,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       pendingOCRList,
       pendingOCRListFromBrowser,
       excludeUploadIdentifier,
+
+      temporaryAssetList,
+      addTemporaryAssetHandler,
+      deleteTemporaryAssetHandler,
+      clearTemporaryAssetHandler,
     }),
     [
       OCRList,
@@ -845,6 +833,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       inputDescription,
       pendingOCRList,
       pendingOCRListFromBrowser,
+      temporaryAssetList,
+      addTemporaryAssetHandler,
+      deleteTemporaryAssetHandler,
+      clearTemporaryAssetHandler,
     ]
   );
 

@@ -13,12 +13,14 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IAccount } from '@/interfaces/accounting_account';
 import { useModalContext } from '@/contexts/modal_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastId } from '@/constants/toast_id';
 import { default30DayPeriodInSec, inputStyle } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { IAssetDetails } from '@/interfaces/asset';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -41,8 +43,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { selectedCompany } = useUserCtx();
+  const { addTemporaryAssetHandler } = useAccountingCtx();
 
-  const { trigger, success, isLoading, error } = APIHandler(APIName.ASSET_GET_BY_ID_V2);
+  const { trigger, success, isLoading, error, data } = APIHandler<IAssetDetails>(
+    APIName.CREATE_ASSET_V2
+  );
 
   const accountInputRef = useRef<HTMLInputElement>(null);
 
@@ -265,8 +270,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   useEffect(() => {
     if (!isLoading) {
-      if (success) {
-        modalVisibilityHandler();
+      if (success && data) {
+        // Info: (20241025 - Julian) 新增資產至暫存
+        addTemporaryAssetHandler(data);
 
         // Info: (20241025 - Julian) 顯示成功 toast 訊息
         toastHandler({
@@ -285,7 +291,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         });
       }
     }
-  }, [success, isLoading, error]);
+  }, [success, isLoading, error, data]);
 
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
