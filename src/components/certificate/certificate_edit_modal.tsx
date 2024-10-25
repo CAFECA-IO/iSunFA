@@ -284,8 +284,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       ...data,
       id: filteredCounterPartyList.length + 1,
       companyId,
-      createdAt: new Date().getTime() / 1000,
-      updatedAt: new Date().getTime() / 1000,
+      createdAt: Math.floor(new Date().getTime() / 1000),
+      updatedAt: Math.floor(new Date().getTime() / 1000),
     });
     toastHandler({
       id: ToastId.ADD_COUNTERPARTY_SUCCESS,
