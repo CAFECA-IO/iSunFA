@@ -778,6 +778,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_ACTION_LOG_LIST,
     method: HttpMethod.GET,
     path: APIPath.USER_ACTION_LOG_LIST,
+  }),
   [APIName.GET_ACCOUNTING_SETTING]: createConfig({
     name: APIName.GET_ACCOUNTING_SETTING,
     method: HttpMethod.GET,
