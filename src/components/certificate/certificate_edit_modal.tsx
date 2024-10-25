@@ -270,12 +270,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       },
     };
     onSave(updatedData);
-    toastHandler({
-      id: ToastId.SAVE_CERTIFICATE_SUCCESS,
-      type: ToastType.SUCCESS,
-      content: t('certificate:EDIT.SUCCESS'),
-      closeable: true,
-    });
     toggleIsEditModalOpen(false);
   };
 

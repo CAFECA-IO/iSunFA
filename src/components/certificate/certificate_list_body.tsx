@@ -103,7 +103,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             withoutVoucher: 3,
           },
           currency: 'TWD',
-          certificates: generateRandomCertificates(1),
+          certificates: dummyCertificateList,
         },
         page: 1,
         totalPages: 2,
@@ -196,17 +196,18 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       submitBtnStr: t('certificate:DELETE.YES'),
       submitBtnFunction: async () => {
         try {
-          // Todo: (20240923 - tzuhan) Remove item
-          // Deprecated: (20240923 - tzuhan) debugging purpose
-          // eslint-disable-next-line no-console
-          console.log('Remove single id:', id);
-          await deleteCertificateAPI({ params: { companyId }, query: { certificateId: id } });
-          toastHandler({
-            id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-            type: ToastType.SUCCESS,
-            content: t('certificate:DELETE.SUCCESS'),
-            closeable: true,
+          const { success } = await deleteCertificateAPI({
+            params: { companyId, certificateId: id },
+            query: { certificateId: id },
           });
+          if (success) {
+            toastHandler({
+              id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+              type: ToastType.SUCCESS,
+              content: t('certificate:DELETE.SUCCESS'),
+              closeable: true,
+            });
+          } else throw new Error(t('certificate:DELETE.ERROR'));
         } catch (error) {
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_ERROR,
@@ -240,7 +241,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             console.log('Remove multiple ids:', selectedIds);
 
             const args = (id: string) => ({
-              params: { companyId },
+              params: { companyId, certificateId: id },
               query: { certificateId: id },
             });
             const promises = selectedIds.map((id) => deleteCertificateAPI(args(id)));
@@ -275,6 +276,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleDownloadItem = useCallback((id: number) => {
     const { file } = data[id];
+    // eslint-disable-next-line no-console
+    console.log('id', id, 'data', data, 'Download file:', file);
     const link = document.createElement('a');
     link.href = file.url;
     link.download = file.name || `image_${file.id}`;
@@ -322,9 +325,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleEditItem = useCallback(async (certificate: ICertificate) => {
-    // Deprecated: (20240923 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Save selected id:', certificate);
     try {
       const { success, data: updatedCertificate } = await updateCertificateAPI({
         params: { companyId, certificateId: certificate.id },
