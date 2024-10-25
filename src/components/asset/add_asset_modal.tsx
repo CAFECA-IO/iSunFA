@@ -430,7 +430,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           className="flex w-full flex-col gap-y-40px px-30px py-24px text-sm text-input-text-primary"
         >
           {/* Info: (20241015 - Julian) input fields */}
-          <div className="grid max-h-550px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
+          <div className="grid max-h-500px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
             {/* Info: (20241015 - Julian) Asset Type */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
               <p className="font-semibold">
