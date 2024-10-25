@@ -7,6 +7,9 @@ import { checkAuthorization } from '@/lib/utils/auth_check';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { validateRequest } from '@/lib/utils/validator';
+import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
+import { APIPath } from '@/constants/api_connection';
+import { UserActionLogActionType } from '@/constants/user_action_log';
 
 export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEMA, U>(
   apiName: T,
@@ -54,6 +57,18 @@ export async function withRequestValidation<T extends keyof typeof API_ZOD_SCHEM
         }
       }
     }
+    await createUserActionLog({
+      sessionId: session.id,
+      userId: session.userId,
+      actionType: UserActionLogActionType.API,
+      actionDescription: apiName,
+      ipAddress: req.headers['x-forwarded-for'] as string,
+      userAgent: req.headers['user-agent'] as string,
+      apiEndpoint: APIPath[apiName],
+      httpMethod: req.method || '',
+      requestPayload: req.body,
+      statusMessage,
+    });
   } catch (error) {
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     loggerError(userId, `Handler Request Error for ${apiName} in middleware.ts`, error as Error);

@@ -1,6 +1,7 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
 import { ICompanyKYCForm } from './company_kyc';
+import { ICertificate } from './certificate';
 
 export type IAPIName =
   | 'AGREE_TO_TERMS'
@@ -14,6 +15,7 @@ export type IAPIName =
   | 'USER_PENDING_TASK_GET'
   | 'USER_SETTING_GET'
   | 'USER_SETTING_UPDATE'
+  | 'USER_ACTION_LOG_LIST'
   | 'COMPANY_PENDING_TASK_GET'
   | 'COMPANY_LIST'
   | 'COMPANY_ADD'
@@ -63,6 +65,7 @@ export type IAPIName =
   | 'COMPANY_DELETE'
   | 'COMPANY_UPDATE'
   | 'ROLE_LIST'
+  | 'USER_ROLE_LIST'
   | 'CREATE_ROLE'
   | 'ROLE_SELECT'
   | 'ROLE_GET_BY_ID'
@@ -118,6 +121,7 @@ export type IAPIInput = {
     | IVoucher
     | IFinancialReportRequest
     | ICompanyKYCForm
+    | ICertificate
     | string;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
