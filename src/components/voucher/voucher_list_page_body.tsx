@@ -76,6 +76,7 @@ const VoucherListPageBody: React.FC = () => {
       vouchers: IVoucherBeta[];
     }>
   ) => {
+    setPage(data.page);
     setUnRead(data.data.unRead);
     setTotalPages(data.totalPages);
     setTotalCount(data.totalCount);
