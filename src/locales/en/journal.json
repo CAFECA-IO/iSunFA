@@ -272,5 +272,8 @@
     "DELETE_MESSAGE_SUBMIT_BTN": "Yes, delete the voucher",
     "DELETE_SUCCESS_TOAST": "Vouchers have been deleted.",
     "UNDO": "Undo"
+  },
+  "LEDGER": {
+    "LEDGER_PERIOD": "Ledger Period"
   }
 }

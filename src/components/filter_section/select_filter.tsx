@@ -43,12 +43,14 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
         onClick={toggleMenuHandler}
         className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer ${className}`}
       >
-        <p className="text-input-text-input-placeholder">
+        <p className="flex-1 truncate text-input-text-input-placeholder">
           {selectedValue
             ? t(`common:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
             : selectedValue}
         </p>
-        <FaChevronDown />
+        <div className="flex h-20px w-20px items-center justify-center">
+          <FaChevronDown />
+        </div>
         <div
           ref={menuRef}
           className={`absolute left-0 top-12 z-10 grid w-full rounded-sm border border-input-stroke-input ${
@@ -57,7 +59,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
               : 'grid-rows-0 border-transparent'
           } overflow-hidden transition-all duration-300 ease-in-out`}
         >
-          <ul className={`flex w-full flex-col items-start p-2`}>
+          <ul className={`flex max-h-400px w-full flex-col items-start overflow-y-auto p-2`}>
             {options.map((option) => (
               <li
                 key={option}

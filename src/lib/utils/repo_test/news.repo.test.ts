@@ -87,7 +87,7 @@ describe('News Repository', () => {
     });
 
     it('should return null if news item does not exist', async () => {
-      const news = await getNewsById(999999); // Assuming this ID does not exist
+      const news = await getNewsById(999999); // Info: (20241024 - Jacky) Assuming this ID does not exist
       expect(news).toBeNull();
     });
   });

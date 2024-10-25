@@ -27,7 +27,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
         {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
 
         {/* // Info: (20241018 - Liz) Content Body */}
-        <main className="h-full overflow-y-auto px-20px py-32px screen1280:px-56px">
+        <main className="h-full overflow-y-auto overflow-x-hidden px-20px py-32px screen1280:px-56px">
           {children}
         </main>
       </div>

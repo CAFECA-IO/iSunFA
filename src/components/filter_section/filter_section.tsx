@@ -3,39 +3,59 @@ import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAPIName } from '@/interfaces/api_connection';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { generateRandomCertificates, ICertificate, VIEW_TYPES } from '@/interfaces/certificate';
+import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
 import ViewToggle from '@/components/filter_section/view_toggle';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { SortOrder, SortBy } from '@/constants/sort';
+import { useTranslation } from 'next-i18next';
 
-interface FilterSectionProps {
+interface FilterSectionProps<T> {
   className?: string;
   apiName: IAPIName;
-  params?: Record<string, string | number | boolean>;
+  params?: Record<string, string | number | boolean | undefined>;
+  page: number;
+  pageSize: number;
+  tab?: string;
   types?: string[];
   statuses?: string[];
-  sortingOptions?: string[];
-  sortingByDate?: boolean;
-  onApiResponse?: (data: ICertificate[]) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
-  viewType?: VIEW_TYPES;
-  viewToggleHandler?: (viewType: VIEW_TYPES) => void;
-  extraQuery?: Record<string, string | number | boolean>; // Info: (20241022 - Julian) 額外查詢條件
+  sortingOptions?: SortBy[];
+  onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
+  viewType?: DISPLAY_LIST_VIEW_TYPE;
+  viewToggleHandler?: (viewType: DISPLAY_LIST_VIEW_TYPE) => void;
+  dateSort?: SortOrder | null;
+  setDateSort?: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  otherSorts?: {
+    sort: SortBy;
+    sortOrder: SortOrder;
+  }[];
 }
 
-const FilterSection: React.FC<FilterSectionProps> = ({
+const FilterSection = <T,>({
   className,
   apiName,
   params,
+  page = 1,
+  pageSize = DEFAULT_PAGE_LIMIT,
+  tab,
   types = [],
   statuses = [],
   sortingOptions = [],
-  sortingByDate = false,
   onApiResponse,
   viewType,
   viewToggleHandler,
-  extraQuery,
-}) => {
+  dateSort,
+  setDateSort,
+  otherSorts,
+}: FilterSectionProps<T>) => {
+  const { t } = useTranslation(['certificate', 'common']);
+  const { toastHandler } = useModalContext();
   const [selectedType, setSelectedType] = useState<string | undefined>(
     types.length > 0 ? types[0] : undefined
   );
@@ -51,59 +71,112 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     sortingOptions.length > 0 ? sortingOptions[0] : undefined
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { trigger } = APIHandler<ICertificate[]>(apiName);
-  const [sorting, setSorting] = useState<boolean>();
+  const [selectedSortOptions, setSelectedSortOptions] = useState<{
+    [key: string]: {
+      by: string;
+      order: SortOrder;
+    };
+  }>({});
+
+  // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
+  const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
 
   // Info: (20240919 - tzuhan) 發送 API 請求
   const fetchData = useCallback(async () => {
     try {
       if (isLoading) return;
       setIsLoading(true);
-      // Deprecated: (20240920 - tzuhan) Debugging purpose only
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_LIST_V2 API 的地方，以及query參數的組合
       const { success, code, data } = await trigger({
         params,
         query: {
+          page,
+          pageSize,
+          tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
           type: selectedType,
-          status: selectedStatus,
-          startTimeStamp: !selectedDateRange.startTimeStamp
+          status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
+          // Info: (20241022 - tzuhan) @Murky, 這裡排序需要可以多種方式排序，所以需要修改
+          sortOption: JSON.stringify(selectedSortOptions),
+          startDate: !selectedDateRange.startTimeStamp
             ? undefined
             : selectedDateRange.startTimeStamp,
-          endTimeStamp: !selectedDateRange.endTimeStamp
-            ? undefined
-            : selectedDateRange.endTimeStamp,
-          search: searchQuery,
-          sort: selectedSorting || sorting ? 'desc' : 'asc',
-          ...extraQuery,
+          endDate: !selectedDateRange.endTimeStamp ? undefined : selectedDateRange.endTimeStamp,
+          searchQuery,
         },
       });
-      /* Deprecated: (20240920 - tzuhan) Debugging purpose only
-      // Info: (20240920 - tzuhan) 回傳 API 回應資料
-      if (success && onApiResponse) onApiResponse(data!);
+      if (success && onApiResponse && data) onApiResponse(data);
       if (!success) {
-        // Deprecated: (20240919 - tzuhan) Debugging purpose only
-        // eslint-disable-next-line no-console
-        console.error('API Request Failed:', code);
+        // ToDo: (20241021 - tzuhan) handle error
+        toastHandler({
+          id: ToastId.API_REQUEST_FAILED,
+          type: ToastType.ERROR,
+          content: `API Request Failed: ${code}`,
+          closeable: true,
+        });
       }
-      */
-      if (onApiResponse) onApiResponse(generateRandomCertificates());
     } catch (error) {
-      // Deprecated: (20240919 - tzuhan) Debugging purpose only
-      // eslint-disable-next-line no-console
-      console.error('API Request error:', error);
+      // ToDo: (20241021 - tzuhan) handle error
+      toastHandler({
+        id: ToastId.API_REQUEST_FAILED,
+        type: ToastType.ERROR,
+        content: `API Request error: ${(error as Error).message}`,
+        closeable: true,
+      });
     } finally {
       setIsLoading(false);
     }
   }, [
     isLoading,
+    tab,
     selectedType,
     selectedStatus,
     selectedDateRange,
     searchQuery,
-    selectedSorting,
-    sorting,
-    extraQuery,
+    selectedSortOptions,
+    page,
   ]);
+
+  const handleSort = () => {
+    if (setDateSort) {
+      if (selectedSortOptions[SortBy.DATE]) {
+        setDateSort(
+          selectedSortOptions[SortBy.DATE].order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC
+        );
+      } else {
+        setDateSort(SortOrder.DESC);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (dateSort) {
+      setSelectedSortOptions((prev) => ({
+        ...prev,
+        [SortBy.DATE]: {
+          by: SortBy.DATE,
+          order: dateSort,
+        },
+      }));
+    } else {
+      setSelectedSortOptions((prev) => {
+        const rest = { ...prev };
+        delete rest[SortBy.DATE];
+        return rest;
+      });
+    }
+    if (otherSorts) {
+      otherSorts.forEach(({ sort, sortOrder }) => {
+        if (sort === SortBy.DATE) return;
+        setSelectedSortOptions((prev) => ({
+          ...prev,
+          [sort]: {
+            by: sort,
+            order: sortOrder,
+          },
+        }));
+      });
+    }
+  }, [dateSort, otherSorts]);
 
   // Info: (20240919 - tzuhan) 每次狀態變更時，組合查詢條件並發送 API 請求
   useEffect(() => {
@@ -111,13 +184,14 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       fetchData();
     }
   }, [
+    page,
+    pageSize,
+    tab,
     selectedType,
     selectedStatus,
     selectedDateRange,
     searchQuery,
-    selectedSorting,
-    sorting,
-    extraQuery,
+    selectedSortOptions,
   ]);
 
   return (
@@ -164,14 +238,14 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       )}
 
       {/* Info: (20240919 - tzuhan) 排序選項 */}
-      {sortingByDate ? (
-        <button
-          type="button"
-          className="flex items-center space-x-2 pb-2"
-          onClick={() => setSorting((prev) => !prev)}
-        >
+      {selectedSortOptions[SortBy.DATE] ? (
+        <button type="button" className="flex items-center space-x-2 pb-2" onClick={handleSort}>
           <Image src="/elements/double_arrow_down.svg" alt="arrow_down" width={20} height={20} />
-          <div className="leading-none">Newest</div>
+          <div className="leading-none">
+            {selectedSortOptions[SortBy.DATE].order === SortOrder.DESC
+              ? t('common:SORTING.NEWEST')
+              : t('common:SORTING.ORDEST')}
+          </div>
         </button>
       ) : (
         sortingOptions.length > 0 && (

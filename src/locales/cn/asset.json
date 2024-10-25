@@ -67,6 +67,7 @@
     "RESIDUAL_VALUE": "残值",
     "REMAINING_LIFE": "剩余使用年限",
     "NOTE": "备注",
-    "VOUCHER": "凭证"
+    "VOUCHER": "凭证",
+    "NO_ASSET": "无资产"
   }
 }

@@ -25,7 +25,7 @@ const IncomeStatementPageBody = () => {
           />
         </div>
         {/* Info: (20240920 - Julian) Voucher List */}
-        <IncomeStatementList />
+        <IncomeStatementList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );

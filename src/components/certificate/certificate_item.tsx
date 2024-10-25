@@ -56,27 +56,27 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         </BorderCell>
       )}
       <BorderCell isSelected={certificate.isSelected}>
-        <CalendarIcon timestamp={new Date(certificate.date).getTime()} />
+        <CalendarIcon timestamp={new Date(certificate.invoice.inputOrOutput).getTime()} />
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="min-w-120px space-y-2">
         <>
-          <div className="text-text-neutral-tertiary">{certificate.invoiceName}</div>
-          <div className="text-text-neutral-primary">{certificate.invoiceNumber}</div>
+          <div className="text-text-neutral-tertiary">{certificate.invoice.name}</div>
+          <div className="text-text-neutral-primary">{certificate.invoice.no}</div>
         </>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="space-y-2">
         <>
-          <div className="text-text-neutral-tertiary">{certificate.counterParty.taxId}</div>
-          <div className="text-text-neutral-primary">{certificate.counterParty.name}</div>
+          <div className="text-text-neutral-tertiary">{certificate.invoice.counterParty.taxId}</div>
+          <div className="text-text-neutral-primary">{certificate.invoice.counterParty.name}</div>
         </>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="max-w-120px">
-        <div className="text-text-neutral-primary">{certificate.invoiceType}</div>
+        <div className="text-text-neutral-primary">{certificate.invoice.type}</div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="min-w-100px">
-        <div className="text-text-neutral-primary">Taxable {certificate.taxRate}%</div>
+        <div className="text-text-neutral-primary">Taxable {certificate.invoice.taxRatio}%</div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
       <BorderCell isSelected={certificate.isSelected}>
@@ -89,7 +89,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
               <div> Pre-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
-              {certificate.priceBeforeTax}
+              {certificate.invoice.priceBeforeTax}
               <span className="ml-1 text-text-neutral-tertiary">TWD</span>
             </div>
           </div>
@@ -101,7 +101,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
               <div>After-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
-              {certificate.totalPrice}
+              {certificate.invoice.totalPrice}
               <span className="ml-1 text-text-neutral-tertiary">TWD</span>
             </div>
           </div>
@@ -109,7 +109,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected}>
         <div className="flex items-center justify-center">
-          {certificate.deductible ? (
+          {certificate.invoice.deductible ? (
             <Image src="/elements/check.svg" alt="Yes" width={20} height={20} />
           ) : (
             <div></div>
@@ -125,7 +125,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
             <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
               TH
             </span>
-            <span>{certificate.uploader}</span>
+            <span>{certificate.invoice.uploader}</span>
           </div>
         </>
       </BorderCell>

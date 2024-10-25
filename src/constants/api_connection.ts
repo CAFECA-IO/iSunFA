@@ -97,6 +97,7 @@ export enum APIName {
   COMPANY_DELETE = 'COMPANY_DELETE',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
   ROLE_LIST = 'ROLE_LIST',
+  USER_ROLE_LIST = 'USER_ROLE_LIST',
   CREATE_ROLE = 'CREATE_ROLE',
   ROLE_SELECT = 'ROLE_SELECT',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
@@ -123,12 +124,15 @@ export enum APIName {
   PUSHER = 'PUSHER',
   ENCRYPT = 'ENCRYPT',
   DECRYPT = 'DECRYPT',
+  ASSET_LIST_V2 = 'ASSET_LIST_V2',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
   ACCOUNTING_SETTING_GET = 'ACCOUNTING_SETTING_GET',
   ACCOUNTING_SETTING_UPDATE = 'ACCOUNTING_SETTING_UPDATE',
   USER_SETTING_GET = 'USER_SETTING_GET',
   USER_SETTING_UPDATE = 'USER_SETTING_UPDATE',
   USER_ACTION_LOG_LIST = 'USER_ACTION_LOG_LIST',
+  GET_ACCOUNTING_SETTING = 'GET_ACCOUNTING_SETTING',
+  UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
 }
 
 export enum APIPath {
@@ -204,6 +208,7 @@ export enum APIPath {
   COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
   ROLE_LIST = `${apiPrefixV2}/company/:companyId/role`,
+  USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   CREATE_ROLE = `${apiPrefixV2}/company/:companyId/role`,
   ROLE_SELECT = `${apiPrefixV2}/company/:companyId/role/select`,
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
@@ -230,12 +235,15 @@ export enum APIPath {
   PUSHER = `${apiPrefixV2}/pusher`,
   ENCRYPT = `${apiPrefixV2}/encrypt`,
   DECRYPT = `${apiPrefixV2}/decrypt`,
+  ASSET_LIST_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   ACCOUNTING_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   USER_SETTING_GET = `${apiPrefixV2}/user/:userId/setting`,
   USER_SETTING_UPDATE = `${apiPrefixV2}/user/:userId/setting`,
   USER_ACTION_LOG_LIST = `${apiPrefixV2}/user/:userId/action_log`,
+  GET_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
+  UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
 }
 const createConfig = ({
   name,
@@ -532,6 +540,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ROLE_LIST,
   }),
+  [APIName.USER_ROLE_LIST]: createConfig({
+    name: APIName.USER_ROLE_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.USER_ROLE_LIST,
+  }),
   [APIName.CREATE_ROLE]: createConfig({
     name: APIName.CREATE_ROLE,
     method: HttpMethod.POST,
@@ -696,6 +709,31 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ACCOUNTING_SETTING_UPDATE,
   }),
+  [APIName.CERTIFICATE_LIST_V2]: createConfig({
+    name: APIName.CERTIFICATE_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.CERTIFICATE_GET_V2]: createConfig({
+    name: APIName.CERTIFICATE_GET_V2,
+    method: HttpMethod.GET,
+    path: APIPath.CERTIFICATE_GET_V2,
+  }),
+  [APIName.CERTIFICATE_POST_V2]: createConfig({
+    name: APIName.CERTIFICATE_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.CERTIFICATE_POST_V2,
+  }),
+  [APIName.CERTIFICATE_PUT_V2]: createConfig({
+    name: APIName.CERTIFICATE_PUT_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  [APIName.CERTIFICATE_DELETE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.CERTIFICATE_PUT_V2,
+  }),
   [APIName.COUNTERPARTY_LIST]: createConfig({
     name: APIName.COUNTERPARTY_LIST,
     method: HttpMethod.GET,
@@ -721,6 +759,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.DELETE,
     path: APIPath.COUNTERPARTY_DELETE,
   }),
+  [APIName.ASSET_LIST_V2]: createConfig({
+    name: APIName.ASSET_LIST_V2,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_LIST_V2,
+  }),
   [APIName.USER_SETTING_GET]: createConfig({
     name: APIName.USER_SETTING_GET,
     method: HttpMethod.GET,
@@ -735,5 +778,14 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_ACTION_LOG_LIST,
     method: HttpMethod.GET,
     path: APIPath.USER_ACTION_LOG_LIST,
+  [APIName.GET_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.GET_ACCOUNTING_SETTING,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNTING_SETTING,
+  }),
+  [APIName.UPDATE_ACCOUNTING_SETTING]: createConfig({
+    name: APIName.UPDATE_ACCOUNTING_SETTING,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ACCOUNTING_SETTING,
   }),
 };

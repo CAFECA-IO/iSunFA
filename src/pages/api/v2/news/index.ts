@@ -13,6 +13,7 @@ const handleGetRequest: IHandleRequest<
   APIName.NEWS_LIST,
   INews[] | IPaginatedData<INews[]>
 > = async ({ query }) => {
+  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews[] | IPaginatedData<INews[]> | null = null;
 

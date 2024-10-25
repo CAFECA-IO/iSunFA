@@ -1,3 +1,6 @@
+import type { IVoucherEntity } from '@/interfaces/voucher';
+import type { ICompanyEntity } from '@/interfaces/company';
+import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 /* Info: (20240927 - Shirley) asset v1 介面 */
 export interface IAsset {
   id: number;
@@ -126,6 +129,11 @@ export const mockAssetItem: IAssetItem = {
   deletedAt: null,
 };
 
+// Info: (20241024 - Julian) For UI
+export interface IAssetItemUI extends IAssetItem {
+  isSelected: boolean;
+}
+
 export const mockAssetDetails: IAssetDetails = {
   ...mockAssetItem,
   depreciationStart: 1632511200,
@@ -159,3 +167,142 @@ export const mockUpdateAssetInput: IUpdateAssetInput = {
 };
 
 /* Info: (20240927 - Shirley) asset v2 介面 */
+
+/**
+ * Info: (20241024 - Murky)
+ * @description Asset Entity Interface specify  for backend
+ * @note use parsePrismaAssetToAssetEntity to convert Asset in prisma to IAssetEntity
+ * @note use initAssetEntity to create new Asset Entity
+ */
+export interface IAssetEntity {
+  /**
+   * Info: (20241024 - Murky)
+   * @description Asset ID, 0 if not yet saved in database
+   */
+  id: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description company id of company that own the asset
+   */
+  companyId: number;
+
+  name: string;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Asset type that is based on property, plant, equipment
+   * @note value is Account Code of asset
+   * @shirley 目前我只有寫一個type，不確定要有哪些type
+   */
+  type: AssetEntityType;
+  /**
+   * Info: (20241024 - Murky)
+   * @description Property Serial number
+   */
+  number: string;
+  /**
+   * Info: (20241024 - Murky)
+   * @description When the asset is acquired
+   * @note need to be in seconds
+   */
+  acquisitionDate: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @Float
+   * @description The price (or consideration) to acquire the asset
+   */
+  purchasePrice: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @Float
+   * @description Sum of depreciation expense from the acquisition date to the current date
+   */
+  accumulatedDepreciation: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @Float
+   * @description The remaining value of the asset after depreciated through the useful life
+   */
+  residualValue: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description The remaining useful life of the asset,
+   * decrease when time pass
+   * @note need to be in seconds
+   */
+  remainingLife: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description asset still in used or how it is disposed
+   */
+  status: AssetStatus;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description When the asset start to depreciate,
+   * normally is the acquisition date
+   * @note need to be in seconds
+   */
+  depreciationStart: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description How the asset is depreciated
+   */
+  depreciationMethod: AssetDepreciationMethod;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Total useful life of the asset,
+   * won't decrease when time pass
+   * @note need to be in seconds
+   */
+  usefulLife: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description note input by user
+   */
+  note: string;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description When the asset is created in database
+   * @note need to be in seconds
+   */
+  createdAt: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description When the asset is updated in database
+   * @note need to be in seconds
+   */
+  updatedAt: number;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description When the asset is deleted in database,
+   * null if not deleted
+   * @note need to be in seconds
+   */
+  deletedAt: number | null;
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Vouchers that related to this asset,
+   * ex: depreciation voucher, disposal voucher, acquisition voucher
+   */
+  assetVouchers: IVoucherEntity[];
+
+  /**
+   * Info: (20241024 - Murky)
+   * @description Company that own the asset
+   */
+  company?: ICompanyEntity;
+}

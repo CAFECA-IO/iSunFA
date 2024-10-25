@@ -67,6 +67,7 @@
     "RESIDUAL_VALUE": "Residual Value",
     "REMAINING_LIFE": "Remaining Useful Life",
     "NOTE": "Note",
-    "VOUCHER": "Voucher"
+    "VOUCHER": "Voucher",
+    "NO_ASSET": "No asset"
   }
 }
