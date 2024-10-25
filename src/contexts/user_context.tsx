@@ -8,6 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
+import { IRole } from '@/interfaces/role';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
 import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
@@ -15,6 +16,7 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface UserContextType {
   credential: string | null;
@@ -84,6 +86,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
+
+  // ToDo: (20241025 - Liz) 新增函數處理使用者擁有的角色
+  // const [, setUserRoleList, userRoleListRef] = useStateRef<IRole[] | null>(null);
   const [, setRole, roleRef] = useStateRef<string | null>(null);
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
   const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
@@ -112,6 +117,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     APIName.STATUS_INFO_GET
   );
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
+
+  const { trigger: userRoleListAPI } = APIHandler<IPaginatedData<IRole[]>>(APIName.USER_ROLE_LIST);
+
+  // Info: (20241025 - Liz) 打 API 取得使用者擁有的角色
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getUserRoleList = async () => {
+    const {
+      data: userRoleList,
+      success: getUserRoleListSuccess,
+      code: getUserRoleListCode,
+    } = await userRoleListAPI({ params: { userId: userAuth?.id } });
+
+    if (getUserRoleListSuccess && userRoleList) {
+      return userRoleList;
+    }
+
+    throw new Error(getUserRoleListCode);
+  };
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
