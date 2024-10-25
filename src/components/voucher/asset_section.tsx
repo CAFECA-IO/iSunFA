@@ -5,18 +5,40 @@ import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { IAssetItem } from '@/interfaces/asset';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { ILineItemBeta } from '@/interfaces/line_item';
+import { AccountCodesOfAsset } from '@/constants/asset';
+import { IAccount } from '@/interfaces/accounting_account';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
   assets: IAssetItem[];
   setAssets: React.Dispatch<React.SetStateAction<IAssetItem[]>>;
+  lineItems: ILineItemBeta[];
 }
 
-const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, setAssets }) => {
+const AssetSection: React.FC<IAssetSectionProps> = ({
+  isShowAssetHint,
+  assets,
+  setAssets,
+  lineItems,
+}) => {
   const { t } = useTranslation('common');
-  const { addAssetModalVisibilityHandler } = useGlobalCtx();
+  const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
+
+  // Info: (20241025 - Julian) 根據 lineItems 取得資產類別的會計科目
+  const assetAccountList = lineItems
+    .filter((lineItem) => {
+      // Info: (20241025 - Julian) 判斷是否為資產類別的會計科目
+      const isAsset = lineItem.account
+        ? AccountCodesOfAsset.includes(lineItem.account.code)
+        : false;
+      return isAsset;
+    })
+    .map((lineItem) => lineItem.account) // Info: (20241025 - Julian) 轉換為 IAccount
+    .filter((account) => account !== undefined) as IAccount[]; // Info: (20241025 - Julian) 移除 undefined
 
   const assNewAssetHandler = () => {
+    addAssetModalDataHandler(assetAccountList);
     addAssetModalVisibilityHandler();
   };
 

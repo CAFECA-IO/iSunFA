@@ -955,7 +955,12 @@ const NewVoucherForm: React.FC = () => {
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
           <div className="col-span-2 flex flex-col">
-            <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
+            <AssetSection
+              isShowAssetHint={isShowAssetHint}
+              assets={assets}
+              setAssets={setAssets}
+              lineItems={voucherLineItems}
+            />
           </div>
         )}
         {/* Info: (20240926 - Julian) Reverse */}

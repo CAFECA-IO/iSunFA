@@ -13,11 +13,9 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IAccount } from '@/interfaces/accounting_account';
 import { useModalContext } from '@/contexts/modal_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastId } from '@/constants/toast_id';
 import { default30DayPeriodInSec, inputStyle } from '@/constants/display';
-import { AccountCodesOfAsset } from '@/constants/asset';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { FREE_COMPANY_ID } from '@/constants/config';
@@ -25,6 +23,7 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 interface IAddAssetModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  assetAccountList: IAccount[];
 }
 
 enum DepreciationMethod {
@@ -36,19 +35,14 @@ enum DepreciationMethod {
 const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   isModalVisible,
   modalVisibilityHandler,
+  assetAccountList,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { accountList } = useAccountingCtx();
   const { selectedCompany } = useUserCtx();
 
   const { trigger, success, isLoading, error } = APIHandler(APIName.ASSET_GET_BY_ID_V2);
-
-  // Info: (20241025 - Julian) 取得資產相關的會計科目
-  const assetAccountList = accountList.filter((account) => {
-    return AccountCodesOfAsset.includes(account.code);
-  });
 
   const accountInputRef = useRef<HTMLInputElement>(null);
 
@@ -182,7 +176,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       return true;
     });
     setFilteredAccountList(filteredList);
-  }, [searchKeyword, accountList]);
+  }, [searchKeyword, assetAccountList]);
 
   useEffect(() => {
     // Info: (20241015 - Julian) 查詢會計科目關鍵字時聚焦
