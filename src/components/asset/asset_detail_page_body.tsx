@@ -15,13 +15,18 @@ import { AssetStatus } from '@/constants/asset';
 import { ToastType } from '@/interfaces/toastify';
 import { ASSET_DELETE_TERM } from '@/constants/common';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { AssetModalType } from '@/interfaces/asset_modal';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { t } = useTranslation('common');
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
-  const { assetStatusSettingModalDataHandler, assetStatusSettingModalVisibilityHandler } =
-    useGlobalCtx();
+  const {
+    assetStatusSettingModalDataHandler,
+    assetStatusSettingModalVisibilityHandler,
+    addAssetModalDataHandler,
+    addAssetModalVisibilityHandler,
+  } = useGlobalCtx();
   const { selectedCompany } = useUserCtx();
 
   const params = {
@@ -36,12 +41,20 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     true
   );
 
+  // Info: (20241028 - Julian) Delete asset API
   const {
     trigger: deleteAsset,
     isLoading: isDeleting,
     success: deleteSuccess,
     error: deleteError,
   } = APIHandler<IAssetDetails>(APIName.DELETE_ASSET_V2, { params });
+
+  // Info: (20241028 - Julian) Update asset API
+  const { trigger: updateAsset, data: defaultAssetData } = APIHandler<IAssetDetails>(
+    APIName.UPDATE_ASSET_V2,
+    { params },
+    true
+  );
 
   // Info: (20241016 - Julian) Get asset details from API
   const {
@@ -101,8 +114,13 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
 
   // ToDo: (20241016 - Julian) Call API to edit asset
   const editClickHandler = () => {
-    // eslint-disable-next-line no-console
-    console.log('Edit asset');
+    updateAsset(); // Info: (20241028 - Julian) 先 call API 取得資料
+    addAssetModalDataHandler({
+      modalType: AssetModalType.EDIT,
+      assetAccountList: [],
+      assetData: defaultAssetData ?? null,
+    });
+    addAssetModalVisibilityHandler();
   };
 
   const statusSettingClickHandler = () => {
@@ -160,7 +178,11 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
     </div>
   );
 
-  const assetStatusString = t(`asset:ASSET.STATUS_${assetStatus.toUpperCase()}`);
+  const displayAssetStatus = (
+    <div className="ml-auto w-fit rounded-full bg-badge-surface-soft-error px-6px py-px text-xs text-badge-text-error-solid">
+      {t(`asset:ASSET.STATUS_${assetStatus.toUpperCase()}`)}
+    </div>
+  );
 
   const displayedRemainingLife =
     assetStatus === AssetStatus.NORMAL && remainingLife > 0 ? (
@@ -187,15 +209,16 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
         {remainingProcessBar}
       </div>
     ) : (
-      <div className="ml-auto w-fit rounded-full bg-badge-surface-soft-error px-6px py-px text-badge-text-error-solid">
-        {assetStatusString}
-      </div>
+      displayAssetStatus
     );
+
+  const isStatus = assetStatus !== AssetStatus.NORMAL ? displayAssetStatus : null;
 
   const isTitle = !isLoading ? (
     <div className="flex items-center gap-10px font-bold">
       <h1 className="text-44px text-text-neutral-primary">{assetName}</h1>
       <p className="text-xl text-text-neutral-tertiary">{assetNumber}</p>
+      {isStatus}
     </div>
   ) : (
     <Skeleton width={300} height={44} rounded />

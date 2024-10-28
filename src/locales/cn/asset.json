@@ -39,9 +39,9 @@
     "DEPRECIATION_METHOD": "折旧方法",
     "NOTE": "备注",
     "NOTE_PLACEHOLDER": "在此输入您的备注",
-    "STRAIGHT_LINE_METHOD": "直线折旧法",
-    "DOUBLE_DECLINING_BALANCE_METHOD": "双倍余额递减法",
-    "SUM_OF_THE_YEAR_DIGIT_METHOD": "年数总和法",
+    "STRAIGHT_LINE": "直线折旧法",
+    "DOUBLE_DECLINING": "双倍余额递减法",
+    "SUM_OF_YEAR_DIGIT": "年数总和法",
     "CONFIRM_MESSAGE_TITLE": "您确定要新增此资产吗？",
     "CONFIRM_MESSAGE_CONTENT": "30 天后将无法删除。",
     "CONFIRM_MESSAGE_BTN": "是的，新增资产",
@@ -70,5 +70,12 @@
     "NOTE": "备注",
     "VOUCHER": "凭证",
     "NO_ASSET": "无资产"
+  },
+  "EDIT_ASSET_MODAL": {
+    "TITLE": "编辑资产",
+    "SUBTITLE": "请输入资产资讯",
+    "CONFIRM_MESSAGE_TITLE": "您确定要更新此资产吗？",
+    "CONFIRM_MESSAGE_BTN": "是的，更新资产",
+    "TOAST_SUCCESS": "资产已更新"
   }
 }

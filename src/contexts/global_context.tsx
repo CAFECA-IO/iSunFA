@@ -42,7 +42,7 @@ import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_mo
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
 import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
 
 interface IGlobalContext {
   width: number;
@@ -57,7 +57,7 @@ interface IGlobalContext {
 
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
-  addAssetModalDataHandler: (list: IAccount[]) => void;
+  addAssetModalDataHandler: (defaultAssetData: IAssetModal) => void;
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
@@ -157,7 +157,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
-  const [assetAccountList, setAssetAccountList] = useState<IAccount[]>([]);
+  const [defaultAssetData, setDefaultAssetData] = useState<IAssetModal>(initialAssetModal);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
 
@@ -237,8 +237,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const addAssetModalVisibilityHandler = () => {
     setIsAddAssetModalVisible(!isAddAssetModalVisible);
   };
-  const addAssetModalDataHandler = (list: IAccount[]) => {
-    setAssetAccountList(list);
+  const addAssetModalDataHandler = (assetData: IAssetModal) => {
+    setDefaultAssetData(assetData);
   };
 
   const cameraScannerVisibilityHandler = () => {
@@ -639,7 +639,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddAssetModal
         isModalVisible={isAddAssetModalVisible}
         modalVisibilityHandler={addAssetModalVisibilityHandler}
-        assetAccountList={assetAccountList}
+        defaultData={defaultAssetData}
       />
 
       <CameraScanner

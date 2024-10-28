@@ -15,6 +15,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { AssetModalType } from '@/interfaces/asset_modal';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
@@ -45,8 +46,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, l
     .map((lineItem) => lineItem.account) // Info: (20241025 - Julian) 轉換為 IAccount
     .filter((account) => account !== undefined) as IAccount[]; // Info: (20241025 - Julian) 移除 undefined
 
-  const assNewAssetHandler = () => {
-    addAssetModalDataHandler(assetAccountList);
+  const addNewAssetHandler = () => {
+    addAssetModalDataHandler({
+      modalType: AssetModalType.ADD,
+      assetAccountList,
+      assetData: null,
+    });
     addAssetModalVisibilityHandler();
   };
 
@@ -129,7 +134,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, l
 
       <div className="flex flex-col gap-12px">
         {displayedAssetList}
-        <Button type="button" variant="secondaryOutline" onClick={assNewAssetHandler}>
+        <Button type="button" variant="secondaryOutline" onClick={addNewAssetHandler}>
           <FiPlus size={20} />
           <p>{t('journal:ASSET_SECTION.ADD_BTN')}</p>
         </Button>
