@@ -15,4 +15,7 @@ export enum ToastId {
   ADD_COUNTERPARTY_SUCCESS = 'toast-add-counterparty-success',
   SAVE_CERTIFICATE_SUCCESS = 'toast-save-certificate-success',
   API_REQUEST_FAILED = 'toast-api-request-failed',
+  LIST_CERTIFICATE_ERROR = 'toast-list-certificate-error',
+  UPDATE_CERTIFICATE_SUCCESS = 'toast-update-certificate-success',
+  UPDATE_CERTIFICATE_ERROR = 'toast-update-certificate-error',
 }

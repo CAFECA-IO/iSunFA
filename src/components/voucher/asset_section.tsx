@@ -1,33 +1,88 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
-import { IAssetItem } from '@/interfaces/asset';
+import { IAssetDetails } from '@/interfaces/asset';
+import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import { ILineItemBeta } from '@/interfaces/line_item';
+import { AccountCodesOfAsset } from '@/constants/asset';
+import { IAccount } from '@/interfaces/accounting_account';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ToastType } from '@/interfaces/toastify';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
-  assets: IAssetItem[];
-  setAssets: React.Dispatch<React.SetStateAction<IAssetItem[]>>;
+  assets: IAssetDetails[];
+  lineItems: ILineItemBeta[];
 }
 
-const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, setAssets }) => {
+const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, lineItems }) => {
   const { t } = useTranslation('common');
-  const { addAssetModalVisibilityHandler } = useGlobalCtx();
+  const { selectedCompany } = useUserCtx();
+  const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
+  const { deleteTemporaryAssetHandler } = useAccountingCtx();
+  const { toastHandler } = useModalContext();
+
+  const { trigger, success, isLoading, data, error } = APIHandler<IAssetDetails>(
+    APIName.DELETE_ASSET_V2
+  );
+
+  // Info: (20241025 - Julian) 根據 lineItems 取得資產類別的會計科目
+  const assetAccountList = lineItems
+    .filter((lineItem) => {
+      // Info: (20241025 - Julian) 判斷是否為資產類別的會計科目
+      const isAsset = lineItem.account
+        ? AccountCodesOfAsset.includes(lineItem.account.code)
+        : false;
+      return isAsset;
+    })
+    .map((lineItem) => lineItem.account) // Info: (20241025 - Julian) 轉換為 IAccount
+    .filter((account) => account !== undefined) as IAccount[]; // Info: (20241025 - Julian) 移除 undefined
 
   const assNewAssetHandler = () => {
+    addAssetModalDataHandler(assetAccountList);
     addAssetModalVisibilityHandler();
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (success && data) {
+        // Info: (20241025 - Julian) 確定 API 刪除成功後，更新畫面
+        deleteTemporaryAssetHandler(data.id);
+      } else if (error) {
+        // Info: (20241025 - Julian) 刪除失敗後，提示使用者
+        toastHandler({
+          id: 'delete-asset-error',
+          type: ToastType.ERROR,
+          content: t('asset:ADD_ASSET_MODAL.TOAST_ERROR'),
+          closeable: true,
+        });
+      }
+    }
+  }, [success, data, isLoading]);
 
   const displayedAssetList =
     assets && assets.length > 0 ? (
       assets.map((asset) => {
-        const deleteHandler = () => setAssets(assets.filter((a) => a.id !== asset.id));
+        const deleteHandler = () => {
+          // Info: (20241025 - Julian) trigger API to delete asset
+          trigger({
+            params: {
+              companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+              assetId: asset.id,
+            },
+          });
+        };
 
         return (
           <div
-            key={asset.id}
+            key={`${asset.id} - ${asset.assetName}`}
             className="flex gap-16px rounded-sm border border-file-uploading-stroke-outline bg-file-uploading-surface-primary p-20px"
           >
             <Image src="/icons/number_sign.svg" alt="number_sign" width={24} height={24} />

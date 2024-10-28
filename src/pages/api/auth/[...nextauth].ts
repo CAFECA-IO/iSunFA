@@ -1,12 +1,16 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { getSession, setSession } from '@/lib/utils/session';
+import { destroySession, getSession, setSession } from '@/lib/utils/session';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createUserByAuth, getUserByCredential } from '@/lib/utils/repo/authentication.repo';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { FileFolder, PUBLIC_IMAGE_ID } from '@/constants/file';
+import { APIPath } from '@/constants/api_connection';
+import { UserActionLogActionType } from '@/constants/user_action_log';
+import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 // Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
 // import { getInvitationByCode } from '@/lib/utils/repo/invitation.repo';
 // import { isInvitationValid, useInvitation } from '@/lib/utils/invitation';
@@ -136,6 +140,24 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       signIn: ISUNFA_ROUTE.LOGIN,
     },
     secret: process.env.NEXTAUTH_SECRET,
+    events: {
+      signOut: async () => {
+        const session = await getSession(req, res);
+        await createUserActionLog({
+          sessionId: session.id,
+          userId: session.userId,
+          actionType: UserActionLogActionType.LOGOUT,
+          actionDescription: UserActionLogActionType.LOGOUT,
+          ipAddress: (req.headers['x-forwarded-for'] as string) || '',
+          userAgent: (req.headers['user-agent'] as string) || '',
+          apiEndpoint: APIPath.SIGN_OUT,
+          httpMethod: req.method || '',
+          requestPayload: {},
+          statusMessage: STATUS_MESSAGE.SUCCESS,
+        });
+        destroySession(session);
+      },
+    },
     callbacks: {
       async signIn({ user, account }) {
         try {
@@ -188,6 +210,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             // Dbuser = getUser;
             await setSession(session, { userId: getUser.user.id });
           }
+          await createUserActionLog({
+            sessionId: session.id,
+            userId: session.userId,
+            actionType: UserActionLogActionType.LOGIN,
+            actionDescription: UserActionLogActionType.LOGIN,
+            ipAddress: req.headers['x-forwarded-for'] as string,
+            userAgent: req.headers['user-agent'] as string,
+            apiEndpoint: req.url || APIPath.SIGN_IN,
+            httpMethod: req.method || '',
+            requestPayload: req.body,
+            statusMessage: STATUS_MESSAGE.SUCCESS,
+          });
           /* Info: (20240829 - Anna) 邀請碼後續會使用，目前先註解
           if (invitationCode) {
             const getInvitation = await getInvitationByCode(invitationCode);

@@ -29,6 +29,7 @@ interface CertificateEditModalProps {
   toggleIsEditModalOpen: (open: boolean) => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   certificate?: ICertificateUI;
   onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
+  onDelete: (id: number) => void;
 }
 
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
@@ -37,6 +38,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   toggleIsEditModalOpen,
   certificate,
   onSave,
+  onDelete,
 }) => {
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
@@ -84,8 +86,17 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   const selectTaxHandler = (value: number) => {
     setTaxRatio(value);
-    setTaxPrice(Math.round((priceBeforeTax * value) / 100));
+    const updateTaxPrice = Math.round((priceBeforeTax * value) / 100);
+    setTaxPrice(updateTaxPrice);
+    setTotalPrice(priceBeforeTax + updateTaxPrice);
     setIsTaxRatioMenuOpen(false);
+  };
+
+  const priceBeforeTaxChangeHandler = (value: number) => {
+    setPriceBeforeTax(value);
+    const updateTaxPrice = Math.round((value * taxRatio) / 100);
+    setTaxPrice(updateTaxPrice);
+    setTotalPrice(value + updateTaxPrice);
   };
 
   // Info: (20241017 - tzuhan) 參考 AddAssetModal
@@ -259,12 +270,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       },
     };
     onSave(updatedData);
-    toastHandler({
-      id: ToastId.SAVE_CERTIFICATE_SUCCESS,
-      type: ToastType.SUCCESS,
-      content: t('certificate:EDIT.SUCCESS'),
-      closeable: true,
-    });
     toggleIsEditModalOpen(false);
   };
 
@@ -279,8 +284,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       ...data,
       id: filteredCounterPartyList.length + 1,
       companyId,
-      createdAt: new Date().getTime() / 1000,
-      updatedAt: new Date().getTime() / 1000,
+      createdAt: Math.floor(new Date().getTime() / 1000),
+      updatedAt: Math.floor(new Date().getTime() / 1000),
     });
     toastHandler({
       id: ToastId.ADD_COUNTERPARTY_SUCCESS,
@@ -421,6 +426,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                   required
                   hasComma
                   className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                  triggerWhenChanged={priceBeforeTaxChangeHandler}
                 />
                 <div className="flex items-center rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-12px text-sm text-input-text-input-placeholder">
                   <Image
@@ -430,7 +436,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('common:COMMON.TWD')}</p>
+                  <p>{t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)}</p>
                 </div>
               </div>
             </div>
@@ -490,7 +496,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                       alt="twd_icon"
                       className="rounded-full"
                     />
-                    <p>{t('common:COMMON.TWD')}</p>
+                    <p>{t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)}</p>
                   </div>
                 </div>
               </div>
@@ -522,7 +528,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t('common:COMMON.TWD')}</p>
+                  <p>{t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)}</p>
                 </div>
               </div>
             </div>
@@ -617,7 +623,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               id="certificate-delete-btn"
               type="button"
               className="px-16px py-8px"
-              onClick={() => toggleIsEditModalOpen(false)}
+              onClick={() => onDelete(certificate.id)}
               variant="errorOutline"
             >
               <LuTrash2 size={20} />

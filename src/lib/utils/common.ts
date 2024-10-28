@@ -213,7 +213,7 @@ export const cleanBoolean = (booleanStr: unknown): boolean => {
   return false;
 };
 
-const getCodeByMessage = (statusMessage: string) => {
+export const getCodeByMessage = (statusMessage: string) => {
   let code: string;
   let message: string;
   if (statusMessage in STATUS_CODE) {
@@ -229,14 +229,19 @@ const getCodeByMessage = (statusMessage: string) => {
   return { code, message };
 };
 
+export function statusCodeToHttpCode(statusCode: string): number {
+  const httpCodeStr = statusCode.slice(0, 3);
+  const httpCode = parseInt(httpCodeStr, 10);
+  return httpCode;
+}
+
 export const formatApiResponse = <T>(
   statusMessage: string,
   payload: T
 ): { httpCode: number; result: IResponseData<T> } => {
   const { code, message } = getCodeByMessage(statusMessage);
   const success = !!code.startsWith('2');
-  const httpCodeStr = code.slice(0, 3);
-  const httpCode = Number(httpCodeStr);
+  const httpCode = statusCodeToHttpCode(code);
   const result: IResponseData<T> = {
     powerby: 'iSunFA v' + version,
     success,

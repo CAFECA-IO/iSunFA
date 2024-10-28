@@ -15,7 +15,6 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
-import { IAssetItem } from '@/interfaces/asset';
 import { IReverse, defaultReverse } from '@/interfaces/reverse';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
@@ -70,7 +69,8 @@ const NewVoucherForm: React.FC = () => {
   const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
-  const { getAccountListHandler } = useAccountingCtx();
+  const { getAccountListHandler, temporaryAssetList, clearTemporaryAssetHandler } =
+    useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const {
@@ -146,9 +146,6 @@ const NewVoucherForm: React.FC = () => {
   );
   const [filteredCounterparty, setFilteredCounterparty] =
     useState<ICounterparty[]>(dummyCounterparty);
-
-  // Info: (20241011 - Julian) 資產相關 state
-  const [assets, setAssets] = useState<IAssetItem[]>([]);
 
   // Info: (20241011 - Julian) 沖銷傳票相關 state
   const [reverses, setReverses] = useState<IReverse[]>([defaultReverse]);
@@ -433,10 +430,10 @@ const NewVoucherForm: React.FC = () => {
   }, [recurringArray]);
 
   useEffect(() => {
-    if (isAssetRequired && assets.length > 0) {
+    if (isAssetRequired && temporaryAssetList.length > 0) {
       setIsShowAssetHint(false);
     }
-  }, [assets]);
+  }, [temporaryAssetList]);
 
   const typeToggleHandler = () => {
     setTypeVisible(!typeVisible);
@@ -495,7 +492,7 @@ const NewVoucherForm: React.FC = () => {
     setRecurringPeriod(default30DayPeriodInSec);
     setRecurringUnit(RecurringUnit.MONTH);
     setRecurringArray([]);
-    setAssets([]);
+    clearTemporaryAssetHandler();
     setReverses([defaultReverse]);
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
@@ -546,8 +543,8 @@ const NewVoucherForm: React.FC = () => {
       isRecurring
         ? `Every ${recurringUnit === RecurringUnit.WEEK ? 'week' : 'year'}: ${recurringArray.map((item) => item)}`
         : '',
-      assets.length > 0 ? '\nAssets:' : '',
-      `${assets.map((asset) => `${asset.assetNumber} ${asset.assetName}`)}`,
+      temporaryAssetList.length > 0 ? '\nAssets:' : '',
+      `${temporaryAssetList.map((asset) => `${asset.assetNumber} ${asset.assetName}`)}`,
       reverses.length > 0 ? '\nReverses:' : '',
       `${reverses.map((reverse) => `${reverse.voucher?.voucherNo} ${reverse.amount}`)}`,
       '\nVoucherLineItems:',
@@ -590,7 +587,7 @@ const NewVoucherForm: React.FC = () => {
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       router.push('#voucher-line-block');
-    } else if (isAssetRequired && assets.length === 0) {
+    } else if (isAssetRequired && temporaryAssetList.length === 0) {
       // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
       setIsShowAssetHint(true);
       router.push('#asset-section');
@@ -955,7 +952,11 @@ const NewVoucherForm: React.FC = () => {
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
           <div className="col-span-2 flex flex-col">
-            <AssetSection isShowAssetHint={isShowAssetHint} assets={assets} setAssets={setAssets} />
+            <AssetSection
+              isShowAssetHint={isShowAssetHint}
+              assets={temporaryAssetList}
+              lineItems={voucherLineItems}
+            />
           </div>
         )}
         {/* Info: (20240926 - Julian) Reverse */}
