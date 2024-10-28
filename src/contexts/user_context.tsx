@@ -27,8 +27,8 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
-  role: string | null;
-  selectRole: (roleId: string) => void;
+  selectRole: (roleName: string) => void;
+  selectedRole: string | null; // ToDo: (20241028 - Liz) 確認要存 IRole 還是存 role.name 就好
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -60,8 +60,8 @@ export const UserContext = createContext<UserContextType>({
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
-  role: null,
   selectRole: () => {},
+  selectedRole: null,
   selectedCompany: null,
   selectCompany: async () => {},
   successSelectCompany: undefined,
@@ -89,7 +89,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ToDo: (20241025 - Liz) 新增函數處理使用者擁有的角色
   // const [, setUserRoleList, userRoleListRef] = useStateRef<IRole[] | null>(null);
-  const [, setRole, roleRef] = useStateRef<string | null>(null);
+  // Info: (20241028 - Liz) 使用者目前選擇的角色
+  const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
+
+  // const [, setRole, roleRef] = useStateRef<string | null>(null);
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
   const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
     undefined
@@ -143,7 +146,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setCredential(null);
     setIsSignIn(false);
     setIsSignInError(false);
-    setRole(null);
+    setSelectedRole(null);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
@@ -172,19 +175,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   //   }
   // };
 
-  // ToDo: (20241008 - Liz) Beta 要重新導向到選擇角色的頁面。但目前先導向到選擇公司的頁面。
   const goToSelectRolePage = () => {
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
     console.log('呼叫 goToSelectRolePage');
 
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
 
   // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
-  // const goToDashboard = () => {
-  //   router.push(ISUNFA_ROUTE.DASHBOARD);
-  // };
+  const goToDashboard = () => {
+    router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+  };
 
   const goBackToOriginalPath = () => {
     const redirectPath = localStorage.getItem('redirectPath');
@@ -195,7 +197,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
 
     if (redirectPath) {
-      router.push(redirectPath || '/');
+      router.push(redirectPath);
+    } else {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
     }
   };
 
@@ -322,7 +326,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
+  // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」(processRoleInfo)
 
   // Info: (20241001 - Liz) 此函數處理使用者資訊:
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
@@ -357,32 +361,42 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241009 - Liz) 此函數是在處理使用者和公司資訊，並根據處理結果來決定下一步的操作:
   // 它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleUserAndCompanyProcessing = (user: IUser, company: ICompany) => {
-    const isProcessedInfo = processUserInfo(user);
+  const handleProcessData = (user: IUser, company: ICompany) => {
+    const isProcessedUser = processUserInfo(user);
     const isProcessedCompany = processCompanyInfo(company);
+
     // ToDo: (20241008 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
     // const isProcessedRole = processRoleInfo(role);
+    const isProcessedRole = 'Bookkeeper'; // fake data
 
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
-    console.log('isProcessedInfo: ', isProcessedInfo, 'isProcessedCompany: ', isProcessedCompany);
+    console.log(
+      'isProcessedUser: ',
+      isProcessedUser,
+      'isProcessedCompany: ',
+      isProcessedCompany,
+      'isProcessedRole',
+      isProcessedRole
+    );
 
-    // ToDo: (20241008 - Liz) 之後會增加一個判斷是否有選擇角色的邏輯
-    if (isProcessedInfo && isProcessedCompany) {
-      goBackToOriginalPath();
-    } else if (isProcessedInfo && !isProcessedCompany) {
-      // goToDashboard(); // ToDo: (20241008 - Liz) 之後沒有選擇公司會導向到可以選擇公司的儀表板
-      goToSelectRolePage(); // Info: (20241008 - Liz) 暫時用 Alpha 版的選擇公司頁面
-    } else {
+    if (!isProcessedUser) {
       clearStates();
       redirectToLoginPage();
+    } else if (!isProcessedRole) {
+      goToSelectRolePage();
+    } else if (!isProcessedCompany) {
+      goToDashboard();
+      // goToSelectRolePage();
+    } else {
+      goBackToOriginalPath();
     }
   };
 
   // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
-  // 當 API 回傳成功且有資料時，它會呼叫 handleUserAndCompanyProcessing 分別處理使用者和公司資訊。
+  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者和公司資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
@@ -409,7 +423,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('getStatusInfo:', StatusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
     if (getStatusInfoSuccess && StatusInfo) {
-      handleUserAndCompanyProcessing(StatusInfo.user, StatusInfo.company);
+      // ToDo: (20241028 - Liz) 之後打 v2 的 getStatusInfoAPI 還可以多取得使用者的角色資訊
+      handleProcessData(StatusInfo.user, StatusInfo.company);
     } else {
       clearStates();
       redirectToLoginPage();
@@ -483,10 +498,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20241028 - Liz) 建立角色的功能 API: createRole
+
   // ToDo: (20241009 - Liz) 選擇角色的功能
-  const selectRole = (roleId: string) => {
-    setRole(roleId);
+  const selectRole = (roleName: IRole['name']) => {
+    setSelectedRole(roleName);
   };
+
+  // Deprecated: (20241028 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('selectedRole:', selectedRoleRef.current);
 
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
@@ -582,8 +603,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
       isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
-      role: roleRef.current,
       selectRole,
+      selectedRole: selectedRoleRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       successSelectCompany: successSelectCompanyRef.current,
@@ -598,7 +619,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }),
     [
       credentialRef.current,
-      roleRef.current,
+      selectedRoleRef.current,
       selectedCompanyRef.current,
       successSelectCompanyRef.current,
       errorCodeRef.current,

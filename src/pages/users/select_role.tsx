@@ -6,11 +6,11 @@ import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/select_role/introduction';
 import RoleCard from '@/components/beta/select_role/role_card';
 import PreviewModal from '@/components/beta/select_role/preview_modal';
-import { RoleId } from '@/constants/role';
+import { RoleName } from '@/constants/role';
 
 const SelectRolePage = () => {
   const { t } = useTranslation(['common']);
-  const [showingRole, setShowingRole] = useState<RoleId | null>(null);
+  const [showingRole, setShowingRole] = useState<RoleName | null>(null);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
 
   const togglePreviewModal = () => {

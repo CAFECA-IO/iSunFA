@@ -7,7 +7,7 @@ import I18n from '@/components/i18n/i18n';
 import { FiHome, FiArrowRight } from 'react-icons/fi';
 import { TbLogout } from 'react-icons/tb';
 import { HiPlus } from 'react-icons/hi2';
-import { RoleId } from '@/constants/role';
+import { RoleName } from '@/constants/role';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useUserCtx } from '@/contexts/user_context';
@@ -24,7 +24,7 @@ interface JobRecordCardProps {
 const jobsRecords = [
   {
     jobId: 1,
-    roleId: RoleId.BOOKKEEPER,
+    roleId: RoleName.BOOKKEEPER,
     roleName: 'Bookkeeper',
     roleIconSrc: '/icons/information_desk.svg',
     roleAltText: 'information_desk',
@@ -34,7 +34,7 @@ const jobsRecords = [
   },
   {
     jobId: 2,
-    roleId: RoleId.EDUCATIONAL_TRIAL_VERSION,
+    roleId: RoleName.EDUCATIONAL_TRIAL_VERSION,
     roleName: 'Educational',
     roleIconSrc: '/icons/graduation_cap.svg',
     roleAltText: 'graduation_cap',

@@ -1,25 +1,25 @@
 import React from 'react';
 import Image from 'next/image';
 import { FiEye, FiArrowRight } from 'react-icons/fi';
-import { RoleId } from '@/constants/role';
+import { RoleName } from '@/constants/role';
 import { useUserCtx } from '@/contexts/user_context';
-import Link from 'next/link';
-import { ISUNFA_ROUTE } from '@/constants/url';
+// import Link from 'next/link';
+// import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IntroductionProps {
-  showingRole: React.SetStateAction<RoleId | null>;
+  showingRole: React.SetStateAction<RoleName | null>;
   togglePreviewModal: () => void;
 }
 interface ButtonsProps {
-  showingRole: RoleId;
+  showingRole: RoleName;
   togglePreviewModal: () => void;
 }
 interface BookkeeperIntroductionProps {
-  showingRole: RoleId;
+  showingRole: RoleName;
   togglePreviewModal: () => void;
 }
 interface EducationalTrialVersionIntroductionProps {
-  showingRole: RoleId;
+  showingRole: RoleName;
   togglePreviewModal: () => void;
 }
 
@@ -53,12 +53,18 @@ const DefaultIntroduction: React.FC = () => {
 };
 
 const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) => {
-  const { selectRole } = useUserCtx();
+  const { selectRole, selectedRole } = useUserCtx();
 
   const handleStart = () => {
     // Deprecated: (20241007 - Liz)
     // eslint-disable-next-line no-console
-    console.log('showingRole:', showingRole, '儲存 showingRole 到 userCtx');
+    console.log(
+      'showingRole',
+      showingRole,
+      'selectedRole:',
+      selectedRole,
+      '儲存 showingRole 到 userCtx'
+    );
 
     selectRole(showingRole);
   };
@@ -74,16 +80,14 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
         <FiEye size={24} />
       </button>
 
-      <Link href={ISUNFA_ROUTE.JOB_RECORD}>
-        <button
-          type="button"
-          className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          onClick={handleStart}
-        >
-          <p>Start</p>
-          <FiArrowRight size={24} />
-        </button>
-      </Link>
+      <button
+        type="button"
+        className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+        onClick={handleStart}
+      >
+        <p>Start</p>
+        <FiArrowRight size={24} />
+      </button>
     </div>
   );
 };
@@ -175,10 +179,10 @@ const Introduction: React.FC<IntroductionProps> = ({ showingRole, togglePreviewM
   return (
     <>
       {!showingRole && <DefaultIntroduction />}
-      {showingRole === RoleId.BOOKKEEPER && (
+      {showingRole === RoleName.BOOKKEEPER && (
         <BookkeeperIntroduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
       )}
-      {showingRole === RoleId.EDUCATIONAL_TRIAL_VERSION && (
+      {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
         <EducationalTrialVersionIntroduction
           showingRole={showingRole}
           togglePreviewModal={togglePreviewModal}
