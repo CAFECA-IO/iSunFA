@@ -9,10 +9,17 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { MOCK_RESPONSE as TrialBalanceData, TrialBalanceItem } from '@/interfaces/trial_balance';
+import Toggle from '@/components/toggle/toggle';
 
 const TrialBalanceList = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+
+  const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
+  // Info: (20241028 - Anna) 處理 toggle 開關
+  const subAccountsToggleHandler: () => void = () => {
+    setSubAccountsToggle((prevState) => !prevState);
+  };
 
   const [voucherList] = useState<TrialBalanceItem[]>(TrialBalanceData.items.data);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,9 +41,22 @@ const TrialBalanceList = () => {
   });
 
   const displayedSelectArea = (
-    <div className="ml-auto flex items-center gap-24px">
-      <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-      <PrintButton onClick={() => {}} disabled={false} />
+    <div className="flex items-center justify-between px-px max-md:flex-wrap">
+      {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
+      <div className="flex items-center gap-4">
+        <Toggle
+          id="subAccounts-toggle"
+          initialToggleState={subAccountsToggle}
+          getToggledState={subAccountsToggleHandler}
+          toggleStateFromParent={subAccountsToggle}
+        />
+        <span className="text-neutral-600">Display Sub-Accounts</span>
+      </div>
+      {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
+      <div className="ml-auto flex items-center gap-24px">
+        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+        <PrintButton onClick={() => {}} disabled={false} />
+      </div>
     </div>
   );
 
