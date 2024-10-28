@@ -39,7 +39,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機日期
   function randomDate(start: Date, end: Date): number {
     const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-    return date.getTime() / 1000;
+    return Math.floor(date.getTime() / 1000);
   }
 
   // Info: (20240920 - tzuhan) 幫助函數: 生成隨機的 Number
@@ -99,13 +99,13 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
 
         currencyAlias: 'TWD',
         taxType: InvoiceTaxType.TAXABLE,
-        createdAt: new Date().getTime() / 1000,
-        updatedAt: new Date().getTime() / 1000,
+        createdAt: Math.floor(new Date().getTime() / 1000),
+        updatedAt: Math.floor(new Date().getTime() / 1000),
       },
       voucherNo: randomVoucherNo(i),
 
-      createdAt: new Date().getTime() / 1000,
-      updatedAt: new Date().getTime() / 1000,
+      createdAt: Math.floor(new Date().getTime() / 1000),
+      updatedAt: Math.floor(new Date().getTime() / 1000),
     };
     certificates.push(certificate);
     i += 1;

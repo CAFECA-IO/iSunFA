@@ -232,7 +232,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     return (
       // Info: (20241004 - Julian) 顯示有子項目的 AccountType
       childAccountList.length > 0 ? (
-        <div className="flex flex-col">
+        <div key={value} className="flex flex-col">
           <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
             {t(`journal:ACCOUNT_TYPE.${value.toUpperCase()}`)}
           </p>

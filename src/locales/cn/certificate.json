@@ -40,7 +40,8 @@
     "TOKEN_NOT_PROVIDED": "未提供令牌",
     "NOTIFY_WEB": "通知网页失败",
     "WENT_WRONG": "出错了，请再试一次。",
-    "UPLOAD_AND_NOTIFY": "上传并通知网页失败"
+    "UPLOAD_AND_NOTIFY": "上传并通知网页失败",
+    "UPDATE_CERTIFICATE": "更新发票失败，{{reason}}"
   },
   "WARNING": {
     "UPLOAD_FAILED": "上传失败",

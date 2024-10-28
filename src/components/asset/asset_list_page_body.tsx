@@ -10,7 +10,7 @@ import { AssetStatus, AccountCodesOfAsset } from '@/constants/asset';
 import { useTranslation } from 'next-i18next';
 import { IAssetItem } from '@/interfaces/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { SortOrder } from '@/constants/sort';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('common');
@@ -19,21 +19,35 @@ const AssetListPageBody: React.FC = () => {
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
   const params = { companyId };
-  // ToDo: (20241024 - Julian) add filter query
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [assetList, setAssetList] = useState<IAssetItem[]>([]);
   // Info: (20241024 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const [priceSort, setPriceSort] = useState<null | SortOrder>(null);
-  const [depreciationSort, setDepreciationSort] = useState<null | SortOrder>(null);
-  const [residualSort, setResidualSort] = useState<null | SortOrder>(null);
+  const [purchasePriceSort, setPurchasePriceSort] = useState<null | SortOrder>(null);
+  const [accumulatedDepreciationSort, setAccumulatedDepreciationSort] = useState<null | SortOrder>(
+    null
+  );
+  const [residualValueSort, setResidualValueSort] = useState<null | SortOrder>(null);
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
+
+  const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
 
   useEffect(() => {
     getAccountListHandler(companyId);
   }, [companyId]);
+
+  useEffect(() => {
+    setOtherSorts([
+      ...(purchasePriceSort ? [{ sort: SortBy.PURCHASE_PRICE, sortOrder: purchasePriceSort }] : []),
+      ...(accumulatedDepreciationSort
+        ? [{ sort: SortBy.ACCUMULATED_DEPRECIATION, sortOrder: accumulatedDepreciationSort }]
+        : []),
+      ...(residualValueSort ? [{ sort: SortBy.RESIDUAL_VALUE, sortOrder: residualValueSort }] : []),
+      ...(remainingLifeSort ? [{ sort: SortBy.REMAINING_LIFE, sortOrder: remainingLifeSort }] : []),
+    ]);
+  }, [purchasePriceSort, accumulatedDepreciationSort, residualValueSort, remainingLifeSort]);
 
   // Info: (20241024 - Julian) 資產類別列表
   const assetTypeList = accountList
@@ -54,7 +68,7 @@ const AssetListPageBody: React.FC = () => {
       {/* Info: (20240925 - Julian) Asset List */}
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241024 - Julian) Filter Section */}
-        <FilterSection
+        <FilterSection<IAssetItem[]>
           params={params}
           apiName={APIName.ASSET_LIST_V2}
           onApiResponse={handleApiResponse}
@@ -62,6 +76,8 @@ const AssetListPageBody: React.FC = () => {
           statuses={['All', ...assetStatusList]}
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
+          dateSort={dateSort}
+          otherSorts={otherSorts}
         />
         {/* Info: (20240925 - Julian) Asset List */}
         {assetList && assetList.length > 0 ? (
@@ -69,12 +85,12 @@ const AssetListPageBody: React.FC = () => {
             assetList={assetList}
             dateSort={dateSort}
             setDateSort={setDateSort}
-            priceSort={priceSort}
-            setPriceSort={setPriceSort}
-            depreciationSort={depreciationSort}
-            setDepreciationSort={setDepreciationSort}
-            residualSort={residualSort}
-            setResidualSort={setResidualSort}
+            priceSort={purchasePriceSort}
+            setPriceSort={setPurchasePriceSort}
+            depreciationSort={accumulatedDepreciationSort}
+            setDepreciationSort={setAccumulatedDepreciationSort}
+            residualSort={residualValueSort}
+            setResidualSort={setResidualValueSort}
             remainingLifeSort={remainingLifeSort}
             setRemainingLifeSort={setRemainingLifeSort}
           />

@@ -37,6 +37,7 @@ import voucherCertificates from '@/seed_json/voucher_certificate.json';
 import accountingSettings from '@/seed_json/accounting_setting.json';
 import userSettings from '@/seed_json/user_setting.json';
 import companySettings from '@/seed_json/company_setting.json';
+import userActionLogs from '@/seed_json/user_action_log.json';
 
 const prisma = new PrismaClient();
 
@@ -300,6 +301,12 @@ async function createCompanySetting() {
   });
 }
 
+async function createUserActionLog() {
+  await prisma.userActionLog.createMany({
+    data: userActionLogs,
+  });
+}
+
 async function main() {
   await createFile();
   await createCompany();
@@ -311,6 +318,7 @@ async function main() {
   });
   await createUser();
   await createCounterparty();
+  await createUserActionLog();
   await createAccountingSetting();
   await createCompanySetting();
   await createUserSetting();

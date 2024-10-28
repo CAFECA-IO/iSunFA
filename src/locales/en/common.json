@@ -512,6 +512,9 @@
   },
 
   "LATEST_NEWS_PAGE": {
-    "LATEST_NEWS": "Latest News"
+    "LATEST_NEWS": "Latest News",
+    "FINANCIAL_NEWS": "Financial News",
+    "SYSTEM_NEWS": "System News",
+    "MATCH_NEWS": "Match News"
   }
 }

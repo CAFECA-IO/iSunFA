@@ -13,6 +13,9 @@ export enum CertificateSortBy {
 export enum CERTIFICATE_USER_INTERACT_OPERATION {
   DOWNLOAD = 'Download',
   REMOVE = 'Remove',
+  ADD_VOUCHER = 'Add Voucher',
+  ADD_ASSET = 'Add Asset',
+  DELETE = 'Delete',
 }
 
 export enum InvoiceTabs {

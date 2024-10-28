@@ -77,6 +77,7 @@ import {
   companySettingGetValidator,
   companySettingPutValidator,
 } from '@/lib/utils/zod_schema/company_setting';
+import { userActionLogListValidator } from '@/lib/utils/zod_schema/user_action_log';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -147,4 +148,5 @@ export const API_ZOD_SCHEMA = {
   [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutValidator,
   [APIName.USER_SETTING_GET]: userSettingGetValidator,
   [APIName.USER_SETTING_UPDATE]: userSettingPutValidator,
+  [APIName.USER_ACTION_LOG_LIST]: userActionLogListValidator,
 };

@@ -56,7 +56,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         </BorderCell>
       )}
       <BorderCell isSelected={certificate.isSelected}>
-        <CalendarIcon timestamp={new Date(certificate.invoice.inputOrOutput).getTime()} />
+        <CalendarIcon timestamp={certificate.invoice.date} />
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
