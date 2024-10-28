@@ -7,6 +7,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
+import { NO_COMPANY_ID } from '@/constants/company';
 
 const handleGetRequest: IHandleRequest<APIName.TODO_LIST, ITodo[]> = async () => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -15,6 +16,8 @@ const handleGetRequest: IHandleRequest<APIName.TODO_LIST, ITodo[]> = async () =>
   const todoList: ITodo[] = [
     {
       id: 1,
+      userId: 1,
+      companyId: 1,
       title: 'Test',
       content: 'Test',
       type: 'Test',
@@ -31,13 +34,16 @@ const handleGetRequest: IHandleRequest<APIName.TODO_LIST, ITodo[]> = async () =>
   return { statusMessage, payload };
 };
 
-const handlePostRequest: IHandleRequest<APIName.CREATE_TODO, ITodo> = async ({ body }) => {
+const handlePostRequest: IHandleRequest<APIName.CREATE_TODO, ITodo> = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ITodo | null = null;
 
-  const { title, content, type, time, status } = body;
+  const { userId } = query;
+  const { companyId, title, content, type, time, status } = body;
   const createdTodo = {
     id: 1,
+    userId,
+    companyId: companyId || NO_COMPANY_ID,
     title,
     content,
     type,

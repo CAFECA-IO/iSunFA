@@ -20,6 +20,7 @@ const todoPostQueryValidator = z.object({
   userId: z.number().int(),
 });
 const todoPostBodyValidator = z.object({
+  companyId: z.number().int().optional(),
   title: z.string(),
   content: z.string(),
   type: z.string(),
