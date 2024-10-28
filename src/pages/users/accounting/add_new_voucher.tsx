@@ -1,4 +1,5 @@
-import React from 'react';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -9,6 +10,17 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 
 const AddNewVoucherPage: React.FC = () => {
   const { t } = useTranslation('common');
+  const router = useRouter();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (router.isReady) {
+      const ids = router.query.ids as string;
+      if (ids) {
+        setSelectedIds(ids.split(',').map((id) => parseInt(id, 10)));
+      }
+    }
+  }, [router.isReady, router.query.ids]);
 
   return (
     <>
@@ -24,7 +36,7 @@ const AddNewVoucherPage: React.FC = () => {
         pageTitle={t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')}
         goBackUrl={ISUNFA_ROUTE.BETA_VOUCHER_LIST}
       >
-        <NewVoucherForm />
+        <NewVoucherForm selectedCertificateIds={selectedIds} />
       </Layout>
     </>
   );

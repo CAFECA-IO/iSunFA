@@ -64,7 +64,11 @@ const dummyAIResult: IAIResultVoucher = {
   lineItemsInfo: { lineItems: [] },
 };
 
-const NewVoucherForm: React.FC = () => {
+interface NewVoucherFormProps {
+  selectedCertificateIds: number[];
+}
+
+const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedCertificateIds }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -167,7 +171,7 @@ const NewVoucherForm: React.FC = () => {
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>(selectedCertificateIds);
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
@@ -191,6 +195,12 @@ const NewVoucherForm: React.FC = () => {
     },
     [certificates]
   );
+
+  useEffect(() => {
+    if (selectedIds.length > 0) {
+      setOpenSelectorModal(true);
+    }
+  }, [selectedIds]);
 
   useEffect(() => {
     if (selectedCertificates.length > 0 && selectedIds.length > 0) {

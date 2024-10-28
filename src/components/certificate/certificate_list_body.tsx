@@ -1,4 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
@@ -30,6 +31,7 @@ import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upl
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 import { InvoiceType } from '@/constants/invoice';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface CertificateListBodyProps {}
 
@@ -47,6 +49,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
   const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_PUT_V2);
   const { trigger: deleteCertificateAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
+  const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
   const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
@@ -181,10 +184,13 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, [data, activeTab]);
 
   const handleAddVoucher = useCallback(() => {
-    // Todo: (20240920 - tzuhan) Add voucher
-    // Deprecated: (20240920 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Add voucher on selected ids:', filterSelectedIds());
+    const router = useRouter();
+    const selectedIds = filterSelectedIds();
+
+    router.push({
+      pathname: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
+      query: { ids: selectedIds.join(',') },
+    });
   }, [filterSelectedIds]);
 
   const handleDeleteItem = useCallback((id: number) => {
@@ -240,22 +246,21 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             // eslint-disable-next-line no-console
             console.log('Remove multiple ids:', selectedIds);
 
-            const args = (id: string) => ({
-              params: { companyId, certificateId: id },
-              query: { certificateId: id },
+            const { success: deleteMultipleSuccess, code } = await deleteCertificatesAPI({
+              params: { companyId },
+              query: { certificateIds: selectedIds },
             });
-            const promises = selectedIds.map((id) => deleteCertificateAPI(args(id)));
-
-            // Info: (20241025 - tzuhan) 這裡應執行實際的刪除邏輯
-            await Promise.all(promises);
-
-            // Info: (20241025 - tzuhan) 顯示刪除成功的提示
-            toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-              type: ToastType.SUCCESS,
-              content: t('certificate:DELETE.SUCCESS'),
-              closeable: true,
-            });
+            if (deleteMultipleSuccess) {
+              // Info: (20241025 - tzuhan) 顯示刪除成功的提示
+              toastHandler({
+                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+                type: ToastType.SUCCESS,
+                content: t('certificate:DELETE.SUCCESS'),
+                closeable: true,
+              });
+            } else {
+              throw new Error(code);
+            }
           } catch (error) {
             // Info: (20241025 - tzuhan) 顯示錯誤提示
             toastHandler({
@@ -274,28 +279,26 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     }
   }, [data, activeTab, t, messageModalDataHandler, messageModalVisibilityHandler, toastHandler]);
 
-  const handleDownloadItem = useCallback((id: number) => {
-    const { file } = data[id];
-    // Deprecated: (20241025 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('id', id, 'data', data, 'Download file:', file);
-    const link = document.createElement('a');
-    link.href = file.url;
-    link.download = file.name || `image_${file.id}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, []);
+  const handleDownloadItem = useCallback(
+    (id: number) => {
+      const { file } = data[id];
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.name || `image_${file.id}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    [data]
+  );
 
-  // Info: (20240923 - tzuhan) 下載選中項目
   const handleDownloadSelectedItems = useCallback(() => {
-    // TODO: (20240923 - tzuhan) 下載選中的項目
-    Object.keys(data).forEach((id) => {
-      if (data[parseInt(id, 10)].isSelected) {
+    Object.entries(data).forEach(([id, item]) => {
+      if (item.isSelected) {
         handleDownloadItem(parseInt(id, 10));
       }
     });
-  }, [data, activeTab]);
+  }, [data, activeTab, handleDownloadItem]);
 
   const onTabClick = useCallback((tab: string) => {
     setActiveTab(tab as InvoiceTabs);
