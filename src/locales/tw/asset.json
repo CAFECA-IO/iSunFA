@@ -19,7 +19,8 @@
     "TITLE": "狀態設定",
     "SUBTITLE": "請輸入資產資訊",
     "UPDATE_DATE": "更新日期",
-    "STATUS": "狀態"
+    "STATUS": "狀態",
+    "UPDATE_STATUS_SUCCESS_TOAST": "資產狀態已變更"
   },
   "ADD_ASSET_MODAL": {
     "TITLE": "新增資產",

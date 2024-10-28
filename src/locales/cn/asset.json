@@ -19,7 +19,8 @@
     "TITLE": "状态设定",
     "SUBTITLE": "请输入资产信息",
     "UPDATE_DATE": "更新日期",
-    "STATUS": "状态"
+    "STATUS": "状态",
+    "UPDATE_STATUS_SUCCESS_TOAST": "资产状态已变更"
   },
   "ADD_ASSET_MODAL": {
     "TITLE": "新增资产",

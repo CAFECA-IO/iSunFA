@@ -19,7 +19,8 @@
     "TITLE": "Status Setting",
     "SUBTITLE": "Please enter the information of asset",
     "UPDATE_DATE": "Update Date",
-    "STATUS": "Status"
+    "STATUS": "Status",
+    "UPDATE_STATUS_SUCCESS_TOAST": "Asset status has been changed."
   },
   "ADD_ASSET_MODAL": {
     "TITLE": "Add New Asset",

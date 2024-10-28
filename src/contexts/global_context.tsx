@@ -119,7 +119,7 @@ interface IGlobalContext {
 
   isAssetStatusSettingModalVisible: boolean;
   assetStatusSettingModalVisibilityHandler: () => void;
-  assetStatusSettingModalDataHandler: (status: string) => void;
+  assetStatusSettingModalDataHandler: (assetId: string, status: string) => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -217,6 +217,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
+  const [updateAssetId, setUpdateAssetId] = useState('');
   const [defaultStatus, setDefaultStatus] = useState('');
 
   const { width, height } = windowSize;
@@ -361,7 +362,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAssetStatusSettingModalVisible(!isAssetStatusSettingModalVisible);
   };
 
-  const assetStatusSettingModalDataHandler = (status: string) => {
+  const assetStatusSettingModalDataHandler = (assetId: string, status: string) => {
+    setUpdateAssetId(assetId);
     setDefaultStatus(status);
   };
 
@@ -763,6 +765,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AssetStatusSettingModal
         isModalVisible={isAssetStatusSettingModalVisible}
         modalVisibilityHandler={assetStatusSettingModalVisibilityHandler}
+        updateAssetId={updateAssetId}
         defaultStatus={defaultStatus}
       />
 
