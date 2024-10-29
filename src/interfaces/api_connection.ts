@@ -109,7 +109,8 @@ export type IAPIName =
   | 'ACCOUNTING_SETTING_GET'
   | 'ACCOUNTING_SETTING_UPDATE'
   | 'CREATE_ASSET_V2'
-  | 'DELETE_ASSET_V2';
+  | 'DELETE_ASSET_V2'
+  | 'UPDATE_ASSET_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

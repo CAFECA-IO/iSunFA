@@ -21,23 +21,24 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { IAssetDetails } from '@/interfaces/asset';
+import { AssetModalType, IAssetModal } from '@/interfaces/asset_modal';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  assetAccountList: IAccount[];
+  defaultData: IAssetModal;
 }
 
 enum DepreciationMethod {
-  STRAIGHT_LINE = 'Straight line method',
-  DOUBLE_DECLINING = 'Double declining balance method',
-  SUM_OF_YEAR_DIGIT = 'Sum of the year digit method',
+  STRAIGHT_LINE = 'Straight line',
+  DOUBLE_DECLINING = 'Double declining',
+  SUM_OF_YEAR_DIGIT = 'Sum of year digit',
 }
 
 const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   isModalVisible,
   modalVisibilityHandler,
-  assetAccountList,
+  defaultData,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
@@ -45,9 +46,29 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { selectedCompany } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
-  const { trigger, success, isLoading, error, data } = APIHandler<IAssetDetails>(
-    APIName.CREATE_ASSET_V2
-  );
+  const { assetAccountList, modalType, assetData } = defaultData;
+
+  const modalTitle =
+    modalType === AssetModalType.ADD
+      ? t('asset:ADD_ASSET_MODAL.TITLE')
+      : t('asset:EDIT_ASSET_MODAL.TITLE');
+
+  const modalSubtitle =
+    modalType === AssetModalType.ADD
+      ? t('asset:ADD_ASSET_MODAL.SUBTITLE')
+      : t('asset:EDIT_ASSET_MODAL.SUBTITLE');
+
+  const apiName =
+    modalType === AssetModalType.ADD ? APIName.CREATE_ASSET_V2 : APIName.UPDATE_ASSET_V2;
+
+  // Info: (20241028 - Julian) API calling
+  const {
+    trigger,
+    success,
+    isLoading,
+    error,
+    data: assetResult,
+  } = APIHandler<IAssetDetails>(apiName);
 
   const accountInputRef = useRef<HTMLInputElement>(null);
 
@@ -105,6 +126,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   // Info: (20241015 - Julian) 判斷是否為 1602 - 土地成本
   const [isLandCost, setIsLandCost] = useState<boolean>(false);
 
+  // Info: (20241028 - Julian) 重置 Modal
   useEffect(() => {
     if (!isModalVisible) {
       setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
@@ -129,6 +151,28 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setIsLandCost(false);
     }
   }, [isModalVisible]);
+
+  // Info: (20241028 - Julian) 編輯資產時，填入原本資料
+  useEffect(() => {
+    if (assetData) {
+      setAccountTitle(assetData.assetType);
+      setInputNo(assetData.assetNumber);
+      setInputName(assetData.assetName);
+      setInputResidualValue(assetData.residualValue);
+      setInputTotal(assetData.purchasePrice);
+      setAcquisitionDate({
+        startTimeStamp: assetData.acquisitionDate,
+        endTimeStamp: assetData.acquisitionDate,
+      });
+      setDepreciationStartDate({
+        startTimeStamp: assetData.depreciationStart,
+        endTimeStamp: assetData.depreciationStart,
+      });
+      setInputUsefulLife(assetData.usefulLife);
+      setSelectedDepreciationMethod(assetData.depreciationMethod as DepreciationMethod);
+      setInputNote(assetData.note ?? '');
+    }
+  }, [assetData]);
 
   useEffect(() => {
     if (accountTitle !== t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
@@ -233,7 +277,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     setMethodVisible(!isMethodVisible);
   };
 
-  const addNewAsset = async () => {
+  const submitHandler = async () => {
     const generalBody = {
       assetName: inputName,
       assetType: accountTitle,
@@ -260,27 +304,53 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       note: inputNote,
     };
 
+    // Info: (20241028 - Julian) 新增資產只需 companyId
+    const addParams = {
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+    };
+
+    // Info: (20241028 - Julian) 更新資產需 assetId
+    const updateParams = {
+      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+      assetId: assetData?.id,
+    };
+
     trigger({
-      params: {
-        companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      },
+      params: modalType === AssetModalType.ADD ? addParams : updateParams,
       body: isLandCost ? landBody : generalBody,
     });
   };
 
   useEffect(() => {
     if (!isLoading) {
-      if (success && data) {
-        // Info: (20241025 - Julian) 新增資產至暫存
-        addTemporaryAssetHandler(data);
+      if (success && assetResult) {
+        switch (modalType) {
+          // Info: (20241028 - Julian) 新增資產的處理
+          case AssetModalType.ADD:
+            // Info: (20241025 - Julian) 新增資產至暫存
+            addTemporaryAssetHandler(assetResult);
 
-        // Info: (20241025 - Julian) 顯示成功 toast 訊息
-        toastHandler({
-          id: ToastId.ADD_ASSET_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: t('asset:ADD_ASSET_MODAL.TOAST_SUCCESS'),
-          closeable: true,
-        });
+            // Info: (20241025 - Julian) 顯示成功 toast 訊息
+            toastHandler({
+              id: ToastId.ADD_ASSET_SUCCESS,
+              type: ToastType.SUCCESS,
+              content: t('asset:ADD_ASSET_MODAL.TOAST_SUCCESS'),
+              closeable: true,
+            });
+            break;
+          // Info: (20241028 - Julian) 編輯資產的處理
+          case AssetModalType.EDIT:
+            // Info: (20241028 - Julian) 顯示成功 toast 訊息
+            toastHandler({
+              id: ToastId.ADD_ASSET_SUCCESS,
+              type: ToastType.SUCCESS,
+              content: t('asset:EDIT_ASSET_MODAL.TOAST_SUCCESS'),
+              closeable: true,
+            });
+            break;
+          default:
+            break;
+        }
       } else if (error) {
         // Info: (20241025 - Julian) 顯示錯誤 toast 訊息
         toastHandler({
@@ -291,7 +361,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         });
       }
     }
-  }, [success, isLoading, error, data]);
+  }, [success, isLoading, error, assetResult]);
 
   const addAssetSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -315,12 +385,21 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     } else {
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_TITLE'),
-        content: t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_CONTENT'),
+        title:
+          modalType === AssetModalType.ADD
+            ? t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_TITLE')
+            : t('asset:EDIT_ASSET_MODAL.CONFIRM_MESSAGE_TITLE'),
+        content:
+          modalType === AssetModalType.ADD
+            ? t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_CONTENT')
+            : '',
         backBtnStr: t('common:COMMON.CANCEL'),
-        submitBtnStr: t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_BTN'),
+        submitBtnStr:
+          modalType === AssetModalType.ADD
+            ? t('asset:ADD_ASSET_MODAL.CONFIRM_MESSAGE_BTN')
+            : t('asset:EDIT_ASSET_MODAL.CONFIRM_MESSAGE_BTN'),
         submitBtnFunction: () => {
-          addNewAsset();
+          submitHandler();
           modalVisibilityHandler();
         },
       });
@@ -329,7 +408,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   };
 
   const translateMethod = (method: DepreciationMethod) => {
-    const key = method.toUpperCase().replace(/ /g, '_');
+    const key = method.toUpperCase().replace(/ /g, '_').replace(/-/g, '_');
     return t(`asset:ADD_ASSET_MODAL.${key}`);
   };
 
@@ -411,9 +490,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
         <div className="relative flex flex-col items-center px-20px py-16px">
           {/* Info: (20241015 - Julian) desktop title */}
           <h1 className="whitespace-nowrap text-xl font-bold text-card-text-primary">
-            {t('asset:ADD_ASSET_MODAL.TITLE')}
+            {modalTitle}
           </h1>
-          <p className="text-sm text-card-text-secondary">{t('asset:ADD_ASSET_MODAL.SUBTITLE')}</p>
+          <p className="text-sm text-card-text-secondary">{modalSubtitle}</p>
           {/* Info: (20241015 - Julian) close button */}
           <button
             type="button"
