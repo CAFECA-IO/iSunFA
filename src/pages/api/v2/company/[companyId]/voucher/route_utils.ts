@@ -7,8 +7,28 @@ import { initEventEntity } from '@/lib/utils/event';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { initLineItemEntity } from '@/lib/utils/line_item';
 import { Logger } from 'pino';
-import { Voucher as PrismaVoucher, LineItem as PrismaLineItem } from '@prisma/client';
+import {
+  Voucher as PrismaVoucher,
+  LineItem as PrismaLineItem,
+  Counterparty as PrismaCounterParty,
+  Asset as PrismaAsset,
+  Company as PrismaCompany,
+  User as PrismaUser,
+} from '@prisma/client';
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
+import { initVoucherEntity } from '@/lib/utils/voucher';
+import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
+import { timestampInSeconds } from '@/lib/utils/common';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { EventType } from '@/constants/account';
+import { JOURNAL_EVENT } from '@/constants/journal';
+import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
+import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
+import { IUserEntity } from '@/interfaces/user';
+import { ICompanyEntity } from '@/interfaces/company';
+import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
+import { IAssetEntity } from '@/interfaces/asset';
 /**
  * Info: (20241025 - Murky)
  * @description all function need for voucher Post
@@ -32,8 +52,8 @@ export const voucherAPIPostUtils = {
     return item.length > 0;
   },
 
-  isItemExist: (item: unknown) => {
-    return !!item;
+  isItemExist: <T>(item: T | undefined | null): item is T => {
+    return item !== undefined && item !== null;
   },
 
   /**
@@ -42,6 +62,15 @@ export const voucherAPIPostUtils = {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isVoucherExistById: async (voucherId: number) => {
+    return true;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @todo implement check asset exist by assetId from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isAssetExistById: async (assetId: number) => {
     return true;
   },
 
@@ -70,33 +99,72 @@ export const voucherAPIPostUtils = {
   },
 
   /**
+   * Info: (20241029 - Murky)
+   * @todo implement get counter party from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initCounterPartyFromPrisma: async (counterPartyId: number) => {
+    const counterPartyDto = {} as PrismaCounterParty;
+    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
+    return counterParty;
+  },
+
+  /**
+   * Info: (20241029 - Murky)
+   * @todo implement get asset from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initAssetFromPrisma: async (assetId: number) => {
+    const assetDto = {} as PrismaAsset;
+    const asset = parsePrismaAssetToAssetEntity(assetDto);
+    return asset;
+  },
+
+  /**
+   * Info: (20241029 - Murky)
+   * @todo implement get company from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initCompanyFromPrisma: async (assetId: number) => {
+    const companyDto = {} as PrismaCompany;
+    const company = parsePrismaCompanyToCompanyEntity(companyDto);
+    return company;
+  },
+
+  /**
+   * Info: (20241029 - Murky)
+   * @todo implement get issuer from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initIssuerFromPrisma: async (issuerId: number) => {
+    const issuerDto = {} as PrismaUser;
+    const issuer = parsePrismaUserToUserEntity(issuerDto);
+    return issuer;
+  },
+  /**
    * Info: (20241025 - Murky)
    * @description init revert event (but not yet save to database)
-   * @param options - voucherRevertOthers, voucherBeReverted, nowInSecond
-   * @param options.voucherRevertOthers - IVoucherEntity, voucher that revert other voucher
-   * @param options.voucherBeReverted - IVoucherEntity, voucher that be reverted
+   * @param options
    * @param options.nowInSecond - number, current time in second
+   * @param options.associateVouchers - Array, associateVouchers
    */
-  initEventByRevertVoucher: ({
-    voucherRevertOther,
-    voucherBeReverted,
+  initRevertEventEntity: ({
     nowInSecond,
+    associateVouchers,
   }: {
-    voucherRevertOther: IVoucherEntity;
-    voucherBeReverted: IVoucherEntity;
     nowInSecond: number;
+    associateVouchers: Array<{
+      originalVoucher: IVoucherEntity;
+      resultVoucher: IVoucherEntity;
+      amount: number;
+    }>;
   }) => {
     const revertEvent: IEventEntity = initEventEntity({
       eventType: EventEntityType.REVERT,
       frequency: EventEntityFrequency.ONCE,
       startDate: nowInSecond,
       endDate: nowInSecond,
-      associateVouchers: [
-        {
-          originalVoucher: voucherBeReverted,
-          resultVoucher: voucherRevertOther,
-        },
-      ],
+      associateVouchers,
     });
     return revertEvent;
   },
@@ -108,6 +176,17 @@ export const voucherAPIPostUtils = {
   areAllVouchersExistById: async (voucherIds: number[]): Promise<boolean> => {
     const results = await Promise.all(
       voucherIds.map(async (id) => voucherAPIPostUtils.isVoucherExistById(id))
+    );
+    return results.every((result) => result === true);
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description check all asset exist by voucherIds in prisma
+   */
+  areAllAssetsExistById: async (assetIds: number[]): Promise<boolean> => {
+    const results = await Promise.all(
+      assetIds.map(async (id) => voucherAPIPostUtils.isAssetExistById(id))
     );
     return results.every((result) => result === true);
   },
@@ -136,6 +215,129 @@ export const voucherAPIPostUtils = {
     return lineItemEntities;
   },
 
+  /**
+   * Info: (20241029 - Murky)
+   * @description convert associateVoucherInfo from front-end
+   *  to "associateVouchers" in IEventEntity
+   * @param originalVoucher - IVoucherEntity, for original voucher
+   * @param reverseVouchersInfo - Array, for reverse vouchers relation
+   * @param reverseVouchersInfo.voucherId - number, voucherId that be reversed
+   * @param reverseVouchersInfo.amount - number, amount of reverse voucher
+   * @param reverseVouchersInfo.lineItemIdBeReversed - number, lineItemId that be reversed
+   * @param reverseVouchersInfo.lineItemIdReverseOther - number, lineItemId that reverse other
+   */
+  initRevertAssociateVouchers: async ({
+    originalVoucher,
+    reverseVouchersInfo,
+  }: {
+    originalVoucher: IVoucherEntity;
+    reverseVouchersInfo: Array<{
+      voucherId: number;
+      amount: number;
+      lineItemIdBeReversed: number;
+      lineItemIdReverseOther: number;
+    }>;
+  }) => {
+    return Promise.all(
+      reverseVouchersInfo.map(async (reverseVoucher) => {
+        const reverseVoucherEntity = await voucherAPIPostUtils.initVoucherFromPrisma(
+          reverseVoucher.voucherId
+        );
+        // Info: (20241029 - Murky) Deep copy original voucher
+        const originalVoucherCopy = await initVoucherEntity({
+          issuerId: originalVoucher.issuerId,
+          counterPartyId: originalVoucher.counterPartyId,
+          companyId: originalVoucher.companyId,
+          type: originalVoucher.type,
+          status: originalVoucher.status,
+          editable: originalVoucher.editable,
+          no: originalVoucher.no,
+          date: originalVoucher.date,
+        });
+
+        const lineItemBeReversed = await voucherAPIPostUtils.initLineItemFromPrisma(
+          reverseVoucher.voucherId
+        );
+
+        const lineItemRevertOther = await voucherAPIPostUtils.initLineItemFromPrisma(
+          reverseVoucher.voucherId
+        );
+
+        reverseVoucherEntity.lineItems = [lineItemRevertOther];
+        originalVoucherCopy.lineItems = [lineItemBeReversed];
+
+        return {
+          originalVoucher: originalVoucherCopy,
+          resultVoucher: reverseVoucherEntity,
+          amount: reverseVoucher.amount,
+        };
+      })
+    );
+  },
+
+  initDepreciationVoucher: (expenseInfo: {
+    issuer: IUserEntity;
+    company: ICompanyEntity;
+    currentPeriodYear: number;
+    currentPeriodMonth: number;
+  }) => {
+    const {
+      issuer: { id: userId },
+      company: { id: companyId },
+      currentPeriodYear,
+      currentPeriodMonth,
+    } = expenseInfo;
+    // Info: (20241029 - Murky) currentPeriodMonth is 1-based
+    const lastDateOfMonth = new Date(currentPeriodYear, currentPeriodMonth - 1, 0).getDate();
+
+    // Info: (20241029 - Murky) 需要從折舊當天取得voucherNo
+    const voucherDate = new Date(currentPeriodYear, currentPeriodMonth - 1, lastDateOfMonth);
+    const voucherDateInSecond = timestampInSeconds(voucherDate.getTime());
+    const depreciateExpenseVoucherNo = ''; // Info: (20241029 - Murky) 需要在存入database的時候取得voucherNo
+    const depreciateExpenseVoucher = initVoucherEntity({
+      issuerId: userId,
+      counterPartyId: PUBLIC_COUNTER_PARTY.id,
+      companyId,
+      type: EventType.TRANSFER,
+      status: JOURNAL_EVENT.UPCOMING,
+      editable: true,
+      no: depreciateExpenseVoucherNo,
+      date: voucherDateInSecond,
+    });
+
+    return depreciateExpenseVoucher;
+  },
+
+  initDepreciationVoucherFromAssetEntity: (
+    assetEntity: IAssetEntity,
+    {
+      nowInSecond,
+      issuer,
+      company,
+    }: {
+      nowInSecond: number;
+      issuer: IUserEntity;
+      company: ICompanyEntity;
+    }
+  ) => {
+    // Info: (20241029 - Murky) 每個asset都有一整串的折舊
+    const depreciateExpenseInfoArray = calculateAssetDepreciationSerial(assetEntity, {
+      nowInSecond,
+    });
+
+    const depreciateExpenseVouchers = depreciateExpenseInfoArray.map((info) => {
+      const depreciateExpenseVoucher = voucherAPIPostUtils.initDepreciationVoucher({
+        issuer,
+        company,
+        currentPeriodMonth: info.currentPeriodMonth,
+        currentPeriodYear: info.currentPeriodYear,
+      });
+
+      return depreciateExpenseVoucher;
+    });
+
+    return depreciateExpenseVouchers;
+  },
   /**
    * Info: (20241025 - Murky)
    * @description throw StatusMessage as Error, but it can log the errorMessage

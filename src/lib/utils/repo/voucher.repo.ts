@@ -201,11 +201,29 @@ export async function createLineItemInPrisma(
   }
 }
 
-export async function getLatestVoucherNoInPrisma(companyId: number) {
+export async function getLatestVoucherNoInPrisma(
+  companyId: number,
+  {
+    voucherDate,
+  }: {
+    voucherDate?: number;
+  } = {}
+) {
   try {
-    const result = await prisma.voucher.findFirst({
+    let result: { createdAt: number; no: string } | null = null;
+    const baseDate = voucherDate ? new Date(timestampInMilliSeconds(voucherDate)) : new Date();
+    const startOfDay = new Date(baseDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(baseDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    result = await prisma.voucher.findFirst({
       where: {
         companyId,
+        date: {
+          gte: timestampInSeconds(startOfDay.getTime()),
+          lte: timestampInSeconds(endOfDay.getTime()),
+        },
       },
       orderBy: {
         no: SortOrder.DESC,
@@ -216,19 +234,16 @@ export async function getLatestVoucherNoInPrisma(companyId: number) {
       },
     });
 
-    const localToday = new Date();
-    const localTodayNo =
-      `${localToday.getFullYear()}`.padStart(4, '0') +
-      `${localToday.getMonth() + 1}`.padStart(2, '0') +
-      `${localToday.getDate()}`.padStart(2, '0');
-    const resultDate = result?.createdAt
-      ? new Date(timestampInMilliSeconds(result?.createdAt)).getDate()
-      : -1;
-    const isYesterday = resultDate !== localToday.getDate();
-    const latestNo = result?.no.slice(result.no.length - 3) || '0'; // Info: （ 20240522 - Murky）I want to slice the last 3 digits
-    const newVoucherNo = isYesterday ? '001' : String(Number(latestNo) + 1).padStart(3, '0');
+    // 格式化日期為 YYYYMMDD
+    const formattedDate =
+      `${startOfDay.getFullYear()}`.padStart(4, '0') +
+      `${startOfDay.getMonth() + 1}`.padStart(2, '0') +
+      `${startOfDay.getDate()}`.padStart(2, '0');
 
-    return `${localTodayNo}${newVoucherNo}`;
+    const latestNo = result?.no.slice(-3) || '000'; // 取最後三位數字作為流水號
+    const newVoucherNo = String(Number(latestNo) + 1).padStart(3, '0');
+
+    return `${formattedDate}${newVoucherNo}`;
   } catch (error) {
     const logError = loggerError(
       0,

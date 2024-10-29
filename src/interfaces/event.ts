@@ -70,7 +70,7 @@ export interface IEventEntity {
 
   /**
    * Info: (20241023 - Murky)
-   * @description array of voucher relate to another voucher
+   * @description array of voucher relate to another voucher, can be used like reverse voucher
    */
   associateVouchers: {
     /**
@@ -84,5 +84,12 @@ export interface IEventEntity {
      * @description the result(consequence) voucher of this event due to original voucher
      */
     resultVoucher: IVoucherEntity;
+
+    /**
+     * Info: (20241029 - Murky)
+     * @description amount of money that two vouchers are related
+     * @note use only when reversing voucher
+     */
+    amount?: number;
   }[];
 }

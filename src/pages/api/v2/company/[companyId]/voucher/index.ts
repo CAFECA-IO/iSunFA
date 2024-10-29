@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// ToDo: (20241029 - Murky) 記得刪掉上面這一段
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import {
   mockVouchersReturn,
@@ -16,6 +18,12 @@ import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { VoucherV2Action } from '@/constants/voucher';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { initCounterPartyEntity } from '@/lib/utils/counterparty';
+import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { IEventEntity } from '@/interfaces/event';
+import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
+import { EventType } from '@/constants/account';
 
 export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, object> = async ({
   query,
@@ -78,39 +86,61 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
       recurringInfo,
       assetIds,
       reverseVouchers: reverseVouchersInfo,
+      counterPartyId,
       ...voucherInfo
     } = body;
+
     const { companyId, userId } = session;
-    // Info: (20241025 - Murky) Is xxx exist area
+
+    /**
+     * Info: (20241029 - Murky)
+     * @description all timestamp in one post use this timestamp as createdAt
+     */
+    const nowInSecond = getTimestampNow();
+
+    /**
+     * Info: (20241029 - Murky)
+     * @description Storing events throughout the process, saving to prisma in the end
+     * @property revertEvent - Revert Event Entity (if any)
+     * @property recurringEvent - Recurring Event Entity (if any)
+     * @property assetEvent - Asset Event Entity (if any)
+     */
+    const eventControlPanel: {
+      revertEvent: IEventEntity | null;
+      recurringEvent: IEventEntity | null;
+      assetEvent: IEventEntity | null;
+    } = {
+      revertEvent: null,
+      recurringEvent: null,
+      assetEvent: null,
+    };
+
+    // Info: (20241029 - Murky) Check which action algorithm should be executed
     const doRevert = postUtils.isDoAction({
       actions,
       command: VoucherV2Action.REVERT,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const doAddAsset = postUtils.isDoAction({
       actions,
       command: VoucherV2Action.ADD_ASSET,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const doRecurring = postUtils.isDoAction({
       actions,
       command: VoucherV2Action.RECURRING,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // Info: (20241025 - Murky) Is xxx exist
     const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const isRecurringInfoExist = postUtils.isItemExist(recurringInfo);
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
     const isAssetIdsHasItems = postUtils.isArrayHasItems(assetIds);
     const isReverseVouchersInfoHasItems = postUtils.isArrayHasItems(reverseVouchersInfo);
     const isVoucherInfoExist = postUtils.isItemExist(voucherInfo);
     const isVoucherEditable = true;
+
     // Info: (20241025 - Murky) Early throw error if lineItems is empty and voucherInfo is empty
     if (!isLineItemsHasItems) {
       postUtils.throwErrorAndLog(loggerBack, {
@@ -126,17 +156,28 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
       });
     }
 
-    // Info: (20241025 - Murky) Get VoucherNo
-    const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
+    const company = await postUtils.initCompanyFromPrisma(companyId);
+    const issuer = await postUtils.initIssuerFromPrisma(userId);
+    // Info: (20241025 - Murky) Init Voucher, counterParty LineItems Entity
+    const newVoucherNo = ''; // Info: (20241025 - Murky) [Warning!] VoucherNo 需要在存入的transaction中取得
 
-    // Info: (20241025 - Murky) Init Voucher and LineItems Entity
+    // Info: (20241029 - Murky) 一開始都先用public counterParty, 進入Reverse邏輯後在使用前端傳進來的counterParty
+    const publicCounterPartyEntity: ICounterPartyEntity = initCounterPartyEntity({
+      id: PUBLIC_COUNTER_PARTY.id,
+      companyId: PUBLIC_COUNTER_PARTY.companyId,
+      name: PUBLIC_COUNTER_PARTY.name,
+      taxId: PUBLIC_COUNTER_PARTY.taxId,
+      type: PUBLIC_COUNTER_PARTY.type,
+      note: PUBLIC_COUNTER_PARTY.note,
+      createdAt: PUBLIC_COUNTER_PARTY.createdAt,
+      updatedAt: PUBLIC_COUNTER_PARTY.updatedAt,
+      deletedAt: PUBLIC_COUNTER_PARTY.deletedAt,
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const voucher = initVoucherEntity({
-      issuerId: userId,
-      // counterPartyId: voucherInfo.counterPartyId,
-      counterPartyId: 1,
-      companyId,
+      issuerId: issuer.id,
+      counterPartyId: publicCounterPartyEntity.id,
+      companyId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
       editable: isVoucherEditable,
@@ -144,11 +185,22 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
       date: voucherInfo.voucherDate,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    voucher.counterParty = publicCounterPartyEntity;
+
     const lineItemEntities = postUtils.initLineItemEntities(lineItems);
 
     // ToDo: (20241025 - Murky) Revert Logic, 也許可以拉到別的地方
     if (doRevert) {
+      // Info: (20241029 - Murky) Revert Event need to use counterParty Provided by frontend
+      if (!isCounterPartyIdExist) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: 'counterPartyId is required when post revert voucher',
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+
+      const counterPartyEntity = await postUtils.initCounterPartyFromPrisma(counterPartyId!);
+
       if (!isReverseVouchersInfoHasItems) {
         postUtils.throwErrorAndLog(loggerBack, {
           errorMessage: 'reverseVouchers is required when post revert voucher',
@@ -166,22 +218,51 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
 
       if (!isAllRevertVoucherExist) {
         postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with reverseVouchersInfo, all reverseVoucher need to exist`,
+          errorMessage: `when post voucher with reverseVouchersInfo, all reverseVoucher need to exist in database`,
           statusMessage: STATUS_MESSAGE.BAD_REQUEST,
         });
       }
 
       // Info: (20241025 - Murky) Create Revert Event Entity with reverseVouchersInfo (event not yet created)
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const reverseLineItemPairs = await Promise.all(
-        reverseVouchersInfo.map(async (reverseVoucher) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const lineItemBeReversed = await postUtils.initLineItemFromPrisma(
-            reverseVoucher.voucherId
-          );
+      const associateVouchersForRevertEvent = await postUtils.initRevertAssociateVouchers({
+        originalVoucher: voucher,
+        reverseVouchersInfo,
+      });
+
+      const revertEventEntity = postUtils.initRevertEventEntity({
+        nowInSecond,
+        associateVouchers: associateVouchersForRevertEvent,
+      });
+
+      voucher.counterParty = counterPartyEntity;
+      eventControlPanel.revertEvent = revertEventEntity;
+    }
+
+    if (doAddAsset) {
+      const isAllAssetExist = postUtils.areAllAssetsExistById(assetIds);
+
+      if (!isAllAssetExist) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: `when post voucher with assetIds, all asset need to exist in database`,
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+
+      const assetEntities = await Promise.all(assetIds.map(postUtils.initAssetFromPrisma));
+
+      // Info: (20241029 - Murky) Generate all Depreciation Voucher
+      const depreciatedVouchers = assetEntities
+        .map((assetEntity) => {
+          return postUtils.initDepreciationVoucherFromAssetEntity(assetEntity, {
+            nowInSecond,
+            issuer,
+            company,
+          });
         })
-      );
+        .flat();
+
+      // ToDo: (20241029 - Murky) 寫到這邊，initAssetAssociatedVouchers 還沒有實作
     }
   } catch (_error) {
     const error = _error as Error;
