@@ -18,12 +18,12 @@ jest.mock('../../../../../../lib/utils/auth_check', () => ({
 }));
 
 // Info: (20240927 - Murky) Comment if you want to check validateRequest related info
-jest.mock('../../../../../../lib/utils/logger_back', () => ({
-  loggerRequest: jest.fn().mockReturnValue({
-    info: jest.fn(),
-    error: jest.fn(),
-  }),
-}));
+// jest.mock('../../../../../../lib/utils/logger_back', () => ({
+//   loggerRequest: jest.fn().mockReturnValue({
+//     info: jest.fn(),
+//     error: jest.fn(),
+//   }),
+// }));
 
 beforeEach(() => {});
 
@@ -99,6 +99,8 @@ describe('company/[companyId]/voucher', () => {
           {
             voucherId: 1003,
             amount: 500,
+            lineItemIdBeReversed: 1001,
+            lineItemIdReverseOther: 1002,
           },
         ],
       };

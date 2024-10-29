@@ -85,13 +85,15 @@ const voucherPostBodyValidatorV2 = z.object({
   voucherDate: z.number().int(),
   type: z.nativeEnum(EventType),
   note: z.string(),
-  counterPartyId: z.number().int(),
   lineItems: z.array(iLineItemBodyValidatorV2),
   recurringInfo: recurringEventForVoucherPostValidatorV2.optional(),
   assetIds: z.array(z.number().int()),
+  counterPartyId: z.number().int().optional(),
   reverseVouchers: z.array(
     z.object({
       voucherId: z.number().int(),
+      lineItemIdBeReversed: z.number().int(),
+      lineItemIdReverseOther: z.number().int(),
       amount: z.number(),
     })
   ),

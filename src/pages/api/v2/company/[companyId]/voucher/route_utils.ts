@@ -7,12 +7,20 @@ import { initEventEntity } from '@/lib/utils/event';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { initLineItemEntity } from '@/lib/utils/line_item';
 import { Logger } from 'pino';
-import { Voucher as PrismaVoucher } from '@prisma/client';
+import { Voucher as PrismaVoucher, LineItem as PrismaLineItem } from '@prisma/client';
+import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 /**
  * Info: (20241025 - Murky)
  * @description all function need for voucher Post
  */
 export const voucherAPIPostUtils = {
+  fakeLineItemsRelation: Array<{
+    id: number;
+    debit: boolean;
+    lineItemBeReversed: ILineItemEntity;
+    lineItemRevertOther: ILineItemEntity;
+    amount: number;
+  }>,
   /**
    * Info: (20241025 - Murky)
    * @description determine if certain command is need to be done
@@ -47,6 +55,18 @@ export const voucherAPIPostUtils = {
     const voucherDto = {} as PrismaVoucher;
     const voucher = parsePrismaVoucherToVoucherEntity(voucherDto);
     return voucher;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @todo implement get line item from prisma logic
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initLineItemFromPrisma: async (lineItemId: number) => {
+    // ToDo: (20241025 - Murky) implement get voucher from prisma logic
+    const lineItemDto = {} as PrismaLineItem;
+    const lineItem = parsePrismaLineItemToLineItemEntity(lineItemDto);
+    return lineItem;
   },
 
   /**

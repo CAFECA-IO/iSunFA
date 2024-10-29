@@ -134,7 +134,8 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const voucher = initVoucherEntity({
       issuerId: userId,
-      counterPartyId: voucherInfo.counterPartyId,
+      // counterPartyId: voucherInfo.counterPartyId,
+      counterPartyId: 1,
       companyId,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
@@ -171,6 +172,16 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
       }
 
       // Info: (20241025 - Murky) Create Revert Event Entity with reverseVouchersInfo (event not yet created)
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const reverseLineItemPairs = await Promise.all(
+        reverseVouchersInfo.map(async (reverseVoucher) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const lineItemBeReversed = await postUtils.initLineItemFromPrisma(
+            reverseVoucher.voucherId
+          );
+        })
+      );
     }
   } catch (_error) {
     const error = _error as Error;
