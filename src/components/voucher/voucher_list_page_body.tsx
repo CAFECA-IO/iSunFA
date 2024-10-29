@@ -7,7 +7,6 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
-// import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
@@ -16,8 +15,8 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 enum VoucherTabs {
-  UPLOADED = 'Uploaded Voucher',
-  UPCOMING = 'Upcoming Events',
+  UPLOADED = 'UPLOADED_VOUCHER',
+  UPCOMING = 'UPCOMING_EVENTS',
 }
 
 const VoucherListPageBody: React.FC = () => {
@@ -46,26 +45,13 @@ const VoucherListPageBody: React.FC = () => {
       ...(debitSort ? [{ sort: SortBy.DEBIT, sortOrder: debitSort }] : []),
     ]);
   }, [creditSort, debitSort]);
-  // const [currentPage, setCurrentPage] = useState(1);
 
-  // ToDo: (20240920 - Julian) dummy data
-  // const totalPage = 10;
-  // const voucherTabCount = [0, 1];
-
-  const voucherTab = Object.values(VoucherTabs);
+  const voucherTabs = Object.values(VoucherTabs).map((value) => t(`journal:VOUCHER.${value}_TAB`));
   const voucherTypeList = Object.keys(EventType).map((key) => key.toLowerCase());
 
-  // const tabQueryStr = activeTab.toLowerCase();
   const params = { companyId: selectedCompany?.id ?? FREE_COMPANY_ID };
+  const tabQuery = activeTab === VoucherTabs.UPLOADED ? 'uploaded' : 'upcoming';
 
-  // const { data: voucherData } = APIHandler<{ data: IVoucherBeta[] }>(
-  //   APIName.VOUCHER_LIST_V2,
-  //   {
-  //     params,
-  //     query: { strategy: tabQueryStr },
-  //   },
-  //   true
-  // );
   const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
   const handleApiResponse = (
     data: IPaginatedData<{
@@ -82,10 +68,6 @@ const VoucherListPageBody: React.FC = () => {
     setTotalCount(data.totalCount);
     setVoucherList(data.data.vouchers);
   };
-
-  // Info: (20241024 - Tzuhan) 已更新 FilterSection 的 props 包含了你列出的額外查詢條件
-  // Info: (20241022 - Julian) 額外查詢條件
-  // const extraQuery = { strategy: tabQueryStr, page: currentPage };
 
   const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
 
@@ -119,7 +101,8 @@ const VoucherListPageBody: React.FC = () => {
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
-          tabs={voucherTab}
+          tabs={voucherTabs}
+          tabsString={voucherTabs}
           activeTab={activeTab}
           onTabClick={tabClick}
           counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}
@@ -137,7 +120,7 @@ const VoucherListPageBody: React.FC = () => {
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          tab={activeTab}
+          tab={tabQuery}
           types={voucherTypeList}
           dateSort={dateSort}
           otherSorts={otherSorts}

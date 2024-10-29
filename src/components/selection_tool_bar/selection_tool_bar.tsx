@@ -1,5 +1,5 @@
-import { ICertificateUI } from '@/interfaces/certificate';
 import React from 'react';
+import { ICertificateUI } from '@/interfaces/certificate';
 import { FaPlus } from 'react-icons/fa6';
 import { FiDownload, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
@@ -91,8 +91,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                   onClick={operation.onClick}
                 >
                   <FiDownload />
-                  {/* <div>{`${t('common:SELECTION.EXPORT')} ${operation.buttonStr ? t(`common:SELECTION.${operation.buttonStr.toUpperCase()}`) : ''}`}</div> */}
-                  <div>{t(`common:SELECTION.${operation.buttonStr.toUpperCase}`)}</div>
+                  <div>{operation.buttonStr}</div>
                 </Button>
               ))}
             {addOperations &&
@@ -104,9 +103,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                   onClick={operation.onClick}
                 >
                   <FaPlus />
-                  {/* <div>{t('common:SELECTION.ADD_NEW_ASSET')}</div> */}
-                  {/* <div>{t('common:SELECTION.ADD_NEW_VOUCHER')}</div> */}
-                  <div>{t(`common:SELECTION.${operation.buttonStr.toUpperCase}`)}</div>
+                  <div>{operation.buttonStr}</div>
                 </Button>
               ))}
             {onDelete && (
@@ -146,8 +143,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                   onClick={operation.onClick}
                 >
                   <FiDownload />
-                  {/* <div>{`${t('common:SELECTION.EXPORT')} ${operation.buttonStr ? t(`common:SELECTION.${operation.buttonStr.toUpperCase()}`) : ''}`}</div> */}
-                  <div>{t(`common:SELECTION.${operation.buttonStr.toUpperCase}`)}</div>
+                  <div>{operation.buttonStr}</div>
                 </Button>
               ))}
             {isSelectable && (

@@ -204,7 +204,9 @@
     "BALANCE": "Balance",
     "LEDGER": "Ledger",
     "TRIAL_BALANCE": "Trial_Balance",
-    "NO_VOUCHER": "No voucher data"
+    "NO_VOUCHER": "No voucher data",
+    "UPLOADED_VOUCHER_TAB": "Uploaded Voucher",
+    "UPCOMING_EVENTS_TAB": "Upcoming Events"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "Add New Voucher",
@@ -275,5 +277,15 @@
   },
   "LEDGER": {
     "LEDGER_PERIOD": "Ledger Period"
+  },
+  "AI_WORKING_AREA": {
+    "RESTING_CONTENT": "Please select the certificates for AI to generate the voucher for you",
+    "WORKING_CONTENT": "AI is scanning your certificates, please wait...",
+    "STOP_BTN": "Stop scanning",
+    "FAILED_CONTENT": "AI didn’t find any valid data from your certificate, please enter manually or",
+    "RETRY_BTN": "Try again",
+    "FINISH_CONTENT": "AI has done scanning. Click here to allow AI",
+    "FILL_UP_BTN": "Fill up your voucher",
+    "WARNING_CONTENT": "AI can make mistake, please double check important information."
   }
 }
