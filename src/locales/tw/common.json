@@ -298,7 +298,8 @@
     "CODE": "科目編號",
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
-    "ENDING": "結束日"
+    "ENDING": "結束日",
+    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
