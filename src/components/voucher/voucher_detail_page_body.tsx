@@ -36,8 +36,8 @@ interface IVoucherDetailForFrontend {
     type: string;
     startDate: number;
     endDate: number;
-    daysOfWeek: number[]; // 0~6
-    monthsOfYear: string[]; // '1'~'12'
+    daysOfWeek: number[]; // Info: (20241029 - Julian) 0~6
+    monthsOfYear: string[]; // Info: (20241029 - Julian) '1'~'12'
   };
   payableInfo:
     | {
