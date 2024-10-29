@@ -11,26 +11,24 @@ import {
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { formatCompanySetting } from '@/lib/utils/formatter/company_setting.formatter';
+import { CompanySetting } from '@prisma/client';
 
-const handleGetRequest: IHandleRequest<APIName.COMPANY_SETTING_GET, ICompanySetting> = async ({
+const handleGetRequest: IHandleRequest<APIName.COMPANY_SETTING_GET, CompanySetting> = async ({
   query,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanySetting | null = null;
+  let payload: CompanySetting | null = null;
 
   const { companyId } = query;
 
   const getCompanySetting = await getCompanySettingByCompanyId(companyId);
   if (getCompanySetting) {
-    const companySetting = formatCompanySetting(getCompanySetting);
-    payload = companySetting;
+    payload = getCompanySetting;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } else {
     const createdCompanySetting = await createCompanySetting(companyId);
     if (createdCompanySetting) {
-      const companySetting = formatCompanySetting(createdCompanySetting);
-      payload = companySetting;
+      payload = createdCompanySetting;
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     } else {
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
@@ -40,25 +38,21 @@ const handleGetRequest: IHandleRequest<APIName.COMPANY_SETTING_GET, ICompanySett
   return { statusMessage, payload };
 };
 
-const handlePutRequest: IHandleRequest<APIName.COMPANY_SETTING_UPDATE, ICompanySetting> = async ({
+const handlePutRequest: IHandleRequest<APIName.COMPANY_SETTING_UPDATE, CompanySetting> = async ({
   query,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanySetting | null = null;
+  let payload: CompanySetting | null = null;
 
   const { companyId } = query;
   const companySettingData = body;
 
   try {
-    const updatedCompanySetting = await updateCompanySettingById(
-      Number(companyId),
-      companySettingData
-    );
+    const updatedCompanySetting = await updateCompanySettingById(companyId, companySettingData);
 
     if (updatedCompanySetting) {
-      const companySetting = formatCompanySetting(updatedCompanySetting);
-      payload = companySetting;
+      payload = updatedCompanySetting;
       statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     } else {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;

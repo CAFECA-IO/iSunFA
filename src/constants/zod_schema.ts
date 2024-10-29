@@ -8,12 +8,12 @@ import {
   certificatePutValidator,
 } from '@/lib/utils/zod_schema/certificate';
 import {
-  companyDeleteValidator,
-  companyGetByIdValidator,
-  companyListValidator,
-  companyPostValidator,
-  companyPutValidator,
-  companySelectValidator,
+  companyDeleteSchema,
+  companyGetByIdSchema,
+  companyListSchema,
+  companyPostSchema,
+  companyPutSchema,
+  companySelectSchema,
 } from '@/lib/utils/zod_schema/company';
 import {
   invoiceCreateValidator,
@@ -26,11 +26,7 @@ import {
   journalListValidator,
 } from '@/lib/utils/zod_schema/journal';
 import { kycUploadValidator } from '@/lib/utils/zod_schema/kyc';
-import {
-  newsGetValidator,
-  newsListValidator,
-  newsPostValidator,
-} from '@/lib/utils/zod_schema/news';
+import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
 import {
   ocrDeleteValidator,
   ocrListValidator,
@@ -38,16 +34,12 @@ import {
   ocrUploadValidator,
 } from '@/lib/utils/zod_schema/ocr';
 import {
-  companyPendingTaskValidator,
-  userPendingTaskValidator,
+  companyPendingTaskSchema,
+  userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
 import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
-import {
-  roleListValidator,
-  rolePostValidator,
-  roleSelectValidator,
-} from '@/lib/utils/zod_schema/role';
-import { todoListValidator, todoPostValidator } from '@/lib/utils/zod_schema/todo';
+import { roleListSchema, rolePostSchema, roleSelectSchema } from '@/lib/utils/zod_schema/role';
+import { todoListSchema, todoPostSchema } from '@/lib/utils/zod_schema/todo';
 import {
   voucherCreateValidator,
   voucherDeleteValidatorV2,
@@ -59,25 +51,22 @@ import {
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
 import {
-  accountingSettingGetValidator,
-  accountingSettingPutValidator,
+  accountingSettingGetSchema,
+  accountingSettingPutSchema,
 } from '@/lib/utils/zod_schema/accounting_setting';
 import {
-  counterpartyListValidator,
-  counterpartyPostValidator,
-  counterpartyGetByIdValidator,
-  counterpartyPutValidator,
-  counterpartyDeleteValidator,
+  counterpartyListSchema,
+  counterpartyPostSchema,
+  counterpartyGetByIdSchema,
+  counterpartyPutSchema,
+  counterpartyDeleteSchema,
 } from '@/lib/utils/zod_schema/counterparty';
+import { userSettingGetSchema, userSettingPutSchema } from '@/lib/utils/zod_schema/user_setting';
 import {
-  userSettingGetValidator,
-  userSettingPutValidator,
-} from '@/lib/utils/zod_schema/user_setting';
-import {
-  companySettingGetValidator,
-  companySettingPutValidator,
+  companySettingGetSchema,
+  companySettingPutSchema,
 } from '@/lib/utils/zod_schema/company_setting';
-import { userActionLogListValidator } from '@/lib/utils/zod_schema/user_action_log';
+import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -115,38 +104,41 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
-  [APIName.COMPANY_LIST]: companyListValidator,
-  [APIName.COMPANY_ADD]: companyPostValidator,
-  [APIName.COMPANY_SELECT]: companySelectValidator,
-  [APIName.COMPANY_GET_BY_ID]: companyGetByIdValidator,
-  [APIName.COMPANY_UPDATE]: companyPutValidator,
-  [APIName.COMPANY_DELETE]: companyDeleteValidator,
-  [APIName.COMPANY_SETTING_GET]: companySettingGetValidator,
-  [APIName.COMPANY_SETTING_UPDATE]: companySettingPutValidator,
-  [APIName.COUNTERPARTY_LIST]: counterpartyListValidator,
-  [APIName.COUNTERPARTY_ADD]: counterpartyPostValidator,
-  [APIName.COUNTERPARTY_GET_BY_ID]: counterpartyGetByIdValidator,
-  [APIName.COUNTERPARTY_UPDATE]: counterpartyPutValidator,
-  [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteValidator,
-  [APIName.USER_PENDING_TASK_GET]: userPendingTaskValidator,
-  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
-  [APIName.ROLE_LIST]: roleListValidator,
-  [APIName.ROLE_SELECT]: roleSelectValidator,
-  [APIName.CREATE_ROLE]: rolePostValidator,
-  [APIName.NEWS_LIST]: newsListValidator,
-  [APIName.CREATE_NEWS]: newsPostValidator,
-  [APIName.NEWS_GET_BY_ID]: newsGetValidator,
-  [APIName.TODO_LIST]: todoListValidator,
-  [APIName.CREATE_TODO]: todoPostValidator,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteValidatorV2,
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
   [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
   [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
-  [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetValidator,
-  [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutValidator,
-  [APIName.USER_SETTING_GET]: userSettingGetValidator,
-  [APIName.USER_SETTING_UPDATE]: userSettingPutValidator,
-  [APIName.USER_ACTION_LOG_LIST]: userActionLogListValidator,
+};
+
+export const ZOD_SCHEMA_API = {
+  [APIName.COMPANY_LIST]: companyListSchema,
+  [APIName.COMPANY_ADD]: companyPostSchema,
+  [APIName.COMPANY_SELECT]: companySelectSchema,
+  [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
+  [APIName.COMPANY_UPDATE]: companyPutSchema,
+  [APIName.COMPANY_DELETE]: companyDeleteSchema,
+  [APIName.COMPANY_SETTING_GET]: companySettingGetSchema,
+  [APIName.COMPANY_SETTING_UPDATE]: companySettingPutSchema,
+  [APIName.COUNTERPARTY_LIST]: counterpartyListSchema,
+  [APIName.COUNTERPARTY_ADD]: counterpartyPostSchema,
+  [APIName.COUNTERPARTY_GET_BY_ID]: counterpartyGetByIdSchema,
+  [APIName.COUNTERPARTY_UPDATE]: counterpartyPutSchema,
+  [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
+  [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
+  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
+  [APIName.ROLE_LIST]: roleListSchema,
+  [APIName.ROLE_SELECT]: roleSelectSchema,
+  [APIName.CREATE_ROLE]: rolePostSchema,
+  [APIName.NEWS_LIST]: newsListSchema,
+  [APIName.CREATE_NEWS]: newsPostSchema,
+  [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
+  [APIName.TODO_LIST]: todoListSchema,
+  [APIName.CREATE_TODO]: todoPostSchema,
+  [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetSchema,
+  [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutSchema,
+  [APIName.USER_SETTING_GET]: userSettingGetSchema,
+  [APIName.USER_SETTING_UPDATE]: userSettingPutSchema,
+  [APIName.USER_ACTION_LOG_LIST]: userActionLogListSchema,
 };
