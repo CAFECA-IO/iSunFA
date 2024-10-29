@@ -2,12 +2,13 @@ import React from 'react';
 
 interface TabProps {
   tabs: string[];
+  tabsString: string[];
   activeTab: string;
   onTabClick: (tab: string) => void;
   counts: number[];
 }
 
-const Tabs: React.FC<TabProps> = ({ tabs, activeTab, onTabClick, counts }) => {
+const Tabs: React.FC<TabProps> = ({ tabs, tabsString, activeTab, onTabClick, counts }) => {
   return (
     <div className="my-4 inline-flex w-full items-center justify-center">
       {tabs.map((tab, index) => (
@@ -20,7 +21,7 @@ const Tabs: React.FC<TabProps> = ({ tabs, activeTab, onTabClick, counts }) => {
           <p
             className={`flex items-center gap-4px whitespace-nowrap text-base leading-normal ${activeTab === tabs[index] ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
           >
-            {tab}
+            {tabsString[index]}
           </p>
           <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
             {`${counts[index]} ${counts[index] > 0 ? '+' : ''}`}
