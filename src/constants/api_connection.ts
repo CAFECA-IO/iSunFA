@@ -136,6 +136,7 @@ export enum APIName {
   UPDATE_ACCOUNTING_SETTING = 'UPDATE_ACCOUNTING_SETTING',
   CREATE_ASSET_V2 = 'CREATE_ASSET_V2',
   DELETE_ASSET_V2 = 'DELETE_ASSET_V2',
+  UPDATE_ASSET_V2 = 'UPDATE_ASSET_V2',
 }
 
 export enum APIPath {
@@ -250,6 +251,7 @@ export enum APIPath {
   UPDATE_ACCOUNTING_SETTING = `${apiPrefixV2}/company/:companyId/accounting_setting`,
   CREATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   DELETE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
+  UPDATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
 }
 const createConfig = ({
   name,
@@ -810,5 +812,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DELETE_ASSET_V2,
     method: HttpMethod.DELETE,
     path: APIPath.DELETE_ASSET_V2,
+  }),
+  [APIName.UPDATE_ASSET_V2]: createConfig({
+    name: APIName.UPDATE_ASSET_V2,
+    method: HttpMethod.PUT,
+    path: APIPath.UPDATE_ASSET_V2,
   }),
 };
