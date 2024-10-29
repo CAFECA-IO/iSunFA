@@ -364,7 +364,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
             <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
               {item.code}
             </td>
-            {/* <td className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm"> */}
             <td
               className={`flex items-center justify-between ${
                 item.children && item.children.length > 0 && !isSubAccountsCollapsed[item.code]
