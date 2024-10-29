@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import Introduction from '@/components/beta/select_role/introduction';
-import RoleCard from '@/components/beta/select_role/role_card';
-import PreviewModal from '@/components/beta/select_role/preview_modal';
+import Introduction from '@/components/beta/create_role/introduction';
+import RoleCard from '@/components/beta/create_role/role_card';
+import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { RoleName } from '@/constants/role';
 
-const SelectRolePage = () => {
+const CreateRolePage = () => {
   const { t } = useTranslation(['common']);
   const [showingRole, setShowingRole] = useState<RoleName | null>(null);
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
@@ -23,7 +23,7 @@ const SelectRolePage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:SELECT_ROLE.SELECT_ROLE_ISUNFA')}</title>
+        <title>{t('common:CREATE_ROLE.SELECT_ROLE_ISUNFA')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -71,4 +71,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default SelectRolePage;
+export default CreateRolePage;

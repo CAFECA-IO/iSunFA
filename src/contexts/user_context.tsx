@@ -180,7 +180,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line no-console
     console.log('呼叫 goToSelectRolePage');
 
-    router.push(ISUNFA_ROUTE.SELECT_ROLE);
+    router.push(ISUNFA_ROUTE.CREATE_ROLE);
   };
 
   // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板

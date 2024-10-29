@@ -495,7 +495,7 @@
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
   },
-  "SELECT_ROLE": {
+  "CREATE_ROLE": {
     "SELECT_ROLE_ISUNFA": "Select Role - iSunFA"
   },
 

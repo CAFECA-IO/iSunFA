@@ -152,7 +152,7 @@ const JobRecordPage = () => {
           ))}
 
           <Link
-            href={ISUNFA_ROUTE.SELECT_ROLE}
+            href={ISUNFA_ROUTE.CREATE_ROLE}
             className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
           >
             <HiPlus size={64} />
