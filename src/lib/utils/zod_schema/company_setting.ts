@@ -1,25 +1,19 @@
 import { z } from 'zod';
-import { IZodValidator } from '@/interfaces/zod_validator';
+import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
-// Info: (20241023 - Jacky) Company setting get validator
-const companySettingGetQueryValidator = z.object({
-  companyId: z.number().int(),
+// Info: (20241029 - Jacky) Company setting null schema
+const companySettingNullSchema = z.union([z.object({}), z.string()]);
+
+// Info: (20241023 - Jacky) Company setting get schema
+const companySettingGetQuerySchema = z.object({
+  companyId: zodStringToNumber,
 });
-const companySettingGetBodyValidator = z.object({});
 
-export const companySettingGetValidator: IZodValidator<
-  (typeof companySettingGetQueryValidator)['shape'],
-  (typeof companySettingGetBodyValidator)['shape']
-> = {
-  query: companySettingGetQueryValidator,
-  body: companySettingGetBodyValidator,
-};
-
-// Info: (20241023 - Jacky) Company setting put validator
-const companySettingPutQueryValidator = z.object({
-  companyId: z.number().int(),
+// Info: (20241023 - Jacky) Company setting put schema
+const companySettingPutQuerySchema = z.object({
+  companyId: zodStringToNumber,
 });
-const companySettingPutBodyValidator = z.object({
+const companySettingPutBodySchema = z.object({
   id: z.number(),
   companyId: z.number().int(),
   companyName: z.string(),
@@ -33,15 +27,8 @@ const companySettingPutBodyValidator = z.object({
   updatedAt: z.number(),
 });
 
-export const companySettingPutValidator: IZodValidator<
-  (typeof companySettingPutQueryValidator)['shape'],
-  (typeof companySettingPutBodyValidator)['shape']
-> = {
-  query: companySettingPutQueryValidator,
-  body: companySettingPutBodyValidator,
-};
-
-export const CompanySettingSchema = z
+// Info: (20241029 - Jacky) Company setting output schema
+export const companySettingOutputSchema = z
   .object({
     id: z.number(),
     companyId: z.number(),
@@ -70,3 +57,36 @@ export const CompanySettingSchema = z
     createdAt: companySetting.createdAt,
     updatedAt: companySetting.updatedAt,
   }));
+
+// Info: (20241029 - Jacky) Company setting validate schema
+const companySettingValidateSchema = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  companyName: z.string(),
+  companyTaxId: z.string(),
+  taxSerialNumber: z.string(),
+  representativeName: z.string(),
+  country: z.string(),
+  phone: z.string(),
+  address: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+export const companySettingGetSchema = {
+  input: {
+    querySchema: companySettingGetQuerySchema,
+    bodySchema: companySettingNullSchema,
+  },
+  outputSchema: companySettingOutputSchema,
+  frontend: companySettingValidateSchema,
+};
+
+export const companySettingPutSchema = {
+  input: {
+    querySchema: companySettingPutQuerySchema,
+    bodySchema: companySettingPutBodySchema,
+  },
+  outputSchema: companySettingOutputSchema,
+  frontend: companySettingValidateSchema,
+};

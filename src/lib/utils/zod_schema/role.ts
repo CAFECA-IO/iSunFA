@@ -1,46 +1,58 @@
 import { z } from 'zod';
-import { IZodValidator } from '@/interfaces/zod_validator';
+import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
-// Info: (20241015 - Jacky) Role list validator
-const roleListQueryValidator = z.object({
-  userId: z.number().int(),
+// Info: (20241029 - Jacky) Role null schema
+const roleNullSchema = z.union([z.object({}), z.string()]);
+
+// Info: (20241015 - Jacky) Role list schema
+const roleListQuerySchema = z.object({
+  userId: zodStringToNumber,
 });
-const roleListBodyValidator = z.object({});
 
-export const roleListValidator: IZodValidator<
-  (typeof roleListQueryValidator)['shape'],
-  (typeof roleListBodyValidator)['shape']
-> = {
-  query: roleListQueryValidator,
-  body: roleListBodyValidator,
-};
-
-// Info: (20241015 - Jacky) Role post validator
-const rolePostQueryValidator = z.object({});
-const rolePostBodyValidator = z.object({
+// Info: (20241015 - Jacky) Role post schema
+const rolePostBodySchema = z.object({
   userId: z.number().int(),
   roleId: z.number().int(),
 });
 
-export const rolePostValidator: IZodValidator<
-  (typeof rolePostQueryValidator)['shape'],
-  (typeof rolePostBodyValidator)['shape']
-> = {
-  query: rolePostQueryValidator,
-  body: rolePostBodyValidator,
+// Info: (20241015 - Jacky) Role select schema
+const roleSelectQuerySchema = z.object({
+  userId: zodStringToNumber,
+  roleId: zodStringToNumber,
+});
+
+const roleOutputSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  permissions: z.array(z.string()),
+  lastLoginAt: z.number().int(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
+
+export const roleListSchema = {
+  input: {
+    querySchema: roleListQuerySchema,
+    bodySchema: roleNullSchema,
+  },
+  outputSchema: roleOutputSchema,
+  frontend: roleNullSchema,
 };
 
-// Info: (20241015 - Jacky) Role select validator
-const roleSelectQueryValidator = z.object({
-  userId: z.number().int(),
-  roleId: z.number().int(),
-});
-const roleSelectBodyValidator = z.object({});
+export const rolePostSchema = {
+  input: {
+    querySchema: roleNullSchema,
+    bodySchema: rolePostBodySchema,
+  },
+  outputSchema: roleOutputSchema,
+  frontend: roleNullSchema,
+};
 
-export const roleSelectValidator: IZodValidator<
-  (typeof roleSelectQueryValidator)['shape'],
-  (typeof roleSelectBodyValidator)['shape']
-> = {
-  query: roleSelectQueryValidator,
-  body: roleSelectBodyValidator,
+export const roleSelectSchema = {
+  input: {
+    querySchema: roleSelectQuerySchema,
+    bodySchema: roleNullSchema,
+  },
+  outputSchema: roleOutputSchema,
+  frontend: roleNullSchema,
 };

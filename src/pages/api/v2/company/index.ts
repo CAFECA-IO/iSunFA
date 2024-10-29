@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -89,10 +89,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload:
-      | { company: ICompany; role: IRole }
-      | IPaginatedData<{ company: ICompany; role: IRole }[]>
-      | null;
+    payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null;
   }>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.COMPANY_LIST, req, res, handleGetRequest),
