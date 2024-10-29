@@ -16,6 +16,10 @@ import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import BalanceDetailsButton from '@/components/button/balance_details_button';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { IDatePeriod } from '@/interfaces/date_period';
+import PrintButton from '@/components/button/print_button';
+import DownloadButton from '@/components/button/download_button';
+import Toggle from '@/components/toggle/toggle';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -37,6 +41,7 @@ const COLOR_CLASSES = [
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
   const { t } = useTranslation('common');
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -45,6 +50,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
+
+  const [totalSubAccountsToggle, setTotalSubAccountsToggle] = useState(false); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 狀態
+
+  // Info: (20241029 - Anna) 切換 totalSubAccountsToggle 的開關狀態
+  const totalSubAccountsToggleHandler = () => {
+    setTotalSubAccountsToggle((prevState) => !prevState);
+  };
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -197,14 +209,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     if (reportFinancial && reportFinancial.details) {
       const initialCollapseState: { [key: string]: boolean } = reportFinancial.details.reduce(
         (acc, item) => {
-          acc[item.code] = true; // Info: (20241017 - Anna) 預設每個項目的展開狀態為摺疊
+          // acc[item.code] = true; // Info: (20241017 - Anna) 預設每個項目的展開狀態為摺疊
+          acc[item.code] = !totalSubAccountsToggle; // Info: (20241029 - Anna) 根據 totalSubAccountsToggle 設定初始展開狀態
           return acc;
         },
         {} as { [key: string]: boolean }
       );
       setIsSubAccountsCollapsed(initialCollapseState);
     }
-  }, [reportFinancial]);
+  }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -351,7 +364,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
             <td className="border border-stroke-brand-secondary-soft p-10px text-sm">
               {item.code}
             </td>
-            <td className="flex items-center justify-between border-b border-stroke-brand-secondary-soft p-10px text-sm">
+            <td
+              className={`flex items-center justify-between ${
+                item.children && item.children.length > 0 && !isSubAccountsCollapsed[item.code]
+                  ? ''
+                  : 'border-b'
+              } border-stroke-brand-secondary-soft p-10px text-sm`}
+            >
               {item.name}
               {/* Info: (20241021 - Anna) 如果有 children 才顯示 CollapseButton */}
               {item.children && item.children.length > 0 && (
@@ -412,6 +431,24 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     });
     return rows;
   };
+  // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
+  const displayedSelectArea = (
+    <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap">
+      <div className="flex items-center gap-4">
+        <Toggle
+          id="totalSubAccounts-toggle"
+          initialToggleState={totalSubAccountsToggle}
+          getToggledState={totalSubAccountsToggleHandler}
+          toggleStateFromParent={totalSubAccountsToggle}
+        />
+        <span className="text-neutral-600">{t('common:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
+      </div>
+      <div className="ml-auto flex items-center gap-24px">
+        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+        <PrintButton onClick={() => {}} disabled={false} />
+      </div>
+    </div>
+  );
 
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
@@ -478,10 +515,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p className="text-xs font-bold leading-5">細項分類格式</p>
+            <p className="font-bold leading-5">細項分類格式</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="text-xs font-bold leading-5">單位：新台幣元</p>
+          <p className="font-bold leading-5">單位：新台幣元</p>
         </div>
         {!isDetailCollapsed && (
           <table className="w-full border-collapse bg-white">
@@ -626,14 +663,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   const TurnoverDay = (
     <div id="5" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>應收帳款週轉天數</p>
           <p>單位：天</p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
               <th className="whitespace-nowrap border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curYear}年度
               </th>
@@ -657,7 +694,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
+              <th className="w-300px border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-left text-sm font-semibold"></th>
               <th className="border border-stroke-brand-secondary-soft bg-surface-brand-primary-soft p-10px text-end text-sm font-semibold">
                 {curYear}年度
               </th>
@@ -689,12 +726,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
 
   return (
     <div className="mx-auto w-full origin-top overflow-x-auto">
+      <hr className="mb-40px break-before-page" />
+      {displayedSelectArea}
       {ItemSummary}
       <hr className="break-before-page" />
       {ItemDetail}
       <hr className="break-before-page" />
       {ProportionalTable}
-      <hr className="break-before-page" />
+      <hr className="mb-16px mt-32px break-before-page" />
       {AssetItem}
       <hr className="break-before-page" />
       {TurnoverDay}

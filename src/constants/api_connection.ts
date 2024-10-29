@@ -45,6 +45,7 @@ export enum APIName {
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
   CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
+  CERTIFICATE_DELETE__MULTIPLE_V2 = 'CERTIFICATE_DELETE__MULTIPLE_V2',
   COUNTERPARTY_LIST = 'COUNTERPARTY_LIST',
   COUNTERPARTY_GET_BY_ID = 'COUNTERPARTY_GET_BY_ID',
   COUNTERPARTY_ADD = 'COUNTERPARTY_ADD',
@@ -161,6 +162,7 @@ export enum APIPath {
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   COUNTERPARTY_LIST = `${apiPrefix}/company/:companyId/counterparty`,
   COUNTERPARTY_ADD = `${apiPrefix}/company/:companyId/counterparty`,
   COUNTERPARTY_GET_BY_ID = `${apiPrefix}/company/:companyId/counterparty/:counterpartyId`,
@@ -741,6 +743,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_DELETE_V2,
     method: HttpMethod.DELETE,
     path: APIPath.CERTIFICATE_PUT_V2,
+  }),
+  // Info: (20241028 - Tzuhan) @Murky, 需要新增這個 API 用來在 certificate list 一次性刪除多張certificate
+  [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE__MULTIPLE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.CERTIFICATE_DELETE__MULTIPLE_V2,
   }),
   [APIName.COUNTERPARTY_LIST]: createConfig({
     name: APIName.COUNTERPARTY_LIST,

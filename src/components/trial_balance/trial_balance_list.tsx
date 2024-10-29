@@ -50,7 +50,7 @@ const TrialBalanceList = () => {
           getToggledState={subAccountsToggleHandler}
           toggleStateFromParent={subAccountsToggle}
         />
-        <span className="text-neutral-600">Display Sub-Accounts</span>
+        <span className="text-neutral-600">{t('common:COMMON.DISPLAY_SUB_ACCOUNTS')}</span>
       </div>
       {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
       <div className="ml-auto flex items-center gap-24px">
@@ -61,7 +61,8 @@ const TrialBalanceList = () => {
   );
 
   const displayedVoucherList = voucherList.map((voucher) => (
-    <TrialBalanceItemRow key={voucher.id} voucher={voucher} />
+    // Info: (20241029 - Anna)  Passing subAccountsToggle to each TrialBalanceItemRow
+    <TrialBalanceItemRow key={voucher.id} voucher={voucher} totalExpanded={subAccountsToggle} />
   ));
 
   const formatNumber = (num: number): string => {
