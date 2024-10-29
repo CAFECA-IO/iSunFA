@@ -66,6 +66,7 @@ export type IAPIName =
   | 'COMPANY_UPDATE'
   | 'ROLE_LIST'
   | 'USER_ROLE_LIST'
+  | 'USER_CREATE_ROLE'
   | 'CREATE_ROLE'
   | 'ROLE_SELECT'
   | 'ROLE_GET_BY_ID'

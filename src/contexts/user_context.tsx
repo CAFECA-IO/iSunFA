@@ -17,6 +17,7 @@ import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { RoleName } from '@/constants/role';
 
 interface UserContextType {
   credential: string | null;
@@ -27,6 +28,7 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
+  createRole: (roleName: RoleName) => Promise<boolean>;
   selectRole: (roleName: string) => void;
   selectedRole: string | null; // ToDo: (20241028 - Liz) 確認要存 IRole 還是存 role.name 就好
   selectedCompany: ICompany | null;
@@ -60,6 +62,7 @@ export const UserContext = createContext<UserContextType>({
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
+  createRole: async () => false,
   selectRole: () => {},
   selectedRole: null,
   selectedCompany: null,
@@ -89,10 +92,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ToDo: (20241025 - Liz) 新增函數處理使用者擁有的角色
   // const [, setUserRoleList, userRoleListRef] = useStateRef<IRole[] | null>(null);
-  // Info: (20241028 - Liz) 使用者目前選擇的角色
+  // Info: (20241028 - Liz) 使用者目前選擇的角色(拿取 getStateInfoAPI 回傳的 Role 資料)
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
 
-  // const [, setRole, roleRef] = useStateRef<string | null>(null);
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
   const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
     undefined
@@ -119,6 +121,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
 
   const { trigger: userRoleListAPI } = APIHandler<IPaginatedData<IRole[]>>(APIName.USER_ROLE_LIST);
+
+  const { trigger: createRoleAPI } = APIHandler<IRole>(APIName.USER_CREATE_ROLE);
 
   // Info: (20241025 - Liz) 打 API 取得使用者擁有的角色
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -327,6 +331,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」(processRoleInfo)
+  // 會把 getStateInfoAPI 回傳的 Role 資料存入 setSelectedRole
 
   // Info: (20241001 - Liz) 此函數處理使用者資訊:
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
@@ -367,7 +372,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // ToDo: (20241008 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
     // const isProcessedRole = processRoleInfo(role);
-    const isProcessedRole = 'Bookkeeper'; // fake data
+    const isProcessedRole = 'Bookkeeper'; // Deprecated: (20241029 - Liz) fake data
 
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
@@ -498,16 +503,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20241028 - Liz) 建立角色的功能 API: createRole
+  // Info: (20241029 - Liz) 建立角色的功能
+  const createRole = async (roleName: RoleName) => {
+    try {
+      const { success } = await createRoleAPI({
+        params: { userId: userAuth?.id },
+        body: { roleName },
+      });
 
-  // ToDo: (20241009 - Liz) 選擇角色的功能
-  const selectRole = (roleName: IRole['name']) => {
-    setSelectedRole(roleName);
+      // Info: (20241029 - Liz) 檢查建立角色的成功狀態
+      if (!success) {
+        return false; // 建立失敗
+      }
+
+      return true; // 建立成功
+    } catch (error) {
+      // console.error('Error creating role:', error);
+      return false; // 建立失敗
+    }
   };
 
-  // Deprecated: (20241028 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('selectedRole:', selectedRoleRef.current);
+  // ToDo: (20241009 - Liz) 選擇角色的功能
+  const selectRole = () => {
+    // 打 API 選擇角色
+  };
 
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
@@ -603,6 +622,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
       isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
+      createRole,
       selectRole,
       selectedRole: selectedRoleRef.current,
       selectedCompany: selectedCompanyRef.current,
