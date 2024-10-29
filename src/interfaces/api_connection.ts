@@ -1,7 +1,7 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
-import { ICompanyKYCForm } from './company_kyc';
-import { ICertificate } from './certificate';
+import { ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { ICertificate } from '@/interfaces/certificate';
 
 export type IAPIName =
   | 'AGREE_TO_TERMS'
@@ -101,6 +101,7 @@ export type IAPIName =
   | 'UPDATE_ACCOUNTING_SETTING'
   | 'ASSET_LIST_V2'
   | 'VOUCHER_LIST_V2'
+  | 'VOUCHER_DELETE_V2'
   | 'CERTIFICATE_LIST_V2'
   | 'CERTIFICATE_GET_V2'
   | 'CERTIFICATE_POST_V2'

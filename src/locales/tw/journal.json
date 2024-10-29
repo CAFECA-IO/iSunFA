@@ -204,7 +204,9 @@
     "BALANCE": "餘額",
     "LEDGER": "分類帳",
     "TRIAL_BALANCE": "試算表",
-    "NO_VOUCHER": "無傳票資料"
+    "NO_VOUCHER": "無傳票資料",
+    "UPLOADED_VOUCHER_TAB": "已過帳傳票",
+    "UPCOMING_EVENTS_TAB": "未過帳傳票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增傳票",
@@ -275,5 +277,15 @@
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分類帳期間"
+  },
+  "AI_WORKING_AREA": {
+    "RESTING_CONTENT": "請選擇憑證，讓 AI 為您生成所需的傳票",
+    "WORKING_CONTENT": "AI 正在分析您的憑證，請稍候...",
+    "STOP_BTN": "停止分析",
+    "FAILED_CONTENT": "AI 未從您的憑證中找到任何有效資料，請手動輸入或",
+    "RETRY_BTN": "重試",
+    "FINISH_CONTENT": "AI 已完成分析，點擊以讓 AI",
+    "FILL_UP_BTN": "填寫您的傳票",
+    "WARNING_CONTENT": "AI 可能會出錯，請仔細檢查重要資訊。"
   }
 }
