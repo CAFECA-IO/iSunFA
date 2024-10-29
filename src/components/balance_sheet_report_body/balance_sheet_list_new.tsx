@@ -222,8 +222,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
+        </div>
       </div>
     );
   } else if (getReportFinancialIsLoading) {

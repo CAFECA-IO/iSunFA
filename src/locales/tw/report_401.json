@@ -182,5 +182,9 @@
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "報告類型",
     "ATTENTION": "注意：產生報告大約需要 30 到 40 分鐘。完成後，它將儲存在“我的報告”中。感謝您的耐心等待。"
+  },
+  "REPORT": {
+    "NO_DATA_AVAILABLE": "無可用數據",
+    "PLEASE_SELECT_PERIOD": "請選擇期間"
   }
 }
