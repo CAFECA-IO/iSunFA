@@ -495,12 +495,13 @@
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
   },
-  "CREATE_ROLE": {
-    "SELECT_ROLE_ISUNFA": "Select Role - iSunFA"
+
+  "CREATE_ROLE_PAGE": {
+    "CREATE_ROLE_TITLE": "Create Role"
   },
 
-  "CREATED_ROLES": {
-    "CREATED_ROLES": "Created Roles"
+  "SELECT_ROLE_PAGE": {
+    "SELECT_ROLE_TITLE": "Select Role"
   },
 
   "BETA_DASHBOARD": {

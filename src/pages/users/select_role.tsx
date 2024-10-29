@@ -2,74 +2,79 @@ import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import Image from 'next/image';
-import I18n from '@/components/i18n/i18n';
 import { FiHome, FiArrowRight } from 'react-icons/fi';
 import { TbLogout } from 'react-icons/tb';
 import { HiPlus } from 'react-icons/hi2';
-import { RoleName } from '@/constants/role';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ISUNFA_ROUTE } from '@/constants/url';
+import I18n from '@/components/i18n/i18n';
 import { useUserCtx } from '@/contexts/user_context';
+import { IRole } from '@/interfaces/role';
+import { RoleName } from '@/constants/role';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { DEFAULT_AVATAR_URL } from '@/constants/display';
 
-interface JobRecordCardProps {
-  roleName: string;
+interface UserRoleProps {
+  name: string;
   roleIconSrc: string;
-  roleAltText: string;
-  jobAvatarSrc: string;
-  jonAltText: string;
-  lastLoginTime: string;
+  roleIconAlt: string;
+  avatar: string;
+  lastLoginAt: number;
 }
 
-const jobsRecords = [
+// Info: (20241029 - Liz) 用來對照 Role 的 Icon
+const USER_ROLES_ICON = [
   {
-    jobId: 1,
-    roleId: RoleName.BOOKKEEPER,
-    roleName: 'Bookkeeper',
+    id: RoleName.BOOKKEEPER,
     roleIconSrc: '/icons/information_desk.svg',
-    roleAltText: 'information_desk',
-    jobAvatarSrc: '/images/fake_job_avatar_01.svg',
-    jonAltText: 'fake_job_avatar_01',
-    lastLoginTime: '2024/09/09 15:30:30',
+    roleIconAlt: 'information_desk',
   },
   {
-    jobId: 2,
-    roleId: RoleName.EDUCATIONAL_TRIAL_VERSION,
-    roleName: 'Educational',
+    id: RoleName.EDUCATIONAL_TRIAL_VERSION,
     roleIconSrc: '/icons/graduation_cap.svg',
-    roleAltText: 'graduation_cap',
-    jobAvatarSrc: '/images/fake_job_avatar_02.svg',
-    jonAltText: 'fake_job_avatar_02',
-    lastLoginTime: '2024/09/09 15:30:30',
+    roleIconAlt: 'graduation_cap',
   },
 ];
 
-const JobRecordCard = ({
-  roleName,
-  roleIconSrc,
-  roleAltText,
-  jobAvatarSrc,
-  jonAltText,
-  lastLoginTime,
-}: JobRecordCardProps) => {
-  // ToDo: (20241009 - Liz) 選擇 Job 功能
+// ToDo: (20241029 - Liz) 這是假資料，之後要改成從 API 拿
+const USER_ROLES: IRole[] = [
+  {
+    id: 1,
+    name: RoleName.BOOKKEEPER,
+    lastLoginAt: 1730044800,
+    createdAt: 1730044800,
+    updatedAt: 1730044800,
+    permissions: ['READ', 'WRITE', 'DELETE'],
+  },
+  {
+    id: 2,
+    name: RoleName.EDUCATIONAL_TRIAL_VERSION,
+    lastLoginAt: 1730131200,
+    createdAt: 1730131200,
+    updatedAt: 1730131200,
+    permissions: ['READ', 'WRITE'],
+  },
+];
+
+const UserRole = ({ name, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserRoleProps) => {
+  // ToDo: (20241009 - Liz) 選擇 Role 功能
   const handleStart = () => {
     // Deprecated: (20241009 - Liz)
     // eslint-disable-next-line no-console
-    console.log('選擇這個 Job 來開始工作');
+    console.log('選擇這個 Role 來開始工作');
   };
 
   return (
     <div className="relative flex h-480px w-280px flex-col items-center justify-between rounded-lg bg-surface-neutral-surface-lv1 p-40px shadow-Dropshadow_S">
       <div className="absolute left-20px top-20px opacity-30">
-        <Image src={roleIconSrc} alt={roleAltText} width={64} height={64} />
+        <Image src={roleIconSrc} alt={roleIconAlt} width={64} height={64} />
       </div>
 
-      <h2 className="text-32px font-bold text-text-neutral-primary">{roleName}</h2>
+      <h2 className="text-32px font-bold text-text-neutral-primary">{name}</h2>
 
       <Image
-        src={jobAvatarSrc}
-        alt={jonAltText}
+        src={avatar}
+        alt="user_avatar"
         width={120}
         height={120}
         className="rounded-full"
@@ -78,7 +83,7 @@ const JobRecordCard = ({
       <div className="space-y-16px text-center text-lg font-medium">
         <p className="text-text-neutral-secondary">Last Login Time</p>
 
-        <p className="text-text-neutral-tertiary">{lastLoginTime}</p>
+        <p className="text-text-neutral-tertiary">{lastLoginAt}</p>
       </div>
 
       <button
@@ -93,9 +98,9 @@ const JobRecordCard = ({
   );
 };
 
-const JobRecordPage = () => {
+const SelectRolePage = () => {
   const { t } = useTranslation(['common']);
-  const { signOut } = useUserCtx();
+  const { signOut, userAuth } = useUserCtx();
 
   return (
     <>
@@ -103,7 +108,7 @@ const JobRecordPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:CREATED_ROLES.CREATED_ROLES')}</title>
+        <title>{t('common:SELECT_ROLE_PAGE.SELECT_ROLE_TITLE')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -124,8 +129,9 @@ const JobRecordPage = () => {
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
           <I18n />
 
-          {/* // ToDo: (20241009 - Liz) 回到主頁功能 */}
-          <FiHome size={20} />
+          <Link href={ISUNFA_ROUTE.BETA_DASHBOARD}>
+            <FiHome size={20} />
+          </Link>
         </div>
 
         <button
@@ -137,19 +143,22 @@ const JobRecordPage = () => {
           <p className="font-semibold">Log out</p>
         </button>
 
-        {/* // Info: (20241009 - Liz) Job Record Cards */}
+        {/* // Info: (20241009 - Liz) User Roles */}
         <section className="flex items-center justify-center gap-40px pt-120px">
-          {jobsRecords.map((jobRecord) => (
-            <JobRecordCard
-              key={jobRecord.jobId}
-              roleName={jobRecord.roleName}
-              roleIconSrc={jobRecord.roleIconSrc}
-              roleAltText={jobRecord.roleAltText}
-              jobAvatarSrc={jobRecord.jobAvatarSrc}
-              jonAltText={jobRecord.jonAltText}
-              lastLoginTime={jobRecord.lastLoginTime}
-            />
-          ))}
+          {USER_ROLES.map((role) => {
+            const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === role.name);
+
+            return (
+              <UserRole
+                key={role.id}
+                name={role.name}
+                roleIconSrc={roleIcon?.roleIconSrc ?? ''}
+                roleIconAlt={roleIcon?.roleIconAlt ?? ''}
+                avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
+                lastLoginAt={role.lastLoginAt}
+              />
+            );
+          })}
 
           <Link
             href={ISUNFA_ROUTE.CREATE_ROLE}
@@ -181,4 +190,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default JobRecordPage;
+export default SelectRolePage;

@@ -23,7 +23,7 @@ const CreateRolePage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:CREATE_ROLE.SELECT_ROLE_ISUNFA')}</title>
+        <title>{t('common:CREATE_ROLE_PAGE.CREATE_ROLE_TITLE')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
