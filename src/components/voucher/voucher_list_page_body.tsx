@@ -120,6 +120,7 @@ const VoucherListPageBody: React.FC = () => {
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
           tabs={voucherTab}
+          tabsString={voucherTab}
           activeTab={activeTab}
           onTabClick={tabClick}
           counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}

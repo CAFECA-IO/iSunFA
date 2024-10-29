@@ -65,10 +65,10 @@ const dummyAIResult: IAIResultVoucher = {
 };
 
 interface NewVoucherFormProps {
-  selectedCertificateIds: number[];
+  selectedData: { [id: string]: ICertificateUI };
 }
 
-const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedCertificateIds }) => {
+const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -171,7 +171,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedCertificateIds 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>(selectedCertificateIds);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
@@ -195,12 +195,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedCertificateIds 
     },
     [certificates]
   );
-
-  useEffect(() => {
-    if (selectedIds.length > 0) {
-      setOpenSelectorModal(true);
-    }
-  }, [selectedIds]);
 
   useEffect(() => {
     if (selectedCertificates.length > 0 && selectedIds.length > 0) {
@@ -286,7 +280,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedCertificateIds 
       );
       setCertificates(certificatesData);
     },
-    []
+    [selectedCertificates]
   );
 
   // Info: (20241004 - Julian) Type 下拉選單
@@ -805,6 +799,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedCertificateIds 
       pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
   }, []);
+
+  useEffect(() => {
+    setSelectedCertificates(Object.values(selectedData));
+    setSelectedIds(Object.keys(selectedData).map(Number));
+  }, [selectedCertificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">

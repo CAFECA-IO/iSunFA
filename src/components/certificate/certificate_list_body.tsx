@@ -41,6 +41,7 @@ const sanitizeFileName = (fileName: string): string => {
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation('certificate');
+  const router = useRouter();
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const params = { companyId: selectedCompany?.id };
@@ -53,7 +54,10 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  const [data, setData] = useState<{ [id: string]: ICertificateUI }>({});
+  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [selectedCertificates, setSelectedCertificates] = useState<{
+    [id: string]: ICertificateUI;
+  }>({});
   const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
   const [unRead, setUnRead] = useState<{
     withVoucher: number;
@@ -78,9 +82,50 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([]);
-  const [exportOperations, setExportOperations] = useState<ISelectionToolBarOperation[]>([]);
   const [currency, setCurrency] = useState<string>('TWD');
+
+  const handleAddVoucher = useCallback(() => {
+    router.push({
+      pathname: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
+    });
+  }, [selectedCertificates]);
+
+  const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([
+    {
+      operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
+      buttonStr: t('common:SELECTION.ADD_NEW_VOUCHER'),
+      onClick: handleAddVoucher,
+    },
+  ]);
+
+  const handleDownloadItem = useCallback(
+    (id: number) => {
+      const { file } = certificates[id];
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.name || `image_${file.id}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    [certificates]
+  );
+
+  const handleDownloadSelectedItems = useCallback(() => {
+    Object.entries(certificates).forEach(([id, item]) => {
+      if (item.isSelected) {
+        handleDownloadItem(parseInt(id, 10));
+      }
+    });
+  }, [certificates, activeTab, handleDownloadItem]);
+
+  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
+    {
+      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+      buttonStr: t('certificate:LIST.EXPORT_CERTIFICATES'),
+      onClick: handleDownloadSelectedItems,
+    },
+  ]);
 
   const handleApiResponse = useCallback(
     (
@@ -145,7 +190,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           },
           {} as { [id: number]: ICertificateUI }
         );
-        setData(certificateData);
+        setCertificates(certificateData);
       } catch (error) {
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
@@ -161,76 +206,75 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleSelect = useCallback(
     (ids: number[], isSelected: boolean) => {
       const updatedData = {
-        ...data,
+        ...certificates,
       };
       if (ids.length === Object.keys(updatedData).length) {
         setIsSelectedAll(isSelected);
       } else {
         setIsSelectedAll(false);
       }
+      const selectedData: { [id: string]: ICertificateUI } = {
+        ...selectedCertificates,
+      };
       ids.forEach((id) => {
         updatedData[id] = {
           ...updatedData[id],
           isSelected,
         };
+        if (isSelected) {
+          selectedData[id] = updatedData[id];
+        } else {
+          delete selectedData[id];
+        }
       });
-      setData(updatedData);
+      localStorage.setItem('selectedCertificates', JSON.stringify(selectedData));
+      setCertificates(updatedData);
+      setSelectedCertificates(selectedData);
     },
-    [data, activeTab, isSelectedAll]
+    [certificates, activeTab, isSelectedAll]
   );
 
-  const filterSelectedIds = useCallback(() => {
-    return Object.keys(data).filter((id) => data[parseInt(id, 10)].isSelected);
-  }, [data, activeTab]);
-
-  const handleAddVoucher = useCallback(() => {
-    const router = useRouter();
-    const selectedIds = filterSelectedIds();
-
-    router.push({
-      pathname: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
-      query: { ids: selectedIds.join(',') },
-    });
-  }, [filterSelectedIds]);
-
-  const handleDeleteItem = useCallback((id: number) => {
-    messageModalDataHandler({
-      title: t('certificate:DELETE.TITLE'),
-      content: t('certificate:DELETE.CONTENT'),
-      notes: `${data[id].invoice.name}?`,
-      messageType: MessageType.WARNING,
-      submitBtnStr: t('certificate:DELETE.YES'),
-      submitBtnFunction: async () => {
-        try {
-          const { success } = await deleteCertificateAPI({
-            params: { companyId, certificateId: id },
-            query: { certificateId: id },
-          });
-          if (success) {
+  const handleDeleteItem = useCallback(
+    (id: number) => {
+      messageModalDataHandler({
+        title: t('certificate:DELETE.TITLE'),
+        content: t('certificate:DELETE.CONTENT'),
+        notes: `${certificates[id].invoice.name}?`,
+        messageType: MessageType.WARNING,
+        submitBtnStr: t('certificate:DELETE.YES'),
+        submitBtnFunction: async () => {
+          try {
+            const { success } = await deleteCertificateAPI({
+              params: { companyId, certificateId: id },
+              query: { certificateId: id },
+            });
+            if (success) {
+              toastHandler({
+                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+                type: ToastType.SUCCESS,
+                content: t('certificate:DELETE.SUCCESS'),
+                closeable: true,
+              });
+            } else throw new Error(t('certificate:DELETE.ERROR'));
+          } catch (error) {
             toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-              type: ToastType.SUCCESS,
-              content: t('certificate:DELETE.SUCCESS'),
+              id: ToastId.DELETE_CERTIFICATE_ERROR,
+              type: ToastType.ERROR,
+              content: t('certificate:ERROR.WENT_WRONG'),
               closeable: true,
             });
-          } else throw new Error(t('certificate:DELETE.ERROR'));
-        } catch (error) {
-          toastHandler({
-            id: ToastId.DELETE_CERTIFICATE_ERROR,
-            type: ToastType.ERROR,
-            content: t('certificate:ERROR.WENT_WRONG'),
-            closeable: true,
-          });
-        }
-      },
-      backBtnStr: t('certificate:DELETE.NO'),
-    });
-    messageModalVisibilityHandler();
-  }, []);
+          }
+        },
+        backBtnStr: t('certificate:DELETE.NO'),
+      });
+      messageModalVisibilityHandler();
+    },
+    [certificates]
+  );
 
   const handleDeleteSelectedItems = useCallback(() => {
     // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = Object.keys(data).filter((id) => data[id].isSelected);
+    const selectedIds = Object.keys(certificates).filter((id) => certificates[id].isSelected);
 
     // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
     if (selectedIds.length > 0) {
@@ -277,48 +321,32 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       // Info: (20241025 - tzuhan) 顯示確認刪除的模態框
       messageModalVisibilityHandler();
     }
-  }, [data, activeTab, t, messageModalDataHandler, messageModalVisibilityHandler, toastHandler]);
+  }, [
+    certificates,
+    activeTab,
+    t,
+    messageModalDataHandler,
+    messageModalVisibilityHandler,
+    toastHandler,
+  ]);
 
-  const handleDownloadItem = useCallback(
-    (id: number) => {
-      const { file } = data[id];
-      const link = document.createElement('a');
-      link.href = file.url;
-      link.download = file.name || `image_${file.id}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    },
-    [data]
-  );
-
-  const handleDownloadSelectedItems = useCallback(() => {
-    Object.entries(data).forEach(([id, item]) => {
-      if (item.isSelected) {
-        handleDownloadItem(parseInt(id, 10));
+  const onTabClick = useCallback(
+    (tab: string) => {
+      if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
+        setAddOperations([
+          {
+            operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
+            buttonStr: t('common:SELECTION.ADD_NEW_VOUCHER'),
+            onClick: handleAddVoucher,
+          },
+        ]);
+      } else {
+        setAddOperations([]);
       }
-    });
-  }, [data, activeTab, handleDownloadItem]);
-
-  const onTabClick = useCallback((tab: string) => {
-    setActiveTab(tab as InvoiceTabs);
-    if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
-      setAddOperations([
-        {
-          operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-          buttonStr: t('certificate:OPERATION.ADD_VOUCHER'),
-          onClick: handleAddVoucher,
-        },
-      ]);
-      setExportOperations([
-        {
-          operation: CERTIFICATE_USER_INTERACT_OPERATION.DELETE,
-          buttonStr: t('certificate:OPERATION.DELETE'),
-          onClick: handleDownloadSelectedItems,
-        },
-      ]);
-    }
-  }, []);
+      setActiveTab(tab as InvoiceTabs);
+    },
+    [activeTab, handleAddVoucher, handleDownloadSelectedItems]
+  );
 
   const openEditModalHandler = useCallback(
     (id: number) => {
@@ -328,49 +356,52 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [editingId]
   );
 
-  const handleEditItem = useCallback(async (certificate: ICertificate) => {
-    try {
-      // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
-      const { success, data: updatedCertificate } = await updateCertificateAPI({
-        params: { companyId, certificateId: certificate.id },
-        body: certificate,
-      });
-      if (success && updatedCertificate) {
-        const updatedData = {
-          ...data,
-          [certificate.id]: {
-            ...updatedCertificate,
-            isSelected: false,
-            actions: [
-              CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-              CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-            ],
-          },
-        };
-        setData(updatedData);
-        toastHandler({
-          id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: t('certificate:EDIT.SUCCESS'),
-          closeable: true,
+  const handleEditItem = useCallback(
+    async (certificate: ICertificate) => {
+      try {
+        // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
+        const { success, data: updatedCertificate } = await updateCertificateAPI({
+          params: { companyId, certificateId: certificate.id },
+          body: certificate,
         });
-      } else {
+        if (success && updatedCertificate) {
+          const updatedData = {
+            ...certificates,
+            [certificate.id]: {
+              ...updatedCertificate,
+              isSelected: false,
+              actions: [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ],
+            },
+          };
+          setCertificates(updatedData);
+          toastHandler({
+            id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
+            type: ToastType.SUCCESS,
+            content: t('certificate:EDIT.SUCCESS'),
+            closeable: true,
+          });
+        } else {
+          toastHandler({
+            id: ToastId.UPDATE_CERTIFICATE_ERROR,
+            type: ToastType.ERROR,
+            content: t('certificate:ERROR.WENT_WRONG'),
+            closeable: true,
+          });
+        }
+      } catch (error) {
         toastHandler({
           id: ToastId.UPDATE_CERTIFICATE_ERROR,
           type: ToastType.ERROR,
-          content: t('certificate:ERROR.WENT_WRONG'),
+          content: t('certificate:ERROR.UPDATE_CERTIFICATE', { reason: (error as Error).message }),
           closeable: true,
         });
       }
-    } catch (error) {
-      toastHandler({
-        id: ToastId.UPDATE_CERTIFICATE_ERROR,
-        type: ToastType.ERROR,
-        content: t('certificate:ERROR.UPDATE_CERTIFICATE', { reason: (error as Error).message }),
-        closeable: true,
-      });
-    }
-  }, []);
+    },
+    [certificates, companyId]
+  );
 
   const mobileUploadFileHandler = useCallback(
     async (message: { token: string; file: IFileUIBeta }) => {
@@ -397,32 +428,38 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         console.log(`mobileUploadFiles:`, mobileUploadFiles);
       }
     },
-    [tokenRef, setMobileUploadFiles]
+    [tokenRef, setMobileUploadFiles, mobileUploadFiles]
   );
 
-  const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
-    const { certificate: newCertificate } = message;
-    if (
-      (newCertificate.voucherNo && activeTab === InvoiceTabs.WITHOUT_VOUCHER) ||
-      (!newCertificate.voucherNo && activeTab === InvoiceTabs.WITH_VOUCHER) ||
-      newCertificate.companyId !== companyId
-    ) {
-      return;
-    }
+  const certificateCreatedHandler = useCallback(
+    (message: { certificate: ICertificate }) => {
+      const { certificate: newCertificate } = message;
+      if (
+        (newCertificate.voucherNo && activeTab === InvoiceTabs.WITHOUT_VOUCHER) ||
+        (!newCertificate.voucherNo && activeTab === InvoiceTabs.WITH_VOUCHER) ||
+        newCertificate.companyId !== companyId
+      ) {
+        return;
+      }
 
-    const newCertificates = {
-      ...data,
-    };
-    newCertificates[message.certificate.id] = {
-      ...message.certificate,
-      isSelected: false,
-      unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
-      actions: !message.certificate.voucherNo
-        ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
-        : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-    };
-    setData(newCertificates);
-  }, []);
+      const newCertificates = {
+        ...certificates,
+      };
+      newCertificates[message.certificate.id] = {
+        ...message.certificate,
+        isSelected: false,
+        unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
+        actions: !message.certificate.voucherNo
+          ? [
+              CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+              CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+            ]
+          : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+      };
+      setCertificates(newCertificates);
+    },
+    [companyId, certificates, activeTab]
+  );
 
   const getToken = useCallback(async () => {
     if (!tokenRef.current) {
@@ -473,7 +510,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           isOpen={isEditModalOpen}
           companyId={companyId}
           toggleIsEditModalOpen={setIsEditModalOpen}
-          certificate={editingId ? data[editingId] : undefined}
+          certificate={editingId ? certificates[editingId] : undefined}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}
         />
@@ -488,7 +525,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
-        className={`flex grow flex-col gap-4 ${data && Object.values(data).length > 0 ? 'overflow-y-scroll' : ''} `}
+        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-y-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
         <InvoiceUpload
@@ -500,7 +537,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
         {/* Info: (20240919 - tzuhan) Tabs */}
         <Tabs
-          tabs={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
+          tabs={Object.values(InvoiceTabs)}
+          tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
           onTabClick={onTabClick}
           counts={unRead ? [unRead.withoutVoucher, unRead.withVoucher] : [0, 0]}
@@ -532,19 +570,19 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}
-        {data && Object.values(data).length > 0 ? (
+        {certificates && Object.values(certificates).length > 0 ? (
           <>
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
               isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
-              items={Object.values(data)}
+              items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRRICE')}:`}
               totalPrice={totalInvoicePrice}
               currency={currency}
-              selectedCount={filterSelectedIds().length}
-              totalCount={Object.values(data).length || 0}
+              selectedCount={Object.values(selectedCertificates).length}
+              totalCount={Object.values(certificates).length || 0}
               handleSelect={handleSelect}
               addOperations={addOperations}
               exportOperations={exportOperations}
@@ -556,7 +594,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               setPage={setPage}
               totalPages={totalPages}
               totalCount={totalCount}
-              certificates={Object.values(data)}
+              certificates={Object.values(certificates)}
               viewType={viewType}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
