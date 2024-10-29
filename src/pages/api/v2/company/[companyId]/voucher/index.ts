@@ -252,7 +252,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
       const assetEntities = await Promise.all(assetIds.map(postUtils.initAssetFromPrisma));
 
       // Info: (20241029 - Murky) Generate all Depreciation Voucher
-      const depreciatedVouchers = assetEntities
+      const depreciatedExpenseVouchers = assetEntities
         .map((assetEntity) => {
           return postUtils.initDepreciationVoucherFromAssetEntity(assetEntity, {
             nowInSecond,
@@ -262,7 +262,12 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
         })
         .flat();
 
-      // ToDo: (20241029 - Murky) 寫到這邊，initAssetAssociatedVouchers 還沒有實作
+      const assetEventEntity = postUtils.initAddAssetEventEntity({
+        originalVoucher: voucher,
+        depreciatedExpenseVouchers,
+      });
+
+      eventControlPanel.assetEvent = assetEventEntity;
     }
   } catch (_error) {
     const error = _error as Error;

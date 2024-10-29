@@ -244,7 +244,7 @@ export const voucherAPIPostUtils = {
           reverseVoucher.voucherId
         );
         // Info: (20241029 - Murky) Deep copy original voucher
-        const originalVoucherCopy = await initVoucherEntity({
+        const originalVoucherCopy = initVoucherEntity({
           issuerId: originalVoucher.issuerId,
           counterPartyId: originalVoucher.counterPartyId,
           companyId: originalVoucher.companyId,
@@ -338,6 +338,48 @@ export const voucherAPIPostUtils = {
 
     return depreciateExpenseVouchers;
   },
+
+  initAddAssetAssociateVouchers: ({
+    originalVoucher,
+    depreciatedExpenseVouchers,
+  }: {
+    originalVoucher: IVoucherEntity;
+    depreciatedExpenseVouchers: IVoucherEntity[];
+  }) => {
+    const associateVouchers = depreciatedExpenseVouchers.map((depreciatedExpenseVoucher) => {
+      return {
+        originalVoucher,
+        resultVoucher: depreciatedExpenseVoucher,
+      };
+    });
+
+    return associateVouchers;
+  },
+
+  initAddAssetEventEntity: ({
+    originalVoucher,
+    depreciatedExpenseVouchers,
+  }: {
+    originalVoucher: IVoucherEntity;
+    depreciatedExpenseVouchers: IVoucherEntity[];
+  }) => {
+    const associateVouchers = voucherAPIPostUtils.initAddAssetAssociateVouchers({
+      originalVoucher,
+      depreciatedExpenseVouchers,
+    });
+
+    // Info: (20241029 - Murky) Warning: 折舊活動目前先放Once
+    const addAssetEvent: IEventEntity = initEventEntity({
+      eventType: EventEntityType.ASSET,
+      frequency: EventEntityFrequency.ONCE,
+      startDate: originalVoucher.date,
+      endDate: originalVoucher.date,
+      associateVouchers,
+    });
+
+    return addAssetEvent;
+  },
+
   /**
    * Info: (20241025 - Murky)
    * @description throw StatusMessage as Error, but it can log the errorMessage
