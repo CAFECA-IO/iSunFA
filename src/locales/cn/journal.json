@@ -204,7 +204,9 @@
     "BALANCE": "余额",
     "LEDGER": "分类帐",
     "TRIAL_BALANCE": "试算表",
-    "NO_VOUCHER": "无传票资料"
+    "NO_VOUCHER": "无传票资料",
+    "UPLOADED_VOUCHER_TAB": "已过账传票",
+    "UPCOMING_EVENTS_TAB": "未过账传票"
   },
   "ADD_NEW_VOUCHER": {
     "PAGE_TITLE": "新增传票",
@@ -275,5 +277,15 @@
   },
   "LEDGER": {
     "LEDGER_PERIOD": "分类帐期间"
+  },
+  "AI_WORKING_AREA": {
+    "RESTING_CONTENT": "请选择凭证，让 AI 为您生成所需的传票",
+    "WORKING_CONTENT": "AI 正在分析您的凭证，请稍候...",
+    "STOP_BTN": "停止分析",
+    "FAILED_CONTENT": "AI 未从您的凭证中找到任何有效资料，请手动输入或",
+    "RETRY_BTN": "重试",
+    "FINISH_CONTENT": "AI 已完成分析，点击以让 AI",
+    "FILL_UP_BTN": "填写您的传票",
+    "WARNING_CONTENT": "AI 可能会出错，请仔细检查重要资讯。"
   }
 }
