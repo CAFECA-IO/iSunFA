@@ -810,4 +810,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.UPDATE_ASSET_V2,
   }),
+  [APIName.VOUCHER_DELETE_V2]: createConfig({
+    name: APIName.VOUCHER_DELETE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.VOUCHER_DELETE_V2,
+  }),
 };
