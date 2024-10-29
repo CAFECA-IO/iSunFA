@@ -45,6 +45,7 @@ export enum APIName {
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
   CERTIFICATE_DELETE_V2 = 'CERTIFICATE_DELETE_V2',
+  CERTIFICATE_DELETE__MULTIPLE_V2 = 'CERTIFICATE_DELETE__MULTIPLE_V2',
   COUNTERPARTY_LIST = 'COUNTERPARTY_LIST',
   COUNTERPARTY_GET_BY_ID = 'COUNTERPARTY_GET_BY_ID',
   COUNTERPARTY_ADD = 'COUNTERPARTY_ADD',
@@ -136,6 +137,7 @@ export enum APIName {
   CREATE_ASSET_V2 = 'CREATE_ASSET_V2',
   DELETE_ASSET_V2 = 'DELETE_ASSET_V2',
   UPDATE_ASSET_V2 = 'UPDATE_ASSET_V2',
+  ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
 }
 
 export enum APIPath {
@@ -160,6 +162,7 @@ export enum APIPath {
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
+  CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   COUNTERPARTY_LIST = `${apiPrefix}/company/:companyId/counterparty`,
   COUNTERPARTY_ADD = `${apiPrefix}/company/:companyId/counterparty`,
   COUNTERPARTY_GET_BY_ID = `${apiPrefix}/company/:companyId/counterparty/:counterpartyId`,
@@ -250,6 +253,7 @@ export enum APIPath {
   CREATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   DELETE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   UPDATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
+  ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
 }
 const createConfig = ({
   name,
@@ -740,6 +744,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.DELETE,
     path: APIPath.CERTIFICATE_PUT_V2,
   }),
+  // Info: (20241028 - Tzuhan) @Murky, 需要新增這個 API 用來在 certificate list 一次性刪除多張certificate
+  [APIName.CERTIFICATE_DELETE__MULTIPLE_V2]: createConfig({
+    name: APIName.CERTIFICATE_DELETE__MULTIPLE_V2,
+    method: HttpMethod.DELETE,
+    path: APIPath.CERTIFICATE_DELETE__MULTIPLE_V2,
+  }),
   [APIName.COUNTERPARTY_LIST]: createConfig({
     name: APIName.COUNTERPARTY_LIST,
     method: HttpMethod.GET,
@@ -814,5 +824,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_DELETE_V2,
     method: HttpMethod.DELETE,
     path: APIPath.VOUCHER_DELETE_V2,
+  }),
+  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: createConfig({
+    name: APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE,
   }),
 };

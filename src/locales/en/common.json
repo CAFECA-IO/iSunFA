@@ -298,7 +298,8 @@
     "CODE": "Code",
     "BEGINNING": "Beginning",
     "MIDTERM": "Midterm",
-    "ENDING": "Ending"
+    "ENDING": "Ending",
+    "DISPLAY_SUB_ACCOUNTS": "Display Sub-Accounts"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
