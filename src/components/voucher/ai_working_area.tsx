@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { IoWarningOutline, IoPauseCircleOutline } from 'react-icons/io5';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { GrRefresh } from 'react-icons/gr';
@@ -26,6 +27,8 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
   setIsShowAnalysisPreview,
   fillUpClickHandler,
 }) => {
+  const { t } = useTranslation('common');
+
   const gifSrc =
     aiState === AIState.RESTING ? '/animations/ai_resting.gif' : '/animations/ai_working.gif';
 
@@ -33,35 +36,35 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
     aiState === AIState.RESTING ? (
       // Info: (20241017 - Julian) AI Resting
       <p className="font-medium text-text-neutral-primary">
-        Please select the certificates for AI to generate the voucher for you
+        {t('journal:AI_WORKING_AREA.RESTING_CONTENT')}
       </p>
     ) : aiState === AIState.WORKING ? (
       // Info: (20241017 - Julian) AI Working
       <div className="flex items-center font-medium text-text-neutral-primary">
-        <p>AI is scanning your certificates, please wait...</p>
+        <p>{t('journal:AI_WORKING_AREA.WORKING_CONTENT')}</p>
         <button
           type="button"
           className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover"
           onClick={() => setAiState(AIState.RESTING)}
         >
           <IoPauseCircleOutline size={20} />
-          <p>Stop scanning</p>
+          <p>{t('journal:AI_WORKING_AREA.STOP_BTN')}</p>
         </button>
       </div>
     ) : aiState === AIState.FAILED ? (
       <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
-        <p>AI didn’t find any valid data from your certificate, please enter manually or</p>
+        <p>{t('journal:AI_WORKING_AREA.FAILED_CONTENT')}</p>
         <button
           type="button"
           className="flex items-center gap-4px px-16px py-8px text-sm text-button-text-primary hover:text-button-text-primary-hover"
         >
           <GrRefresh size={20} className="scale-x-flip" />
-          <p>Try again</p>
+          <p>{t('journal:AI_WORKING_AREA.RETRY_BTN')}</p>
         </button>
       </div>
     ) : analyzeSuccess && AIState.FINISH ? (
       <div className="flex items-center gap-16px font-medium text-text-neutral-primary">
-        <p>AI has done scanning. Click here to allow AI</p>
+        <p>{t('journal:AI_WORKING_AREA.FINISH_CONTENT')}</p>
         <button
           type="button"
           className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-sm text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover"
@@ -70,7 +73,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
           onClick={fillUpClickHandler}
         >
           <HiOutlineSparkles size={16} />
-          <p>Fill up your voucher</p>
+          <p>{t('journal:AI_WORKING_AREA.FILL_UP_BTN')}</p>
         </button>
       </div>
     ) : null;
@@ -79,7 +82,7 @@ const AIWorkingArea: React.FC<AIWorkingAreaProps> = ({
     analyzeSuccess && aiState === AIState.FINISH ? (
       <div className="flex items-center gap-4px text-text-neutral-tertiary">
         <IoWarningOutline size={16} />
-        <p className="text-xs">AI can make mistake, please double check important information.</p>
+        <p className="text-xs">{t('journal:AI_WORKING_AREA.WARNING_CONTENT')}</p>
       </div>
     ) : null;
 

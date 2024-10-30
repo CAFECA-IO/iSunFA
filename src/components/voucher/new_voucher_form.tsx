@@ -64,7 +64,11 @@ const dummyAIResult: IAIResultVoucher = {
   lineItemsInfo: { lineItems: [] },
 };
 
-const NewVoucherForm: React.FC = () => {
+interface NewVoucherFormProps {
+  selectedData: { [id: string]: ICertificateUI };
+}
+
+const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -276,7 +280,7 @@ const NewVoucherForm: React.FC = () => {
       );
       setCertificates(certificatesData);
     },
-    []
+    [selectedCertificates]
   );
 
   // Info: (20241004 - Julian) Type 下拉選單
@@ -795,6 +799,11 @@ const NewVoucherForm: React.FC = () => {
       pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
   }, []);
+
+  useEffect(() => {
+    setSelectedCertificates(Object.values(selectedData));
+    setSelectedIds(Object.keys(selectedData).map(Number));
+  }, [selectedCertificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">

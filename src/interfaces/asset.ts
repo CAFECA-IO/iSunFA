@@ -20,6 +20,7 @@ export interface IAsset {
   createdAt: number;
   updatedAt: number;
 }
+
 export const mockAssetData: IAsset[] = [
   {
     id: 1,
@@ -171,6 +172,24 @@ export const mockUpdateAssetInput: IUpdateAssetInput = {
 /**
  * Info: (20241024 - Murky)
  * @description Asset Entity Interface specify  for backend
+ * @property id - number Asset ID, 0 if not yet saved in database
+ * @property companyId - number company id of company that own the asset
+ * @property name - string
+ * @property type - AssetEntityType Asset type that is based on property, plant, equipment
+ * @property number - string Property Serial number
+ * @property acquisitionDate - number When the asset is acquired
+ * @property purchasePrice - number The price (or consideration) to acquire the asset
+ * @property accumulatedDepreciation - number Sum of depreciation expense from the acquisition date to the current date
+ * @property residualValue - number The remaining value of the asset after depreciated through the useful life
+ * @property remainingLife - number asset still in used or how it is disposed
+ * @property status - AssetStatus asset still in used or how it is disposed
+ * @property depreciationStart - number When the asset start to depreciate, normally is the acquisition date
+ * @property depreciationMethod - AssetDepreciationMethod How the asset is depreciated
+ * @property usefulLife - the last use date in second of the asset
+ * @property note - string note input by user
+ * @property createdAt - number When the asset is created in database
+ * @property updatedAt - number When the asset is updated in database
+ * @property deletedAt - number | null When the asset is deleted in database, null if not deleted
  * @note use parsePrismaAssetToAssetEntity to convert Asset in prisma to IAssetEntity
  * @note use initAssetEntity to create new Asset Entity
  */
@@ -259,8 +278,7 @@ export interface IAssetEntity {
 
   /**
    * Info: (20241024 - Murky)
-   * @description Total useful life of the asset,
-   * won't decrease when time pass
+   * @description the last use date in second of the asset
    * @note need to be in seconds
    */
   usefulLife: number;
@@ -305,4 +323,46 @@ export interface IAssetEntity {
    * @description Company that own the asset
    */
   company?: ICompanyEntity;
+}
+
+/**
+ * Info: (20241029 - Murky)
+ * @param asset - IAssetEntity 用來計算折舊的資產Entity
+ * @param option - { nowInSecond: number, totalAmountOfDepreciationTarget: number, amountOfDepreciationTargetHappenThisPeriod: number }
+ * @param option.nowInSecond - number 現在的時間，如果是用直線法等需要時間的折舊公式使用
+ * @param option.totalAmountOfDepreciationTarget - number? 要折舊的計算標的，像是總機器小時或總生產量, 非使用時間計算的折舊方法
+ * @param option.amountOfDepreciationTargetHappenThisPeriod - number? 這個期間內發生的折舊標的數量，非使用時間計算的折舊方法
+ * @return - {
+ *  currentPeriodYear: number, 本期折舊是屬於哪一年
+ *  currentPeriodMonth: number, 本期折舊是屬於哪一月
+ *  currentPeriodDepreciation: number, 這個期間的折舊金額
+ *  originalValue: number, 資產原始價值
+ *  accumulatedDepreciation: number, 累計折舊金額
+ *  remainingValue: number, 剩餘價值
+ *  residualValue: number, 預估殘值
+ * }
+ * @Shirley 折舊公式的Interface
+ */
+export interface calculateAssetEntityDepreciation {
+  (
+    asset: IAssetEntity,
+    {
+      nowInSecond,
+      totalAmountOfDepreciationTarget,
+      amountOfDepreciationTargetHappenThisPeriod,
+    }: {
+      nowInSecond: number;
+      totalAmountOfDepreciationTarget?: number;
+      amountOfDepreciationTargetHappenThisPeriod?: number;
+    }
+  ): {
+    currentPeriodYear: number;
+    currentPeriodMonth: number;
+    currentPeriodDepreciation: number;
+    originalValue: number;
+    accumulatedDepreciation: number;
+    remainingValue: number;
+    residualValue: number;
+    remainingLife: number;
+  };
 }

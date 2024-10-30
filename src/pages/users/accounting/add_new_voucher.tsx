@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -6,9 +6,21 @@ import { ILocale } from '@/interfaces/locale';
 import NewVoucherForm from '@/components/voucher/new_voucher_form';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { ICertificateUI } from '@/interfaces/certificate';
 
 const AddNewVoucherPage: React.FC = () => {
   const { t } = useTranslation('common');
+  const [selectedCertificates, setSelectedCertificates] = useState<{
+    [id: string]: ICertificateUI;
+  }>({});
+
+  useEffect(() => {
+    const storedCertificates = localStorage.getItem('selectedCertificates');
+    if (storedCertificates) {
+      setSelectedCertificates(JSON.parse(storedCertificates));
+      localStorage.removeItem('selectedCertificates');
+    }
+  }, []);
 
   return (
     <>
@@ -24,7 +36,7 @@ const AddNewVoucherPage: React.FC = () => {
         pageTitle={t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')}
         goBackUrl={ISUNFA_ROUTE.BETA_VOUCHER_LIST}
       >
-        <NewVoucherForm />
+        <NewVoucherForm selectedData={selectedCertificates} />
       </Layout>
     </>
   );

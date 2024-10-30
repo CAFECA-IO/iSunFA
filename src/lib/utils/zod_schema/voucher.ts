@@ -1,11 +1,13 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import { iLineItemBodyValidatorV2, iLineItemValidator } from '@/lib/utils/zod_schema/lineItem';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType } from '@/constants/account';
 import { SortOrder } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
+import { JOURNAL_EVENT } from '@/constants/journal';
+import { VoucherV2Action } from '@/constants/voucher';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -35,6 +37,13 @@ export const voucherUpdateValidator: IZodValidator<
 > = {
   query: voucherUpdateQueryValidator,
   body: voucherCreateBodyValidator,
+};
+
+export const voucherRequestValidatorsV1: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  POST: voucherCreateValidator,
+  PUT: voucherUpdateValidator,
 };
 
 /**
@@ -71,17 +80,20 @@ export const voucherGetAllValidatorV2: IZodValidator<
 // Info: (20240927 - Murky) POST voucher v2 validator
 const voucherPostQueryValidatorV2 = z.object({});
 const voucherPostBodyValidatorV2 = z.object({
+  actions: z.array(z.nativeEnum(VoucherV2Action)),
   certificateIds: z.array(z.number().int()),
   voucherDate: z.number().int(),
   type: z.nativeEnum(EventType),
   note: z.string(),
-  counterPartyId: z.number().int(),
   lineItems: z.array(iLineItemBodyValidatorV2),
   recurringInfo: recurringEventForVoucherPostValidatorV2.optional(),
   assetIds: z.array(z.number().int()),
+  counterPartyId: z.number().int().optional(),
   reverseVouchers: z.array(
     z.object({
       voucherId: z.number().int(),
+      lineItemIdBeReversed: z.number().int(),
+      lineItemIdReverseOther: z.number().int(),
       amount: z.number(),
     })
   ),
@@ -151,4 +163,64 @@ export const voucherDeleteValidatorV2: IZodValidator<
 > = {
   query: voucherDeleteQueryValidatorV2,
   body: voucherDeleteBodyValidatorV2,
+};
+
+export const voucherRequestValidatorsV2 = {
+  GET_ONE: voucherGetOneValidatorV2,
+  GET_LIST: voucherGetAllValidatorV2,
+  PUT: voucherPutValidatorV2,
+  POST: voucherPostValidatorV2,
+  DELETE: voucherDeleteValidatorV2,
+  WAS_READ: voucherWasReadValidatorV2,
+};
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init voucher entity or parsed prisma voucher
+ * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
+ */
+export const voucherEntityValidator = z.object({
+  id: z.number(),
+  issuerId: z.number(),
+  counterPartyId: z.number(),
+  companyId: z.number(),
+  status: z.nativeEnum(JOURNAL_EVENT),
+  editable: z.boolean(),
+  no: z.string(),
+  date: z.number(),
+  type: z.nativeEnum(EventType),
+  note: z.string().nullable(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  originalEvents: z.array(z.any()).optional(),
+  resultEvents: z.array(z.any()).optional(),
+  lineItems: z.array(z.any()).optional(),
+  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  certificates: z.array(z.any()).optional(),
+  issuer: z.any().optional(),
+  readByUsers: z.array(z.any()).optional(),
+});
+
+// Info: (20241030 - Murky) Below is new version of middleware
+
+const voucherNullSchema = z.union([z.object({}), z.string()]);
+
+export const voucherPostSchema = {
+  input: {
+    querySchema: voucherPostQueryValidatorV2,
+    bodySchema: voucherPostBodyValidatorV2,
+  },
+  outputSchema: voucherEntityValidator,
+  frontend: voucherNullSchema,
+};
+
+export const voucherListSchema = {
+  input: {
+    querySchema: voucherGetAllQueryValidatorV2,
+    bodySchema: voucherGetAllBodyValidatorV2,
+  },
+  outputSchema: z.array(voucherEntityValidator),
+  frontend: voucherNullSchema,
 };

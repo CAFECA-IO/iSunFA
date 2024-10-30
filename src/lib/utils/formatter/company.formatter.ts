@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import { KYCStatus } from '@/constants/kyc';
 import { ICompany, ICompanyDetail, ICompanyEntity } from '@/interfaces/company';
 import { Admin, Company, CompanyKYC, File, Company as PrismaCompany } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
+import { companyEntityValidator } from '@/lib/utils/zod_schema/company';
 
 export async function formatCompanyList(
   companyList: (Company & {
@@ -54,21 +54,10 @@ export function formatCompanyDetail(
 /**
  * Info: (20241023 - Murky)
  * @description convert Prisma.Company to ICompanyEntity
+ * @note please check companyEntityValidator for how to parse the data
  */
 export function parsePrismaCompanyToCompanyEntity(dto: PrismaCompany): ICompanyEntity {
-  const companyEntitySchema = z.object({
-    id: z.number(),
-    name: z.string(),
-    taxId: z.string(),
-    // Deprecated: (20241023 - Murky) - tag will be removed after 20241030
-    // tag: z.string(),
-    startDate: z.number(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
-    deletedAt: z.number().nullable(),
-  });
-
-  const { data, success, error } = companyEntitySchema.safeParse(dto);
+  const { data, success, error } = companyEntityValidator.safeParse(dto);
 
   if (!success) {
     throw new FormatterError('CompanyEntity format prisma data error', {

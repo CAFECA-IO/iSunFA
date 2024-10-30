@@ -8,7 +8,7 @@ import {
   RepresentativeIDType,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { zodTimestampInSeconds } from './common';
 
@@ -74,3 +74,9 @@ export const iCompanyKYCValidator = z.object({
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
 });
+
+export const kycRequestValidators: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  POST: kycUploadValidator,
+};

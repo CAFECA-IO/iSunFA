@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FiTrash2, FiEdit } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
@@ -16,9 +17,12 @@ import { ToastType } from '@/interfaces/toastify';
 import { ASSET_DELETE_TERM } from '@/constants/common';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { AssetModalType } from '@/interfaces/asset_modal';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { t } = useTranslation('common');
+  const router = useRouter();
+
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
   const {
@@ -131,6 +135,8 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   useEffect(() => {
     if (!isDeleting) {
       if (deleteSuccess) {
+        // Info: (20241029 - Julian) 刪除成功後，跳轉至列表頁，並顯示成功 toast
+        router.push(ISUNFA_ROUTE.ASSET_LIST);
         toastHandler({
           id: 'delete-asset-toast',
           type: ToastType.SUCCESS,

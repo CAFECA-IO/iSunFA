@@ -19,3 +19,9 @@ export const reportGetValidatorV2: IZodValidator<
   query: reportGetQueryValidatorV2,
   body: reportGetBodyValidatorV2,
 };
+
+export const reportRequestValidatorsV2: {
+  [method: string]: IZodValidator<z.ZodRawShape, z.ZodRawShape>;
+} = {
+  GET_ONE: reportGetValidatorV2,
+};

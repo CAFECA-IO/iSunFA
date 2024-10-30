@@ -15,7 +15,8 @@ const APandARPageBody: React.FC = () => {
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
-          tabs={[APandARTabs.RECEIVABLE, APandARTabs.PAYABLE]}
+          tabs={Object.values(APandARTabs)}
+          tabsString={['Receivable', 'Payable']}
           activeTab={activeTab}
           onTabClick={(tab: string) => setActiveTab(tab as APandARTabs)}
           counts={[0, 1]}
