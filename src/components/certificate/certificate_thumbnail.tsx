@@ -80,14 +80,14 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       </div>
 
       {/* Info: (20241030 - Tzuhan) unRead */}
-      {!data.unRead && (
+      {data.unRead && !activeSelection && (
         <div className="absolute left-1.5 top-1.5 z-10 flex items-center justify-center rounded-xs bg-badge-surface-soft-primary px-2.5 py-1 text-xs text-badge-text-primary-solid">
           {t('certificate:LABEL.NEW')}
         </div>
       )}
 
       {/* Info: (20240924 - Tzuhan) 資料不完整 */}
-      {!dataImcomplete && (
+      {dataImcomplete && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
           <IoWarningOutline size={16} />
         </div>

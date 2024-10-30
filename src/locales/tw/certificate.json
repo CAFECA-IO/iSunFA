@@ -109,5 +109,16 @@
   "OPERATION": {
     "DOWNLOAD": "下載",
     "REMOVE": "刪除"
+  },
+  "INVOICE_TYPE": {
+    "TRIPLICATE_INPUT": "三聯式電腦發票",
+    "DUPLICATE_INPUT": "二聯式收銀機統一發票及其他含稅憑證",
+    "PROOF_OF_RETURN_TRIPLICATE": "使用三聯式發票、電腦發票、三聯式收銀機發票及一般計稅電子發票之退貨或折讓證明單",
+    "PROOF_OF_RETURN_DUPLICATE": "使用二聯式收銀機發票及其他含稅憑證之退貨或折讓證明單",
+    "TRIPLICATE_GENERAL_TAX": "三聯式收銀機統一發票及一般計稅電子發票",
+    "SUMMARY_REGISTRATION_TRIPLICATE": "每張三聯式電腦發票含稅額在新台幣500元以下之彙總申報",
+    "SUMMARY_REGISTRATION_DUPLICATE": "每張二聯式收銀機發票及其他含稅憑證含稅額在新台幣500元以下之彙總申報",
+    "CUSTOMS_PAYMENT_CERTIFICATE": "海關營業稅繳納證明",
+    "CUSTOMS_REFUND_DECLARATION": "多繳營業稅海關退稅申請書"
   }
 }

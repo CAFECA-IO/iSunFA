@@ -1,7 +1,13 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
-import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+// Info: (20241030 - tzuhan) @Murky 這邊的 import InvoiceType 被我改成 InvoiceTypeUpdate 之後需要改回去（等我們InvoiceType統一）
+import {
+  InvoiceTaxType,
+  InvoiceTransactionDirection,
+  InvoiceType,
+  InvoiceTypeUpdate,
+} from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 
 // Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
@@ -37,7 +43,7 @@ export interface IInvoiceBeta {
   taxRatio: number;
   taxPrice: number;
   totalPrice: number;
-  type: InvoiceType;
+  type: InvoiceTypeUpdate;
   deductible: boolean;
   createdAt: number;
   updatedAt: number;

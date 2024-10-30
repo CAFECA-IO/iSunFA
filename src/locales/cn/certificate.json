@@ -110,5 +110,16 @@
   "OPERATION": {
     "DOWNLOAD": "下载",
     "REMOVE": "删除"
+  },
+  "INVOICE_TYPE": {
+    "TRIPLICATE_INPUT": "三联式电脑发票",
+    "DUPLICATE_INPUT": "二联式收银机统一发票及其他含税凭证",
+    "PROOF_OF_RETURN_TRIPLICATE": "使用三联式发票、电脑发票、三联式收银机发票及一般计税电子发票之退货或折让证明单",
+    "PROOF_OF_RETURN_DUPLICATE": "使用二联式收银机发票及其他含税凭证之退货或折让证明单",
+    "TRIPLICATE_GENERAL_TAX": "三联式收银机统一发票及一般计税电子发票",
+    "SUMMARY_REGISTRATION_TRIPLICATE": "每张三联式电脑发票含税额在新台币500元以下之汇总申报",
+    "SUMMARY_REGISTRATION_DUPLICATE": "每张二联式收银机发票及其他含税凭证含税额在新台币500元以下之汇总申报",
+    "CUSTOMS_PAYMENT_CERTIFICATE": "海关营业税缴纳证明",
+    "CUSTOMS_REFUND_DECLARATION": "多缴营业税海关退税申请书"
   }
 }

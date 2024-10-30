@@ -110,5 +110,16 @@
   "OPERATION": {
     "DOWNLOAD": "Download",
     "REMOVE": "Remove"
+  },
+  "INVOICE_TYPE": {
+    "TRIPLICATE_INPUT": "Triplicate Input, Unified Invoices of Computerized Accounting Machines",
+    "DUPLICATE_INPUT": "Duplicate Input Cash Register Unified Invoices, and Other Certificates Containing Tax Amounts",
+    "PROOF_OF_RETURN_TRIPLICATE": "Proof of Return or Discount for Purchases Using Triplicate Input Unified Invoices, Computerized Accounting Machines, Triplicate Cash Register Unified Invoices, and General Tax Calculation Electronic Invoices",
+    "PROOF_OF_RETURN_DUPLICATE": "Proof of Return or Discount for Purchases Using Duplicate Cash Register Unified Invoices and Other Certificates Containing Tax Amounts",
+    "TRIPLICATE_GENERAL_TAX": "Triplicate Input Cash Register Unified Invoices and General Tax Calculation Electronic Invoices",
+    "SUMMARY_REGISTRATION_TRIPLICATE": "Summary Registration of Each Triplicate Input, Unified Invoices of Computerized Accounting Machines with a Tax Amount Below NT$500",
+    "SUMMARY_REGISTRATION_DUPLICATE": "Summary Registration of Each Duplicate Input Cash Register Unified Invoice and Other Certificates Containing Tax Amounts with a Tax Amount Below NT$500",
+    "CUSTOMS_PAYMENT_CERTIFICATE": "Certificate of Payment for Business Tax Levied by Customs",
+    "CUSTOMS_REFUND_DECLARATION": "Declaration Form for Customs Refund of Overpaid Business Tax"
   }
 }
