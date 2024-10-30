@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
 import { checkboxStyle } from '@/constants/display';
 import type { TrialBalanceItem } from '@/interfaces/trial_balance';
@@ -6,12 +6,19 @@ import CollapseButton from '@/components/button/collapse_button';
 
 interface ITrialBalanceItemProps {
   voucher: TrialBalanceItem;
+  totalExpanded: boolean; // Info: (20241029 - Anna) Receive expanded state from parent
 }
 
-const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => {
+const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanceItemProps) => {
   const [isChecked, setIsChecked] = useState(false);
   // Info: (20241025 - Anna) 新增狀態來追蹤按鈕展開狀態
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localIsExpanded, setLocalIsExpanded] = useState(totalExpanded); // Info: (20241029 - Anna) 使用解構的 totalExpanded 作為初始值
+
+  // Info: (20241029 - Anna) Update local isExpanded when parent state changes
+  useEffect(() => {
+    setLocalIsExpanded(totalExpanded);
+  }, [totalExpanded]);
+
   const displayedCheckbox = (
     <div className="relative px-8px py-6">
       <input
@@ -28,7 +35,10 @@ const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => 
       <div className="flex items-center justify-between">
         <p className="m-0 flex items-center">{voucher.no}</p>
         {/* Info: (20241025 - Anna) 在 voucher.no 右側加入 CollapseButton */}
-        <CollapseButton onClick={() => setIsExpanded(!isExpanded)} isCollapsed={!isExpanded} />
+        <CollapseButton
+          onClick={() => setLocalIsExpanded(!localIsExpanded)} // Info: (20241029 - Anna) 使用 localIsExpanded
+          isCollapsed={!localIsExpanded}
+        />
       </div>
     </div>
   );
@@ -126,7 +136,7 @@ const TrialBalanceItemRow = React.memo(({ voucher }: ITrialBalanceItemProps) => 
         </div>
       </div>
       {/* Info: (20241025 - Anna) 如果展開，新增子科目表格 */}
-      {isExpanded && (
+      {localIsExpanded && (
         <div className="table-row h-20px font-normal">
           <div className="table-cell w-32px text-center">{displayedCheckbox}</div>
           <div className="table-cell w-50px text-center align-middle">
