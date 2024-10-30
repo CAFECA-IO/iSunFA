@@ -55,8 +55,8 @@ export async function createAdminByInvitation(userId: number, invitation: IInvit
         updatedAt: nowTimestamp,
       },
     });
-    const formatedAdmin: IAdmin = await formatAdmin(createdAdmin);
-    return formatedAdmin;
+    const formattedAdmin: IAdmin = await formatAdmin(createdAdmin);
+    return formattedAdmin;
   });
   return admin;
 }

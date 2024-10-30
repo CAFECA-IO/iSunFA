@@ -1,28 +1,16 @@
 import { LineItem as PrismaLineItem } from '@prisma/client';
-import { z } from 'zod';
 
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
+import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 
 /**
  * Info: (20241023 - Murky)
  * @description convert LineItem from prisma to ILineItemEntity
+ * @note please check lineItemEntityValidator for how to validate the data
  */
 export function parsePrismaLineItemToLineItemEntity(dto: PrismaLineItem): ILineItemEntity {
-  // ToDo: (20241023 - Murky) Need to move to other place
-  const lineItemEntitySchema = z.object({
-    id: z.number(),
-    amount: z.number(),
-    description: z.string(),
-    debit: z.boolean(),
-    accountId: z.number(),
-    voucherId: z.number(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
-    deletedAt: z.number().nullable(),
-  });
-
-  const { data, success, error } = lineItemEntitySchema.safeParse(dto);
+  const { data, success, error } = lineItemEntityValidator.safeParse(dto);
 
   if (!success) {
     throw new FormatterError('LineItemEntity format prisma data error', {

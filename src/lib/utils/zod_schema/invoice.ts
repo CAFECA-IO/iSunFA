@@ -1,8 +1,10 @@
 import { EventType } from '@/constants/account';
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import { iPaymentValidator } from '@/lib/utils/zod_schema/payment';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+import { CurrencyType } from '@/constants/currency';
 
 const iInvoiceValidator = z.object({
   journalId: z.number().nullable(),
@@ -25,7 +27,7 @@ const invoiceCreateBodyValidator = z.object({
   invoice: iInvoiceValidator,
 });
 
-export const invoiceCreateValidator: IZodValidator<
+const invoiceCreateValidator: IZodValidator<
   (typeof invoiceCreateQueryValidator)['shape'],
   (typeof invoiceCreateBodyValidator)['shape']
 > = {
@@ -39,7 +41,7 @@ const invoiceUpdateBodyValidator = z.object({
   invoice: iInvoiceValidator,
 });
 
-export const invoiceUpdateValidator: IZodValidator<
+const invoiceUpdateValidator: IZodValidator<
   (typeof invoiceUpdateQueryValidator)['shape'],
   (typeof invoiceUpdateBodyValidator)['shape']
 > = {
@@ -47,16 +49,53 @@ export const invoiceUpdateValidator: IZodValidator<
   body: invoiceUpdateBodyValidator,
 };
 
-const invoiceGetByIdQueryValidator = z.object({
+const invoiceGetOneQueryValidator = z.object({
   invoiceId: zodStringToNumber,
 });
 
-const invoiceGetByIdBodyValidator = z.object({});
+const invoiceGetOneBodyValidator = z.object({});
 
-export const invoiceGetByIdValidator: IZodValidator<
-  (typeof invoiceGetByIdQueryValidator)['shape'],
-  (typeof invoiceGetByIdBodyValidator)['shape']
+const invoiceGetOneValidator: IZodValidator<
+  (typeof invoiceGetOneQueryValidator)['shape'],
+  (typeof invoiceGetOneBodyValidator)['shape']
 > = {
-  query: invoiceGetByIdQueryValidator,
-  body: invoiceGetByIdBodyValidator,
+  query: invoiceGetOneQueryValidator,
+  body: invoiceGetOneBodyValidator,
 };
+
+/**
+ * Info: (20241025 - Murky)
+ * Use this to put in zod.schema to be used in middleware
+ */
+export const invoiceRequestValidators: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  GET_ONE: invoiceGetOneValidator,
+  PUT: invoiceUpdateValidator,
+  POST: invoiceCreateValidator,
+};
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init invoice entity or parsed prisma invoice
+ */
+export const invoiceEntityValidator = z.object({
+  id: z.number(),
+  certificateId: z.number(),
+  counterPartyId: z.number(),
+  inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
+  date: z.number(),
+  no: z.string(),
+  currencyAlias: z.nativeEnum(CurrencyType),
+  priceBeforeTax: z.number(),
+  taxType: z.nativeEnum(InvoiceTaxType),
+  taxRatio: z.number(),
+  taxPrice: z.number(),
+  totalPrice: z.number(),
+  type: z.nativeEnum(InvoiceType),
+  deductible: z.boolean(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  counterParty: z.any().optional(),
+});

@@ -48,3 +48,12 @@ export const zodExampleValidator: IZodValidator<
   query: queryValidator,
   body: bodyValidator,
 };
+
+export const zodExampleValidators: {
+  [method: string]: IZodValidator<z.ZodRawShape, z.ZodRawShape>;
+} = {
+  GET_ONE: zodExampleValidator,
+  POST: zodExampleValidator,
+  PUT: zodExampleValidator,
+  DELETE: zodExampleValidator,
+};
