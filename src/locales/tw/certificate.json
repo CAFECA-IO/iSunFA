@@ -1,7 +1,6 @@
 {
   "LIST": {
-    "INVOICE_TOTAL_PRRICE": "發票總價",
-    "EXPORT_CERTIFICATES": "匯出發票"
+    "INVOICE_TOTAL_PRRICE": "發票總價"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "無憑證的發票",
@@ -78,6 +77,14 @@
     "SPECIAL": "專用",
     "UNIFORM_INVOICE": "統一發票"
   },
+  "SELECT": {
+    "TITLE": "選擇發票",
+    "CONTENT": "選擇您想要與傳票關聯的發票"
+  },
+  "EXPORT": {
+    "TITLE": "匯出發票",
+    "CONTENT": "選擇你想要導出的發票"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "新增客戶/供應商",
     "BOTH": "客戶/供應商",
@@ -95,5 +102,12 @@
     "PARTNER_TYPE": "合作夥伴類型",
     "NOTE": "備註",
     "ENTER_TEXT": "輸入文字"
+  },
+  "LABEL": {
+    "NEW": "新增"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "下載",
+    "REMOVE": "刪除"
   }
 }

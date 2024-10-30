@@ -78,6 +78,14 @@
     "SPECIAL": "专用",
     "UNIFORM_INVOICE": "统一发票"
   },
+  "SELECT": {
+    "TITLE": "选择发票",
+    "CONTENT": "选择您想要传票关联的发票"
+  },
+  "EXPORT": {
+    "TITLE": "导出发票",
+    "CONTENT": "选择您想要导出的发票"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "新增客户/供应商",
     "BOTH": "客户/供应商",
@@ -95,5 +103,12 @@
     "PARTNER_TYPE": "合作伙伴类型",
     "NOTE": "备注",
     "ENTER_TEXT": "输入文字"
+  },
+  "LABEL": {
+    "NEW": "新增"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "下载",
+    "REMOVE": "删除"
   }
 }

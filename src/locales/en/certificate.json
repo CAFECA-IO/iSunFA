@@ -78,6 +78,14 @@
     "SPECIAL": "Special",
     "UNIFORM_INVOICE": "Uniform Invoice"
   },
+  "SELECT": {
+    "TITLE": "Select Certificates",
+    "CONTENT": "Choosing the certificates you want to attach with the voucher"
+  },
+  "EXPORT": {
+    "TITLE": "Export Certificates",
+    "CONTENT": "Please select the Certificates you want to export"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "Add New Client/Supplier",
     "BOTH": "Both",
@@ -95,5 +103,12 @@
     "PARTNER_TYPE": "Partner Type",
     "NOTE": "Note",
     "ENTER_TEXT": "Enter Text"
+  },
+  "LABEL": {
+    "NEW": "New"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "Download",
+    "REMOVE": "Remove"
   }
 }

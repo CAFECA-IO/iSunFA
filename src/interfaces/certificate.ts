@@ -1,5 +1,4 @@
-import { IInvoiceBeta } from '@/interfaces/invoice';
-import type { IInvoiceEntity } from '@/interfaces/invoice';
+import type { IInvoiceBetaOptional, IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileUIBeta } from '@/interfaces/file';
 import type { IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
@@ -15,7 +14,7 @@ export interface ICertificate {
   companyId: number;
   file: IFileUIBeta;
   unRead?: boolean;
-  invoice: IInvoiceBeta;
+  invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
 
   aiResultId?: string;

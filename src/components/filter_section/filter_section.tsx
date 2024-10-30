@@ -26,6 +26,7 @@ interface FilterSectionProps<T> {
   types?: string[];
   statuses?: string[];
   sortingOptions?: SortBy[];
+  enableSearch?: boolean;
   onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: DISPLAY_LIST_VIEW_TYPE;
   viewToggleHandler?: (viewType: DISPLAY_LIST_VIEW_TYPE) => void;
@@ -44,6 +45,7 @@ const FilterSection = <T,>({
   page = 1,
   pageSize = DEFAULT_PAGE_LIMIT,
   tab,
+  enableSearch = true,
   types = [],
   statuses = [],
   sortingOptions = [],
@@ -231,7 +233,7 @@ const FilterSection = <T,>({
       </div>
 
       {/* Info: (20240919 - tzuhan) 搜索欄 */}
-      <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      {enableSearch && <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
 
       {/* Info: (20240919 - tzuhan) 顯示風格切換 */}
       {viewType && viewToggleHandler && (
