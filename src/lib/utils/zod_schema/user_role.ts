@@ -39,12 +39,14 @@ const userRoleOutputSchema = z
     lastLoginAt: data.role.lastLoginAt,
   }));
 
+const userRoleListOutputSchema = z.array(userRoleOutputSchema);
+
 export const userRoleListSchema = {
   input: {
     querySchema: userRoleListQuerySchema,
     bodySchema: userRoleNullSchema,
   },
-  outputSchema: userRoleOutputSchema,
+  outputSchema: userRoleListOutputSchema,
   frontend: userRoleNullSchema,
 };
 
