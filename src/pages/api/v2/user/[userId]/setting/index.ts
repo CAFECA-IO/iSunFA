@@ -11,26 +11,24 @@ import {
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { formatUserSetting } from '@/lib/utils/formatter/user_setting.formatter';
+import { UserSetting } from '@prisma/client';
 
-const handleGetRequest: IHandleRequest<APIName.USER_SETTING_GET, IUserSetting> = async ({
+const handleGetRequest: IHandleRequest<APIName.USER_SETTING_GET, UserSetting> = async ({
   query,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUserSetting | null = null;
+  let payload: UserSetting | null = null;
 
   const { userId } = query;
 
   const getUserSetting = await getUserSettingByUserId(userId);
   if (getUserSetting) {
-    const userSetting = formatUserSetting(getUserSetting);
-    payload = userSetting;
+    payload = getUserSetting;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } else {
     const createdUserSetting = await createUserSetting(userId);
     if (createdUserSetting) {
-      const userSetting = formatUserSetting(createdUserSetting);
-      payload = userSetting;
+      payload = createdUserSetting;
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     } else {
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
@@ -40,12 +38,12 @@ const handleGetRequest: IHandleRequest<APIName.USER_SETTING_GET, IUserSetting> =
   return { statusMessage, payload };
 };
 
-const handlePutRequest: IHandleRequest<APIName.USER_SETTING_UPDATE, IUserSetting> = async ({
+const handlePutRequest: IHandleRequest<APIName.USER_SETTING_UPDATE, UserSetting> = async ({
   query,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUserSetting | null = null;
+  let payload: UserSetting | null = null;
 
   const { userId } = query;
   const userSettingData = body;
@@ -54,8 +52,7 @@ const handlePutRequest: IHandleRequest<APIName.USER_SETTING_UPDATE, IUserSetting
     const updatedUserSetting = await updateUserSettingById(userId, userSettingData);
 
     if (updatedUserSetting) {
-      const userSetting = formatUserSetting(updatedUserSetting);
-      payload = userSetting;
+      payload = updatedUserSetting;
       statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     } else {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;

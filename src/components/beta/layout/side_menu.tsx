@@ -159,7 +159,7 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
   };
 
   return (
-    <div className="h-full bg-surface-neutral-main-background">
+    <div className="z-100 h-full bg-surface-neutral-main-background">
       {isSideMenuOpen ? (
         <section className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
           {/* Side Menu Icon */}
