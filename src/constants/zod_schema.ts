@@ -38,7 +38,11 @@ import {
   userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
 import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
-import { roleListSchema, rolePostSchema, roleSelectSchema } from '@/lib/utils/zod_schema/role';
+import {
+  userRoleListSchema,
+  userRolePostSchema,
+  userRoleSelectSchema,
+} from '@/lib/utils/zod_schema/user_role';
 import { todoListSchema, todoPostSchema } from '@/lib/utils/zod_schema/todo';
 import {
   voucherCreateValidator,
@@ -128,9 +132,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
-  [APIName.ROLE_LIST]: roleListSchema,
-  [APIName.ROLE_SELECT]: roleSelectSchema,
-  [APIName.CREATE_ROLE]: rolePostSchema,
+  [APIName.ROLE_LIST]: userRoleListSchema,
+  [APIName.ROLE_SELECT]: userRoleSelectSchema,
+  [APIName.CREATE_ROLE]: userRolePostSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
