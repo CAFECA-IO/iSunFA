@@ -1,4 +1,4 @@
-import { ROLE_NAME } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import {
   createAdmin,
   createCompanyAndRole,
@@ -51,7 +51,7 @@ describe('Admin Repository Additional Tests', () => {
     it('should return the owner of a company by company ID', async () => {
       const owner = await getOwnerByCompanyId(testCompanyId);
       expect(owner).toBeDefined();
-      expect(owner?.role.name).toBe(ROLE_NAME.OWNER);
+      expect(owner?.role.name).toBe(CompanyRoleName.OWNER);
     });
 
     it('should return null if the owner is not found', async () => {
@@ -105,7 +105,7 @@ describe('Admin Repository Additional Tests', () => {
       await deleteFileByIdForTesting(testFile.id); // Clean up after test
       expect(companyRole).toBeDefined();
       expect(companyRole?.company.taxId).toBe(taxId);
-      expect(companyRole?.role.name).toBe(ROLE_NAME.OWNER);
+      expect(companyRole?.role.name).toBe(CompanyRoleName.OWNER);
     });
 
     it('should return null if the company and role are not found', async () => {
