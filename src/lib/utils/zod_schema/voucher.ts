@@ -202,3 +202,25 @@ export const voucherEntityValidator = z.object({
   issuer: z.any().optional(),
   readByUsers: z.array(z.any()).optional(),
 });
+
+// Info: (20241030 - Murky) Below is new version of middleware
+
+const voucherNullSchema = z.union([z.object({}), z.string()]);
+
+export const voucherPostSchema = {
+  input: {
+    querySchema: voucherPostQueryValidatorV2,
+    bodySchema: voucherPostBodyValidatorV2,
+  },
+  outputSchema: voucherEntityValidator,
+  frontend: voucherNullSchema,
+};
+
+export const voucherListSchema = {
+  input: {
+    querySchema: voucherGetAllQueryValidatorV2,
+    bodySchema: voucherGetAllBodyValidatorV2,
+  },
+  outputSchema: z.array(voucherEntityValidator),
+  frontend: voucherNullSchema,
+};

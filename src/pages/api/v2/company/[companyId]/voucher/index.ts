@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // ToDo: (20241029 - Murky) 記得刪掉上面這一段
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { formatApiResponse, getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import {
   mockVouchersReturn,
@@ -16,14 +15,14 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
+import { postVoucherV2 } from '@/lib/utils/repo/voucher.repo';
 import { VoucherV2Action } from '@/constants/voucher';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { initCounterPartyEntity } from '@/lib/utils/counterparty';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
-import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
-import { EventType } from '@/constants/account';
+import { IVoucherEntity } from '@/interfaces/voucher';
+import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 
 export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, object> = async ({
   query,
@@ -70,12 +69,12 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, object> =
  * 1. voucherNo 不可以是unique(不同公司會撞No)
  * 2. 需要Worker去把upcoming event裡的voucher轉成正式的voucher
  */
-export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> = async ({
+export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucherEntity> = async ({
   body,
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  const payload: number | null = null;
+  let payload: IVoucherEntity | null = null;
   // const mockPostedVoucherId = 1002;
 
   try {
@@ -132,7 +131,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
     });
 
     // Info: (20241025 - Murky) Is xxx exist
-    const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
+    // const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
     const isRecurringInfoExist = postUtils.isItemExist(recurringInfo);
     const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
@@ -174,6 +173,8 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
       deletedAt: PUBLIC_COUNTER_PARTY.deletedAt,
     });
 
+    const lineItemEntities = postUtils.initLineItemEntities(lineItems);
+
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
       counterPartyId: publicCounterPartyEntity.id,
@@ -186,8 +187,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
     });
 
     voucher.counterParty = publicCounterPartyEntity;
-
-    const lineItemEntities = postUtils.initLineItemEntities(lineItems);
+    voucher.lineItems = lineItemEntities;
 
     // ToDo: (20241025 - Murky) Revert Logic, 也許可以拉到別的地方
     if (doRevert) {
@@ -235,11 +235,21 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
         associateVouchers: associateVouchersForRevertEvent,
       });
 
+      // Info: (20241030 - Murky) CounterParty只有在 "Revert事件"的時候會放在voucher裡, 其他時候都用PUBLIC_VOUCHER
       voucher.counterParty = counterPartyEntity;
+
+      // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
       eventControlPanel.revertEvent = revertEventEntity;
     }
 
     if (doAddAsset) {
+      if (!isAssetIdsHasItems) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: 'assetIds is required when post voucher with assetIds',
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+
       const isAllAssetExist = postUtils.areAllAssetsExistById(assetIds);
 
       if (!isAllAssetExist) {
@@ -267,7 +277,44 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, number> 
         depreciatedExpenseVouchers,
       });
 
+      // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel , Prisma Transaction時一起建立
       eventControlPanel.assetEvent = assetEventEntity;
+    }
+
+    if (doRecurring) {
+      if (!isRecurringInfoExist) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: 'recurringInfo is required when post recurring voucher',
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+
+      const recurringAssociateVouchers = postUtils.initRecurringAssociateVouchers({
+        originalVoucher: voucher,
+        recurringInfo: recurringInfo!,
+      });
+
+      const recurringEventEntity = postUtils.initRecurringEventEntity({
+        startDateInSecond: recurringInfo!.startDate,
+        endDateInSecond: recurringInfo!.endDate,
+        associateVouchers: recurringAssociateVouchers,
+        frequency: recurringInfo!.type,
+        daysOfWeek: recurringInfo!.daysOfWeek,
+        monthsOfYear: recurringInfo!.monthsOfYear,
+      });
+
+      // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
+      eventControlPanel.recurringEvent = recurringEventEntity;
+
+      const createdVoucher = await postVoucherV2({
+        nowInSecond,
+        originalVoucher: voucher,
+        eventControlPanel,
+        company,
+        issuer,
+      });
+
+      payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
     }
   } catch (_error) {
     const error = _error as Error;

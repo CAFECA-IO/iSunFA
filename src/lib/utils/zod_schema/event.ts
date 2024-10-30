@@ -12,7 +12,7 @@ export const eventEntityValidator = z.object({
   startDate: z.number(),
   endDate: z.number(),
   dateOfWeek: z.array(z.number().max(6).min(0)),
-  monthsOfYear: z.array(z.string().regex(/^\d+$/)),
+  monthsOfYear: z.array(z.number().max(11).min(0)),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),

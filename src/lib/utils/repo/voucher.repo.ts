@@ -3,15 +3,20 @@ import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ILineItem } from '@/interfaces/line_item';
+import type { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
   IVoucherDataForSavingToDB,
+  IVoucherEntity,
   IVoucherFromPrismaIncludeJournalLineItems,
 } from '@/interfaces/voucher';
 import { SortOrder } from '@/constants/sort';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import type { ICompanyEntity } from '@/interfaces/company';
+import type { IEventEntity } from '@/interfaces/event';
+import { IUserEntity } from '@/interfaces/user';
+import { assert } from 'console';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -458,4 +463,135 @@ export async function countUnpostedVoucher(companyId: number) {
   });
 
   return missingCertificatesCount;
+}
+
+export async function postVoucherV2({
+  nowInSecond,
+  company,
+  originalVoucher,
+  issuer,
+  eventControlPanel: { revertEvent },
+}: {
+  nowInSecond: number;
+  company: ICompanyEntity;
+  originalVoucher: IVoucherEntity;
+  issuer: IUserEntity;
+  eventControlPanel: {
+    revertEvent: IEventEntity | null;
+    recurringEvent: IEventEntity | null;
+    assetEvent: IEventEntity | null;
+  };
+}) {
+  // ToDo: (20241030 - Murky) Implement recurringEvent and assetEvent
+  // const isRecurringEvent = !!recurringEvent;
+  // const isAssetEvent = !!assetEvent;
+  const isRevertEvent = !!revertEvent;
+
+  const voucherCreated = await prisma.$transaction(async (tx) => {
+    const originalVoucherNo = await getLatestVoucherNoInPrisma(company.id, {
+      voucherDate: originalVoucher.date,
+    });
+
+    const originalVoucherInDB = await tx.voucher.create({
+      data: {
+        no: originalVoucherNo,
+        date: originalVoucher.date,
+        type: originalVoucher.type,
+        note: originalVoucher.note,
+        status: originalVoucher.status,
+        editable: originalVoucher.editable,
+        createdAt: nowInSecond,
+        updatedAt: nowInSecond,
+        deletedAt: null,
+        company: {
+          connect: {
+            id: company.id,
+          },
+        },
+        issuer: {
+          connect: {
+            id: issuer.id,
+          },
+        },
+        counterparty: {
+          connect: {
+            id: originalVoucher.counterPartyId,
+          },
+        },
+        lineItems: {
+          create: originalVoucher.lineItems.map((lineItem) => ({
+            amount: lineItem.amount,
+            description: lineItem.description,
+            debit: lineItem.debit,
+            account: {
+              connect: {
+                id: lineItem.accountId,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          })),
+        },
+      },
+    });
+
+    if (isRevertEvent) {
+      const { associateVouchers } = revertEvent;
+
+      assert(
+        associateVouchers,
+        'associateVouchers is not provided in postVoucherV2 in voucher.repo.ts'
+      );
+      assert(
+        associateVouchers.length > 0,
+        'associateVouchers is empty in postVoucherV2 in voucher.repo.ts'
+      );
+
+      associateVouchers.map(async (associateVoucher) => {
+        const { originalVoucher: original } = associateVoucher;
+        const { resultVoucher } = associateVoucher;
+
+        // ToDo: (20241030 - Murky) 需要存放lineItems和lineItems的對應關係
+        // const originalLineItems = original.lineItems[0]
+        // const resultLineItems = resultVoucher.lineItems[0]
+
+        const eventInDB = await tx.event.create({
+          data: {
+            eventType: revertEvent.eventType,
+            frequence: revertEvent.frequency,
+            startDate: revertEvent.startDate,
+            endDate: revertEvent.endDate,
+            daysOfWeek: revertEvent.dateOfWeek,
+            monthsOfYear: revertEvent.monthsOfYear.map((month) => String(month)),
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          },
+        });
+
+        await tx.accociateVoucher.create({
+          data: {
+            originalVoucher: {
+              connect: {
+                id: original.id,
+              },
+            },
+            resultVoucher: {
+              connect: {
+                id: resultVoucher.id,
+              },
+            },
+            event: {
+              connect: {
+                id: eventInDB.id,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          },
+        });
+      });
+    }
+    return originalVoucherInDB;
+  });
+  return voucherCreated;
 }

@@ -19,7 +19,11 @@ import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
-import { timestampInSeconds } from '@/lib/utils/common';
+import {
+  getDaysBetweenDates,
+  getLastDatesOfMonthsBetweenDates,
+  timestampInSeconds,
+} from '@/lib/utils/common';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { EventType } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
@@ -169,6 +173,234 @@ export const voucherAPIPostUtils = {
     return revertEvent;
   },
 
+  initRecurringWeeklyVouchers: ({
+    originalVoucher,
+    startDate,
+    endDate,
+    daysOfWeek,
+  }: {
+    originalVoucher: IVoucherEntity;
+    startDate: number;
+    endDate: number;
+    daysOfWeek: number[];
+  }) => {
+    const recurringVoucher: IVoucherEntity[] = daysOfWeek
+      .map((dayOfWeek) => {
+        const voucherRecurringDates: Date[] = getDaysBetweenDates({
+          startInSecond: startDate,
+          endInSecond: endDate,
+          dayByNumber: dayOfWeek,
+        });
+
+        const voucherRecurringByDay = voucherRecurringDates.map((date) => {
+          return initVoucherEntity({
+            issuerId: originalVoucher.issuerId,
+            counterPartyId: originalVoucher.counterPartyId,
+            companyId: originalVoucher.companyId,
+            type: originalVoucher.type,
+            status: JOURNAL_EVENT.UPCOMING,
+            editable: true,
+            no: originalVoucher.no,
+            date: timestampInSeconds(date.getTime()),
+          });
+        });
+
+        return voucherRecurringByDay;
+      })
+      .flat();
+    return recurringVoucher;
+  },
+
+  initRecurringMonthlyVouchers: ({
+    originalVoucher,
+    startDate,
+    endDate,
+    monthsOfYear,
+  }: {
+    originalVoucher: IVoucherEntity;
+    startDate: number;
+    endDate: number;
+    monthsOfYear: number[];
+  }) => {
+    const recurringVoucher: IVoucherEntity[] = monthsOfYear
+      .map((monthOfYear) => {
+        const voucherRecurringDates: Date[] = getLastDatesOfMonthsBetweenDates({
+          startInSecond: startDate,
+          endInSecond: endDate,
+          monthByNumber: monthOfYear,
+        });
+        const voucherRecurringByMonth = voucherRecurringDates.map((date) => {
+          return initVoucherEntity({
+            issuerId: originalVoucher.issuerId,
+            counterPartyId: originalVoucher.counterPartyId,
+            companyId: originalVoucher.companyId,
+            type: originalVoucher.type,
+            status: JOURNAL_EVENT.UPCOMING,
+            editable: true,
+            no: originalVoucher.no,
+            date: timestampInSeconds(date.getTime()),
+          });
+        });
+
+        return voucherRecurringByMonth;
+      })
+      .flat();
+    return recurringVoucher;
+  },
+
+  initRecurringVouchers: ({
+    type,
+    voucherDateInSecond,
+    originalVoucher,
+    startDateInSecond,
+    endDateInSecond,
+    daysOfWeek,
+    monthsOfYear,
+  }: {
+    type: EventEntityFrequency.MONTHLY | EventEntityFrequency.WEEKLY;
+    voucherDateInSecond: number;
+    originalVoucher: IVoucherEntity;
+    startDateInSecond: number;
+    endDateInSecond: number;
+    daysOfWeek: number[];
+    monthsOfYear: number[];
+  }) => {
+    let recurringVoucher: IVoucherEntity[];
+    // ToDo: (20241030 - Murky)  要小心同一天可能是月底的問題, 或是同一個星期天
+    const now = new Date(timestampInSeconds(voucherDateInSecond));
+
+    // Info: (20241030 - Murky) Start date 不可以比voucherDate早
+    const startDate = new Date(
+      timestampInSeconds(Math.max(startDateInSecond, voucherDateInSecond))
+    );
+    switch (type) {
+      case EventEntityFrequency.WEEKLY: {
+        let startDateAdjust = startDateInSecond;
+        const nextDayOfWeek = daysOfWeek.find((dayOfWeek) => dayOfWeek > now.getDay());
+
+        // Info: (20241030 - Murky) 如果Recurring的第一天是startDate, 且是VoucherDate, 那麼就要往後一天
+        if (
+          nextDayOfWeek &&
+          nextDayOfWeek === startDate.getDay() &&
+          startDate.getDate() === now.getDate() &&
+          startDate.getMonth() === now.getMonth()
+        ) {
+          startDateAdjust = timestampInSeconds(startDate.setDate(startDate.getDate() + 1));
+        }
+
+        recurringVoucher = voucherAPIPostUtils.initRecurringWeeklyVouchers({
+          originalVoucher,
+          startDate: startDateAdjust,
+          endDate: endDateInSecond,
+          daysOfWeek,
+        });
+
+        break;
+      }
+      case EventEntityFrequency.MONTHLY: {
+        let startDateAdjust = startDateInSecond;
+
+        const nextMonthOfYear = monthsOfYear.find(
+          (monthOfYear) => monthOfYear > startDate.getMonth()
+        );
+        const lastDateOfMonth = new Date(
+          startDate.getFullYear(),
+          startDate.getMonth() + 1,
+          0
+        ).getDate();
+        // Info: (20241030 - Murky) 如果Recurring的第一天是startDate 也就是月底, 那麼就要往後一天
+        if (
+          nextMonthOfYear &&
+          nextMonthOfYear === startDate.getMonth() &&
+          startDate.getDate() === lastDateOfMonth
+        ) {
+          startDateAdjust = timestampInSeconds(startDate.setDate(startDate.getDate() + 1));
+        }
+
+        recurringVoucher = voucherAPIPostUtils.initRecurringMonthlyVouchers({
+          originalVoucher,
+          startDate: startDateAdjust,
+          endDate: endDateInSecond,
+          monthsOfYear,
+        });
+        break;
+      }
+      default:
+        throw new Error('Not yet implement');
+    }
+    return recurringVoucher;
+  },
+
+  initRecurringAssociateVouchers: ({
+    originalVoucher,
+    recurringInfo,
+  }: {
+    originalVoucher: IVoucherEntity;
+    recurringInfo: {
+      type: EventEntityFrequency.MONTHLY | EventEntityFrequency.WEEKLY;
+      startDate: number;
+      endDate: number;
+      daysOfWeek: number[];
+      monthsOfYear: number[];
+    };
+  }) => {
+    const recurringVoucher: IVoucherEntity[] = voucherAPIPostUtils.initRecurringVouchers({
+      type: recurringInfo.type,
+      voucherDateInSecond: originalVoucher.date,
+      originalVoucher,
+      startDateInSecond: recurringInfo.startDate,
+      endDateInSecond: recurringInfo.endDate,
+      daysOfWeek: recurringInfo.daysOfWeek,
+      monthsOfYear: recurringInfo.monthsOfYear,
+    });
+    // ToDo: (20241030 - Murky)  要小心同一天可能是月底的問題, 或是同一個星期天
+
+    const associateVouchers = recurringVoucher.map((voucher) => {
+      return {
+        originalVoucher,
+        resultVoucher: voucher,
+      };
+    });
+
+    return associateVouchers;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description init recurring event (but not yet save to database)
+   * @param options
+   * @param options.nowInSecond - number, current time in second
+   * @param options.associateVouchers - Array, associateVouchers with originalVoucher and resultVoucher
+   */
+  initRecurringEventEntity: ({
+    startDateInSecond,
+    endDateInSecond,
+    associateVouchers,
+    frequency,
+    daysOfWeek,
+    monthsOfYear,
+  }: {
+    startDateInSecond: number;
+    endDateInSecond: number;
+    frequency: EventEntityFrequency.MONTHLY | EventEntityFrequency.WEEKLY;
+    daysOfWeek: number[];
+    monthsOfYear: number[];
+    associateVouchers: Array<{
+      originalVoucher: IVoucherEntity;
+      resultVoucher: IVoucherEntity;
+    }>;
+  }) => {
+    const revertEvent: IEventEntity = initEventEntity({
+      eventType: EventEntityType.REPEAT,
+      frequency,
+      startDate: startDateInSecond,
+      endDate: endDateInSecond,
+      associateVouchers,
+      dateOfWeek: daysOfWeek,
+      monthsOfYear,
+    });
+    return revertEvent;
+  },
   /**
    * Info: (20241025 - Murky)
    * @description check all vouchers exist by voucherIds in prisma

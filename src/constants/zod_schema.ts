@@ -31,6 +31,8 @@ import {
   voucherDeleteValidatorV2,
   voucherGetAllValidatorV2,
   voucherGetOneValidatorV2,
+  voucherListSchema,
+  voucherPostSchema,
   voucherPostValidatorV2,
   voucherRequestValidatorsV1,
   voucherWasReadValidatorV2,
@@ -127,4 +129,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_SETTING_GET]: userSettingGetSchema,
   [APIName.USER_SETTING_UPDATE]: userSettingPutSchema,
   [APIName.USER_ACTION_LOG_LIST]: userActionLogListSchema,
+  [APIName.VOUCHER_POST_V2]: voucherPostSchema,
+  [APIName.VOUCHER_LIST_V2]: voucherListSchema,
 };

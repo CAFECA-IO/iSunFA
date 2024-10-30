@@ -704,3 +704,63 @@ export function getLastSecondsOfEachMonth(
 
   return result;
 }
+
+/**
+ * Info: (20241030 - Murky)
+ * @describe 給定開始時間和結束時間，回傳這段時間內每個星期的特定星期幾的日期
+ * @param startInSecond - {number} 開始時間 in second
+ * @param endInSecond - {number} 結束時間 in second
+ * @param dayByNumber - {number} 一週的第幾天, 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+ */
+export function getDaysBetweenDates({
+  startInSecond,
+  endInSecond,
+  dayByNumber,
+}: {
+  startInSecond: number;
+  endInSecond: number;
+  dayByNumber: number;
+}) {
+  const result = [];
+  const current = new Date(timestampInMilliSeconds(startInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endInSecond));
+  // Info: (20241030 - Murky) Shift to next of required days
+  current.setDate(current.getDate() + ((dayByNumber - current.getDay() + 7) % 7));
+  //  Info: (20241030 - Murky) While less than end date, add dates to result array
+  while (current < endDate) {
+    result.push(new Date(+current));
+    current.setDate(current.getDate() + 7);
+  }
+  return result;
+}
+
+/**
+ * Info: (20241030 - Murky)
+ * @describe 給定開始時間和結束時間，回傳這段時間內每個月的最後一天
+ * @param startInSecond - {number} 開始時間 in second
+ * @param endInSecond - {number} 結束時間 in second
+ * @param monthByNumber - {number} 一年的第幾個月, 0 = January, 1 = February, ..., 11 = December
+ */
+export function getLastDatesOfMonthsBetweenDates({
+  startInSecond,
+  endInSecond,
+  monthByNumber,
+}: {
+  startInSecond: number;
+  endInSecond: number;
+  monthByNumber: number;
+}) {
+  const result = [];
+  const current = new Date(timestampInMilliSeconds(startInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endInSecond));
+
+  current.setMonth(current.getMonth() + ((monthByNumber - current.getMonth() + 12) % 12));
+  current.setDate(0);
+
+  while (current < endDate) {
+    result.push(new Date(+current));
+    current.setMonth(current.getMonth() + 12);
+    current.setDate(0);
+  }
+  return result;
+}

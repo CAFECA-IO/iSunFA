@@ -46,9 +46,9 @@ export interface IEventEntity {
 
   /**
    * Info: (20241023 - Murky)
-   * @description '1'~'12', which month of year this event happened repeatedly, empty if not repeated
+   * @description 0~11, which month of year this event happened repeatedly, empty if not repeated
    */
-  monthsOfYear: string[];
+  monthsOfYear: number[];
 
   /**
    * Info: (20241023 - Murky)

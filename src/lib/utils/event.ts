@@ -1,5 +1,5 @@
 import { IEventEntity } from '@/interfaces/event';
-import { Event as PrismaEvent } from '@prisma/client';
+// import { Event as PrismaEvent } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import { EventEntityFrequency, EventEntityType } from '@/constants/event';
 import type { IVoucherEntity } from '@/interfaces/voucher';
@@ -9,13 +9,18 @@ import type { IVoucherEntity } from '@/interfaces/voucher';
  * @description Create IEventEntity, used to record the event of voucher relate to voucher
  */
 export function initEventEntity(
-  dto: Partial<PrismaEvent> & {
+  // dto: Partial<PrismaEvent> & {
+  dto: {
     eventType: EventEntityType;
     frequency: EventEntityFrequency;
     startDate: number;
     endDate: number;
+    id?: number;
+    createdAt?: number;
+    updatedAt?: number;
+    deletedAt?: number | null;
     dateOfWeek?: number[];
-    monthsOfYear?: string[];
+    monthsOfYear?: number[];
     associateVouchers?: {
       originalVoucher: IVoucherEntity;
       resultVoucher: IVoucherEntity;
