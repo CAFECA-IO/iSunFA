@@ -10,7 +10,7 @@ import { File, Role, User, UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
 
 const handleGetRequest: IHandleRequest<
-  APIName.ROLE_LIST,
+  APIName.USER_ROLE_LIST,
   (UserRole & { user: User & { imageFile: File }; role: Role })[]
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -25,7 +25,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePostRequest: IHandleRequest<
-  APIName.CREATE_ROLE,
+  APIName.USER_CREATE_ROLE,
   (UserRole & { user: User & { imageFile: File }; role: Role }) | null
 > = async ({ body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -46,8 +46,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserRole | IUserRole[] | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ROLE_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_ROLE, req, res, handlePostRequest),
+  GET: (req, res) => withRequestValidation(APIName.USER_ROLE_LIST, req, res, handleGetRequest),
+  POST: (req, res) => withRequestValidation(APIName.USER_CREATE_ROLE, req, res, handlePostRequest),
 };
 
 export default async function handler(

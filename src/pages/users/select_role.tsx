@@ -9,10 +9,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import I18n from '@/components/i18n/i18n';
 import { useUserCtx } from '@/contexts/user_context';
-import { IRole } from '@/interfaces/role';
-import { RoleName } from '@/constants/role';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_AVATAR_URL } from '@/constants/display';
+import { RoleName } from '@/constants/role';
+import { IUserRole } from '@/interfaces/user_role';
 
 interface UserRoleProps {
   name: string;
@@ -37,22 +37,50 @@ const USER_ROLES_ICON = [
 ];
 
 // ToDo: (20241029 - Liz) 這是假資料，之後要改成從 API 拿
-const USER_ROLES: IRole[] = [
+const USER_ROLES: IUserRole[] = [
   {
     id: 1,
-    name: RoleName.BOOKKEEPER,
+    user: {
+      id: 1,
+      name: 'John Doe',
+      email: 'john@gmail.com',
+      imageId: '1',
+      agreementList: ['agreement1', 'agreement2'],
+      createdAt: 1730044800,
+      updatedAt: 1730044800,
+    },
+    role: {
+      id: 1,
+      name: RoleName.BOOKKEEPER,
+      permissions: ['READ', 'WRITE', 'DELETE'],
+      createdAt: 1730044800,
+      updatedAt: 1730044800,
+    },
     lastLoginAt: 1730044800,
     createdAt: 1730044800,
     updatedAt: 1730044800,
-    permissions: ['READ', 'WRITE', 'DELETE'],
   },
   {
     id: 2,
-    name: RoleName.EDUCATIONAL_TRIAL_VERSION,
+    user: {
+      id: 1,
+      name: 'John Doe',
+      email: 'jo',
+      imageId: '1',
+      agreementList: ['agreement1', 'agreement2'],
+      createdAt: 1730044800,
+      updatedAt: 1730044800,
+    },
+    role: {
+      id: 2,
+      name: RoleName.EDUCATIONAL_TRIAL_VERSION,
+      permissions: ['READ', 'WRITE'],
+      createdAt: 1730131200,
+      updatedAt: 1730131200,
+    },
     lastLoginAt: 1730131200,
     createdAt: 1730131200,
     updatedAt: 1730131200,
-    permissions: ['READ', 'WRITE'],
   },
 ];
 
@@ -145,17 +173,17 @@ const SelectRolePage = () => {
 
         {/* // Info: (20241009 - Liz) User Roles */}
         <section className="flex items-center justify-center gap-40px pt-120px">
-          {USER_ROLES.map((role) => {
-            const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === role.name);
+          {USER_ROLES.map((userRole) => {
+            const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
 
             return (
               <UserRole
-                key={role.id}
-                name={role.name}
+                key={userRole.id}
+                name={userRole.role.name}
                 roleIconSrc={roleIcon?.roleIconSrc ?? ''}
                 roleIconAlt={roleIcon?.roleIconAlt ?? ''}
                 avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
-                lastLoginAt={role.lastLoginAt}
+                lastLoginAt={userRole.lastLoginAt}
               />
             );
           })}

@@ -97,12 +97,8 @@ export enum APIName {
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
   COMPANY_DELETE = 'COMPANY_DELETE',
   COMPANY_UPDATE = 'COMPANY_UPDATE',
-  ROLE_LIST = 'ROLE_LIST',
-  // Info: (20241029 - Liz) Beta 版本的角色相關 API ===(start)
   USER_ROLE_LIST = 'USER_ROLE_LIST',
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
-  // Info: (20241029 - Liz) Beta 版本的角色相關 API ===(end)
-  CREATE_ROLE = 'CREATE_ROLE',
   ROLE_SELECT = 'ROLE_SELECT',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
@@ -216,12 +212,8 @@ export enum APIPath {
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
   COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
-  ROLE_LIST = `${apiPrefixV2}/company/:companyId/role`,
-  // Info: (20241029 - Liz) Beta 版本的角色相關 API ===(start)
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
-  // Info: (20241029 - Liz) Beta 版本的角色相關 API ===(end)
-  CREATE_ROLE = `${apiPrefixV2}/company/:companyId/role`,
   ROLE_SELECT = `${apiPrefixV2}/company/:companyId/role/select`,
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
@@ -551,12 +543,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.ROLE_GET_BY_ID,
   }),
-  [APIName.ROLE_LIST]: createConfig({
-    name: APIName.ROLE_LIST,
-    method: HttpMethod.GET,
-    path: APIPath.ROLE_LIST,
-  }),
-  // Info: (20241029 - Liz) Beta 版本的角色相關 API ===(start)
   [APIName.USER_ROLE_LIST]: createConfig({
     name: APIName.USER_ROLE_LIST,
     method: HttpMethod.GET,
@@ -566,13 +552,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_CREATE_ROLE,
     method: HttpMethod.POST,
     path: APIPath.USER_CREATE_ROLE,
-  }),
-  // Info: (20241029 - Liz) Beta 版本的角色相關 API ===(end)
-
-  [APIName.CREATE_ROLE]: createConfig({
-    name: APIName.CREATE_ROLE,
-    method: HttpMethod.POST,
-    path: APIPath.CREATE_ROLE,
   }),
   [APIName.ROLE_SELECT]: createConfig({
     name: APIName.ROLE_SELECT,
