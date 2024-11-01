@@ -13,6 +13,8 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { DEFAULT_AVATAR_URL } from '@/constants/display';
 import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 interface UserRoleProps {
   name: string;
@@ -37,52 +39,52 @@ const USER_ROLES_ICON = [
 ];
 
 // ToDo: (20241029 - Liz) 這是假資料，之後要改成從 API 拿
-const USER_ROLES: IUserRole[] = [
-  {
-    id: 1,
-    user: {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@gmail.com',
-      imageId: '1',
-      agreementList: ['agreement1', 'agreement2'],
-      createdAt: 1730044800,
-      updatedAt: 1730044800,
-    },
-    role: {
-      id: 1,
-      name: RoleName.BOOKKEEPER,
-      permissions: ['READ', 'WRITE', 'DELETE'],
-      createdAt: 1730044800,
-      updatedAt: 1730044800,
-    },
-    lastLoginAt: 1730044800,
-    createdAt: 1730044800,
-    updatedAt: 1730044800,
-  },
-  {
-    id: 2,
-    user: {
-      id: 1,
-      name: 'John Doe',
-      email: 'jo',
-      imageId: '1',
-      agreementList: ['agreement1', 'agreement2'],
-      createdAt: 1730044800,
-      updatedAt: 1730044800,
-    },
-    role: {
-      id: 2,
-      name: RoleName.EDUCATIONAL_TRIAL_VERSION,
-      permissions: ['READ', 'WRITE'],
-      createdAt: 1730131200,
-      updatedAt: 1730131200,
-    },
-    lastLoginAt: 1730131200,
-    createdAt: 1730131200,
-    updatedAt: 1730131200,
-  },
-];
+// const USER_ROLES: IUserRole[] = [
+//   {
+//     id: 1,
+//     user: {
+//       id: 1,
+//       name: 'John Doe',
+//       email: 'john@gmail.com',
+//       imageId: '1',
+//       agreementList: ['agreement1', 'agreement2'],
+//       createdAt: 1730044800,
+//       updatedAt: 1730044800,
+//     },
+//     role: {
+//       id: 1,
+//       name: RoleName.BOOKKEEPER,
+//       permissions: ['READ', 'WRITE', 'DELETE'],
+//       createdAt: 1730044800,
+//       updatedAt: 1730044800,
+//     },
+//     lastLoginAt: 1730044800,
+//     createdAt: 1730044800,
+//     updatedAt: 1730044800,
+//   },
+//   {
+//     id: 2,
+//     user: {
+//       id: 1,
+//       name: 'John Doe',
+//       email: 'jo',
+//       imageId: '1',
+//       agreementList: ['agreement1', 'agreement2'],
+//       createdAt: 1730044800,
+//       updatedAt: 1730044800,
+//     },
+//     role: {
+//       id: 2,
+//       name: RoleName.EDUCATIONAL_TRIAL_VERSION,
+//       permissions: ['READ', 'WRITE'],
+//       createdAt: 1730131200,
+//       updatedAt: 1730131200,
+//     },
+//     lastLoginAt: 1730131200,
+//     createdAt: 1730131200,
+//     updatedAt: 1730131200,
+//   },
+// ];
 
 const UserRole = ({ name, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserRoleProps) => {
   // ToDo: (20241009 - Liz) 選擇 Role 功能
@@ -128,7 +130,28 @@ const UserRole = ({ name, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserR
 
 const SelectRolePage = () => {
   const { t } = useTranslation(['common']);
-  const { signOut, userAuth } = useUserCtx();
+  const { signOut, userAuth, getUserRoleList } = useUserCtx();
+  const router = useRouter();
+  const [userRoleList, setUserRoleList] = useState<IUserRole[]>([]);
+
+  useEffect(() => {
+    const fetchUserRoleList = async () => {
+      const data = await getUserRoleList();
+
+      if (data && data?.length > 0) {
+        setUserRoleList(data);
+      } else {
+        router.push(ISUNFA_ROUTE.CREATE_ROLE);
+      }
+    };
+
+    fetchUserRoleList();
+  }, [router]);
+
+  if (userRoleList === null) {
+    // 顯示載入指示器，直到完成 `getUserRoleList` 的請求
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -173,7 +196,7 @@ const SelectRolePage = () => {
 
         {/* // Info: (20241009 - Liz) User Roles */}
         <section className="flex items-center justify-center gap-40px pt-120px">
-          {USER_ROLES.map((userRole) => {
+          {userRoleList.map((userRole) => {
             const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
 
             return (

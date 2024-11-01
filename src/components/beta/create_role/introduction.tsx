@@ -61,6 +61,10 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
       // Info: (20241029 - Liz) 呼叫 createRole 並等待結果
       const isSuccess = await createRole(showingRole);
 
+      // Deprecated: (20241101 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleCreateRole isSuccess:', isSuccess);
+
       // Info: (20241029 - Liz) 根據回傳的布林值執行不同的操作
       if (isSuccess) {
         // Info: (20241029 - Liz) 角色建立成功，在這裡執行成功的操作。例如，顯示成功訊息、更新介面等

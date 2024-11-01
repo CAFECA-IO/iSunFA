@@ -30,9 +30,9 @@ interface UserContextType {
   isSignInError: boolean;
   createRole: (roleName: RoleName) => Promise<boolean>;
   selectRole: (roleName: string) => Promise<void>;
-  getUserRoleList: () => Promise<void>;
+  getUserRoleList: () => Promise<IUserRole[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
-  userRoleList: IUserRole[] | null;
+
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -66,9 +66,9 @@ export const UserContext = createContext<UserContextType>({
   isSignInError: false,
   createRole: async () => false,
   selectRole: async () => {},
-  getUserRoleList: async () => {},
+  getUserRoleList: async () => null,
   selectedRole: null,
-  userRoleList: null,
+
   selectedCompany: null,
   selectCompany: async () => {},
   successSelectCompany: undefined,
@@ -94,7 +94,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
-  const [, setUserRoleList, userRoleListRef] = useStateRef<IUserRole[] | null>(null);
   // Info: (20241028 - Liz) 使用者目前選擇的角色(拿取 getStateInfoAPI 回傳的 Role 資料)
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
 
@@ -175,7 +174,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line no-console
     console.log('呼叫 goToSelectRolePage');
 
-    router.push(ISUNFA_ROUTE.CREATE_ROLE);
+    router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
 
   // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
@@ -550,18 +549,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241025 - Liz) 取得使用者擁有的所有角色
   const getUserRoleList = async () => {
-    setUserRoleList(null);
-
     try {
       const { data: userRoleList, success } = await userRoleListAPI({
         params: { userId: userAuth?.id },
       });
 
       if (success && userRoleList) {
-        setUserRoleList(userRoleList);
+        return userRoleList;
       }
+
+      return null;
     } catch (error) {
       // Handle error if needed
+      return null;
     }
   };
 
@@ -663,7 +663,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectRole,
       getUserRoleList,
       selectedRole: selectedRoleRef.current,
-      userRoleList: userRoleListRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       successSelectCompany: successSelectCompanyRef.current,
@@ -679,7 +678,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     [
       credentialRef.current,
       selectedRoleRef.current,
-      userRoleListRef.current,
       selectedCompanyRef.current,
       successSelectCompanyRef.current,
       errorCodeRef.current,

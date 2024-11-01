@@ -203,7 +203,7 @@ export enum APIPath {
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
   REPORT_GET_V2 = `${apiPrefixV2}/company/:companyId/report`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
-  STATUS_INFO_GET = `${apiPrefix}/status_info`,
+  STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   PUBLIC_FILE_UPLOAD = `${apiPrefixV2}/upload`,

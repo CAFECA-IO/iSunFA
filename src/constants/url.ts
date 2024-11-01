@@ -18,7 +18,7 @@ export const ISUNFA_ROUTE = {
   // Info: (20241015 - Liz) Beta routes
   EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
   CREATE_ROLE: '/users/create_role',
-  JOB_RECORD: '/users/job_record',
+  SELECT_ROLE: '/users/select_role',
   BETA_DASHBOARD: '/beta/dashboard',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
   MY_COMPANY_LIST_PAGE: '/beta/my_company_list_page',
