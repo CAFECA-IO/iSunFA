@@ -670,3 +670,97 @@ export function numberBeDashIfFalsy(num: number | null | undefined | string) {
 
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
+
+/**
+ * Info: (20241029 - Murky)
+ * @describe 給定startDateInSecond和endDateInSecond，回傳這段時間內每個月的最後一秒, 包含endDate的月份
+ */
+export function getLastSecondsOfEachMonth(
+  startDateInSecond: number,
+  endDateInSecond: number
+): number[] {
+  const startDate = new Date(timestampInMilliSeconds(startDateInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endDateInSecond));
+
+  const result: number[] = [];
+
+  // Info: (20241029 - Murky) 建立複製的日期避免修改原來的 `startDate`
+  const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  // Info: (20241029 - Murky) 繼續迴圈直到 `current` 超過 `endDate` 的月份
+  while (current.getTime() <= endDate.getTime()) {
+    // Info: (20241029 - Murky) 找到當前月份的最後一天
+    const lastDayOfMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+
+    // Info: (20241029 - Murky) 設定到該天的最後一秒
+    lastDayOfMonth.setHours(23, 59, 59, 999);
+
+    // Info: (20241029 - Murky) 將當月最後一天的最後一秒加入結果陣列
+    result.push(lastDayOfMonth.getTime());
+
+    // Info: (20241029 - Murky) 移動到下個月
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return result;
+}
+
+/**
+ * Info: (20241030 - Murky)
+ * @describe 給定開始時間和結束時間，回傳這段時間內每個星期的特定星期幾的日期
+ * @param startInSecond - {number} 開始時間 in second
+ * @param endInSecond - {number} 結束時間 in second
+ * @param dayByNumber - {number} 一週的第幾天, 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+ */
+export function getDaysBetweenDates({
+  startInSecond,
+  endInSecond,
+  dayByNumber,
+}: {
+  startInSecond: number;
+  endInSecond: number;
+  dayByNumber: number;
+}) {
+  const result = [];
+  const current = new Date(timestampInMilliSeconds(startInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endInSecond));
+  // Info: (20241030 - Murky) Shift to next of required days
+  current.setDate(current.getDate() + ((dayByNumber - current.getDay() + 7) % 7));
+  //  Info: (20241030 - Murky) While less than end date, add dates to result array
+  while (current < endDate) {
+    result.push(new Date(+current));
+    current.setDate(current.getDate() + 7);
+  }
+  return result;
+}
+
+/**
+ * Info: (20241030 - Murky)
+ * @describe 給定開始時間和結束時間，回傳這段時間內每個月的最後一天
+ * @param startInSecond - {number} 開始時間 in second
+ * @param endInSecond - {number} 結束時間 in second
+ * @param monthByNumber - {number} 一年的第幾個月, 0 = January, 1 = February, ..., 11 = December
+ */
+export function getLastDatesOfMonthsBetweenDates({
+  startInSecond,
+  endInSecond,
+  monthByNumber,
+}: {
+  startInSecond: number;
+  endInSecond: number;
+  monthByNumber: number;
+}) {
+  const result = [];
+  const current = new Date(timestampInMilliSeconds(startInSecond));
+  const endDate = new Date(timestampInMilliSeconds(endInSecond));
+
+  current.setMonth(current.getMonth() + ((monthByNumber - current.getMonth() + 12) % 12));
+  current.setDate(0);
+
+  while (current < endDate) {
+    result.push(new Date(+current));
+    current.setMonth(current.getMonth() + 12);
+    current.setDate(0);
+  }
+  return result;
+}

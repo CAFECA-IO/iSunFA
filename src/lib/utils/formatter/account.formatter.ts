@@ -1,9 +1,8 @@
 import { SortOrder } from '@/constants/sort';
 import { IAccount, IAccountEntity, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { Account as PrismaAccount } from '@prisma/client';
-import { z } from 'zod';
-import { AccountType } from '@/constants/account';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
+import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
 
 export function formatAccount(account: PrismaAccount): IAccount {
   return {
@@ -64,37 +63,7 @@ export function formatIPaginatedAccount(accounts: {
  * @note Reference of recursive schema: https://github.com/colinhacks/zod?tab=readme-ov-file#recursive-types
  */
 export function parsePrismaAccountToAccountEntity(dto: PrismaAccount): IAccountEntity {
-  // ToDo: (20241023 - Murky) Need to move to other place
-
-  const basicAccountEntitySchema = z.object({
-    id: z.number(),
-    companyId: z.number(),
-    system: z.string(), // Info: (20241023 - Murky) Change to enum ['IFRS', 'GAAP'] if needed
-    type: z.nativeEnum(AccountType),
-    debit: z.boolean(),
-    liquidity: z.boolean(),
-    code: z.string(),
-    name: z.string(),
-    forUser: z.boolean(),
-    level: z.number(),
-    parentCode: z.string(),
-    rootCode: z.string(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
-    deletedAt: z.number().nullable(),
-  });
-
-  type AccountEntity = z.infer<typeof basicAccountEntitySchema> & {
-    parent?: AccountEntity;
-    root?: AccountEntity;
-  };
-
-  const accountEntitySchema: z.ZodType<AccountEntity> = basicAccountEntitySchema.extend({
-    parent: z.lazy(() => accountEntitySchema.optional()),
-    root: z.lazy(() => accountEntitySchema.optional()),
-  });
-
-  const { data, success, error } = accountEntitySchema.safeParse(dto);
+  const { data, success, error } = accountEntityValidator.safeParse(dto);
 
   if (!success) {
     throw new FormatterError('AccountEntity format prisma data error', {
