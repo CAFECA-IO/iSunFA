@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
@@ -7,10 +7,10 @@ import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
-import { VoucherType } from '@/constants/account';
+// import { VoucherType } from '@/constants/account';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { ILedgerPayload } from '@/interfaces/ledger';
+import { ILedgerPayload, MOCK_RESPONSE as LEDGER_DATA_RESPONSE } from '@/interfaces/ledger';
 
 // Info: (20241101 - Anna) 將 dummyVoucherList 註解掉，改為使用 API 回傳的資料
 // const dummyVoucherList: ILedgerBeta[] = [
@@ -84,6 +84,7 @@ import { ILedgerPayload } from '@/interfaces/ledger';
 
 const LedgerList = () => {
   const { t } = useTranslation('common');
+  const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   const [totalDebitAmount, setTotalDebitAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
@@ -138,37 +139,62 @@ const LedgerList = () => {
     </div>
   );
 
-  // Info: (20241101 - Anna) 使用 useCallback 包裝 API 請求函式
+  // Todo: (20241101 - Anna) 使用 useCallback 包裝 API 請求函式 (實作好API再換回fetch)
+  // const fetchLedgerData = useCallback(async () => {
+  //   if (isAuthLoading || !selectedCompany?.id) return;
+
+  //   const response = await fetch(
+  //     `/api/v2/company/${selectedCompany.id}/ledger?page=${currentPage}`
+  //   );
+  //   if (response.ok) {
+  //     const data: ILedgerPayload = await response.json();
+  //     const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
+  //       id: item.id,
+  //       date: item.voucherDate,
+  //       voucherNo: item.voucherNumber,
+  //       voucherType: item.voucherType,
+  //       note: item.particulars,
+  //       accounting: [{ code: item.no, name: item.accountingTitle }],
+  //       credit: [item.creditAmount],
+  //       debit: [item.debitAmount],
+  //       balance: [item.balance],
+  //     }));
+  //     setVoucherList(transformedData); // Info: (20241101 - Anna) 更新為符合 ILedgerBeta 的轉換後數據
+  //     setTotalPages(data.items.totalPages);
+  //     setTotalDebitAmount(data.total.totalDebitAmount);
+  //     setTotalCreditAmount(data.total.totalCreditAmount);
+  //   } else {
+  //     // eslint-disable-next-line no-console
+  //     console.error('Failed to fetch ledger data.');
+  //   }
+  // }, [isAuthLoading, selectedCompany?.id, currentPage]);
+
+  // Info: (20241101 - Anna) 定義 `fetchLedgerData` 函數
   const fetchLedgerData = useCallback(async () => {
     if (isAuthLoading || !selectedCompany?.id) return;
 
-    const response = await fetch(
-      `/api/v2/company/${selectedCompany.id}/ledger?page=${currentPage}`
-    );
-    if (response.ok) {
-      const data: ILedgerPayload = await response.json();
-      const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
-        id: item.id,
-        date: item.voucherDate,
-        voucherNo: item.voucherNumber,
-        voucherType: VoucherType.RECEIVE, // Todo: (20241101 - Anna) 假設有一種默認類型，待後端補充欄位後可改為動態值
-        note: item.particulars,
-        accounting: [{ code: item.no, name: item.accountingTitle }],
-        credit: [item.creditAmount],
-        debit: [item.debitAmount],
-        balance: [item.balance],
-      }));
-      setVoucherList(transformedData); // Info: (20241101 - Anna) 更新為符合 ILedgerBeta 的轉換後數據
-      setTotalPages(data.items.totalPages);
-      setTotalDebitAmount(data.total.totalDebitAmount);
-      setTotalCreditAmount(data.total.totalCreditAmount);
-    } else {
-      // eslint-disable-next-line no-console
-      console.error('Failed to fetch ledger data.');
-    }
+    // Todo: (20241101 - Anna) 暫時使用 MOCK_RESPONSE，模擬 API 回傳的數據
+    const data: ILedgerPayload = LEDGER_DATA_RESPONSE;
+
+    const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
+      id: item.id,
+      date: item.voucherDate,
+      voucherNo: item.voucherNumber,
+      voucherType: item.voucherType,
+      note: item.particulars,
+      accounting: [{ code: item.no, name: item.accountingTitle }],
+      credit: [item.creditAmount],
+      debit: [item.debitAmount],
+      balance: [item.balance],
+    }));
+
+    setVoucherList(transformedData);
+    setTotalPages(data.items.totalPages);
+    setTotalDebitAmount(data.total.totalDebitAmount);
+    setTotalCreditAmount(data.total.totalCreditAmount);
   }, [isAuthLoading, selectedCompany?.id, currentPage]);
 
-  // Info: (20241101 - Anna) 使用 useEffect 依賴 currentPage 和 selectedCompany 變化時觸發 API 請求**
+  // Todo: (20241101 - Anna) 使用 useEffect 依賴 currentPage 和 selectedCompany 變化時觸發 API 請求(實作好API再換回fetch)
   useEffect(() => {
     fetchLedgerData();
   }, [fetchLedgerData]);
@@ -186,7 +212,9 @@ const LedgerList = () => {
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
-            <div className={`table-cell ${tableCellStyles} border-b border-r`}>
+            <div
+              className={`table-cell border-stroke-neutral-quaternary ${tableCellStyles} border-b`}
+            >
               <div className="flex items-center justify-center">
                 <div className="relative">
                   <input type="checkbox" className={checkboxStyle} />
@@ -237,16 +265,16 @@ const LedgerList = () => {
         {/* Info: (20241009 - Anna) 表格內容 */}
         <div className="col-span-1"></div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          Total Debit amount
+          {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {totalDebitAmount}
+          {formatNumber(totalDebitAmount)}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          Total Credit amount
+          {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {totalCreditAmount}
+          {formatNumber(totalCreditAmount)}
         </div>
       </div>
 

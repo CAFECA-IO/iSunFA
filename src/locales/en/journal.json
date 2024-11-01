@@ -282,7 +282,9 @@
     "GENERAL": "General",
     "DETAILED": "Detailed",
     "GENERAL_DETAILED": "General & Detailed",
-    "SPECIFIC_ACCOUNTING_TITLE": "Specific accounting title"
+    "SPECIFIC_ACCOUNTING_TITLE": "Specific accounting title",
+    "TOTAL_DEBIT_AMOUNT": "Total Debit amount",
+    "TOTAL_CREDIT_AMOUNT": "Total Credit amount"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "Please select the certificates for AI to generate the voucher for you",

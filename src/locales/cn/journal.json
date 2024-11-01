@@ -282,7 +282,9 @@
     "GENERAL": "总分类帐",
     "DETAILED": "明细分类帐",
     "GENERAL_DETAILED": "总分类帐 和 明细分类帐",
-    "SPECIFIC_ACCOUNTING_TITLE": "会计科目"
+    "SPECIFIC_ACCOUNTING_TITLE": "会计科目",
+    "TOTAL_DEBIT_AMOUNT": "借方总额",
+    "TOTAL_CREDIT_AMOUNT": "贷方总额"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "请选择凭证，让 AI 为您生成所需的传票",
