@@ -204,6 +204,7 @@
     "BALANCE": "余额",
     "LEDGER": "分类帐",
     "TRIAL_BALANCE": "试算表",
+    "TRIAL_BALANCE_PERIOD": "试算表期间",
     "NO_VOUCHER": "无传票资料",
     "UPLOADED_VOUCHER_TAB": "已过账传票",
     "UPCOMING_EVENTS_TAB": "未过账传票"
@@ -276,7 +277,12 @@
     "UNDO": "复原"
   },
   "LEDGER": {
-    "LEDGER_PERIOD": "分类帐期间"
+    "LEDGER_PERIOD": "分类帐期间",
+    "LABEL_TYPE": "分类帐类型",
+    "GENERAL": "总分类帐",
+    "DETAILED": "明细分类帐",
+    "GENERAL_DETAILED": "总分类帐 和 明细分类帐",
+    "SPECIFIC_ACCOUNTING_TITLE": "会计科目"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "请选择凭证，让 AI 为您生成所需的传票",

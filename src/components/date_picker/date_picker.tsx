@@ -73,7 +73,8 @@ const PopulateDates = ({
 
   // Info: (20240417 - Shirley) 顯示星期標題
   const weekNameList = WEEK_LIST.map((week) => (
-    <p className="mx-auto h-35px w-35px text-date-picker-text-week" key={week}>
+    // Info: (20241101 - Anna) 加上 mb-0 防止報告頁面跑版，其他頁面應不受影響
+    <p className="mx-auto mb-0 h-35px w-35px text-date-picker-text-week" key={week}>
       {t(week)}
     </p>
   ));
@@ -422,8 +423,9 @@ const DatePicker = ({
           }
         )}
       >
+        {/* Info: (20241101 - Anna) 加上 mb-0 防止報告頁面跑版，其他頁面應不受影響 */}
         <p
-          className={cn('flex-1 whitespace-nowrap text-start text-sm', {
+          className={cn('mb-0 flex-1 whitespace-nowrap text-start text-sm', {
             'border-button-stroke-primary-hover': componentVisible,
             [buttonStyleAfterDateSelected]: isDateSelected,
           })}
@@ -471,8 +473,9 @@ const DatePicker = ({
             </Button>
             {/* Info: (20240417 - Shirley) Month and Year */}
             <div className="flex space-x-4 text-date-picker-text-default">
-              <p>{displayedYear}</p>
-              <p>{displayedMonth}</p>
+              {/* Info: (20241101 - Anna) 加上 mb-0 防止報告頁面跑版，其他頁面應不受影響 */}
+              <p className="mb-0">{displayedYear}</p>
+              <p className="mb-0">{displayedMonth}</p>
             </div>
 
             {/* Info: (20240417 - Shirley) Next button */}

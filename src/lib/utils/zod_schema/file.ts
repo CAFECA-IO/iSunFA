@@ -1,5 +1,20 @@
-import { FileFolder } from '@/constants/file';
 import { z } from 'zod';
+import { FileFolder } from '@/constants/file';
+
+export const fileSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  size: z.number(),
+  mimeType: z.string(),
+  type: z.string(),
+  url: z.string(),
+  isEncrypted: z.boolean(),
+  encryptedSymmetricKey: z.string(),
+  iv: z.instanceof(Uint8Array),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+  deletedAt: z.number().int().nullable(),
+});
 
 /**
  * Info: (20241025 - Murky)

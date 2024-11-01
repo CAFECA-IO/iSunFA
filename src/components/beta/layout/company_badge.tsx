@@ -14,7 +14,8 @@ const CompanyBadge = () => {
             width={14}
             height={14}
           ></Image>
-          <p className="px-2.5px text-xs font-medium">{selectedCompany}</p>
+          {/* Info: (20241101 - Anna) 加上 mb-0 防止報告頁面跑版，其他頁面應不受影響 */}
+          <p className="mb-0 px-2.5px text-xs font-medium">{selectedCompany}</p>
         </div>
       ) : null}
     </div>

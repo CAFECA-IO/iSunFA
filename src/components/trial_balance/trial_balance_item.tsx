@@ -31,14 +31,17 @@ const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanc
   );
 
   const displayedAccountingCode = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
+    <div className="ml-2 flex h-full items-center justify-start font-normal text-neutral-600">
       <div className="flex items-center justify-between">
         <p className="m-0 flex items-center">{voucher.no}</p>
         {/* Info: (20241025 - Anna) 在 voucher.no 右側加入 CollapseButton */}
-        <CollapseButton
-          onClick={() => setLocalIsExpanded(!localIsExpanded)} // Info: (20241029 - Anna) 使用 localIsExpanded
-          isCollapsed={!localIsExpanded}
-        />
+        {/* Info: (20241025 - Anna) 只有當 voucher.subAccounts 有數據時才顯示 CollapseButton */}
+        {voucher.subAccounts.length > 0 && (
+          <CollapseButton
+            onClick={() => setLocalIsExpanded(!localIsExpanded)} // Info: (20241029 - Anna) 使用 localIsExpanded
+            isCollapsed={!localIsExpanded}
+          />
+        )}
       </div>
     </div>
   );
@@ -136,37 +139,40 @@ const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanc
         </div>
       </div>
       {/* Info: (20241025 - Anna) 如果展開，新增子科目表格 */}
-      {localIsExpanded && (
-        <div className="table-row h-20px font-normal">
-          <div className="table-cell w-32px text-center">{displayedCheckbox}</div>
-          <div className="table-cell w-50px text-center align-middle">
-            <span className="ml-6 text-neutral-400">114101</span>
-          </div>
-          <div className="table-cell w-370px text-center align-middle">
-            <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-              <span className="ml-12 flex items-center text-neutral-400">應收帳款-A</span>
+      {localIsExpanded &&
+        voucher.subAccounts.map((subAccount) => (
+          <div key={subAccount.id} className="table-row h-20px font-normal">
+            <div className="table-cell w-32px text-center">{displayedCheckbox}</div>
+            <div className="table-cell w-50px text-center align-middle">
+              <span className="ml-6 text-neutral-400">{subAccount.no}</span>
+            </div>
+            <div className="table-cell w-370px text-center align-middle">
+              <div className="flex h-full items-center justify-center font-normal text-neutral-600">
+                <span className="ml-12 flex items-center text-neutral-400">
+                  {subAccount.accountingTitle}
+                </span>
+              </div>
+            </div>
+            <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
+              {numberWithCommas(subAccount.beginningDebitAmount)}
+            </div>
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
+              {numberWithCommas(subAccount.beginningCreditAmount)}
+            </div>
+            <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
+              {numberWithCommas(subAccount.midtermDebitAmount)}
+            </div>
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
+              {numberWithCommas(subAccount.midtermCreditAmount)}
+            </div>
+            <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
+              {numberWithCommas(subAccount.endingDebitAmount)}
+            </div>
+            <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
+              {numberWithCommas(subAccount.endingCreditAmount)}
             </div>
           </div>
-          <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
-            {numberWithCommas(5000)}
-          </div>
-          <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-olive-100 py-8px pr-2 text-right align-middle text-neutral-600">
-            {numberWithCommas(1000)}
-          </div>
-          <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
-            {numberWithCommas(2000)}
-          </div>
-          <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-baby-100 py-8px pr-2 text-right align-middle text-neutral-600">
-            {numberWithCommas(1500)}
-          </div>
-          <div className="table-cell h-full w-77px border-r-0.5px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
-            {numberWithCommas(3000)}
-          </div>
-          <div className="table-cell h-full w-77px border-stroke-neutral-quaternary bg-support-pink-100 py-8px pr-2 text-right align-middle text-neutral-600">
-            {numberWithCommas(2500)}
-          </div>
-        </div>
-      )}
+        ))}
     </>
   );
 });

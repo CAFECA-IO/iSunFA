@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
@@ -6,94 +6,102 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { VoucherType } from '@/constants/account';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
+import { ILedgerPayload } from '@/interfaces/ledger';
 
-const dummyVoucherList: ILedgerBeta[] = [
-  {
-    id: 1,
-    date: 1632511200,
-    voucherNo: '20240920-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Printer-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [100200],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 2,
-    date: 1662511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.EXPENSE,
-    note: 'Printer-0002',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [0],
-    debit: [10200],
-    balance: [100200],
-  },
-  {
-    id: 3,
-    date: 1672592800,
-    voucherNo: '20240925-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Scanner-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [0],
-    debit: [200],
-    balance: [100200],
-  },
-  {
-    id: 4,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 5,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 6,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-];
+// Info: (20241101 - Anna) 將 dummyVoucherList 註解掉，改為使用 API 回傳的資料
+// const dummyVoucherList: ILedgerBeta[] = [
+//   {
+//     id: 1,
+//     date: 1632511200,
+//     voucherNo: '20240920-0001',
+//     voucherType: VoucherType.RECEIVE,
+//     note: 'Printer-0001',
+//     accounting: [{ code: '1141', name: 'Accounts receivable' }],
+//     credit: [100200],
+//     debit: [0],
+//     balance: [100200],
+//   },
+//   {
+//     id: 2,
+//     date: 1662511200,
+//     voucherNo: '20240922-0002',
+//     voucherType: VoucherType.EXPENSE,
+//     note: 'Printer-0002',
+//     accounting: [{ code: '1141', name: 'Accounts receivable' }],
+//     credit: [0],
+//     debit: [10200],
+//     balance: [100200],
+//   },
+//   {
+//     id: 3,
+//     date: 1672592800,
+//     voucherNo: '20240925-0001',
+//     voucherType: VoucherType.RECEIVE,
+//     note: 'Scanner-0001',
+//     accounting: [{ code: '1141', name: 'Accounts receivable' }],
+//     credit: [0],
+//     debit: [200],
+//     balance: [100200],
+//   },
+//   {
+//     id: 4,
+//     date: 1702511200,
+//     voucherNo: '20240922-0002',
+//     voucherType: VoucherType.TRANSFER,
+//     note: 'Mouse-0001',
+//     accounting: [{ code: '1141', name: 'Accounts receivable' }],
+//     credit: [300],
+//     debit: [0],
+//     balance: [100200],
+//   },
+//   {
+//     id: 5,
+//     date: 1702511200,
+//     voucherNo: '20240922-0002',
+//     voucherType: VoucherType.TRANSFER,
+//     note: 'Mouse-0001',
+//     accounting: [{ code: '1141', name: 'Accounts receivable' }],
+//     credit: [300],
+//     debit: [0],
+//     balance: [100200],
+//   },
+//   {
+//     id: 6,
+//     date: 1702511200,
+//     voucherNo: '20240922-0002',
+//     voucherType: VoucherType.TRANSFER,
+//     note: 'Mouse-0001',
+//     accounting: [{ code: '1141', name: 'Accounts receivable' }],
+//     credit: [300],
+//     debit: [0],
+//     balance: [100200],
+//   },
+// ];
 
 const LedgerList = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
+  const [totalDebitAmount, setTotalDebitAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
+  const [totalCreditAmount, setTotalCreditAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
+
+  const { selectedCompany, isAuthLoading } = useUserCtx(); // (20241101 - Anna) 從 useUserCtx 取得 companyId
+
   // ToDo: (20240927 - Julian) data filter
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>(dummyVoucherList);
+  // Info: (20241101 - Anna) 初始化帳本資料的狀態管理
+  // const [voucherList, setVoucherList] = useState<ILedgerBeta[]>(dummyVoucherList);
+  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // (20241101 - Anna) 動態 totalPages 狀態
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
-
-  // ToDo: (20240920 - Julian) dummy data
-  const totalPage = 10;
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'text-center align-middle';
@@ -129,6 +137,41 @@ const LedgerList = () => {
       <PrintButton onClick={() => {}} disabled={false} />
     </div>
   );
+
+  // Info: (20241101 - Anna) 使用 useCallback 包裝 API 請求函式
+  const fetchLedgerData = useCallback(async () => {
+    if (isAuthLoading || !selectedCompany?.id) return;
+
+    const response = await fetch(
+      `/api/v2/company/${selectedCompany.id}/ledger?page=${currentPage}`
+    );
+    if (response.ok) {
+      const data: ILedgerPayload = await response.json();
+      const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
+        id: item.id,
+        date: item.voucherDate,
+        voucherNo: item.voucherNumber,
+        voucherType: VoucherType.RECEIVE, // Todo: (20241101 - Anna) 假設有一種默認類型，待後端補充欄位後可改為動態值
+        note: item.particulars,
+        accounting: [{ code: item.no, name: item.accountingTitle }],
+        credit: [item.creditAmount],
+        debit: [item.debitAmount],
+        balance: [item.balance],
+      }));
+      setVoucherList(transformedData); // Info: (20241101 - Anna) 更新為符合 ILedgerBeta 的轉換後數據
+      setTotalPages(data.items.totalPages);
+      setTotalDebitAmount(data.total.totalDebitAmount);
+      setTotalCreditAmount(data.total.totalCreditAmount);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch ledger data.');
+    }
+  }, [isAuthLoading, selectedCompany?.id, currentPage]);
+
+  // Info: (20241101 - Anna) 使用 useEffect 依賴 currentPage 和 selectedCompany 變化時觸發 API 請求**
+  useEffect(() => {
+    fetchLedgerData();
+  }, [fetchLedgerData]);
 
   const displayedVoucherList = voucherList.map((voucher) => {
     return <LedgerItem key={voucher.id} voucher={voucher} />;
@@ -197,13 +240,13 @@ const LedgerList = () => {
           Total Debit amount
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          1,800,000
+          {totalDebitAmount}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
           Total Credit amount
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          1,120,000
+          {totalCreditAmount}
         </div>
       </div>
 
@@ -211,7 +254,7 @@ const LedgerList = () => {
       <div className="mx-auto">
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPage}
+          totalPages={totalPages}
           setCurrentPage={setCurrentPage}
         />
       </div>

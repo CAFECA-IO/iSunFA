@@ -204,6 +204,7 @@
     "BALANCE": "Balance",
     "LEDGER": "Ledger",
     "TRIAL_BALANCE": "Trial_Balance",
+    "TRIAL_BALANCE_PERIOD": "Trial Balance Period",
     "NO_VOUCHER": "No voucher data",
     "UPLOADED_VOUCHER_TAB": "Uploaded Voucher",
     "UPCOMING_EVENTS_TAB": "Upcoming Events"
@@ -276,7 +277,12 @@
     "UNDO": "Undo"
   },
   "LEDGER": {
-    "LEDGER_PERIOD": "Ledger Period"
+    "LEDGER_PERIOD": "Ledger Period",
+    "LABEL_TYPE": "Label Type",
+    "GENERAL": "General",
+    "DETAILED": "Detailed",
+    "GENERAL_DETAILED": "General & Detailed",
+    "SPECIFIC_ACCOUNTING_TITLE": "Specific accounting title"
   },
   "AI_WORKING_AREA": {
     "RESTING_CONTENT": "Please select the certificates for AI to generate the voucher for you",
