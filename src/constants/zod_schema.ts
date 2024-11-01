@@ -121,7 +121,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.USER_ROLE_LIST]: userRoleListSchema,
-  [APIName.ROLE_SELECT]: userRoleSelectSchema,
+  [APIName.USER_SELECT_ROLE]: userRoleSelectSchema,
   [APIName.USER_CREATE_ROLE]: userRolePostSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,
