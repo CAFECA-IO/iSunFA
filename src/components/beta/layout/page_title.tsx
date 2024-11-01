@@ -24,8 +24,10 @@ const PageTitle = ({ pageTitle = '', goBackUrl = '' }: PageTitleProps) => {
           </Link>
         )
       }
-
-      <h1 className="text-xl font-bold leading-32px text-text-neutral-secondary">{pageTitle}</h1>
+      {/* Info: (20241101 - Anna) 加上 mb-0 防止報告頁面跑版，其他頁面應不受影響 */}
+      <h1 className="mb-0 text-xl font-bold leading-32px text-text-neutral-secondary">
+        {pageTitle}
+      </h1>
     </div>
   );
 };

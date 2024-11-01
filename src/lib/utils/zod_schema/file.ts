@@ -14,7 +14,7 @@ export const fileSchema = z.object({
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
   deletedAt: z.number().int().nullable(),
- });
+});
 
 /**
  * Info: (20241025 - Murky)

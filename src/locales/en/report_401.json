@@ -182,5 +182,9 @@
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "Report Type",
     "ATTENTION": "Attention: The report will take approximately 30 to 40 minutes to generate. Once completed, it will be stored in \"My Reports.\" Please check back later. Thank you for your patience."
+  },
+  "REPORT": {
+    "NO_DATA_AVAILABLE": "No data available.",
+    "PLEASE_SELECT_PERIOD": "Please Select Period."
   }
 }

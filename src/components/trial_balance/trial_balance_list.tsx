@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import TrialBalanceItemRow from '@/components/trial_balance/trial_balance_item';
 import Pagination from '@/components/pagination/pagination';
@@ -8,25 +8,65 @@ import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { MOCK_RESPONSE as TrialBalanceData, TrialBalanceItem } from '@/interfaces/trial_balance';
+import {
+  MOCK_RESPONSE as TrialBalanceData,
+  TrialBalanceItem,
+  ITrialBalancePayload,
+} from '@/interfaces/trial_balance';
 import Toggle from '@/components/toggle/toggle';
+import { RiCoinsLine } from 'react-icons/ri';
 
 const TrialBalanceList = () => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   const [subAccountsToggle, setSubAccountsToggle] = useState<boolean>(false);
+
+  // Info: (20241101 - Anna) 將資料原始狀態設為空
+  // const [voucherList] = useState<TrialBalanceItem[]>(TrialBalanceData.items.data);
+  const [voucherList, setVoucherList] = useState<TrialBalanceItem[]>([]);
+
+  // Info: (20241101 - Anna)  模擬 API 呼叫
+  const fetchTrialBalanceData = useCallback(async () => {
+    const mockFetch = async (): Promise<ITrialBalancePayload> => {
+      return new Promise<ITrialBalancePayload>((resolve) => {
+        setTimeout(() => {
+          resolve(TrialBalanceData); // Info: (20241101 - Anna) 使用 mock data 代替 API 回應
+        }, 500); // Info: (20241101 - Anna) 延遲 500 毫秒模擬網路請求
+      });
+    };
+
+    try {
+      const response = await mockFetch();
+      setVoucherList(response.items.data); // Info: (20241101 - Anna)  設定獲得的 mock 資料
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching trial balance data:', error);
+    }
+  }, []);
+
+  // Info: (20241101 - Anna)  資料請求 useEffect
+  useEffect(() => {
+    fetchTrialBalanceData();
+  }, [fetchTrialBalanceData]);
+
   // Info: (20241028 - Anna) 處理 toggle 開關
   const subAccountsToggleHandler: () => void = () => {
     setSubAccountsToggle((prevState) => !prevState);
   };
 
-  const [voucherList] = useState<TrialBalanceItem[]>(TrialBalanceData.items.data);
   const [currentPage, setCurrentPage] = useState(1);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
 
-  const totalPage = 10;
+  // Todo: (20241101 - Anna) API 呼叫處理 (等Shirley提供API後修改)
+  // const {
+  //   data: trialBalanceData,
+  //   trigger,
+  //   success,
+  //   isLoading,
+  //   code,
+  // } = APIHandler<ITrialBalancePayload>(APIName.TRIAL_BALANCE);
 
   const displayedCredit = SortingButton({
     string: t('journal:JOURNAL.CREDIT'),
@@ -42,6 +82,13 @@ const TrialBalanceList = () => {
 
   const displayedSelectArea = (
     <div className="flex items-center justify-between px-px max-md:flex-wrap">
+      {/* Info: (20241101 - Anna)幣別 */}
+      <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-orange-500 bg-white px-10px py-6px text-sm font-medium text-badge-text-error-solid">
+        <RiCoinsLine className="text-orange-600" />
+        <p className="whitespace-nowrap text-orange-600">
+          {t(`common:COMMON.${TrialBalanceData.currencyAlias}`)}
+        </p>
+      </div>
       {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
       <div className="flex items-center gap-4">
         <Toggle
@@ -194,7 +241,7 @@ const TrialBalanceList = () => {
       <div className="mx-auto">
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPage}
+          totalPages={TrialBalanceData.items.totalPages}
           setCurrentPage={setCurrentPage}
         />
       </div>

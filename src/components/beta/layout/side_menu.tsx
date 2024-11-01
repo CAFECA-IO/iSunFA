@@ -67,7 +67,8 @@ const PanelLayout = ({
         <div className="flex h-24px w-24px items-center justify-center">
           <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
         </div>
-        <p className="grow text-left">{panelTitle}</p>
+        {/* Info: (20241101 - Anna) 加上 mb-0、no-underline 防止報告頁面跑版，其他頁面應不受影響 */}
+        <p className="mb-0 grow text-left no-underline">{panelTitle}</p>
         <IoIosArrowForward size={20} />
       </button>
 
@@ -144,7 +145,8 @@ const SubMenuItem = ({
     <Link
       href={href ?? TEMPORARY_LINK}
       onClick={handleClick}
-      className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
+      // Info: (20241101 - Anna) 加上 no-underline 防止報告頁面跑版，其他頁面應不受影響
+      className={`rounded-xs px-12px py-10px font-medium no-underline hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
     >
       {linkText}
     </Link>
@@ -271,10 +273,12 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
             {/* // Info: (20241015 - Liz) 回到儀表板 */}
             <Link
               href={ISUNFA_ROUTE.BETA_DASHBOARD}
-              className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+              // Info: (20241101 - Anna) 加上 no-underline 防止報告頁面跑版，其他頁面應不受影響
+              className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary no-underline hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
             >
               <Image src="/icons/dashboard.svg" alt="dashboard_icon" width={24} height={24}></Image>
-              <p>Back to dashboard</p>
+              {/* Info: (20241101 - Anna) 加上 mb-0 防止報告頁面跑版，其他頁面應不受影響 */}
+              <p className="mb-0">Back to dashboard</p>
             </Link>
           </div>
 

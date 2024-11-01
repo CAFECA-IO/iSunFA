@@ -45,7 +45,9 @@ const LedgerPageBody = () => {
           </div>
 
           {/* Info: (20241015 - Anna) radio buttons */}
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">Label Type</p>
+          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
+            {t('journal:LEDGER.LABEL_TYPE')}
+          </p>
           <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
             {/* Info: (20241015 - Anna) General */}
             <label
@@ -60,7 +62,7 @@ const LedgerPageBody = () => {
                 checked={selectedReportType === 'General'}
                 onChange={() => handleReportTypeChange('General')}
               />
-              <p>General</p>
+              <p className="text-sm">{t('journal:LEDGER.GENERAL')}</p>
             </label>
             {/* Info: (20241015 - Anna) Detailed */}
             <label
@@ -75,7 +77,7 @@ const LedgerPageBody = () => {
                 checked={selectedReportType === 'Detailed'}
                 onChange={() => handleReportTypeChange('Detailed')}
               />
-              <p>Detailed</p>
+              <p className="text-sm">{t('journal:LEDGER.DETAILED')}</p>
             </label>
             {/* Info: (20240424 - Anna) General & Detailed */}
             <label
@@ -90,12 +92,12 @@ const LedgerPageBody = () => {
                 checked={selectedReportType === 'General & Detailed'}
                 onChange={() => handleReportTypeChange('General & Detailed')}
               />
-              <p>General & Detailed</p>
+              <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
             </label>
           </div>
           {/* Info: (20241015 - Anna) 選會計科目 */}
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
-            Specific accounting title
+          <p className="mt-18px text-sm font-semibold text-neutral-300">
+            {t('journal:LEDGER.SPECIFIC_ACCOUNTING_TITLE')}
           </p>
           <AccountRangeFilter
             assetOptions={assetOptions}
