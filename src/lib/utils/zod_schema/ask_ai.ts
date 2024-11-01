@@ -1,5 +1,5 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 
 const askAIPostQueryValidatorV2 = z.object({
   reason: z.enum(['help', 'certificate', 'voucher']),
@@ -44,4 +44,11 @@ export const askAIGetResultValidatorV2: IZodValidator<
 > = {
   query: askAIGetResultQueryValidatorV2,
   body: askAIGetResultBodyValidatorV2,
+};
+
+export const askAIGetAllValidatorsV2: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  POST: askAIPostValidatorV2,
+  GET: askAIGetResultValidatorV2,
 };
