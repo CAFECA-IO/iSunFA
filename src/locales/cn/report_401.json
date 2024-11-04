@@ -182,5 +182,9 @@
   "ANALYSIS_REPORTS_SECTION": {
     "REPORT_TYPE": "报告类型",
     "ATTENTION": "注意：产生报告大约需要 30 到 40 分钟。完成后，它将存储在“我的报告”中。感谢您的耐心等待。"
+  },
+  "REPORT": {
+    "NO_DATA_AVAILABLE": "无可用数据",
+    "PLEASE_SELECT_PERIOD": "请选择期间"
   }
 }

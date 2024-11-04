@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SelectFilter from '@/components/filter_section/select_filter';
+import { useTranslation } from 'next-i18next';
 
 interface AccountRangeFilterProps {
   assetOptions: string[]; // Info: (20241015 - Anna) 資產科目選項
@@ -14,6 +15,7 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
   equityOptions,
   onRangeSelected,
 }) => {
+  const { t } = useTranslation('common');
   // Info: (20241015 - Anna) From 部分的狀態
   const [fromCategory, setFromCategory] = useState<'Asset' | 'Liability' | 'Equity'>('Asset');
   const [fromAccount, setFromAccount] = useState<string>('');
@@ -45,13 +47,13 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
     <div className="flex w-full space-x-4">
       {/* Info: (20241015 - Anna) From 篩選 */}
       <div className="flex w-1/2 items-center">
-        <span className="mr-2">From</span>
+        <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.FROM')}</span>
         <SelectFilter
           label="NONE"
           options={['Asset', 'Liability', 'Equity']}
           selectedValue={fromCategory}
           onChange={(value) => setFromCategory(value as 'Asset' | 'Liability' | 'Equity')}
-          className="rounded-r-none" // Info: (20241015 - Anna) 移除右側圓角
+          className="rounded-r-none border-r-0" // Info: (20241015 - Anna) 移除右側圓角
         />
         <SelectFilter
           label="NONE"
@@ -65,13 +67,13 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
 
       {/* Info: (20241015 - Anna) To 篩選 */}
       <div className="flex w-1/2 items-center">
-        <span className="mr-2">To</span>
+        <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.TO')}</span>
         <SelectFilter
           label="NONE"
           options={['Asset', 'Liability', 'Equity']}
           selectedValue={toCategory}
           onChange={(value) => setToCategory(value as 'Asset' | 'Liability' | 'Equity')}
-          className="rounded-r-none" // Info: (20241015 - Anna) 移除右側圓角
+          className="rounded-r-none border-r-0" // Info: (20241015 - Anna) 移除右側圓角
         />
         <SelectFilter
           label="NONE"

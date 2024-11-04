@@ -1,3 +1,4 @@
+import { VoucherType } from '@/constants/account';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 export interface ILedgerQueryParams {
@@ -20,6 +21,7 @@ export interface ILedgerItem {
   debitAmount: number;
   creditAmount: number;
   balance: number;
+  voucherType: VoucherType;
   createAt: number;
   updateAt: number;
 }
@@ -51,6 +53,7 @@ export const MOCK_RESPONSE: ILedgerPayload = {
         debitAmount: 300000,
         creditAmount: 0,
         balance: 420000,
+        voucherType: VoucherType.RECEIVE,
         createAt: 1706745600,
         updateAt: 1706745600,
       },
@@ -64,13 +67,42 @@ export const MOCK_RESPONSE: ILedgerPayload = {
         debitAmount: 500000,
         creditAmount: 0,
         balance: 500000,
+        voucherType: VoucherType.RECEIVE,
+        createAt: 1706745600,
+        updateAt: 1706745600,
+      },
+      {
+        id: 3,
+        voucherDate: 1706745600,
+        no: '2141',
+        accountingTitle: '應付帳款',
+        voucherNumber: 'ZV2024-003',
+        particulars: '原物料採購',
+        debitAmount: 0,
+        creditAmount: 200000,
+        balance: -200000,
+        voucherType: VoucherType.EXPENSE,
+        createAt: 1706745600,
+        updateAt: 1706745600,
+      },
+      {
+        id: 4,
+        voucherDate: 1706745600,
+        no: '1111',
+        accountingTitle: '銀行存款',
+        voucherNumber: 'ZV2024-004',
+        particulars: '資金調度',
+        debitAmount: 100000,
+        creditAmount: 0,
+        balance: 100000,
+        voucherType: VoucherType.TRANSFER,
         createAt: 1706745600,
         updateAt: 1706745600,
       },
     ],
     page: 1,
     totalPages: 1,
-    totalCount: 2,
+    totalCount: 4,
     pageSize: 10,
     hasNextPage: false,
     hasPreviousPage: false,

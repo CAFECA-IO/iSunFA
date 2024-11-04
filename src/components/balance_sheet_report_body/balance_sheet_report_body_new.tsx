@@ -7,7 +7,6 @@ import { ReportLanguagesMap, ReportLanguagesKey } from '@/interfaces/report_lang
 import { IoIosArrowDown } from 'react-icons/io';
 import Image from 'next/image';
 
-// const BalanceSheetPageBody = ({ reportId }: { reportId: string }) => {
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPageBody = () => {
   const { t } = useTranslation(['common', 'report_401']);

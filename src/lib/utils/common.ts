@@ -38,8 +38,11 @@ export const timestampToYMD = (timestamp: number) => {
   };
 };
 
-export const numberWithCommas = (x: number | string) => {
-  return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
+// Info: (20241101 - Anna) 千分位符號、括號
+export const numberWithCommas = (number: number | string) => {
+  const num = typeof number === 'string' ? parseFloat(number) : number;
+  const formattedNumber = new Intl.NumberFormat().format(Math.abs(num));
+  return num < 0 ? `(${formattedNumber})` : formattedNumber;
 };
 
 // Info: (20240416 - Shirley) truncate the string to the given length
