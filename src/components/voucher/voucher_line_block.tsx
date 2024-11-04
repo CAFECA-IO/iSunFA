@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -15,11 +15,14 @@ interface IVoucherLineBlockProps {
   totalCredit: number;
   lineItems: ILineItemBeta[];
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemBeta[]>>;
-  flagOfClear: boolean;
-  flagOfSubmit: boolean;
-  isAccountingNull: boolean;
-  haveZeroLine: boolean;
-  isVoucherLineEmpty: boolean;
+  isReverseRequired: boolean; // Info: (20241104 - Julian) 是否需要反轉分錄
+  setIsReverseRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 設定是否需要反轉分錄
+
+  flagOfClear: boolean; // Info: (20241104 - Julian) 是否按下清除按鈕
+  flagOfSubmit: boolean; // Info: (20241104 - Julian) 是否按下送出按鈕
+  isAccountingNull: boolean; // Info: (20241104 - Julian) 是否有空的會計科目
+  haveZeroLine: boolean; // Info: (20241104 - Julian) 是否有金額為 0 的傳票列
+  isVoucherLineEmpty: boolean; // Info: (20241104 - Julian) 是否傳票列為空
 }
 
 interface IVoucherLinePreviewProps {
@@ -33,6 +36,9 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   totalCredit,
   lineItems,
   setLineItems,
+  isReverseRequired,
+  setIsReverseRequired,
+
   flagOfClear,
   flagOfSubmit,
   isAccountingNull,
@@ -52,6 +58,16 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     const newVoucherId = lineItems.length > 0 ? lineItems[lineItems.length - 1].id + 1 : 0;
     setLineItems([...lineItems, { ...initialVoucherLine, id: newVoucherId }]);
   };
+
+  useEffect(() => {
+    // Info: (20241104 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
+    const isReverse = lineItems.some(
+      (item) =>
+        (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
+        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
+    );
+    setIsReverseRequired(isReverse);
+  }, [lineItems]);
 
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
@@ -82,35 +98,69 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
         // Info: (20241001 - Julian) 設定 Debit
         const debitChangeHandler = (debit: number) => {
-          duplicateLineItem.debit = true;
-          duplicateLineItem.amount = debit;
-          setLineItems(
-            lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-          );
+          if (debit === 0) {
+            // Info: (20241001 - Julian) 如果金額為 0，則不設定借貸
+            duplicateLineItem.debit = null;
+            duplicateLineItem.amount = 0;
+            setLineItems(
+              lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
+            );
+          } else {
+            duplicateLineItem.debit = true;
+            duplicateLineItem.amount = debit;
+            setLineItems(
+              lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
+            );
+          }
         };
 
         // Info: (20241001 - Julian) 設定 Credit
         const creditChangeHandler = (credit: number) => {
-          duplicateLineItem.debit = false;
-          duplicateLineItem.amount = credit;
-          setLineItems(
-            lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
-          );
+          if (credit === 0) {
+            // Info: (20241001 - Julian) 如果金額為 0，則不設定借貸
+            duplicateLineItem.debit = null;
+            duplicateLineItem.amount = 0;
+            setLineItems(
+              lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
+            );
+          } else {
+            duplicateLineItem.debit = false;
+            duplicateLineItem.amount = credit;
+            setLineItems(
+              lineItems.map((item) => (item.id === duplicateLineItem.id ? duplicateLineItem : item))
+            );
+          }
         };
+
         return (
-          <VoucherLineItem
-            key={lineItem.id}
-            deleteHandler={deleteVoucherLine}
-            accountTitleHandler={accountTitleHandler}
-            particularsChangeHandler={particularsChangeHandler}
-            debitChangeHandler={debitChangeHandler}
-            creditChangeHandler={creditChangeHandler}
-            flagOfClear={flagOfClear}
-            flagOfSubmit={flagOfSubmit}
-            accountIsNull={isAccountingNull}
-            amountIsZero={haveZeroLine}
-            amountNotEqual={totalCredit !== totalDebit}
-          />
+          <>
+            <VoucherLineItem
+              key={`${lineItem.id}-voucher-line`}
+              deleteHandler={deleteVoucherLine}
+              accountTitleHandler={accountTitleHandler}
+              particularsChangeHandler={particularsChangeHandler}
+              debitChangeHandler={debitChangeHandler}
+              creditChangeHandler={creditChangeHandler}
+              flagOfClear={flagOfClear}
+              flagOfSubmit={flagOfSubmit}
+              accountIsNull={isAccountingNull}
+              amountIsZero={haveZeroLine}
+              amountNotEqual={totalCredit !== totalDebit}
+            />
+
+            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示反轉分錄 */}
+            {isReverseRequired ? (
+              <div className="col-start-1 col-end-13">
+                <button
+                  type="button"
+                  className="flex items-center gap-4px text-text-neutral-invert"
+                >
+                  <FaPlus />
+                  <p>Reverse item</p>
+                </button>
+              </div>
+            ) : null}
+          </>
         );
       })
     ) : (

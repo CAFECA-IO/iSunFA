@@ -9,7 +9,6 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
-import ReverseSection from '@/components/voucher/reverse_section';
 import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
@@ -344,13 +343,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
-    // Info: (20241004 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
-    const isReverse = voucherLineItems.some(
-      (item) =>
-        (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
-    );
-
     setTotalDebit(debitTotal);
     setTotalCredit(creditTotal);
     setHaveZeroLine(zeroLine);
@@ -358,7 +350,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setIsVoucherLineEmpty(voucherLineItems.length === 0);
     setIsCounterpartyRequired(isAPorAR);
     setIsAssetRequired(isAsset);
-    setIsReverseRequired(isReverse);
   }, [voucherLineItems]);
 
   useEffect(() => {
@@ -968,17 +959,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             />
           </div>
         )}
-        {/* Info: (20240926 - Julian) Reverse */}
-        {isReverseRequired && (
-          <div className="col-span-2 flex flex-col">
-            <ReverseSection
-              reverses={reverses}
-              setReverses={setReverses}
-              flagOfClear={flagOfClear}
-              flagOfSubmit={flagOfSubmit}
-            />
-          </div>
-        )}
         {/* Info: (20240926 - Julian) Voucher line block */}
         {isShowAnalysisPreview ? (
           <VoucherLinePreview
@@ -990,11 +970,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           <VoucherLineBlock
             totalCredit={totalCredit}
             totalDebit={totalDebit}
+            lineItems={voucherLineItems}
+            setLineItems={setLineItems}
+            isReverseRequired={isReverseRequired}
+            setIsReverseRequired={setIsReverseRequired}
             haveZeroLine={haveZeroLine}
             isAccountingNull={isAccountingNull}
             isVoucherLineEmpty={isVoucherLineEmpty}
-            lineItems={voucherLineItems}
-            setLineItems={setLineItems}
             flagOfClear={flagOfClear}
             flagOfSubmit={flagOfSubmit}
           />
