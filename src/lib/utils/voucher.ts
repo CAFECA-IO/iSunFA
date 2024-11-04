@@ -47,7 +47,7 @@ export function initVoucherEntity(
     type: dto.type,
     note: dto.note || null,
     aiResultId: dto.aiResultId,
-    aiStatus: dto.aiStatus,
+    // aiStatus: dto.aiStatus,
     createdAt: dto.createdAt || nowInSecond,
     updatedAt: dto.updatedAt || nowInSecond,
     deletedAt: dto.deletedAt || null,

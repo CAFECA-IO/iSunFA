@@ -17,6 +17,7 @@ export const iLineItemValidator = z.object({
  */
 
 export const iLineItemBodyValidatorV2 = z.object({
+  id: z.number().optional(),
   description: z.string(),
   debit: z.boolean(),
   amount: z.number(),
