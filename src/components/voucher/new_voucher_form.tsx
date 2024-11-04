@@ -972,7 +972,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             totalDebit={totalDebit}
             lineItems={voucherLineItems}
             setLineItems={setLineItems}
-            isReverseRequired={isReverseRequired}
             setIsReverseRequired={setIsReverseRequired}
             haveZeroLine={haveZeroLine}
             isAccountingNull={isAccountingNull}

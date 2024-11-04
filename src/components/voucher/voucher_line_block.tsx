@@ -5,6 +5,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { FiBookOpen } from 'react-icons/fi';
 import { inputStyle } from '@/constants/display';
@@ -15,8 +16,7 @@ interface IVoucherLineBlockProps {
   totalCredit: number;
   lineItems: ILineItemBeta[];
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemBeta[]>>;
-  isReverseRequired: boolean; // Info: (20241104 - Julian) 是否需要反轉分錄
-  setIsReverseRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 設定是否需要反轉分錄
+  setIsReverseRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要反轉分錄
 
   flagOfClear: boolean; // Info: (20241104 - Julian) 是否按下清除按鈕
   flagOfSubmit: boolean; // Info: (20241104 - Julian) 是否按下送出按鈕
@@ -36,7 +36,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   totalCredit,
   lineItems,
   setLineItems,
-  isReverseRequired,
   setIsReverseRequired,
 
   flagOfClear,
@@ -46,6 +45,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   isVoucherLineEmpty,
 }) => {
   const { t } = useTranslation('common');
+  const { selectReverseItemsModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -74,6 +74,10 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       lineItems.map((lineItem) => {
         // Info: (20241001 - Julian) 複製傳票列
         const duplicateLineItem = { ...lineItem };
+
+        const isShowReverse =
+          (lineItem.account?.code === '2171' && lineItem.debit === true && lineItem.amount > 0) || // Info: (20241001 - Julian) 應付帳款
+          (lineItem.account?.code === '1172' && lineItem.debit === false && lineItem.amount > 0); // Info: (20241001 - Julian) 應收帳款
 
         // Info: (20241001 - Julian) 刪除傳票列
         const deleteVoucherLine = () => {
@@ -148,12 +152,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
               amountNotEqual={totalCredit !== totalDebit}
             />
 
-            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示反轉分錄 */}
-            {isReverseRequired ? (
+            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示 */}
+            {isShowReverse ? (
               <div className="col-start-1 col-end-13">
                 <button
                   type="button"
                   className="flex items-center gap-4px text-text-neutral-invert"
+                  onClick={selectReverseItemsModalVisibilityHandler}
                 >
                   <FaPlus />
                   <p>Reverse item</p>
