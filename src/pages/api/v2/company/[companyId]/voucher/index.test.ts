@@ -3,8 +3,10 @@ import {
   handlePostRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { VoucherV2Action } from '@/constants/voucher';
+import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 import { EventType } from '@/constants/account';
+import { SortBy, SortOrder } from '@/constants/sort';
+import { VoucherListAllSortOptions } from '@/lib/utils/zod_schema/voucher';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -35,13 +37,22 @@ describe('company/[companyId]/voucher', () => {
   describe('GET Voucher List', () => {
     it('should pass', async () => {
       const query = {
-        pageSize: 1,
-        strategy: 'upcoming' as 'upcoming' | 'uploaded' | 'payment' | 'receiving',
         page: 1,
+        pageSize: 10,
+        tab: VoucherListTabV2.UPLOADED,
+        type: EventType.PAYMENT,
         startDate: 1,
         endDate: 1,
+        searchQuery: 'string',
       };
-      const body = {};
+      const body = {
+        sortOption: {
+          [SortBy.DATE as VoucherListAllSortOptions]: {
+            by: SortBy.DATE,
+            order: SortOrder.ASC,
+          },
+        },
+      };
       const session = {
         userId: 1001,
         companyId: 1001,
