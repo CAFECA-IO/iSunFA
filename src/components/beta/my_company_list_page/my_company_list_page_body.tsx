@@ -338,9 +338,11 @@ const MyCompanyListPageBody = () => {
         toggleModal={toggleCreateCompanyModal}
       />
 
-      {isChangeTagModalOpen && (
-        <ChangeTagModal toggleModal={toggleChangeTagModal} companyName={companyName} />
-      )}
+      <ChangeTagModal
+        companyName={companyName}
+        isModalOpen={isChangeTagModalOpen}
+        toggleModal={toggleChangeTagModal}
+      />
     </main>
   );
 };
