@@ -8,6 +8,44 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
+import { counterPartyEntityValidator } from '@/constants/counterparty';
+import { userEntityValidator } from '@/lib/utils/zod_schema/user';
+import { userVoucherEntityValidator } from '@/lib/utils/zod_schema/user_voucher';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { IVoucherBeta } from '@/interfaces/voucher';
+import { eventTypeToVoucherType } from '@/lib/utils/common';
+import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
+import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
+import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init voucher entity or parsed prisma voucher
+ * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
+ */
+export const voucherEntityValidator = z.object({
+  id: z.number(),
+  issuerId: z.number(),
+  counterPartyId: z.number(),
+  companyId: z.number(),
+  status: z.nativeEnum(JOURNAL_EVENT),
+  editable: z.boolean(),
+  no: z.string(),
+  date: z.number(),
+  type: z.nativeEnum(EventType),
+  note: z.string().nullable(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  originalEvents: z.array(z.any()).optional(),
+  resultEvents: z.array(z.any()).optional(),
+  lineItems: z.array(z.any()).optional(),
+  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  certificates: z.array(z.any()).optional(),
+  issuer: z.any().optional(),
+  readByUsers: z.array(z.any()).optional(),
+});
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -68,6 +106,7 @@ const voucherListAllSortOptions = z.enum([
   SortBy.PAY_RECEIVE_ALREADY_HAPPENED,
   SortBy.PAY_RECEIVE_REMAIN,
 ]);
+
 // Info: (20240927 - Murky) GET all v2 validator
 // Info: (20241104 - Murky) 不需要status, 因為status和tab重複, 都是upcoming, uploaded
 const voucherGetAllQueryValidatorV2 = z.object({
@@ -90,6 +129,90 @@ const voucherGetAllBodyValidatorV2 = z.object({
       })
     )
     .optional(),
+});
+
+const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
+  z.object({
+    vouchers: z.array(
+      z.object({
+        ...voucherEntityValidator.shape,
+        counterParty: counterPartyEntityValidator,
+        issuer: z.object({
+          ...userEntityValidator.shape,
+          imageFile: fileEntityValidator,
+        }),
+        readByUsers: z.array(userVoucherEntityValidator),
+        lineItems: z.array(
+          z.object({
+            ...iLineItemBodyValidatorV2.shape,
+            id: z.number(),
+            account: accountEntityValidator,
+          })
+        ),
+        sum: z.object({
+          debit: z.boolean(),
+          amount: z.number(),
+        }),
+      })
+    ),
+    unRead: z.object({
+      uploadedVoucher: z.number(),
+      upcomingEvents: z.number(),
+    }),
+  })
+).transform((data) => {
+  const parsedVouchers: IVoucherBeta[] = data.data.vouchers.map((voucher) => ({
+    id: voucher.id,
+    voucherDate: voucher.date,
+    voucherNo: voucher.no,
+    voucherType: eventTypeToVoucherType(voucher.type),
+    note: voucher.note ?? '',
+    counterParty: {
+      companyId: z.number().parse(voucher.counterParty.id).toString(),
+      name: voucher.counterParty.name,
+    },
+    issuer: {
+      avatar: voucher.issuer.imageFile.url,
+      name: voucher.issuer.name,
+    },
+    unRead: voucher.readByUsers.length === 0,
+    lineItemsInfo: {
+      lineItems: voucher.lineItems.map((lineItem) => ({
+        id: lineItem.id,
+        description: lineItem.description,
+        debit: lineItem.debit,
+        amount: lineItem.amount,
+        account: {
+          ...lineItem.account,
+        },
+      })),
+      sum: {
+        debit: z.boolean().parse(voucher.sum.debit),
+        amount: z.number().parse(voucher.sum.amount),
+      },
+    },
+  }));
+
+  const parsedData: IPaginatedData<{
+    unRead: {
+      uploadedVoucher: number;
+      upcomingEvents: number;
+    };
+    vouchers: IVoucherBeta[];
+  }> = {
+    page: data.page,
+    totalPages: data.totalPages,
+    totalCount: data.totalCount,
+    pageSize: data.pageSize,
+    hasNextPage: data.hasNextPage,
+    hasPreviousPage: data.hasPreviousPage,
+    sort: data.sort,
+    data: {
+      unRead: data.data.unRead,
+      vouchers: parsedVouchers,
+    },
+  };
+  return parsedData;
 });
 
 export const voucherGetAllValidatorV2: IZodValidator<
@@ -197,35 +320,6 @@ export const voucherRequestValidatorsV2 = {
   WAS_READ: voucherWasReadValidatorV2,
 };
 
-/**
- * Info: (20241025 - Murky)
- * @description schema for init voucher entity or parsed prisma voucher
- * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
- */
-export const voucherEntityValidator = z.object({
-  id: z.number(),
-  issuerId: z.number(),
-  counterPartyId: z.number(),
-  companyId: z.number(),
-  status: z.nativeEnum(JOURNAL_EVENT),
-  editable: z.boolean(),
-  no: z.string(),
-  date: z.number(),
-  type: z.nativeEnum(EventType),
-  note: z.string().nullable(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-  originalEvents: z.array(z.any()).optional(),
-  resultEvents: z.array(z.any()).optional(),
-  lineItems: z.array(z.any()).optional(),
-  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
-  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
-  certificates: z.array(z.any()).optional(),
-  issuer: z.any().optional(),
-  readByUsers: z.array(z.any()).optional(),
-});
-
 // Info: (20241030 - Murky) Below is new version of middleware
 
 const voucherNullSchema = z.union([z.object({}), z.string()]);
@@ -244,6 +338,6 @@ export const voucherListSchema = {
     querySchema: voucherGetAllQueryValidatorV2,
     bodySchema: voucherGetAllBodyValidatorV2,
   },
-  outputSchema: z.array(voucherEntityValidator),
+  outputSchema: voucherGetAllOutputValidatorV2,
   frontend: voucherNullSchema,
 };
