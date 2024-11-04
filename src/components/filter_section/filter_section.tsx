@@ -104,6 +104,10 @@ const FilterSection = <T,>({
           endDate: !selectedDateRange.endTimeStamp ? undefined : selectedDateRange.endTimeStamp,
           searchQuery,
         },
+        body: {
+          // Info: (20241104 - Murky) @tzuhan 這裡我是試看用body接, selectedSortOptions 這個物件
+          sortOption: selectedSortOptions,
+        },
       });
       if (success && onApiResponse && data) onApiResponse(data);
       if (!success) {

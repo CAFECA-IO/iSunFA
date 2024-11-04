@@ -4,10 +4,10 @@ import { iLineItemBodyValidatorV2, iLineItemValidator } from '@/lib/utils/zod_sc
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType } from '@/constants/account';
-import { SortOrder } from '@/constants/sort';
+import { SortBy, SortOrder } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { VoucherV2Action } from '@/constants/voucher';
+import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -53,21 +53,44 @@ export const voucherRequestValidatorsV1: {
  * ************************************************
  */
 
+/**
+ * Info: (20241104 - Murky)
+ * @description voucher list all filter section 可以用哪些值排序
+ */
+export type VoucherListAllSortOptions = z.infer<typeof voucherListAllSortOptions>;
+
+const voucherListAllSortOptions = z.enum([
+  SortBy.DATE,
+  SortBy.CREDIT,
+  SortBy.DEBIT,
+  SortBy.PERIOD,
+  SortBy.PAY_RECEIVE_TOTAL,
+  SortBy.PAY_RECEIVE_ALREADY_HAPPENED,
+  SortBy.PAY_RECEIVE_REMAIN,
+]);
 // Info: (20240927 - Murky) GET all v2 validator
+// Info: (20241104 - Murky) 不需要status, 因為status和tab重複, 都是upcoming, uploaded
 const voucherGetAllQueryValidatorV2 = z.object({
-  strategy: z.enum(['upcoming', 'uploaded', 'payment', 'receiving']),
-  canBeEdit: z.boolean().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   type: z.nativeEnum(EventType).optional(),
-  sortBy: z.enum(['voucherDate', 'period', 'credit', 'debit']).optional(),
-  sortOrder: z.nativeEnum(SortOrder).optional(),
+  tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
   endDate: zodStringToNumberWithDefault(Infinity),
   searchQuery: z.string().optional(),
 });
 
-const voucherGetAllBodyValidatorV2 = z.object({});
+const voucherGetAllBodyValidatorV2 = z.object({
+  sortOption: z
+    .record(
+      voucherListAllSortOptions,
+      z.object({
+        by: voucherListAllSortOptions,
+        order: z.nativeEnum(SortOrder),
+      })
+    )
+    .optional(),
+});
 
 export const voucherGetAllValidatorV2: IZodValidator<
   (typeof voucherGetAllQueryValidatorV2)['shape'],
