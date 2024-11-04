@@ -1,27 +1,64 @@
 import { useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { useUserCtx } from '@/contexts/user_context';
+import { CompanyTag } from '@/constants/company';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
 interface CreateCompanyModalProps {
+  isModalOpen: boolean;
   toggleModal: () => void;
 }
 
-const DROPDOWN_ITEMS = ['All', 'Financial', 'Tax'];
-
-const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
+const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProps) => {
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [tag, setTag] = useState('All');
+  const [tag, setTag] = useState<CompanyTag>(CompanyTag.ALL);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { createCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
   };
 
-  const handleSubmit = () => {
-    // Handle submit logic
+  const handleSubmit = async () => {
+    setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+
+    try {
+      const { success, code } = await createCompany({ name: companyName, taxId, tag });
+
+      if (success) {
+        toggleModal();
+      } else {
+        // Deprecated: (20241104 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('error code:', code);
+
+        toastHandler({
+          id: 'company-needed',
+          type: ToastType.ERROR,
+          content: (
+            <div className="flex items-center gap-32px">
+              Create company failed. Error code: {code}
+            </div>
+          ),
+          closeable: true,
+          position: ToastPosition.TOP_CENTER,
+        });
+      }
+    } catch (error) {
+      // Deprecated: (20241104 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('CreateCompanyModal handleSubmit error:', error);
+    } finally {
+      setIsLoading(false); // API 回傳後解除 loading 狀態
+    }
   };
 
-  return (
+  return isModalOpen ? (
     <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
@@ -77,7 +114,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {DROPDOWN_ITEMS.map((item) => (
+                  {Object.values(CompanyTag).map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -108,6 +145,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
           <button
             type="button"
             onClick={handleSubmit}
+            disabled={isLoading}
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             Submit
@@ -115,7 +153,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
         </section>
       </div>
     </main>
-  );
+  ) : null;
 };
 
 export default CreateCompanyModal;

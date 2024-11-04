@@ -100,6 +100,7 @@ export enum APIName {
   USER_ROLE_LIST = 'USER_ROLE_LIST',
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
+  CREATE_COMPANY = 'CREATE_COMPANY',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
   ROLE_UPDATE = 'ROLE_UPDATE',
@@ -215,6 +216,7 @@ export enum APIPath {
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/role/:roleId`,
+  CREATE_COMPANY = `${apiPrefixV2}/company`,
   ROLE_GET_BY_ID = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_DELETE = `${apiPrefix}/company/:companyId/role/:roleId`,
   ROLE_UPDATE = `${apiPrefix}/company/:companyId/role/:roleId`,
@@ -557,6 +559,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_SELECT_ROLE,
     method: HttpMethod.PUT,
     path: APIPath.USER_SELECT_ROLE,
+  }),
+  [APIName.CREATE_COMPANY]: createConfig({
+    name: APIName.CREATE_COMPANY,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_COMPANY,
   }),
   [APIName.ROLE_DELETE]: createConfig({
     name: APIName.ROLE_DELETE,
