@@ -33,18 +33,10 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
       if (success) {
         toggleModal();
       } else {
-        // Deprecated: (20241104 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('error code:', code);
-
         toastHandler({
-          id: 'company-needed',
+          id: 'create-company-failed',
           type: ToastType.ERROR,
-          content: (
-            <div className="flex items-center gap-32px">
-              Create company failed. Error code: {code}
-            </div>
-          ),
+          content: <p>Create company failed. Error code: {code}</p>,
           closeable: true,
           position: ToastPosition.TOP_CENTER,
         });

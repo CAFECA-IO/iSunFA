@@ -9,7 +9,11 @@ import { LuFileCheck } from 'react-icons/lu';
 import { FiSearch } from 'react-icons/fi';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-// import FilterSection from '@/components/filter_section/filter_section'; // ToDo: (20241022 - Liz) 使用共用元件代替 Search
+
+// ToDo: (20241022 - Liz) 使用共用元件代替 Search
+import FilterSection from '@/components/filter_section/filter_section';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { ICompany } from '@/interfaces/company';
 
 enum CompanyType {
   Financial = 'Financial',
@@ -274,9 +278,24 @@ const MyCompanyListPageBody = () => {
     }
   };
 
+  const handleApiResponse = (resData: IPaginatedData<ICompany[]>) => {
+    // Deprecated: (20241104 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(resData);
+  };
+
   return (
     <main className="flex h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
+        {/* Filter // ToDo: (20241104 - Liz) 把日曆隱藏 */}
+        <FilterSection
+          className="flex-auto"
+          apiName="COMPANY_LIST"
+          page={1}
+          pageSize={5}
+          onApiResponse={handleApiResponse}
+        />
+
         {/* Search */}
         <div className="flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
           <input

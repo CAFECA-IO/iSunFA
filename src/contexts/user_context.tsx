@@ -44,6 +44,7 @@ interface UserContextType {
     tag: CompanyTag;
   }) => Promise<{ success: boolean; code: string }>;
 
+  getCompanyList: () => Promise<ICompany[] | null>;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -79,8 +80,9 @@ export const UserContext = createContext<UserContextType>({
   selectRole: async () => {},
   getUserRoleList: async () => null,
   selectedRole: null,
-
   createCompany: async () => ({ success: false, code: '' }),
+  getCompanyList: async () => null,
+
   selectedCompany: null,
   selectCompany: async () => {},
   successSelectCompany: undefined,
@@ -145,6 +147,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createCompanyAPI } = APIHandler<{ name: string; taxId: string }>(
     APIName.CREATE_COMPANY
   );
+  // Info: (20241104 - Liz) 取得使用者公司列表 API
+  const { trigger: companyListAPI } = APIHandler<ICompany[]>(APIName.COMPANY_LIST);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -600,6 +604,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Info: (20241104 - Liz) 取得使用者公司列表的功能
+  const getCompanyList = async () => {
+    try {
+      const { data: companyList, success } = await companyListAPI({
+        query: { userId: userAuth?.id },
+      });
+
+      if (success && companyList) {
+        return companyList;
+      }
+
+      return null;
+    } catch (error) {
+      // Handle error if needed
+      return null;
+    }
+  };
+
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
     setSelectedCompany(null);
@@ -699,6 +721,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getUserRoleList,
       selectedRole: selectedRoleRef.current,
       createCompany,
+      getCompanyList,
+
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       successSelectCompany: successSelectCompanyRef.current,
