@@ -1,22 +1,23 @@
 import React, { useEffect } from 'react';
-import { FaPlus, FaMinus } from 'react-icons/fa6';
-import { FiEdit, FiBookOpen } from 'react-icons/fi';
+import { FaPlus } from 'react-icons/fa6';
+import { FiBookOpen } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
-import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
+import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import ReverseItem from '@/components/voucher/reverse_item';
 
 interface IVoucherLineBlockProps {
   totalDebit: number;
   totalCredit: number;
-  lineItems: ILineItemBeta[];
-  setLineItems: React.Dispatch<React.SetStateAction<ILineItemBeta[]>>;
+  lineItems: ILineItemUI[];
+  setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
   setIsReverseRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要反轉分錄
 
   flagOfClear: boolean; // Info: (20241104 - Julian) 是否按下清除按鈕
@@ -47,7 +48,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 }) => {
   const { t } = useTranslation('common');
   const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
-  const { reverseList } = useAccountingCtx();
+  const { reverseList, addReverseListHandler } = useAccountingCtx();
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -63,13 +64,32 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   useEffect(() => {
     // Info: (20241104 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
-    const isReverse = lineItems.some(
-      (item) =>
+    const lineItemsHaveReverse = lineItems.map((item) => {
+      const isReverse =
         (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
-    );
-    setIsReverseRequired(isReverse);
+        (item.account?.code === '1172' && item.debit === false && item.amount > 0); // Info: (20241009 - Julian) 應收帳款
+      return {
+        ...item,
+        isReverse,
+      };
+    });
+    const isReverseRequired = lineItemsHaveReverse.some((item) => item.isReverse);
+
+    setIsReverseRequired(isReverseRequired);
+    setLineItems(lineItemsHaveReverse);
   }, [lineItems]);
+
+  useEffect(() => {
+    // Info: (20241105 - Julian) 將反轉分錄的資料掛在傳票列上
+    const reverseLineItems = lineItems.map((item) => {
+      const reverseVoucherList = reverseList[item.id];
+      return {
+        ...item,
+        reverseList: reverseVoucherList,
+      };
+    });
+    setLineItems(reverseLineItems);
+  }, [reverseList]);
 
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
@@ -149,6 +169,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           selectReverseItemsModalVisibilityHandler();
         };
 
+        const reverseVoucherList = reverseList[lineItem.id];
+
         return (
           <>
             <VoucherLineItem
@@ -166,34 +188,22 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
             />
 
             {/* Info: (20241104 - Julian) 反轉分錄列表 */}
-            {reverseList[lineItem.id] && reverseList[lineItem.id].length > 0
-              ? reverseList[lineItem.id].map((item) => (
-                  <div className="col-start-1 col-end-13 flex items-center justify-between gap-4px font-medium text-text-neutral-invert">
-                    <button
-                      type="button"
-                      className="p-10px text-button-text-primary hover:text-button-text-primary-hover"
-                    >
-                      <FaMinus />
-                    </button>
-                    <div className="flex flex-1 items-center gap-20px">
-                      <div>{item.voucherNo}</div>
-                      <div>
-                        {item.account?.code} - {item.account?.name}
-                      </div>
-                      <div>{item.description}</div>
-                    </div>
-                    <div className="flex items-center gap-4px">
-                      <div>Reverse: {item.reverseAmount}</div>
-                      <button
-                        type="button"
-                        className="p-10px text-button-text-primary hover:text-button-text-primary-hover"
-                        onClick={addReverseHandler}
-                      >
-                        <FiEdit />
-                      </button>
-                    </div>
-                  </div>
-                ))
+            {isShowReverse && reverseVoucherList && reverseVoucherList.length > 0
+              ? reverseVoucherList.map((item) => {
+                  const removeReverse = () =>
+                    addReverseListHandler(
+                      lineItem.id,
+                      reverseVoucherList.filter((reverseItem) => reverseItem.id !== item.id)
+                    );
+                  return (
+                    <ReverseItem
+                      key={item.id}
+                      reverseItem={item}
+                      addHandler={addReverseHandler}
+                      removeHandler={removeReverse}
+                    />
+                  );
+                })
               : null}
 
             {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
@@ -226,45 +236,43 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     );
 
   return (
-    <div id="voucher-line-block" className="col-span-2">
-      {/* Info: (20240927 - Julian) Table */}
-      <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
-        {/* Info: (20240927 - Julian) Table Header */}
-        <div className="grid w-full grid-cols-13 gap-x-24px">
-          <div className="col-span-3 font-semibold text-text-neutral-invert">
-            {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
-          </div>
-          <div className="col-span-3 font-semibold text-text-neutral-invert">
-            {t('journal:VOUCHER_LINE_BLOCK.PARTICULARS')}
-          </div>
-          <div className="col-span-3 font-semibold text-text-neutral-invert">
-            {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
-          </div>
-          <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
-            {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
-          </div>
+    /* Info: (20240927 - Julian) Table */
+    <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
+      {/* Info: (20240927 - Julian) Table Header */}
+      <div className="grid w-full grid-cols-13 gap-x-24px">
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
         </div>
-
-        {/* Info: (20240927 - Julian) Table Body */}
-        <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
-          {voucherLines}
-
-          {/* Info: (20240927 - Julian) Total calculation */}
-          {/* Info: (20240927 - Julian) Total Debit */}
-          <div className="col-start-7 col-end-10 text-right">
-            <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
-          </div>
-          {/* Info: (20240927 - Julian) Total Debit */}
-          <div className="col-start-11 col-end-13 text-right">
-            <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
-          </div>
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER_LINE_BLOCK.PARTICULARS')}
         </div>
-
-        {/* Info: (20240927 - Julian) Add button */}
-        <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
-          <FaPlus size={20} />
-        </Button>
+        <div className="col-span-3 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
+        </div>
+        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+          {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
+        </div>
       </div>
+
+      {/* Info: (20240927 - Julian) Table Body */}
+      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
+        {voucherLines}
+
+        {/* Info: (20240927 - Julian) Total calculation */}
+        {/* Info: (20240927 - Julian) Total Debit */}
+        <div className="col-start-7 col-end-10 text-right">
+          <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
+        </div>
+        {/* Info: (20240927 - Julian) Total Debit */}
+        <div className="col-start-11 col-end-13 text-right">
+          <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
+        </div>
+      </div>
+
+      {/* Info: (20240927 - Julian) Add button */}
+      <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
+        <FaPlus size={20} />
+      </Button>
     </div>
   );
 };

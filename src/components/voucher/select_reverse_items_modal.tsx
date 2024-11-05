@@ -8,7 +8,8 @@ import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
 import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
-import { IReverseItemUI, dummyReverseData, IReverseItemModal } from '@/interfaces/reverse';
+import { IReverseItemModal } from '@/interfaces/reverse';
+import { IReverseItemUI, dummyReverseData } from '@/interfaces/line_item';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 
 interface ISelectReverseItemsModal {
@@ -143,10 +144,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   // Info: (20241105 - Julian) 如果沒有選取任何 reverse item 或是有選取但金額為 0，則無法確認
   const confirmDisabled =
-    totalReverseAmount === 0 ||
-    selectedReverseItems.some((reverse) => {
-      return reverse.reverseAmount === 0;
-    });
+    totalReverseAmount === 0 || selectedReverseItems.some((reverse) => reverse.reverseAmount === 0);
 
   // Info: (20241105 - Julian) 全選
   const checkAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {

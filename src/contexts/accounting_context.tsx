@@ -6,7 +6,7 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IAssetDetails } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
-import { IReverseItem } from '@/interfaces/reverse';
+import { IReverseItem } from '@/interfaces/line_item';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -145,6 +145,7 @@ interface IAccountingContext {
     [key: number]: IReverseItem[];
   };
   addReverseListHandler: (lineItemId: number, item: IReverseItem[]) => void;
+  clearReverseListHandler: () => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -198,6 +199,7 @@ const initialAccountingContext: IAccountingContext = {
 
   reverseList: {},
   addReverseListHandler: () => {},
+  clearReverseListHandler: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -763,6 +765,11 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     });
   };
 
+  // Info: (20241105 - Julian) 清空反轉分錄列表
+  const clearReverseListHandler = () => {
+    setReverseList({});
+  };
+
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {
       setSelectedOCR(OCR);
@@ -832,6 +839,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
       reverseList,
       addReverseListHandler,
+      clearReverseListHandler,
     }),
     [
       OCRList,
@@ -864,6 +872,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       clearTemporaryAssetHandler,
       reverseList,
       addReverseListHandler,
+      clearReverseListHandler,
     ]
   );
 
