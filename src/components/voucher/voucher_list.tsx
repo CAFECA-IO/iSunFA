@@ -51,11 +51,6 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   // Info: (20241022 - Julian) 被選中的 voucher
   const [selectedVoucherList, setSelectedVoucherList] = useState<IVoucherUI[]>([]);
 
-  // Info: (20240920 - Julian) 排序狀態
-  // const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  // const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
-  // const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
-
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
@@ -63,7 +58,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
 
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
-  const selectAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Info: (20241105 - Julian) 勾選全部
+  const checkAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     // Info: (20241022 - Julian) 切換全選狀態
     setIsSelectedAll(!isSelectedAll);
@@ -78,6 +74,20 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     });
   };
 
+  // Info: (20241105 - Julian) 選擇全部（文字按鈕）
+  const selectAllHandler = () => {
+    setIsSelectedAll(!isSelectedAll);
+    setUiVoucherList((prev) => {
+      return prev.map((voucher) => {
+        return {
+          ...voucher,
+          isSelected: !isSelectedAll,
+        };
+      });
+    });
+  };
+
+  // Info: (20241105 - Julian) 單一勾選
   const selectHandler = (id: number) => {
     setUiVoucherList((prev) => {
       return prev.map((voucher) => {
@@ -95,6 +105,11 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   useEffect(() => {
     // Info: (20241022 - Julian) 更新被選中的 voucher
     setSelectedVoucherList(uiVoucherList.filter((voucher) => voucher.isSelected === true));
+
+    // Info: (20241022 - Julian) 判斷是否全選
+    const selectedCount = uiVoucherList.filter((voucher) => voucher.isSelected === true).length;
+    const totalCount = uiVoucherList.length;
+    setIsSelectedAll(selectedCount === totalCount);
   }, [uiVoucherList]);
 
   // ToDo: (20241022 - Julian) 刪除功能
@@ -139,9 +154,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   const displayedSelectArea = (
-    <div className="ml-auto flex items-center gap-24px">
+    <div className="ml-auto flex h-50px items-center gap-24px">
       {/* Info: (20240920 - Julian) Export Voucher button */}
-      <Button type="button" variant="tertiaryOutline" onClick={exportVoucherModalVisibilityHandler}>
+      <Button
+        type="button"
+        variant="tertiaryOutline"
+        className={isCheckBoxOpen ? 'hidden' : 'flex'}
+        onClick={exportVoucherModalVisibilityHandler}
+      >
         <MdOutlineFileDownload />
         <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
       </Button>
@@ -160,6 +180,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       <button
         type="button"
         className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+        onClick={selectAllHandler}
       >
         {t('common:COMMON.SELECT_ALL')}
       </button>
@@ -204,7 +225,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row">
             <div className={`${checkStyle} border-b border-stroke-neutral-quaternary`}>
-              <input type="checkbox" className={checkboxStyle} onChange={selectAllHandler} />
+              <input
+                type="checkbox"
+                className={checkboxStyle}
+                checked={isSelectedAll}
+                onChange={checkAllHandler}
+              />
             </div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>{displayedDate}</div>
             <div className={`${tableCellStyles} ${sideBorderStyles}`}>

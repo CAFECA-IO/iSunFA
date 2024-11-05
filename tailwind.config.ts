@@ -1471,6 +1471,7 @@ module.exports = {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
         'dynamic-fill': 'repeat(auto-fill, minmax(200px, 1fr))',
         13: 'repeat(13, minmax(0, 1fr))', // Info: (20240927 - Julian) Voucher line 用
+        14: 'repeat(14, minmax(0, 1fr))', // Info: (20241105 - Julian) Reverse item 用
       },
       gridAutoRows: {
         'min-content': 'min-content',
