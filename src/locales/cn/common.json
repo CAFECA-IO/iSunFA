@@ -551,6 +551,13 @@
     "NO_DATA": "没有资料"
   },
 
+  "HEADER": {
+    "SEARCH": "搜索",
+    "MY_ACCOUNT": "我的账户",
+    "SUBSCRIPTION_AND_BILLS": "订阅与账单",
+    "LOGOUT": "登出"
+  },
+
   "MY_COMPANY_LIST_PAGE": {
     "MY_COMPANY_LIST": "我的公司列表"
   },

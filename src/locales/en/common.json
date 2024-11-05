@@ -551,6 +551,13 @@
     "NO_DATA": "No Data"
   },
 
+  "HEADER": {
+    "SEARCH": "Search",
+    "MY_ACCOUNT": "My Account",
+    "SUBSCRIPTION_AND_BILLS": "Subscription and Bills",
+    "LOGOUT": "Logout"
+  },
+
   "MY_COMPANY_LIST_PAGE": {
     "MY_COMPANY_LIST": "My Company List"
   },

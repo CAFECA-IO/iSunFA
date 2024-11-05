@@ -551,6 +551,13 @@
     "NO_DATA": "沒有資料"
   },
 
+  "HEADER": {
+    "SEARCH": "搜尋",
+    "MY_ACCOUNT": "我的帳號",
+    "SUBSCRIPTION_AND_BILLS": "訂閱與帳單",
+    "LOGOUT": "登出"
+  },
+
   "MY_COMPANY_LIST_PAGE": {
     "MY_COMPANY_LIST": "我的公司列表"
   },
