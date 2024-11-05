@@ -7,6 +7,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
 import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
@@ -35,14 +36,21 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   selectHandler,
   amountChangeHandler,
 }) => {
+  const { t } = useTranslation('common');
   const { id, voucherNo, accounting, particulars, amount, isSelected, reverseAmount } = reverseData;
 
   const accountCode = accounting.split(' - ')[0];
   const accountName = accounting.split(' - ')[1];
 
   const checkboxChangeHandler = () => selectHandler(id);
-  const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
-    amountChangeHandler(id, parseInt(e.target.value, 10));
+  const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Info: (20241105 - Julian) 金額只能輸入數字
+    const num = parseInt(e.target.value, 10);
+    const numValue = Number.isNaN(num) ? 0 : num;
+    // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
+    const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
+    amountChangeHandler(id, valueInRange);
+  };
 
   return (
     <>
@@ -69,7 +77,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
         <span className="text-text-neutral-tertiary"> TWD</span>
       </div>
       {/* Info: (20241104 - Julian) Reverse Amount */}
-      <div className="col-start-11 col-end-14 text-right">
+      <div className="col-start-11 col-end-15 text-right">
         <div
           className={`flex items-center divide-x rounded-sm border ${
             isSelected
@@ -80,8 +88,8 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
           <input
             type="string"
             className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
-            placeholder="0"
             value={reverseAmount}
+            placeholder="0"
             onChange={reverseAmountChangeHandler}
             disabled={!isSelected}
           />
@@ -93,7 +101,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
               alt="tw_icon"
               className="rounded-full"
             />
-            <p className="text-input-text-input-placeholder">TWD</p>
+            <p className="text-input-text-input-placeholder">{t('common:COMMON.TWD')}</p>
           </div>
         </div>
       </div>
@@ -105,6 +113,8 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   isModalVisible,
   modalVisibilityHandler,
 }) => {
+  const { t } = useTranslation(['common', 'journal']);
+
   const dummyData = [
     {
       id: 1,
@@ -232,7 +242,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex w-90vw flex-col items-center gap-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg lg:w-700px">
+      <div className="relative flex w-90vw flex-col items-center gap-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg md:w-750px">
         {/* Info: (20241104 - Julian) Close button */}
         <button type="button" onClick={modalVisibilityHandler} className="absolute right-4 top-4">
           <RxCross2 size={24} className="text-icon-surface-single-color-primary" />
@@ -259,7 +269,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               <input
                 type="string"
                 className="flex-1 bg-transparent outline-none placeholder:text-input-text-input-placeholder"
-                placeholder="Search"
+                placeholder={t('common:COMMON.SEARCH')}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
               />
@@ -286,7 +296,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
             </div>
             <div className="flex flex-col items-center px-16px py-8px text-sm">
               {/* Info: (20241104 - Julian) Table header */}
-              <div className="grid w-full grid-cols-13 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
+              <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
                 {/* Info: (20241104 - Julian) Checkbox */}
                 <div className="col-start-1 col-end-2">
                   <input
@@ -305,11 +315,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                 {/* Info: (20241104 - Julian) Amount */}
                 <div className="col-start-9 col-end-11">Amount</div>
                 {/* Info: (20241104 - Julian) Reverse Amount */}
-                <div className="col-start-11 col-end-14 text-right">Reverse Amount</div>
+                <div className="col-start-11 col-end-15 text-right">Reverse Amount</div>
               </div>
 
               {/* Info: (20241104 - Julian) Table body */}
-              <div className="grid max-h-450px w-full grid-cols-13 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
+              <div className="grid max-h-450px w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
                 {reverseList}
               </div>
             </div>
@@ -323,7 +333,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               className="px-16px py-8px"
               onClick={modalVisibilityHandler}
             >
-              Cancel
+              {t('common:COMMON.CANCEL')}
             </Button>
             <Button
               type="button"
@@ -331,7 +341,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               className="px-16px py-8px"
               disabled={confirmDisabled}
             >
-              Confirm
+              {t('common:COMMON.CONFIRM')}
             </Button>
           </div>
         </div>

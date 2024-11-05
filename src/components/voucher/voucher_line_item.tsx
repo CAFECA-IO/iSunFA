@@ -5,7 +5,7 @@ import { LuTrash2 } from 'react-icons/lu';
 import { FiBookOpen } from 'react-icons/fi';
 import { AccountType } from '@/constants/account';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
-import { numberWithCommas } from '@/lib/utils/common';
+// import { numberWithCommas } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 
@@ -172,26 +172,26 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   const debitInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const debitValue = e.target.value;
-    const debitValueInt = Number.isNaN(parseInt(debitValue, 10)) ? 0 : parseInt(debitValue, 10);
-    const debitValueStr = debitValueInt.toString().replace(/\D/g, '').replace(/^0+/, '');
+    const debitNum = parseInt(e.target.value, 10);
+    const debitValue = Number.isNaN(debitNum) ? 0 : debitNum;
 
-    // Info: (20241001 - Julian) 加入千分位逗號
-    setDebitInput(numberWithCommas(debitValueStr));
+    // Info: (20241105 - Julian) 加入千分位逗號會造成輸入錯誤，暫時移除
+    // setDebitInput(numberWithCommas(debitValue));
+    setDebitInput(debitValue.toString());
     // Info: (20241001 - Julian) 設定 Debit
-    debitChangeHandler(debitValueInt);
+    debitChangeHandler(debitValue);
   };
 
   const creditInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const creditValue = e.target.value;
-    const creditValueInt = Number.isNaN(parseInt(creditValue, 10)) ? 0 : parseInt(creditValue, 10);
-    const creditValueStr = creditValueInt.toString().replace(/\D/g, '').replace(/^0+/, '');
+    const creditNum = parseInt(e.target.value, 10);
+    const creditValue = Number.isNaN(creditNum) ? 0 : creditNum;
 
-    // Info: (20241001 - Julian) 加入千分位逗號
-    setCreditInput(numberWithCommas(creditValueStr));
+    // Info: (20241105 - Julian) 加入千分位逗號會造成輸入錯誤，暫時移除
+    // setCreditInput(numberWithCommas(creditValue));
+    setCreditInput(creditValue.toString());
     // Info: (20241001 - Julian) 設定 Credit
-    creditChangeHandler(creditValueInt);
+    creditChangeHandler(creditValue);
   };
 
   const accountEditingHandler = () => {

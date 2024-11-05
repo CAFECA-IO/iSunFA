@@ -45,7 +45,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   isVoucherLineEmpty,
 }) => {
   const { t } = useTranslation('common');
-  const { selectReverseItemsModalVisibilityHandler } = useGlobalCtx();
+  const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -136,6 +136,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           }
         };
 
+        // Info: (20241105 - Julian) 新增反轉分錄
+        const addReverseHandler = () => {
+          // Info: (20241105 - Julian) 會計科目編號
+          selectReverseDataHandler(lineItem.account?.code ?? '');
+          selectReverseItemsModalVisibilityHandler();
+        };
+
         return (
           <>
             <VoucherLineItem
@@ -158,7 +165,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
                 <button
                   type="button"
                   className="flex items-center gap-4px text-text-neutral-invert"
-                  onClick={selectReverseItemsModalVisibilityHandler}
+                  onClick={addReverseHandler}
                 >
                   <FaPlus />
                   <p>Reverse item</p>
