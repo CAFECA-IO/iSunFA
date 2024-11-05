@@ -1,4 +1,5 @@
 import type { ICounterPartyEntity } from 'src/interfaces/counterparty';
+import { z } from 'zod';
 /**
  * Info: (20241023 - Murky)
  * @description which is the counter party relation from our company perspective
@@ -38,3 +39,15 @@ export const PUBLIC_COUNTER_PARTY: ICounterPartyEntity = {
   updatedAt: 0,
   deletedAt: null,
 };
+
+export const counterPartyEntityValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  name: z.string(),
+  taxId: z.string(),
+  type: z.nativeEnum(CounterpartyType),
+  note: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});

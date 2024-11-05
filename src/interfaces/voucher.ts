@@ -106,7 +106,7 @@ export interface IVoucherBeta {
     avatar: string;
     name: string;
   };
-  onRead: boolean;
+  unRead: boolean;
 
   lineItemsInfo: {
     sum: {
@@ -131,7 +131,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: false,
+    unRead: false,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -176,7 +176,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -214,7 +214,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -266,7 +266,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -304,7 +304,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -474,7 +474,7 @@ export interface IVoucherEntity {
    * @description aich result status
    * @note database has not yet created this column
    */
-  aiStatus?: string;
+  // aiStatus?: string;
 
   // ToDo: (20241023 - Murky) Certificate
   certificates: ICertificateEntity[];
