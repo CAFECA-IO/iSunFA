@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import SelectFilter from '@/components/filter_section/select_filter';
 import { useTranslation } from 'next-i18next';
 
+// Info: (20241105 - Anna) 科目選項
 interface AccountRangeFilterProps {
-  assetOptions: string[]; // Info: (20241015 - Anna) 資產科目選項
-  liabilityOptions: string[]; // Info: (20241015 - Anna) 負債科目選項
-  equityOptions: string[]; // Info: (20241015 - Anna) 權益科目選項
+  assetOptions: string[];
+  liabilityOptions: string[];
+  equityOptions: string[];
+  revenueOptions: string[];
+  costOptions: string[];
+  expenseOptions: string[];
+  incomeOptions: string[];
+  otherComprehensiveIncomeOptions: string[];
   onRangeSelected: (from: string, to: string) => void; // Info: (20241015 - Anna) 當用戶選擇範圍後的回調
 }
 
@@ -13,18 +19,51 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
   assetOptions,
   liabilityOptions,
   equityOptions,
+  revenueOptions,
+  costOptions,
+  expenseOptions,
+  incomeOptions,
+  otherComprehensiveIncomeOptions,
   onRangeSelected,
 }) => {
   const { t } = useTranslation('common');
   // Info: (20241015 - Anna) From 部分的狀態
-  const [fromCategory, setFromCategory] = useState<'Asset' | 'Liability' | 'Equity'>('Asset');
+  const [fromCategory, setFromCategory] = useState<
+    | 'Asset'
+    | 'Liability'
+    | 'Equity'
+    | 'Revenue'
+    | 'Cost'
+    | 'Expense'
+    | 'Income'
+    | 'OtherComprehensiveIncome'
+  >('Asset');
   const [fromAccount, setFromAccount] = useState<string>('');
 
   // Info: (20241015 - Anna) To 部分的狀態
-  const [toCategory, setToCategory] = useState<'Asset' | 'Liability' | 'Equity'>('Asset');
+  const [toCategory, setToCategory] = useState<
+    | 'Asset'
+    | 'Liability'
+    | 'Equity'
+    | 'Revenue'
+    | 'Cost'
+    | 'Expense'
+    | 'Income'
+    | 'OtherComprehensiveIncome'
+  >('Asset');
   const [toAccount, setToAccount] = useState<string>('');
 
-  const getOptionsByCategory = (category: 'Asset' | 'Liability' | 'Equity') => {
+  const getOptionsByCategory = (
+    category:
+      | 'Asset'
+      | 'Liability'
+      | 'Equity'
+      | 'Revenue'
+      | 'Cost'
+      | 'Expense'
+      | 'Income'
+      | 'OtherComprehensiveIncome'
+  ) => {
     switch (category) {
       case 'Asset':
         return assetOptions;
@@ -32,6 +71,16 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
         return liabilityOptions;
       case 'Equity':
         return equityOptions;
+      case 'Revenue':
+        return revenueOptions;
+      case 'Cost':
+        return costOptions;
+      case 'Expense':
+        return expenseOptions;
+      case 'Income':
+        return incomeOptions;
+      case 'OtherComprehensiveIncome':
+        return otherComprehensiveIncomeOptions;
       default:
         return [];
     }
@@ -50,9 +99,29 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
         <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.FROM')}</span>
         <SelectFilter
           label="NONE"
-          options={['Asset', 'Liability', 'Equity']}
+          options={[
+            'Asset',
+            'Liability',
+            'Equity',
+            'Revenue',
+            'Cost',
+            'Expense',
+            'Income',
+            'OtherComprehensiveIncome',
+          ]}
           selectedValue={fromCategory}
-          onChange={(value) => setFromCategory(value as 'Asset' | 'Liability' | 'Equity')}
+          onChange={(value) =>
+            setFromCategory(
+              value as
+                | 'Asset'
+                | 'Liability'
+                | 'Equity'
+                | 'Revenue'
+                | 'Cost'
+                | 'Expense'
+                | 'Income'
+                | 'OtherComprehensiveIncome'
+            )}
           className="rounded-r-none border-r-0" // Info: (20241015 - Anna) 移除右側圓角
         />
         <SelectFilter
@@ -70,9 +139,29 @@ const AccountRangeFilter: React.FC<AccountRangeFilterProps> = ({
         <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.TO')}</span>
         <SelectFilter
           label="NONE"
-          options={['Asset', 'Liability', 'Equity']}
+          options={[
+            'Asset',
+            'Liability',
+            'Equity',
+            'Revenue',
+            'Cost',
+            'Expense',
+            'Income',
+            'OtherComprehensiveIncome',
+          ]}
           selectedValue={toCategory}
-          onChange={(value) => setToCategory(value as 'Asset' | 'Liability' | 'Equity')}
+          onChange={(value) =>
+            setToCategory(
+              value as
+                | 'Asset'
+                | 'Liability'
+                | 'Equity'
+                | 'Revenue'
+                | 'Cost'
+                | 'Expense'
+                | 'Income'
+                | 'OtherComprehensiveIncome'
+            )}
           className="rounded-r-none border-r-0" // Info: (20241015 - Anna) 移除右側圓角
         />
         <SelectFilter
