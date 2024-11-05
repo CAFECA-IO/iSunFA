@@ -530,7 +530,11 @@
     "TO_DO_LIST": "To-do list",
     "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
     "LINK_MY_CALENDAR": "Link My Calendar",
-    "NO_SCHEDULE_FOR_TODAY": "No schedule for today"
+    "NO_SCHEDULE_FOR_TODAY": "No schedule for today",
+    "MY_COMPANY_LIST": "My Company List",
+    "COMPANY_NOT_YET_CREATED": "Company not yet created",
+    "PLEASE_PROCEED_TO": "Please proceed to",
+    "CREATE_A_COMPANY": "create a company"
   },
 
   "MY_COMPANY_LIST_PAGE": {

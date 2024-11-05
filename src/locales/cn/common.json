@@ -530,7 +530,11 @@
     "TO_DO_LIST": "待办事项",
     "CALENDAR_NOT_YET_LINKED": "日历尚未连结",
     "LINK_MY_CALENDAR": "连结我的日历",
-    "NO_SCHEDULE_FOR_TODAY": "今天没有安排待办事项"
+    "NO_SCHEDULE_FOR_TODAY": "今天没有安排待办事项",
+    "MY_COMPANY_LIST": "我的公司列表",
+    "COMPANY_NOT_YET_CREATED": "尚未创建公司",
+    "PLEASE_PROCEED_TO": "请前往",
+    "CREATE_A_COMPANY": "创建公司"
   },
 
   "MY_COMPANY_LIST_PAGE": {
