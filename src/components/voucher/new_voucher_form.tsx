@@ -7,9 +7,8 @@ import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import Toggle from '@/components/toggle/toggle';
+// import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
-import ReverseSection from '@/components/voucher/reverse_section';
 import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
@@ -20,11 +19,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
 import {
-  checkboxStyle,
+  // checkboxStyle,
   inputStyle,
   default30DayPeriodInSec,
-  WEEK_FULL_LIST,
-  MONTH_ABR_LIST,
+  // WEEK_FULL_LIST,
+  // MONTH_ABR_LIST,
 } from '@/constants/display';
 import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
@@ -159,8 +158,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
   const [isShowCounterHint, setIsShowCounterHint] = useState<boolean>(false);
-  const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
-  const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
+  // const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
+  // const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
@@ -305,11 +304,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20241007 - Julian) Recurring 下拉選單
-  const {
-    targetRef: recurringRef,
-    componentVisible: isRecurringMenuOpen,
-    setComponentVisible: setRecurringMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+  // const {
+  //   targetRef: recurringRef,
+  //   componentVisible: isRecurringMenuOpen,
+  //   setComponentVisible: setRecurringMenuOpen,
+  // } = useOuterClick<HTMLDivElement>(false);
 
   const counterpartyInputRef = useRef<HTMLInputElement>(null);
 
@@ -344,13 +343,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
-    // Info: (20241004 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
-    const isReverse = voucherLineItems.some(
-      (item) =>
-        (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
-    );
-
     setTotalDebit(debitTotal);
     setTotalCredit(creditTotal);
     setHaveZeroLine(zeroLine);
@@ -358,7 +350,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setIsVoucherLineEmpty(voucherLineItems.length === 0);
     setIsCounterpartyRequired(isAPorAR);
     setIsAssetRequired(isAsset);
-    setIsReverseRequired(isReverse);
   }, [voucherLineItems]);
 
   useEffect(() => {
@@ -420,18 +411,18 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [counterparty]);
 
   // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
-  useEffect(() => {
-    if (isRecurring && recurringPeriod.startTimeStamp !== 0 && recurringPeriod.endTimeStamp !== 0) {
-      setIsShowRecurringPeriodHint(false);
-    }
-  }, [isRecurring, recurringPeriod]);
+  // useEffect(() => {
+  //   if (isRecurring && recurringPeriod.startTimeStamp !== 0 && recurringPeriod.endTimeStamp !== 0) {
+  //     setIsShowRecurringPeriodHint(false);
+  //   }
+  // }, [isRecurring, recurringPeriod]);
 
   // Info: (20241007 - Julian) 週期未選擇時顯示提示
-  useEffect(() => {
-    if (isRecurring && recurringArray.length > 0) {
-      setIsShowRecurringArrayHint(false);
-    }
-  }, [recurringArray]);
+  // useEffect(() => {
+  //   if (isRecurring && recurringArray.length > 0) {
+  //     setIsShowRecurringArrayHint(false);
+  //   }
+  // }, [recurringArray]);
 
   useEffect(() => {
     if (isAssetRequired && temporaryAssetList.length > 0) {
@@ -456,13 +447,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setCounterKeyword(e.target.value);
   };
 
-  const recurringToggleHandler = () => {
-    setIsRecurring(!isRecurring);
-  };
+  // const recurringToggleHandler = () => {
+  //   setIsRecurring(!isRecurring);
+  // };
 
-  const recurringUnitToggleHandler = () => {
-    setRecurringMenuOpen(!isRecurringMenuOpen);
-  };
+  // const recurringUnitToggleHandler = () => {
+  //   setRecurringMenuOpen(!isRecurringMenuOpen);
+  // };
 
   // Info: (20241018 - Julian) 欄位顯示
   const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterPartyId);
@@ -478,13 +469,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   };
 
-  const translateUnit = (unit: RecurringUnit) => {
-    if (unit === RecurringUnit.WEEK) {
-      return t(`common:COMMON.WEEK`);
-    } else {
-      return t(`common:COMMON.YEAR`);
-    }
-  };
+  // const translateUnit = (unit: RecurringUnit) => {
+  //   if (unit === RecurringUnit.WEEK) {
+  //     return t(`common:COMMON.WEEK`);
+  //   } else {
+  //     return t(`common:COMMON.YEAR`);
+  //   }
+  // };
 
   // Info: (20241004 - Julian) 清空表單
   const clearAllHandler = () => {
@@ -571,17 +562,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     ) {
       setIsShowCounterHint(true);
       router.push('#voucher-counterparty');
-    } else if (
-      // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
-      isRecurring &&
-      (recurringPeriod.startTimeStamp === 0 || recurringPeriod.endTimeStamp === 0)
-    ) {
-      setIsShowRecurringPeriodHint(true);
-      router.push('#voucher-recurring');
-    } else if (isRecurring && recurringArray.length === 0) {
-      // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
-      setIsShowRecurringArrayHint(true);
-      router.push('#voucher-recurring');
+      // } else if (
+      //   // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
+      //   isRecurring &&
+      //   (recurringPeriod.startTimeStamp === 0 || recurringPeriod.endTimeStamp === 0)
+      // ) {
+      //   setIsShowRecurringPeriodHint(true);
+      //   router.push('#voucher-recurring');
+      // } else if (isRecurring && recurringArray.length === 0) {
+      //   // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
+      //   setIsShowRecurringArrayHint(true);
+      //   router.push('#voucher-recurring');
     } else if (
       (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
       totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
@@ -610,8 +601,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
       setIsShowCounterHint(false);
-      setIsShowRecurringPeriodHint(false);
-      setIsShowRecurringArrayHint(false);
+      // setIsShowRecurringPeriodHint(false);
+      // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
       setFlagOfSubmit(!flagOfSubmit);
       router.push('#');
@@ -695,82 +686,133 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     </div>
   ) : null;
 
-  const recurringUnitMenu = (
-    <div
-      ref={recurringRef}
-      className={`absolute left-0 top-12 ${isRecurringMenuOpen ? 'flex' : 'hidden'} w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px`}
-    >
-      {Object.values(RecurringUnit).map((unit) => {
-        const recurringUnitClickHandler = () => {
-          setRecurringUnit(unit);
-          setRecurringMenuOpen(false);
-        };
-        return (
-          <button
-            key={unit}
-            type="button"
-            className="py-8px hover:bg-dropdown-surface-menu-background-secondary"
-            onClick={recurringUnitClickHandler}
-          >
-            {translateUnit(unit)}
-          </button>
-        );
-      })}
-    </div>
-  );
+  // const recurringUnitMenu = (
+  //   <div
+  //     ref={recurringRef}
+  //     className={`absolute left-0 top-12 ${isRecurringMenuOpen ? 'flex' : 'hidden'} w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px`}
+  //   >
+  //     {Object.values(RecurringUnit).map((unit) => {
+  //       const recurringUnitClickHandler = () => {
+  //         setRecurringUnit(unit);
+  //         setRecurringMenuOpen(false);
+  //       };
+  //       return (
+  //         <button
+  //           key={unit}
+  //           type="button"
+  //           className="py-8px hover:bg-dropdown-surface-menu-background-secondary"
+  //           onClick={recurringUnitClickHandler}
+  //         >
+  //           {translateUnit(unit)}
+  //         </button>
+  //       );
+  //     })}
+  //   </div>
+  // );
 
-  const recurringUnitCheckboxes =
-    recurringUnit === RecurringUnit.WEEK
-      ? Array.from({ length: 7 }, (_, i) => {
-          const week = i;
-          const weekChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-            if (e.target.checked) {
-              setRecurringArray([...recurringArray, week]);
-            } else {
-              setRecurringArray(recurringArray.filter((item) => item !== week));
-            }
-          };
-          // Info: (20241007 - Julian) 檢查 Array 是否有該值
-          const weekChecked = recurringArray.includes(week);
+  // const recurringUnitCheckboxes =
+  //   recurringUnit === RecurringUnit.WEEK
+  //     ? Array.from({ length: 7 }, (_, i) => {
+  //         const week = i;
+  //         const weekChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //           if (e.target.checked) {
+  //             setRecurringArray([...recurringArray, week]);
+  //           } else {
+  //             setRecurringArray(recurringArray.filter((item) => item !== week));
+  //           }
+  //         };
+  //         // Info: (20241007 - Julian) 檢查 Array 是否有該值
+  //         const weekChecked = recurringArray.includes(week);
 
-          return (
-            <div key={week} className="flex items-center gap-8px whitespace-nowrap">
-              <input
-                type="checkbox"
-                id={`week-${week}`}
-                checked={weekChecked}
-                className={checkboxStyle}
-                onChange={weekChangeHandler}
-              />
-              <label htmlFor={`week-${week}`}>{t(WEEK_FULL_LIST[week])}</label>
-            </div>
-          );
-        })
-      : Array.from({ length: 12 }, (_, i) => {
-          const month = i + 1;
-          const monthChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-            if (e.target.checked) {
-              setRecurringArray([...recurringArray, month]);
-            } else {
-              setRecurringArray(recurringArray.filter((item) => item !== month));
-            }
-          };
-          // Info: (20241007 - Julian) 檢查 Array 是否有該值
-          const monthChecked = recurringArray.includes(month);
+  //         return (
+  //           <div key={week} className="flex items-center gap-8px whitespace-nowrap">
+  //             <input
+  //               type="checkbox"
+  //               id={`week-${week}`}
+  //               checked={weekChecked}
+  //               className={checkboxStyle}
+  //               onChange={weekChangeHandler}
+  //             />
+  //             <label htmlFor={`week-${week}`}>{t(WEEK_FULL_LIST[week])}</label>
+  //           </div>
+  //         );
+  //       })
+  //     : Array.from({ length: 12 }, (_, i) => {
+  //         const month = i + 1;
+  //         const monthChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //           if (e.target.checked) {
+  //             setRecurringArray([...recurringArray, month]);
+  //           } else {
+  //             setRecurringArray(recurringArray.filter((item) => item !== month));
+  //           }
+  //         };
+  //         // Info: (20241007 - Julian) 檢查 Array 是否有該值
+  //         const monthChecked = recurringArray.includes(month);
 
-          return (
-            <div key={month} className="flex items-center gap-8px whitespace-nowrap">
-              <input
-                type="checkbox"
-                id={`month-${month}`}
-                checked={monthChecked}
-                className={checkboxStyle}
-                onChange={monthChangeHandler}
-              />
-              <label htmlFor={`month-${month}`}>{t(MONTH_ABR_LIST[i])}</label>
-            </div>
-          );
-        });
+  //         return (
+  //           <div key={month} className="flex items-center gap-8px whitespace-nowrap">
+  //             <input
+  //               type="checkbox"
+  //               id={`month-${month}`}
+  //               checked={monthChecked}
+  //               className={checkboxStyle}
+  //               onChange={monthChangeHandler}
+  //             />
+  //             <label htmlFor={`month-${month}`}>{t(MONTH_ABR_LIST[i])}</label>
+  //           </div>
+  //         );
+  //       });
+
+  // ToDo: (20241104 - Julian) 預計移到其他地方
+  // const displayedRecurring =  (
+  //   <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
+  //     {/* Info: (20241007 - Julian) switch */}
+  //     <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
+  //       <Toggle
+  //         id="recurring-toggle"
+  //         initialToggleState={isRecurring}
+  //         getToggledState={recurringToggleHandler}
+  //       />
+  //       <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
+  //     </div>
+  //     {/* Info: (20241007 - Julian) recurring period */}
+  //     <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
+  //       <DatePicker
+  //         type={DatePickerType.TEXT_PERIOD}
+  //         period={recurringPeriod}
+  //         setFilteredPeriod={setRecurringPeriod}
+  //         datePickerClassName="w-full"
+  //         btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
+  //       />
+  //     </div>
+  //     {/* Info: (20241007 - Julian) recurring unit */}
+  //     <div
+  //       className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
+  //     >
+  //       {/* Info: (20241007 - Julian) recurring unit block */}
+  //       <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+  //         <p className="px-12px py-10px text-input-text-input-placeholder">
+  //           {t('journal:ADD_NEW_VOUCHER.EVERY')}
+  //         </p>
+  //         <div
+  //           onClick={recurringUnitToggleHandler}
+  //           className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
+  //         >
+  //           <p className="w-50px">{translateUnit(recurringUnit)}</p>
+  //           <FaChevronDown />
+  //           {/* Info: (20240926 - Julian) recurring unit dropdown */}
+  //           {recurringUnitMenu}
+  //         </div>
+  //       </div>
+  //       {/* Info: (20241007 - Julian) recurring unit checkbox */}
+  //       <div
+  //         className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
+  //       >
+  //         {recurringUnitCheckboxes}
+  //       </div>
+  //     </div>
+  //   </div>
+  // )
 
   const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
     const newCertificates = {
@@ -911,53 +953,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           </div>
         )}
         {/* Info: (20241007 - Julian) Recurring */}
-        <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
-          {/* Info: (20241007 - Julian) switch */}
-          <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
-            <Toggle
-              id="recurring-toggle"
-              initialToggleState={isRecurring}
-              getToggledState={recurringToggleHandler}
-            />
-            <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
-          </div>
-          {/* Info: (20241007 - Julian) recurring period */}
-          <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
-            <DatePicker
-              type={DatePickerType.TEXT_PERIOD}
-              period={recurringPeriod}
-              setFilteredPeriod={setRecurringPeriod}
-              datePickerClassName="w-full"
-              btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
-            />
-          </div>
-          {/* Info: (20241007 - Julian) recurring unit */}
-          <div
-            className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
-          >
-            {/* Info: (20241007 - Julian) recurring unit block */}
-            <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-              <p className="px-12px py-10px text-input-text-input-placeholder">
-                {t('journal:ADD_NEW_VOUCHER.EVERY')}
-              </p>
-              <div
-                onClick={recurringUnitToggleHandler}
-                className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
-              >
-                <p className="w-50px">{translateUnit(recurringUnit)}</p>
-                <FaChevronDown />
-                {/* Info: (20240926 - Julian) recurring unit dropdown */}
-                {recurringUnitMenu}
-              </div>
-            </div>
-            {/* Info: (20241007 - Julian) recurring unit checkbox */}
-            <div
-              className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
-            >
-              {recurringUnitCheckboxes}
-            </div>
-          </div>
-        </div>
+
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
           <div className="col-span-2 flex flex-col">
@@ -965,17 +961,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               isShowAssetHint={isShowAssetHint}
               assets={temporaryAssetList}
               lineItems={voucherLineItems}
-            />
-          </div>
-        )}
-        {/* Info: (20240926 - Julian) Reverse */}
-        {isReverseRequired && (
-          <div className="col-span-2 flex flex-col">
-            <ReverseSection
-              reverses={reverses}
-              setReverses={setReverses}
-              flagOfClear={flagOfClear}
-              flagOfSubmit={flagOfSubmit}
             />
           </div>
         )}
@@ -990,11 +975,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           <VoucherLineBlock
             totalCredit={totalCredit}
             totalDebit={totalDebit}
+            lineItems={voucherLineItems}
+            setLineItems={setLineItems}
+            setIsReverseRequired={setIsReverseRequired}
             haveZeroLine={haveZeroLine}
             isAccountingNull={isAccountingNull}
             isVoucherLineEmpty={isVoucherLineEmpty}
-            lineItems={voucherLineItems}
-            setLineItems={setLineItems}
             flagOfClear={flagOfClear}
             flagOfSubmit={flagOfSubmit}
           />
