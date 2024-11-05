@@ -1,4 +1,4 @@
-import {
+import handler, {
   handleGetRequest,
   handlePostRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/index';
@@ -6,12 +6,21 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 import { EventType } from '@/constants/account';
 import { SortBy, SortOrder } from '@/constants/sort';
-import { VoucherListAllSortOptions } from '@/lib/utils/zod_schema/voucher';
+import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '@/client';
+import { UserActionLogActionType } from '@/constants/user_action_log';
+import { voucherListSchema } from '@/lib/utils/zod_schema/voucher';
 
 jest.mock('../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1001,
     companyId: 1001,
+    roleId: 1001,
+    cookie: {
+      httpOnly: false,
+      path: 'string',
+      secure: false,
+    },
   }),
 }));
 
@@ -25,15 +34,35 @@ jest.mock('../../../../../../lib/utils/auth_check', () => ({
 //     info: jest.fn(),
 //     error: jest.fn(),
 //   }),
+//   loggerError: jest.fn().mockReturnValue({
+//     info: jest.fn(),
+//     error: jest.fn(),
+//   }),
 // }));
 
-beforeEach(() => {});
+beforeEach(() => {
+  jest.spyOn(prisma.userActionLog, 'create').mockResolvedValue({
+    id: 1,
+    sessionId: '1',
+    userId: 1001,
+    actionType: UserActionLogActionType.API,
+    actionDescription: 'null',
+    actionTime: Date.now(),
+    ipAddress: '127.0.0.1',
+    userAgent: 'null',
+    apiEndpoint: 'null',
+    httpMethod: 'GET',
+    requestPayload: {},
+    httpStatusCode: 200,
+    statusMessage: 'null',
+  });
+});
 
 afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('company/[companyId]/voucher', () => {
+describe('company/[companyId]/voucher handleRequest test', () => {
   describe('GET Voucher List', () => {
     it('should pass', async () => {
       const query = {
@@ -44,15 +73,15 @@ describe('company/[companyId]/voucher', () => {
         startDate: 1,
         endDate: 1,
         searchQuery: 'string',
-      };
-      const body = {
-        sortOption: {
-          [SortBy.DATE as VoucherListAllSortOptions]: {
+        // sortOption: 'Date:asc-Amount:desc',
+        sortOption: [
+          {
             by: SortBy.DATE,
             order: SortOrder.ASC,
           },
-        },
+        ],
       };
+      const body = {};
       const session = {
         userId: 1001,
         companyId: 1001,
@@ -133,6 +162,48 @@ describe('company/[companyId]/voucher', () => {
       });
 
       expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
+    });
+  });
+});
+
+describe('company/[companyId]/voucher integration test', () => {
+  let req: jest.Mocked<NextApiRequest>;
+  let res: jest.Mocked<NextApiResponse>;
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  describe('Get list voucher', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {
+          page: '1',
+          pageSize: '10',
+          tab: VoucherListTabV2.UPLOADED,
+          type: EventType.PAYMENT,
+          startDate: '1',
+          endDate: '1',
+          searchQuery: 'string',
+          sortOption: 'Date:asc-Amount:desc',
+        },
+        method: 'GET',
+        json: jest.fn(),
+        body: {},
+      } as unknown as jest.Mocked<NextApiRequest>;
+
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
+
+      const outputValidator = voucherListSchema.frontend;
+
+      await handler(req, res);
+
+      // Info: (20241105 - Murky) res.json的回傳值
+      const apiResponse = res.json.mock.calls[0][0];
+      const { success } = outputValidator.safeParse(apiResponse.payload);
+      expect(success).toBe(true);
     });
   });
 });
