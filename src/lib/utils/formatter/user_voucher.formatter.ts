@@ -1,8 +1,7 @@
-import { z } from 'zod';
 import { UserVoucher as PrismaUserVoucher } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { IUserVoucherEntity } from '@/interfaces/user_voucher';
-
+import { userVoucherEntityValidator } from '@/lib/utils/zod_schema/user_voucher';
 /**
  * Info: (20241024 - Murky)
  * @description 將 PrismaUserVoucher 資料轉換為符合 IUserVoucherEntity 介面的物件。
@@ -16,19 +15,7 @@ import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 export function parsePrismaUserVoucherToUserVoucherEntity(
   dto: PrismaUserVoucher
 ): IUserVoucherEntity {
-  const zodUserVoucherEntityParser = z.object({
-    id: z.number(),
-    userId: z.number(),
-    voucherId: z.number(),
-    isRead: z.boolean(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
-    deletedAt: z.number().nullable(),
-    user: z.any().optional(),
-    voucher: z.any().optional(),
-  });
-
-  const { data, success, error } = zodUserVoucherEntityParser.safeParse(dto);
+  const { data, success, error } = userVoucherEntityValidator.safeParse(dto);
 
   if (!success) {
     throw new FormatterError('UserVoucherEntity format prisma data error', {

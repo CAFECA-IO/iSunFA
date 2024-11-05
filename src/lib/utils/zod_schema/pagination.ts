@@ -16,3 +16,15 @@ export const paginatedDataSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
     hasPreviousPage: z.boolean(),
     sort: z.array(SortSchema),
   });
+
+export const paginatedDataSchemaDataNotArray = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    data: dataSchema,
+    page: z.number(),
+    totalPages: z.number(),
+    totalCount: z.number(),
+    pageSize: z.number(),
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    sort: z.array(SortSchema),
+  });

@@ -120,10 +120,10 @@ const VoucherListPageBody: React.FC = () => {
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          tab={tabQuery}
-          types={voucherTypeList}
+          tab={tabQuery} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
+          types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
           dateSort={dateSort}
-          otherSorts={otherSorts}
+          otherSorts={otherSorts} // Info: (20241104 - Murky) 可以用哪些sort 請參考 VoucherListAllSortOptions, 在 src/lib/utils/zod_schema/voucher.ts
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}
