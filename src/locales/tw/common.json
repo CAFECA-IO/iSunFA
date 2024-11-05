@@ -528,8 +528,8 @@
   "BETA_DASHBOARD": {
     "DASHBOARD": "儀表板",
     "TO_DO_LIST": "待辦事項",
-    "CALENDAR_NOT_YET_LINKED": "日曆尚未連結",
-    "LINK_MY_CALENDAR": "連結我的日曆",
+    "CALENDAR_NOT_YET_LINKED": "行事曆尚未連結",
+    "LINK_MY_CALENDAR": "連結我的行事曆",
     "NO_SCHEDULE_FOR_TODAY": "今天沒有安排待辦事項",
     "MY_COMPANY_LIST": "我的公司列表",
     "COMPANY_NOT_YET_CREATED": "尚未建立公司",
@@ -540,7 +540,15 @@
     "SYSTEM": "系統資訊",
     "MATCHING": "媒合資訊",
     "MORE": "更多",
-    "SEE_MORE": "查看更多"
+    "SEE_MORE": "查看更多",
+    "PENDING_TASKS": "待處理任務",
+    "PENDING_TASKS_TOTAL": "待處理任務 (全部)",
+    "MISSING_CERTIFICATE": "缺少憑證",
+    "UNPOSTED_VOUCHERS": "尚未入帳",
+    "UNARCHIVED_CUSTOMER_DATA": "尚未封存的客戶資料",
+    "ADD_TO_MY_CALENDAR": "新增至我的行事曆",
+    "NO_DATA_AVAILABLE": "沒有可用資料",
+    "NO_DATA": "沒有資料"
   },
 
   "MY_COMPANY_LIST_PAGE": {
