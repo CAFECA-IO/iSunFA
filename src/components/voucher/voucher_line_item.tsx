@@ -172,20 +172,26 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   const debitInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const debitValue = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
+    const debitValue = e.target.value;
+    const debitValueInt = Number.isNaN(parseInt(debitValue, 10)) ? 0 : parseInt(debitValue, 10);
+    const debitValueStr = debitValueInt.toString().replace(/\D/g, '').replace(/^0+/, '');
+
     // Info: (20241001 - Julian) 加入千分位逗號
-    setDebitInput(numberWithCommas(debitValue));
+    setDebitInput(numberWithCommas(debitValueStr));
     // Info: (20241001 - Julian) 設定 Debit
-    debitChangeHandler(Number(debitValue));
+    debitChangeHandler(debitValueInt);
   };
 
   const creditInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241001 - Julian) 限制只能輸入數字，並去掉開頭 0
-    const creditValue = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
+    const creditValue = e.target.value;
+    const creditValueInt = Number.isNaN(parseInt(creditValue, 10)) ? 0 : parseInt(creditValue, 10);
+    const creditValueStr = creditValueInt.toString().replace(/\D/g, '').replace(/^0+/, '');
+
     // Info: (20241001 - Julian) 加入千分位逗號
-    setCreditInput(numberWithCommas(creditValue));
+    setCreditInput(numberWithCommas(creditValueStr));
     // Info: (20241001 - Julian) 設定 Credit
-    creditChangeHandler(Number(creditValue));
+    creditChangeHandler(creditValueInt);
   };
 
   const accountEditingHandler = () => {
@@ -293,12 +299,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       </div>
       {/* Info: (20240927 - Julian) Particulars */}
       <input
+        type="string"
         value={particulars}
         onChange={particularsInputChangeHandler}
         className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none"
       />
       {/* Info: (20240927 - Julian) Debit */}
       <input
+        type="string"
         value={debitInput}
         onChange={debitInputChangeHandler}
         placeholder="0"
@@ -307,6 +315,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       />
       {/* Info: (20240927 - Julian) Credit */}
       <input
+        type="string"
         value={creditInput}
         onChange={creditInputChangeHandler}
         placeholder="0"
