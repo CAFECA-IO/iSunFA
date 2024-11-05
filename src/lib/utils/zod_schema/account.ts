@@ -1,4 +1,4 @@
-import { AccountType } from '@/constants/account';
+import { AccountSystem, AccountType } from '@/constants/account';
 import { z } from 'zod';
 
 /**
@@ -35,4 +35,22 @@ type AccountEntity = z.infer<typeof basicAccountEntityValidator> & {
 export const accountEntityValidator: z.ZodType<AccountEntity> = basicAccountEntityValidator.extend({
   parent: z.lazy(() => accountEntityValidator.optional()),
   root: z.lazy(() => accountEntityValidator.optional()),
+});
+
+/**
+ * Info: (20241105 - Murky)
+ * @description IAccount is used in IVoucherBeta => ILineItemBeta => IAccount
+ */
+export const IAccountValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  system: z.nativeEnum(AccountSystem),
+  type: z.nativeEnum(AccountType),
+  debit: z.boolean().describe('false will be credit'),
+  liquidity: z.boolean(),
+  code: z.string(),
+  name: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
 });

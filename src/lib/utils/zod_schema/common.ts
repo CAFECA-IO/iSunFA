@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { timestampInSeconds } from '@/lib/utils/common';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 export const zodStringToNumber = z.string().regex(/^\d+$/).transform(Number);
 
@@ -30,5 +31,36 @@ export function zodTimestampInSecondsNoDefault() {
     .string()
     .regex(/^\d+$/)
     .transform((val) => timestampInSeconds(Number(val)));
+  return setting;
+}
+
+/**
+ * Info: (20241105 - Murky)
+ * @description 前端的filter section sorting options, 可以用這個parse成 [{ by: SortBy, order: SortOrder }]
+ * @jacky
+ * @shirley
+ */
+export function zodFilterSectionSortingOptions() {
+  const setting = z
+    .string()
+    .transform((val) => {
+      const sortOptionsSlice = val.split('-');
+      const sortOptions = sortOptionsSlice.map((sortOption) => {
+        const [sort, order] = sortOption.split(':');
+        return {
+          by: sort,
+          order,
+        };
+      });
+      return sortOptions;
+    })
+    .pipe(
+      z.array(
+        z.object({
+          by: z.nativeEnum(SortBy),
+          order: z.nativeEnum(SortOrder),
+        })
+      )
+    );
   return setting;
 }
