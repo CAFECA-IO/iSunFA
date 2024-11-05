@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
 import { NextApiRequest } from 'next';
 import { APIPath } from '@/constants/api_connection';
-import { loggerRequest } from './logger_back';
+import { loggerRequest, loggerError } from '@/lib/utils/logger_back';
+
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
  * it will cause error when not implement all the keys
@@ -66,11 +67,18 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
   } else {
     const zodErrorMessage = JSON.parse(JSON.stringify(error.message));
     // // Info: (20241023 - Jacky) No logger used here, since this function needs to be used in the frontend too
-    throw new ApiValidationError(`Data validation failed`, {
+    const errorOption = {
       dto: rawData,
       zodErrorMessage,
       issues: error.issues,
-    });
+    };
+    const logger = loggerError(
+      0,
+      `Validate and format data by zod failed`,
+      JSON.stringify(errorOption)
+    );
+    logger.error('Data validation failed');
+    throw new ApiValidationError(`Data validation failed`, errorOption);
   }
 }
 

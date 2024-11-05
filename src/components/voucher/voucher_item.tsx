@@ -22,7 +22,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     note,
     counterParty,
     issuer,
-    onRead,
+    unRead,
     lineItemsInfo,
     isSelected,
   } = voucher;
@@ -35,7 +35,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
 
   const displayedDate = (
     <div className="relative top-10px flex justify-center">
-      <CalendarIcon timestamp={voucherDate} onRead={onRead} />
+      <CalendarIcon timestamp={voucherDate} unRead={unRead} />
     </div>
   );
 
