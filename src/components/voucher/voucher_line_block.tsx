@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { FaPlus } from 'react-icons/fa6';
+import { FaPlus, FaMinus } from 'react-icons/fa6';
+import { FiEdit, FiBookOpen } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
@@ -7,9 +8,9 @@ import { Button } from '@/components/button/button';
 import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccount } from '@/interfaces/accounting_account';
-import { FiBookOpen } from 'react-icons/fi';
 import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 interface IVoucherLineBlockProps {
   totalDebit: number;
@@ -46,6 +47,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 }) => {
   const { t } = useTranslation('common');
   const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
+  const { reverseList } = useAccountingCtx();
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -138,8 +140,12 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
         // Info: (20241105 - Julian) 新增反轉分錄
         const addReverseHandler = () => {
-          // Info: (20241105 - Julian) 會計科目編號
-          selectReverseDataHandler(lineItem.account?.code ?? '');
+          const modalData = {
+            account: lineItem.account, // Info: (20241105 - Julian) 會計科目編號
+            lineItemId: lineItem.id, // Info: (20241105 - Julian) LineItem ID
+          };
+
+          selectReverseDataHandler(modalData);
           selectReverseItemsModalVisibilityHandler();
         };
 
@@ -159,7 +165,38 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
               amountNotEqual={totalCredit !== totalDebit}
             />
 
-            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示 */}
+            {/* Info: (20241104 - Julian) 反轉分錄列表 */}
+            {reverseList[lineItem.id] && reverseList[lineItem.id].length > 0
+              ? reverseList[lineItem.id].map((item) => (
+                  <div className="col-start-1 col-end-13 flex items-center justify-between gap-4px font-medium text-text-neutral-invert">
+                    <button
+                      type="button"
+                      className="p-10px text-button-text-primary hover:text-button-text-primary-hover"
+                    >
+                      <FaMinus />
+                    </button>
+                    <div className="flex flex-1 items-center gap-20px">
+                      <div>{item.voucherNo}</div>
+                      <div>
+                        {item.account?.code} - {item.account?.name}
+                      </div>
+                      <div>{item.description}</div>
+                    </div>
+                    <div className="flex items-center gap-4px">
+                      <div>Reverse: {item.reverseAmount}</div>
+                      <button
+                        type="button"
+                        className="p-10px text-button-text-primary hover:text-button-text-primary-hover"
+                        onClick={addReverseHandler}
+                      >
+                        <FiEdit />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              : null}
+
+            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
             {isShowReverse ? (
               <div className="col-start-1 col-end-13">
                 <button
@@ -191,40 +228,42 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   return (
     <div id="voucher-line-block" className="col-span-2">
       {/* Info: (20240927 - Julian) Table */}
-      <div className="grid w-full grid-cols-13 gap-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
+      <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
         {/* Info: (20240927 - Julian) Table Header */}
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
-        </div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER_LINE_BLOCK.PARTICULARS')}
-        </div>
-        <div className="col-span-3 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
-        </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
-          {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
+        <div className="grid w-full grid-cols-13 gap-x-24px">
+          <div className="col-span-3 font-semibold text-text-neutral-invert">
+            {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
+          </div>
+          <div className="col-span-3 font-semibold text-text-neutral-invert">
+            {t('journal:VOUCHER_LINE_BLOCK.PARTICULARS')}
+          </div>
+          <div className="col-span-3 font-semibold text-text-neutral-invert">
+            {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
+          </div>
+          <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+            {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
+          </div>
         </div>
 
         {/* Info: (20240927 - Julian) Table Body */}
-        {voucherLines}
+        <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
+          {voucherLines}
 
-        {/* Info: (20240927 - Julian) Total calculation */}
-        {/* Info: (20240927 - Julian) Total Debit */}
-        <div className="col-start-7 col-end-10 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
-        </div>
-        {/* Info: (20240927 - Julian) Total Debit */}
-        <div className="col-start-11 col-end-13 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
+          {/* Info: (20240927 - Julian) Total calculation */}
+          {/* Info: (20240927 - Julian) Total Debit */}
+          <div className="col-start-7 col-end-10 text-right">
+            <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
+          </div>
+          {/* Info: (20240927 - Julian) Total Debit */}
+          <div className="col-start-11 col-end-13 text-right">
+            <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
+          </div>
         </div>
 
         {/* Info: (20240927 - Julian) Add button */}
-        <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
-            <FaPlus size={20} />
-          </Button>
-        </div>
+        <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
+          <FaPlus size={20} />
+        </Button>
       </div>
     </div>
   );

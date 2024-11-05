@@ -44,6 +44,7 @@ import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher
 import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
 import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
 import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
+import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
 
 interface IGlobalContext {
   width: number;
@@ -124,7 +125,7 @@ interface IGlobalContext {
 
   isSelectReverseItemsModalVisible: boolean;
   selectReverseItemsModalVisibilityHandler: () => void;
-  selectReverseDataHandler: (data: string) => void;
+  selectReverseDataHandler: (data: IReverseItemModal) => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -226,7 +227,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [defaultStatus, setDefaultStatus] = useState('');
 
   const [isSelectReverseItemsModalVisible, setIsSelectReverseItemsModalVisible] = useState(false);
-  const [selectedReverseData, setSelectedReverseData] = useState('');
+  const [selectedReverseData, setSelectedReverseData] =
+    useState<IReverseItemModal>(defaultReverseItemModal);
 
   const { width, height } = windowSize;
 
@@ -379,7 +381,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsSelectReverseItemsModalVisible(!isSelectReverseItemsModalVisible);
   };
 
-  const selectReverseDataHandler = (data: string) => {
+  const selectReverseDataHandler = (data: IReverseItemModal) => {
     setSelectedReverseData(data);
   };
 
@@ -796,7 +798,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <SelectReverseItemsModal
         isModalVisible={isSelectReverseItemsModalVisible}
         modalVisibilityHandler={selectReverseItemsModalVisibilityHandler}
-        accounting={selectedReverseData}
+        modalData={selectedReverseData}
       />
 
       {children}

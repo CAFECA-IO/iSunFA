@@ -8,25 +8,17 @@ import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
 import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
+import { IReverseItemUI, dummyReverseData, IReverseItemModal } from '@/interfaces/reverse';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  accounting: string; // Info: (20241104 - Julian) 取得會計科目以呼叫 API
-}
-
-interface IReverseItem {
-  id: number;
-  voucherNo: string;
-  accounting: string;
-  particulars: string;
-  amount: number;
-  isSelected: boolean;
-  reverseAmount: number;
+  modalData: IReverseItemModal;
 }
 
 interface IReverseItemProps {
-  reverseData: IReverseItem;
+  reverseData: IReverseItemUI;
   selectHandler: (id: number) => void;
   amountChangeHandler: (id: number, value: number) => void;
 }
@@ -37,10 +29,10 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   amountChangeHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { id, voucherNo, accounting, particulars, amount, isSelected, reverseAmount } = reverseData;
+  const { id, voucherNo, account, description, amount, isSelected, reverseAmount } = reverseData;
 
-  const accountCode = accounting.split(' - ')[0];
-  const accountName = accounting.split(' - ')[1];
+  const accountCode = account?.code ?? '';
+  const accountName = account?.name ?? '';
 
   const checkboxChangeHandler = () => selectHandler(id);
   const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,11 +62,11 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
         {accountCode} - <span className="text-text-neutral-tertiary">{accountName}</span>
       </div>
       {/* Info: (20241104 - Julian) Particulars */}
-      <div className="col-start-7 col-end-9">{particulars}</div>
+      <div className="col-start-7 col-end-9">{description}</div>
       {/* Info: (20241104 - Julian) Amount */}
       <div className="col-start-9 col-end-11">
         {numberWithCommas(amount)}
-        <span className="text-text-neutral-tertiary"> TWD</span>
+        <span className="text-text-neutral-tertiary"> {t('common:COMMON.TWD')}</span>
       </div>
       {/* Info: (20241104 - Julian) Reverse Amount */}
       <div className="col-start-11 col-end-15 text-right">
@@ -112,44 +104,26 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
 const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   isModalVisible,
   modalVisibilityHandler,
+  modalData,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
+  const { addReverseListHandler } = useAccountingCtx();
 
-  const dummyData = [
-    {
-      id: 1,
-      voucherNo: '2021100001',
-      accounting: '1001 - Cash',
-      particulars: 'Salary',
-      amount: 30000,
-      isSelected: true,
-    },
-    {
-      id: 2,
-      voucherNo: '2021100002',
-      accounting: '1002 - Bank',
-      particulars: 'Bonus',
-      amount: 20000,
-      isSelected: false,
-    },
-    {
-      id: 3,
-      voucherNo: '2021100003',
-      accounting: '1003 - Account Receivable',
-      particulars: 'Overtime',
-      amount: 50000,
-      isSelected: false,
-    },
-  ];
+  // Info: (20241104 - Julian) 取得會計科目以呼叫 API
+  const { lineItemId } = modalData;
 
-  const defaultUIReverseList: IReverseItem[] = dummyData.map((reverse) => {
+  const rawReverseData = dummyReverseData; // ToDo: (20241105 - Julian) Call API to get reverse data
+
+  const defaultUIReverseList: IReverseItemUI[] = rawReverseData.map((reverse) => {
     return {
       ...reverse,
       reverseAmount: 0,
+      isSelected: false,
     };
   });
 
-  const [uiReverseItemList, setUiReverseItemList] = useState<IReverseItem[]>(defaultUIReverseList);
+  const [uiReverseItemList, setUiReverseItemList] =
+    useState<IReverseItemUI[]>(defaultUIReverseList);
   // Info: (20241104 - Julian) Filter
   const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
@@ -159,18 +133,27 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   // Info: (20241104 - Julian) reverse item 數量
   const totalItems = uiReverseItemList.length;
+
+  const selectedReverseItems = uiReverseItemList.filter((reverse) => reverse.isSelected);
+
   // Info: (20241104 - Julian) reverse item 總金額
-  const totalReverseAmount = uiReverseItemList.reduce((acc, reverse) => {
-    return reverse.isSelected ? acc + reverse.reverseAmount : acc;
+  const totalReverseAmount = selectedReverseItems.reduce((acc, reverse) => {
+    return acc + reverse.reverseAmount;
   }, 0);
 
-  const confirmDisabled = totalReverseAmount === 0;
+  // Info: (20241105 - Julian) 如果沒有選取任何 reverse item 或是有選取但金額為 0，則無法確認
+  const confirmDisabled =
+    totalReverseAmount === 0 ||
+    selectedReverseItems.some((reverse) => {
+      return reverse.reverseAmount === 0;
+    });
 
+  // Info: (20241105 - Julian) 全選
   const checkAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     // Info: (20241104 - Julian) 切換全選狀態
     setIsSelectedAll(!isSelectedAll);
-    // Info: (20241104 - Julian) 切換所有 Asset 的選取狀態
+    // Info: (20241104 - Julian) 切換所有 reverse item 狀態
     setUiReverseItemList((prev) => {
       return prev.map((reverse) => {
         return { ...reverse, isSelected: isChecked };
@@ -178,6 +161,12 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     });
   };
 
+  const confirmHandler = () => {
+    addReverseListHandler(lineItemId, selectedReverseItems);
+    modalVisibilityHandler();
+  };
+
+  // Info: (20241104 - Julian) 監聽 reverse item 選取狀態
   useEffect(() => {
     const selectedCount = uiReverseItemList.filter((reverse) => reverse.isSelected).length;
     setSelectCount(selectedCount);
@@ -340,6 +329,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               variant="tertiary"
               className="px-16px py-8px"
               disabled={confirmDisabled}
+              onClick={confirmHandler}
             >
               {t('common:COMMON.CONFIRM')}
             </Button>

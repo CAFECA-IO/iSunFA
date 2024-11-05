@@ -6,6 +6,7 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IAssetDetails } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
+import { IReverseItem } from '@/interfaces/reverse';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -138,6 +139,12 @@ interface IAccountingContext {
   addTemporaryAssetHandler: (asset: IAssetDetails) => void;
   deleteTemporaryAssetHandler: (assetId: number) => void;
   clearTemporaryAssetHandler: () => void;
+
+  // Info: (20241105 - Julian) 反轉分錄列表
+  reverseList: {
+    [key: number]: IReverseItem[];
+  };
+  addReverseListHandler: (lineItemId: number, item: IReverseItem[]) => void;
 }
 
 const initialAccountingContext: IAccountingContext = {
@@ -188,6 +195,9 @@ const initialAccountingContext: IAccountingContext = {
   addTemporaryAssetHandler: () => {},
   deleteTemporaryAssetHandler: () => {},
   clearTemporaryAssetHandler: () => {},
+
+  reverseList: {},
+  addReverseListHandler: () => {},
 };
 
 export const AccountingContext = createContext<IAccountingContext>(initialAccountingContext);
@@ -248,6 +258,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
 
   const [temporaryAssetList, setTemporaryAssetList] = useState<IAssetDetails[]>([]);
+
+  const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItem[] }>({});
 
   const getAccountListHandler = (
     companyId: number,
@@ -741,6 +753,16 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     setTemporaryAssetList([]);
   };
 
+  // Info: (20241105 - Julian) 新增反轉分錄列表
+  const addReverseListHandler = (lineItemId: number, reverseItemList: IReverseItem[]) => {
+    setReverseList((prev) => {
+      return {
+        ...prev,
+        [lineItemId]: reverseItemList,
+      };
+    });
+  };
+
   const selectOCRHandler = useCallback(
     (OCR: IOCR | undefined) => {
       setSelectedOCR(OCR);
@@ -807,6 +829,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       addTemporaryAssetHandler,
       deleteTemporaryAssetHandler,
       clearTemporaryAssetHandler,
+
+      reverseList,
+      addReverseListHandler,
     }),
     [
       OCRList,
@@ -837,6 +862,8 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       addTemporaryAssetHandler,
       deleteTemporaryAssetHandler,
       clearTemporaryAssetHandler,
+      reverseList,
+      addReverseListHandler,
     ]
   );
 
