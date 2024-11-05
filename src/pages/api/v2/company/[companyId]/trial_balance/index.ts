@@ -2,44 +2,75 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ITrialBalancePayload, MOCK_RESPONSE } from '@/interfaces/trial_balance';
+import { ITrialBalanceTotal, MOCK_RESPONSE, TrialBalanceItem } from '@/interfaces/trial_balance';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { IPaginatedData } from '@/interfaces/pagination';
 
-interface IPayload extends ITrialBalancePayload {}
-
-interface IResponse {
-  statusMessage: string;
-  payload: IPayload | null;
-}
-
-// ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
-export async function handleGetRequest() {
+export const handleGetRequest: IHandleRequest<
+  APIName.TRIAL_BALANCE_LIST,
+  {
+    currencyAlias: string;
+    items: IPaginatedData<TrialBalanceItem[]>;
+    total: ITrialBalanceTotal;
+  }
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPayload | null = null;
+  let payload: {
+    currencyAlias: string;
+    items: IPaginatedData<TrialBalanceItem[]>;
+    total: ITrialBalanceTotal;
+  } | null = null;
+  // Deprecated: (20241110 - Shirley) 測試用
+  // eslint-disable-next-line no-console
+  console.log(query);
 
+  // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
   // ToDo: (20240927 - Shirley) 從請求中獲取session資料
   // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
   // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
   // ToDo: (20240927 - Shirley) 將試算表資料格式化為TrialBalanceItem介面
 
-  // Deprecated: (20241010 - Shirley) 連接的模擬資料
+  // Deprecated: 連接的模擬資料
   payload = MOCK_RESPONSE;
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{
+    statusMessage: string;
+    payload: {
+      currencyAlias: string;
+      items: IPaginatedData<TrialBalanceItem[]>;
+      total: ITrialBalanceTotal;
+    } | null;
+  }>;
 } = {
-  GET: handleGetRequest,
+  GET: (req, res) => withRequestValidation(APIName.TRIAL_BALANCE_LIST, req, res, handleGetRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPayload | null>>
+  res: NextApiResponse<
+    IResponseData<{
+      currencyAlias: string;
+      items: IPaginatedData<TrialBalanceItem[]>;
+      total: ITrialBalanceTotal;
+    } | null>
+  >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPayload | null = null;
+  let payload: {
+    currencyAlias: string;
+    items: IPaginatedData<TrialBalanceItem[]>;
+    total: ITrialBalanceTotal;
+  } | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -53,7 +84,11 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IPayload | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<{
+      currencyAlias: string;
+      items: IPaginatedData<TrialBalanceItem[]>;
+      total: ITrialBalanceTotal;
+    } | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }
