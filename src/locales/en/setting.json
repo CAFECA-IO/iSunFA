@@ -42,6 +42,7 @@
     "FAILED_TO_GET_ACCOUNT_DATA": "Failed to get account data, please try again later.",
     "FAIL_UPDATE_COMPANY_NAME": "Fail to update company name. Code:{{updateTeamCode}}",
     "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income",
-    "COST": "Cost"
+    "COST": "Cost",
+    "CLIENT_SUPPLIER_SETTING": "Client/Supplier setting"
   }
 }

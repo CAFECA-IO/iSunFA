@@ -42,6 +42,7 @@
     "FAIL_UPDATE_COMPANY_NAME": "无法更新公司名称。错误代码：{{updateTeamCode}}",
     "ASSET": "资产",
     "OTHERCOMPREHENSIVEINCOME": "其他综合損益",
-    "COST": "成本"
+    "COST": "成本",
+    "CLIENT_SUPPLIER_SETTING": "交易伙伴设定"
   }
 }

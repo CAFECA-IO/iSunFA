@@ -7,7 +7,7 @@ import { checkboxStyle } from '@/constants/display';
 import { VoucherType } from '@/constants/account';
 
 // Info: (20241004 - Anna) temp interface
-export interface ILedgerBeta {
+export interface ICounterpartyBeta {
   id: number;
   date: number;
   voucherNo: string;
@@ -22,11 +22,11 @@ export interface ILedgerBeta {
   balance: number[];
 }
 
-interface ILedgerItemProps {
-  voucher: ILedgerBeta;
+interface ICounterpartyItemProps {
+  voucher: ICounterpartyBeta;
 }
 
-const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
+const CounterpartyItem = React.memo(({ voucher }: ICounterpartyItemProps) => {
   const { date, voucherNo, voucherType, note, accounting, credit, debit } = voucher;
 
   const [isChecked, setIsChecked] = useState(false);
@@ -145,4 +145,4 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
   );
 });
 
-export default LedgerItem;
+export default CounterpartyItem;
