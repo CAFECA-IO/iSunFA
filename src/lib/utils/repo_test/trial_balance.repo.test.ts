@@ -2,16 +2,15 @@ import { listTrialBalance } from '@/lib/utils/repo/trial_balance.repo';
 import { SortOrder } from '@/constants/sort';
 import { SortBy } from '@/constants/journal';
 // import { trialBalanceItemSchema } from '@/lib/utils/zod_schema/trial_balance';
-// import { MOCK_RESPONSE } from '@/interfaces/trial_balance';
 
 describe('Trial Balance Repository', () => {
   describe('listTrialBalance', () => {
     it('應該返回分頁的試算表項目列表', async () => {
       const params = {
-        // companyId: 10000005, // 假設存在的公司 ID
-        companyId: 1002, // 假設存在的公司 ID
-        startDate: 1609459200,
-        endDate: 1640995200,
+        companyId: 10000455, // 假設存在的公司 ID
+        // companyId: 1002, // 假設存在的公司 ID
+        startDate: 1729380068,
+        endDate: 1730762468,
         sortBy: SortBy.CREATED_AT,
         sortOrder: SortOrder.DESC,
         page: 1,
@@ -28,7 +27,7 @@ describe('Trial Balance Repository', () => {
       expect(trialBalance).toBeDefined();
       // Deprecated: (20241031 - Shirley)
       // eslint-disable-next-line no-console
-      console.log('real_data trialBalance', JSON.stringify(trialBalance, null, 2));
+      // console.log('real_data trialBalance', JSON.stringify(trialBalance, null, 2));
 
       expect(trialBalance.currencyAlias).toBeDefined();
 
@@ -56,6 +55,8 @@ describe('Trial Balance Repository', () => {
     });
 
     it('應該處理無效的公司 ID 並拋出錯誤', async () => {
+      // FIXME: implement it
+      // eslint-disable-next-line
       const params = {
         companyId: 9999, // 假設不存在的公司 ID
         startDate: 1609459200,
@@ -66,9 +67,6 @@ describe('Trial Balance Repository', () => {
         pageSize: 10,
       };
 
-      // eslint-disable-next-line no-console
-      console.log('params', params);
-      // FIXME: implement it
       // await expect(listTrialBalance(params)).rejects.toThrow('Bad request');
     });
   });

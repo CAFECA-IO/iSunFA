@@ -13,6 +13,15 @@ WI:
 company id in account -> ...
 WII: (preferred)
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
+
+1. 搜尋 accounting setting table 取得貨幣別
+2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
+  2.1 整理 account 資料結構
+3. 用 my company id 搜尋 voucher table 取得所有憑證
+4. 用 my company id & 所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item
+5. 依照期初、期中、期末分別計算所有會計科目的借方跟貸方金額
+6. 處理子科目
+7. 加總所有子科目金額
 */
 
 interface LineItem {
@@ -84,9 +93,9 @@ interface ListTrialBalanceParams {
  * @param params ListTrialBalanceParams
  * @returns Promise<ITrialBalancePayload>
  */
+// 修改後的 listTrialBalance 方法
 export async function listTrialBalance(
   params: ListTrialBalanceParams
-  // ): Promise<ITrialBalanceResponse> {
 ): Promise<ITrialBalancePayload> {
   const {
     companyId,
@@ -103,7 +112,7 @@ export async function listTrialBalance(
   const skip = pageToOffset(pageNumber, size);
 
   try {
-    // Info: (20241022 - Shirley)取得公司會計設定中的貨幣別
+    // 1. 搜尋 accounting setting table 取得貨幣別
     const accountingSettingData = await prisma.accountingSetting.findFirst({
       where: { id: companyId },
     });
@@ -112,25 +121,15 @@ export async function listTrialBalance(
 
     if (accountingSettingData) {
       currencyAlias = accountingSettingData.currency || 'TWD';
-      // eslint-disable-next-line no-console
-      console.log('accountingSettingData', accountingSettingData);
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    // const currencyAlias = !accountingSettingData.currency ? 'TWD' : accountingSettingData.currency;
-
-    // eslint-disable-next-line no-console
-    console.log('accountingSettingData', accountingSettingData);
-
-    // Info: (20241022 - Shirley) 取得所有相關會計科目
+    // 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
     const accounts = await prisma.account.findMany({
       where: {
         OR: [
           { companyId, deletedAt: null }, // 使用傳入的 companyId
           { companyId: 1002, deletedAt: null }, // 固定查詢 public companyId = 1002
         ],
-        // companyId,
-        // deletedAt: null,
       },
       include: {
         lineItem: {
@@ -139,7 +138,7 @@ export async function listTrialBalance(
             voucher: {
               date: {
                 lte: endDate,
-                gte: 0, // Info: (20241022 - Shirley)取得所有日期的資料以計算期初
+                gte: 0, // 取得所有日期的資料以計算期初
               },
             },
           },
@@ -169,10 +168,55 @@ export async function listTrialBalance(
       },
     });
 
-    // eslint-disable-next-line no-console
-    console.log('accounts top 10', JSON.stringify(accounts.slice(0, 10), null, 2));
+    // 取得所有 voucher 的 ID
+    // const allVoucherIds = accounts.flatMap((account) =>
+    //   account.lineItem.map((item) => item.voucherId)
+    // );
+    const allVoucherData = await prisma.voucher.findMany({
+      where: {
+        companyId: 10000455,
+        // FIXME: implement it
+        // companyId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    });
 
-    // Info: (20241022 - Shirley)建立科目映射表
+    // eslint-disable-next-line no-console
+    console.log('allVoucherData', allVoucherData);
+
+    const allVoucherIds = allVoucherData.map((voucher) => voucher.id);
+
+    // 4. 用所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item（補充）
+    const additionalLineItems = await prisma.lineItem.findMany({
+      where: {
+        voucherId: { in: allVoucherIds },
+        deletedAt: null,
+      },
+      include: {
+        voucher: true,
+      },
+    });
+
+    // eslint-disable-next-line no-console
+    // console.log(
+    //   'additionalLineItemsLength',
+    //   additionalLineItems.length,
+    //   'additionalLineItems',
+    //   additionalLineItems
+    // );
+
+    // 合併 account 表中的 line items 與 voucher 表中的 line items
+    accounts.forEach((account) => {
+      const voucherLineItems = additionalLineItems.filter(
+        (item) => item.accountId === account.id && !account.lineItem.some((li) => li.id === item.id)
+      );
+      account.lineItem.push(...voucherLineItems);
+    });
+
+    // 2.1 整理 account 資料結構，依照 parent code 追溯
     const accountMap: { [key: string]: AccountWithSub } = {};
     accounts.forEach((account) => {
       accountMap[account.code] = {
@@ -181,22 +225,30 @@ export async function listTrialBalance(
       };
     });
 
-    // Info: (20241022 - Shirley)建立科目樹狀結構
+    // 建立科目樹狀結構，透過 parent code 追溯
     const rootAccounts: AccountWithSub[] = [];
     accounts.forEach((account) => {
-      if (account.parentCode && accountMap[account.parentCode]) {
-        accountMap[account.parentCode].subAccounts.push(accountMap[account.code]);
+      if (account.parentCode) {
+        const parent = accountMap[account.parentCode];
+        if (parent && account.code !== account.parentCode) {
+          parent.subAccounts.push(accountMap[account.code]);
+        } else {
+          // 當 code === parentCode 或找不到父代碼時，視為最頂層
+          rootAccounts.push(accountMap[account.code]);
+        }
       } else {
+        // 沒有 parentCode 時，視為最頂層
         rootAccounts.push(accountMap[account.code]);
       }
     });
-
+    // // eslint-disable-next-line no-console
+    // console.log('accountMap', accountMap);
     // eslint-disable-next-line no-console
-    console.log('rootAccounts', rootAccounts);
+    // console.log('rootAccounts', rootAccounts);
 
-    // Info: (20241022 - Shirley)計算試算表項目
+    // 計算試算表項目
     const calculateTrialBalance = (account: AccountWithSub): AccountWithSubResult => {
-      // Info: (20241022 - Shirley)計算期初金額
+      // 計算期初金額
       const beginningCreditAmount = account.lineItem
         .filter((item: LineItem) => !item.debit && item.voucher.date < startDate)
         .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
@@ -204,7 +256,17 @@ export async function listTrialBalance(
         .filter((item: LineItem) => item.debit && item.voucher.date < startDate)
         .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
 
-      // Info: (20241022 - Shirley)計算期中金額
+      // eslint-disable-next-line no-console
+      // console.log(
+      //   'account input in calculateTrialBalance',
+      //   account,
+      //   'beginningCreditAmount',
+      //   beginningCreditAmount,
+      //   'beginningDebitAmount',
+      //   beginningDebitAmount
+      // );
+
+      // 計算期中金額
       const midtermCreditAmount = account.lineItem
         .filter(
           (item: LineItem) =>
@@ -221,10 +283,10 @@ export async function listTrialBalance(
       const endingCreditAmount = beginningCreditAmount + midtermCreditAmount;
       const endingDebitAmount = beginningDebitAmount + midtermDebitAmount;
 
-      // Info: (20241022 - Shirley)處理子科目
+      // 處理子科目
       const subAccounts = account.subAccounts.map(calculateTrialBalance);
 
-      // Info: (20241022 - Shirley)加總子科目金額
+      // 加總子科目金額
       let totalBeginningCredit = beginningCreditAmount;
       let totalBeginningDebit = beginningDebitAmount;
       let totalMidtermCredit = midtermCreditAmount;
@@ -271,7 +333,10 @@ export async function listTrialBalance(
 
     const trialBalanceItems = rootAccounts.map(calculateTrialBalance);
 
-    // TODO: (20241022 - Shirley) 扁平化所有試算表項目以便計算總金額
+    // eslint-disable-next-line no-console
+    // console.log('trialBalanceItems', trialBalanceItems);
+
+    // 扁平化所有試算表項目以便計算總金額
     const flattenTrialBalance = (items: AccountWithSubResult[]): AccountWithSubResult[] => {
       let flat: AccountWithSubResult[] = [];
       items.forEach((item) => {
@@ -285,7 +350,7 @@ export async function listTrialBalance(
 
     const flatItems = flattenTrialBalance(trialBalanceItems);
 
-    // TODO: (20241022 - Shirley) 計算總金額
+    // 計算總金額
     const total = {
       beginningCreditAmount: flatItems.reduce((sum, item) => sum + item.beginningCreditAmount, 0),
       beginningDebitAmount: flatItems.reduce((sum, item) => sum + item.beginningDebitAmount, 0),
@@ -297,19 +362,7 @@ export async function listTrialBalance(
       updateAt: Math.floor(Date.now() / 1000),
     };
 
-    // TODO: (20241022 - Shirley) 排序
-    // const sortedItems = trialBalanceItems.sort((a, b) => {
-    //   const fieldA = a[sortBy];
-    //   const fieldB = b[sortBy];
-    //   if (sortOrder === SortOrder.ASC) {
-    //     return fieldA > fieldB ? 1 : -1;
-    //   }
-    //   return fieldA < fieldB ? 1 : -1;
-    // });
-
-    // TODO: (20241022 - Shirley) 分頁
-    // const totalCount = sortedItems.length;
-    // const paginatedData = sortedItems.slice(skip, skip + size);
+    // 分頁
     const paginatedData = trialBalanceItems.slice(skip, skip + size);
     const totalCount = trialBalanceItems.length;
     const totalPages = Math.ceil(totalCount / size);
@@ -348,6 +401,7 @@ export async function listTrialBalance(
       total,
     };
   } catch (error) {
+    // FIXME: remove
     // eslint-disable-next-line no-console
     console.log('error catched in listTrialBalance in trial_balance.repo.ts', error);
     const logError = loggerError(
