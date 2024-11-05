@@ -35,6 +35,7 @@ interface FilterSectionProps<T> {
     sort: SortBy;
     sortOrder: SortOrder;
   }[];
+  diseableDateSearch?: boolean;
 }
 
 const FilterSection = <T,>({
@@ -53,6 +54,7 @@ const FilterSection = <T,>({
   dateSort,
   setDateSort,
   otherSorts,
+  diseableDateSearch,
 }: FilterSectionProps<T>) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { toastHandler } = useModalContext();
@@ -221,14 +223,16 @@ const FilterSection = <T,>({
       )}
 
       {/* Info: (20240919 - tzuhan) 時間區間篩選 */}
-      <div className="flex min-w-250px flex-1 flex-col">
-        <DatePicker
-          period={selectedDateRange}
-          setFilteredPeriod={setSelectedDateRange}
-          type={DatePickerType.TEXT_PERIOD}
-          btnClassName=""
-        />
-      </div>
+      {!diseableDateSearch && (
+        <div className="flex min-w-250px flex-1 flex-col">
+          <DatePicker
+            period={selectedDateRange}
+            setFilteredPeriod={setSelectedDateRange}
+            type={DatePickerType.TEXT_PERIOD}
+            btnClassName=""
+          />
+        </div>
+      )}
 
       {/* Info: (20240919 - tzuhan) 搜索欄 */}
       <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />

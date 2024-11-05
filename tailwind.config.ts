@@ -623,7 +623,7 @@ module.exports = {
         'input-text-input-filled': 'var(--input-text-input-filled)',
         'input-text-input-hover': 'var(--input-text-input-hover)',
         'input-text-input-placeholder': 'var(--input-text-input-placeholder)',
-        'input-text-primary': 'var(--input-text-primary)',
+        'input-text-primary': 'var(--neutral-light)',
         'input-text-secondary': 'var(--input-text-secondary)',
         'input-text-success': 'var(--input-text-success)',
         'input-text-warning': 'var(--input-text-warning)',
@@ -1342,6 +1342,9 @@ module.exports = {
         // Info: (20241023 - Liz) Side menu
         SideMenu:
           '50px 0px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 28px 0px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 11px 0px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 6px 0px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 2px 0px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
+
+        normal_setting_brand:
+          '0px 50px 17px 0px var(--shadow-lv-1, rgba(49, 67, 98, 0.00)), 0px 28px 15px 0px var(--shadow-lv-2, rgba(49, 67, 98, 0.01)), 0px 11px 13px 0px var(--shadow-lv-3, rgba(49, 67, 98, 0.05)), 0px 6px 10px 0px var(--shadow-lv-4, rgba(49, 67, 98, 0.09)), 0px 2px 5px 0px var(--shadow-lv-5, rgba(49, 67, 98, 0.10))',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',

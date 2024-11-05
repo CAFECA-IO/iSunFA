@@ -43,5 +43,31 @@
     "ASSET": "资产",
     "OTHERCOMPREHENSIVEINCOME": "其他综合損益",
     "COST": "成本"
+  },
+  "NORMAL": {
+    "TITLE": "常规设置",
+    "NOTICE_SETTING": "通知设置",
+    "SYSTEM_NOTIFICATION": "系统通知",
+    "UPDATES_N_SUBSCRIPTION_NOTIFICATION": "更新与订阅通知",
+    "EMAIL_NOTIFICATION": "发送通知到电子邮件",
+    "COMPANY_SETTING": "公司设置",
+    "ACCOUNT_SETTING": "账户设置",
+    "ADD_A_COMPANY": "添加公司",
+    "VIEW_ALL_COMPANIES": "查看所有公司",
+    "USER_NAME": "用户名",
+    "LINKED_EMAIL": "已关联的电子邮件",
+    "LOGIN_DEVICE_N_IP": "登录设备与 IP",
+    "SUBSCRIPTION_MANAGEMENT": "订阅管理",
+    "REMOVE_THIS_ACCOUNT": "删除此账户",
+    "FIRST_NAME": "名字",
+    "EX_JANE": "例：Jane",
+    "LAST_NAME": "姓氏",
+    "EX_DOE": "例：Doe",
+    "SELECT_COUNTRY": "选择国家",
+    "COUNTRY": "国家",
+    "SELECT_LANGUAGE": "选择语言",
+    "LANGUAGE": "语言",
+    "ENTER_NUMBER": "输入号码",
+    "PHONE_NUMBER": "电话号码"
   }
 }

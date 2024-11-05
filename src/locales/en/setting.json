@@ -43,5 +43,31 @@
     "FAIL_UPDATE_COMPANY_NAME": "Fail to update company name. Code:{{updateTeamCode}}",
     "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income",
     "COST": "Cost"
+  },
+  "NORMAL": {
+    "TITLE": "Normal Setting",
+    "NOTICE_SETTING": "Notice Settings",
+    "SYSTEM_NOTIFICATION": "System Notification",
+    "UPDATES_N_SUBSCRIPTION_NOTIFICATION": "Updates & Subscription Notification",
+    "EMAIL_NOTIFICATION": "Send notifications to email",
+    "COMPANY_SETTING": "Company Settings",
+    "ACCOUNT_SETTING": "Account Settings",
+    "ADD_A_COMPANY": "Add a company",
+    "VIEW_ALL_COMPANIES": "View all companies",
+    "USER_NAME": "User Name",
+    "LINKED_EMAIL": "Linked Email",
+    "LOGIN_DEVICE_N_IP": "Login Device & IP",
+    "SUBSCRIPTION_MANAGEMENT": "Subscription Management",
+    "REMOVE_THIS_ACCOUNT": "Remove this account",
+    "FIRST_NAME": "First Name",
+    "EX_JANE": "Ex. Jane",
+    "LAST_NAME": "Last Name",
+    "EX_DOE": "Ex. Doe",
+    "SELECT_COUNTRY": "Select Country",
+    "COUNTRY": "Country",
+    "SELECT_LANGUAGE": "Select Language",
+    "LANGUAGE": "Language",
+    "ENTER_NUMBER": "Enter Number",
+    "PHONE_NUMBER": "Phone Number"
   }
 }
