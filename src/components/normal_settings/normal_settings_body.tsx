@@ -349,7 +349,7 @@ const NormalSettingsBody: React.FC<NormalSettingsBodyProps> = () => {
       </form>
 
       {/* Notice Settings */}
-      <div className="">
+      <div>
         <div id="notice-setting-section" className="mb-lv-7 flex items-center gap-4">
           <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
           <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
@@ -397,7 +397,7 @@ const NormalSettingsBody: React.FC<NormalSettingsBodyProps> = () => {
       </div>
 
       {/* Company Settings */}
-      <div className="flex flex-col items-start">
+      <div className="flex flex-col">
         <div id="company-setting-section" className="mb-lv-7 flex items-center gap-4">
           <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
           <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
@@ -415,14 +415,19 @@ const NormalSettingsBody: React.FC<NormalSettingsBodyProps> = () => {
           id="setting-add-company"
           type="button"
           variant="linkBorderless"
-          className="mb-lv-7 p-0"
+          className="mb-lv-7 justify-start p-0"
         >
           <p className="flex gap-2">
             <Image src="/icons/plus.svg" width={16} height={16} alt="notice_icon" />
             <span>{t('setting:NORMAL.ADD_A_COMPANY')}</span>
           </p>
         </Button>
-        <Button id="setting-add-company" type="button" variant="linkBorderless" className="p-0">
+        <Button
+          id="setting-add-company"
+          type="button"
+          variant="linkBorderless"
+          className="justify-start p-0"
+        >
           <p className="flex gap-2">
             <Image src="/icons/notification-text.svg" width={16} height={16} alt="notice_icon" />
             <span>{t('setting:NORMAL.VIEW_ALL_COMPANIES')}</span>
@@ -431,7 +436,7 @@ const NormalSettingsBody: React.FC<NormalSettingsBodyProps> = () => {
       </div>
 
       {/* Account Settings */}
-      <div className="flex flex-col items-start">
+      <div className="flex flex-col">
         <div id="notice-setting-section" className="mb-lv-7 flex items-center gap-4">
           <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
           <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
@@ -444,7 +449,7 @@ const NormalSettingsBody: React.FC<NormalSettingsBodyProps> = () => {
           id="setting-subscribe"
           type="button"
           variant="linkBorderless"
-          className="mb-lv-7 p-0"
+          className="mb-lv-7 justify-start p-0"
         >
           <p className="flex gap-2">
             <Image
@@ -456,7 +461,12 @@ const NormalSettingsBody: React.FC<NormalSettingsBodyProps> = () => {
             <span>{t('setting:NORMAL.SUBSCRIPTION_MANAGEMENT')}</span>
           </p>
         </Button>
-        <Button id="setting-remove" type="button" variant="errorBorderless" className="p-0">
+        <Button
+          id="setting-remove"
+          type="button"
+          variant="errorBorderless"
+          className="justify-start p-0"
+        >
           <p className="flex gap-2">
             <Image src="/icons/user-x-02.svg" width={16} height={16} alt="notice_icon" />
             <span>{t('setting:NORMAL.REMOVE_THIS_ACCOUNT')}</span>
