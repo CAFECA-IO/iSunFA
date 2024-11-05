@@ -534,7 +534,13 @@
     "MY_COMPANY_LIST": "我的公司列表",
     "COMPANY_NOT_YET_CREATED": "尚未创建公司",
     "PLEASE_PROCEED_TO": "请前往",
-    "CREATE_A_COMPANY": "创建公司"
+    "CREATE_A_COMPANY": "创建公司",
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL": "财经新闻",
+    "SYSTEM": "系统资讯",
+    "MATCHING": "媒合资讯",
+    "MORE": "更多",
+    "SEE_MORE": "查看更多"
   },
 
   "MY_COMPANY_LIST_PAGE": {

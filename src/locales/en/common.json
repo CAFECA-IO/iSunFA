@@ -534,7 +534,13 @@
     "MY_COMPANY_LIST": "My Company List",
     "COMPANY_NOT_YET_CREATED": "Company not yet created",
     "PLEASE_PROCEED_TO": "Please proceed to",
-    "CREATE_A_COMPANY": "create a company"
+    "CREATE_A_COMPANY": "create a company",
+    "LATEST_NEWS": "Latest News",
+    "FINANCIAL": "Financial",
+    "SYSTEM": "System",
+    "MATCHING": "Matching",
+    "MORE": "More",
+    "SEE_MORE": "See More"
   },
 
   "MY_COMPANY_LIST_PAGE": {
