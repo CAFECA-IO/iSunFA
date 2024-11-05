@@ -67,7 +67,7 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
     );
 
   const displayedNote = (
-    <p className="flex h-full items-center justify-start font-normal text-text-neutral-tertiary">
+    <p className="flex h-full items-center justify-start px-1 font-normal text-text-neutral-tertiary">
       {note}
     </p>
   );
