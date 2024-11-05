@@ -90,11 +90,11 @@ const DonutChart = ({
   isChartForTotal,
 }: DonutChartProps) => {
   const backgroundColorSwitch = isChartForTotal
-    ? ['#FFB946', '#1C4E80', '#84920c']
-    : ['#D3F4E5', '#FED7D7', '#b27dbb'];
+    ? ['#FD853A', '#6CDEA0', '#9B8AFB']
+    : ['#BDF0D5', '#EBE9FE', '#FFEAD5'];
 
   const data: ChartData<'doughnut', number[], string> = {
-    labels: ['Missing certificate', 'Unposted vouchers'],
+    labels: ['Missing certificate', 'Unposted vouchers', 'Unarchived customer data'],
     datasets: [
       {
         data: [
@@ -407,7 +407,7 @@ const PendingTasks = () => {
 
   /* === Fake Data === */
   // Deprecated: (20241016 - Liz) 這是假資料，等之後串真正資料後再刪除
-  const selectedCompany = '';
+  const selectedCompany = '123';
   const isSelectedCompany = !!selectedCompany; // 強制轉為布林值
   const hasCompanyList = true;
 
