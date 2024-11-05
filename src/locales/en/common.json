@@ -526,7 +526,11 @@
   },
 
   "BETA_DASHBOARD": {
-    "DASHBOARD": "Dashboard"
+    "DASHBOARD": "Dashboard",
+    "TO_DO_LIST": "To-do list",
+    "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
+    "LINK_MY_CALENDAR": "Link My Calendar",
+    "NO_SCHEDULE_FOR_TODAY": "No schedule for today"
   },
 
   "MY_COMPANY_LIST_PAGE": {

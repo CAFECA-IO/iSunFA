@@ -526,7 +526,11 @@
   },
 
   "BETA_DASHBOARD": {
-    "DASHBOARD": "仪表板"
+    "DASHBOARD": "仪表板",
+    "TO_DO_LIST": "待办事项",
+    "CALENDAR_NOT_YET_LINKED": "日历尚未连结",
+    "LINK_MY_CALENDAR": "连结我的日历",
+    "NO_SCHEDULE_FOR_TODAY": "今天没有安排待办事项"
   },
 
   "MY_COMPANY_LIST_PAGE": {
