@@ -3,12 +3,11 @@ import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { generateRandomCertificates, ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import { generateRandomCertificates, ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
-import { ILineItemBeta } from '@/interfaces/line_item';
 import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { MessageType } from '@/interfaces/message_modal';
@@ -16,54 +15,13 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import Skeleton from '@/components/skeleton/skeleton';
 import { WEEK_FULL_LIST } from '@/constants/display';
-import { IAsset } from '@/interfaces/asset';
 import { ToastType } from '@/interfaces/toastify';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { IVoucherDetailForFrontend } from '@/interfaces/voucher';
 
 // Info: (20241014 - Julian) @Murky Interface for Voucher Detail
-interface IVoucherDetailForFrontend {
-  id: number;
-  voucherDate: number;
-  type: string;
-  note: string;
-  counterParty: {
-    id: number;
-    companyId: number;
-    name: string;
-  };
-  recurringInfo: {
-    type: string;
-    startDate: number;
-    endDate: number;
-    daysOfWeek: number[]; // Info: (20241029 - Julian) 0~6
-    monthsOfYear: number[]; // Info: (20241029 - Julian) 0~11
-  };
-  payableInfo:
-    | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
-      }
-    | undefined;
-  receivingInfo:
-    | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
-      }
-    | undefined;
-  reverseVoucherIds: {
-    id: number;
-    voucherNo: string;
-  }[];
-  assets: IAsset[];
-  certificates: ICertificate[];
-  lineItemsInfo: {
-    lineItems: ILineItemBeta[];
-  };
-}
-
+// Info: (20241105 - Murky) @Julian IVoucherDetailForFrontend 搬到 interface/voucher
 const defaultVoucherDetail: IVoucherDetailForFrontend = {
   id: 0,
   voucherDate: 0,

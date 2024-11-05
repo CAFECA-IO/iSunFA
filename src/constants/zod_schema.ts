@@ -32,12 +32,15 @@ import {
 } from '@/lib/utils/zod_schema/user_role';
 import { todoListSchema, todoPostSchema } from '@/lib/utils/zod_schema/todo';
 import {
+  voucherDeleteSchema,
   voucherDeleteValidatorV2,
   voucherGetAllValidatorV2,
+  voucherGetOneSchema,
   voucherGetOneValidatorV2,
   voucherListSchema,
   voucherPostSchema,
   voucherPostValidatorV2,
+  voucherPutSchema,
   voucherRequestValidatorsV1,
   voucherWasReadValidatorV2,
 } from '@/lib/utils/zod_schema/voucher';
@@ -135,4 +138,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_ACTION_LOG_LIST]: userActionLogListSchema,
   [APIName.VOUCHER_POST_V2]: voucherPostSchema,
   [APIName.VOUCHER_LIST_V2]: voucherListSchema,
+  [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneSchema,
+  [APIName.VOUCHER_PUT_V2]: voucherPutSchema,
+  [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
 };
