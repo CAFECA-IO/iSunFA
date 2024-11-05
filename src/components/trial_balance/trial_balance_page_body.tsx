@@ -30,7 +30,7 @@ const TrialBalancePageBody = () => {
         </div>
         <hr className="break-before-page" />
         {/* Info: (20240920 - Julian) Voucher List */}
-        <TrialBalanceList />
+        <TrialBalanceList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );
