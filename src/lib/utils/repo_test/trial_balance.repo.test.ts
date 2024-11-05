@@ -2,6 +2,8 @@ import { listTrialBalance } from '@/lib/utils/repo/trial_balance.repo';
 import { SortOrder } from '@/constants/sort';
 import { SortBy } from '@/constants/journal';
 // import { trialBalanceItemSchema } from '@/lib/utils/zod_schema/trial_balance';
+import fs from 'fs';
+import path from 'path';
 
 describe('Trial Balance Repository', () => {
   describe('listTrialBalance', () => {
@@ -28,6 +30,15 @@ describe('Trial Balance Repository', () => {
       // Deprecated: (20241031 - Shirley)
       // eslint-disable-next-line no-console
       // console.log('real_data trialBalance', JSON.stringify(trialBalance, null, 2));
+
+      // 將測試數據寫入檔案
+      const logDir = path.join(process.cwd(), 'tmp');
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+
+      const logPath = path.join(logDir, 'trial-balance-test-1.json');
+      fs.writeFileSync(logPath, JSON.stringify(trialBalance, null, 2), 'utf-8');
 
       expect(trialBalance.currencyAlias).toBeDefined();
 

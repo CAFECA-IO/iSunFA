@@ -7,13 +7,13 @@ import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { SortBy } from '@/constants/journal';
 import { ITrialBalancePayload } from '@/interfaces/trial_balance';
+import { buildAccountForest } from '@/lib/utils/account/common';
+import fs from 'fs';
+import path from 'path';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
 
-/* Info: (20241023 - Shirley) Trial balance repository 實作
-WI:
-company id in account -> ...
-WII: (preferred)
+/* Info: (20241105 - Shirley) Trial balance repository 實作
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
-
 1. 搜尋 accounting setting table 取得貨幣別
 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
   2.1 整理 account 資料結構
@@ -63,7 +63,7 @@ interface AccountWithSubResult {
   createAt: number;
   updateAt: number;
 
-  _total: {
+  _total?: {
     beginningCreditAmount: number;
     beginningDebitAmount: number;
     midtermCreditAmount: number;
@@ -93,7 +93,6 @@ interface ListTrialBalanceParams {
  * @param params ListTrialBalanceParams
  * @returns Promise<ITrialBalancePayload>
  */
-// 修改後的 listTrialBalance 方法
 export async function listTrialBalance(
   params: ListTrialBalanceParams
 ): Promise<ITrialBalancePayload> {
@@ -127,8 +126,8 @@ export async function listTrialBalance(
     const accounts = await prisma.account.findMany({
       where: {
         OR: [
-          { companyId, deletedAt: null }, // 使用傳入的 companyId
-          { companyId: 1002, deletedAt: null }, // 固定查詢 public companyId = 1002
+          { companyId, deletedAt: null },
+          { companyId: PUBLIC_COMPANY_ID, deletedAt: null },
         ],
       },
       include: {
@@ -167,6 +166,25 @@ export async function listTrialBalance(
         },
       },
     });
+
+    const forestResult = buildAccountForest(accounts);
+    // eslint-disable-next-line no-console
+    console.log('forestResult', forestResult);
+
+    const logDir = path.join(process.cwd(), 'tmp');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir);
+    }
+
+    const logPath = path.join(logDir, 'account-forest-comparison.json');
+    const logContent = {
+      timestamp: new Date().toISOString(),
+      originalAccounts: accounts.length,
+      forestResult,
+      // forestResult: JSON.stringify(forestResult),
+    };
+
+    fs.writeFileSync(logPath, `${JSON.stringify(logContent, null, 2)}\n`, { flag: 'a' });
 
     // 取得所有 voucher 的 ID
     // const allVoucherIds = accounts.flatMap((account) =>
@@ -287,21 +305,21 @@ export async function listTrialBalance(
       const subAccounts = account.subAccounts.map(calculateTrialBalance);
 
       // 加總子科目金額
-      let totalBeginningCredit = beginningCreditAmount;
-      let totalBeginningDebit = beginningDebitAmount;
-      let totalMidtermCredit = midtermCreditAmount;
-      let totalMidtermDebit = midtermDebitAmount;
-      let totalEndingCredit = endingCreditAmount;
-      let totalEndingDebit = endingDebitAmount;
+      // let totalBeginningCredit = beginningCreditAmount;
+      // let totalBeginningDebit = beginningDebitAmount;
+      // let totalMidtermCredit = midtermCreditAmount;
+      // let totalMidtermDebit = midtermDebitAmount;
+      // let totalEndingCredit = endingCreditAmount;
+      // let totalEndingDebit = endingDebitAmount;
 
-      subAccounts.forEach((sub) => {
-        totalBeginningCredit += sub.beginningCreditAmount;
-        totalBeginningDebit += sub.beginningDebitAmount;
-        totalMidtermCredit += sub.midtermCreditAmount;
-        totalMidtermDebit += sub.midtermDebitAmount;
-        totalEndingCredit += sub.endingCreditAmount;
-        totalEndingDebit += sub.endingDebitAmount;
-      });
+      // subAccounts.forEach((sub) => {
+      //   totalBeginningCredit += sub.beginningCreditAmount;
+      //   totalBeginningDebit += sub.beginningDebitAmount;
+      //   totalMidtermCredit += sub.midtermCreditAmount;
+      //   totalMidtermDebit += sub.midtermDebitAmount;
+      //   totalEndingCredit += sub.endingCreditAmount;
+      //   totalEndingDebit += sub.endingDebitAmount;
+      // });
 
       const now = getTimestampNow();
 
@@ -318,16 +336,16 @@ export async function listTrialBalance(
         subAccounts,
         createAt: now,
         updateAt: now,
-        _total: {
-          beginningCreditAmount: totalBeginningCredit,
-          beginningDebitAmount: totalBeginningDebit,
-          midtermCreditAmount: totalMidtermCredit,
-          midtermDebitAmount: totalMidtermDebit,
-          endingCreditAmount: totalEndingCredit,
-          endingDebitAmount: totalEndingDebit,
-          createAt: now,
-          updateAt: now,
-        },
+        // _total: {
+        //   beginningCreditAmount: totalBeginningCredit,
+        //   beginningDebitAmount: totalBeginningDebit,
+        //   midtermCreditAmount: totalMidtermCredit,
+        //   midtermDebitAmount: totalMidtermDebit,
+        //   endingCreditAmount: totalEndingCredit,
+        //   endingDebitAmount: totalEndingDebit,
+        //   createAt: now,
+        //   updateAt: now,
+        // },
       };
     };
 
@@ -372,12 +390,13 @@ export async function listTrialBalance(
     const sort = [{ sortBy, sortOrder }];
 
     const responseItems = paginatedData.map((item) => {
-      const { _total, subAccounts, ...rest } = item;
-
+      // const { _total, subAccounts, ...rest } = item;
+      const { subAccounts, ...rest } = item;
       return {
         ...rest,
         subAccounts: subAccounts.map((sub: AccountWithSubResult) => {
-          const { _total: subTotal, subAccounts: subSub, ...subRest } = sub;
+          // const { _total: subTotal, subAccounts: subSub, ...subRest } = sub;
+          const { subAccounts: subSub, ...subRest } = sub;
           return {
             ...subRest,
             subAccounts: subSub,
