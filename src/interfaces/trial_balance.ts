@@ -26,6 +26,11 @@ export interface ITrialBalanceTotal {
   updateAt: number;
 }
 
+export interface ITrialBalanceData {
+  items: TrialBalanceItem[];
+  total: ITrialBalanceTotal;
+}
+
 export interface ITrialBalancePayload {
   currencyAlias: string;
   items: IPaginatedData<TrialBalanceItem[]>;
@@ -40,24 +45,38 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
         id: 1,
         no: '1141',
         accountingTitle: '應收帳款',
-        beginningCreditAmount: 0,
+        beginningCreditAmount: 10,
         beginningDebitAmount: 1785000,
-        midtermCreditAmount: 0,
+        midtermCreditAmount: 10,
         midtermDebitAmount: 1785000,
-        endingCreditAmount: 0,
+        endingCreditAmount: 10,
         endingDebitAmount: 1785000,
         createAt: 1704067200,
         updateAt: 1704067200,
         subAccounts: [
           {
+            id: 114100, // generate in backend instead of getting from db,
+            no: '114100',
+            accountingTitle: '應收帳款', // shadow the default accounting title
+            beginningCreditAmount: 10,
+            beginningDebitAmount: 1785000,
+            midtermCreditAmount: 10,
+            midtermDebitAmount: 1785000,
+            endingCreditAmount: 10,
+            endingDebitAmount: 1785000,
+            createAt: 1704067200,
+            updateAt: 1704067200,
+            subAccounts: [],
+          },
+          {
             id: 2,
             no: '114101',
             accountingTitle: '應收帳款-A公司',
-            beginningCreditAmount: 0,
+            beginningCreditAmount: 10,
             beginningDebitAmount: 1785000,
-            midtermCreditAmount: 0,
+            midtermCreditAmount: 10,
             midtermDebitAmount: 1785000,
-            endingCreditAmount: 0,
+            endingCreditAmount: 10,
             endingDebitAmount: 1785000,
             createAt: 1704067200,
             updateAt: 1704067200,
@@ -77,7 +96,22 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
         endingDebitAmount: 500000,
         createAt: 1704067200,
         updateAt: 1704067200,
-        subAccounts: [],
+        subAccounts: [
+          {
+            id: 115100, // generate in backend instead of getting from db,
+            no: '115100',
+            accountingTitle: '其他應收款', // shadow the default accounting title
+            beginningCreditAmount: 10,
+            beginningDebitAmount: 1785000,
+            midtermCreditAmount: 10,
+            midtermDebitAmount: 1785000,
+            endingCreditAmount: 10,
+            endingDebitAmount: 1785000,
+            createAt: 1704067200,
+            updateAt: 1704067200,
+            subAccounts: [],
+          },
+        ],
       },
     ],
     page: 1,
