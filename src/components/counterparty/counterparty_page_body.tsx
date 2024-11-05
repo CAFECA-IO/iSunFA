@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import LedgerList from '@/components/ledger/ledger_list';
+import CounterpartyList from '@/components/counterparty/counterparty_list';
 import AccountRangeFilter from '@/components/filter_section/account_range_filter';
 import { radioButtonStyle } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -9,7 +9,7 @@ import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 
-const LedgerPageBody = () => {
+const CounterpartyPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
 
   const queryCondition = {
@@ -111,20 +111,6 @@ const LedgerPageBody = () => {
       setExpenseOptions(expenses);
       setIncomeOptions(incomes);
       setOtherComprehensiveIncomeOptions(otherComprehensiveIncomes);
-
-      // Info: (20241105 - Anna) 印出各類別的會計科目
-      // eslint-disable-next-line no-console
-      // console.log('Assets:', assets);
-      // console.log('Liabilities:', liabilities);
-      // console.log('Equities:', equities);
-      // console.log('Revenues:', revenues);
-      // console.log('Costs:', costs);
-      // console.log('Expenses:', expenses);
-      // console.log('Incomes:', incomes);
-      // console.log('GainsOrLosses:', gainsOrLosses);
-      // console.log('OtherComprehensiveIncomes:', otherComprehensiveIncomes);
-      // console.log('CashFlows:', cashFlows);
-      // console.log('Others:', others);
     }
   }, [accountTitleList]);
 
@@ -217,10 +203,10 @@ const LedgerPageBody = () => {
         </div>
 
         <div className="h-px w-full bg-neutral-100"></div>
-        <LedgerList selectedDateRange={selectedDateRange} />
+        <CounterpartyList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );
 };
 
-export default LedgerPageBody;
+export default CounterpartyPageBody;

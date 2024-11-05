@@ -74,7 +74,7 @@ const CashFlowStatementPageBody = () => {
   );
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center gap-40px px-40px py-40px">
+    <div className="relative flex min-h-screen flex-col items-center gap-40px py-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241017 - Anna) 日期篩選器和語言選擇 */}
         <div className="flex flex-col max-md:flex-col md:flex-row md:items-center md:gap-10">

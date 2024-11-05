@@ -1,10 +1,18 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z, ZodRawShape } from 'zod';
-import { iLineItemBodyValidatorV2, iLineItemValidator } from '@/lib/utils/zod_schema/lineItem';
-import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import {
+  ILineItemBetaValidator,
+  iLineItemBodyValidatorV2,
+  iLineItemValidator,
+} from '@/lib/utils/zod_schema/lineItem';
+import {
+  zodFilterSectionSortingOptions,
+  zodStringToNumber,
+  zodStringToNumberWithDefault,
+} from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { EventType } from '@/constants/account';
-import { SortBy, SortOrder } from '@/constants/sort';
+import { EventType, VoucherType } from '@/constants/account';
+import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
@@ -17,35 +25,6 @@ import { eventTypeToVoucherType } from '@/lib/utils/common';
 import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
 import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
-
-/**
- * Info: (20241025 - Murky)
- * @description schema for init voucher entity or parsed prisma voucher
- * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
- */
-export const voucherEntityValidator = z.object({
-  id: z.number(),
-  issuerId: z.number(),
-  counterPartyId: z.number(),
-  companyId: z.number(),
-  status: z.nativeEnum(JOURNAL_EVENT),
-  editable: z.boolean(),
-  no: z.string(),
-  date: z.number(),
-  type: z.nativeEnum(EventType),
-  note: z.string().nullable(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-  originalEvents: z.array(z.any()).optional(),
-  resultEvents: z.array(z.any()).optional(),
-  lineItems: z.array(z.any()).optional(),
-  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
-  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
-  certificates: z.array(z.any()).optional(),
-  issuer: z.any().optional(),
-  readByUsers: z.array(z.any()).optional(),
-});
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -92,6 +71,63 @@ export const voucherRequestValidatorsV1: {
  */
 
 /**
+ * Info: (20241025 - Murky)
+ * @description schema for init voucher entity or parsed prisma voucher
+ * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
+ */
+export const voucherEntityValidator = z.object({
+  id: z.number(),
+  issuerId: z.number(),
+  counterPartyId: z.number(),
+  companyId: z.number(),
+  status: z.nativeEnum(JOURNAL_EVENT),
+  editable: z.boolean(),
+  no: z.string(),
+  date: z.number(),
+  type: z.nativeEnum(EventType),
+  note: z.string().nullable(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  originalEvents: z.array(z.any()).optional(),
+  resultEvents: z.array(z.any()).optional(),
+  lineItems: z.array(z.any()).optional(),
+  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  certificates: z.array(z.any()).optional(),
+  issuer: z.any().optional(),
+  readByUsers: z.array(z.any()).optional(),
+});
+
+/**
+ * Info: (20241105 - Murky)
+ * @description IVoucherBeta is the component of get all voucher list
+ */
+export const IVoucherBetaValidator = z.object({
+  id: z.number(),
+  voucherDate: z.number(),
+  voucherNo: z.string(),
+  voucherType: z.nativeEnum(VoucherType),
+  note: z.string(),
+  counterParty: z.object({
+    companyId: z.string(),
+    name: z.string(),
+  }),
+  issuer: z.object({
+    avatar: z.string(),
+    name: z.string(),
+  }),
+  unRead: z.boolean(),
+  lineItemsInfo: z.object({
+    sum: z.object({
+      debit: z.boolean(),
+      amount: z.number(),
+    }),
+    lineItems: z.array(ILineItemBetaValidator),
+  }),
+});
+
+/**
  * Info: (20241104 - Murky)
  * @description voucher list all filter section 可以用哪些值排序
  */
@@ -116,20 +152,11 @@ const voucherGetAllQueryValidatorV2 = z.object({
   tab: z.nativeEnum(VoucherListTabV2),
   startDate: zodStringToNumberWithDefault(0),
   endDate: zodStringToNumberWithDefault(Infinity),
+  sortOption: zodFilterSectionSortingOptions(),
   searchQuery: z.string().optional(),
 });
 
-const voucherGetAllBodyValidatorV2 = z.object({
-  sortOption: z
-    .record(
-      voucherListAllSortOptions,
-      z.object({
-        by: voucherListAllSortOptions,
-        order: z.nativeEnum(SortOrder),
-      })
-    )
-    .optional(),
-});
+const voucherGetAllBodyValidatorV2 = z.object({});
 
 const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
   z.object({
@@ -214,6 +241,18 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
   };
   return parsedData;
 });
+
+const voucherGetAllFrontendDataValidatorV2 = z.object({
+  vouchers: z.array(IVoucherBetaValidator),
+  unRead: z.object({
+    uploadedVoucher: z.number(),
+    upcomingEvents: z.number(),
+  }),
+});
+
+const voucherGetAllFrontendValidatorV2 = paginatedDataSchemaDataNotArray(
+  voucherGetAllFrontendDataValidatorV2
+);
 
 export const voucherGetAllValidatorV2: IZodValidator<
   (typeof voucherGetAllQueryValidatorV2)['shape'],
@@ -339,5 +378,5 @@ export const voucherListSchema = {
     bodySchema: voucherGetAllBodyValidatorV2,
   },
   outputSchema: voucherGetAllOutputValidatorV2,
-  frontend: voucherNullSchema,
+  frontend: voucherGetAllFrontendValidatorV2,
 };

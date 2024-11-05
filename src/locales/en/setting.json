@@ -41,8 +41,7 @@
     "FAILED_TO_UPDATE_ACCOUNT": "Failed to update account, please try again later.",
     "FAILED_TO_GET_ACCOUNT_DATA": "Failed to get account data, please try again later.",
     "FAIL_UPDATE_COMPANY_NAME": "Fail to update company name. Code:{{updateTeamCode}}",
-    "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income",
-    "COST": "Cost"
+    "OTHERCOMPREHENSIVEINCOME": "Other Comprehensive Income"
   },
   "NORMAL": {
     "TITLE": "Normal Setting",
@@ -68,6 +67,8 @@
     "SELECT_LANGUAGE": "Select Language",
     "LANGUAGE": "Language",
     "ENTER_NUMBER": "Enter Number",
-    "PHONE_NUMBER": "Phone Number"
+    "PHONE_NUMBER": "Phone Number",
+    "COST": "Cost",
+    "CLIENT_SUPPLIER_SETTING": "Client/Supplier setting"
   }
 }

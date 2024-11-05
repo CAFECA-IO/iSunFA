@@ -21,16 +21,16 @@ export enum SortOrder {
  */
 export enum SortBy {
   DATE = 'Date',
-  DATE_CREATED = 'Date Created',
-  DATE_UPDATED = 'Date Updated',
-  VOUCHER_NUMBER = 'Voucher No.',
+  DATE_CREATED = 'DateCreated',
+  DATE_UPDATED = 'DateUpdated',
+  VOUCHER_NUMBER = 'VoucherNo.',
   AMOUNT = 'Amount',
   CREDIT = 'Credit',
   DEBIT = 'Debit',
-  PURCHASE_PRICE = 'Purchase Price',
-  ACCUMULATED_DEPRECIATION = 'Accumulated Depreciation',
-  RESIDUAL_VALUE = 'Residual Value',
-  REMAINING_LIFE = 'Remaining Life',
+  PURCHASE_PRICE = 'PurchasePrice',
+  ACCUMULATED_DEPRECIATION = 'AccumulatedDepreciation',
+  RESIDUAL_VALUE = 'ResidualValue',
+  REMAINING_LIFE = 'RemainingLife',
 
   /**
    * Info: (20241104 - Murky)

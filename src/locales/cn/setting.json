@@ -41,8 +41,7 @@
     "FAILED_TO_GET_ACCOUNT_DATA": "取得科目资料失败，请稍后重试。",
     "FAIL_UPDATE_COMPANY_NAME": "无法更新公司名称。错误代码：{{updateTeamCode}}",
     "ASSET": "资产",
-    "OTHERCOMPREHENSIVEINCOME": "其他综合損益",
-    "COST": "成本"
+    "OTHERCOMPREHENSIVEINCOME": "其他综合損益"
   },
   "NORMAL": {
     "TITLE": "常规设置",
@@ -68,6 +67,8 @@
     "SELECT_LANGUAGE": "选择语言",
     "LANGUAGE": "语言",
     "ENTER_NUMBER": "输入号码",
-    "PHONE_NUMBER": "电话号码"
+    "PHONE_NUMBER": "电话号码",
+    "COST": "成本",
+    "CLIENT_SUPPLIER_SETTING": "交易伙伴设定"
   }
 }
