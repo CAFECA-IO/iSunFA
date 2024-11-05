@@ -75,9 +75,6 @@ interface AccountWithSubResult {
   };
 }
 
-/**
- * 取得分頁化的試算表資料
- */
 interface ListTrialBalanceParams {
   companyId: number;
   startDate: number;
@@ -88,11 +85,6 @@ interface ListTrialBalanceParams {
   pageSize?: number | 'infinity';
 }
 
-/**
- * 列出所有試算表項目
- * @param params ListTrialBalanceParams
- * @returns Promise<ITrialBalancePayload>
- */
 export async function listTrialBalance(
   params: ListTrialBalanceParams
 ): Promise<ITrialBalancePayload> {
@@ -111,7 +103,7 @@ export async function listTrialBalance(
   const skip = pageToOffset(pageNumber, size);
 
   try {
-    // 1. 搜尋 accounting setting table 取得貨幣別
+    // Info: (20241105 - Shirley) 1. 搜尋 accounting setting table 取得貨幣別
     const accountingSettingData = await prisma.accountingSetting.findFirst({
       where: { id: companyId },
     });
@@ -122,7 +114,7 @@ export async function listTrialBalance(
       currencyAlias = accountingSettingData.currency || 'TWD';
     }
 
-    // 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
+    // Info: (20241105 - Shirley) 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
     const accounts = await prisma.account.findMany({
       where: {
         OR: [
@@ -207,7 +199,7 @@ export async function listTrialBalance(
 
     const allVoucherIds = allVoucherData.map((voucher) => voucher.id);
 
-    // 4. 用所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item（補充）
+    // Info: (20241105 - Shirley) 4. 用所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item（補充）
     const additionalLineItems = await prisma.lineItem.findMany({
       where: {
         voucherId: { in: allVoucherIds },
@@ -226,7 +218,7 @@ export async function listTrialBalance(
     //   additionalLineItems
     // );
 
-    // 合併 account 表中的 line items 與 voucher 表中的 line items
+    // Info: (20241105 - Shirley) 合併 account 表中的 line items 與 voucher 表中的 line items
     accounts.forEach((account) => {
       const voucherLineItems = additionalLineItems.filter(
         (item) => item.accountId === account.id && !account.lineItem.some((li) => li.id === item.id)
@@ -234,7 +226,7 @@ export async function listTrialBalance(
       account.lineItem.push(...voucherLineItems);
     });
 
-    // 2.1 整理 account 資料結構，依照 parent code 追溯
+    // Info: (20241105 - Shirley) 2.1 整理 account 資料結構，依照 parent code 追溯
     const accountMap: { [key: string]: AccountWithSub } = {};
     accounts.forEach((account) => {
       accountMap[account.code] = {
@@ -243,7 +235,7 @@ export async function listTrialBalance(
       };
     });
 
-    // 建立科目樹狀結構，透過 parent code 追溯
+    // Info: (20241105 - Shirley) 建立科目樹狀結構，透過 parent code 追溯
     const rootAccounts: AccountWithSub[] = [];
     accounts.forEach((account) => {
       if (account.parentCode) {
@@ -264,9 +256,9 @@ export async function listTrialBalance(
     // eslint-disable-next-line no-console
     // console.log('rootAccounts', rootAccounts);
 
-    // 計算試算表項目
+    // Info: (20241105 - Shirley) 計算試算表項目
     const calculateTrialBalance = (account: AccountWithSub): AccountWithSubResult => {
-      // 計算期初金額
+      // Info: (20241105 - Shirley) 計算期初金額
       const beginningCreditAmount = account.lineItem
         .filter((item: LineItem) => !item.debit && item.voucher.date < startDate)
         .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
@@ -284,7 +276,7 @@ export async function listTrialBalance(
       //   beginningDebitAmount
       // );
 
-      // 計算期中金額
+      // Info: (20241105 - Shirley) 計算期中金額
       const midtermCreditAmount = account.lineItem
         .filter(
           (item: LineItem) =>
@@ -301,7 +293,7 @@ export async function listTrialBalance(
       const endingCreditAmount = beginningCreditAmount + midtermCreditAmount;
       const endingDebitAmount = beginningDebitAmount + midtermDebitAmount;
 
-      // 處理子科目
+      // Info: (20241105 - Shirley) 處理子科目
       const subAccounts = account.subAccounts.map(calculateTrialBalance);
 
       // 加總子科目金額
@@ -354,7 +346,7 @@ export async function listTrialBalance(
     // eslint-disable-next-line no-console
     // console.log('trialBalanceItems', trialBalanceItems);
 
-    // 扁平化所有試算表項目以便計算總金額
+    // Info: (20241105 - Shirley) 扁平化所有試算表項目以便計算總金額
     const flattenTrialBalance = (items: AccountWithSubResult[]): AccountWithSubResult[] => {
       let flat: AccountWithSubResult[] = [];
       items.forEach((item) => {
@@ -368,7 +360,7 @@ export async function listTrialBalance(
 
     const flatItems = flattenTrialBalance(trialBalanceItems);
 
-    // 計算總金額
+    // Info: (20241105 - Shirley) 計算總金額
     const total = {
       beginningCreditAmount: flatItems.reduce((sum, item) => sum + item.beginningCreditAmount, 0),
       beginningDebitAmount: flatItems.reduce((sum, item) => sum + item.beginningDebitAmount, 0),
@@ -380,7 +372,7 @@ export async function listTrialBalance(
       updateAt: Math.floor(Date.now() / 1000),
     };
 
-    // 分頁
+    // Info: (20241105 - Shirley) 分頁
     const paginatedData = trialBalanceItems.slice(skip, skip + size);
     const totalCount = trialBalanceItems.length;
     const totalPages = Math.ceil(totalCount / size);
