@@ -299,7 +299,9 @@
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
     "ENDING": "結束日",
-    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目"
+    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目",
+    "PARTNER_S_NAME": "交易夥伴名稱",
+    "TAX_ID": "統一編號"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",

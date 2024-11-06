@@ -133,7 +133,7 @@ const LedgerPageBody = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center gap-40px py-40px">
+    <div className="relative flex min-h-screen flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         <div>
           <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
