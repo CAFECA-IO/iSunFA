@@ -574,5 +574,9 @@
     "FINANCIAL_NEWS": "財經新聞",
     "SYSTEM_NEWS": "系統新聞",
     "MATCH_NEWS": "媒合資訊"
+  },
+
+  "TO_DO_LIST_PAGE": {
+    "TO_DO_LIST_TITLE": "待辦事項"
   }
 }

@@ -574,5 +574,9 @@
     "FINANCIAL_NEWS": "Financial News",
     "SYSTEM_NEWS": "System News",
     "MATCH_NEWS": "Match News"
+  },
+
+  "TO_DO_LIST_PAGE": {
+    "TO_DO_LIST_TITLE": "To-do List"
   }
 }
