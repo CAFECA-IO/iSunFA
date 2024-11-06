@@ -6,7 +6,7 @@
     "CREATE": "创建新公司"
   },
   "TAG": {
-    "FINANCIA": "财务",
+    "FINANCIAL": "财务",
     "TAX": "税务",
     "ALL": "全部"
   }

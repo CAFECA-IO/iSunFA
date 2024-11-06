@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
-import CreateCompanyModal from '@/components/company_settings/create_company_modal';
+import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import CompanyListModal from '@/components/company_settings/company_list_modal';
 
 interface CompanySettingsProps {}
