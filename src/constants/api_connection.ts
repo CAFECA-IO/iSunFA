@@ -80,6 +80,7 @@ export enum APIName {
   VOUCHER_DELETE_V2 = 'VOUCHER_DELETE_V2',
   VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
   VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
+  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = 'REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
   // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
@@ -195,7 +196,8 @@ export enum APIPath {
   VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
+  VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/account/:accountId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
@@ -700,6 +702,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_LIST_V2,
     method: HttpMethod.GET,
     path: APIPath.VOUCHER_LIST_V2,
+  }),
+  [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: createConfig({
+    // Info: (20241106 - Murky) @Julian 這個是Reverse Voucher的時後可以get出account list的api
+    name: APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
+    method: HttpMethod.GET,
+    path: APIPath.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
   }),
   [APIName.ASK_AI_V2]: createConfig({
     name: APIName.ASK_AI_V2,
