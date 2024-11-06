@@ -1,18 +1,48 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiCalendar } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
+import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 
+interface ICurrency {
+  countryName: string;
+  currencyName: string;
+  iconSrc: string;
+}
+
+const dummyCurrencies: ICurrency[] = [
+  {
+    countryName: 'United States',
+    currencyName: 'USD',
+    iconSrc: '/icons/us.svg',
+  },
+  {
+    countryName: 'Taiwan',
+    currencyName: 'TWD',
+    iconSrc: '/icons/tw.svg',
+  },
+];
+
 const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
 
+  const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(dummyCurrencies[0]);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
+
+  const {
+    targetRef: currencyMenuRef,
+    componentVisible: currencyMenuVisible,
+    setComponentVisible: setCurrencyMenuVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
 
   const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -32,6 +62,36 @@ const AccountingSettingPageBody: React.FC = () => {
       setReportGenerateDay(10);
     }
   };
+
+  const currencyDropdown = (
+    <div
+      ref={currencyMenuRef}
+      className={`absolute top-50px grid w-full rounded-sm ${
+        currencyMenuVisible
+          ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+          : 'grid-rows-0 border-transparent'
+      } overflow-hidden transition-all duration-300 ease-in-out`}
+    >
+      <div className="flex flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px">
+        {dummyCurrencies.map((currency) => {
+          const countryClickHandler = () => {
+            setCurrentCurrency(currency);
+            setCurrencyMenuVisible(false);
+          };
+          return (
+            <div
+              key={currency.countryName}
+              onClick={countryClickHandler}
+              className="flex items-center gap-12px px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-dropdown-surface-item-hover"
+            >
+              <Image src={currency.iconSrc} width={16} height={16} alt="currency_icon" />
+              <p>{currency.currencyName}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-center gap-40px p-40px">
@@ -86,7 +146,9 @@ const AccountingSettingPageBody: React.FC = () => {
             </p>
             {/* Info: (20241106 - Julian) ===== 稅務申報週期下拉選單 ===== */}
             <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-              <div className="px-12px py-10px text-input-text-input-placeholder">Every</div>
+              <div className="px-12px py-10px text-input-text-input-placeholder">
+                {t('common:DATE_PICKER.EVERY')}
+              </div>
               <div className="flex flex-1 items-center justify-between px-12px py-10px">
                 <p className="text-input-text-input-filled">Month</p>
                 <div className="text-icon-surface-single-color-primary">
@@ -110,16 +172,20 @@ const AccountingSettingPageBody: React.FC = () => {
         </div>
         <div className="grid grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 貨幣下拉選單 ===== */}
-          <div className="flex items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+          <div
+            onClick={toggleCurrencyMenu}
+            className="relative flex items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+          >
             <div className="px-12px py-10px">
-              <Image width={16} height={16} alt="currency_icon" src="/icons/us.svg" />
+              <Image width={16} height={16} alt="currency_icon" src={currentCurrency.iconSrc} />
             </div>
             <div className="flex flex-1 items-center justify-between px-12px py-10px">
-              <p className="text-input-text-input-placeholder">USD</p>
+              <p className="text-input-text-input-filled">{currentCurrency.currencyName}</p>
               <div className="text-icon-surface-single-color-primary">
                 <FaChevronDown />
               </div>
             </div>
+            {currencyDropdown}
           </div>
         </div>
       </div>
@@ -137,11 +203,12 @@ const AccountingSettingPageBody: React.FC = () => {
         {/* Info: (20241106 - Julian) ===== 會計設定內容 ===== */}
         <div className="flex flex-col gap-40px">
           {/* Info: (20241106 - Julian) ===== 期間設定子標題 ===== */}
-          <div className="flex items-center gap-10px text-sm font-semibold text-text-neutral-primary">
+          {/* TODO: (20241106 - Julian) 須確認是否保留 */}
+          <div className="hidden items-center gap-10px text-sm font-semibold text-text-neutral-primary">
             <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
             <p>{t('setting:ACCOUNTING.PERIOD_SETTINGS_SUBTITLE')}</p>
           </div>
-          <div className="flex w-full items-start gap-40px">
+          <div className="hidden w-full items-start gap-40px">
             {/* Info: (20241106 - Julian) ===== 會計年度 ===== */}
             <div className="flex flex-col gap-10px">
               <p className="text-sm text-input-text-primary">
@@ -262,6 +329,16 @@ const AccountingSettingPageBody: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
+      <div className="ml-auto flex items-center">
+        <Button type="button" variant="tertiaryBorderless">
+          {t('common:COMMON.CANCEL')}
+        </Button>
+        <Button type="button" variant="tertiary">
+          {t('common:COMMON.SAVE')}
+        </Button>
       </div>
     </div>
   );
