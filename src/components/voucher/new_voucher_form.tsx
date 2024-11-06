@@ -929,11 +929,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
           <div ref={assetRef} className="col-span-2 flex flex-col">
-            <AssetSection
-              isShowAssetHint={isShowAssetHint}
-              assets={temporaryAssetList}
-              lineItems={voucherLineItems}
-            />
+            <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
