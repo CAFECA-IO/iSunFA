@@ -7,8 +7,8 @@ import { Prisma } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
 import type { ICounterPartyEntity } from '@/interfaces/counterparty';
-import type { IAssetEntity } from '@/interfaces/asset';
-import type { ICertificateEntity } from '@/interfaces/certificate';
+import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
+import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import type { IUserEntity } from '@/interfaces/user';
 
@@ -90,6 +90,49 @@ export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
     };
   };
 }>;
+
+export interface IVoucherDetailForFrontend {
+  id: number;
+  voucherDate: number;
+  type: string;
+  note: string;
+  counterParty: {
+    id: number;
+    companyId: number;
+    name: string;
+  };
+  recurringInfo: {
+    // Info: (20241105 - Murky) @Julian 如過不需要的話可以加上?
+    type: string;
+    startDate: number;
+    endDate: number;
+    daysOfWeek: number[]; // Info: (20241029 - Julian) 0~6
+    monthsOfYear: number[]; // Info: (20241029 - Julian) 0~11
+  };
+  payableInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  receivingInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  reverseVoucherIds: {
+    id: number;
+    voucherNo: string;
+  }[];
+  assets: IAssetDetails[];
+  certificates: ICertificate[];
+  lineItemsInfo: {
+    lineItems: ILineItemBeta[];
+  };
+}
 
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
@@ -460,7 +503,7 @@ export interface IVoucherEntity {
    * @description Asset that related to this voucher,
    * undefined if not related to any asset
    */
-  asset?: IAssetEntity;
+  asset: IAssetEntity[];
 
   /**
    * Info: (20241024 - Murky)

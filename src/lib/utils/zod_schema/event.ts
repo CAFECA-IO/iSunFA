@@ -16,5 +16,5 @@ export const eventEntityValidator = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
-  associateVoucher: z.array(z.any()).optional(), // ToDo: (20241023 - Murky) It can be VoucherEntitySchema
+  associateVouchers: z.array(z.any()).optional(), // ToDo: (20241023 - Murky) It can be VoucherEntitySchema
 });
