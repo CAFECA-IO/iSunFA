@@ -1,3 +1,5 @@
+import { CompanyTag } from '@/constants/company';
+
 export interface ICompanySetting {
   id: number;
   companyId: number;
@@ -10,4 +12,11 @@ export interface ICompanySetting {
   address: string;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface ICompanySettingList {
+  id: number;
+  partnerName: string;
+  taxId: string;
+  type: CompanyTag;
 }

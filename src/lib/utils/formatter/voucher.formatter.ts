@@ -30,6 +30,7 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     lineItems: data.lineItems || [],
     certificates: data.certificates || [],
     readByUsers: data.readByUsers || [],
+    asset: data.asset || [],
   };
 
   return voucherEntity;

@@ -76,8 +76,8 @@ describe('company/[companyId]/voucher handleRequest test', () => {
         // sortOption: 'Date:asc-Amount:desc',
         sortOption: [
           {
-            by: SortBy.DATE,
-            order: SortOrder.ASC,
+            sortBy: SortBy.DATE,
+            sortOrder: SortOrder.ASC,
           },
         ],
       };

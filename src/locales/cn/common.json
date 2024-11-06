@@ -301,7 +301,8 @@
     "ENDING": "结束日",
     "DISPLAY_SUB_ACCOUNTS": "显示所有子科目",
     "PARTNER_S_NAME": "交易伙伴名称",
-    "TAX_ID": "统一编号"
+    "TAX_ID": "统一编号",
+    "SUBMIT": "送出"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
@@ -546,5 +547,9 @@
     "FINANCIAL_NEWS": "财经新闻",
     "SYSTEM_NEWS": "系统新闻",
     "MATCH_NEWS": "媒合资讯"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "输入姓名",
+    "ENTER_NUMBER": "输入号码"
   }
 }
