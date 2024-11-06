@@ -6,6 +6,9 @@ import { userOutputSchema } from './user';
 // Info: (20241029 - Jacky) UserRole null schema
 const userRoleNullSchema = z.union([z.object({}), z.string()]);
 
+const userRoleQuerySchema = z.object({
+  userId: zodStringToNumber,
+});
 // Info: (20241015 - Jacky) UserRole list schema
 const userRoleListQuerySchema = z.object({
   userId: zodStringToNumber,
@@ -13,7 +16,6 @@ const userRoleListQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) UserRole post schema
 const userRolePostBodySchema = z.object({
-  userId: z.number().int(),
   roleName: z.string(),
 });
 
@@ -45,7 +47,7 @@ export const userRoleListSchema = {
 
 export const userRolePostSchema = {
   input: {
-    querySchema: userRoleNullSchema,
+    querySchema: userRoleQuerySchema,
     bodySchema: userRolePostBodySchema,
   },
   outputSchema: userRoleOutputSchema,
