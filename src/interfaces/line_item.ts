@@ -30,14 +30,65 @@ export interface ILineItemBeta {
   account: IAccount | null;
 }
 
+export interface ILineItemUI extends ILineItemBeta {
+  isReverse: boolean;
+  reverseList: IReverseItem[];
+}
+
 // Info: (20241014 - Julian) 初始傳票列
-export const initialVoucherLine: ILineItemBeta = {
+export const initialVoucherLine: ILineItemUI = {
   id: 0,
   account: null,
   description: '',
   debit: null,
   amount: 0,
+  isReverse: false,
+  reverseList: [],
 };
+
+export interface IReverseItem {
+  id: number;
+  amount: number;
+  description: string;
+  debit: boolean | null;
+  account: IAccount | null;
+  voucherNo: string;
+  reverseAmount: number;
+}
+
+export interface IReverseItemUI extends IReverseItem {
+  isSelected: boolean;
+}
+
+export const dummyReverseData: IReverseItem[] = [
+  {
+    id: 1,
+    voucherNo: '2021100001',
+    account: null,
+    description: 'Salary',
+    debit: true,
+    amount: 30000,
+    reverseAmount: 0,
+  },
+  {
+    id: 2,
+    voucherNo: '2021100002',
+    account: null,
+    description: 'Bonus',
+    debit: true,
+    amount: 20000,
+    reverseAmount: 0,
+  },
+  {
+    id: 3,
+    voucherNo: '2021100003',
+    account: null,
+    description: 'Overtime',
+    debit: true,
+    amount: 50000,
+    reverseAmount: 0,
+  },
+];
 
 /**
  * Info: (20241023 - Murky)
