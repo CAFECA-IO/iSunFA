@@ -26,6 +26,9 @@ const buttonVariants = cva(
           'border border-stroke-state-error text-text-state-error hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover group-hover:border-button-stroke-primary-hover group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         disabledGray: 'border border-button-stroke-disable text-button-text-disable',
         disabledYellow: 'border border-button-stroke-primary text-button-text-primary',
+        linkBorderless:
+          'border-none text-text-neutral-link hover:text-button-text-primary-hover  disabled:text-button-text-disable',
+        errorBorderless: 'border-none text-text-state-error  disabled:text-button-text-disable',
       },
       size: {
         default: 'px-6 py-3',

@@ -277,7 +277,7 @@
     --text-neutral-link: var(--support-baby-600);
     --text-neutral-link-hover: var(--support-baby-300);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-light);
+    --text-neutral-primary: var(--neutral-600);
     --text-input-filled: var(--neutral-600);
     --text-neutral-secondary: var(--neutral-400);
     --text-neutral-solid-dark: var(--neutral-600);
@@ -704,7 +704,7 @@
     --text-neutral-link: var(--support-baby-400);
     --text-neutral-link-hover: var(--support-baby-400);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-light);
+    --text-neutral-primary: var(--neutral-600);
     --text-neutral-secondary: var(--neutral-50);
     --text-neutral-solid-dark: var(--neutral-600);
     --text-neutral-solid-light: var(--neutral-25);
@@ -1275,6 +1275,15 @@ input[type='checkbox']:checked::before {
 
 .items-center {
   align-items: center !important;
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(
+      0deg,
+      var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 0%,
+      var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 100%
+    ),
+    var(--surface-neutral-surface-lv2, #fff);
 }
 
 @media (max-width: 769px) {
