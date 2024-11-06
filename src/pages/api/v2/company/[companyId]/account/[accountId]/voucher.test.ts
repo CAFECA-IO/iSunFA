@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler from '@/pages/api/v2/company/[companyId]/account/[accountId]/lineitem';
+import handler from '@/pages/api/v2/company/[companyId]/account/[accountId]/voucher';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
+import { voucherGetByAccountSchema } from '@/lib/utils/zod_schema/voucher';
 
 jest.mock('../../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
@@ -82,7 +82,7 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
         json: jest.fn(),
       } as unknown as jest.Mocked<NextApiResponse>;
 
-      const outputValidator = lineItemGetByAccountSchema.frontend;
+      const outputValidator = voucherGetByAccountSchema.frontend;
 
       await handler(req, res);
 

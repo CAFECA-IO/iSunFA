@@ -378,6 +378,88 @@ export interface IVoucherUI extends IVoucherBeta {
 }
 
 /**
+ * Info: (20241106 - Murky)
+ * @description 這個interface是在 report 頁面中點擊某一個account後, 呈現所有有那個account的voucher
+ * @note 後端須把lineItems 依照 debit在前, credit在後排序
+ * @Anna src/components/button/balance_details_button.tsx 的資料會是這個interface
+ */
+export interface IVoucherForSingleAccount {
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher id
+   */
+  id: number;
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher date, selected by user
+   */
+  date: number;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher 流水號
+   */
+  voucherNo: string;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @enum VoucherType RECEIVE, TRANSFER, EXPENSE
+   * @note 後端需要從EventType轉換成VoucherType
+   */
+  voucherType: VoucherType;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher note
+   */
+  note: string;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @description 畫面上的 `particulars`, amount 欄位用這邊loop顯示 (這是一個array)
+   */
+  lineItems: {
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item id
+     */
+    id: number;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item amount
+     */
+    amount: number;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item description (for `particular`)
+     */
+    description: string;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item debit or credit
+     */
+    debit: boolean;
+  }[];
+  issuer: {
+    /**
+     * Info: (20241106 - Murky)
+     * @description issuer avatar url
+     * @note 後端請用fileUrl轉換
+     */
+    avatar: string;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description issuer name
+     */
+    name: string;
+  };
+}
+
+/**
  * Info: (20241023 - Murky)
  * @description For voucher api passing data
  * @note Use  parsePrismaVoucherToVoucherEntity to convert PrismaVoucher to VoucherEntity
