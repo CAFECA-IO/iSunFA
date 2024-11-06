@@ -500,7 +500,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ? reverses.map((reverse) => {
             return {
               voucherId: reverse.voucherNo,
-              lineItemIdBeReversed: reverse.id, // Info: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+              lineItemIdBeReversed: reverse.voucherId, // Info: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
               lineItemIdReverseOther: -1, // Info: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
               amount: reverse.amount,
             };

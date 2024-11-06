@@ -205,7 +205,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         const addReverseHandler = () => {
           const modalData = {
             account: lineItem.account, // Info: (20241105 - Julian) 會計科目編號
-            lineItemId: lineItem.id, // Info: (20241105 - Julian) LineItem ID
+            lineItemIndex: lineItem.id, // Info: (20241105 - Julian) LineItem ID
           };
 
           selectReverseDataHandler(modalData);
@@ -236,11 +236,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
                   const removeReverse = () =>
                     addReverseListHandler(
                       lineItem.id,
-                      reverseVoucherList.filter((reverseItem) => reverseItem.id !== item.id)
+                      reverseVoucherList.filter(
+                        (reverseItem) => reverseItem.voucherId !== item.voucherId
+                      )
                     );
                   return (
                     <ReverseItem
-                      key={item.id}
+                      key={item.voucherId}
                       reverseItem={item}
                       addHandler={addReverseHandler}
                       removeHandler={removeReverse}
