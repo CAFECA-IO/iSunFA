@@ -21,7 +21,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
   };
 
   const handleSubmit = () => {
-    // Handle submit logic
+    // ToDo: (20241106 - Tzuhan) Handle submit logic
   };
 
   return (

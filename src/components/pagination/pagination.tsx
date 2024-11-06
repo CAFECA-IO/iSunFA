@@ -193,7 +193,7 @@ const Pagination = forwardRef(
           {t('common:COMMON.OF')} {totalPages}
         </p>
 
-        {totalCount && (
+        {totalCount !== undefined && (
           <p className="text-sm text-text-neutral-tertiary">
             {t('common:COMMON.TOTAL')}: {totalCount} {t('common:COMMON.DOCUMENT')}
           </p>
