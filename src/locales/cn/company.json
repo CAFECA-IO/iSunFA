@@ -1,0 +1,20 @@
+{
+  "LIST": {
+    "TITLE": "公司列表",
+    "PARTNER_NAME": "合作伙伴名称",
+    "TAX_ID": "税务编号",
+    "TYPE": "类型",
+    "ACTION": "操作"
+  },
+  "INFO": {
+    "NAME": "公司名称",
+    "TAX_ID": "营业税号",
+    "WORK_TAG": "工作标签",
+    "CREATE": "创建新公司"
+  },
+  "TAG": {
+    "FINANCIAL": "财务",
+    "TAX": "税务",
+    "ALL": "全部"
+  }
+}

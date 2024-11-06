@@ -299,7 +299,8 @@
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
     "ENDING": "结束日",
-    "DISPLAY_SUB_ACCOUNTS": "显示所有子科目"
+    "DISPLAY_SUB_ACCOUNTS": "显示所有子科目",
+    "SUBMIT": "送出"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
@@ -544,5 +545,9 @@
     "FINANCIAL_NEWS": "财经新闻",
     "SYSTEM_NEWS": "系统新闻",
     "MATCH_NEWS": "媒合资讯"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "输入姓名",
+    "ENTER_NUMBER": "输入号码"
   }
 }
