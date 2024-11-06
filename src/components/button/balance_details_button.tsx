@@ -18,11 +18,11 @@ import DownloadButton from './download_button';
  */
 // Info: (20241003 - Anna) temp interface
 export interface IVoucherBeta {
-  id: number; // voucherId
-  date: number; // voucherDate
+  id: number; // Info: (20241106 - Murky) voucherId
+  date: number; // Info: (20241106 - Murky) voucherDate
   voucherNo: string;
   voucherType: VoucherType;
-  note: string; // particular
+  note: string; // Info: (20241106 - Murky) particular
   accounting: string[];
   credit: number[];
   debit: number[];
