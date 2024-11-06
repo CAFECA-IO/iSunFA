@@ -1,5 +1,5 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import {
   zodStringToNumber,
   zodStringToNumberWithDefault,
@@ -125,3 +125,33 @@ export const certificateDeleteValidator: IZodValidator<
   query: certificateDeleteQueryValidator,
   body: certificateDeleteBodyValidator,
 };
+
+export const certificateRequestValidators: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  GET_ONE: certificateGetOneValidator,
+  PUT: certificatePutValidator,
+  POST: certificatePostValidator,
+  DELETE: certificateDeleteValidator,
+  GET_LIST: certificateListValidator,
+};
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init certificate entity or parsed prisma certificate
+ * @todo file, invoice, company, vouchers should be implemented
+ */
+export const certificateEntityValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  voucherNo: z.string().nullable(),
+  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  file: z.any().optional(),
+  invoice: z.any().optional(),
+  company: z.any().optional(),
+  vouchers: z.array(z.any()).optional(),
+});

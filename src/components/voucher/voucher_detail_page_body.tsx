@@ -37,22 +37,18 @@ interface IVoucherDetailForFrontend {
     startDate: number;
     endDate: number;
     daysOfWeek: number[]; // Info: (20241029 - Julian) 0~6
-    monthsOfYear: string[]; // Info: (20241029 - Julian) '1'~'12'
+    monthsOfYear: number[]; // Info: (20241029 - Julian) 0~11
   };
-  payableInfo:
-    | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
-      }
-    | undefined;
-  receivingInfo:
-    | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
-      }
-    | undefined;
+  payableInfo?: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
+  receivingInfo?: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
   reverseVoucherIds: {
     id: number;
     voucherNo: string;

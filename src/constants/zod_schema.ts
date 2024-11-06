@@ -15,41 +15,33 @@ import {
   companyPutSchema,
   companySelectSchema,
 } from '@/lib/utils/zod_schema/company';
-import {
-  invoiceCreateValidator,
-  invoiceGetByIdValidator,
-  invoiceUpdateValidator,
-} from '@/lib/utils/zod_schema/invoice';
-import {
-  journalDeleteValidator,
-  journalGetByIdValidator,
-  journalListValidator,
-} from '@/lib/utils/zod_schema/journal';
-import { kycUploadValidator } from '@/lib/utils/zod_schema/kyc';
+import { invoiceRequestValidators } from '@/lib/utils/zod_schema/invoice';
+import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
+import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
-import {
-  ocrDeleteValidator,
-  ocrListValidator,
-  ocrResultGetByIdValidator,
-  ocrUploadValidator,
-} from '@/lib/utils/zod_schema/ocr';
+import { ocrRequestValidators } from '@/lib/utils/zod_schema/ocr';
 import {
   companyPendingTaskSchema,
   userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
 import { reportGetValidatorV2 } from '@/lib/utils/zod_schema/report';
-import { roleListSchema, rolePostSchema, roleSelectSchema } from '@/lib/utils/zod_schema/role';
+import {
+  userRoleListSchema,
+  userRolePostSchema,
+  userRoleSelectSchema,
+} from '@/lib/utils/zod_schema/user_role';
 import { todoListSchema, todoPostSchema } from '@/lib/utils/zod_schema/todo';
 import {
-  voucherCreateValidator,
   voucherDeleteValidatorV2,
   voucherGetAllValidatorV2,
   voucherGetOneValidatorV2,
+  voucherListSchema,
+  voucherPostSchema,
   voucherPostValidatorV2,
-  voucherUpdateValidator,
+  voucherRequestValidatorsV1,
   voucherWasReadValidatorV2,
 } from '@/lib/utils/zod_schema/voucher';
-import { zodExampleValidator } from '@/lib/utils/zod_schema/zod_example';
+import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
 import {
   accountingSettingGetSchema,
   accountingSettingPutSchema,
@@ -67,6 +59,7 @@ import {
   companySettingPutSchema,
 } from '@/lib/utils/zod_schema/company_setting';
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
+import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -81,20 +74,20 @@ import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log'
 
 export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
-  [APIName.INVOICE_CREATE]: invoiceCreateValidator,
-  [APIName.INVOICE_GET_BY_ID]: invoiceGetByIdValidator,
-  [APIName.INVOICE_UPDATE]: invoiceUpdateValidator,
-  [APIName.JOURNAL_DELETE]: journalDeleteValidator,
-  [APIName.JOURNAL_GET_BY_ID]: journalGetByIdValidator,
-  [APIName.JOURNAL_LIST]: journalListValidator,
-  [APIName.KYC_UPLOAD]: kycUploadValidator,
-  [APIName.OCR_DELETE]: ocrDeleteValidator,
-  [APIName.OCR_LIST]: ocrListValidator,
-  [APIName.OCR_RESULT_GET_BY_ID]: ocrResultGetByIdValidator,
-  [APIName.OCR_UPLOAD]: ocrUploadValidator,
-  [APIName.VOUCHER_CREATE]: voucherCreateValidator,
-  [APIName.VOUCHER_UPDATE]: voucherUpdateValidator,
-  [APIName.ZOD_EXAMPLE]: zodExampleValidator,
+  [APIName.INVOICE_CREATE]: invoiceRequestValidators.POST,
+  [APIName.INVOICE_GET_BY_ID]: invoiceRequestValidators.GET_ONE,
+  [APIName.INVOICE_UPDATE]: invoiceRequestValidators.PUT,
+  [APIName.JOURNAL_DELETE]: journalRequestValidators.DELETE,
+  [APIName.JOURNAL_GET_BY_ID]: journalRequestValidators.GET_ONE,
+  [APIName.JOURNAL_LIST]: journalRequestValidators.GET_LIST,
+  [APIName.KYC_UPLOAD]: kycRequestValidators.POST,
+  [APIName.OCR_DELETE]: ocrRequestValidators.DELETE,
+  [APIName.OCR_LIST]: ocrRequestValidators.GET_LIST,
+  [APIName.OCR_RESULT_GET_BY_ID]: ocrRequestValidators.GET_ONE,
+  [APIName.OCR_UPLOAD]: ocrRequestValidators.POST,
+  [APIName.VOUCHER_CREATE]: voucherRequestValidatorsV1.POST,
+  [APIName.VOUCHER_UPDATE]: voucherRequestValidatorsV1.PUT,
+  [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultValidatorV2,
@@ -128,9 +121,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
-  [APIName.ROLE_LIST]: roleListSchema,
-  [APIName.ROLE_SELECT]: roleSelectSchema,
-  [APIName.CREATE_ROLE]: rolePostSchema,
+  [APIName.ROLE_LIST]: userRoleListSchema,
+  [APIName.ROLE_SELECT]: userRoleSelectSchema,
+  [APIName.CREATE_ROLE]: userRolePostSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
@@ -141,4 +134,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_SETTING_GET]: userSettingGetSchema,
   [APIName.USER_SETTING_UPDATE]: userSettingPutSchema,
   [APIName.USER_ACTION_LOG_LIST]: userActionLogListSchema,
+  [APIName.VOUCHER_POST_V2]: voucherPostSchema,
+  [APIName.VOUCHER_LIST_V2]: voucherListSchema,
+  [APIName.TRIAL_BALANCE_LIST]: trialBalanceListSchema,
 };

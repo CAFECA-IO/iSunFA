@@ -1,8 +1,8 @@
 import { IUser, IUserEntity } from '@/interfaces/user';
 import { User, UserAgreement, File, User as PrismaUser } from '@prisma/client';
 
-import { z } from 'zod';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
+import { userEntityValidator } from '@/lib/utils/zod_schema/user';
 
 export function formatUser(
   user: User & {
@@ -40,23 +40,10 @@ export async function formatUserList(
  * @param {PrismaUser} dto - 來自 Prisma 的 PrismaUser 資料物件。
  * @returns {IUserEntity} 符合 IUserEntity 結構的物件。
  * @throws {FormatterError} 當傳入的 dto 無法通過 Zod 驗證時，拋出錯誤，包含錯誤訊息及細節。
- * @note file, vouchers, certificates are not parsed
+ * @note please check userEntityValidator for how validation parse
  */
 export function parsePrismaUserToUserEntity(dto: PrismaUser): IUserEntity {
-  const zodUserEntityParser = z.object({
-    id: z.number(),
-    name: z.string(),
-    email: z.string().nullable(),
-    imageFileId: z.number(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
-    deletedAt: z.number().nullable(),
-    imageFile: z.any().optional(),
-    vouchers: z.array(z.any()).optional(),
-    certificates: z.array(z.any()).optional(),
-  });
-
-  const { data, success, error } = zodUserEntityParser.safeParse(dto);
+  const { data, success, error } = userEntityValidator.safeParse(dto);
 
   if (!success) {
     throw new FormatterError('UserEntity format prisma data error', {

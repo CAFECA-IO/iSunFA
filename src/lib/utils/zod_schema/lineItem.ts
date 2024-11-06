@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IAccountValidator } from '@/lib/utils/zod_schema/account';
 
 export const iLineItemValidator = z.object({
   lineItemIndex: z.string(),
@@ -17,8 +18,21 @@ export const iLineItemValidator = z.object({
  */
 
 export const iLineItemBodyValidatorV2 = z.object({
+  id: z.number().optional(),
   description: z.string(),
   debit: z.boolean(),
   amount: z.number(),
   accountId: z.number().int(),
+});
+
+/**
+ * Info: (20241105 - Murky)
+ * @description ILineItemBeta is used in IVoucherBeta => ILineItemBeta => IAccount
+ */
+export const ILineItemBetaValidator = z.object({
+  id: z.number(),
+  amount: z.number(),
+  description: z.string(),
+  debit: z.boolean().nullable(),
+  account: IAccountValidator.nullable(), // 使用 IAccountValidator 來驗證 account，並允許為 null
 });

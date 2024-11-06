@@ -3,8 +3,8 @@ import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
+// import 'bootstrap/dist/css/bootstrap.min.css';
+// import 'bootstrap-icons/font/bootstrap-icons.css';
 import LineChart from '@/components/cash_flow_statement_report_body/line_chart';
 import BarChart from '@/components/cash_flow_statement_report_body/bar_chart';
 import Image from 'next/image';
@@ -15,12 +15,18 @@ import { timestampToString } from '@/lib/utils/common';
 import CollapseButton from '@/components/button/collapse_button';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { useTranslation } from 'next-i18next';
+import PrintButton from '@/components/button/print_button';
+import DownloadButton from '@/components/button/download_button';
+import { useGlobalCtx } from '@/contexts/global_context';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
 }
 
 const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedDateRange }) => {
+  const { t } = useTranslation('common');
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
@@ -145,8 +151,12 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
   // Info: (20241024 - Anna) 檢查報表數據和載入狀態
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="mb-0 text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="mb-0 text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
+        </div>
       </div>
     );
   } else if (getReportFinancialIsLoading) {
@@ -194,7 +204,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                 <tr key={value.code}>
                   <td
                     colSpan={6}
-                    className="border border-stroke-brand-secondary-soft p-10px text-xs font-bold"
+                    className="border border-stroke-brand-secondary-soft p-10px font-bold"
                   >
                     {value.name}
                   </td>
@@ -203,13 +213,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
             }
             return (
               <tr key={value.code}>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                  {value.code}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-xs">
-                  {value.name}
-                </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                <td className="border border-stroke-brand-secondary-soft p-10px">{value.code}</td>
+                <td className="border border-stroke-brand-secondary-soft p-10px">{value.name}</td>
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                   {
                     value.curPeriodAmount === 0
                       ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
@@ -218,7 +224,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                         : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
                   }
                 </td>
-                <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs">
+                <td className="border border-stroke-brand-secondary-soft p-10px text-end">
                   {value.prePeriodAmount === 0
                     ? '-'
                     : value.prePeriodAmount < 0
@@ -237,7 +243,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
     return (
       <div className="mt-4 text-text-neutral-primary">
         <h3 className="text-base font-semibold leading-6">不動產、廠房、設備的收支項目：</h3>
-        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
+        <ol className="list-decimal pl-6 font-normal leading-5 text-text-neutral-primary">
           {firstThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -246,7 +252,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
         </ol>
 
         <h3 className="mt-4 text-base font-semibold leading-6">策略性投資項目：</h3>
-        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
+        <ol className="list-decimal pl-6 font-normal leading-5 text-text-neutral-primary">
           {secondThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -254,7 +260,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
           ))}
         </ol>
         <h3 className="mt-4 text-base font-semibold leading-6">其他：</h3>
-        <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
+        <ol className="list-decimal pl-6 font-normal leading-5 text-text-neutral-primary">
           {thirdThought?.split('\n').map((line) => (
             <li key={line} className="mb-2 ml-1">
               {line}
@@ -275,10 +281,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
       reportFinancial?.otherInfo?.freeCash[previousYear] ? (
         <tbody>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start font-normal leading-5 text-text-neutral-secondary">
               營業活動現金流入
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
@@ -287,7 +293,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                       currentYear
                     ]?.operatingCashFlow.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
@@ -298,17 +304,17 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
             </td>
           </tr>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start font-normal leading-5 text-text-neutral-secondary">
               不動產、廠房及設備
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe < 0
                   ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe < 0
@@ -317,10 +323,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
             </td>
           </tr>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start font-normal leading-5 text-text-neutral-secondary">
               無形資產支出
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
@@ -329,7 +335,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                       currentYear
                     ]?.intangibleAsset.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
@@ -340,17 +346,17 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
             </td>
           </tr>
           <tr>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-start text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-start font-normal leading-5 text-text-neutral-secondary">
               自由現金流量
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash < 0
                   ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
             </td>
-            <td className="border border-stroke-brand-secondary-soft p-10px text-end text-xs font-normal leading-5 text-text-neutral-secondary">
+            <td className="border border-stroke-brand-secondary-soft p-10px text-end font-normal leading-5 text-text-neutral-secondary">
               {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash === 0
                 ? '-'
                 : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash < 0
@@ -382,13 +388,22 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
       </div>
     );
   };
+  // Info: (20241101 - Anna) 列印及下載按鈕
+  const displayedSelectArea = (
+    <div className="mb-16px flex items-center justify-end px-px max-md:flex-wrap">
+      <div className="ml-auto flex items-center gap-24px">
+        <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
+        <PrintButton onClick={() => {}} disabled={false} />
+      </div>
+    </div>
+  );
 
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
         <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>項目彙總格式</p>
+            <p className="mb-0">項目彙總格式</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p>單位：新台幣元</p>
@@ -404,9 +419,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
     <div id="2" className="relative overflow-hidden">
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="relative -z-10"></div>
-        <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
+        <div className="mb-1 mt-8 flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
-            <p>細項分類格式</p>
+            <p className="mb-0">細項分類格式</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p>單位：新台幣元</p>
@@ -420,7 +435,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
   );
   const operatingCF5Y = (
     <div id="3" className="relative overflow-hidden">
-      <section className="relative mx-3 text-xs text-text-neutral-secondary">
+      <section className="relative mx-3 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>
             {' '}
@@ -439,19 +454,19 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-center text-center text-xs font-semibold">A和B比例關係</p>
+              <p className="my-auto items-center text-center font-semibold">A和B比例關係</p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <div className="mb-16 flex">
               <div className="mt-18px w-3/5">
                 <LineChart data={lineChartData} labels={lineChartLabels} />
               </div>
-              <div className="mt-18px w-2/5 pl-8 text-xs">
+              <div className="mt-18px w-2/5 pl-8">
                 <p>A. 稅前淨利(淨損)+折舊及攤銷費用-支付的所得稅</p>
                 <p>B. 營業活動的現金流入(流出)</p>
               </div>
             </div>
-            <div className="mb-1 mt-2 flex justify-between text-xs font-semibold text-surface-brand-secondary">
+            <div className="mb-1 mt-2 flex justify-between font-semibold text-surface-brand-secondary">
               <p>圖表金額來源彙總：</p>
             </div>
             <table className="relative w-full border-collapse bg-white">
@@ -468,7 +483,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                   ))}
                 </tr>
               </thead>
-              <tbody className="text-xs">
+              <tbody>
                 <tr>
                   <td className="border border-stroke-brand-secondary-soft p-10px font-semibold">
                     A
@@ -612,9 +627,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
   );
   const investmentRatio = (
     <div id="4" className="relative overflow-hidden">
-      <section className="relative mx-1 text-xs text-text-neutral-secondary">
+      <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px font-semibold text-surface-brand-secondary">
-          <p className="break-words text-xs font-semibold leading-tight">
+          <p className="break-words font-semibold leading-tight">
             {reportFinancial && reportFinancial.otherInfo && reportFinancial.otherInfo.fourthTitle}
           </p>
         </div>
@@ -628,7 +643,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
+              <p className="my-auto items-end font-semibold text-text-neutral-secondary">
                 {curYear}年度投資活動項目佔比
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
@@ -644,7 +659,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
                 width={24}
                 height={24}
               />
-              <p className="my-auto items-end text-xs font-semibold text-text-neutral-secondary">
+              <p className="my-auto items-end font-semibold text-text-neutral-secondary">
                 {preYear}年度投資活動項目佔比
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
@@ -653,11 +668,11 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
           </div>
         </div>
         <div className="mb-16px mt-4 font-semibold text-surface-brand-secondary">
-          <p className="text-xs font-semibold">{curYear}年度上圖組成項目之細項及iSunFa認為：</p>
+          <p className="font-semibold">{curYear}年度上圖組成項目之細項及iSunFa認為：</p>
         </div>
         <div id="5" className="relative overflow-hidden">
-          <section className="relative mx-3 text-xs text-text-neutral-secondary">
-            <div className="mb-16px mt-32px text-xs font-semibold leading-5 text-surface-brand-secondary"></div>
+          <section className="relative mx-3 text-text-neutral-secondary">
+            <div className="mb-16px mt-32px font-semibold leading-5 text-surface-brand-secondary"></div>
             {renderedInvestmentRatio()}
           </section>
         </div>
@@ -666,12 +681,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
   );
   const freeCashFlow = (
     <div id="6" className="relative overflow-hidden">
-      <section className="relative mx-3 text-xs text-text-neutral-secondary">
-        <div className="mb-16px mt-32px text-xs font-semibold leading-5 text-surface-brand-secondary"></div>
-        <div className="mb-4 mt-32px text-center text-xs font-semibold leading-5 text-surface-brand-secondary">
-          <p className="text-start text-xs font-semibold">
-            年度產生的自由現金：公司可以靈活運用的現金
-          </p>
+      <section className="relative mx-3 text-text-neutral-secondary">
+        <div className="mb-16px mt-32px font-semibold leading-5 text-surface-brand-secondary"></div>
+        <div className="mb-4 mt-32px text-center font-semibold leading-5 text-surface-brand-secondary">
+          <p className="text-start font-semibold">年度產生的自由現金：公司可以靈活運用的現金</p>
           {renderedFreeCashFlow(curYear, preYear)}
         </div>
       </section>
@@ -680,6 +693,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedD
 
   return (
     <div className="mx-auto w-full origin-top overflow-x-auto">
+      <hr className="mb-40px break-before-page" />
+      {displayedSelectArea}
       {ItemSummary}
       {ItemDetail}
       {operatingCF5Y}

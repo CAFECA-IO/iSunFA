@@ -1,38 +1,141 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LedgerList from '@/components/ledger/ledger_list';
 import AccountRangeFilter from '@/components/filter_section/account_range_filter';
 import { radioButtonStyle } from '@/constants/display';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
+import { IPaginatedAccount } from '@/interfaces/accounting_account';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 const LedgerPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
-  // Info: (20241015 - Anna) dummy data
-  const assetOptions = ['1141 Accounts receivable', '1100 Cash', '1150 Inventory'];
-  const liabilityOptions = ['2100 Accounts payable', '2200 Notes payable'];
-  const equityOptions = ['3000 Common stock', '3100 Retained earnings'];
-  // Info: (20241015 - Anna) 用於追踪分類帳類型的狀態
+
+  const queryCondition = {
+    limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+    forUser: true,
+    sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
+    sortOrder: 'asc',
+  };
+
+  // Info: (20241104 - Anna) API call to fetch account data
+  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
+    APIName.ACCOUNT_LIST,
+    {
+      params: { companyId: 10000007 },
+      query: queryCondition,
+    },
+    false,
+    true
+  );
+
+  // Info: (20241105 - Anna) 定義各類別的會計科目選項
+  // Info: (20241105 - Anna) 從 src/constants/account.ts 的 export enum AccountType 而來，只留下有科目的類別
+  const [assetOptions, setAssetOptions] = useState<string[]>([]);
+  const [liabilityOptions, setLiabilityOptions] = useState<string[]>([]);
+  const [equityOptions, setEquityOptions] = useState<string[]>([]);
+  const [revenueOptions, setRevenueOptions] = useState<string[]>([]);
+  const [costOptions, setCostOptions] = useState<string[]>([]);
+  const [expenseOptions, setExpenseOptions] = useState<string[]>([]);
+  const [incomeOptions, setIncomeOptions] = useState<string[]>([]);
+  const [otherComprehensiveIncomeOptions, setOtherComprehensiveIncomeOptions] = useState<string[]>(
+    []
+  );
+
   const [selectedReportType, setSelectedReportType] = useState<
     'General' | 'Detailed' | 'General & Detailed'
   >('General');
-
-  // Info: (20241015 - Anna) 處理用戶選擇報表類型
-  const handleReportTypeChange = (type: 'General' | 'Detailed' | 'General & Detailed') => {
-    setSelectedReportType(type);
-  };
-  // Info: (20241015 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
 
+  useEffect(() => {
+    getAccountList({ query: { ...queryCondition } });
+  }, []);
+
+  useEffect(() => {
+    if (accountTitleList) {
+      // eslint-disable-next-line no-console
+      // console.log('API Response:', accountTitleList); // Info: (20241105 - Anna) 查看原始資料
+      // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
+      const assets: string[] = [];
+      const liabilities: string[] = [];
+      const equities: string[] = [];
+      const revenues: string[] = [];
+      const costs: string[] = [];
+      const expenses: string[] = [];
+      const incomes: string[] = [];
+      const otherComprehensiveIncomes: string[] = [];
+
+      // Info: (20241105 - Anna) 遍歷 accountTitleList.data，依據 type 將科目分類
+      accountTitleList.data.forEach((account) => {
+        const accountName = `${account.code} ${account.name}`;
+        switch (account.type) {
+          case 'asset':
+            assets.push(accountName);
+            break;
+          case 'liability':
+            liabilities.push(accountName);
+            break;
+          case 'equity':
+            equities.push(accountName);
+            break;
+          case 'revenue':
+            revenues.push(accountName);
+            break;
+          case 'cost':
+            costs.push(accountName);
+            break;
+          case 'expense':
+            expenses.push(accountName);
+            break;
+          case 'income':
+            incomes.push(accountName);
+            break;
+          case 'otherComprehensiveIncome':
+            otherComprehensiveIncomes.push(accountName);
+            break;
+          default:
+            break;
+        }
+      });
+
+      // Info: (20241105 - Anna) 更新各類別的選項狀態
+      setAssetOptions(assets);
+      setLiabilityOptions(liabilities);
+      setEquityOptions(equities);
+      setRevenueOptions(revenues);
+      setCostOptions(costs);
+      setExpenseOptions(expenses);
+      setIncomeOptions(incomes);
+      setOtherComprehensiveIncomeOptions(otherComprehensiveIncomes);
+
+      // Info: (20241105 - Anna) 印出各類別的會計科目
+      // eslint-disable-next-line no-console
+      // console.log('Assets:', assets);
+      // console.log('Liabilities:', liabilities);
+      // console.log('Equities:', equities);
+      // console.log('Revenues:', revenues);
+      // console.log('Costs:', costs);
+      // console.log('Expenses:', expenses);
+      // console.log('Incomes:', incomes);
+      // console.log('GainsOrLosses:', gainsOrLosses);
+      // console.log('OtherComprehensiveIncomes:', otherComprehensiveIncomes);
+      // console.log('CashFlows:', cashFlows);
+      // console.log('Others:', others);
+    }
+  }, [accountTitleList]);
+
+  const handleReportTypeChange = (type: 'General' | 'Detailed' | 'General & Detailed') => {
+    setSelectedReportType(type);
+  };
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center gap-40px px-40px py-40px">
+    <div className="relative flex min-h-screen flex-col items-center gap-40px py-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
-        {/* Info: (20241015 - Anna) 篩選器 */}
         <div>
-          {/* Info: (20241015 - Anna) 日期篩選器 */}
           <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
             {t('journal:LEDGER.LEDGER_PERIOD')}
           </p>
@@ -44,10 +147,10 @@ const LedgerPageBody = () => {
             />
           </div>
 
-          {/* Info: (20241015 - Anna) radio buttons */}
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">Label Type</p>
+          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
+            {t('journal:LEDGER.LABEL_TYPE')}
+          </p>
           <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
-            {/* Info: (20241015 - Anna) General */}
             <label
               htmlFor="input-general"
               className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
@@ -60,9 +163,8 @@ const LedgerPageBody = () => {
                 checked={selectedReportType === 'General'}
                 onChange={() => handleReportTypeChange('General')}
               />
-              <p>General</p>
+              <p className="text-sm">{t('journal:LEDGER.GENERAL')}</p>
             </label>
-            {/* Info: (20241015 - Anna) Detailed */}
             <label
               htmlFor="input-detailed"
               className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
@@ -75,9 +177,8 @@ const LedgerPageBody = () => {
                 checked={selectedReportType === 'Detailed'}
                 onChange={() => handleReportTypeChange('Detailed')}
               />
-              <p>Detailed</p>
+              <p className="text-sm">{t('journal:LEDGER.DETAILED')}</p>
             </label>
-            {/* Info: (20240424 - Anna) General & Detailed */}
             <label
               htmlFor="input-general-detailed"
               className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
@@ -90,25 +191,33 @@ const LedgerPageBody = () => {
                 checked={selectedReportType === 'General & Detailed'}
                 onChange={() => handleReportTypeChange('General & Detailed')}
               />
-              <p>General & Detailed</p>
+              <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
             </label>
           </div>
-          {/* Info: (20241015 - Anna) 選會計科目 */}
-          <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
-            Specific accounting title
+
+          <p className="mt-18px text-sm font-semibold text-neutral-300">
+            {t('journal:LEDGER.SPECIFIC_ACCOUNTING_TITLE')}
           </p>
           <AccountRangeFilter
+            // Info: (20241105 - Anna) 傳入各類別的會計科目選項
             assetOptions={assetOptions}
             liabilityOptions={liabilityOptions}
             equityOptions={equityOptions}
-            onRangeSelected={() => {
-              // Todo: (20241015 - Anna) 暫時無需處理 API 邏輯，UI完成後處理
-            }}
+            revenueOptions={revenueOptions}
+            costOptions={costOptions}
+            expenseOptions={expenseOptions}
+            incomeOptions={incomeOptions}
+            otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
+            onRangeSelected={() => {}}
+            // onRangeSelected={(from, to) => {
+            //   // eslint-disable-next-line no-console
+            //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
+            // }}
           />
         </div>
+
         <div className="h-px w-full bg-neutral-100"></div>
-        {/* Info: (20241018 - Anna) Ledger List */}
-        <LedgerList />
+        <LedgerList selectedDateRange={selectedDateRange} />
       </div>
     </div>
   );
