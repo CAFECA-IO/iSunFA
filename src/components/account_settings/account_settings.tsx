@@ -22,6 +22,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         type="button"
         variant="linkBorderless"
         className="mb-lv-7 justify-start p-0"
+        disabled
       >
         <p className="flex gap-2">
           <Image src="/icons/currency-dollar-circle.svg" width={16} height={16} alt="notice_icon" />

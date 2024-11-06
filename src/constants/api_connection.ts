@@ -139,6 +139,7 @@ export enum APIName {
   UPDATE_ASSET_V2 = 'UPDATE_ASSET_V2',
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
+  IP_LIST = 'IP_LIST',
 }
 
 export enum APIPath {
@@ -256,6 +257,7 @@ export enum APIPath {
   UPDATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
+  IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
 }
 const createConfig = ({
   name,
@@ -836,5 +838,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRIAL_BALANCE_LIST,
     method: HttpMethod.GET,
     path: APIPath.TRIAL_BALANCE_LIST,
+  }),
+  [APIName.IP_LIST]: createConfig({
+    name: APIName.IP_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.IP_LIST,
   }),
 };

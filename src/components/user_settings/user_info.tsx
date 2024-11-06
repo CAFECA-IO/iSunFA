@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { FiEdit3, FiLink, FiMail } from 'react-icons/fi';
 import { TbUserCircle } from 'react-icons/tb';
+import { Button } from '@/components/button/button';
+import IPModal from './ip_modal';
 
 interface UserInfoProps {
+  userId: number;
   username: string;
   email: string;
   loginDevice: string;
@@ -12,10 +15,24 @@ interface UserInfoProps {
   imageId: string;
 }
 
-const UserInfo: React.FC<UserInfoProps> = ({ username, email, loginDevice, loginIP, imageId }) => {
+const UserInfo: React.FC<UserInfoProps> = ({
+  userId,
+  username,
+  email,
+  loginDevice,
+  loginIP,
+  imageId,
+}) => {
   const { t } = useTranslation(['setting', 'common']);
+  const [isIPModalOpen, setIsIPModalOpen] = useState(false);
+
+  const toggleIPModal = () => {
+    setIsIPModalOpen((prev) => !prev);
+  };
+
   return (
     <div className="bg-brand-gradient flex items-center gap-lv-7 rounded-md p-4 shadow-normal_setting_brand">
+      {isIPModalOpen && <IPModal userId={userId} toggleModal={toggleIPModal} />}
       <Image
         alt="avatar"
         src={imageId}
@@ -44,9 +61,19 @@ const UserInfo: React.FC<UserInfoProps> = ({ username, email, loginDevice, login
         <FiLink size={16} />
         <div className="flex flex-col items-start gap-1">
           <span className="text-text-neutral-mute">{t('setting:NORMAL.LOGIN_DEVICE_N_IP')}:</span>
-          <span className="text-base text-text-neutral-link">
-            {loginDevice} / {loginIP}
-          </span>
+          <Button
+            id="setting-add-company"
+            type="button"
+            variant="linkBorderless"
+            className="justify-start p-0 text-base font-normal"
+            onClick={toggleIPModal}
+          >
+            <p className="flex gap-2">
+              <span>
+                {loginDevice} / {loginIP}
+              </span>
+            </p>
+          </Button>
         </div>
       </div>
     </div>

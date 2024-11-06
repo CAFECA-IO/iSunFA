@@ -9,6 +9,7 @@ interface UserSettingsProps {}
 
 const UserSettings: React.FC<UserSettingsProps> = () => {
   const { userAuth } = useUserCtx();
+  const userId = userAuth?.id ?? 1;
   const username = userAuth?.name ?? 'Joyce';
   const email = userAuth?.email ?? 'Test01@gmail.com';
   const loginDevice = 'Macos Chrome';
@@ -25,6 +26,7 @@ const UserSettings: React.FC<UserSettingsProps> = () => {
   return (
     <>
       <UserInfo
+        userId={userId}
         username={username}
         email={email}
         loginDevice={loginDevice}

@@ -114,7 +114,8 @@ export type IAPIName =
   | 'DELETE_ASSET_V2'
   | 'UPDATE_ASSET_V2'
   | 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE'
-  | 'TRIAL_BALANCE_LIST';
+  | 'TRIAL_BALANCE_LIST'
+  | 'IP_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
