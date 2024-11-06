@@ -285,7 +285,7 @@ const MyCompanyListPageBody = () => {
   };
 
   return (
-    <main className="flex h-full flex-col gap-40px">
+    <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
         {/* Filter // ToDo: (20241104 - Liz) 把日曆隱藏 */}
         <FilterSection
@@ -311,17 +311,6 @@ const MyCompanyListPageBody = () => {
             <FiSearch size={20} />
           </button>
         </div>
-
-        {/* Info: (20241105 - Tzuhan) 這裡是使用共用元件的範例，但是這個共用元件還沒有實作完成，所以先註解掉 */}
-        {/* <FilterSection<string[]>
-          className="flex-auto"
-          params={{}}
-          apiName={APIName.COMPANY_LIST}
-          onApiResponse={handleApiResponse}
-          page={currentPage}
-          pageSize={DEFAULT_PAGE_LIMIT}
-          diseableDateSearch
-        /> */}
 
         <div className="flex items-center gap-16px">
           <button
