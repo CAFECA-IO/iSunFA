@@ -1,4 +1,11 @@
 {
+  "LIST": {
+    "TITLE": "公司列表",
+    "PARTNER_NAME": "合作夥伴名稱",
+    "TAX_ID": "稅務編號",
+    "TYPE": "類型",
+    "ACTION": "操作"
+  },
   "INFO": {
     "NAME": "公司名稱",
     "TAX_ID": "營業稅號",
