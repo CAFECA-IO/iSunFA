@@ -192,7 +192,8 @@
     "SEP_ABR": "Sep",
     "OCT_ABR": "Oct",
     "NOV_ABR": "Nov",
-    "DEC_ABR": "Dec"
+    "DEC_ABR": "Dec",
+    "EVERY": "Every"
   },
   "SORTING": {
     "SORT_BY": "Sort By",

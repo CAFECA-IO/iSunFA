@@ -9,7 +9,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IReverseItemModal } from '@/interfaces/reverse';
-import { IReverseItemUI, dummyReverseData } from '@/interfaces/line_item';
+import { IReverseItemUI } from '@/interfaces/line_item';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 
 interface ISelectReverseItemsModal {
@@ -30,19 +30,20 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   amountChangeHandler,
 }) => {
   const { t } = useTranslation('common');
-  const { id, voucherNo, account, description, amount, isSelected, reverseAmount } = reverseData;
+  const { voucherId, voucherNo, account, description, amount, isSelected, reverseAmount } =
+    reverseData;
 
   const accountCode = account?.code ?? '';
   const accountName = account?.name ?? '';
 
-  const checkboxChangeHandler = () => selectHandler(id);
+  const checkboxChangeHandler = () => selectHandler(voucherId);
   const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241105 - Julian) 金額只能輸入數字
     const num = parseInt(e.target.value, 10);
     const numValue = Number.isNaN(num) ? 0 : num;
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
     const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
-    amountChangeHandler(id, valueInRange);
+    amountChangeHandler(voucherId, valueInRange);
   };
 
   return (
@@ -111,13 +112,14 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   const { addReverseListHandler } = useAccountingCtx();
 
   // Info: (20241104 - Julian) 取得會計科目以呼叫 API
-  const { lineItemId } = modalData;
+  const { lineItemIndex } = modalData;
 
-  const rawReverseData = dummyReverseData; // ToDo: (20241105 - Julian) Call API to get reverse data
+  const rawReverseData: IReverseItemUI[] = []; // ToDo: (20241105 - Julian) Call API to get reverse data
 
   const defaultUIReverseList: IReverseItemUI[] = rawReverseData.map((reverse) => {
     return {
       ...reverse,
+      lineItemIndex: 0,
       reverseAmount: 0,
       isSelected: false,
     };
@@ -160,7 +162,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   };
 
   const confirmHandler = () => {
-    addReverseListHandler(lineItemId, selectedReverseItems);
+    addReverseListHandler(lineItemIndex, selectedReverseItems);
     modalVisibilityHandler();
   };
 
@@ -191,7 +193,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     const selectCountHandler = (id: number) => {
       setUiReverseItemList((prev) => {
         return prev.map((voucher) => {
-          if (voucher.id === id) {
+          if (voucher.voucherId === id) {
             return {
               ...voucher,
               isSelected: !voucher.isSelected,
@@ -206,7 +208,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     const amountChangeHandler = (id: number, value: number) => {
       setUiReverseItemList((prev) => {
         return prev.map((item) => {
-          if (item.id === id) {
+          if (item.voucherId === id) {
             return {
               ...item,
               reverseAmount: value,
@@ -219,7 +221,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
     return (
       <ReverseItem
-        key={reverse.id}
+        key={reverse.voucherId}
         reverseData={reverse}
         selectHandler={selectCountHandler}
         amountChangeHandler={amountChangeHandler}
