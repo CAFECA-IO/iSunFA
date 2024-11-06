@@ -151,7 +151,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
                 <input
                   id="input-parter-tax-id"
                   type="text"
-                  placeholder={t('certificate:COUNTERPARTY.INVOICE_NUMBER')}
+                  placeholder={t('certificate:COUNTERPARTY.ENTER_NUMBER')}
                   value={inputTaxId}
                   onChange={taxIdChangeHandler}
                   required

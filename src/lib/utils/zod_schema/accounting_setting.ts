@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { CurrencyType } from '@/constants/currency';
 
 // Info: (20241029 - Jacky) Accounting setting null schema
 const accountingSettingNullSchema = z.union([z.object({}), z.string()]);
@@ -136,3 +137,13 @@ export const accountingSettingPutSchema = {
   outputSchema: accountingSettingOutputSchema,
   frontend: accountingSettingValidateSchema,
 };
+
+export const accountingSettingEntityValidator = z.object({
+  companyId: z.number(),
+  currency: z.nativeEnum(CurrencyType),
+  salesTaxRate: z.number(),
+  salesTaxTaxable: z.boolean(),
+  purchaseTaxRate: z.number(),
+  purchaseTaxTaxable: z.boolean(),
+  returnPeriodicity: z.string(),
+});
