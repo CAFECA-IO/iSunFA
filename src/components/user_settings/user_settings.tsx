@@ -2,8 +2,8 @@ import React from 'react';
 import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_AVATAR_URL } from '@/constants/display';
 import { LocaleKey } from '@/constants/normal_setting';
-import UserInfo from '@/components/normal_settings/user_info';
-import UserInfoForm from '@/components/normal_settings/user_info_form';
+import UserInfo from '@/components/user_settings/user_info';
+import UserInfoForm from '@/components/user_settings/user_info_form';
 
 interface UserSettingsProps {}
 

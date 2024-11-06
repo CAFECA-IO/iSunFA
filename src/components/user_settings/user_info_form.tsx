@@ -2,8 +2,8 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import { LocaleKey } from '@/constants/normal_setting';
-import SelectCountryDropdown from '@/components/normal_settings/select_country_dropdown';
-import SelectLauguageDropdown from '@/components/normal_settings/select_language_dropdown';
+import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
+import SelectLauguageDropdown from '@/components/user_settings/select_language_dropdown';
 import PhoneNumberInput from './phone_number_input';
 
 interface UserInfoFormProps {

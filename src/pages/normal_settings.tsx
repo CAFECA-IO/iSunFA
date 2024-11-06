@@ -4,10 +4,10 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
 import Layout from '@/components/beta/layout/layout';
-import UserSettings from '@/components/normal_settings/user_settings';
-import NoticeSettings from '@/components/normal_settings/notice_settings';
-import CompanySettings from '@/components/normal_settings/company_settings';
-import AccountSettings from '@/components/normal_settings//account_settings';
+import UserSettings from '@/components/user_settings/user_settings';
+import NoticeSettings from '@/components/notice_settings/notice_settings';
+import CompanySettings from '@/components/company_settiings/company_settings';
+import AccountSettings from '@/components/account_settings/account_settings';
 
 const NormalSettingsPage: React.FC = () => {
   const { t } = useTranslation(['setting', 'common']);
