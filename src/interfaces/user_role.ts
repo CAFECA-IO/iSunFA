@@ -1,10 +1,7 @@
-import { IRole } from '@/interfaces/role';
-import { IUser } from '@/interfaces/user';
-
 export interface IUserRole {
   id: number;
-  user: IUser;
-  role: IRole;
+  userId: number;
+  roleId: number;
   lastLoginAt: number;
   createdAt: number;
   updatedAt: number;
