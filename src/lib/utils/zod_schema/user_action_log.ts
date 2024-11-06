@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { UserActionLogActionType } from '@/constants/user_action_log';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { paginatedDataSchema } from './pagination';
+import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 // Info: (20241029 - Jacky) User action log null schema
 const userActionLogNullSchema = z.union([z.object({}), z.string()]);
@@ -10,10 +11,10 @@ const userActionLogNullSchema = z.union([z.object({}), z.string()]);
 const userActionLogQuerySchema = z.object({
   userId: zodStringToNumber,
   actionType: z.string(),
-  targetPage: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
-  startDateInSecond: z.number().int().optional(),
-  endDateInSecond: z.number().int().optional(),
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  startDateInSecond: zodStringToNumber.optional(),
+  endDateInSecond: zodStringToNumber.optional(),
 });
 
 // Info: (20241015 - Jacky) User action log output schema
