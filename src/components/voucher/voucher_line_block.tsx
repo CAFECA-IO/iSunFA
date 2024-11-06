@@ -1,21 +1,23 @@
 import React, { useEffect } from 'react';
 import { FaPlus } from 'react-icons/fa6';
+import { FiBookOpen } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
-import { ILineItemBeta, initialVoucherLine } from '@/interfaces/line_item';
+import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccount } from '@/interfaces/accounting_account';
-import { FiBookOpen } from 'react-icons/fi';
 import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
+import { useAccountingCtx } from '@/contexts/accounting_context';
+import ReverseItem from '@/components/voucher/reverse_item';
 
 interface IVoucherLineBlockProps {
   totalDebit: number;
   totalCredit: number;
-  lineItems: ILineItemBeta[];
-  setLineItems: React.Dispatch<React.SetStateAction<ILineItemBeta[]>>;
+  lineItems: ILineItemUI[];
+  setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
   setIsReverseRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要反轉分錄
 
   flagOfClear: boolean; // Info: (20241104 - Julian) 是否按下清除按鈕
@@ -45,7 +47,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   isVoucherLineEmpty,
 }) => {
   const { t } = useTranslation('common');
-  const { selectReverseItemsModalVisibilityHandler } = useGlobalCtx();
+  const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
+  const { reverseList, addReverseListHandler } = useAccountingCtx();
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -61,13 +64,32 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   useEffect(() => {
     // Info: (20241104 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
-    const isReverse = lineItems.some(
-      (item) =>
+    const lineItemsHaveReverse = lineItems.map((item) => {
+      const isReverse =
         (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.debit === false && item.amount > 0) // Info: (20241009 - Julian) 應收帳款
-    );
-    setIsReverseRequired(isReverse);
+        (item.account?.code === '1172' && item.debit === false && item.amount > 0); // Info: (20241009 - Julian) 應收帳款
+      return {
+        ...item,
+        isReverse,
+      };
+    });
+    const isReverseRequired = lineItemsHaveReverse.some((item) => item.isReverse);
+
+    setIsReverseRequired(isReverseRequired);
+    setLineItems(lineItemsHaveReverse);
   }, [lineItems]);
+
+  useEffect(() => {
+    // Info: (20241105 - Julian) 將反轉分錄的資料掛在傳票列上
+    const reverseLineItems = lineItems.map((item) => {
+      const reverseVoucherList = reverseList[item.id];
+      return {
+        ...item,
+        reverseList: reverseVoucherList,
+      };
+    });
+    setLineItems(reverseLineItems);
+  }, [reverseList]);
 
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
@@ -136,6 +158,19 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           }
         };
 
+        // Info: (20241105 - Julian) 新增反轉分錄
+        const addReverseHandler = () => {
+          const modalData = {
+            account: lineItem.account, // Info: (20241105 - Julian) 會計科目編號
+            lineItemId: lineItem.id, // Info: (20241105 - Julian) LineItem ID
+          };
+
+          selectReverseDataHandler(modalData);
+          selectReverseItemsModalVisibilityHandler();
+        };
+
+        const reverseVoucherList = reverseList[lineItem.id];
+
         return (
           <>
             <VoucherLineItem
@@ -152,13 +187,32 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
               amountNotEqual={totalCredit !== totalDebit}
             />
 
-            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示 */}
+            {/* Info: (20241104 - Julian) 反轉分錄列表 */}
+            {isShowReverse && reverseVoucherList && reverseVoucherList.length > 0
+              ? reverseVoucherList.map((item) => {
+                  const removeReverse = () =>
+                    addReverseListHandler(
+                      lineItem.id,
+                      reverseVoucherList.filter((reverseItem) => reverseItem.id !== item.id)
+                    );
+                  return (
+                    <ReverseItem
+                      key={item.id}
+                      reverseItem={item}
+                      addHandler={addReverseHandler}
+                      removeHandler={removeReverse}
+                    />
+                  );
+                })
+              : null}
+
+            {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
             {isShowReverse ? (
               <div className="col-start-1 col-end-13">
                 <button
                   type="button"
                   className="flex items-center gap-4px text-text-neutral-invert"
-                  onClick={selectReverseItemsModalVisibilityHandler}
+                  onClick={addReverseHandler}
                 >
                   <FaPlus />
                   <p>Reverse item</p>
@@ -182,10 +236,10 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     );
 
   return (
-    <div id="voucher-line-block" className="col-span-2">
-      {/* Info: (20240927 - Julian) Table */}
-      <div className="grid w-full grid-cols-13 gap-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
-        {/* Info: (20240927 - Julian) Table Header */}
+    /* Info: (20240927 - Julian) Table */
+    <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
+      {/* Info: (20240927 - Julian) Table Header */}
+      <div className="grid w-full grid-cols-13 gap-x-24px">
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
         </div>
@@ -198,8 +252,10 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
+      </div>
 
-        {/* Info: (20240927 - Julian) Table Body */}
+      {/* Info: (20240927 - Julian) Table Body */}
+      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
         {voucherLines}
 
         {/* Info: (20240927 - Julian) Total calculation */}
@@ -211,14 +267,12 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-start-11 col-end-13 text-right">
           <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
         </div>
-
-        {/* Info: (20240927 - Julian) Add button */}
-        <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
-            <FaPlus size={20} />
-          </Button>
-        </div>
       </div>
+
+      {/* Info: (20240927 - Julian) Add button */}
+      <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
+        <FaPlus size={20} />
+      </Button>
     </div>
   );
 };

@@ -62,6 +62,7 @@ import {
   companySettingPutSchema,
 } from '@/lib/utils/zod_schema/company_setting';
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
+import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -138,6 +139,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_ACTION_LOG_LIST]: userActionLogListSchema,
   [APIName.VOUCHER_POST_V2]: voucherPostSchema,
   [APIName.VOUCHER_LIST_V2]: voucherListSchema,
+  [APIName.TRIAL_BALANCE_LIST]: trialBalanceListSchema,
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneSchema,
   [APIName.VOUCHER_PUT_V2]: voucherPutSchema,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
