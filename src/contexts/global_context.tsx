@@ -43,6 +43,8 @@ import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
 import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
 import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
+import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
+import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
 
 interface IGlobalContext {
   width: number;
@@ -120,6 +122,10 @@ interface IGlobalContext {
   isAssetStatusSettingModalVisible: boolean;
   assetStatusSettingModalVisibilityHandler: () => void;
   assetStatusSettingModalDataHandler: (assetId: string, status: string) => void;
+
+  isSelectReverseItemsModalVisible: boolean;
+  selectReverseItemsModalVisibilityHandler: () => void;
+  selectReverseDataHandler: (data: IReverseItemModal) => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -219,6 +225,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
   const [updateAssetId, setUpdateAssetId] = useState('');
   const [defaultStatus, setDefaultStatus] = useState('');
+
+  const [isSelectReverseItemsModalVisible, setIsSelectReverseItemsModalVisible] = useState(false);
+  const [selectedReverseData, setSelectedReverseData] =
+    useState<IReverseItemModal>(defaultReverseItemModal);
 
   const { width, height } = windowSize;
 
@@ -365,6 +375,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const assetStatusSettingModalDataHandler = (assetId: string, status: string) => {
     setUpdateAssetId(assetId);
     setDefaultStatus(status);
+  };
+
+  const selectReverseItemsModalVisibilityHandler = () => {
+    setIsSelectReverseItemsModalVisible(!isSelectReverseItemsModalVisible);
+  };
+
+  const selectReverseDataHandler = (data: IReverseItemModal) => {
+    setSelectedReverseData(data);
   };
 
   useEffect(() => {
@@ -543,6 +561,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       assetStatusSettingModalVisibilityHandler,
       assetStatusSettingModalDataHandler,
 
+      isSelectReverseItemsModalVisible,
+      selectReverseItemsModalVisibilityHandler,
+      selectReverseDataHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -607,6 +629,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isAssetStatusSettingModalVisible,
       assetStatusSettingModalVisibilityHandler,
       assetStatusSettingModalDataHandler,
+
+      isSelectReverseItemsModalVisible,
+      selectReverseItemsModalVisibilityHandler,
+      selectReverseDataHandler,
 
       termsOfServiceConfirmModalVisibilityHandler,
     ]
@@ -767,6 +793,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={assetStatusSettingModalVisibilityHandler}
         updateAssetId={updateAssetId}
         defaultStatus={defaultStatus}
+      />
+
+      <SelectReverseItemsModal
+        isModalVisible={isSelectReverseItemsModalVisible}
+        modalVisibilityHandler={selectReverseItemsModalVisibilityHandler}
+        modalData={selectedReverseData}
       />
 
       {children}
