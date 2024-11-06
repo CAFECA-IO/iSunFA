@@ -8,6 +8,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { createUserRole, listUserRole } from '@/lib/utils/repo/user_role.repo';
 import { File, Role, User, UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
+import { getRoleByName } from '@/lib/utils/repo/role.repo';
 
 const handleGetRequest: IHandleRequest<
   APIName.ROLE_LIST,
@@ -33,9 +34,12 @@ const handlePostRequest: IHandleRequest<
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   statusMessage = STATUS_MESSAGE.CREATED;
-  const { userId, roleId } = body;
-  const createdUserRole = await createUserRole(userId, roleId);
-  payload = createdUserRole;
+  const { userId, roleName } = body;
+  const role = await getRoleByName(roleName);
+  if (role) {
+    const createdUserRole = await createUserRole(userId, role.id);
+    payload = createdUserRole;
+  }
 
   return { statusMessage, payload };
 };
