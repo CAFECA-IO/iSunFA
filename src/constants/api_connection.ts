@@ -81,6 +81,7 @@ export enum APIName {
   VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
   VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = 'REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2',
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = 'VOUCHER_LIST_GET_BY_ACCOUNT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
   // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
@@ -198,6 +199,7 @@ export enum APIPath {
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/account/:accountId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
@@ -710,6 +712,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
     method: HttpMethod.GET,
     path: APIPath.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
+  }),
+  [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: createConfig({
+    name: APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
   }),
   [APIName.ASK_AI_V2]: createConfig({
     name: APIName.ASK_AI_V2,

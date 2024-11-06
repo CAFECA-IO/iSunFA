@@ -5,7 +5,11 @@ import {
   iLineItemBodyValidatorV2,
   iLineItemValidator,
 } from '@/lib/utils/zod_schema/lineItem';
-import { IVoucherDetailForFrontend, IVoucherBeta } from '@/interfaces/voucher';
+import {
+  IVoucherDetailForFrontend,
+  IVoucherBeta,
+  IVoucherForSingleAccount,
+} from '@/interfaces/voucher';
 import {
   zodFilterSectionSortingOptions,
   zodStringToNumber,
@@ -24,7 +28,10 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { eventTypeToVoucherType } from '@/lib/utils/common';
 import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
 import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
-import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
+import {
+  paginatedDataSchema,
+  paginatedDataSchemaDataNotArray,
+} from '@/lib/utils/zod_schema/pagination';
 import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
 import { assetEntityValidator, IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
 import {
@@ -33,6 +40,7 @@ import {
 } from '@/lib/utils/zod_schema/certificate';
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
+import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -133,6 +141,29 @@ export const IVoucherBetaValidator = z.object({
       amount: z.number(),
     }),
     lineItems: z.array(ILineItemBetaValidator),
+  }),
+});
+
+export const IVoucherForSingleAccountValidator = z.object({
+  id: z.number().describe('voucher id'),
+  date: z.number().describe('voucher date, selected by user'),
+  voucherNo: z.string().describe('voucher 流水號'),
+  voucherType: z.nativeEnum(VoucherType).describe('RECEIVE, TRANSFER, EXPENSE'),
+  note: z.string().describe('voucher note'),
+  lineItems: z
+    .array(
+      z.object({
+        id: z.number().describe('line item id'),
+        amount: z.number().describe('line item amount'),
+        description: z.string().describe('line item description (for `particular`)'),
+        debit: z.boolean().describe('line item debit or credit'),
+      })
+    )
+    .min(1)
+    .describe('particulars and amount for display'),
+  issuer: z.object({
+    avatar: z.string().url().describe('issuer avatar url'),
+    name: z.string().describe('issuer name'),
   }),
 });
 
@@ -582,6 +613,77 @@ export const voucherRequestValidatorsV2 = {
   WAS_READ: voucherWasReadValidatorV2,
 };
 
+// Info: (20241106 - Murky) api/v2/account/[accountId]/voucher.ts
+const voucherGetByAccountQueryValidatorV2 = z.object({
+  accountId: zodStringToNumber,
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  // type: z.nativeEnum(EventType).optional(),
+  // tab: z.nativeEnum(),
+  startDate: zodStringToNumberWithDefault(0),
+  endDate: zodStringToNumberWithDefault(Infinity),
+  sortOption: zodFilterSectionSortingOptions(),
+  searchQuery: z.string().optional(),
+});
+
+const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
+  z.object({
+    ...voucherEntityValidator.shape,
+    lineItems: z
+      .array(
+        z.object({
+          ...lineItemEntityValidator.shape,
+          id: z.number(),
+          account: accountEntityValidator,
+        })
+      )
+      .min(1),
+    issuer: z.object({
+      ...userEntityValidator.shape,
+      imageFile: fileEntityValidator,
+    }),
+  })
+).transform((data) => {
+  const vouchers = data.data.map((voucher) => {
+    const lineItems = voucher.lineItems.map((lineItem) => ({
+      id: lineItem.id,
+      amount: lineItem.amount,
+      description: lineItem.description,
+      debit: lineItem.debit,
+    }));
+    const voucherForSingleAccount: IVoucherForSingleAccount = {
+      id: voucher.id,
+      voucherNo: voucher.no,
+      date: voucher.date,
+      note: voucher.note ?? '',
+      voucherType: eventTypeToVoucherType(voucher.type),
+      lineItems,
+      issuer: {
+        avatar: voucher.issuer.imageFile.url,
+        name: voucher.issuer.name,
+      },
+    };
+
+    return voucherForSingleAccount;
+  });
+  const reverseItemsPagination: z.infer<typeof voucherGetByAccountFrontendValidatorV2> = {
+    page: data.page,
+    totalPages: data.totalPages,
+    totalCount: data.totalCount,
+    pageSize: data.pageSize,
+    hasNextPage: data.hasNextPage,
+    hasPreviousPage: data.hasPreviousPage,
+    sort: data.sort,
+    data: vouchers,
+  };
+
+  return reverseItemsPagination;
+});
+
+const voucherGetByAccountFrontendValidatorV2 = paginatedDataSchema(
+  IVoucherForSingleAccountValidator
+);
+
 // Info: (20241030 - Murky) Below is new version of middleware
 
 const voucherNullSchema = z.union([z.object({}), z.string()]);
@@ -629,4 +731,13 @@ export const voucherDeleteSchema = {
   },
   outputSchema: voucherEntityValidator,
   frontend: voucherNullSchema,
+};
+
+export const voucherGetByAccountSchema = {
+  input: {
+    querySchema: voucherGetByAccountQueryValidatorV2,
+    bodySchema: voucherNullSchema,
+  },
+  outputSchema: voucherGetByAccountOutputValidatorV2,
+  frontend: voucherGetByAccountFrontendValidatorV2,
 };
