@@ -1,141 +1,96 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import CounterpartyItem, { ICounterpartyBeta } from '@/components/counterparty/counterparty_item';
+import CounterpartyItem from '@/components/counterparty/counterparty_item';
 import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
-import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
-import { useGlobalCtx } from '@/contexts/global_context';
-import { useUserCtx } from '@/contexts/user_context';
-import { VoucherType } from '@/constants/account';
-import PrintButton from '@/components/button/print_button';
-import DownloadButton from '@/components/button/download_button';
-// import { ILedgerPayload, MOCK_RESPONSE as LEDGER_DATA_RESPONSE } from '@/interfaces/ledger';
-import Image from 'next/image';
+import { CounterpartyType } from '@/constants/counterparty';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { IDatePeriod } from '@/interfaces/date_period';
+import type { ICounterPartyEntity } from 'src/interfaces/counterparty';
 
 interface CounterpartyListProps {
-  selectedDateRange: IDatePeriod | null; // Info: (20241104 - Anna) 接收來自上層的日期範圍
+  searchQuery: string; // Info: (20241106 - Anna) 接收來自上層的搜尋關鍵字
 }
 
-const CounterpartyList: React.FunctionComponent<CounterpartyListProps> = ({
-  selectedDateRange,
-}) => {
+const CounterpartyList: React.FunctionComponent<CounterpartyListProps> = ({ searchQuery }) => {
   const { t } = useTranslation('common');
-  const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  const [totalDebitAmount, setTotalDebitAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
-  const [totalCreditAmount, setTotalCreditAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
-
-  const { selectedCompany, isAuthLoading } = useUserCtx(); // (20241101 - Anna) 從 useUserCtx 取得 companyId
-
-  const [voucherList, setVoucherList] = useState<ICounterpartyBeta[]>([]);
+  // Info: (20241106 - Anna) 將 CounterPartyList 的狀態類型設為 ICounterPartyEntity[]
+  const [counterPartyList, setCounterPartyList] = useState<ICounterPartyEntity[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // (20241101 - Anna) 動態 totalPages 狀態
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
-  const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
 
-  // Info: (20240920 - Julian) css string
-  const tableCellStyles = 'text-center align-middle';
-  const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
-  //   const checkStyle = `'table-cell' text-center align-middle border-r border-stroke-neutral-quaternary`;
-
-  // Info: (20240920 - Julian) 日期排序按鈕
+  // Info: (20241106 - Anna) 排序按鈕
   const displayedDate = SortingButton({
-    string: t('journal:VOUCHER.VOUCHER_DATE'),
+    string: t('common:COMMON.PARTNER_S_NAME'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
 
-  // Info: (20240920 - Julian) credit 排序按鈕
-  const displayedCredit = SortingButton({
-    string: t('journal:JOURNAL.CREDIT'),
-    sortOrder: creditSort,
-    setSortOrder: setCreditSort,
-  });
-
-  // Info: (20240920 - Julian) debit 排序按鈕
-  const displayedDebit = SortingButton({
-    string: t('journal:JOURNAL.DEBIT'),
-    sortOrder: debitSort,
-    setSortOrder: setDebitSort,
-  });
-
-  const displayedSelectArea = (
-    <div className="ml-auto flex items-center gap-24px">
-      {/* Info: (20241004 - Anna) Export Voucher button */}
-      <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-      {/* Info: (20241004 - Anna) PrintButton */}
-      <PrintButton onClick={() => {}} disabled={false} />
-    </div>
-  );
-
-  /* Info: (20241104 - Anna) 新增狀態和參考變量以追蹤首次加載和日期範圍 */
+  // Info: (20241106 - Anna) 新增狀態和參考變量以追蹤首次加載和搜尋
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Info: (20241106 - Anna) 初始值設為 true 以顯示 Skeleton
 
   const fetchCounterpartyData = useCallback(async () => {
-    // Info: (20241105 - Anna) 使用靜態數據代替暫時的API回應數據
-    const staticData: ICounterpartyBeta[] = [
+    // Info: (20241106 - Anna) 使用符合 ICounterPartyEntity 結構的靜態資料
+    const counterpartyData: ICounterPartyEntity[] = [
       {
         id: 1,
-        date: 1702511200,
-        voucherNo: 'V001',
-        voucherType: 'Supplier' as VoucherType,
-        note: 'Note1',
-        accounting: [{ code: 'A1', name: 'Account1' }],
-        credit: [100],
-        debit: [50],
-        balance: [50],
+        companyId: 100,
+        name: 'Company A',
+        taxId: '123456789',
+        type: CounterpartyType.SUPPLIER,
+        note: 'Sample Note A',
+        createdAt: 1702511200,
+        updatedAt: 1702511200,
+        deletedAt: null,
       },
       {
         id: 2,
-        date: 1702511200,
-        voucherNo: 'V002',
-        voucherType: 'Both' as VoucherType,
-        note: 'Note2',
-        accounting: [{ code: 'A2', name: 'Account2' }],
-        credit: [200],
-        debit: [0],
-        balance: [200],
+        companyId: 101,
+        name: 'Company B',
+        taxId: '987654321',
+        type: CounterpartyType.CLIENT,
+        note: 'Sample Note B',
+        createdAt: 1702511200,
+        updatedAt: 1702511200,
+        deletedAt: null,
       },
       {
         id: 3,
-        date: 1702511200,
-        voucherNo: 'V002',
-        voucherType: 'Client' as VoucherType,
-        note: 'Note2',
-        accounting: [{ code: 'A2', name: 'Account2' }],
-        credit: [200],
-        debit: [0],
-        balance: [200],
+        companyId: 102,
+        name: 'Company C',
+        taxId: '555555555',
+        type: CounterpartyType.BOTH,
+        note: 'Sample Note C',
+        createdAt: 1702511200,
+        updatedAt: 1702511200,
+        deletedAt: null,
       },
     ];
 
-    setVoucherList(staticData); // Info: (20241105 - Anna) 將靜態數據直接設定到 voucherList 狀態
-    setTotalPages(1); // Info: (20241105 - Anna) 設定靜態數據的總頁數
-    setTotalDebitAmount(staticData.reduce((acc, item) => acc + (item.debit[0] || 0), 0)); // Info: (20241105 - Anna) 加總靜態數據中的 Debit
-    setTotalCreditAmount(staticData.reduce((acc, item) => acc + (item.credit[0] || 0), 0)); // Info: (20241105 - Anna) 加總靜態數據中的 Credit
+    // Info: (20241106 - Anna) 使用 searchQuery 過濾靜態數據
+    const filteredData = counterpartyData.filter(
+      (item) => item.name.includes(searchQuery) || item.note.includes(searchQuery)
+    );
+
+    setCounterPartyList(filteredData);
+    setTotalPages(1);
 
     setHasFetchedOnce(true);
-    setIsLoading(false);
-  }, [isAuthLoading, selectedCompany?.id, selectedDateRange, hasFetchedOnce]);
+    setIsLoading(false); // Info: (20241106 - Anna) 加載完成後將 isLoading 設為 false
+  }, [searchQuery]);
 
-  /* Info: (20241104 - Anna) 當選擇日期範圍更改時觸發數據加載 */
+  /* Info: (20241106 - Anna) 當搜尋關鍵字改變時觸發數據加載 */
   useEffect(() => {
-    if (!selectedDateRange) return;
     fetchCounterpartyData();
-  }, [fetchCounterpartyData, selectedDateRange]);
+  }, [fetchCounterpartyData, searchQuery]);
 
-  // Info: (20241101 - Anna) 根據狀態來渲染不同的內容
   if (!hasFetchedOnce && !isLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
-        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
           <p className="text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
@@ -150,88 +105,48 @@ const CounterpartyList: React.FunctionComponent<CounterpartyListProps> = ({
     );
   }
 
-  //  Info: (20241101 - Anna)  顯示數據
-  const displayedVoucherList = voucherList.map((voucher) => {
-    return <CounterpartyItem key={voucher.id} voucher={voucher} />;
-  });
+  // Info: (20241106 - Anna) updated: displayedCounterPartyList 將每個 counterpartyItem 傳給 CounterpartyItem
+  const displayedCounterPartyList = counterPartyList.map((counterparty) => (
+    <CounterpartyItem key={counterparty.id} counterparty={counterparty} />
+  ));
 
   return (
     <div className="flex flex-col">
-      {/* Info: (20240920 - Julian) export & select button */}
-      {displayedSelectArea}
-
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
-        {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
+      <div className="mb-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
             <div
-              className={`table-cell border-stroke-neutral-quaternary ${tableCellStyles} border-b`}
+              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
             >
-              <div className="flex items-center justify-center">
-                <div className="relative">
-                  <input type="checkbox" className={checkboxStyle} />
-                </div>
-              </div>
-            </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {displayedDate}
             </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('common:COMMON.CODE')}
-            </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
-            </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('journal:VOUCHER.VOUCHER_NO')}
-            </div>
-            <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-              {t('journal:VOUCHER.NOTE')}
-            </div>
-            {voucherList.some((voucher) => voucher.debit.some((d) => d !== 0)) && (
-              <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-                {displayedDebit}
-              </div>
-            )}
-            {voucherList.some((voucher) => voucher.credit.some((c) => c !== 0)) && (
-              <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
-                {displayedCredit}
-              </div>
-            )}
             <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')}`}
+              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
             >
-              {t('journal:VOUCHER.BALANCE')}
+              {t('common:COMMON.TAX_ID')}
+            </div>
+            <div
+              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+            >
+              {t('common:COMMON.TYPE')}
+            </div>
+            <div
+              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+            >
+              {t('certificate:COUNTERPARTY.NOTE')}
+            </div>
+            <div
+              className={`table-cell border-b border-stroke-neutral-quaternary text-center align-middle`}
+            >
+              {t('common:COMMON.OPERATIONS')}
             </div>
           </div>
         </div>
 
-        {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedVoucherList}</div>
+        <div className="table-row-group">{displayedCounterPartyList}</div>
       </div>
 
-      <div className="h-px w-full bg-neutral-100"></div>
-
-      {/* Info: (20241009 - Anna) 加總數字的表格 */}
-      <div className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg border-b border-t-0 bg-surface-neutral-surface-lv2 text-sm text-text-neutral-tertiary">
-        {/* Info: (20241009 - Anna) 表格內容 */}
-        <div className="col-span-1"></div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
-        </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {formatNumber(totalDebitAmount)}
-        </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
-        </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {formatNumber(totalCreditAmount)}
-        </div>
-      </div>
-
-      {/* Info: (20240920 - Julian) Pagination */}
-      <div className="mx-auto">
+      <div className="mx-auto mt-10">
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
