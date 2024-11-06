@@ -32,7 +32,7 @@ const Profile = () => {
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute right-0 top-full z-10 flex w-max translate-y-6 flex-col text-nowrap rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
+        <div className="absolute right-0 top-full z-70 flex w-max translate-y-6 flex-col text-nowrap rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
           {/* // Info: (20241014 - Liz) ===== 我的帳號 ===== */}
           {/* // ToDo: (20241014 - Liz) 連結到我的帳號頁面 */}
           <button
