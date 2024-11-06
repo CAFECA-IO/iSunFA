@@ -85,12 +85,7 @@ export async function updateUserRoleLoginAt(
     },
     data: {
       updatedAt: nowInSecond,
-      // ToDo: (20241030 - Jacky) SHOULD NOT UPDATE lastLoginAt in role
-      role: {
-        update: {
-          lastLoginAt: nowInSecond,
-        },
-      },
+      lastLoginAt: nowInSecond,
     },
     include: {
       role: true,

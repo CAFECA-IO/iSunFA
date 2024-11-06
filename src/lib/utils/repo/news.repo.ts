@@ -9,13 +9,14 @@ import { SortOrder } from '@/constants/sort';
 import { loggerError } from '@/lib/utils/logger_back';
 import { SortBy } from '@/constants/journal';
 
-export async function createNews(title: string, content: string, type: NewsType) {
+export async function createNews(imageId: number, title: string, content: string, type: NewsType) {
   const nowInSecond = getTimestampNow();
   let news: News | null = null;
 
   try {
     news = await prisma.news.create({
       data: {
+        imageId,
         title,
         content,
         type,

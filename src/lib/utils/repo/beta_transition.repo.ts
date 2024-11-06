@@ -195,6 +195,7 @@ export async function createInvoice(
   if (!certificate) {
     certificate = await prisma.certificate.create({
       data: {
+        uploaderId: 555,
         companyId,
         fileId: imageFileId,
         createdAt: nowTimestamp,
