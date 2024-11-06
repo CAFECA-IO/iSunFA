@@ -4,7 +4,7 @@ import { Button } from '@/components/button/button';
 import { LocaleKey } from '@/constants/normal_setting';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
 import SelectLauguageDropdown from '@/components/user_settings/select_language_dropdown';
-import PhoneNumberInput from './phone_number_input';
+import PhoneNumberInput from '@/components/user_settings/phone_number_input';
 
 interface UserInfoFormProps {
   firstName: string;

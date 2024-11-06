@@ -1,0 +1,13 @@
+{
+  "INFO": {
+    "NAME": "Company Name",
+    "TAX_ID": "Business Tax ID Number",
+    "WORK_TAG": "Work Tag",
+    "CREATE": "Create New Company"
+  },
+  "TAG": {
+    "FINANCIA": "Financial",
+    "TAX": "Tax",
+    "ALL": "All"
+  }
+}

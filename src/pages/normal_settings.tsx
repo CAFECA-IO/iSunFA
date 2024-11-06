@@ -36,7 +36,7 @@ const NormalSettingsPage: React.FC = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['common', 'setting'])),
+      ...(await serverSideTranslations(locale as string, ['common', 'setting', 'company'])),
     },
   };
 };
