@@ -2,6 +2,21 @@ import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
+/**
+ * Info: (20241105 - Murky)
+ * @description 這個是給前端用的 ICounterparty
+ */
+export const ICounterpartyValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  name: z.string(),
+  taxId: z.string(),
+  type: z.string(),
+  note: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
 // Info: (20241029 - Jacky) Counterparty null schema
 const counterpartyNullSchema = z.union([z.object({}), z.string()]);
 
