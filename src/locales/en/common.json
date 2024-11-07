@@ -192,7 +192,8 @@
     "SEP_ABR": "Sep",
     "OCT_ABR": "Oct",
     "NOV_ABR": "Nov",
-    "DEC_ABR": "Dec"
+    "DEC_ABR": "Dec",
+    "EVERY": "Every"
   },
   "SORTING": {
     "SORT_BY": "Sort By",
@@ -300,6 +301,8 @@
     "MIDTERM": "Midterm",
     "ENDING": "Ending",
     "DISPLAY_SUB_ACCOUNTS": "Display Sub-Accounts",
+    "PARTNER_S_NAME": "Partner’s Name",
+    "TAX_ID": "Tax ID",
     "SUBMIT": "Submit"
   },
   "DASHBOARD": {

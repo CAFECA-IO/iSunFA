@@ -167,7 +167,7 @@ export enum APIPath {
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
-  COUNTERPARTY_LIST = `${apiPrefix}/company/:companyId/counterparty`,
+  COUNTERPARTY_LIST = `${apiPrefixV2}/company/:companyId/counterparty`,
   COUNTERPARTY_ADD = `${apiPrefix}/company/:companyId/counterparty`,
   COUNTERPARTY_GET_BY_ID = `${apiPrefix}/company/:companyId/counterparty/:counterpartyId`,
   COUNTERPARTY_UPDATE = `${apiPrefix}/company/:companyId/counterparty/:counterpartyId`,

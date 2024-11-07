@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
@@ -25,7 +24,6 @@ import {
   // MONTH_ABR_LIST,
 } from '@/constants/display';
 import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
-import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
@@ -69,7 +67,6 @@ interface NewVoucherFormProps {
 
 const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
-  const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
   const {
@@ -134,8 +131,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [voucherLineItems, setLineItems] = useState<ILineItemUI[]>([initialVoucherLine]);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
-  const [totalCredit, setTotalCredit] = useState<number>(0);
-  const [totalDebit, setTotalDebit] = useState<number>(0);
+  const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
+  const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
   const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
   const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
   const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
@@ -266,6 +263,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           withVoucher: number;
           withoutVoucher: number;
         };
+        currency: string;
         certificates: ICertificate[];
       }>
     ) => {
@@ -316,6 +314,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const dateRef = useRef<HTMLDivElement>(null);
   const counterpartyInputRef = useRef<HTMLInputElement>(null);
+  const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
   // Info: (20241004 - Julian) 取得會計科目列表
@@ -324,39 +323,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       getAccountListHandler(selectedCompany.id);
     }
   }, [selectedCompany]);
-
-  // Info: (20241004 - Julian) 傳票列條件
-  useEffect(() => {
-    // Info: (20241004 - Julian) 計算總借貸金額
-    const debitTotal = voucherLineItems.reduce((acc, item) => {
-      return item.debit === true ? acc + item.amount : acc;
-    }, 0);
-    const creditTotal = voucherLineItems.reduce((acc, item) => {
-      return item.debit === false ? acc + item.amount : acc;
-    }, 0);
-    // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = voucherLineItems.some((item) => item.amount === 0 || item.debit === null);
-    // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
-    const accountingNull = voucherLineItems.some((item) => item.account === null);
-
-    // Info: (20241009 - Julian) 會計科目有應收付帳款時，顯示 Counterparty
-    const isAPorAR = voucherLineItems.some((item) => {
-      return AccountCodesOfAPandAR.includes(item.account?.code || '');
-    });
-
-    // Info: (20241009 - Julian) 會計科目有資產時，顯示 Asset
-    const isAsset = voucherLineItems.some((item) => {
-      return AccountCodesOfAsset.includes(item.account?.code || '');
-    });
-
-    setTotalDebit(debitTotal);
-    setTotalCredit(creditTotal);
-    setHaveZeroLine(zeroLine);
-    setIsAccountingNull(accountingNull);
-    setIsVoucherLineEmpty(voucherLineItems.length === 0);
-    setIsCounterpartyRequired(isAPorAR);
-    setIsAssetRequired(isAsset);
-  }, [voucherLineItems]);
 
   useEffect(() => {
     // Info: (20241004 - Julian) 查詢交易對象關鍵字時聚焦
@@ -535,7 +501,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ? reverses.map((reverse) => {
             return {
               voucherId: reverse.voucherNo,
-              lineItemIdBeReversed: reverse.id, // Info: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+              lineItemIdBeReversed: reverse.voucherId, // Info: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
               lineItemIdReverseOther: -1, // Info: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
               amount: reverse.amount,
             };
@@ -586,17 +552,18 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       //   setIsShowRecurringArrayHint(true);
       //   router.push('#voucher-recurring');
     } else if (
-      (totalCredit === 0 && totalDebit === 0) || // Info: (20241004 - Julian) 借貸總金額不可為 0
-      totalCredit !== totalDebit || // Info: (20241004 - Julian) 借貸金額需相等
+      isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
+      isTotalNotEqual || // Info: (20241004 - Julian) 借貸金額需相等
       haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
       isAccountingNull || // Info: (20241004 - Julian) 沒有未選擇的會計科目
       isVoucherLineEmpty // Info: (20241004 - Julian) 沒有傳票列
     ) {
       setFlagOfSubmit(!flagOfSubmit);
+      if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
     } else if (isAssetRequired && temporaryAssetList.length === 0) {
       // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
       setIsShowAssetHint(true);
-      router.push('#asset-section');
+      if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired && reverses.length === 0) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位
       setIsShowReverseHint(true);
@@ -610,6 +577,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // setIsShowRecurringPeriodHint(false);
       // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
+      setIsShowReverseHint(false);
       setFlagOfSubmit(!flagOfSubmit);
     }
   };
@@ -961,12 +929,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
-          <div className="col-span-2 flex flex-col">
-            <AssetSection
-              isShowAssetHint={isShowAssetHint}
-              assets={temporaryAssetList}
-              lineItems={voucherLineItems}
-            />
+          <div ref={assetRef} className="col-span-2 flex flex-col">
+            <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
@@ -983,16 +947,18 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             ) : null}
             <div ref={voucherLineRef} className="col-span-2">
               <VoucherLineBlock
-                totalCredit={totalCredit}
-                totalDebit={totalDebit}
                 lineItems={voucherLineItems}
                 setLineItems={setLineItems}
                 setIsReverseRequired={setIsReverseRequired}
-                haveZeroLine={haveZeroLine}
-                isAccountingNull={isAccountingNull}
-                isVoucherLineEmpty={isVoucherLineEmpty}
                 flagOfClear={flagOfClear}
                 flagOfSubmit={flagOfSubmit}
+                setIsTotalZero={setIsTotalZero}
+                setIsTotalNotEqual={setIsTotalNotEqual}
+                setHaveZeroLine={setHaveZeroLine}
+                setIsAccountingNull={setIsAccountingNull}
+                setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+                setIsCounterpartyRequired={setIsCounterpartyRequired}
+                setIsAssetRequired={setIsAssetRequired}
               />
             </div>
           </>
