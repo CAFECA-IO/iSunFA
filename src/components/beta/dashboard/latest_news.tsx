@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -8,10 +9,11 @@ import { NewsType } from '@/constants/news';
 
 const LatestNews = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
+  const { t } = useTranslation('common');
 
   /* === Fake Data === */
-  // Deprecated: (20241018 - Liz) 這是假資料，之後會改成從 user context 打 API 拿資料
-  const financialNews = [
+  // Deprecated: (20241018 - Liz) FINANCIAL_NEWS, SYSTEM_NEWS, MATCHING_NEWS 是假資料，之後會改成從 user context 打 API 拿資料
+  const FINANCIAL_NEWS = [
     {
       id: 'financial-1',
       title: '遇到金融詐騙免驚 移民署培力新住民金融消費新知',
@@ -44,7 +46,7 @@ const LatestNews = () => {
     },
   ];
 
-  const systemNews = [
+  const SYSTEM_NEWS = [
     {
       id: 'system-1',
       title: 'iSunFA V.14.10 更新版本',
@@ -77,7 +79,7 @@ const LatestNews = () => {
     },
   ];
 
-  const matchingNews = [
+  const MATCHING_NEWS = [
     {
       id: 'system-1',
       title: 'Amazon 上傳相關憑證，徵求記帳士開立傳票',
@@ -114,13 +116,13 @@ const LatestNews = () => {
 
   switch (activeTab) {
     case 0:
-      newsList = financialNews;
+      newsList = FINANCIAL_NEWS;
       break;
     case 1:
-      newsList = systemNews;
+      newsList = SYSTEM_NEWS;
       break;
     case 2:
-      newsList = matchingNews;
+      newsList = MATCHING_NEWS;
       break;
     default:
       newsList = [];
@@ -130,7 +132,9 @@ const LatestNews = () => {
     <DashboardCardLayout>
       <section className="flex flex-col gap-24px">
         <section className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-text-neutral-secondary">Latest News</h1>
+          <h1 className="text-xl font-bold text-text-neutral-secondary">
+            {t('common:BETA_DASHBOARD.LATEST_NEWS')}
+          </h1>
           <MoreLink href={ISUNFA_ROUTE.LATEST_NEWS_PAGE} />
         </section>
 

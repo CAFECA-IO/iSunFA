@@ -118,7 +118,7 @@ export const API_ZOD_SCHEMA = {
 
 export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_LIST]: companyListSchema,
-  [APIName.COMPANY_ADD]: companyPostSchema,
+  [APIName.CREATE_COMPANY]: companyPostSchema,
   [APIName.COMPANY_SELECT]: companySelectSchema,
   [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
@@ -132,9 +132,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
-  [APIName.ROLE_LIST]: userRoleListSchema,
-  [APIName.ROLE_SELECT]: userRoleSelectSchema,
-  [APIName.CREATE_ROLE]: userRolePostSchema,
+  [APIName.USER_ROLE_LIST]: userRoleListSchema,
+  [APIName.USER_SELECT_ROLE]: userRoleSelectSchema,
+  [APIName.USER_CREATE_ROLE]: userRolePostSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,

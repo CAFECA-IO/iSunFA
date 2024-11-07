@@ -1,25 +1,25 @@
 import React from 'react';
 import Image from 'next/image';
 import { FiEye, FiArrowRight } from 'react-icons/fi';
-import { RoleId } from '@/constants/role';
+import { RoleName } from '@/constants/role';
 import { useUserCtx } from '@/contexts/user_context';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IntroductionProps {
-  showingRole: React.SetStateAction<RoleId | null>;
+  showingRole: React.SetStateAction<RoleName | null>;
   togglePreviewModal: () => void;
 }
 interface ButtonsProps {
-  showingRole: RoleId;
+  showingRole: RoleName;
   togglePreviewModal: () => void;
 }
 interface BookkeeperIntroductionProps {
-  showingRole: RoleId;
+  showingRole: RoleName;
   togglePreviewModal: () => void;
 }
 interface EducationalTrialVersionIntroductionProps {
-  showingRole: RoleId;
+  showingRole: RoleName;
   togglePreviewModal: () => void;
 }
 
@@ -53,14 +53,30 @@ const DefaultIntroduction: React.FC = () => {
 };
 
 const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) => {
-  const { selectRole } = useUserCtx();
+  const { createRole } = useUserCtx();
+  const router = useRouter();
 
-  const handleStart = () => {
-    // Deprecated: (20241007 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('showingRole:', showingRole, '儲存 showingRole 到 userCtx');
+  const handleCreateRole = async () => {
+    try {
+      // Info: (20241029 - Liz) 呼叫 createRole 並等待結果
+      const isSuccess = await createRole(showingRole);
 
-    selectRole(showingRole);
+      // Deprecated: (20241101 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleCreateRole isSuccess:', isSuccess);
+
+      // Info: (20241029 - Liz) 根據回傳的布林值執行不同的操作
+      if (isSuccess) {
+        // Info: (20241029 - Liz) 角色建立成功，在這裡執行成功的操作。例如，顯示成功訊息、更新介面等
+
+        router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+      } else {
+        // ToDo: (20241029 - Liz) 角色建立失敗，在這裡執行失敗的操作。例如，顯示錯誤訊息、重試建立角色等
+      }
+    } catch (error) {
+      // console.error("發生錯誤:", error);
+      // Info: (20241029 - Liz) 處理錯誤的邏輯，例如顯示錯誤訊息
+    }
   };
 
   return (
@@ -74,16 +90,14 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
         <FiEye size={24} />
       </button>
 
-      <Link href={ISUNFA_ROUTE.JOB_RECORD}>
-        <button
-          type="button"
-          className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          onClick={handleStart}
-        >
-          <p>Start</p>
-          <FiArrowRight size={24} />
-        </button>
-      </Link>
+      <button
+        type="button"
+        className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+        onClick={handleCreateRole}
+      >
+        <p>Start</p>
+        <FiArrowRight size={24} />
+      </button>
     </div>
   );
 };
@@ -175,10 +189,10 @@ const Introduction: React.FC<IntroductionProps> = ({ showingRole, togglePreviewM
   return (
     <>
       {!showingRole && <DefaultIntroduction />}
-      {showingRole === RoleId.BOOKKEEPER && (
+      {showingRole === RoleName.BOOKKEEPER && (
         <BookkeeperIntroduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
       )}
-      {showingRole === RoleId.EDUCATIONAL_TRIAL_VERSION && (
+      {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
         <EducationalTrialVersionIntroduction
           showingRole={showingRole}
           togglePreviewModal={togglePreviewModal}

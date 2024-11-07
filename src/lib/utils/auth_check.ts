@@ -1,6 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { RoleName } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import {
@@ -13,17 +13,17 @@ import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interface
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { getUserById } from './repo/user.repo';
 
-const getTranslatedRoleName = (roleName: RoleName): string => {
+const getTranslatedRoleName = (roleName: CompanyRoleName): string => {
   const t = i18next.t.bind(i18next);
-  const roleTranslations: Record<RoleName, string> = {
-    [RoleName.SUPER_ADMIN]: t('common:ROLE.SUPER_ADMIN'),
-    [RoleName.ADMIN]: t('common:ROLE.ADMIN'),
-    [RoleName.OWNER]: t('common:ROLE.OWNER'),
-    [RoleName.ACCOUNTANT]: t('common:ROLE.ACCOUNTANT'),
-    [RoleName.BOOKKEEPER]: t('common:ROLE.BOOKKEEPER'),
-    [RoleName.FINANCE]: t('common:ROLE.FINANCE'),
-    [RoleName.VIEWER]: t('common:ROLE.VIEWER'),
-    [RoleName.TEST]: t('common:ROLE.TEST'),
+  const roleTranslations: Record<CompanyRoleName, string> = {
+    [CompanyRoleName.SUPER_ADMIN]: t('common:ROLE.SUPER_ADMIN'),
+    [CompanyRoleName.ADMIN]: t('common:ROLE.ADMIN'),
+    [CompanyRoleName.OWNER]: t('common:ROLE.OWNER'),
+    [CompanyRoleName.ACCOUNTANT]: t('common:ROLE.ACCOUNTANT'),
+    [CompanyRoleName.BOOKKEEPER]: t('common:ROLE.BOOKKEEPER'),
+    [CompanyRoleName.FINANCE]: t('common:ROLE.FINANCE'),
+    [CompanyRoleName.VIEWER]: t('common:ROLE.VIEWER'),
+    [CompanyRoleName.TEST]: t('common:ROLE.TEST'),
   };
 
   return roleTranslations[roleName] || roleName;
@@ -68,7 +68,7 @@ export async function checkUserCompanyOwner(params: {
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
     params.companyId,
     params.userId,
-    RoleName.OWNER
+    CompanyRoleName.OWNER
   );
   return !!admin;
 }
@@ -80,12 +80,16 @@ export async function checkUserCompanySuperAdmin(params: {
   const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
     params.companyId,
     params.userId,
-    RoleName.SUPER_ADMIN
+    CompanyRoleName.SUPER_ADMIN
   );
   return !!admin;
 }
 
-export async function checkRole(req: NextApiRequest, res: NextApiResponse, roleName: RoleName) {
+export async function checkRole(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  roleName: CompanyRoleName
+) {
   const translatedRoleName = getTranslatedRoleName(roleName);
   const session = await getSession(req, res);
   const { companyId, userId } = session;
