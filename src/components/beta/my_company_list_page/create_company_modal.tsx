@@ -12,7 +12,7 @@ interface CreateCompanyModalProps {
 }
 
 const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['company', 'common']);
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
   const [tag, setTag] = useState<CompanyTag>(CompanyTag.ALL);

@@ -528,6 +528,11 @@
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
   },
 
+  "PLACEHOLDER": {
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Number"
+  },
+
   "CREATE_ROLE_PAGE": {
     "CREATE_ROLE_TITLE": "Create Role"
   },
@@ -579,9 +584,14 @@
     "SYSTEM_NEWS": "System News",
     "MATCH_NEWS": "Match News"
   },
+  
   "PLACEHOLDER": {
     "ENTER_NAME": "Enter Name",
     "ENTER_NUMBER": "Enter Number",
     "ENTER_FULL_ADDRESS": "Please enter the full address"
+  },
+
+  "TO_DO_LIST_PAGE": {
+    "TO_DO_LIST_TITLE": "To-do List"
   }
 }
