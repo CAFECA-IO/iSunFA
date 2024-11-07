@@ -528,6 +528,11 @@
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
   },
 
+  "PLACEHOLDER": {
+    "ENTER_NAME": "输入姓名",
+    "ENTER_NUMBER": "输入号码"
+  },
+
   "CREATE_ROLE_PAGE": {
     "CREATE_ROLE_TITLE": "建立角色"
   },
@@ -579,8 +584,8 @@
     "SYSTEM_NEWS": "系统新闻",
     "MATCH_NEWS": "媒合资讯"
   },
-  "PLACEHOLDER": {
-    "ENTER_NAME": "输入姓名",
-    "ENTER_NUMBER": "输入号码"
+
+  "TO_DO_LIST_PAGE": {
+    "TO_DO_LIST_TITLE": "待办事项"
   }
 }
