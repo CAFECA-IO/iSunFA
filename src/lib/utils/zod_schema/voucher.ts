@@ -105,15 +105,15 @@ export const voucherEntityValidator = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
-  originalEvents: z.array(z.any()).optional(),
-  resultEvents: z.array(z.any()).optional(),
-  lineItems: z.array(z.any()).optional(),
+  originalEvents: z.array(z.any()),
+  resultEvents: z.array(z.any()),
+  lineItems: z.array(z.any()),
   aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
   aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
-  certificates: z.array(z.any()).optional(),
+  certificates: z.array(z.any()),
   issuer: z.any().optional(),
-  readByUsers: z.array(z.any()).optional(),
-  asset: z.array(z.any()).optional(),
+  readByUsers: z.array(z.any()),
+  asset: z.array(z.any()),
 });
 
 /**
