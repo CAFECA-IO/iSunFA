@@ -88,8 +88,8 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
             setTaxSerialNumer(data.taxSerialNumber);
             setRepresentativeName(data.representativeName);
             setCompanyAddress(data.address);
-            setCountry(data.country);
-            setCountryCode(data.countryCode);
+            setCountry(data.country as LocaleKey); // Info: (202411007 - Tzuhan)  需跟後端確認是否可以直接轉型
+            setCountryCode(LocaleKey.en); // ToDo: (202411007 - Tzuhan) 需跟後端確認是否有 countryCode
             setPhoneNumber(data.phone);
           }
         })
