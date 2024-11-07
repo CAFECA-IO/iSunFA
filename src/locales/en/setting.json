@@ -90,5 +90,14 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "Accounting Import",
     "IMPORT_FILE": "Import file",
     "MANUAL_ACCOUNT_OPENING": "Manual account opening"
+  },
+  "IP": {
+    "INFO": "Login device & IP information",
+    "LIST": "Login device & IP list",
+    "TIME": "Login time",
+    "DEVICE": "Login device",
+    "ADDRESS": "Login address",
+    "DETECT_DIFFERENT_IP_LOGIN": "Login detected from a different IP address.",
+    "VERIFY_YOUR_ACCOUNT_SECURITY": "Please verify your account security to prevent data leakage."
   }
 }
