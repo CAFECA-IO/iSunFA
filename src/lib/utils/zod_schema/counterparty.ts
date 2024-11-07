@@ -1,17 +1,18 @@
 import { z } from 'zod';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
 // Info: (20241029 - Jacky) Counterparty null schema
 const counterpartyNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241022 - Jacky) Counterparty list schema
 const counterpartyListQuerySchema = z.object({
-  companyId: z.number().int(),
+  companyId: zodStringToNumber,
   type: z.string().optional(),
   searchQuery: z.string().optional(),
-  targetPage: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
 // Info: (20241022 - Jacky) Counterparty post schema

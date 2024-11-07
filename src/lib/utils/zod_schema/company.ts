@@ -1,8 +1,11 @@
 import { z } from 'zod';
 // import { IZodSchema } from '@/interfaces/zod_schema';
 import { CompanyTag, CompanyUpdateAction } from '@/constants/company';
-import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { paginatedDataSchema } from './pagination';
+import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
+import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
+import { fileSchema } from '@/lib/utils/zod_schema/file';
+import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 
 // Info: (20241028 - Jacky) Company null schema
 const companyNullSchema = z.union([z.object({}), z.string()]);
@@ -10,8 +13,8 @@ const companyNullSchema = z.union([z.object({}), z.string()]);
 // Info: (20241016 - Jacky) Company list schema
 const companyListQuerySchema = z.object({
   searchQuery: z.string().optional(),
-  targetPage: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
 
 // Info: (20241016 - Jacky) Company post schema
@@ -48,38 +51,48 @@ const companySelectQuerySchema = z.object({
   companyId: z.number().int(),
 });
 
-const companySchema = z.object({
+const companyPrismaSchema = z.object({
   id: z.number().int(),
-  imageId: z.string(),
+  imagefile: fileSchema,
   name: z.string(),
   taxId: z.string(),
-  tag: z.nativeEnum(CompanyTag),
   startDate: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
 });
 
-const companyRoleSchema = z.object({
-  company: companySchema,
-  role: z.object({
-    id: z.number().int(),
-    name: z.string(),
-    permissions: z.array(z.string()),
-    lastLoginAt: z.number().int(),
-    createdAt: z.number().int(),
-    updatedAt: z.number().int(),
-  }),
+const companyOutputSchema = companyPrismaSchema.transform((data) => {
+  return {
+    ...data,
+    imageId: data.imagefile.url,
+  };
 });
 
+const companyRolePrismaSchema = z.object({
+  company: companyPrismaSchema,
+  tag: z.nativeEnum(CompanyTag),
+  order: z.number().int(),
+  role: rolePrimsaSchema,
+});
+
+const companyRoleOutputSchema = companyRolePrismaSchema.transform((data) => {
+  return {
+    ...data,
+    company: {
+      ...data.company,
+      imageId: data.company.imagefile.url,
+    },
+  };
+});
 // Info: (20241028 - Jacky) Paginated data schema
-const paginatedCompanyAndRoleSchema = paginatedDataSchema(companyRoleSchema);
+const paginatedCompanyAndrolePrimsaSchema = paginatedDataSchema(companyRoleOutputSchema);
 
 export const companyListSchema = {
   input: {
     querySchema: companyListQuerySchema,
     bodySchema: companyNullSchema,
   },
-  outputSchema: paginatedCompanyAndRoleSchema,
+  outputSchema: paginatedCompanyAndrolePrimsaSchema,
   frontend: companyNullSchema,
 };
 
@@ -88,7 +101,7 @@ export const companyPostSchema = {
     querySchema: companyPostQuerySchema,
     bodySchema: companyPostBodySchema,
   },
-  outputSchema: companyRoleSchema,
+  outputSchema: companyRoleOutputSchema,
   frontend: companyNullSchema,
 };
 
@@ -97,7 +110,7 @@ export const companyGetByIdSchema = {
     querySchema: companyGetByIdQuerySchema,
     bodySchema: companyNullSchema,
   },
-  outputSchema: companyRoleSchema,
+  outputSchema: companyRoleOutputSchema.nullable(),
   frontend: companyNullSchema,
 };
 
@@ -106,7 +119,7 @@ export const companyPutSchema = {
     querySchema: companyPutQuerySchema,
     bodySchema: companyPutBodySchema,
   },
-  outputSchema: companyRoleSchema,
+  outputSchema: companyRoleOutputSchema,
   frontend: companyNullSchema,
 };
 
@@ -115,7 +128,7 @@ export const companyDeleteSchema = {
     querySchema: companyDeleteQuerySchema,
     bodySchema: companyNullSchema,
   },
-  outputSchema: companySchema,
+  outputSchema: companyOutputSchema.nullable(),
   frontend: companyNullSchema,
 };
 
@@ -124,7 +137,7 @@ export const companySelectSchema = {
     querySchema: companySelectQuerySchema,
     bodySchema: companyNullSchema,
   },
-  outputSchema: companySchema,
+  outputSchema: companyOutputSchema,
   frontend: companyNullSchema,
 };
 

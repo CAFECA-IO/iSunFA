@@ -8,6 +8,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { createUserRole, listUserRole } from '@/lib/utils/repo/user_role.repo';
 import { File, Role, User, UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
+import { getRoleByName } from '@/lib/utils/repo/role.repo';
 
 const handleGetRequest: IHandleRequest<
   APIName.USER_ROLE_LIST,
@@ -27,15 +28,19 @@ const handleGetRequest: IHandleRequest<
 const handlePostRequest: IHandleRequest<
   APIName.USER_CREATE_ROLE,
   (UserRole & { user: User & { imageFile: File }; role: Role }) | null
-> = async ({ body }) => {
+> = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: (UserRole & { user: User & { imageFile: File }; role: Role }) | null = null;
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   statusMessage = STATUS_MESSAGE.CREATED;
-  const { userId, roleId } = body;
-  const createdUserRole = await createUserRole(userId, roleId);
-  payload = createdUserRole;
+  const { userId } = query;
+  const { roleName } = body;
+  const role = await getRoleByName(roleName);
+  if (role) {
+    const createdUserRole = await createUserRole(userId, role.id);
+    payload = createdUserRole;
+  }
 
   return { statusMessage, payload };
 };

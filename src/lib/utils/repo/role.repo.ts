@@ -25,6 +25,16 @@ export const getRoleById = async (id: number): Promise<Role | null> => {
   return result;
 };
 
+export const getRoleByName = async (name: string): Promise<Role | null> => {
+  let result: Role | null = null;
+  if (name) {
+    result = await prisma.role.findFirst({
+      where: { name },
+    });
+  }
+  return result;
+};
+
 export const listRole = async (): Promise<Role[]> => {
   return prisma.role.findMany();
 };
