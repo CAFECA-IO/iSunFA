@@ -24,7 +24,6 @@ const PageTitle = ({ pageTitle = '', goBackUrl = '' }: PageTitleProps) => {
           </Link>
         )
       }
-
       <h1 className="text-xl font-bold leading-32px text-text-neutral-secondary">{pageTitle}</h1>
     </div>
   );

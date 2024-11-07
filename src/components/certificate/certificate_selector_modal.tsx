@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 
 import FilterSection from '@/components/filter_section/filter_section';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -25,6 +26,7 @@ interface CertificateSelectorModalProps {
         withVoucher: number;
         withoutVoucher: number;
       };
+      currency: string;
       certificates: ICertificate[];
     }>
   ) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
@@ -41,6 +43,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   setSelectedIds,
   openUploaderModal,
 }) => {
+  const { t } = useTranslation(['certificate', 'common']);
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
 
@@ -74,9 +77,11 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           <RxCross1 size={32} />
         </button>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
-        <h2 className="flex justify-center gap-2 text-xl font-semibold">Select Certificates</h2>
+        <h2 className="flex justify-center gap-2 text-xl font-semibold">
+          {t('certificate:SELECT.TITLE')}
+        </h2>
         <p className="flex justify-center text-card-text-secondary">
-          Choosing the certificates you want to attach with the voucher
+          {t('certificate:SELECT.CONTENT')}
         </p>
         <FilterSection
           apiName={APIName.CERTIFICATE_LIST_V2}
@@ -84,7 +89,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
           pageSize={1000} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}
           onApiResponse={handleApiResponse}
-          types={Object.values(InvoiceType)}
+          types={Object.keys(InvoiceType)}
         />
         <div className="mt-12px px-4">
           <div className="flex items-center justify-between">
@@ -96,7 +101,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
               className="text-link-text-primary hover:underline"
               onClick={handleSelectAll}
             >
-              Select All
+              {t('common:COMMON.SELECT_ALL')}
             </button>
           </div>
         </div>
@@ -114,7 +119,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             className="gap-x-4px px-4 py-2"
             onClick={onClose}
           >
-            Cancel
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             id="upload-image-button"
@@ -123,7 +128,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             className="gap-x-4px px-4 py-2"
             onClick={handleComfirm}
           >
-            Confirm
+            {t('common:COMMON.CONFIRM')}
           </Button>
         </div>
       </div>

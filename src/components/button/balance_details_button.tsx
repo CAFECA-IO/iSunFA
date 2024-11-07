@@ -12,13 +12,17 @@ import Image from 'next/image';
 import PrintButton from './print_button';
 import DownloadButton from './download_button';
 
+/**
+ * Info: (20241106 - Murky)
+ * @Anna 新版的interface是 IVoucherForSingleAccount, 在src/interfaces/voucher.ts 386 行
+ */
 // Info: (20241003 - Anna) temp interface
 export interface IVoucherBeta {
-  id: number;
-  date: number;
+  id: number; // Info: (20241106 - Murky) voucherId
+  date: number; // Info: (20241106 - Murky) voucherDate
   voucherNo: string;
   voucherType: VoucherType;
-  note: string;
+  note: string; // Info: (20241106 - Murky) particular
   accounting: string[];
   credit: number[];
   debit: number[];
@@ -72,7 +76,7 @@ const BalanceDetailsButton: React.FC = () => {
       voucherType: VoucherType.TRANSFER,
       note: 'Mouse-0001',
       credit: [300],
-      debit: [300],
+      debit: [0],
       issuer: {
         avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
         name: 'Anna',
@@ -84,8 +88,8 @@ const BalanceDetailsButton: React.FC = () => {
       voucherNo: '20240922-0002',
       voucherType: VoucherType.EXPENSE,
       note: 'Mouse-0001',
-      credit: [300],
-      debit: [300],
+      credit: [0],
+      debit: [1700],
       issuer: {
         avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
         name: 'Anna',
@@ -97,8 +101,8 @@ const BalanceDetailsButton: React.FC = () => {
       voucherNo: '20240922-0002',
       voucherType: VoucherType.RECEIVE,
       note: 'Mouse-0001',
-      credit: [300],
-      debit: [300],
+      credit: [0],
+      debit: [1000000],
       issuer: {
         avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
         name: 'Anna',
@@ -111,7 +115,7 @@ const BalanceDetailsButton: React.FC = () => {
           <div className="ml-4 text-center align-middle">
             <input type="checkbox" className={checkboxStyle} />
           </div>
-          <div className="mb-2 mr-14 mt-4">
+          <div className="mb-2 mr-6 mt-4">
             {/* Info: (20241003 - Anna) 使用 CalendarIcon 組件顯示日期 */}
             <CalendarIcon timestamp={voucher.date} />
           </div>
@@ -121,10 +125,28 @@ const BalanceDetailsButton: React.FC = () => {
         {getVoucherIcon(voucher.voucherType)}
       </div>
       <div className={tableCellStyles}>{voucher.note}</div>
-      <div className={tableCellStyles}>{voucher.credit}</div>
-      <div className={tableCellStyles}>{voucher.debit}</div>
-      <div className={`${tableCellStyles} flex-col justify-center gap-4`}>
-        <div className="font-semibold text-support-baby-600"> {voucher.voucherNo}</div>
+      {/* Info: (20241029 - Anna) 借方或貸方哪邊有金額就顯示對應的icon */}
+      <div className={`${tableCellStyles} pl-6`}>
+        {voucher.debit[0] > 0 ? (
+          <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-success px-6px py-2px text-badge-text-success-solid">
+            <div className="h-6px w-6px rounded border-3px border-badge-text-success-solid"></div>
+            <p>{t('journal:JOURNAL.DEBIT')}</p>
+          </div>
+        ) : (
+          <div className="flex w-70px items-center justify-center gap-4px rounded-full bg-badge-surface-soft-error px-6px py-2px text-badge-text-error-solid">
+            <div className="h-6px w-6px rounded border-3px border-badge-text-error-solid"></div>
+            <p>{t('journal:JOURNAL.CREDIT')}</p>
+          </div>
+        )}
+      </div>
+      {/* Info: (20241029 - Anna) 借方或貸方哪邊有金額就顯示 */}
+      <div className={`table-cell pr-6 text-end align-middle`}>
+        {voucher.debit[0] !== 0
+          ? voucher.debit[0].toLocaleString()
+          : voucher.credit[0].toLocaleString()}
+      </div>
+      <div className={`table-cell flex-col justify-end gap-4 text-end align-middle`}>
+        <div className="mr-6 font-semibold text-support-baby-600"> {voucher.voucherNo}</div>
         <div className="relative mr-6 flex items-center justify-end gap-4px text-text-neutral-primary">
           <Image
             src={voucher.issuer.avatar}
@@ -159,7 +181,7 @@ const BalanceDetailsButton: React.FC = () => {
       {/* Info: (20241003 - Anna) 判斷是否顯示 Modal */}
       {isModalVisible && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50">
-          <div className="relative w-3/4 rounded-lg border border-stroke-neutral-quaternary bg-neutral-50 p-6 lg:w-1/2">
+          <div className="relative w-1000px rounded-lg border border-stroke-neutral-quaternary bg-neutral-50 p-6">
             <div className="flex items-center justify-center">
               <h5 className="text-xl font-bold text-neutral-600">
                 透過損益按公允價值衡量之金融資產 - 流動
@@ -185,23 +207,24 @@ const BalanceDetailsButton: React.FC = () => {
                 <div className="table-header-group h-60px border-b bg-surface-neutral-surface-lv1 text-sm font-normal text-text-neutral-tertiary">
                   <div className="table-row">
                     <div className={`${tableCellStyles} border-r`}>
-                      <div className="flex items-center">
-                        <div className="ml-4 text-center align-middle">
+                      <div className="flex w-160px items-center">
+                        <div className="ml-4 w-32px text-center align-middle">
                           <input type="checkbox" className={checkboxStyle} />
                         </div>
                         {/* Info: (20241003 - Anna) 日期排序按鈕 */}
                         {displayedDate}
                       </div>
                     </div>
-                    <div className={`${tableCellStyles} border-r`}>{t('common:COMMON.TYPE')}</div>
-                    <div className={`${tableCellStyles} border-r`}>{t('journal:VOUCHER.NOTE')}</div>
-                    <div className={`${tableCellStyles} border-r`}>
-                      {t('journal:JOURNAL.CREDIT')}
+                    <div className={`${tableCellStyles} w-80px border-r`}>
+                      {t('common:COMMON.TYPE')}
                     </div>
-                    <div className={`${tableCellStyles} border-r`}>
-                      {t('journal:JOURNAL.DEBIT')}
+                    <div className={`${tableCellStyles} w-236px border-r`}>
+                      {t('journal:VOUCHER.NOTE')}
                     </div>
-                    <div className={tableCellStyles}>
+                    <th className={`${tableCellStyles} w-236px border-r font-normal`} colSpan={2}>
+                      {t('report_401:TAX_REPORT.AMOUNT')}
+                    </th>
+                    <div className={`${tableCellStyles} w-236px`}>
                       {t('journal:VOUCHER.VOUCHER_NO')} & {t('journal:VOUCHER.ISSUER')}
                     </div>
                   </div>

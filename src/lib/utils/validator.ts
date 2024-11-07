@@ -1,9 +1,13 @@
-import { API_ZOD_SCHEMA } from '@/constants/zod_schema';
-import { NextApiRequest } from 'next';
+import { API_ZOD_SCHEMA, ZOD_SCHEMA_API } from '@/constants/zod_schema';
+// import { NextApiRequest } from 'next';
 import { z } from 'zod';
-import { loggerRequest } from '@/lib/utils/logger_back';
-import { APIPath } from '@/constants/api_connection';
+// import { loggerRequest } from '@/lib/utils/logger_back';
+// import { APIPath } from '@/constants/api_connection';
 import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
+import { NextApiRequest } from 'next';
+import { APIPath } from '@/constants/api_connection';
+import { loggerRequest, loggerError } from '@/lib/utils/logger_back';
+
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
  * it will cause error when not implement all the keys
@@ -17,6 +21,16 @@ import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
 export type API_ZodSchema = typeof API_ZOD_SCHEMA;
 export type QueryType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['query']>;
 export type BodyType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['body']>;
+
+export type query<T extends keyof typeof ZOD_SCHEMA_API> = z.infer<
+  (typeof ZOD_SCHEMA_API)[T]['input']['querySchema']
+>;
+export type body<T extends keyof typeof ZOD_SCHEMA_API> = z.infer<
+  (typeof ZOD_SCHEMA_API)[T]['input']['bodySchema']
+>;
+export type output<T extends keyof typeof ZOD_SCHEMA_API> = z.infer<
+  (typeof ZOD_SCHEMA_API)[T]['outputSchema']
+>;
 
 /**
  * // Info: (20241023 - Jacky) Validates and formats data using a Zod schema.
@@ -44,8 +58,8 @@ export type BodyType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['
  * }
  */
 export function validateAndFormatData<T extends z.ZodTypeAny>(
-  rawData: unknown,
-  schema: T
+  schema: T,
+  rawData: unknown
 ): z.infer<T> {
   const { data, success, error } = schema.safeParse(rawData);
   if (success) {
@@ -53,12 +67,58 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
   } else {
     const zodErrorMessage = JSON.parse(JSON.stringify(error.message));
     // // Info: (20241023 - Jacky) No logger used here, since this function needs to be used in the frontend too
-    throw new ApiValidationError(`Data validation failed`, {
+    const errorOption = {
       dto: rawData,
       zodErrorMessage,
       issues: error.issues,
-    });
+    };
+    const logger = loggerError(
+      0,
+      `Validate and format data by zod failed`,
+      JSON.stringify(errorOption)
+    );
+    logger.error('Data validation failed');
+    throw new ApiValidationError(`Data validation failed`, errorOption);
   }
+}
+
+export function validateRequestData<T extends keyof typeof ZOD_SCHEMA_API>(
+  apiName: T,
+  req: NextApiRequest
+): { query: query<T> | null; body: body<T> | null } {
+  const { input } = ZOD_SCHEMA_API[apiName];
+  const { querySchema, bodySchema } = input;
+  let query = null;
+  let body = null;
+
+  try {
+    query = validateAndFormatData(querySchema, req.query);
+    body = validateAndFormatData(bodySchema, req.body);
+  } catch (error) {
+    // Info: (20240909 - Murky) if validator is z.ZodOptional (which used when query or body is not needed), it will return null
+    query = null;
+    body = null;
+  }
+
+  return { query, body };
+}
+
+export function validateOutputData<T extends keyof typeof ZOD_SCHEMA_API>(
+  apiName: T,
+  data: unknown
+): { isOutputDataValid: boolean; outputData: output<T> | null } {
+  let outputData = null;
+  let isOutputDataValid = true;
+  const { outputSchema } = ZOD_SCHEMA_API[apiName];
+
+  try {
+    outputData = validateAndFormatData(outputSchema, data);
+  } catch (error) {
+    isOutputDataValid = false;
+    outputData = null;
+  }
+
+  return { isOutputDataValid, outputData };
 }
 
 export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
@@ -80,8 +140,8 @@ export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
 
   try {
     // Info: (20240909 - Murky) Validate query and body
-    payload.query = validateAndFormatData(query, queryValidator);
-    payload.body = validateAndFormatData(body, bodyValidator);
+    payload.query = validateAndFormatData(queryValidator, query);
+    payload.body = validateAndFormatData(bodyValidator, body);
   } catch (_error) {
     const error = _error as ApiValidationError;
     const logger = loggerRequest(

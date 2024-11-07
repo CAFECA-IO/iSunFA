@@ -274,6 +274,13 @@ const MyCompanyListPageBody = () => {
     }
   };
 
+  /** Info: (20241105 - Tzuhan) 這是使用共用元件的範例，但是這個共用元件還沒有實作完成，所以先註解掉
+   const handleApiResponse = (resData: IPaginatedData<string[]>) => {
+     // eslint-disable-next-line no-console
+     console.log(resData);
+   };
+ */
+
   return (
     <main className="flex h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
@@ -292,6 +299,17 @@ const MyCompanyListPageBody = () => {
             <FiSearch size={20} />
           </button>
         </div>
+
+        {/* Info: (20241105 - Tzuhan) 這裡是使用共用元件的範例，但是這個共用元件還沒有實作完成，所以先註解掉 */}
+        {/* <FilterSection<string[]>
+          className="flex-auto"
+          params={{}}
+          apiName={APIName.COMPANY_LIST}
+          onApiResponse={handleApiResponse}
+          page={currentPage}
+          pageSize={DEFAULT_PAGE_LIMIT}
+          diseableDateSearch
+        /> */}
 
         <div className="flex items-center gap-16px">
           <button

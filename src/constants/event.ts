@@ -33,6 +33,6 @@ export enum EventEntityFrequency {
    * @description Happened only once, used when not need to be repeated
    */
   ONCE = 'once',
+  WEEKLY = 'weekly',
   MONTHLY = 'monthly',
-  YEARLY = 'yearly',
 }

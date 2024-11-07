@@ -1,7 +1,7 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
-import { ICompanyKYCForm } from './company_kyc';
-import { ICertificate } from './certificate';
+import { ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { ICertificate } from '@/interfaces/certificate';
 
 export type IAPIName =
   | 'AGREE_TO_TERMS'
@@ -97,19 +97,27 @@ export type IAPIName =
   | 'ASK_AI_V2'
   | 'ASK_AI_RESULT_V2'
   | 'VOUCHER_LIST_V2'
+  | 'REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2'
+  | 'VOUCHER_LIST_GET_BY_ACCOUNT_V2'
   | 'GET_ACCOUNTING_SETTING'
   | 'UPDATE_ACCOUNTING_SETTING'
   | 'ASSET_LIST_V2'
   | 'VOUCHER_LIST_V2'
+  | 'VOUCHER_DELETE_V2'
   | 'CERTIFICATE_LIST_V2'
   | 'CERTIFICATE_GET_V2'
   | 'CERTIFICATE_POST_V2'
   | 'CERTIFICATE_PUT_V2'
   | 'CERTIFICATE_DELETE_V2'
+  | 'CERTIFICATE_DELETE__MULTIPLE_V2'
   | 'ACCOUNTING_SETTING_GET'
   | 'ACCOUNTING_SETTING_UPDATE'
   | 'CREATE_ASSET_V2'
-  | 'DELETE_ASSET_V2';
+  | 'DELETE_ASSET_V2'
+  | 'UPDATE_ASSET_V2'
+  | 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE'
+  | 'TRIAL_BALANCE_LIST'
+  | 'IP_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

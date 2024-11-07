@@ -1,5 +1,5 @@
-import { ICertificateUI } from '@/interfaces/certificate';
 import React from 'react';
+import { ICertificateUI } from '@/interfaces/certificate';
 import { FaPlus } from 'react-icons/fa6';
 import { FiDownload, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
@@ -45,7 +45,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   addOperations,
   exportOperations,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'certificate']);
   // Info: (20240920 - tzuhan) 全選操作
   const handleSelectAll = () => {
     handleSelect(
@@ -72,7 +72,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   };
 
   return (
-    <div className={`flex items-center justify-between ${className || ''}`}>
+    <div className={`flex h-42px items-center justify-between ${className || ''}`}>
       {active ? (
         <>
           {/* Info: (20240920 - tzuhan) 左側選擇計數顯示 */}
@@ -82,19 +82,6 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
 
           {/* Info: (20240920 - tzuhan) 中間操作按鈕 */}
           <div className="flex items-center space-x-4 text-blue-500">
-            {exportOperations &&
-              exportOperations.map((operation) => (
-                <Button
-                  type="button"
-                  variant="tertiaryOutline"
-                  className="py-1.5"
-                  onClick={operation.onClick}
-                >
-                  <FiDownload />
-                  {/* <div>{`${t('common:SELECTION.EXPORT')} ${operation.buttonStr ? t(`common:SELECTION.${operation.buttonStr.toUpperCase()}`) : ''}`}</div> */}
-                  <div>{t(`common:SELECTION.${operation.buttonStr.toUpperCase}`)}</div>
-                </Button>
-              ))}
             {addOperations &&
               addOperations.map((operation) => (
                 <Button
@@ -104,9 +91,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                   onClick={operation.onClick}
                 >
                   <FaPlus />
-                  {/* <div>{t('common:SELECTION.ADD_NEW_ASSET')}</div> */}
-                  {/* <div>{t('common:SELECTION.ADD_NEW_VOUCHER')}</div> */}
-                  <div>{t(`common:SELECTION.${operation.buttonStr.toUpperCase}`)}</div>
+                  <div>{t(operation.buttonStr)}</div>
                 </Button>
               ))}
             {onDelete && (
@@ -142,12 +127,11 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                 <Button
                   type="button"
                   variant="tertiaryOutline"
-                  className="py-1.5"
+                  className="h-36px py-1.5"
                   onClick={operation.onClick}
                 >
                   <FiDownload />
-                  {/* <div>{`${t('common:SELECTION.EXPORT')} ${operation.buttonStr ? t(`common:SELECTION.${operation.buttonStr.toUpperCase()}`) : ''}`}</div> */}
-                  <div>{t(`common:SELECTION.${operation.buttonStr.toUpperCase}`)}</div>
+                  <div>{t(operation.buttonStr)}</div>
                 </Button>
               ))}
             {isSelectable && (

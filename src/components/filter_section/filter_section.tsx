@@ -26,6 +26,7 @@ interface FilterSectionProps<T> {
   types?: string[];
   statuses?: string[];
   sortingOptions?: SortBy[];
+  enableSearch?: boolean;
   onApiResponse?: (resData: IPaginatedData<T>) => void; // Info: (20240919 - tzuhan) 回傳 API 回應資料
   viewType?: DISPLAY_LIST_VIEW_TYPE;
   viewToggleHandler?: (viewType: DISPLAY_LIST_VIEW_TYPE) => void;
@@ -35,6 +36,7 @@ interface FilterSectionProps<T> {
     sort: SortBy;
     sortOrder: SortOrder;
   }[];
+  diseableDateSearch?: boolean;
 }
 
 const FilterSection = <T,>({
@@ -44,6 +46,7 @@ const FilterSection = <T,>({
   page = 1,
   pageSize = DEFAULT_PAGE_LIMIT,
   tab,
+  enableSearch = true,
   types = [],
   statuses = [],
   sortingOptions = [],
@@ -53,6 +56,7 @@ const FilterSection = <T,>({
   dateSort,
   setDateSort,
   otherSorts,
+  diseableDateSearch,
 }: FilterSectionProps<T>) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { toastHandler } = useModalContext();
@@ -96,8 +100,11 @@ const FilterSection = <T,>({
           tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
           type: selectedType,
           status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
-          // Info: (20241022 - tzuhan) @Murky, 這裡排序需要可以多種方式排序，所以需要修改
-          sortOption: JSON.stringify(selectedSortOptions),
+          // Info: (20241105 - Murky) @tzuhan, @Julian @Jacky, @Shirley, 這邊改用 `sortOption=by:order-by:order` 的方式來傳遞排序條件
+          // sortOption: JSON.stringify(selectedSortOptions),
+          sortOption: Object.values(selectedSortOptions)
+            .map((option) => `${option.by}:${option.order}`)
+            .join('-'),
           startDate: !selectedDateRange.startTimeStamp
             ? undefined
             : selectedDateRange.startTimeStamp,
@@ -221,17 +228,19 @@ const FilterSection = <T,>({
       )}
 
       {/* Info: (20240919 - tzuhan) 時間區間篩選 */}
-      <div className="flex min-w-250px flex-1 flex-col">
-        <DatePicker
-          period={selectedDateRange}
-          setFilteredPeriod={setSelectedDateRange}
-          type={DatePickerType.TEXT_PERIOD}
-          btnClassName=""
-        />
-      </div>
+      {!diseableDateSearch && (
+        <div className="flex min-w-250px flex-1 flex-col">
+          <DatePicker
+            period={selectedDateRange}
+            setFilteredPeriod={setSelectedDateRange}
+            type={DatePickerType.TEXT_PERIOD}
+            btnClassName=""
+          />
+        </div>
+      )}
 
       {/* Info: (20240919 - tzuhan) 搜索欄 */}
-      <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      {enableSearch && <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
 
       {/* Info: (20240919 - tzuhan) 顯示風格切換 */}
       {viewType && viewToggleHandler && (

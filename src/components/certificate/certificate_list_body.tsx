@@ -1,4 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
@@ -30,6 +31,8 @@ import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upl
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 import { InvoiceType } from '@/constants/invoice';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 
 interface CertificateListBodyProps {}
 
@@ -38,7 +41,8 @@ const sanitizeFileName = (fileName: string): string => {
 };
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
-  const { t } = useTranslation('certificate');
+  const { t } = useTranslation(['certificate', 'common']);
+  const router = useRouter();
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const params = { companyId: selectedCompany?.id };
@@ -47,10 +51,14 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
   const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_PUT_V2);
   const { trigger: deleteCertificateAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
+  const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
   const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  const [data, setData] = useState<{ [id: string]: ICertificateUI }>({});
+  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
+  const [selectedCertificates, setSelectedCertificates] = useState<{
+    [id: string]: ICertificateUI;
+  }>({});
   const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
   const [unRead, setUnRead] = useState<{
     withVoucher: number;
@@ -75,9 +83,75 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([]);
-  const [exportOperations, setExportOperations] = useState<ISelectionToolBarOperation[]>([]);
   const [currency, setCurrency] = useState<string>('TWD');
+
+  const handleAddVoucher = useCallback(() => {
+    router.push({
+      pathname: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
+    });
+  }, [selectedCertificates]);
+
+  const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([
+    {
+      operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
+      buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
+      onClick: handleAddVoucher,
+    },
+  ]);
+
+  const handleDownloadItem = useCallback(
+    (id: number) => {
+      const { file } = certificates[id];
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.name || `image_${file.id}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    [certificates]
+  );
+
+  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
+
+  const handleExportModalApiResponse = useCallback(
+    (
+      resData: IPaginatedData<{
+        totalInvoicePrice: number;
+        unRead: {
+          withVoucher: number;
+          withoutVoucher: number;
+        };
+        currency: string;
+        certificates: ICertificate[];
+      }>
+    ) => {
+      setExportModalData(resData.data.certificates);
+    },
+    []
+  );
+
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+
+  const handleExport = useCallback(() => {
+    setIsExportModalOpen(true);
+  }, []);
+
+  const onExport = useCallback(() => {
+    if (exportModalData.length > 0) {
+      exportModalData.forEach((item) => {
+        handleDownloadItem(item.id);
+      });
+    }
+  }, [exportModalData]);
+
+  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
+    {
+      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+      buttonStr: 'certificate:EXPORT.TITLE',
+      onClick: handleExport,
+    },
+  ]);
 
   const handleApiResponse = useCallback(
     (
@@ -95,7 +169,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       const dummyData = {
         data: {
           totalInvoicePrice: dummyCertificateList.reduce(
-            (acc, item) => acc + item.invoice.totalPrice,
+            (acc, item) => acc + (item.invoice.totalPrice || 0),
             0
           ),
           unRead: {
@@ -142,7 +216,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           },
           {} as { [id: number]: ICertificateUI }
         );
-        setData(certificateData);
+        setCertificates(certificateData);
       } catch (error) {
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
@@ -158,73 +232,75 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleSelect = useCallback(
     (ids: number[], isSelected: boolean) => {
       const updatedData = {
-        ...data,
+        ...certificates,
       };
       if (ids.length === Object.keys(updatedData).length) {
         setIsSelectedAll(isSelected);
       } else {
         setIsSelectedAll(false);
       }
+      const selectedData: { [id: string]: ICertificateUI } = {
+        ...selectedCertificates,
+      };
       ids.forEach((id) => {
         updatedData[id] = {
           ...updatedData[id],
           isSelected,
         };
+        if (isSelected) {
+          selectedData[id] = updatedData[id];
+        } else {
+          delete selectedData[id];
+        }
       });
-      setData(updatedData);
+      localStorage.setItem('selectedCertificates', JSON.stringify(selectedData));
+      setCertificates(updatedData);
+      setSelectedCertificates(selectedData);
     },
-    [data, activeTab, isSelectedAll]
+    [certificates, activeTab, isSelectedAll]
   );
 
-  const filterSelectedIds = useCallback(() => {
-    return Object.keys(data).filter((id) => data[parseInt(id, 10)].isSelected);
-  }, [data, activeTab]);
-
-  const handleAddVoucher = useCallback(() => {
-    // Todo: (20240920 - tzuhan) Add voucher
-    // Deprecated: (20240920 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Add voucher on selected ids:', filterSelectedIds());
-  }, [filterSelectedIds]);
-
-  const handleDeleteItem = useCallback((id: number) => {
-    messageModalDataHandler({
-      title: t('certificate:DELETE.TITLE'),
-      content: t('certificate:DELETE.CONTENT'),
-      notes: `${data[id].invoice.name}?`,
-      messageType: MessageType.WARNING,
-      submitBtnStr: t('certificate:DELETE.YES'),
-      submitBtnFunction: async () => {
-        try {
-          const { success } = await deleteCertificateAPI({
-            params: { companyId, certificateId: id },
-            query: { certificateId: id },
-          });
-          if (success) {
+  const handleDeleteItem = useCallback(
+    (id: number) => {
+      messageModalDataHandler({
+        title: t('certificate:DELETE.TITLE'),
+        content: t('certificate:DELETE.CONTENT'),
+        notes: `${certificates[id].invoice.name}?`,
+        messageType: MessageType.WARNING,
+        submitBtnStr: t('certificate:DELETE.YES'),
+        submitBtnFunction: async () => {
+          try {
+            const { success } = await deleteCertificateAPI({
+              params: { companyId, certificateId: id },
+              query: { certificateId: id },
+            });
+            if (success) {
+              toastHandler({
+                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+                type: ToastType.SUCCESS,
+                content: t('certificate:DELETE.SUCCESS'),
+                closeable: true,
+              });
+            } else throw new Error(t('certificate:DELETE.ERROR'));
+          } catch (error) {
             toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-              type: ToastType.SUCCESS,
-              content: t('certificate:DELETE.SUCCESS'),
+              id: ToastId.DELETE_CERTIFICATE_ERROR,
+              type: ToastType.ERROR,
+              content: t('certificate:ERROR.WENT_WRONG'),
               closeable: true,
             });
-          } else throw new Error(t('certificate:DELETE.ERROR'));
-        } catch (error) {
-          toastHandler({
-            id: ToastId.DELETE_CERTIFICATE_ERROR,
-            type: ToastType.ERROR,
-            content: t('certificate:ERROR.WENT_WRONG'),
-            closeable: true,
-          });
-        }
-      },
-      backBtnStr: t('certificate:DELETE.NO'),
-    });
-    messageModalVisibilityHandler();
-  }, []);
+          }
+        },
+        backBtnStr: t('certificate:DELETE.NO'),
+      });
+      messageModalVisibilityHandler();
+    },
+    [certificates]
+  );
 
   const handleDeleteSelectedItems = useCallback(() => {
     // Info: (20241025 - tzuhan) 找出所有選中的項目 ID
-    const selectedIds = Object.keys(data).filter((id) => data[id].isSelected);
+    const selectedIds = Object.keys(certificates).filter((id) => certificates[id].isSelected);
 
     // Info: (20241025 - tzuhan) 如果有選中的項目，顯示刪除確認模態框
     if (selectedIds.length > 0) {
@@ -240,22 +316,21 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
             // eslint-disable-next-line no-console
             console.log('Remove multiple ids:', selectedIds);
 
-            const args = (id: string) => ({
-              params: { companyId, certificateId: id },
-              query: { certificateId: id },
+            const { success: deleteMultipleSuccess, code } = await deleteCertificatesAPI({
+              params: { companyId },
+              query: { certificateIds: selectedIds },
             });
-            const promises = selectedIds.map((id) => deleteCertificateAPI(args(id)));
-
-            // Info: (20241025 - tzuhan) 這裡應執行實際的刪除邏輯
-            await Promise.all(promises);
-
-            // Info: (20241025 - tzuhan) 顯示刪除成功的提示
-            toastHandler({
-              id: ToastId.DELETE_CERTIFICATE_SUCCESS,
-              type: ToastType.SUCCESS,
-              content: t('certificate:DELETE.SUCCESS'),
-              closeable: true,
-            });
+            if (deleteMultipleSuccess) {
+              // Info: (20241025 - tzuhan) 顯示刪除成功的提示
+              toastHandler({
+                id: ToastId.DELETE_CERTIFICATE_SUCCESS,
+                type: ToastType.SUCCESS,
+                content: t('certificate:DELETE.SUCCESS'),
+                closeable: true,
+              });
+            } else {
+              throw new Error(code);
+            }
           } catch (error) {
             // Info: (20241025 - tzuhan) 顯示錯誤提示
             toastHandler({
@@ -272,50 +347,32 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       // Info: (20241025 - tzuhan) 顯示確認刪除的模態框
       messageModalVisibilityHandler();
     }
-  }, [data, activeTab, t, messageModalDataHandler, messageModalVisibilityHandler, toastHandler]);
+  }, [
+    certificates,
+    activeTab,
+    t,
+    messageModalDataHandler,
+    messageModalVisibilityHandler,
+    toastHandler,
+  ]);
 
-  const handleDownloadItem = useCallback((id: number) => {
-    const { file } = data[id];
-    // Deprecated: (20241025 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('id', id, 'data', data, 'Download file:', file);
-    const link = document.createElement('a');
-    link.href = file.url;
-    link.download = file.name || `image_${file.id}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, []);
-
-  // Info: (20240923 - tzuhan) 下載選中項目
-  const handleDownloadSelectedItems = useCallback(() => {
-    // TODO: (20240923 - tzuhan) 下載選中的項目
-    Object.keys(data).forEach((id) => {
-      if (data[parseInt(id, 10)].isSelected) {
-        handleDownloadItem(parseInt(id, 10));
+  const onTabClick = useCallback(
+    (tab: string) => {
+      if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
+        setAddOperations([
+          {
+            operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
+            buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
+            onClick: handleAddVoucher,
+          },
+        ]);
+      } else {
+        setAddOperations([]);
       }
-    });
-  }, [data, activeTab]);
-
-  const onTabClick = useCallback((tab: string) => {
-    setActiveTab(tab as InvoiceTabs);
-    if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
-      setAddOperations([
-        {
-          operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-          buttonStr: t('certificate:OPERATION.ADD_VOUCHER'),
-          onClick: handleAddVoucher,
-        },
-      ]);
-      setExportOperations([
-        {
-          operation: CERTIFICATE_USER_INTERACT_OPERATION.DELETE,
-          buttonStr: t('certificate:OPERATION.DELETE'),
-          onClick: handleDownloadSelectedItems,
-        },
-      ]);
-    }
-  }, []);
+      setActiveTab(tab as InvoiceTabs);
+    },
+    [activeTab, handleAddVoucher, handleExport]
+  );
 
   const openEditModalHandler = useCallback(
     (id: number) => {
@@ -325,49 +382,52 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [editingId]
   );
 
-  const handleEditItem = useCallback(async (certificate: ICertificate) => {
-    try {
-      // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
-      const { success, data: updatedCertificate } = await updateCertificateAPI({
-        params: { companyId, certificateId: certificate.id },
-        body: certificate,
-      });
-      if (success && updatedCertificate) {
-        const updatedData = {
-          ...data,
-          [certificate.id]: {
-            ...updatedCertificate,
-            isSelected: false,
-            actions: [
-              CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-              CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-            ],
-          },
-        };
-        setData(updatedData);
-        toastHandler({
-          id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
-          type: ToastType.SUCCESS,
-          content: t('certificate:EDIT.SUCCESS'),
-          closeable: true,
+  const handleEditItem = useCallback(
+    async (certificate: ICertificate) => {
+      try {
+        // Info: (20241025 - tzuhan) @Murky, 這邊跟目前後端的接口不一致，需要調整的話再跟我說
+        const { success, data: updatedCertificate } = await updateCertificateAPI({
+          params: { companyId, certificateId: certificate.id },
+          body: certificate,
         });
-      } else {
+        if (success && updatedCertificate) {
+          const updatedData = {
+            ...certificates,
+            [certificate.id]: {
+              ...updatedCertificate,
+              isSelected: false,
+              actions: [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ],
+            },
+          };
+          setCertificates(updatedData);
+          toastHandler({
+            id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
+            type: ToastType.SUCCESS,
+            content: t('certificate:EDIT.SUCCESS'),
+            closeable: true,
+          });
+        } else {
+          toastHandler({
+            id: ToastId.UPDATE_CERTIFICATE_ERROR,
+            type: ToastType.ERROR,
+            content: t('certificate:ERROR.WENT_WRONG'),
+            closeable: true,
+          });
+        }
+      } catch (error) {
         toastHandler({
           id: ToastId.UPDATE_CERTIFICATE_ERROR,
           type: ToastType.ERROR,
-          content: t('certificate:ERROR.WENT_WRONG'),
+          content: t('certificate:ERROR.UPDATE_CERTIFICATE', { reason: (error as Error).message }),
           closeable: true,
         });
       }
-    } catch (error) {
-      toastHandler({
-        id: ToastId.UPDATE_CERTIFICATE_ERROR,
-        type: ToastType.ERROR,
-        content: t('certificate:ERROR.UPDATE_CERTIFICATE', { reason: (error as Error).message }),
-        closeable: true,
-      });
-    }
-  }, []);
+    },
+    [certificates, companyId]
+  );
 
   const mobileUploadFileHandler = useCallback(
     async (message: { token: string; file: IFileUIBeta }) => {
@@ -394,32 +454,38 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         console.log(`mobileUploadFiles:`, mobileUploadFiles);
       }
     },
-    [tokenRef, setMobileUploadFiles]
+    [tokenRef, setMobileUploadFiles, mobileUploadFiles]
   );
 
-  const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
-    const { certificate: newCertificate } = message;
-    if (
-      (newCertificate.voucherNo && activeTab === InvoiceTabs.WITHOUT_VOUCHER) ||
-      (!newCertificate.voucherNo && activeTab === InvoiceTabs.WITH_VOUCHER) ||
-      newCertificate.companyId !== companyId
-    ) {
-      return;
-    }
+  const certificateCreatedHandler = useCallback(
+    (message: { certificate: ICertificate }) => {
+      const { certificate: newCertificate } = message;
+      if (
+        (newCertificate.voucherNo && activeTab === InvoiceTabs.WITHOUT_VOUCHER) ||
+        (!newCertificate.voucherNo && activeTab === InvoiceTabs.WITH_VOUCHER) ||
+        newCertificate.companyId !== companyId
+      ) {
+        return;
+      }
 
-    const newCertificates = {
-      ...data,
-    };
-    newCertificates[message.certificate.id] = {
-      ...message.certificate,
-      isSelected: false,
-      unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
-      actions: !message.certificate.voucherNo
-        ? [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD, CERTIFICATE_USER_INTERACT_OPERATION.REMOVE]
-        : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-    };
-    setData(newCertificates);
-  }, []);
+      const newCertificates = {
+        ...certificates,
+      };
+      newCertificates[message.certificate.id] = {
+        ...message.certificate,
+        isSelected: false,
+        unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
+        actions: !message.certificate.voucherNo
+          ? [
+              CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+              CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+            ]
+          : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+      };
+      setCertificates(newCertificates);
+    },
+    [companyId, certificates, activeTab]
+  );
 
   const getToken = useCallback(async () => {
     if (!tokenRef.current) {
@@ -465,12 +531,21 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   return (
     <>
+      {isExportModalOpen && (
+        <CertificateExportModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          handleApiResponse={handleExportModalApiResponse}
+          handleExport={onExport}
+          certificates={exportModalData}
+        />
+      )}
       {isEditModalOpen && (
         <CertificateEditModal
           isOpen={isEditModalOpen}
           companyId={companyId}
           toggleIsEditModalOpen={setIsEditModalOpen}
-          certificate={editingId ? data[editingId] : undefined}
+          certificate={editingId ? certificates[editingId] : undefined}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}
         />
@@ -485,7 +560,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
-        className={`flex grow flex-col gap-4 ${data && Object.values(data).length > 0 ? 'overflow-y-scroll' : ''} `}
+        className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-y-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
         <InvoiceUpload
@@ -497,7 +572,8 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
         {/* Info: (20240919 - tzuhan) Tabs */}
         <Tabs
-          tabs={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
+          tabs={Object.values(InvoiceTabs)}
+          tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
           onTabClick={onTabClick}
           counts={unRead ? [unRead.withoutVoucher, unRead.withVoucher] : [0, 0]}
@@ -529,19 +605,19 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}
-        {data && Object.values(data).length > 0 ? (
+        {certificates && Object.values(certificates).length > 0 ? (
           <>
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
               isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
-              items={Object.values(data)}
+              items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRRICE')}:`}
               totalPrice={totalInvoicePrice}
               currency={currency}
-              selectedCount={filterSelectedIds().length}
-              totalCount={Object.values(data).length || 0}
+              selectedCount={Object.values(selectedCertificates).length}
+              totalCount={Object.values(certificates).length || 0}
               handleSelect={handleSelect}
               addOperations={addOperations}
               exportOperations={exportOperations}
@@ -553,7 +629,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               setPage={setPage}
               totalPages={totalPages}
               totalCount={totalCount}
-              certificates={Object.values(data)}
+              certificates={Object.values(certificates)}
               viewType={viewType}
               activeSelection={activeSelection}
               handleSelect={handleSelect}

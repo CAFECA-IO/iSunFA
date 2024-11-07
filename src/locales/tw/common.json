@@ -192,7 +192,8 @@
     "SEP_ABR": "九月",
     "OCT_ABR": "十月",
     "NOV_ABR": "十一月",
-    "DEC_ABR": "十二月"
+    "DEC_ABR": "十二月",
+    "EVERY": "每"
   },
   "SORTING": {
     "SORT_BY": "排序方式",
@@ -298,7 +299,11 @@
     "CODE": "科目編號",
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
-    "ENDING": "結束日"
+    "ENDING": "結束日",
+    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目",
+    "PARTNER_S_NAME": "交易夥伴名稱",
+    "TAX_ID": "統一編號",
+    "SUBMIT": "送出"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
@@ -421,7 +426,14 @@
     "LIABILITY": "負債",
     "EQUITY": "權益",
     "PAYMENT": "支付",
-    "INCOME": "收入",
+    "INCOME": "營業外收入",
+    "COST": "成本",
+    "EXPENSE": "費用",
+    "REVENUE": "收入",
+    "GAINORLOSS": "損益",
+    "OTHERCOMPREHENSIVEINCOME": "其他綜合損益",
+    "CASHFLOW": "現金流量",
+    "OTHER": "其他",
     "TRANSFER": "移轉",
     "SOLD": "已售出",
     "DONATED": "已捐贈",
@@ -429,6 +441,26 @@
     "MISSING": "已遺失",
     "NORMAL": "使用中",
     "NONE": "",
+    "PURCHASE_TRIPLICATE_AND_ELECTRONIC": "進項三聯式、電子計算機統一發票",
+    "PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER": "進項二聯式、二聯式收銀機統一發票",
+    "PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC": "三聯式、電子計算機及三聯式收銀機統一發票及一般稅額計算之電子發票之銷貨退回或折讓證明單",
+    "PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER": "二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單",
+    "PURCHASE_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC": "進項三聯式收銀機統一發票及一般稅額計算之電子發票，每張稅額五百元以下之進項三聯式收銀機統一發票及一般稅額計算之電子發票",
+    "PURCHASE_UTILITY_ELECTRONIC_INVOICE": "進項公用事業電子發票字軌號碼得以公用事業產製抬頭為一百零五年一月以後已繳納之繳費通知單或已繳費憑證之載具流水號替代登錄",
+    "PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC": "彙總登錄每張稅額五百元以下之進項三聯式、電子計算機統一發票",
+    "PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER": "彙總登錄每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證",
+    "PURCHASE_CUSTOMS_DUTY_PAYMENT": "進項海關代徵營業稅繳納證",
+    "PURCHASE_CUSTOMS_DUTY_REFUND": "進項海關退還溢繳營業稅申報單",
+    "SALES_TRIPLICATE_INVOICE": "銷項三聯式統一發票",
+    "SALES_DUPLICATE_CASH_REGISTER_INVOICE": "銷項二聯式、二聯式收銀機統一發票",
+    "SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC": "三聯式、電子計算機、三聯式收銀機統一發票及一般稅額計算之電子發票之銷貨退回或折讓證明單",
+    "SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM": "二聯式、二聯式收銀機統一發票及銷項免用統一發票之銷貨退回或折讓證明單",
+    "SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC": "銷項三聯式收銀機統一發票及一般稅額計算之電子發票",
+    "SALES_NON_UNIFORM_INVOICE": "銷項免用統一發票",
+    "SALES_SPECIAL_TAX_CALCULATION": "銷項憑證、特種稅額計算之電子發票",
+    "SALES_SPECIAL_TAX_RETURNS": "特種稅額之銷貨退回或折讓證明單",
+    "FOREIGN_SERVICE_PAYMENT": "進口勞務費用支付證明",
+    "FOREIGN_TAX_EXEMPT_GOODS": "進口免稅物品進口證明",
     "土地成本": "土地成本",
     "土地改良物成本": "土地改良物成本",
     "房屋及建築成本": "房屋及建築成本",
@@ -516,5 +548,9 @@
     "FINANCIAL_NEWS": "財經新聞",
     "SYSTEM_NEWS": "系統新聞",
     "MATCH_NEWS": "媒合資訊"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入數字"
   }
 }

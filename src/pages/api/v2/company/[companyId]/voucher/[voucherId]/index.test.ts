@@ -1,18 +1,26 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import {
+import handler, {
   handleDeleteRequest,
   handleGetRequest,
   handlePutRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-
-let req: jest.Mocked<NextApiRequest>;
-let res: jest.Mocked<NextApiResponse>;
+import { VoucherV2Action } from '@/constants/voucher';
+import { EventType } from '@/constants/account';
+import prisma from '@/client';
+import { UserActionLogActionType } from '@/constants/user_action_log';
+import { voucherGetOneSchema } from '@/lib/utils/zod_schema/voucher';
 
 jest.mock('../../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1001,
     companyId: 1001,
+    roleId: 1001,
+    cookie: {
+      httpOnly: false,
+      path: 'string',
+      secure: false,
+    },
   }),
 }));
 
@@ -21,26 +29,29 @@ jest.mock('../../../../../../../lib/utils/auth_check', () => ({
 }));
 
 // Info: (20240927 - Murky) Comment if you want to check validateRequest related info
-jest.mock('../../../../../../../lib/utils/logger_back', () => ({
-  loggerRequest: jest.fn().mockReturnValue({
-    info: jest.fn(),
-    error: jest.fn(),
-  }),
-}));
+// jest.mock('../../../../../../../lib/utils/logger_back', () => ({
+//   loggerRequest: jest.fn().mockReturnValue({
+//     info: jest.fn(),
+//     error: jest.fn(),
+//   }),
+// }));
 
 beforeEach(() => {
-  req = {
-    headers: {},
-    query: {},
-    method: '',
-    socket: {},
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiRequest>;
-
-  res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<NextApiResponse>;
+  jest.spyOn(prisma.userActionLog, 'create').mockResolvedValue({
+    id: 1,
+    sessionId: '1',
+    userId: 1001,
+    actionType: UserActionLogActionType.API,
+    actionDescription: 'null',
+    actionTime: Date.now(),
+    ipAddress: '127.0.0.1',
+    userAgent: 'null',
+    apiEndpoint: 'null',
+    httpMethod: 'GET',
+    requestPayload: {},
+    httpStatusCode: 200,
+    statusMessage: 'null',
+  });
 });
 
 afterEach(() => {
@@ -48,16 +59,30 @@ afterEach(() => {
 });
 
 describe('company/[companyId]/voucher/[voucherId]', () => {
-  const mockVoucherId = '1';
+  const mockVoucherId = 1;
   describe('GET One Voucher', () => {
     it('should pass', async () => {
-      req.query = {
+      const session = {
+        userId: 1001,
+        companyId: 1001,
+        roleId: 1001,
+        cookie: {
+          httpOnly: false,
+          path: 'string',
+          secure: false,
+        },
+      };
+      const query = {
         voucherId: mockVoucherId,
       };
 
-      req.body = {};
+      const body = {};
 
-      const { statusMessage } = await handleGetRequest(req, res);
+      const { statusMessage } = await handleGetRequest({
+        query,
+        body,
+        session,
+      });
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
     });
@@ -65,13 +90,24 @@ describe('company/[companyId]/voucher/[voucherId]', () => {
 
   describe('PUT One Voucher', () => {
     it('should pass', async () => {
-      req.query = {
+      const session = {
+        userId: 1001,
+        companyId: 1001,
+        roleId: 1001,
+        cookie: {
+          httpOnly: false,
+          path: 'string',
+          secure: false,
+        },
+      };
+      const query = {
         voucherId: mockVoucherId,
       };
-      req.body = {
+      const body = {
+        actions: [VoucherV2Action.ADD_ASSET],
         certificateIds: [1001, 1002],
         voucherDate: 10000000,
-        type: 'payment',
+        type: EventType.PAYMENT,
         note: 'this is note',
         counterPartyId: 1001,
         lineItems: [
@@ -100,10 +136,16 @@ describe('company/[companyId]/voucher/[voucherId]', () => {
           {
             voucherId: 1003,
             amount: 500,
+            lineItemIdBeReversed: 1001,
+            lineItemIdReverseOther: 1002,
           },
         ],
       };
-      const { statusMessage } = await handlePutRequest(req, res);
+      const { statusMessage } = await handlePutRequest({
+        query,
+        body,
+        session,
+      });
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_UPDATE);
     });
@@ -111,14 +153,63 @@ describe('company/[companyId]/voucher/[voucherId]', () => {
 
   describe('DELETE One Voucher', () => {
     it('should pass', async () => {
-      req.query = {
+      const query = {
         voucherId: mockVoucherId,
       };
-      req.body = {};
+      const body = {};
 
-      const { statusMessage } = await handleDeleteRequest(req, res);
+      const session = {
+        userId: 1001,
+        companyId: 1001,
+        roleId: 1001,
+        cookie: {
+          httpOnly: false,
+          path: 'string',
+          secure: false,
+        },
+      };
+      const { statusMessage } = await handleDeleteRequest({
+        query,
+        body,
+        session,
+      });
 
       expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_DELETE);
+    });
+  });
+});
+
+describe('company/[companyId]/voucher integration test', () => {
+  let req: jest.Mocked<NextApiRequest>;
+  let res: jest.Mocked<NextApiResponse>;
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  describe('Get one voucher', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {
+          voucherId: '1',
+        },
+        method: 'GET',
+        json: jest.fn(),
+        body: {},
+      } as unknown as jest.Mocked<NextApiRequest>;
+
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
+
+      const outputValidator = voucherGetOneSchema.frontend;
+
+      await handler(req, res);
+
+      // Info: (20241105 - Murky) res.json的回傳值
+      const apiResponse = res.json.mock.calls[0][0];
+      const { success } = outputValidator.safeParse(apiResponse.payload);
+      expect(success).toBe(true);
     });
   });
 });

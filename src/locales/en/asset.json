@@ -19,7 +19,8 @@
     "TITLE": "Status Setting",
     "SUBTITLE": "Please enter the information of asset",
     "UPDATE_DATE": "Update Date",
-    "STATUS": "Status"
+    "STATUS": "Status",
+    "UPDATE_STATUS_SUCCESS_TOAST": "Asset status has been changed."
   },
   "ADD_ASSET_MODAL": {
     "TITLE": "Add New Asset",
@@ -38,9 +39,9 @@
     "DEPRECIATION_METHOD": "Depreciation Method",
     "NOTE": "Note",
     "NOTE_PLACEHOLDER": "Enter your note here",
-    "STRAIGHT_LINE_METHOD": "Straight line method",
-    "DOUBLE_DECLINING_BALANCE_METHOD": "Double declining balance method",
-    "SUM_OF_THE_YEAR_DIGIT_METHOD": "Sum of the year digit method",
+    "STRAIGHT_LINE": "Straight line method",
+    "DOUBLE_DECLINING": "Double declining balance method",
+    "SUM_OF_YEAR_DIGIT": "Sum of the year digit method",
     "CONFIRM_MESSAGE_TITLE": "Are you sure you want to add this asset?",
     "CONFIRM_MESSAGE_CONTENT": "It can not be deleted after 30 days.",
     "CONFIRM_MESSAGE_BTN": "Yes, add the asset",
@@ -69,5 +70,12 @@
     "NOTE": "Note",
     "VOUCHER": "Voucher",
     "NO_ASSET": "No asset"
+  },
+  "EDIT_ASSET_MODAL": {
+    "TITLE": "Edit Asset",
+    "SUBTITLE": "Please enter the information of asset",
+    "CONFIRM_MESSAGE_TITLE": "Are you sure you want to update this asset?",
+    "CONFIRM_MESSAGE_BTN": "Yes, update the asset",
+    "TOAST_SUCCESS": "Asset has been updated"
   }
 }

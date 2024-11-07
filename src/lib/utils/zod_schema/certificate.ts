@@ -1,5 +1,5 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z } from 'zod';
+import { z, ZodRawShape } from 'zod';
 import {
   zodStringToNumber,
   zodStringToNumberWithDefault,
@@ -9,6 +9,25 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { CertificateSortBy } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { SortOrder } from '@/constants/sort';
+import { IFileUIBetaValidator } from '@/lib/utils/zod_schema/file';
+import { IInvoiceBetaValidator } from '@/lib/utils/zod_schema/invoice';
+
+/**
+ * Info: (20241105 - Murky)
+ * @description 這個是給前端用的 ICertificate
+ */
+export const ICertificateValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  file: IFileUIBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
+  unRead: z.boolean().optional(),
+  invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
+  voucherNo: z.string().nullable(),
+  aiResultId: z.string().optional(),
+  aiStatus: z.string().optional(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
 
 const certificateListQueryValidator = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
@@ -125,3 +144,33 @@ export const certificateDeleteValidator: IZodValidator<
   query: certificateDeleteQueryValidator,
   body: certificateDeleteBodyValidator,
 };
+
+export const certificateRequestValidators: {
+  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
+} = {
+  GET_ONE: certificateGetOneValidator,
+  PUT: certificatePutValidator,
+  POST: certificatePostValidator,
+  DELETE: certificateDeleteValidator,
+  GET_LIST: certificateListValidator,
+};
+
+/**
+ * Info: (20241025 - Murky)
+ * @description schema for init certificate entity or parsed prisma certificate
+ * @todo file, invoice, company, vouchers should be implemented
+ */
+export const certificateEntityValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  voucherNo: z.string().nullable(),
+  aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  file: z.any().optional(),
+  invoice: z.any().optional(),
+  company: z.any().optional(),
+  vouchers: z.array(z.any()).optional(),
+});

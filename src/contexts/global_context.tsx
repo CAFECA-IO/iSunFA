@@ -42,7 +42,9 @@ import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_mo
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
 import AssetStatusSettingModal from '@/components/asset_status_setting_modal/asset_status_setting_modal';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
+import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
+import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
 
 interface IGlobalContext {
   width: number;
@@ -57,7 +59,7 @@ interface IGlobalContext {
 
   isAddAssetModalVisible: boolean;
   addAssetModalVisibilityHandler: () => void;
-  addAssetModalDataHandler: (list: IAccount[]) => void;
+  addAssetModalDataHandler: (defaultAssetData: IAssetModal) => void;
 
   isCameraScannerVisible: boolean;
   cameraScannerVisibilityHandler: () => void;
@@ -119,7 +121,11 @@ interface IGlobalContext {
 
   isAssetStatusSettingModalVisible: boolean;
   assetStatusSettingModalVisibilityHandler: () => void;
-  assetStatusSettingModalDataHandler: (status: string) => void;
+  assetStatusSettingModalDataHandler: (assetId: string, status: string) => void;
+
+  isSelectReverseItemsModalVisible: boolean;
+  selectReverseItemsModalVisibilityHandler: () => void;
+  selectReverseDataHandler: (data: IReverseItemModal) => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -157,7 +163,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [confirmModalData, setConfirmModalData] = useState<IConfirmModal>(dummyConfirmModalData);
 
   const [isAddAssetModalVisible, setIsAddAssetModalVisible] = useState(false);
-  const [assetAccountList, setAssetAccountList] = useState<IAccount[]>([]);
+  const [defaultAssetData, setDefaultAssetData] = useState<IAssetModal>(initialAssetModal);
 
   const [isCameraScannerVisible, setIsCameraScannerVisible] = useState(false);
 
@@ -217,7 +223,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
+  const [updateAssetId, setUpdateAssetId] = useState('');
   const [defaultStatus, setDefaultStatus] = useState('');
+
+  const [isSelectReverseItemsModalVisible, setIsSelectReverseItemsModalVisible] = useState(false);
+  const [selectedReverseData, setSelectedReverseData] =
+    useState<IReverseItemModal>(defaultReverseItemModal);
 
   const { width, height } = windowSize;
 
@@ -236,8 +247,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const addAssetModalVisibilityHandler = () => {
     setIsAddAssetModalVisible(!isAddAssetModalVisible);
   };
-  const addAssetModalDataHandler = (list: IAccount[]) => {
-    setAssetAccountList(list);
+  const addAssetModalDataHandler = (assetData: IAssetModal) => {
+    setDefaultAssetData(assetData);
   };
 
   const cameraScannerVisibilityHandler = () => {
@@ -361,8 +372,17 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAssetStatusSettingModalVisible(!isAssetStatusSettingModalVisible);
   };
 
-  const assetStatusSettingModalDataHandler = (status: string) => {
+  const assetStatusSettingModalDataHandler = (assetId: string, status: string) => {
+    setUpdateAssetId(assetId);
     setDefaultStatus(status);
+  };
+
+  const selectReverseItemsModalVisibilityHandler = () => {
+    setIsSelectReverseItemsModalVisible(!isSelectReverseItemsModalVisible);
+  };
+
+  const selectReverseDataHandler = (data: IReverseItemModal) => {
+    setSelectedReverseData(data);
   };
 
   useEffect(() => {
@@ -541,6 +561,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       assetStatusSettingModalVisibilityHandler,
       assetStatusSettingModalDataHandler,
 
+      isSelectReverseItemsModalVisible,
+      selectReverseItemsModalVisibilityHandler,
+      selectReverseDataHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -606,6 +630,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       assetStatusSettingModalVisibilityHandler,
       assetStatusSettingModalDataHandler,
 
+      isSelectReverseItemsModalVisible,
+      selectReverseItemsModalVisibilityHandler,
+      selectReverseDataHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     ]
   );
@@ -637,7 +665,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AddAssetModal
         isModalVisible={isAddAssetModalVisible}
         modalVisibilityHandler={addAssetModalVisibilityHandler}
-        assetAccountList={assetAccountList}
+        defaultData={defaultAssetData}
       />
 
       <CameraScanner
@@ -763,7 +791,14 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AssetStatusSettingModal
         isModalVisible={isAssetStatusSettingModalVisible}
         modalVisibilityHandler={assetStatusSettingModalVisibilityHandler}
+        updateAssetId={updateAssetId}
         defaultStatus={defaultStatus}
+      />
+
+      <SelectReverseItemsModal
+        isModalVisible={isSelectReverseItemsModalVisible}
+        modalVisibilityHandler={selectReverseItemsModalVisibilityHandler}
+        modalData={selectedReverseData}
       />
 
       {children}

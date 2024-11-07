@@ -7,8 +7,8 @@ import { Prisma } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
 import type { ICounterPartyEntity } from '@/interfaces/counterparty';
-import type { IAssetEntity } from '@/interfaces/asset';
-import type { ICertificateEntity } from '@/interfaces/certificate';
+import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
+import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import type { IUserEntity } from '@/interfaces/user';
 
@@ -91,6 +91,49 @@ export type IVoucherFromPrismaIncludeLineItems = Prisma.VoucherGetPayload<{
   };
 }>;
 
+export interface IVoucherDetailForFrontend {
+  id: number;
+  voucherDate: number;
+  type: string;
+  note: string;
+  counterParty: {
+    id: number;
+    companyId: number;
+    name: string;
+  };
+  recurringInfo: {
+    // Info: (20241105 - Murky) @Julian 如過不需要的話可以加上?
+    type: string;
+    startDate: number;
+    endDate: number;
+    daysOfWeek: number[]; // Info: (20241029 - Julian) 0~6
+    monthsOfYear: number[]; // Info: (20241029 - Julian) 0~11
+  };
+  payableInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  receivingInfo:
+    | {
+        total: number;
+        alreadyHappened: number;
+        remain: number;
+      }
+    | undefined;
+  reverseVoucherIds: {
+    id: number;
+    voucherNo: string;
+  }[];
+  assets: IAssetDetails[];
+  certificates: ICertificate[];
+  lineItemsInfo: {
+    lineItems: ILineItemBeta[];
+  };
+}
+
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;
@@ -106,7 +149,7 @@ export interface IVoucherBeta {
     avatar: string;
     name: string;
   };
-  onRead: boolean;
+  unRead: boolean;
 
   lineItemsInfo: {
     sum: {
@@ -131,7 +174,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: false,
+    unRead: false,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -176,7 +219,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -214,7 +257,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -266,7 +309,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -304,7 +347,7 @@ export const dummyVoucherList: IVoucherBeta[] = [
       avatar: 'https://i.pinimg.com/originals/51/7d/4e/517d4ea58fa6c12aca4e035cdbf257b6.jpg',
       name: 'Julian',
     },
-    onRead: true,
+    unRead: true,
     lineItemsInfo: {
       sum: {
         debit: true,
@@ -332,6 +375,88 @@ export const dummyVoucherList: IVoucherBeta[] = [
 
 export interface IVoucherUI extends IVoucherBeta {
   isSelected: boolean;
+}
+
+/**
+ * Info: (20241106 - Murky)
+ * @description 這個interface是在 report 頁面中點擊某一個account後, 呈現所有有那個account的voucher
+ * @note 後端須把lineItems 依照 debit在前, credit在後排序
+ * @Anna src/components/button/balance_details_button.tsx 的資料會是這個interface
+ */
+export interface IVoucherForSingleAccount {
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher id
+   */
+  id: number;
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher date, selected by user
+   */
+  date: number;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher 流水號
+   */
+  voucherNo: string;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @enum VoucherType RECEIVE, TRANSFER, EXPENSE
+   * @note 後端需要從EventType轉換成VoucherType
+   */
+  voucherType: VoucherType;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @description voucher note
+   */
+  note: string;
+
+  /**
+   * Info: (20241106 - Murky)
+   * @description 畫面上的 `particulars`, amount 欄位用這邊loop顯示 (這是一個array)
+   */
+  lineItems: {
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item id
+     */
+    id: number;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item amount
+     */
+    amount: number;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item description (for `particular`)
+     */
+    description: string;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description line item debit or credit
+     */
+    debit: boolean;
+  }[];
+  issuer: {
+    /**
+     * Info: (20241106 - Murky)
+     * @description issuer avatar url
+     * @note 後端請用fileUrl轉換
+     */
+    avatar: string;
+
+    /**
+     * Info: (20241106 - Murky)
+     * @description issuer name
+     */
+    name: string;
+  };
 }
 
 /**
@@ -460,7 +585,7 @@ export interface IVoucherEntity {
    * @description Asset that related to this voucher,
    * undefined if not related to any asset
    */
-  asset?: IAssetEntity;
+  asset: IAssetEntity[];
 
   /**
    * Info: (20241024 - Murky)
@@ -474,7 +599,7 @@ export interface IVoucherEntity {
    * @description aich result status
    * @note database has not yet created this column
    */
-  aiStatus?: string;
+  // aiStatus?: string;
 
   // ToDo: (20241023 - Murky) Certificate
   certificates: ICertificateEntity[];

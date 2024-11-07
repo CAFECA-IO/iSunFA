@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ICompany } from '@/interfaces/company';
+import { ICompanyAndRole } from '@/interfaces/company';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
@@ -16,38 +16,54 @@ import {
   getCompanyAndRoleByTaxId,
   listCompanyAndRole,
 } from '@/lib/utils/repo/admin.repo';
-import { IRole } from '@/interfaces/role';
-import {
-  formatCompanyAndRole,
-  formatCompanyAndRoleList,
-} from '@/lib/utils/formatter/admin.formatter';
+import { Company, Role, File } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<
   APIName.COMPANY_LIST,
-  IPaginatedData<{ company: ICompany; role: IRole }[]>
+  IPaginatedData<
+    Array<{
+      company: Company & { imageFile: File | null };
+      role: Role;
+      tag: string;
+      order: number;
+    }>
+  >
 > = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<{ company: ICompany; role: IRole }[]> | null = null;
-  const { pageSize, targetPage } = query;
+  let payload: IPaginatedData<
+    Array<{
+      company: Company & { imageFile: File | null };
+      role: Role;
+      tag: string;
+      order: number;
+    }>
+  > | null = null;
+  const { pageSize, page } = query;
   const { userId } = session;
 
-  const listedCompanyAndRole = await listCompanyAndRole(userId, targetPage, pageSize);
-  const companyList = {
-    ...listedCompanyAndRole,
-    data: formatCompanyAndRoleList(listedCompanyAndRole.data),
-  };
+  const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize);
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-  payload = companyList;
+  payload = listedCompanyAndRole;
 
   return { statusMessage, payload };
 };
 
 const handlePostRequest: IHandleRequest<
   APIName.COMPANY_ADD,
-  { company: ICompany; role: IRole }
+  {
+    company: Company & { imageFile: File | null };
+    role: Role;
+    tag: string;
+    order: number;
+  }
 > = async ({ body, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: { company: ICompany; role: IRole } | null = null;
+  let payload: {
+    company: Company & { imageFile: File | null };
+    role: Role;
+    tag: string;
+    order: number;
+  } | null = null;
   const { taxId, name, tag } = body;
   const { userId } = session;
 
@@ -70,11 +86,10 @@ const handlePostRequest: IHandleRequest<
     });
     if (file) {
       const createdCompanyAndRole = await createCompanyAndRole(userId, taxId, name, file.id, tag);
-      const newCompanyAndRole = formatCompanyAndRole(createdCompanyAndRole);
       statusMessage = STATUS_MESSAGE.CREATED;
-      payload = newCompanyAndRole;
+      payload = createdCompanyAndRole;
 
-      const companyId = newCompanyAndRole.company.id;
+      const companyId = createdCompanyAndRole.company.id;
       const companyKeyPair = await generateKeyPair();
       await storeKeyByCompany(companyId, companyKeyPair);
     }
@@ -89,10 +104,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload:
-      | { company: ICompany; role: IRole }
-      | IPaginatedData<{ company: ICompany; role: IRole }[]>
-      | null;
+    payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null;
   }>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.COMPANY_LIST, req, res, handleGetRequest),
@@ -101,19 +113,10 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<
-    IResponseData<
-      | { company: ICompany; role: IRole }
-      | IPaginatedData<{ company: ICompany; role: IRole }[]>
-      | null
-    >
-  >
+  res: NextApiResponse<IResponseData<ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | { company: ICompany; role: IRole }
-    | IPaginatedData<{ company: ICompany; role: IRole }[]>
-    | null = null;
+  let payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -128,9 +131,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      | { company: ICompany; role: IRole }
-      | IPaginatedData<{ company: ICompany; role: IRole }[]>
-      | null
+      ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }

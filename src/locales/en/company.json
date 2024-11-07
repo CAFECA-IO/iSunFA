@@ -1,0 +1,20 @@
+{
+  "LIST": {
+    "TITLE": "Company List",
+    "PARTNER_NAME": "Partner’s Name",
+    "TAX_ID": "Tax ID",
+    "TYPE": "Type",
+    "ACTION": "Action"
+  },
+  "INFO": {
+    "NAME": "Company Name",
+    "TAX_ID": "Business Tax ID Number",
+    "WORK_TAG": "Work Tag",
+    "CREATE": "Create New Company"
+  },
+  "TAG": {
+    "FINANCIAL": "Financial",
+    "TAX": "Tax",
+    "ALL": "All"
+  }
+}

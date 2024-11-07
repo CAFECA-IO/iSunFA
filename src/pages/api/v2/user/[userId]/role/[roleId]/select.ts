@@ -2,23 +2,28 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IRole } from '@/interfaces/role';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { getUserRoleByUserAndRoleId } from '@/lib/utils/repo/user_role.repo';
+import { getUserRoleByUserAndRoleId, updateUserRoleLoginAt } from '@/lib/utils/repo/user_role.repo';
 import { setSession } from '@/lib/utils/session';
+import { UserRole } from '@prisma/client';
+import { IUserRole } from '@/interfaces/user_role';
 
-const handlePutRequest: IHandleRequest<APIName.ROLE_SELECT, IRole> = async ({ query, session }) => {
+const handlePutRequest: IHandleRequest<APIName.ROLE_SELECT, UserRole> = async ({
+  query,
+  session,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IRole | null = null;
+  let payload: UserRole | null = null;
   const { userId, roleId } = query;
   const userRole = await getUserRoleByUserAndRoleId(userId, roleId);
 
   if (userRole) {
     statusMessage = STATUS_MESSAGE.SUCCESS;
     setSession(session, { roleId: userRole.roleId });
-    payload = userRole.role;
+    await updateUserRoleLoginAt(userRole.id);
+    payload = userRole;
   } else {
     statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
   }
@@ -30,17 +35,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IRole | null }>;
+  ) => Promise<{ statusMessage: string; payload: IUserRole | null }>;
 } = {
   PUT: (req, res) => withRequestValidation(APIName.ROLE_SELECT, req, res, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IRole | null>>
+  res: NextApiResponse<IResponseData<IUserRole | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IRole | null = null;
+  let payload: IUserRole | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -54,7 +59,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IRole | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IUserRole | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

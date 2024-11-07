@@ -16,10 +16,10 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICounterparty[]> | null = null;
 
-  const { companyId, targetPage, pageSize, type, searchQuery } = query;
+  const { companyId, page, pageSize, type, searchQuery } = query;
   const counterpartyList: IPaginatedData<ICounterparty[]> = await listCounterparty(
     companyId,
-    targetPage,
+    page,
     pageSize,
     type,
     searchQuery
@@ -31,12 +31,14 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty> = async ({
+  query,
   body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICounterparty | null = null;
 
-  const { companyId, name, taxId, type, note } = body;
+  const { companyId } = query;
+  const { name, taxId, type, note } = body;
   const newClient = await createCounterparty(companyId, name, taxId, type, note);
   statusMessage = STATUS_MESSAGE.CREATED;
   payload = newClient;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
@@ -6,94 +6,36 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { VoucherType } from '@/constants/account';
+import { useUserCtx } from '@/contexts/user_context';
+// import { VoucherType } from '@/constants/account';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
+import { ILedgerPayload, MOCK_RESPONSE as LEDGER_DATA_RESPONSE } from '@/interfaces/ledger';
+import Image from 'next/image';
+import { SkeletonList } from '@/components/skeleton/skeleton';
+import { IDatePeriod } from '@/interfaces/date_period';
 
-const dummyVoucherList: ILedgerBeta[] = [
-  {
-    id: 1,
-    date: 1632511200,
-    voucherNo: '20240920-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Printer-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [100200],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 2,
-    date: 1662511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.EXPENSE,
-    note: 'Printer-0002',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [0],
-    debit: [10200],
-    balance: [100200],
-  },
-  {
-    id: 3,
-    date: 1672592800,
-    voucherNo: '20240925-0001',
-    voucherType: VoucherType.RECEIVE,
-    note: 'Scanner-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [0],
-    debit: [200],
-    balance: [100200],
-  },
-  {
-    id: 4,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 5,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-  {
-    id: 6,
-    date: 1702511200,
-    voucherNo: '20240922-0002',
-    voucherType: VoucherType.TRANSFER,
-    note: 'Mouse-0001',
-    accounting: [{ code: '1141', name: 'Accounts receivable' }],
-    credit: [300],
-    debit: [0],
-    balance: [100200],
-  },
-];
+interface LedgerListProps {
+  selectedDateRange: IDatePeriod | null; // Info: (20241104 - Anna) 接收來自上層的日期範圍
+}
 
-const LedgerList = () => {
+const LedgerList: React.FunctionComponent<LedgerListProps> = ({ selectedDateRange }) => {
   const { t } = useTranslation('common');
+  const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  // ToDo: (20240927 - Julian) data filter
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>(dummyVoucherList);
+  const [totalDebitAmount, setTotalDebitAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
+  const [totalCreditAmount, setTotalCreditAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
+
+  const { selectedCompany, isAuthLoading } = useUserCtx(); // (20241101 - Anna) 從 useUserCtx 取得 companyId
+
+  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // (20241101 - Anna) 動態 totalPages 狀態
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
-
-  // ToDo: (20240920 - Julian) dummy data
-  const totalPage = 10;
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'text-center align-middle';
@@ -130,6 +72,84 @@ const LedgerList = () => {
     </div>
   );
 
+  /* Info: (20241104 - Anna) 新增狀態和參考變量以追蹤首次加載和日期範圍 */
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
+
+  /* Info: (20241104 - Anna) 包裝API請求函式的useCallback，並添加日期檢查 */
+  const fetchLedgerData = useCallback(async () => {
+    if (
+      isAuthLoading ||
+      !selectedCompany?.id ||
+      !selectedDateRange ||
+      selectedDateRange.endTimeStamp === 0
+    ) {
+      return;
+    }
+
+    if (
+      prevSelectedDateRange.current &&
+      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
+      hasFetchedOnce
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Todo: (20241101 - Anna) 暫時使用 MOCK_RESPONSE，模擬 API 回傳的數據
+    const data: ILedgerPayload = LEDGER_DATA_RESPONSE;
+
+    const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
+      id: item.id,
+      date: item.voucherDate,
+      voucherNo: item.voucherNumber,
+      voucherType: item.voucherType,
+      note: item.particulars,
+      accounting: [{ code: item.no, name: item.accountingTitle }],
+      credit: [item.creditAmount],
+      debit: [item.debitAmount],
+      balance: [item.balance],
+    }));
+
+    setVoucherList(transformedData);
+    setTotalPages(data.items.totalPages);
+    setTotalDebitAmount(data.total.totalDebitAmount);
+    setTotalCreditAmount(data.total.totalCreditAmount);
+
+    setHasFetchedOnce(true); /* Info: (20241104 - Anna) 設置為已加載 */
+    setIsLoading(false); /* Info: (20241104 - Anna) 停止加載狀態 */
+    prevSelectedDateRange.current = selectedDateRange; /* Info: (20241104 - Anna) 更新日期範圍 */
+  }, [isAuthLoading, selectedCompany?.id, selectedDateRange, hasFetchedOnce]);
+
+  /* Info: (20241104 - Anna) 當選擇日期範圍更改時觸發數據加載 */
+  useEffect(() => {
+    if (!selectedDateRange) return;
+    fetchLedgerData();
+  }, [fetchLedgerData, selectedDateRange]);
+
+  // Info: (20241101 - Anna) 根據狀態來渲染不同的內容
+  if (!hasFetchedOnce && !isLoading) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center">
+        <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="text-neutral-300">{t('report_401:REPORT.NO_DATA_AVAILABLE')}</p>
+          <p className="text-neutral-300">{t('report_401:REPORT.PLEASE_SELECT_PERIOD')}</p>
+        </div>
+      </div>
+    );
+  } else if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={5} />
+      </div>
+    );
+  }
+
+  //  Info: (20241101 - Anna)  顯示數據
   const displayedVoucherList = voucherList.map((voucher) => {
     return <LedgerItem key={voucher.id} voucher={voucher} />;
   });
@@ -143,7 +163,9 @@ const LedgerList = () => {
         {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
         <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px">
-            <div className={`table-cell ${tableCellStyles} border-b border-r`}>
+            <div
+              className={`table-cell border-stroke-neutral-quaternary ${tableCellStyles} border-b`}
+            >
               <div className="flex items-center justify-center">
                 <div className="relative">
                   <input type="checkbox" className={checkboxStyle} />
@@ -194,16 +216,16 @@ const LedgerList = () => {
         {/* Info: (20241009 - Anna) 表格內容 */}
         <div className="col-span-1"></div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          Total Debit amount
+          {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          1,800,000
+          {formatNumber(totalDebitAmount)}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
-          Total Credit amount
+          {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          1,120,000
+          {formatNumber(totalCreditAmount)}
         </div>
       </div>
 
@@ -211,7 +233,7 @@ const LedgerList = () => {
       <div className="mx-auto">
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPage}
+          totalPages={totalPages}
           setCurrentPage={setCurrentPage}
         />
       </div>
