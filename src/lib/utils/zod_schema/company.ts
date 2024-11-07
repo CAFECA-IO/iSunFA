@@ -48,12 +48,12 @@ const companyDeleteQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) Company select schema
 const companySelectQuerySchema = z.object({
-  companyId: z.number().int(),
+  companyId: zodStringToNumber,
 });
 
 const companyPrismaSchema = z.object({
   id: z.number().int(),
-  imagefile: fileSchema,
+  imageFile: fileSchema,
   name: z.string(),
   taxId: z.string(),
   startDate: z.number().int(),
@@ -61,11 +61,13 @@ const companyPrismaSchema = z.object({
   updatedAt: z.number().int(),
 });
 
-const companyOutputSchema = companyPrismaSchema.transform((data) => {
-  return {
-    ...data,
-    imageId: data.imagefile.url,
+export const companyOutputSchema = companyPrismaSchema.transform((data) => {
+  const { imageFile, ...rest } = data;
+  const output = {
+    ...rest,
+    imageId: imageFile.url,
   };
+  return output;
 });
 
 const companyRolePrismaSchema = z.object({
@@ -80,7 +82,7 @@ const companyRoleOutputSchema = companyRolePrismaSchema.transform((data) => {
     ...data,
     company: {
       ...data.company,
-      imageId: data.company.imagefile.url,
+      imageId: data.company.imageFile.url,
     },
   };
 });
@@ -137,7 +139,7 @@ export const companySelectSchema = {
     querySchema: companySelectQuerySchema,
     bodySchema: companyNullSchema,
   },
-  outputSchema: companyOutputSchema,
+  outputSchema: companyOutputSchema.nullable(),
   frontend: companyNullSchema,
 };
 
