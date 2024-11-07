@@ -81,6 +81,9 @@ export const handleGetRequest: IHandleRequest<
       purchaseTaxRate: 5,
       purchaseTaxTaxable: true,
       returnPeriodicity: 'monthly',
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
     };
 
     const mockOriginalInvoice: IInvoiceEntity = {

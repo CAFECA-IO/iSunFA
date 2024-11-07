@@ -196,7 +196,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   searchQuery: z.string().optional(),
 });
 
-const voucherGetAllBodyValidatorV2 = z.union([z.object({}), z.string()]);
+const voucherGetAllBodyValidatorV2 = z.object({});
 
 const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
   z.object({
@@ -293,6 +293,14 @@ const voucherGetAllFrontendDataValidatorV2 = z.object({
 const voucherGetAllFrontendValidatorV2 = paginatedDataSchemaDataNotArray(
   voucherGetAllFrontendDataValidatorV2
 );
+
+export const voucherGetAllValidatorV2: IZodValidator<
+  (typeof voucherGetAllQueryValidatorV2)['shape'],
+  (typeof voucherGetAllBodyValidatorV2)['shape']
+> = {
+  query: voucherGetAllQueryValidatorV2,
+  body: voucherGetAllBodyValidatorV2,
+};
 
 // Info: (20240927 - Murky) POST voucher v2 validator
 const voucherPostQueryValidatorV2 = z.object({});
@@ -598,6 +606,7 @@ export const voucherDeleteValidatorV2: IZodValidator<
 
 export const voucherRequestValidatorsV2 = {
   GET_ONE: voucherGetOneValidatorV2,
+  GET_LIST: voucherGetAllValidatorV2,
   PUT: voucherPutValidatorV2,
   POST: voucherPostValidatorV2,
   DELETE: voucherDeleteValidatorV2,

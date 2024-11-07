@@ -105,6 +105,7 @@ export const API_ZOD_SCHEMA = {
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteValidatorV2,
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
+  [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
   [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
 };
