@@ -1,23 +1,51 @@
-/* eslint-disable */
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { timestampInSeconds } from '@/lib/utils/common';
+import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-interface ExportRequestBody {
+interface BaseExportRequestBody {
   exportType: string;
   fileType: 'csv';
-  type?: string;
-  status?: string;
-  startDate?: number;
-  endDate?: number;
-  searchQuery?: string;
+}
+
+interface AssetExportRequestBody extends BaseExportRequestBody {
+  exportType: 'assets';
+  filters?: {
+    type?: string;
+    status?: string;
+    startDate?: number;
+    endDate?: number;
+    searchQuery?: string;
+  };
   sortOption?: string;
-  language?: string;
-  timezone?: string;
+  options?: {
+    language?: string;
+    timezone?: string;
+    fields?: string[];
+  };
+}
+
+// 可以在這裡新增其他 exportType 的請求介面
+// interface AnotherExportRequestBody extends BaseExportRequestBody {
+//   exportType: 'anotherType';
+//   // 其他特定欄位
+// }
+
+type ExportRequestBody = AssetExportRequestBody; // | AnotherExportRequestBody 等等
+
+interface Asset {
+  acquisitionDate: number;
+  name: string;
+  purchasePrice: number;
+  accumulatedDepreciation: number;
+  residualValue: number;
+  remainingLife: number;
+  type: string;
+  status: string;
+  assetNumber: string;
 }
 
 // 模擬資產資料
-const MOCK_ASSETS = [
+const MOCK_ASSETS: Asset[] = [
   {
     name: '辦公桌',
     acquisitionDate: 1530959244,
@@ -25,6 +53,9 @@ const MOCK_ASSETS = [
     accumulatedDepreciation: 5000,
     residualValue: 25000,
     remainingLife: 10000000,
+    type: 'furniture',
+    status: 'normal',
+    assetNumber: 'A-7890',
   },
   {
     name: '滑鼠',
@@ -33,6 +64,9 @@ const MOCK_ASSETS = [
     accumulatedDepreciation: 5000,
     residualValue: 15000,
     remainingLife: 10000000,
+    type: 'equipment',
+    status: 'normal',
+    assetNumber: 'A-7891',
   },
   {
     name: '筆電',
@@ -41,6 +75,9 @@ const MOCK_ASSETS = [
     accumulatedDepreciation: 5000,
     residualValue: 25000,
     remainingLife: 1000000,
+    type: 'electronics',
+    status: 'normal',
+    assetNumber: 'A-7892',
   },
   {
     name: '手機',
@@ -49,21 +86,20 @@ const MOCK_ASSETS = [
     accumulatedDepreciation: 2000,
     residualValue: 8000,
     remainingLife: 10000,
+    type: 'electronics',
+    status: 'maintenance',
+    assetNumber: 'A-7893',
   },
 ];
 
 // 將物件陣列轉換為 CSV 字串
-function convertToCSV(fields: string[], data: any[]) {
-  // 產生表頭
+function convertToCSV<T extends Record<string, any>>(fields: (keyof T)[], data: T[]): string {
   const header = fields.join(',') + '\n';
-
-  // 產生資料行
   const rows = data
-    .map((item) => {
-      return fields
+    .map((item) =>
+      fields
         .map((field) => {
           const value = item[field];
-          // 處理包含逗號、換行或雙引號的值
           if (
             typeof value === 'string' &&
             (value.includes(',') || value.includes('\n') || value.includes('"'))
@@ -72,14 +108,12 @@ function convertToCSV(fields: string[], data: any[]) {
           }
           return value;
         })
-        .join(',');
-    })
+        .join(',')
+    )
     .join('\n');
-
   return header + rows;
 }
 
-// 定義排序欄位類型
 type SortField =
   | 'acquisitionDate'
   | 'purchasePrice'
@@ -91,7 +125,6 @@ type SortOrder = 'asc' | 'desc';
 // 解析排序選項
 function parseSortOptions(sortOption: string): Array<{ field: SortField; order: SortOrder }> {
   if (!sortOption) return [];
-
   return sortOption.split('-').map((option) => {
     const [field, order] = option.split(':');
     return {
@@ -102,140 +135,103 @@ function parseSortOptions(sortOption: string): Array<{ field: SortField; order: 
 }
 
 // 排序資料
-function sortData(data: any[], sortOptions: Array<{ field: SortField; order: SortOrder }>) {
+function sortData<T>(data: T[], sortOptions: Array<{ field: keyof T; order: SortOrder }>): T[] {
   if (!sortOptions.length) return data;
-
   return [...data].sort((a, b) => {
-    for (const { field, order } of sortOptions) {
-      if (a[field] === b[field]) continue;
-
+    return sortOptions.reduce((acc, { field, order }) => {
+      if (acc !== 0) return acc;
+      if (a[field] === b[field]) return acc;
       const multiplier = order === 'asc' ? 1 : -1;
-      if (typeof a[field] === 'string') {
-        return multiplier * a[field].localeCompare(b[field]);
+      const aValue = a[field];
+      const bValue = b[field];
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return multiplier * aValue.localeCompare(bValue);
       }
-      return multiplier * (a[field] - b[field]);
-    }
-    return 0;
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return multiplier * (aValue - bValue);
+      }
+      return 0;
+    }, 0);
   });
 }
 
-// export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
-//   try {
-//     const {
-//       exportType,
-//       type,
-//       status,
-//       startDate,
-//       endDate,
-//       searchQuery,
-//       sortOption,
-//       language = 'zh-TW',
-//       timezone = '+0800',
-//     } = req.query;
+// 過濾資料
+function filterData<T extends Asset>(data: T[], filters?: AssetExportRequestBody['filters']): T[] {
+  if (!filters) return data;
+  return data.filter((item) => {
+    if (filters.type && item.type !== filters.type) return false;
+    if (filters.status && item.status !== filters.status) return false;
+    if (filters.startDate && item.acquisitionDate < filters.startDate) return false;
+    if (filters.endDate && item.acquisitionDate > filters.endDate) return false;
+    if (filters.searchQuery && !item.name.includes(filters.searchQuery)) return false;
+    return true;
+  });
+}
 
-//     // 驗證必要參數
-//     if (!exportType) {
-//       res.status(400).json({ message: 'Missing required fields' });
-//       return;
-//     }
+// 選擇欄位
+function selectFields<T extends { [key: string]: any }>(
+  data: T[],
+  fields?: (keyof T)[]
+): Partial<T>[] {
+  if (!fields || fields.length === 0) return data;
+  return data.map((item) => {
+    const selected: Partial<T> = {};
+    fields.forEach((field) => {
+      selected[field] = item[field];
+    });
+    return selected;
+  });
+}
 
-//     // 驗證 exportType
-//     if (exportType !== 'assets') {
-//       res.status(400).json({ message: 'Invalid export type' });
-//       return;
-//     }
-
-//     // ToDo: 從資料庫獲取資產資料
-//     let newData: any[] = [];
-//     let assets = MOCK_ASSETS;
-
-//     // 處理排序
-//     if (sortOption) {
-//       const sortOptions = parseSortOptions(sortOption as string);
-//       assets = sortData(assets, sortOptions);
-
-//       console.log('sortOption', sortOption);
-//     }
-
-//     if (timezone) {
-//       newData = assets.map((asset) => ({
-//         ...asset,
-//         // acquisitionDate: convertTimestampToDateBasedOnTimezone(
-//         //   asset.acquisitionDate,
-//         //   timezone as string
-//         // ),
-//       }));
-//     }
-
-//     const fields = [
-//       'acquisitionDate',
-//       'name',
-//       'purchasePrice',
-//       'accumulatedDepreciation',
-//       'residualValue',
-//       'remainingLife',
-//     ];
-//     const csv = convertToCSV(fields, newData);
-
-//     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-//     res.setHeader('Content-Disposition', `attachment; filename=assets_${Date.now()}.csv`);
-//     res.send(csv);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Internal server error' });
-//   }
-// }
-
-// export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-//   if (req.method === 'GET') {
-//     return handleGetRequest(req, res);
-//   }
-//   res.status(405).json({ message: 'Method not allowed' });
-// }
-
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
+// 處理資產匯出
+async function handleAssetExport(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  body: AssetExportRequestBody
+): Promise<void> {
   try {
-    const body = req.body as ExportRequestBody;
-    const {
-      exportType,
-      fileType,
-      type,
-      status,
-      startDate,
-      endDate,
-      searchQuery,
-      sortOption,
-      language = 'zh-TW',
-      timezone = '+0800',
-    } = body;
+    const { companyId } = req.query;
+    if (!companyId || typeof companyId !== 'string') {
+      throw new Error('Invalid companyId');
+    }
+
+    const { exportType, fileType, filters, sortOption, options } = body;
 
     // 驗證必要參數
     if (!exportType || !fileType) {
-      res.status(400).json({ message: 'Missing required fields' });
-      return;
+      throw new Error('Missing required fields');
     }
 
     // 驗證 exportType
     if (exportType !== 'assets') {
-      res.status(400).json({ message: 'Invalid export type' });
-      return;
+      throw new Error('Invalid export type for handleAssetExport');
     }
 
     // 驗證 fileType
     if (!['csv'].includes(fileType)) {
-      res.status(400).json({ message: 'Invalid file type' });
-      return;
+      throw new Error('Invalid file type');
     }
 
     // ToDo: 從資料庫獲取資產資料
-    let assets = MOCK_ASSETS;
+    let assets: Asset[] = MOCK_ASSETS;
+
+    // 處理過濾
+    if (filters) {
+      assets = filterData(assets, filters);
+    }
 
     // 處理排序
     if (sortOption) {
-      const sortOptions = parseSortOptions(sortOption);
-      assets = sortData(assets, sortOptions);
+      const sortOptionsParsed = parseSortOptions(sortOption);
+      assets = sortData(assets, sortOptionsParsed);
     }
 
-    // 處理時區轉換
+    // 處理欄位選擇
+    if (options && options.fields) {
+      assets = selectFields(assets, options.fields as (keyof Asset)[]) as Asset[];
+    }
+
+    // 處理時區轉換 (暫未實作)
     const newData = assets.map((asset) => ({
       ...asset,
       // acquisitionDate: timezone
@@ -243,32 +239,74 @@ export async function handlePostRequest(req: NextApiRequest, res: NextApiRespons
       //   : asset.acquisitionDate,
     }));
 
-    const fields = [
-      'acquisitionDate',
-      'name',
-      'purchasePrice',
-      'accumulatedDepreciation',
-      'residualValue',
-      'remainingLife',
-    ];
+    const fields: (keyof Asset)[] =
+      (options?.fields as (keyof Asset)[]) ||
+      ([
+        'acquisitionDate',
+        'name',
+        'purchasePrice',
+        'accumulatedDepreciation',
+        'residualValue',
+        'remainingLife',
+        'type',
+        'status',
+        'assetNumber',
+      ] as (keyof Asset)[]);
 
-    const fileName = `assets_${Date.now()}.${fileType}`;
+    const csv = convertToCSV<Asset>(fields, newData as Asset[]);
+    const fileName = `assets_${Date.now()}.csv`;
 
-    if (fileType === 'csv') {
-      const csv = convertToCSV(fields, newData);
-      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-      res.send(csv);
-    }
+    // 設置回應標頭以便下載檔案
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.status(200).send(csv);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    const err = error as Error;
+    const { httpCode, result } = formatApiResponse<null>(err.message, null);
+    res.status(httpCode).json(result);
   }
 }
 
+// 可以在這裡新增其他 exportType 的處理函式
+// async function handleAnotherExport(req: NextApiRequest, res: NextApiResponse, body: AnotherExportRequestBody): Promise<void> {
+//   // 實作另一種匯出邏輯
+// }
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse,
+    body: ExportRequestBody
+  ) => Promise<void>;
+} = {
+  POST: async (req, res, body) => {
+    switch (body.exportType) {
+      case 'assets':
+        await handleAssetExport(req, res, body as AssetExportRequestBody);
+        break;
+      // case 'anotherType':
+      //   await handleAnotherExport(req, res, body as AnotherExportRequestBody);
+      //   break;
+      default:
+        throw new Error('Unsupported export type');
+    }
+  },
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    return handlePostRequest(req, res);
+  const handleRequest = methodHandlers[req.method || ''];
+  if (handleRequest) {
+    try {
+      const body = req.body as ExportRequestBody;
+      await handleRequest(req, res, body);
+    } catch (error) {
+      const err = error as Error;
+      const { httpCode, result } = formatApiResponse<null>(err.message, null);
+      res.status(httpCode).json(result);
+    }
+  } else {
+    const statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+    res.status(httpCode).json(result);
   }
-  res.status(405).json({ message: 'Method not allowed' });
 }
