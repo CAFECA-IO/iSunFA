@@ -2,41 +2,52 @@ import Link from 'next/link';
 import Image from 'next/image';
 import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layout';
 import MoreLink from '@/components/beta/dashboard/more_link';
-import { ICompany } from '@/interfaces/company';
+import { ICompanyAndRole } from '@/interfaces/company';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { CompanyTag } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
 
 // ToDo: (20241016 - Liz) 從 user context 中打 API 取得公司列表、判斷是否為空
-const COMPANY_LIST: ICompany[] = [
+const COMPANY_LIST: ICompanyAndRole[] = [
   {
-    id: 1,
-    imageId: '/images/fake_company_log_01.png',
-    name: 'Company A',
-    taxId: '1234567890',
-    tag: 'A',
-    startDate: 1626355200000,
-    createdAt: 1626355200000,
-    updatedAt: 1626355200000,
+    company: {
+      id: 1,
+      imageId: 'img123',
+      name: 'Tech Corp',
+      taxId: '123456789',
+      startDate: 1622505600,
+      createdAt: 1622505600,
+      updatedAt: 1622505600,
+    },
+    tag: CompanyTag.ALL,
+    order: 1,
+    role: {
+      id: 1,
+      name: 'Admin',
+      permissions: ['read', 'write', 'delete'],
+      createdAt: 1622505600,
+      updatedAt: 1622505600,
+    },
   },
   {
-    id: 2,
-    imageId: '/images/fake_company_log_02.png',
-    name: 'Company B',
-    taxId: '0987654321',
-    tag: 'B',
-    startDate: 1626355200000,
-    createdAt: 1626355200000,
-    updatedAt: 1626355200000,
-  },
-  {
-    id: 3,
-    imageId: '/images/fake_company_log_03.png',
-    name: 'Company C',
-    taxId: '1357924680',
-    tag: 'C',
-    startDate: 1626355200000,
-    createdAt: 1626355200000,
-    updatedAt: 1626355200000,
+    company: {
+      id: 2,
+      imageId: 'img456',
+      name: 'Tech Corp 2',
+      taxId: '987654321',
+      startDate: 1622505600,
+      createdAt: 1622505600,
+      updatedAt: 1622505600,
+    },
+    tag: CompanyTag.ALL,
+    order: 2,
+    role: {
+      id: 1,
+      name: 'Admin',
+      permissions: ['read', 'write', 'delete'],
+      createdAt: 1622505600,
+      updatedAt: 1622505600,
+    },
   },
 ];
 
@@ -71,13 +82,18 @@ const CompanyList = () => {
 
   return (
     <div className="flex justify-center gap-40px">
-      {COMPANY_LIST.map((company) => (
+      {COMPANY_LIST.map((companyAndRole) => (
         <button
           type="button"
           onClick={handleSelectCompany}
           className="h-100px w-100px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
         >
-          <Image src={company.imageId} alt={company.name} width={100} height={100}></Image>
+          <Image
+            src={companyAndRole.company.imageId}
+            alt={companyAndRole.company.name}
+            width={100}
+            height={100}
+          ></Image>
         </button>
       ))}
     </div>

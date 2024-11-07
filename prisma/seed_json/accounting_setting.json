@@ -7,6 +7,8 @@
         "purchaseTaxTaxable": true,
         "purchaseTaxRate": 0.10,
         "returnPeriodicity": "quarterly",
-        "currency": "EUR"
+        "currency": "EUR",
+        "createdAt": 1234567890,
+        "updatedAt": 1234567890
     }
 ]
