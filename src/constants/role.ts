@@ -15,3 +15,9 @@ export enum CompanyRoleName {
   VIEWER = 'Viewer',
   TEST = 'Test',
 }
+
+export enum RoleType {
+  COMPANY = 'Company',
+  USER = 'User',
+  SYSTEM = 'System',
+}
