@@ -4,6 +4,7 @@ import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 // import Toggle from '@/components/toggle/toggle';
@@ -41,6 +42,8 @@ import { VoucherV2Action } from '@/constants/voucher';
 //   MONTH = 'month',
 //   WEEK = 'week',
 // }
+
+type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
 // ToDo: (20241021 - Julian) 確認完後移動到 interfaces
 interface IAIResultVoucher {
@@ -242,6 +245,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   }, [isAIWorking, resultData]);
 
+  useEffect(() => {
+    const isReverse = reverses.length > 0;
+    setIsReverseRequired(isReverse);
+  }, [reverseList]);
+
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
     setSelectedIds(selectedCertificates.map((item) => item.id));
@@ -311,6 +319,46 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   //   componentVisible: isRecurringMenuOpen,
   //   setComponentVisible: setRecurringMenuOpen,
   // } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20241107 - Julian) ============ 熱鍵設置 ============
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleTabPress = useCallback(
+    (event: KeyboardEvent) => {
+      event.preventDefault(); // Info: (20241107 - Julian) 阻止預設事件
+
+      // Info: (20241107 - Julian) 獲取 form 元素中的所有 input, button, div 元素
+      const elementsInForm =
+        formRef.current?.querySelectorAll<FocusableElement>('input, button, div') ?? [];
+
+      // Info: (20241107 - Julian) 過濾出可聚焦的元素
+      const focusableElements: FocusableElement[] = Array.from(elementsInForm).filter(
+        // Info: (20241107 - Julian) 過濾掉 disabled 或 tabIndex < 0 的元素
+        (el) => el.tabIndex >= 0 && (el instanceof HTMLDivElement || !el.disabled)
+      );
+
+      const currentIndex = focusableElements.findIndex((el) => el === document.activeElement);
+
+      // Info: (20241107 - Julian) 如果沒有找到當前聚焦元素 || 當前聚焦元素是最後一個可聚焦元素，則聚焦到第一個可聚焦元素
+      if (currentIndex === -1 || currentIndex === focusableElements.length - 1) {
+        focusableElements[0]?.focus();
+      } else {
+        // Info: (20241107 - Julian) 如果日期選擇好了，就直接跳到下一個欄位(index = 16)
+        // if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
+        //   focusableElements[16]?.focus();
+        //   return;
+        // }
+        // Info: (20241107 - Julian) 獲取下一個聚焦元素的 index
+        const nextIndex = currentIndex + 1 >= focusableElements.length ? 0 : currentIndex + 1;
+
+        // Info: (20241107 - Julian) 移動到下一個可聚焦元素
+        focusableElements[nextIndex]?.focus();
+      }
+    },
+    [formRef]
+  );
+
+  useHotkeys('tab', handleTabPress);
 
   const dateRef = useRef<HTMLDivElement>(null);
   const counterpartyInputRef = useRef<HTMLInputElement>(null);
@@ -818,7 +866,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   useEffect(() => {
     setSelectedCertificates(Object.values(selectedData));
     setSelectedIds(Object.keys(selectedData).map(Number));
-  }, [selectedCertificates]);
+  }, [selectedData]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
@@ -855,7 +903,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       />
 
       {/* Info: (20240926 - Julian) form */}
-      <form onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+      <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
         {/* Info: (20240926 - Julian) Date */}
         <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
@@ -877,7 +925,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             {t('journal:ADD_NEW_VOUCHER.VOUCHER_TYPE')}
             <span className="text-text-state-error">*</span>
           </p>
-          <div
+          <button
+            id="voucher-type"
+            type="button"
             onClick={typeToggleHandler}
             className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
           >
@@ -889,7 +939,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             <FaChevronDown size={20} />
             {/* Info: (20240926 - Julian) Type dropdown */}
             {typeDropdownMenu}
-          </div>
+          </button>
         </div>
 
         {/* Info: (20240926 - Julian) Note */}
@@ -901,7 +951,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             value={note}
             onChange={noteChangeHandler}
             placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
+            className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
@@ -914,7 +964,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             <div
               ref={counterpartyRef}
               onClick={counterSearchToggleHandler}
-              className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
+              className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
             >
               {displayedCounterparty}
               <div className="h-20px w-20px">
@@ -943,13 +993,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ) : (
           <>
             {isShowReverseHint ? (
-              <p className="text-text-state-error">Please add reverse item!</p>
+              <p className="text-text-state-error">
+                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
+              </p>
             ) : null}
             <div ref={voucherLineRef} className="col-span-2">
               <VoucherLineBlock
                 lineItems={voucherLineItems}
                 setLineItems={setLineItems}
-                setIsReverseRequired={setIsReverseRequired}
                 flagOfClear={flagOfClear}
                 flagOfSubmit={flagOfSubmit}
                 setIsTotalZero={setIsTotalZero}
@@ -965,10 +1016,15 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         )}
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
-          <Button type="button" variant="secondaryOutline" onClick={clearClickHandler}>
+          <Button
+            id="voucher-clear-button"
+            type="button"
+            variant="secondaryOutline"
+            onClick={clearClickHandler}
+          >
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
-          <Button type="submit">
+          <Button id="voucher-save-button" type="submit">
             <p>{t('common:COMMON.SAVE')}</p>
             <BiSave size={20} />
           </Button>

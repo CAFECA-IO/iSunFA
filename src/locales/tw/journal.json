@@ -239,20 +239,14 @@
     "EMPTY_HINT": "請新增至少 1 筆資產！",
     "ADD_BTN": "新增資產"
   },
-  "REVERSE_SECTION": {
-    "TITLE": "沖銷",
-    "REVERSE_VOUCHER": "沖銷傳票",
-    "REVERSE_VOUCHER_PLACEHOLDER": "請選擇...",
-    "REVERSE_AMOUNT": "沖銷金額",
-    "ADD_BTN": "新增更多沖銷傳票",
-    "EMPTY_HINT": "請新增至少 1 筆沖銷傳票！"
-  },
   "VOUCHER_LINE_BLOCK": {
     "ACCOUNTING": "會計科目",
     "PARTICULARS": "摘要",
     "CREDIT": "貸方金額",
     "DEBIT": "借方金額",
-    "EMPTY_HINT": "請新增至少 1 筆會計分錄！"
+    "EMPTY_HINT": "請新增至少 1 筆會計分錄！",
+    "REVERSE_ITEM": "沖銷項目",
+    "REVERSE_HINT": "請新增至少 1 筆沖銷傳票！"
   },
   "VOUCHER_DETAIL_PAGE": {
     "TITLE": "傳票",
@@ -295,5 +289,15 @@
     "FINISH_CONTENT": "AI 已完成分析，點擊以讓 AI",
     "FILL_UP_BTN": "填寫您的傳票",
     "WARNING_CONTENT": "AI 可能會出錯，請仔細檢查重要資訊。"
+  },
+  "REVERSE_MODAL": {
+    "MODAL_TITLE": "選擇沖銷項目",
+    "SELECT": "選擇",
+    "TOTAL_REVERSE_AMOUNT": "總沖銷金額",
+    "VOUCHER_NO": "傳票號碼",
+    "ACCOUNTING": "會計科目",
+    "PARTICULARS": "摘要",
+    "AMOUNT": "金額",
+    "REVERSE_AMOUNT": "沖銷金額"
   }
 }
