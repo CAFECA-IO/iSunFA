@@ -197,13 +197,12 @@ const SelectRolePage = () => {
         {/* // Info: (20241009 - Liz) User Roles */}
         <section className="flex items-center justify-center gap-40px pt-120px">
           {userRoleList.map((userRole) => {
-            const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.roleId.toString());
-            // ToDo: (20241107 - Liz) 等後端修改回傳格式之後 userRole.roleId.toString() 要改成 userRole.roleName
+            const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.role.name);
 
             return (
               <UserRole
                 key={userRole.id}
-                name={userRole.roleId.toString()}
+                name={userRole.role.name}
                 roleIconSrc={roleIcon?.roleIconSrc ?? ''}
                 roleIconAlt={roleIcon?.roleIconAlt ?? ''}
                 avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
