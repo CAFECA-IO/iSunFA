@@ -368,7 +368,12 @@ export async function listCompanyAndRole(
   pageSize: number = DEFAULT_PAGE_LIMIT,
   sortOrder: SortOrder = SortOrder.ASC
 ): Promise<{
-  data: Array<{ company: Company & { imageFile: File | null }; role: Role }>;
+  data: Array<{
+    company: Company & { imageFile: File | null };
+    role: Role;
+    tag: string;
+    order: number;
+  }>;
   page: number;
   totalPages: number;
   totalCount: number;
@@ -377,7 +382,12 @@ export async function listCompanyAndRole(
   hasPreviousPage: boolean;
   sort: { sortBy: string; sortOrder: string }[];
 }> {
-  let companyRoleList: Array<{ company: Company & { imageFile: File | null }; role: Role }> = [];
+  let companyRoleList: Array<{
+    company: Company & { imageFile: File | null };
+    role: Role;
+    tag: string;
+    order: number;
+  }> = [];
 
   try {
     companyRoleList = await prisma.admin.findMany({
@@ -398,6 +408,8 @@ export async function listCompanyAndRole(
           },
         },
         role: true,
+        tag: true,
+        order: true,
       },
     });
   } catch (error) {
@@ -444,13 +456,17 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
   companyId: number
 ): Promise<{
   company: Company & { imageFile: File | null };
+  tag: string;
+  order: number;
   role: Role;
 } | null> {
   let companyRole: {
     company: Company & { imageFile: File | null };
+    tag: string;
+    order: number;
     role: Role;
   } | null = null;
-  if (companyId > 0) {
+  if (userId > 0 && companyId > 0) {
     companyRole = await prisma.admin.findFirst({
       where: {
         companyId,
@@ -458,6 +474,8 @@ export async function getCompanyAndRoleByUserIdAndCompanyId(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
+        tag: true,
+        order: true,
         company: {
           include: {
             imageFile: true,
@@ -532,10 +550,14 @@ export async function getCompanyAndRoleByTaxId(
   taxId: string
 ): Promise<{
   company: Company;
+  tag: string;
+  order: number;
   role: Role;
 } | null> {
   let companyDetail: {
     company: Company;
+    tag: string;
+    order: number;
     role: Role;
   } | null = null;
   if (taxId) {
@@ -548,6 +570,8 @@ export async function getCompanyAndRoleByTaxId(
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       select: {
+        tag: true,
+        order: true,
         company: true,
         role: true,
       },
@@ -564,7 +588,12 @@ export async function createCompanyAndRole(
   imageFileId: number,
   tag: CompanyTag = CompanyTag.ALL,
   email?: string
-): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
+): Promise<{
+  company: Company & { imageFile: File | null };
+  role: Role;
+  tag: string;
+  order: number;
+}> {
   const nowTimestamp = getTimestampNow();
 
   const userConnect: Prisma.UserCreateNestedOneWithoutAdminsInput = {
@@ -591,41 +620,42 @@ export async function createCompanyAndRole(
     },
   };
 
-  const newCompanyRoleList: { company: Company & { imageFile: File }; role: Role } =
-    await prisma.admin.create({
-      data: {
-        user: userConnect,
-        company: {
-          create: {
-            taxId,
-            name,
-            tag,
-            imageFile: {
-              connect: {
-                id: imageFileId,
-              },
+  const newCompanyRoleList = await prisma.admin.create({
+    data: {
+      user: userConnect,
+      company: {
+        create: {
+          taxId,
+          name,
+          imageFile: {
+            connect: {
+              id: imageFileId,
             },
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-            startDate: nowTimestamp,
           },
+          createdAt: nowTimestamp,
+          updatedAt: nowTimestamp,
+          startDate: nowTimestamp,
         },
-        role: roleConnectOrCreate,
-        email: email || '',
-        status: true,
-        startDate: nowTimestamp,
-        createdAt: nowTimestamp,
-        updatedAt: nowTimestamp,
       },
-      select: {
-        company: {
-          include: {
-            imageFile: true,
-          },
+      tag,
+      role: roleConnectOrCreate,
+      email: email || '',
+      status: true,
+      startDate: nowTimestamp,
+      createdAt: nowTimestamp,
+      updatedAt: nowTimestamp,
+    },
+    select: {
+      company: {
+        include: {
+          imageFile: true,
         },
-        role: true,
       },
-    });
+      tag: true,
+      order: true,
+      role: true,
+    },
+  });
 
   return newCompanyRoleList;
 }
@@ -634,19 +664,24 @@ export async function createCompanyAndRole(
 export async function setCompanyToTop(userId: number, companyId: number) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  let companyRole: { company: Company & { imageFile: File | null }; role: Role } | null = null;
+  let companyRole: {
+    company: Company & { imageFile: File | null };
+    role: Role;
+    tag: string;
+    order: number;
+  } | null = null;
   // Info: (20241017 - Jacky) Get the max companyOrder
   const getMaxOrderAdmin = await prisma.admin.aggregate({
     where: {
       userId,
     },
     _max: {
-      createdAt: true,
+      order: true,
     },
   });
 
   const {
-    _max: { createdAt: maxOrder },
+    _max: { order: maxOrder },
   } = getMaxOrderAdmin;
 
   const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
@@ -658,7 +693,7 @@ export async function setCompanyToTop(userId: number, companyId: number) {
         id: admin.id,
       },
       data: {
-        createdAt: (maxOrder ?? 0) + 1,
+        order: (maxOrder ?? 0) + 1,
         updatedAt: nowTimestamp,
       },
       select: {
@@ -668,6 +703,8 @@ export async function setCompanyToTop(userId: number, companyId: number) {
           },
         },
         role: true,
+        tag: true,
+        order: true,
       },
     });
   }
@@ -677,7 +714,12 @@ export async function setCompanyToTop(userId: number, companyId: number) {
 export async function updateCompanyTagById(
   adminId: number,
   tag: CompanyTag
-): Promise<{ company: Company & { imageFile: File | null }; role: Role }> {
+): Promise<{
+  company: Company & { imageFile: File | null };
+  role: Role;
+  tag: string;
+  order: number;
+}> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   // ToDo: (20241017 - Jacky) update company tag
@@ -686,7 +728,7 @@ export async function updateCompanyTagById(
       id: adminId,
     },
     data: {
-      email: tag,
+      tag,
       updatedAt: nowTimestamp,
     },
     select: {
@@ -695,6 +737,8 @@ export async function updateCompanyTagById(
           imageFile: true,
         },
       },
+      tag: true,
+      order: true,
       role: true,
     },
   });

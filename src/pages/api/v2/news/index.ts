@@ -18,14 +18,13 @@ const handleGetRequest: IHandleRequest<
   let payload: INews[] | IPaginatedData<INews[]> | null = null;
 
   let newsList: INews[] | IPaginatedData<INews[]> | null;
-  const { simple, type, targetPage, pageSize, startDateInSecond, endDateInSecond, searchQuery } =
-    query;
+  const { simple, type, page, pageSize, startDateInSecond, endDateInSecond, searchQuery } = query;
   if (simple) {
     newsList = await listNewsSimple(type, pageSize);
   } else {
     newsList = await listNews(
       type,
-      targetPage,
+      page,
       pageSize,
       startDateInSecond,
       endDateInSecond,
@@ -43,8 +42,8 @@ const handlePostRequest: IHandleRequest<APIName.CREATE_NEWS, INews> = async ({ b
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: INews | null = null;
 
-  const { title, content, type } = body;
-  const createdNews = await createNews(title, content, type);
+  const { imageId, title, content, type } = body;
+  const createdNews = await createNews(imageId, title, content, type);
 
   payload = createdNews;
   statusMessage = STATUS_MESSAGE.CREATED;
