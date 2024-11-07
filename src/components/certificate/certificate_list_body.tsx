@@ -32,6 +32,7 @@ import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 
 interface CertificateListBodyProps {}
 
@@ -40,7 +41,7 @@ const sanitizeFileName = (fileName: string): string => {
 };
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
-  const { t } = useTranslation('certificate');
+  const { t } = useTranslation(['certificate', 'common']);
   const router = useRouter();
   const { selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
@@ -93,7 +94,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([
     {
       operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-      buttonStr: t('common:SELECTION.ADD_NEW_VOUCHER'),
+      buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
       onClick: handleAddVoucher,
     },
   ]);
@@ -111,19 +112,44 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const handleDownloadSelectedItems = useCallback(() => {
-    Object.entries(certificates).forEach(([id, item]) => {
-      if (item.isSelected) {
-        handleDownloadItem(parseInt(id, 10));
-      }
-    });
-  }, [certificates, activeTab, handleDownloadItem]);
+  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
+
+  const handleExportModalApiResponse = useCallback(
+    (
+      resData: IPaginatedData<{
+        totalInvoicePrice: number;
+        unRead: {
+          withVoucher: number;
+          withoutVoucher: number;
+        };
+        currency: string;
+        certificates: ICertificate[];
+      }>
+    ) => {
+      setExportModalData(resData.data.certificates);
+    },
+    []
+  );
+
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+
+  const handleExport = useCallback(() => {
+    setIsExportModalOpen(true);
+  }, []);
+
+  const onExport = useCallback(() => {
+    if (exportModalData.length > 0) {
+      exportModalData.forEach((item) => {
+        handleDownloadItem(item.id);
+      });
+    }
+  }, [exportModalData]);
 
   const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
       operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: t('certificate:LIST.EXPORT_CERTIFICATES'),
-      onClick: handleDownloadSelectedItems,
+      buttonStr: 'certificate:EXPORT.TITLE',
+      onClick: handleExport,
     },
   ]);
 
@@ -143,7 +169,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       const dummyData = {
         data: {
           totalInvoicePrice: dummyCertificateList.reduce(
-            (acc, item) => acc + item.invoice.totalPrice,
+            (acc, item) => acc + (item.invoice.totalPrice || 0),
             0
           ),
           unRead: {
@@ -336,7 +362,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
-            buttonStr: t('common:SELECTION.ADD_NEW_VOUCHER'),
+            buttonStr: 'common:SELECTION.ADD_NEW_VOUCHER',
             onClick: handleAddVoucher,
           },
         ]);
@@ -345,7 +371,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       }
       setActiveTab(tab as InvoiceTabs);
     },
-    [activeTab, handleAddVoucher, handleDownloadSelectedItems]
+    [activeTab, handleAddVoucher, handleExport]
   );
 
   const openEditModalHandler = useCallback(
@@ -505,6 +531,15 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   return (
     <>
+      {isExportModalOpen && (
+        <CertificateExportModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          handleApiResponse={handleExportModalApiResponse}
+          handleExport={onExport}
+          certificates={exportModalData}
+        />
+      )}
       {isEditModalOpen && (
         <CertificateEditModal
           isOpen={isEditModalOpen}

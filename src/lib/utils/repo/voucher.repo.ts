@@ -562,7 +562,7 @@ export async function postVoucherV2({
             startDate: revertEvent.startDate,
             endDate: revertEvent.endDate,
             daysOfWeek: revertEvent.dateOfWeek,
-            monthsOfYear: revertEvent.monthsOfYear.map((month) => String(month)),
+            monthsOfYear: revertEvent.monthsOfYear,
             createdAt: nowInSecond,
             updatedAt: nowInSecond,
           },

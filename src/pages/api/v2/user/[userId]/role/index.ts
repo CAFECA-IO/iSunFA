@@ -6,15 +6,13 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { createUserRole, listUserRole } from '@/lib/utils/repo/user_role.repo';
-import { File, Role, User, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
+import { getRoleByName } from '@/lib/utils/repo/role.repo';
 
-const handleGetRequest: IHandleRequest<
-  APIName.ROLE_LIST,
-  (UserRole & { user: User & { imageFile: File }; role: Role })[]
-> = async ({ query }) => {
+const handleGetRequest: IHandleRequest<APIName.ROLE_LIST, UserRole[]> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (UserRole & { user: User & { imageFile: File }; role: Role })[] | null = null;
+  let payload: UserRole[] | null = null;
   const { userId } = query;
   const listedUserRole = await listUserRole(userId);
 
@@ -24,18 +22,22 @@ const handleGetRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-const handlePostRequest: IHandleRequest<
-  APIName.CREATE_ROLE,
-  (UserRole & { user: User & { imageFile: File }; role: Role }) | null
-> = async ({ body }) => {
+const handlePostRequest: IHandleRequest<APIName.CREATE_ROLE, UserRole | null> = async ({
+  query,
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (UserRole & { user: User & { imageFile: File }; role: Role }) | null = null;
+  let payload: UserRole | null = null;
 
   // Deprecated: (20240924 - Jacky) Mock data for connection
   statusMessage = STATUS_MESSAGE.CREATED;
-  const { userId, roleId } = body;
-  const createdUserRole = await createUserRole(userId, roleId);
-  payload = createdUserRole;
+  const { userId } = query;
+  const { roleName } = body;
+  const role = await getRoleByName(roleName);
+  if (role) {
+    const createdUserRole = await createUserRole(userId, role.id);
+    payload = createdUserRole;
+  }
 
   return { statusMessage, payload };
 };

@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { roleSchema } from '@/lib/utils/zod_schema/role';
-import { userSchema } from './user';
 
 // Info: (20241029 - Jacky) UserRole null schema
 const userRoleNullSchema = z.union([z.object({}), z.string()]);
 
+const userRoleQuerySchema = z.object({
+  userId: zodStringToNumber,
+});
 // Info: (20241015 - Jacky) UserRole list schema
 const userRoleListQuerySchema = z.object({
   userId: zodStringToNumber,
@@ -13,8 +14,7 @@ const userRoleListQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) UserRole post schema
 const userRolePostBodySchema = z.object({
-  userId: z.number().int(),
-  roleId: z.number().int(),
+  roleName: z.string(),
 });
 
 // Info: (20241015 - Jacky) UserRole select schema
@@ -23,21 +23,14 @@ const userRoleSelectQuerySchema = z.object({
   roleId: zodStringToNumber,
 });
 
-const userRoleOutputSchema = z
-  .object({
-    id: z.number().int(),
-    role: roleSchema,
-    user: userSchema,
-    // lastLoginAt: z.number().int(), // ToDo: (20241030 - Jacky) SHOULD USE after db schema updated
-    createdAt: z.number().int(),
-    updatedAt: z.number().int(),
-  })
-  .transform((data) => ({
-    ...data,
-    role: data.role,
-    user: data.user,
-    lastLoginAt: data.role.lastLoginAt,
-  }));
+const userRoleOutputSchema = z.object({
+  id: z.number().int(),
+  roleId: z.number().int(),
+  userId: z.number().int(),
+  lastLoginAt: z.number().int(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+});
 
 const userRoleListOutputSchema = z.array(userRoleOutputSchema);
 
@@ -52,7 +45,7 @@ export const userRoleListSchema = {
 
 export const userRolePostSchema = {
   input: {
-    querySchema: userRoleNullSchema,
+    querySchema: userRoleQuerySchema,
     bodySchema: userRolePostBodySchema,
   },
   outputSchema: userRoleOutputSchema,

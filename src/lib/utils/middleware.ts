@@ -67,7 +67,7 @@ async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
 ) {
   await createUserActionLog({
     sessionId: session.id,
-    userId: session.userId || 0,
+    userId: session.userId || 555,
     actionType: UserActionLogActionType.API,
     actionDescription: apiName,
     ipAddress: req.headers['x-forwarded-for'] as string,

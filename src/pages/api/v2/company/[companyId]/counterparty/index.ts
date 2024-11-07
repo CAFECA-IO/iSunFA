@@ -16,10 +16,10 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICounterparty[]> | null = null;
 
-  const { companyId, targetPage, pageSize, type, searchQuery } = query;
+  const { companyId, page, pageSize, type, searchQuery } = query;
   const counterpartyList: IPaginatedData<ICounterparty[]> = await listCounterparty(
     companyId,
-    targetPage,
+    page,
     pageSize,
     type,
     searchQuery
