@@ -551,6 +551,7 @@
   },
   "PLACEHOLDER": {
     "ENTER_NAME": "Enter Name",
-    "ENTER_NUMBER": "Enter Number"
+    "ENTER_NUMBER": "Enter Number",
+    "ENTER_FULL_ADDRESS": "Please enter the full address"
   }
 }

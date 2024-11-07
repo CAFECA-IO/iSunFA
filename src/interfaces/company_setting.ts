@@ -1,4 +1,4 @@
-import { CompanyTag } from '@/constants/company';
+import { LocaleKey } from '@/constants/normal_setting';
 
 export interface ICompanySetting {
   id: number;
@@ -7,16 +7,11 @@ export interface ICompanySetting {
   companyTaxId: string;
   taxSerialNumber: string;
   representativeName: string;
-  country: string;
+  country: LocaleKey;
+  // Info: (202411007 - Tzuhan) @Jacky need add country code for phone number
+  countryCode: LocaleKey;
   phone: string;
   address: string;
   createdAt: number;
   updatedAt: number;
-}
-
-export interface ICompanySettingList {
-  id: number;
-  partnerName: string;
-  taxId: string;
-  type: CompanyTag;
 }

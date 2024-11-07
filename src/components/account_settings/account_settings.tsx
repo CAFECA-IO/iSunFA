@@ -30,7 +30,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = () => {
         </p>
       </Button>
       <Button
-        id="setting-remove"
+        id="setting-remove-account"
         type="button"
         variant="errorBorderless"
         className="justify-start p-0"

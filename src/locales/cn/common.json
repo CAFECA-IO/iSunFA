@@ -550,7 +550,8 @@
     "MATCH_NEWS": "媒合资讯"
   },
   "PLACEHOLDER": {
-    "ENTER_NAME": "输入姓名",
-    "ENTER_NUMBER": "输入号码"
+    "ENTER_NAME": "输入名称",
+    "ENTER_NUMBER": "输入号码",
+    "ENTER_FULL_ADDRESS": "输入完整地址"
   }
 }

@@ -551,6 +551,7 @@
   },
   "PLACEHOLDER": {
     "ENTER_NAME": "輸入名稱",
-    "ENTER_NUMBER": "輸入數字"
+    "ENTER_NUMBER": "輸入數字",
+    "ENTER_FULL_ADDRESS": "輸入完整地址"
   }
 }

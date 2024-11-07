@@ -46,7 +46,7 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
         </p>
       </Button>
       <Button
-        id="setting-add-company"
+        id="setting-list-company"
         type="button"
         variant="linkBorderless"
         className="justify-start p-0"

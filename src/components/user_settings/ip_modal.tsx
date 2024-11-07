@@ -129,12 +129,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal }) => {
           <div id="company-setting-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
             <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
-              <Image
-                src="/icons/asset_management_icon.svg"
-                width={16}
-                height={16}
-                alt="company_icon"
-              />
+              <Image src="/icons/location.svg" width={16} height={16} alt="company_icon" />
               <p>{t('setting:IP.LIST')}</p>
             </div>
             <hr className="flex-1 border-divider-stroke-lv-4" />

@@ -19,4 +19,7 @@ export enum ToastId {
   UPDATE_CERTIFICATE_SUCCESS = 'toast-update-certificate-success',
   UPDATE_CERTIFICATE_ERROR = 'toast-update-certificate-error',
   IP_ABNORMAL = 'toast-ip-abnormal',
+  COMPANY_SETTING_GET_ERROR = 'toast-company-setting-get-error',
+  COMPANY_SETTING_UPDATE_SUCCESS = 'toast-company-setting-update-success',
+  COMPANY_SETTING_UPDATE_ERROR = 'toast-company-setting-update-error',
 }
