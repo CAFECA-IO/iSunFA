@@ -7,6 +7,7 @@ import { generateRandomCounterParties } from '@/interfaces/counterparty';
 import { ProgressStatus } from '@/constants/account';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
+import type { IUserEntity } from '@/interfaces/user';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
@@ -194,5 +195,5 @@ export interface ICertificateEntity {
    */
   vouchers: IVoucherEntity[];
 
-  // ToDo: (20241024 - Murky) Users
+  uploader?: IUserEntity;
 }
