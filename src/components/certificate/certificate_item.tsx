@@ -82,26 +82,21 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </BorderCell>
       )}
-      <BorderCell isSelected={certificate.isSelected}>
-        <div className="relative">
-          <CalendarIcon timestamp={certificate.invoice?.date ?? 0} />
-          <div className="absolute bottom-0 right-0 h-10px w-10px rounded-full bg-surface-state-error p-2px"></div>
+      <BorderCell isSelected={certificate.isSelected} className="text-center">
+        <div className="inline-block">
+          <CalendarIcon timestamp={certificate.invoice?.date ?? 0} unRead={!!certificate.unRead} />
         </div>
       </BorderCell>
 
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex min-w-120px gap-1">
-        <>
-          {dataImcomplete && (
-            <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
-              <IoWarningOutline size={16} />
-            </div>
-          )}
+        <div className="flex items-center gap-2">
+          {!!dataImcomplete && <IoWarningOutline size={16} className="text-surface-state-error" />}
           <div className="flex-col gap-2">
             <div className="text-text-neutral-tertiary">{certificate.invoice.name ?? ''}</div>
             <div className="text-text-neutral-primary">{certificate.invoice.no ?? ''}</div>
           </div>
-        </>
+        </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="space-y-2">
         <>
@@ -115,7 +110,9 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="max-w-120px">
         <div className="text-text-neutral-primary">
-          {certificate.invoice?.type ? t(`certificate:INVOICE.${certificate.invoice?.type}`) : ''}
+          {certificate.invoice?.type
+            ? t(`certificate:INVOICE_TYPE.${certificate.invoice?.type}`)
+            : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="min-w-100px">

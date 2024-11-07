@@ -4,14 +4,34 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
-import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
-import { getSession } from '@/lib/utils/session';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { IVoucherEntity } from '@/interfaces/voucher';
+import { JOURNAL_EVENT } from '@/constants/journal';
+import { AccountType, EventType } from '@/constants/account';
+import { CounterpartyType } from '@/constants/counterparty';
+import { ICounterPartyEntity } from '@/interfaces/counterparty';
+import { ILineItemEntity } from '@/interfaces/line_item';
+import { IAccountEntity } from '@/interfaces/accounting_account';
+import { AI_TYPE } from '@/constants/aich';
 
-type APIResponse = object | null;
+type CertificateAiResponse = {
+  aiType: AI_TYPE; // Info: (20241107 - Murky) For zod discriminator
+  [key: string]: unknown;
+};
+
+type VoucherAiResponse = IVoucherEntity & {
+  aiType: AI_TYPE; // Info: (20241107 - Murky) For zod discriminator
+  counterParty: ICounterPartyEntity;
+  lineItems: (ILineItemEntity & { account: IAccountEntity })[];
+};
+
+// type APIResponse = CertificateAiResponse | VoucherAiResponse | null;
+type APIResponse = VoucherAiResponse | CertificateAiResponse | null;
 
 const DEFAULT_STATUS_MESSAGE = STATUS_MESSAGE.BAD_REQUEST;
-const DEFAULT_PAYLOAD: APIResponse = null;
+const DEFAULT_PAYLOAD = null;
 
 // Info: (20241004 - Murky) Mock promise to simulate fetching AI result
 const mockFetchAIResult = new Promise((resolve) => {
@@ -30,6 +50,7 @@ async function certificateHandler() {
 
     // Info: (20241004 - Murky) Populate the payload with certificate details
     payload = {
+      aiType: AI_TYPE.CERTIFICATE,
       inputOrOutput: 'input',
       certificateDate: 10000001, // Info: (20241004 - Murky) Example certificate date
       certificateNo: 'AB-12345678', // Info: (20241004 - Murky) Certificate number
@@ -51,6 +72,7 @@ async function certificateHandler() {
 }
 
 // Info: (20241004 - Murky) Handler for the 'voucher' endpoint
+// ASK_AI_RESULT_V2 希望可以回 IAIResultVoucher
 async function voucherHandler() {
   let statusMessage: string = DEFAULT_STATUS_MESSAGE;
   let payload: APIResponse = DEFAULT_PAYLOAD;
@@ -60,35 +82,139 @@ async function voucherHandler() {
   if (resultFromAI) {
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
 
-    // Info: (20241004 - Murky) Populate the payload with voucher details
-    payload = {
-      voucherDate: 1000000, // Info: (20241004 - Murky) Example voucher date
-      type: 'payment', // Info: (20241004 - Murky) Type of voucher (e.g., payment, transfer, receiving)
-      note: 'This is a note', // Info: (20241004 - Murky) Additional notes for the voucher
-      counterPartyId: 1001, // Info: (20241004 - Murky) ID of the counterparty
-      lineItemsInfo: {
-        sum: {
-          debit: true, // Info: (20241004 - Murky) Whether the sum is debit or credit
-          amount: 1000, // Info: (20241004 - Murky) Total amount
-        },
-        lineItems: [
-          {
-            id: 1001, // Info: (20241004 - Murky) Line item ID
-            amount: 1000, // Info: (20241004 - Murky) Amount for this line item
-            description: 'This is a description', // Info: (20241004 - Murky) Description of the line item
-            debit: true, // Info: (20241004 - Murky) Whether this line item is debit
-            accountId: 1001, // Info: (20241004 - Murky) Account ID associated with this line item
-          },
-          {
-            id: 1002, // Info: (20241004 - Murky) Line item ID
-            amount: 1001, // Info: (20241004 - Murky) Amount for this line item
-            description: 'This is a description', // Info: (20241004 - Murky) Description of the line item
-            debit: false, // Info: (20241004 - Murky) Whether this line item is credit
-            accountId: 1002, // Info: (20241004 - Murky) Account ID associated with this line item
-          },
-        ],
-      },
+    /**
+     * Info: (20241107 - Murky)
+     * @description 需要在AI回傳Counterparty 公司之後，從database裡面撈一個公司出來
+     */
+    const mockCounterParty: ICounterPartyEntity = {
+      id: 1,
+      companyId: 1003,
+      name: '原價屋',
+      taxId: '27749036',
+      type: CounterpartyType.CLIENT,
+      note: '買電腦',
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
     };
+
+    /**
+     * Info: (20241107 - Murky)
+     * @description AI回傳account 名稱或是code之後，需要在database 中match一個account出來
+     */
+    const mockLineItems: (ILineItemEntity & { account: IAccountEntity })[] = [
+      {
+        id: -1, // Info: (20241107 - Murky) AI拿不到, 寫死
+        description: '存入銀行',
+        amount: 600,
+        debit: true,
+        accountId: 1,
+        voucherId: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        account: {
+          id: 1,
+          companyId: 1002,
+          system: 'IFRS',
+          type: AccountType.ASSET,
+          debit: true,
+          liquidity: true,
+          code: '1103',
+          name: '銀行存款',
+          forUser: true,
+          parentCode: '1100',
+          rootCode: '1100',
+          level: 3,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
+      },
+      {
+        id: -1, // Info: (20241107 - Murky) AI拿不到, 寫死
+        description: '存入銀行',
+        amount: 600,
+        debit: true,
+        accountId: 1,
+        voucherId: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        account: {
+          id: 2,
+          companyId: 1002,
+          system: 'IFRS',
+          type: AccountType.ASSET,
+          debit: true,
+          liquidity: true,
+          code: '1101',
+          name: '庫存現金',
+          forUser: true,
+          parentCode: '1100',
+          rootCode: '1100',
+          level: 3,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
+      },
+      {
+        id: -1, // Info: (20241107 - Murky) AI拿不到, 寫死
+        description: '原價屋',
+        amount: 1000,
+        debit: false,
+        accountId: 1,
+        voucherId: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        account: {
+          id: 1,
+          companyId: 1002,
+          system: 'IFRS',
+          type: AccountType.ASSET,
+          debit: true,
+          liquidity: true,
+          code: '1172',
+          name: '應收帳款',
+          forUser: true,
+          parentCode: '1170',
+          rootCode: '1170',
+          level: 3,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
+      },
+    ];
+
+    const mockVoucher: VoucherAiResponse = {
+      aiType: AI_TYPE.VOUCHER,
+      id: -1, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      issuerId: -1, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      counterPartyId: -1, // Info: (20241107 - Murky) AI拿不到, 但是前端要知道, 用fuzzy search
+      companyId: -1, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      status: JOURNAL_EVENT.UPLOADED, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      editable: true, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      no: '',
+      date: 100000000, // Info: (20241107 - Murky) AI必須轉換出來
+      type: EventType.INCOME, // Info: (20241107 - Murky) 可以讓AI轉換
+      note: 'this is note',
+      counterParty: mockCounterParty,
+      createdAt: -1, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      updatedAt: -1, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      deletedAt: null, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      lineItems: mockLineItems, // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      readByUsers: [], // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      originalEvents: [], // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      resultEvents: [], // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      certificates: [], // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+      asset: [], // Info: (20241107 - Murky) AI拿不到, 寫死就可以
+    };
+
+    // Info: (20241004 - Murky) Populate the payload with voucher details
+    payload = mockVoucher;
   }
 
   return {
@@ -104,35 +230,30 @@ const getHandlers: {
     payload: APIResponse;
   }>;
 } = {
-  certificate: certificateHandler,
-  voucher: voucherHandler,
+  [AI_TYPE.CERTIFICATE]: certificateHandler,
+  [AI_TYPE.VOUCHER]: voucherHandler,
 };
 
 // Info: (20241004 - Murky) Function to handle GET requests
-export async function handleGetRequest(req: NextApiRequest, res: NextApiResponse<APIResponse>) {
+export const handleGetRequest: IHandleRequest<APIName.ASK_AI_RESULT_V2, APIResponse> = async ({
+  query,
+}) => {
   let statusMessage: string = DEFAULT_STATUS_MESSAGE;
   let payload: APIResponse = DEFAULT_PAYLOAD;
 
-  // Info: (20241004 - Murky) Get user session information
-  const { userId } = await getSession(req, res);
-
-  // Info: (20241004 - Murky) Validate the request and extract query parameters
-  const { query } = validateRequest(APIName.ASK_AI_RESULT_V2, req, userId);
-
   // Info: (20241004 - Murky) If query is valid, call the appropriate handler
-  if (query && query.reason) {
-    const postHandler = getHandlers[query.reason];
-    ({ statusMessage, payload } = await postHandler());
-  }
+  const { reason } = query;
+  const postHandler = getHandlers[reason];
+  ({ statusMessage, payload } = await postHandler());
 
   return {
     statusMessage,
     payload,
-    userId,
   };
-}
+};
 
 // Info: (20241004 - Murky) Map of method handlers for different HTTP methods
+
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -140,10 +261,9 @@ const methodHandlers: {
   ) => Promise<{
     statusMessage: string;
     payload: APIResponse;
-    userId: number;
   }>;
 } = {
-  GET: handleGetRequest,
+  GET: (req, res) => withRequestValidation(APIName.ASK_AI_RESULT_V2, req, res, handleGetRequest),
 };
 
 // Info: (20241004 - Murky) Main handler function for the API route
@@ -153,14 +273,14 @@ export default async function handler(
 ) {
   let statusMessage: string = DEFAULT_STATUS_MESSAGE;
   let payload: APIResponse = DEFAULT_PAYLOAD;
-  let userId: number = -1;
+  const userId: number = -1;
 
   try {
     // Info: (20241004 - Murky) Determine the request method and call the appropriate handler
     const method = req.method ?? 'UNKNOWN';
     const handleRequest = methodHandlers[method];
     if (handleRequest) {
-      ({ statusMessage, payload, userId } = await handleRequest(req, res));
+      ({ statusMessage, payload } = await handleRequest(req, res));
     } else {
       // Info: (20241004 - Murky) Set status message if method is not allowed
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;

@@ -19,7 +19,7 @@ export const ISUNFA_ROUTE = {
   EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
   CREATE_ROLE: '/users/create_role',
   SELECT_ROLE: '/users/select_role',
-  BETA_DASHBOARD: '/beta/dashboard',
+  DASHBOARD: '/users/dashboard',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
   MY_COMPANY_LIST_PAGE: '/beta/my_company_list_page',
   LATEST_NEWS_PAGE: '/beta/latest_news_page',
@@ -27,7 +27,7 @@ export const ISUNFA_ROUTE = {
   SYSTEM_NEWS_PAGE: '/beta/latest_news_page/system_news_page',
   MATCH_NEWS_PAGE: '/beta/latest_news_page/match_news_page',
 
-  DASHBOARD: '/users/dashboard',
+  DASHBOARD_V1: '/users/v1/dashboard',
   KYC: '/users/kyc',
   SALARY: '/users/salary',
   SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
@@ -38,7 +38,7 @@ export const ISUNFA_ROUTE = {
   CERTIFICATE_LIST: '/users/accounting/certificate_list',
   ASSET_LIST: '/users/asset',
 
-  SELECT_COMPANY: '/users/select_company',
+  // SELECT_COMPANY: '/users/select_company',
   JOURNAL_LIST: '/users/accounting/journal_list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',

@@ -35,7 +35,7 @@ interface PanelLayoutProps {
   disabled?: boolean;
 }
 
-const TEMPORARY_LINK = ISUNFA_ROUTE.BETA_DASHBOARD;
+const TEMPORARY_LINK = ISUNFA_ROUTE.DASHBOARD;
 
 const PanelLayout = ({
   panelTitle,
@@ -270,7 +270,7 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
 
             {/* // Info: (20241015 - Liz) 回到儀表板 */}
             <Link
-              href={ISUNFA_ROUTE.BETA_DASHBOARD}
+              href={ISUNFA_ROUTE.DASHBOARD}
               className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
             >
               <Image src="/icons/dashboard.svg" alt="dashboard_icon" width={24} height={24}></Image>
