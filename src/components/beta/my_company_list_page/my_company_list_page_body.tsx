@@ -9,7 +9,11 @@ import { LuFileCheck } from 'react-icons/lu';
 import { FiSearch } from 'react-icons/fi';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-// import FilterSection from '@/components/filter_section/filter_section'; // ToDo: (20241022 - Liz) 使用共用元件代替 Search
+
+// ToDo: (20241022 - Liz) 使用共用元件代替 Search
+import FilterSection from '@/components/filter_section/filter_section';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { ICompany } from '@/interfaces/company';
 
 enum CompanyType {
   Financial = 'Financial',
@@ -274,16 +278,24 @@ const MyCompanyListPageBody = () => {
     }
   };
 
-  /** Info: (20241105 - Tzuhan) 這是使用共用元件的範例，但是這個共用元件還沒有實作完成，所以先註解掉
-   const handleApiResponse = (resData: IPaginatedData<string[]>) => {
-     // eslint-disable-next-line no-console
-     console.log(resData);
-   };
- */
+  const handleApiResponse = (resData: IPaginatedData<ICompany[]>) => {
+    // Deprecated: (20241104 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(resData);
+  };
 
   return (
-    <main className="flex h-full flex-col gap-40px">
+    <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
+        {/* Filter // ToDo: (20241104 - Liz) 把日曆隱藏 */}
+        <FilterSection
+          className="flex-auto"
+          apiName="COMPANY_LIST"
+          page={1}
+          pageSize={5}
+          onApiResponse={handleApiResponse}
+        />
+
         {/* Search */}
         <div className="flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
           <input
@@ -299,17 +311,6 @@ const MyCompanyListPageBody = () => {
             <FiSearch size={20} />
           </button>
         </div>
-
-        {/* Info: (20241105 - Tzuhan) 這裡是使用共用元件的範例，但是這個共用元件還沒有實作完成，所以先註解掉 */}
-        {/* <FilterSection<string[]>
-          className="flex-auto"
-          params={{}}
-          apiName={APIName.COMPANY_LIST}
-          onApiResponse={handleApiResponse}
-          page={currentPage}
-          pageSize={DEFAULT_PAGE_LIMIT}
-          diseableDateSearch
-        /> */}
 
         <div className="flex items-center gap-16px">
           <button
@@ -350,11 +351,17 @@ const MyCompanyListPageBody = () => {
       )}
 
       {/* Modal */}
-      {isCreateCompanyModalOpen && <CreateCompanyModal toggleModal={toggleCreateCompanyModal} />}
 
-      {isChangeTagModalOpen && (
-        <ChangeTagModal toggleModal={toggleChangeTagModal} companyName={companyName} />
-      )}
+      <CreateCompanyModal
+        isModalOpen={isCreateCompanyModalOpen}
+        toggleModal={toggleCreateCompanyModal}
+      />
+
+      <ChangeTagModal
+        companyName={companyName}
+        isModalOpen={isChangeTagModalOpen}
+        toggleModal={toggleChangeTagModal}
+      />
     </main>
   );
 };

@@ -10,7 +10,7 @@ import { setSession } from '@/lib/utils/session';
 import { UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
 
-const handlePutRequest: IHandleRequest<APIName.ROLE_SELECT, UserRole> = async ({
+const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, UserRole> = async ({
   query,
   session,
 }) => {
@@ -37,7 +37,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserRole | null }>;
 } = {
-  PUT: (req, res) => withRequestValidation(APIName.ROLE_SELECT, req, res, handlePutRequest),
+  PUT: (req, res) => withRequestValidation(APIName.USER_SELECT_ROLE, req, res, handlePutRequest),
 };
 
 export default async function handler(

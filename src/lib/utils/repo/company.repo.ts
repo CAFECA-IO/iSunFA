@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { Admin, Company, Prisma, File } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { ROLE_NAME } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 
 export async function getCompanyById(
   companyId: number
@@ -42,7 +42,7 @@ export async function getCompanyWithOwner(companyId: number): Promise<
         admins: {
           where: {
             role: {
-              name: ROLE_NAME.OWNER,
+              name: CompanyRoleName.OWNER,
             },
           },
         },

@@ -9,7 +9,7 @@ import {
   User,
   UserAgreement,
 } from '@prisma/client';
-import { ROLE_NAME, RoleName } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import { SortOrder } from '@/constants/sort';
 import { getTimestampNow, pageToOffset, timestampInSeconds } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -134,7 +134,7 @@ export async function getOwnerByCompanyId(
       companyId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
       role: {
-        name: ROLE_NAME.OWNER,
+        name: CompanyRoleName.OWNER,
       },
     },
     include: {
@@ -183,7 +183,7 @@ export async function getAdminByCompanyIdAndUserId(
 export async function getAdminByCompanyIdAndUserIdAndRoleName(
   companyId: number,
   userId: number,
-  roleName: RoleName
+  roleName: CompanyRoleName
 ): Promise<
   | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
   | null
@@ -521,7 +521,7 @@ export async function getCompanyDetailAndRoleByCompanyId(
             admins: {
               where: {
                 role: {
-                  name: ROLE_NAME.OWNER,
+                  name: CompanyRoleName.OWNER,
                 },
                 OR: [{ deletedAt: 0 }, { deletedAt: null }],
               },
@@ -605,10 +605,10 @@ export async function createCompanyAndRole(
   const roleConnectOrCreate: Prisma.RoleCreateNestedOneWithoutAdminsInput = {
     connectOrCreate: {
       where: {
-        name: ROLE_NAME.OWNER,
+        name: CompanyRoleName.OWNER,
       },
       create: {
-        name: ROLE_NAME.OWNER,
+        name: CompanyRoleName.OWNER,
         // ToDo: (20240822 - Murky) [Beta] Should enum the permissions,
         // however, since Beta version will change the permission type,
         // and what permission per type is not clear yet, so just put it as string array

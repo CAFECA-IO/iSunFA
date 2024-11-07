@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useTranslation } from 'next-i18next';
 
 interface NewsListProps {
   list: {
@@ -21,6 +22,8 @@ interface NewsProps {
 }
 
 const News = ({ news }: NewsProps) => {
+  const { t } = useTranslation('common');
+
   let link = '';
 
   switch (news.type) {
@@ -53,7 +56,7 @@ const News = ({ news }: NewsProps) => {
       </p>
 
       <Link href={link} className="flex-none text-sm font-semibold text-link-text-primary">
-        See More
+        {t('common:BETA_DASHBOARD.SEE_MORE')}
       </Link>
     </div>
   );

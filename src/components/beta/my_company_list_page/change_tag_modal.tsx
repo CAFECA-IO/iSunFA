@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 
 interface ChangeTagModalProps {
-  toggleModal: () => void;
   companyName: string;
+  isModalOpen: boolean;
+  toggleModal: () => void;
 }
 
 const DROPDOWN_ITEMS = ['All', 'Financial', 'Tax'];
 
-const ChangeTagModal = ({ toggleModal, companyName }: ChangeTagModalProps) => {
+const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModalProps) => {
   // ToDo: (20241025 - Liz) 拿 companyName 打 API 去變更公司的 tag。
   // Deprecated: (20241025 - Liz)
   // eslint-disable-next-line no-console
@@ -25,7 +26,7 @@ const ChangeTagModal = ({ toggleModal, companyName }: ChangeTagModalProps) => {
     // Handle submit logic
   };
 
-  return (
+  return isModalOpen ? (
     <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
@@ -107,7 +108,7 @@ const ChangeTagModal = ({ toggleModal, companyName }: ChangeTagModalProps) => {
         </section>
       </div>
     </main>
-  );
+  ) : null;
 };
 
 export default ChangeTagModal;
