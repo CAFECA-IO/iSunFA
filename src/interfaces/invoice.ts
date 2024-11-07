@@ -47,6 +47,8 @@ export interface IInvoiceBeta {
   counterParty: ICounterparty;
 }
 
+export type IInvoiceBetaOptional = Partial<IInvoiceBeta>;
+
 /**
  * Info: (20241024 - Murky)
  * @description Invoice Entity for backend, this is not "Invoice" in real life, this is the metadata of certificate
