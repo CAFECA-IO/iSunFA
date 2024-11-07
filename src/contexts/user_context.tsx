@@ -18,6 +18,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
+import { CompanyTag } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -33,6 +34,17 @@ interface UserContextType {
   getUserRoleList: () => Promise<IUserRole[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
 
+  createCompany: ({
+    name,
+    taxId,
+    tag,
+  }: {
+    name: string;
+    taxId: string;
+    tag: CompanyTag;
+  }) => Promise<{ success: boolean; code: string }>;
+
+  getCompanyList: () => Promise<ICompany[] | null>;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -68,6 +80,8 @@ export const UserContext = createContext<UserContextType>({
   selectRole: async () => {},
   getUserRoleList: async () => null,
   selectedRole: null,
+  createCompany: async () => ({ success: false, code: '' }),
+  getCompanyList: async () => null,
 
   selectedCompany: null,
   selectCompany: async () => {},
@@ -123,12 +137,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     company: ICompany;
     role: IRole;
   }>(APIName.STATUS_INFO_GET);
-
+  // Info: (20241104 - Liz) 取得使用者角色列表 API
   const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
-
+  // Info: (20241104 - Liz) 建立角色 API
   const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
+  // Info: (20241104 - Liz) 建立公司 API
+  const { trigger: createCompanyAPI } = APIHandler<{ name: string; taxId: string }>(
+    APIName.CREATE_COMPANY
+  );
+  // Info: (20241104 - Liz) 取得使用者公司列表 API
+  const { trigger: companyListAPI } = APIHandler<ICompany[]>(APIName.COMPANY_LIST);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -161,13 +181,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line no-console
     console.log('呼叫 redirectToLoginPage (但不一定真的重新導向喔)');
   };
-
-  // Info: (20241001 - Liz) Alpha:重新導向到選擇公司的頁面 ; Beta:重新導向到選擇角色的頁面
-  // const redirectToSelectCompanyPage = () => {
-  //   if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
-  //     router.push(ISUNFA_ROUTE.SELECT_COMPANY);
-  //   }
-  // };
 
   const goToSelectRolePage = () => {
     // Deprecated: (20241008 - Liz)
@@ -565,6 +578,50 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Info: (20241104 - Liz) 建立公司的功能
+  const createCompany = async ({
+    name,
+    taxId,
+    tag,
+  }: {
+    name: string;
+    taxId: string;
+    tag: CompanyTag;
+  }) => {
+    try {
+      const { success, code } = await createCompanyAPI({
+        body: { name, taxId, tag },
+      });
+
+      if (!success) {
+        return { success: false, code };
+      }
+
+      return { success: true, code: '' };
+    } catch (error) {
+      // Handle error if needed
+      return { success: false, code: '' };
+    }
+  };
+
+  // Info: (20241104 - Liz) 取得使用者公司列表的功能
+  const getCompanyList = async () => {
+    try {
+      const { data: companyList, success } = await companyListAPI({
+        query: { userId: userAuth?.id },
+      });
+
+      if (success && companyList) {
+        return companyList;
+      }
+
+      return null;
+    } catch (error) {
+      // Handle error if needed
+      return null;
+    }
+  };
+
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
     setSelectedCompany(null);
@@ -663,6 +720,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectRole,
       getUserRoleList,
       selectedRole: selectedRoleRef.current,
+      createCompany,
+      getCompanyList,
+
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       successSelectCompany: successSelectCompanyRef.current,
