@@ -78,6 +78,14 @@
     "SPECIAL": "Special",
     "UNIFORM_INVOICE": "Uniform Invoice"
   },
+  "SELECT": {
+    "TITLE": "Select Certificates",
+    "CONTENT": "Choosing the certificates you want to attach with the voucher"
+  },
+  "EXPORT": {
+    "TITLE": "Export Certificates",
+    "CONTENT": "Please select the Certificates you want to export"
+  },
   "COUNTERPARTY": {
     "ADD_NEW": "Add New Client/Supplier",
     "BOTH": "Both",
@@ -95,5 +103,34 @@
     "PARTNER_TYPE": "Partner Type",
     "NOTE": "Note",
     "ENTER_TEXT": "Enter Text"
+  },
+  "LABEL": {
+    "NEW": "New"
+  },
+  "OPERATION": {
+    "DOWNLOAD": "Download",
+    "REMOVE": "Remove"
+  },
+  "INVOICE_TYPE": {
+    "PURCHASE_TRIPLICATE_AND_ELECTRONIC": "Purchase Triplicate and Electronic Invoice",
+    "PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER": "Purchase Duplicate Cash Register and Other Invoice",
+    "PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC": "Purchase Returns Triplicate and Electronic Invoice",
+    "PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER": "Purchase Returns Duplicate Cash Register and Other Invoice",
+    "PURCHASE_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC": "Purchase Triplicate Cash Register and Electronic Invoice",
+    "PURCHASE_UTILITY_ELECTRONIC_INVOICE": "Purchase Utility Electronic Invoice",
+    "PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC": "Purchase Summarized Triplicate and Electronic Invoice",
+    "PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER": "Purchase Summarized Duplicate Cash Register and Other Invoice",
+    "PURCHASE_CUSTOMS_DUTY_PAYMENT": "Purchase Customs Duty Payment",
+    "PURCHASE_CUSTOMS_DUTY_REFUND": "Purchase Customs Duty Refund",
+    "SALES_TRIPLICATE_INVOICE": "Sales Triplicate Invoice",
+    "SALES_DUPLICATE_CASH_REGISTER_INVOICE": "Sales Duplicate Cash Register Invoice",
+    "SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC": "Sales Returns Triplicate and Electronic Invoice",
+    "SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM": "Sales Returns Duplicate and Non-Uniform Invoice",
+    "SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC": "Sales Triplicate Cash Register and Electronic Invoice",
+    "SALES_NON_UNIFORM_INVOICE": "Sales Non-Uniform Invoice",
+    "SALES_SPECIAL_TAX_CALCULATION": "Sales Special Tax Calculation",
+    "SALES_SPECIAL_TAX_RETURNS": "Sales Special Tax Returns",
+    "FOREIGN_SERVICE_PAYMENT": "Foreign Service Payment",
+    "FOREIGN_TAX_EXEMPT_GOODS": "Foreign Tax Exempt Goods"
   }
 }

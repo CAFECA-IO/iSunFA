@@ -263,6 +263,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           withVoucher: number;
           withoutVoucher: number;
         };
+        currency: string;
         certificates: ICertificate[];
       }>
     ) => {

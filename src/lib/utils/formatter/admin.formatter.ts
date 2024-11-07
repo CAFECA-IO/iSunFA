@@ -61,11 +61,18 @@ export function formatCompanyAndRoleList(
 
 export function formatCompanyAndRole(companyAndRole: {
   company: Company & { imageFile: File | null };
+  tag: string;
+  order: number;
   role: Role;
-}): { company: ICompany; role: IRole } {
+}): { company: ICompany; role: IRole; tag: string; order: number } {
   const formattedCompany = formatCompany(companyAndRole.company);
   const formattedRole = companyAndRole.role;
-  return { company: formattedCompany, role: formattedRole };
+  return {
+    company: formattedCompany,
+    role: formattedRole,
+    tag: companyAndRole.tag,
+    order: companyAndRole.order,
+  };
 }
 
 export function formatCompanyDetailAndRole(companyDetailAndRole: {

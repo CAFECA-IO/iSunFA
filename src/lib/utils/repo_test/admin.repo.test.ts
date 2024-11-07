@@ -127,7 +127,7 @@ describe('Admin Repository Additional Tests', () => {
       const newTag = CompanyTag.ALL;
       const updatedCompany = await updateCompanyTagById(testAdminId, newTag);
       expect(updatedCompany).toBeDefined();
-      expect(updatedCompany.company.tag).toBe(newTag);
+      expect(updatedCompany.tag).toBe(newTag);
     });
   });
   describe('getAdminByCompanyIdAndUserId', () => {

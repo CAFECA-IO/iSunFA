@@ -12,37 +12,53 @@ import {
   setCompanyToTop,
   updateCompanyTagById,
 } from '@/lib/utils/repo/admin.repo';
-import { formatCompanyAndRole } from '@/lib/utils/formatter/admin.formatter';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { CompanyUpdateAction } from '@/constants/company';
+import { Company, Role, File } from '@prisma/client';
 
-const handleGetRequest: IHandleRequest<APIName.COMPANY_GET_BY_ID, ICompanyAndRole> = async ({
-  query,
-  session,
-}) => {
+const handleGetRequest: IHandleRequest<
+  APIName.COMPANY_GET_BY_ID,
+  {
+    company: Company & { imageFile: File | null };
+    tag: string;
+    order: number;
+    role: Role;
+  }
+> = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyAndRole | null = null;
+  let payload: {
+    company: Company & { imageFile: File | null };
+    tag: string;
+    order: number;
+    role: Role;
+  } | null = null;
 
   const { companyId } = query;
   const { userId } = session;
   const getCompanyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, companyId);
-  if (getCompanyAndRole) {
-    const companyDetailAndRole = formatCompanyAndRole(getCompanyAndRole);
-    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    payload = companyDetailAndRole;
-  }
+  statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  payload = getCompanyAndRole;
   return { statusMessage, payload };
 };
 
-const handlePutRequest: IHandleRequest<APIName.COMPANY_UPDATE, ICompanyAndRole> = async ({
-  query,
-  body,
-  session,
-}) => {
+const handlePutRequest: IHandleRequest<
+  APIName.COMPANY_UPDATE,
+  {
+    company: Company & { imageFile: File | null };
+    tag: string;
+    order: number;
+    role: Role;
+  }
+> = async ({ query, body, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyAndRole | null = null;
+  let payload: {
+    company: Company & { imageFile: File | null };
+    tag: string;
+    order: number;
+    role: Role;
+  } | null = null;
 
   const { companyId } = query;
   const { action, tag } = body;
@@ -52,18 +68,16 @@ const handlePutRequest: IHandleRequest<APIName.COMPANY_UPDATE, ICompanyAndRole> 
       const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
       if (admin && tag) {
         const updatedCompanyAndRole = await updateCompanyTagById(admin.id, tag);
-        const companyAndRole = formatCompanyAndRole(updatedCompanyAndRole);
         statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-        payload = companyAndRole;
+        payload = updatedCompanyAndRole;
       }
       break;
     }
     case CompanyUpdateAction.SET_TO_TOP: {
       const updatedCompanyAndRole = await setCompanyToTop(userId, companyId);
       if (updatedCompanyAndRole) {
-        const companyAndRole = formatCompanyAndRole(updatedCompanyAndRole);
         statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-        payload = companyAndRole;
+        payload = updatedCompanyAndRole;
       }
       break;
     }
