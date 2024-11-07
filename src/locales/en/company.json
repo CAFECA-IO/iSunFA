@@ -12,6 +12,18 @@
     "WORK_TAG": "Work Tag",
     "CREATE": "Create New Company"
   },
+  "EDIT": {
+    "BACK": "Back",
+    "INFO": "Company Information",
+    "COMPANY_NAME": "Company Name",
+    "BUSSINESS_TAX_ID": "Business Tax ID Number",
+    "TAX_SERIAL_NUMBER": "Tax Serial Number",
+    "COMPANY_REPRESENTATIVE_NAME": "Company representative's name",
+    "COUNTRY_OF_INCORPORATION": "Country of incorporation",
+    "COMPANY_ADDRESS": "Company address",
+    "PHONE_NUMBER": "Phone number",
+    "REMOVE_THIS_COMPANY": "Remove This Company"
+  },
   "TAG": {
     "FINANCIAL": "Financial",
     "TAX": "Tax",

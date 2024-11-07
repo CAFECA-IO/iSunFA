@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import LoginPageBody from '@/components/login_page_body/login_page_body';
+import LoginPageBody from '@/components/login/login_page_body';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { ILoginPageProps } from '@/interfaces/page_props';

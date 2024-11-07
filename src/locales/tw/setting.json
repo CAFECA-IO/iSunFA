@@ -90,5 +90,14 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
     "IMPORT_FILE": "上傳檔案",
     "MANUAL_ACCOUNT_OPENING": "手動開戶"
+  },
+  "IP": {
+    "INFO": "登入裝置與 IP 資訊",
+    "LIST": "登入裝置與 IP 列表",
+    "TIME": "登入時間",
+    "DEVICE": "登入裝置",
+    "ADDRESS": "登入地址",
+    "DETECT_DIFFERENT_IP_LOGIN": "偵測到來自不同 IP 位址的登入。",
+    "VERIFY_YOUR_ACCOUNT_SECURITY": "請驗證您的帳戶安全性以防止資料外洩。"
   }
 }
