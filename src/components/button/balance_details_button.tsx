@@ -12,13 +12,17 @@ import Image from 'next/image';
 import PrintButton from './print_button';
 import DownloadButton from './download_button';
 
+/**
+ * Info: (20241106 - Murky)
+ * @Anna 新版的interface是 IVoucherForSingleAccount, 在src/interfaces/voucher.ts 386 行
+ */
 // Info: (20241003 - Anna) temp interface
 export interface IVoucherBeta {
-  id: number;
-  date: number;
+  id: number; // Info: (20241106 - Murky) voucherId
+  date: number; // Info: (20241106 - Murky) voucherDate
   voucherNo: string;
   voucherType: VoucherType;
-  note: string;
+  note: string; // Info: (20241106 - Murky) particular
   accounting: string[];
   credit: number[];
   debit: number[];

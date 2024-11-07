@@ -47,48 +47,19 @@ export const initialVoucherLine: ILineItemUI = {
 };
 
 export interface IReverseItem {
-  id: number;
+  voucherId: number;
   amount: number;
   description: string;
-  debit: boolean | null;
-  account: IAccount | null;
+  debit: boolean;
+  account: IAccount;
   voucherNo: string;
-  reverseAmount: number;
 }
 
 export interface IReverseItemUI extends IReverseItem {
+  lineItemIndex: number;
   isSelected: boolean;
+  reverseAmount: number;
 }
-
-export const dummyReverseData: IReverseItem[] = [
-  {
-    id: 1,
-    voucherNo: '2021100001',
-    account: null,
-    description: 'Salary',
-    debit: true,
-    amount: 30000,
-    reverseAmount: 0,
-  },
-  {
-    id: 2,
-    voucherNo: '2021100002',
-    account: null,
-    description: 'Bonus',
-    debit: true,
-    amount: 20000,
-    reverseAmount: 0,
-  },
-  {
-    id: 3,
-    voucherNo: '2021100003',
-    account: null,
-    description: 'Overtime',
-    debit: true,
-    amount: 50000,
-    reverseAmount: 0,
-  },
-];
 
 /**
  * Info: (20241023 - Murky)

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IAccountValidator } from '@/lib/utils/zod_schema/account';
 
 /**
  * Info: (20241025 - Murky)
@@ -14,4 +15,17 @@ export const lineItemEntityValidator = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
+});
+
+/**
+ * Info: (20241106 - Murky)
+ * @description this is for IReverseItem for " Select Reverse Item"
+ */
+export const IReverseItemValidator = z.object({
+  voucherId: z.number(),
+  voucherNo: z.string(),
+  amount: z.number(),
+  description: z.string(),
+  account: IAccountValidator,
+  debit: z.boolean(),
 });

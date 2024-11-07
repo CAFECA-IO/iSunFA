@@ -43,13 +43,17 @@ export function zodTimestampInSecondsNoDefault() {
 export function zodFilterSectionSortingOptions() {
   const setting = z
     .string()
+    .optional()
     .transform((val) => {
+      if (!val) {
+        return [];
+      }
       const sortOptionsSlice = val.split('-');
       const sortOptions = sortOptionsSlice.map((sortOption) => {
         const [sort, order] = sortOption.split(':');
         return {
-          by: sort,
-          order,
+          sortBy: sort,
+          sortOrder: order,
         };
       });
       return sortOptions;
@@ -57,8 +61,8 @@ export function zodFilterSectionSortingOptions() {
     .pipe(
       z.array(
         z.object({
-          by: z.nativeEnum(SortBy),
-          order: z.nativeEnum(SortOrder),
+          sortBy: z.nativeEnum(SortBy),
+          sortOrder: z.nativeEnum(SortOrder),
         })
       )
     );

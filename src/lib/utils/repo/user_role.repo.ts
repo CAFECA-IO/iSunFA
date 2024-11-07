@@ -1,12 +1,9 @@
 import prisma from '@/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { File, Prisma, Role, User, UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 
 // Info: (20241015 - Jacky) Create
-export async function createUserRole(
-  userId: number,
-  roleId: number
-): Promise<UserRole & { user: User & { imageFile: File }; role: Role }> {
+export async function createUserRole(userId: number, roleId: number): Promise<UserRole> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const newUserRole = await prisma.userRole.create({
@@ -16,34 +13,16 @@ export async function createUserRole(
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
     },
-    include: {
-      role: true,
-      user: {
-        include: {
-          imageFile: true,
-        },
-      },
-    },
   });
   return newUserRole;
 }
 
 // Info: (20241015 - Jacky) List
-export async function listUserRole(
-  userId: number
-): Promise<(UserRole & { user: User & { imageFile: File }; role: Role })[]> {
+export async function listUserRole(userId: number): Promise<UserRole[]> {
   const listedUserRoles = await prisma.userRole.findMany({
     where: {
       userId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
-    include: {
-      role: true,
-      user: {
-        include: {
-          imageFile: true,
-        },
-      },
     },
   });
 
@@ -53,29 +32,19 @@ export async function listUserRole(
 export async function getUserRoleByUserAndRoleId(
   userId: number,
   roleId: number
-): Promise<(UserRole & { user: User & { imageFile: File }; role: Role }) | null> {
+): Promise<UserRole | null> {
   const userRole = await prisma.userRole.findFirst({
     where: {
       userId,
       roleId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
-    include: {
-      role: true,
-      user: {
-        include: {
-          imageFile: true,
-        },
-      },
-    },
   });
 
   return userRole;
 }
 
-export async function updateUserRoleLoginAt(
-  id: number
-): Promise<UserRole & { user: User & { imageFile: File }; role: Role }> {
+export async function updateUserRoleLoginAt(id: number): Promise<UserRole> {
   const nowInSecond = getTimestampNow();
 
   const updatedUserRole = await prisma.userRole.update({
@@ -86,14 +55,6 @@ export async function updateUserRoleLoginAt(
     data: {
       updatedAt: nowInSecond,
       lastLoginAt: nowInSecond,
-    },
-    include: {
-      role: true,
-      user: {
-        include: {
-          imageFile: true,
-        },
-      },
     },
   });
   return updatedUserRole;
