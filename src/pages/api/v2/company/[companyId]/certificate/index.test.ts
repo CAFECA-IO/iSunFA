@@ -94,7 +94,9 @@ describe('company/[companyId]/certificate integration test', () => {
     it('should return data match frontend validator', async () => {
       req = {
         headers: {},
-        query: {},
+        query: {
+          companyId: '1',
+        },
         body: {
           fileId: 1,
         },

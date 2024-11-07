@@ -181,7 +181,9 @@ export const certificateGetOneValidator: IZodValidator<
   body: certificateGetOneBodyValidator,
 };
 
-const certificatePostQueryValidator = z.object({});
+const certificatePostQueryValidator = z.object({
+  companyId: zodStringToNumber,
+});
 
 /**
  * Info: (20241107 - Murky)

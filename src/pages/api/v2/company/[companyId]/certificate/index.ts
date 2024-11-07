@@ -171,14 +171,16 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
 };
 
 export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, object> = async ({
+  query,
   body,
-  session,
+  // session,
 }) => {
-  const statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificatePostResponse | null = null;
 
   const { fileId } = body;
-  const { companyId } = session;
+  // const { companyId } = session;
+  const { companyId } = query;
 
   const mockFile: IFileEntity = {
     id: fileId,
@@ -204,7 +206,7 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   };
 
   payload = mockCertificate;
-
+  statusMessage = STATUS_MESSAGE.CREATED;
   return {
     statusMessage,
     payload,
