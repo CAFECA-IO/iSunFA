@@ -16,7 +16,8 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
-import { IPaginatedData } from '@/interfaces/pagination';
+import { RoleName } from '@/constants/role';
+import { IUserRole } from '@/interfaces/user_role';
 
 interface UserContextType {
   credential: string | null;
@@ -27,8 +28,11 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
-  role: string | null;
-  selectRole: (roleId: string) => void;
+  createRole: (roleName: RoleName) => Promise<boolean>;
+  selectRole: (roleName: string) => Promise<void>;
+  getUserRoleList: () => Promise<IUserRole[] | null>;
+  selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
+
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -60,8 +64,11 @@ export const UserContext = createContext<UserContextType>({
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
-  role: null,
-  selectRole: () => {},
+  createRole: async () => false,
+  selectRole: async () => {},
+  getUserRoleList: async () => null,
+  selectedRole: null,
+
   selectedCompany: null,
   selectCompany: async () => {},
   successSelectCompany: undefined,
@@ -87,9 +94,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
-  // ToDo: (20241025 - Liz) 新增函數處理使用者擁有的角色
-  // const [, setUserRoleList, userRoleListRef] = useStateRef<IRole[] | null>(null);
-  const [, setRole, roleRef] = useStateRef<string | null>(null);
+  // Info: (20241028 - Liz) 使用者目前選擇的角色(拿取 getStateInfoAPI 回傳的 Role 資料)
+  const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
+
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
   const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
     undefined
@@ -110,28 +117,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
-  const { trigger: getStatusInfoAPI } = APIHandler<{ user: IUser; company: ICompany }>(
-    APIName.STATUS_INFO_GET
-  );
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
+  const { trigger: getStatusInfoAPI } = APIHandler<{
+    user: IUser;
+    company: ICompany;
+    role: IRole;
+  }>(APIName.STATUS_INFO_GET);
 
-  const { trigger: userRoleListAPI } = APIHandler<IPaginatedData<IRole[]>>(APIName.USER_ROLE_LIST);
+  const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
 
-  // Info: (20241025 - Liz) 打 API 取得使用者擁有的角色
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getUserRoleList = async () => {
-    const {
-      data: userRoleList,
-      success: getUserRoleListSuccess,
-      code: getUserRoleListCode,
-    } = await userRoleListAPI({ params: { userId: userAuth?.id } });
-
-    if (getUserRoleListSuccess && userRoleList) {
-      return userRoleList;
-    }
-
-    throw new Error(getUserRoleListCode);
-  };
+  const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
+  // Info: (20241101 - Liz) 選擇角色 API
+  const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -143,7 +140,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setCredential(null);
     setIsSignIn(false);
     setIsSignInError(false);
-    setRole(null);
+    setSelectedRole(null);
     setSelectedCompany(null);
     setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
@@ -172,19 +169,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   //   }
   // };
 
-  // ToDo: (20241008 - Liz) Beta 要重新導向到選擇角色的頁面。但目前先導向到選擇公司的頁面。
   const goToSelectRolePage = () => {
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
     console.log('呼叫 goToSelectRolePage');
 
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
 
   // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
-  // const goToDashboard = () => {
-  //   router.push(ISUNFA_ROUTE.DASHBOARD);
-  // };
+  const goToDashboard = () => {
+    router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+  };
 
   const goBackToOriginalPath = () => {
     const redirectPath = localStorage.getItem('redirectPath');
@@ -195,7 +191,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
 
     if (redirectPath) {
-      router.push(redirectPath || '/');
+      router.push(redirectPath);
+    } else {
+      router.push(ISUNFA_ROUTE.DASHBOARD);
     }
   };
 
@@ -322,7 +320,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20241004 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
+  // Info: (20241101 - Liz) 此函數處理「使用者的角色資訊」
+  const processRoleInfo = (role: IRole) => {
+    if (role && Object.keys(role).length > 0) {
+      // Deprecated: (20241029 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 processRoleInfo 並且 role 存在:', role);
+
+      setSelectedRole(role.name);
+
+      return true;
+    } else {
+      // Deprecated: (20241029 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 processRoleInfo 並且 role 不存在:', role);
+
+      setSelectedRole(null);
+
+      return false;
+    }
+  };
 
   // Info: (20241001 - Liz) 此函數處理使用者資訊:
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
@@ -354,35 +371,42 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241009 - Liz) 此函數是在處理使用者和公司資訊，並根據處理結果來決定下一步的操作:
-  // 它會呼叫 processUserInfo 和 processCompanyInfo 分別處理使用者和公司資訊。
+  // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
+  // 它會呼叫 processUserInfo, processCompanyInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleUserAndCompanyProcessing = (user: IUser, company: ICompany) => {
-    const isProcessedInfo = processUserInfo(user);
-    const isProcessedCompany = processCompanyInfo(company);
-    // ToDo: (20241008 - Liz) 之後會新增一個函數來處理「使用者的角色資訊」
-    // const isProcessedRole = processRoleInfo(role);
+  const handleProcessData = (statusInfo: { user: IUser; company: ICompany; role: IRole }) => {
+    const isProcessedUser = processUserInfo(statusInfo.user);
+    const isProcessedCompany = processCompanyInfo(statusInfo.company);
+    const isProcessedRole = processRoleInfo(statusInfo.role);
 
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
-    console.log('isProcessedInfo: ', isProcessedInfo, 'isProcessedCompany: ', isProcessedCompany);
+    console.log(
+      'isProcessedUser: ',
+      isProcessedUser,
+      'isProcessedCompany: ',
+      isProcessedCompany,
+      'isProcessedRole',
+      isProcessedRole
+    );
 
-    // ToDo: (20241008 - Liz) 之後會增加一個判斷是否有選擇角色的邏輯
-    if (isProcessedInfo && isProcessedCompany) {
-      goBackToOriginalPath();
-    } else if (isProcessedInfo && !isProcessedCompany) {
-      // goToDashboard(); // ToDo: (20241008 - Liz) 之後沒有選擇公司會導向到可以選擇公司的儀表板
-      goToSelectRolePage(); // Info: (20241008 - Liz) 暫時用 Alpha 版的選擇公司頁面
-    } else {
+    if (!isProcessedUser) {
       clearStates();
       redirectToLoginPage();
+    } else if (!isProcessedRole) {
+      goToSelectRolePage();
+    } else if (!isProcessedCompany) {
+      goToDashboard();
+      // goToSelectRolePage();
+    } else {
+      goBackToOriginalPath();
     }
   };
 
   // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
-  // 當 API 回傳成功且有資料時，它會呼叫 handleUserAndCompanyProcessing 分別處理使用者和公司資訊。
+  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者和公司資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
@@ -399,17 +423,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('儲存現在路由 currentPath:', currentPath);
 
     const {
-      data: StatusInfo,
+      data: statusInfo,
       success: getStatusInfoSuccess,
       code: getStatusInfoCode,
     } = await getStatusInfoAPI();
 
     // Deprecated: (20241001 - Liz)
     // eslint-disable-next-line no-console
-    console.log('getStatusInfo:', StatusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
+    console.log('getStatusInfo:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
-    if (getStatusInfoSuccess && StatusInfo) {
-      handleUserAndCompanyProcessing(StatusInfo.user, StatusInfo.company);
+    if (getStatusInfoSuccess && statusInfo) {
+      handleProcessData(statusInfo);
     } else {
       clearStates();
       redirectToLoginPage();
@@ -483,9 +507,62 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20241009 - Liz) 選擇角色的功能
-  const selectRole = (roleId: string) => {
-    setRole(roleId);
+  // Info: (20241029 - Liz) 建立角色的功能
+  const createRole = async (roleName: RoleName) => {
+    try {
+      const { success } = await createRoleAPI({
+        params: { userId: userAuth?.id },
+        body: { roleName },
+      });
+
+      // Info: (20241029 - Liz) 檢查建立角色的成功狀態
+      if (!success) {
+        return false; // Info: (20241107 - Liz) 建立失敗
+      }
+
+      return true; // Info: (20241107 - Liz) 建立成功
+    } catch (error) {
+      // console.error('Error creating role:', error);
+      return false; // Info: (20241107 - Liz) 建立失敗
+    }
+  };
+
+  // Info: (20241101 - Liz) 選擇角色的功能
+  const selectRole = async (roleName: string) => {
+    setSelectedRole(null);
+
+    try {
+      const { success } = await selectRoleAPI({
+        params: { userId: userAuth?.id },
+        body: { roleName },
+      });
+
+      if (success) {
+        setSelectedRole(roleName);
+      }
+
+      setSelectedRole(null);
+    } catch (error) {
+      setSelectedRole(null);
+    }
+  };
+
+  // Info: (20241025 - Liz) 取得使用者擁有的所有角色
+  const getUserRoleList = async () => {
+    try {
+      const { data: userRoleList, success } = await userRoleListAPI({
+        params: { userId: userAuth?.id },
+      });
+
+      if (success && userRoleList) {
+        return userRoleList;
+      }
+
+      return null;
+    } catch (error) {
+      // Info: (20241107 - Liz) Handle error if needed
+      return null;
+    }
   };
 
   // Info: (20240513 - Julian) 選擇公司的功能
@@ -582,8 +659,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAgreeTermsOfService: isAgreeTermsOfServiceRef.current,
       isAgreePrivacyPolicy: isAgreePrivacyPolicyRef.current,
       isSignInError: isSignInErrorRef.current,
-      role: roleRef.current,
+      createRole,
       selectRole,
+      getUserRoleList,
+      selectedRole: selectedRoleRef.current,
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
       successSelectCompany: successSelectCompanyRef.current,
@@ -598,7 +677,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }),
     [
       credentialRef.current,
-      roleRef.current,
+      selectedRoleRef.current,
       selectedCompanyRef.current,
       successSelectCompanyRef.current,
       errorCodeRef.current,

@@ -527,12 +527,13 @@
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
   },
-  "SELECT_ROLE": {
-    "SELECT_ROLE_ISUNFA": "选择角色 - iSunFA"
+
+  "CREATE_ROLE_PAGE": {
+    "CREATE_ROLE_TITLE": "建立角色"
   },
 
-  "CREATED_ROLES": {
-    "CREATED_ROLES": "已建立角色"
+  "SELECT_ROLE_PAGE": {
+    "SELECT_ROLE_TITLE": "选择角色"
   },
 
   "BETA_DASHBOARD": {

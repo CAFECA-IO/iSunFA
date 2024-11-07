@@ -43,22 +43,6 @@ function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req
   return { query, body };
 }
 
-function formatOutputData<T extends keyof typeof ZOD_SCHEMA_API>(
-  apiName: T,
-  rawOutputData: unknown
-) {
-  let outputData: output<T> | null = null;
-  let isOutputDataValid = true;
-  outputData = validateOutputData(apiName, rawOutputData);
-  // Info: (20241029 - Jacky) If validation failed, it will return null, but rawOutputData is not null
-  if (rawOutputData && !outputData) {
-    isOutputDataValid = false;
-    loggerError(0, `Invalid output data for ${apiName} in middleware.ts`, `Output data is invalid`);
-  }
-
-  return { isOutputDataValid, outputData };
-}
-
 async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
   session: ISessionData,
   apiName: T,
@@ -106,7 +90,7 @@ export async function withRequestValidation<T extends keyof typeof ZOD_SCHEMA_AP
             session,
           });
           statusMessage = handlerStatusMessage;
-          const { outputData, isOutputDataValid } = formatOutputData(apiName, handlerOutput);
+          const { isOutputDataValid, outputData } = validateOutputData(apiName, handlerOutput);
           if (!isOutputDataValid) {
             statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
           } else {
