@@ -1,27 +1,12 @@
 import Head from 'next/head';
-import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import NavBar from '@/components/nav_bar/nav_bar';
-import { useUserCtx } from '@/contexts/user_context';
-import DashboardPageBody from '@/components/dashboard_page_body/dashboard_page_body';
-import { GetServerSideProps } from 'next';
-import { SkeletonList } from '@/components/skeleton/skeleton';
-import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
+import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
+import Layout from '@/components/beta/layout/layout';
+import DashboardBody from '@/components/beta/dashboard/dashboard_body';
 
-const DashboardPage = () => {
-  const { t } = useTranslation('common');
-  const { isAuthLoading } = useUserCtx();
-
-  const displayedBody = isAuthLoading ? (
-    <div className="flex h-screen w-full items-center justify-center">
-      <SkeletonList count={DEFAULT_SKELETON_COUNT_FOR_PAGE} />
-    </div>
-  ) : (
-    <div className="pt-14">
-      <DashboardPageBody />
-    </div>
-  );
+const Dashboard = () => {
+  const { t } = useTranslation(['common']);
 
   return (
     <>
@@ -29,7 +14,7 @@ const DashboardPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:NAV_BAR.DASHBOARD')} - iSunFA</title>
+        <title>{t('common:BETA_DASHBOARD.DASHBOARD')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -44,17 +29,14 @@ const DashboardPage = () => {
         />
       </Head>
 
-      <div className="h-screen font-barlow">
-        <div className="">
-          <NavBar />
-        </div>
-        {displayedBody}
-      </div>
+      <Layout isDashboard>
+        <DashboardBody />
+      </Layout>
     </>
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
+export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
       ...(await serverSideTranslations(locale as string, [
@@ -72,4 +54,4 @@ export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   };
 };
 
-export default DashboardPage;
+export default Dashboard;

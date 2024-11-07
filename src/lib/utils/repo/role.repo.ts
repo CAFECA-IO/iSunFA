@@ -1,6 +1,7 @@
 import prisma from '@/client';
 import { Role } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
+import { RoleType } from '@/constants/role';
 
 export const createRole = async (
   data: Omit<Role, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>
@@ -35,8 +36,12 @@ export const getRoleByName = async (name: string): Promise<Role | null> => {
   return result;
 };
 
-export const listRole = async (): Promise<Role[]> => {
-  return prisma.role.findMany();
+export const listRole = async (type: RoleType): Promise<Role[]> => {
+  return prisma.role.findMany({
+    where: {
+      type,
+    },
+  });
 };
 
 export const updateRole = async (

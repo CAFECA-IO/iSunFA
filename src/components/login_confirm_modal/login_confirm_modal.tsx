@@ -41,7 +41,7 @@ const LoginConfirmModal: React.FC<ILoginConfirmProps> = ({
     if (id === 'agree-to-our-privacy-policy') {
       tosModalVisibilityHandler(false);
       await handleUserAgree(Hash.HASH_FOR_PRIVACY_POLICY);
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      router.push(ISUNFA_ROUTE.SELECT_ROLE);
     }
   };
   const onCancel = () => {

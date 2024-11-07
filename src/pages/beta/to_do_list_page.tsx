@@ -33,7 +33,7 @@ const ToDoListPage = () => {
       <Layout
         isDashboard={false}
         pageTitle={t('common:TO_DO_LIST_PAGE.TO_DO_LIST_TITLE')}
-        goBackUrl={ISUNFA_ROUTE.BETA_DASHBOARD}
+        goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
         <ToDoListPageBody />
       </Layout>

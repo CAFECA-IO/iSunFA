@@ -90,5 +90,14 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
     "IMPORT_FILE": "上传档案",
     "MANUAL_ACCOUNT_OPENING": "手动开户"
+  },
+  "IP": {
+    "INFO": "登录设备与 IP 信息",
+    "LIST": "登录设备与 IP 列表",
+    "TIME": "登录时间",
+    "DEVICE": "登录设备",
+    "ADDRESS": "登录地址",
+    "DETECT_DIFFERENT_IP_LOGIN": "检测到来自不同 IP 地址的登录。",
+    "VERIFY_YOUR_ACCOUNT_SECURITY": "请验证您的帐户安全性以防止数据外泄。"
   }
 }

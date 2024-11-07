@@ -8,3 +8,13 @@ export enum AICH_APIS_TYPES {
   GET_VOUCHER_RESULT = 'get_voucher_result',
   GET_CONTRACT_RESULT = 'get_contract_result',
 }
+
+/**
+ * Info: (20241106 - Murky)
+ * @description AICH 可以回傳的 AI 結果類型
+ */
+export enum AI_TYPE {
+  CERTIFICATE = 'certificate',
+  VOUCHER = 'voucher',
+  HELP = 'help',
+}
