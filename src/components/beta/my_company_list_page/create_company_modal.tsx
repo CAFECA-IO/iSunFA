@@ -96,7 +96,9 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
                 className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
                 onClick={toggleDropdown}
               >
-                <p className="px-12px py-10px text-base font-medium"> {t('company:TAG.' + tag)}</p>
+                <p className="px-12px py-10px text-base font-medium">
+                  {t('company:TAG.' + tag.toUpperCase())}
+                </p>
 
                 <div className="px-12px py-10px">
                   {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}

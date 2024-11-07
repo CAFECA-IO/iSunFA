@@ -537,7 +537,36 @@
   },
 
   "BETA_DASHBOARD": {
-    "DASHBOARD": "儀表板"
+    "DASHBOARD": "儀表板",
+    "TO_DO_LIST": "待辦事項",
+    "CALENDAR_NOT_YET_LINKED": "行事曆尚未連結",
+    "LINK_MY_CALENDAR": "連結我的行事曆",
+    "NO_SCHEDULE_FOR_TODAY": "今天沒有安排待辦事項",
+    "MY_COMPANY_LIST": "我的公司列表",
+    "COMPANY_NOT_YET_CREATED": "尚未建立公司",
+    "PLEASE_PROCEED_TO": "請前往",
+    "CREATE_A_COMPANY": "建立公司",
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL": "財經新聞",
+    "SYSTEM": "系統資訊",
+    "MATCHING": "媒合資訊",
+    "MORE": "更多",
+    "SEE_MORE": "查看更多",
+    "PENDING_TASKS": "待處理任務",
+    "PENDING_TASKS_TOTAL": "待處理任務 (全部)",
+    "MISSING_CERTIFICATE": "缺少憑證",
+    "UNPOSTED_VOUCHERS": "尚未入帳",
+    "UNARCHIVED_CUSTOMER_DATA": "尚未封存的客戶資料",
+    "ADD_TO_MY_CALENDAR": "新增至我的行事曆",
+    "NO_DATA_AVAILABLE": "沒有可用資料",
+    "NO_DATA": "沒有資料"
+  },
+
+  "HEADER": {
+    "SEARCH": "搜尋",
+    "MY_ACCOUNT": "我的帳號",
+    "SUBSCRIPTION_AND_BILLS": "訂閱與帳單",
+    "LOGOUT": "登出"
   },
 
   "MY_COMPANY_LIST_PAGE": {

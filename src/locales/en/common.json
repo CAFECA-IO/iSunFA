@@ -537,7 +537,36 @@
   },
 
   "BETA_DASHBOARD": {
-    "DASHBOARD": "Dashboard"
+    "DASHBOARD": "Dashboard",
+    "TO_DO_LIST": "To-do List",
+    "CALENDAR_NOT_YET_LINKED": "Calendar not yet linked",
+    "LINK_MY_CALENDAR": "Link My Calendar",
+    "NO_SCHEDULE_FOR_TODAY": "No schedule for today",
+    "MY_COMPANY_LIST": "My Company List",
+    "COMPANY_NOT_YET_CREATED": "Company not yet created",
+    "PLEASE_PROCEED_TO": "Please proceed to",
+    "CREATE_A_COMPANY": "create a company",
+    "LATEST_NEWS": "Latest News",
+    "FINANCIAL": "Financial",
+    "SYSTEM": "System",
+    "MATCHING": "Matching",
+    "MORE": "More",
+    "SEE_MORE": "See More",
+    "PENDING_TASKS": "Pending Tasks",
+    "PENDING_TASKS_TOTAL": "Pending Tasks (Total)",
+    "MISSING_CERTIFICATE": "Missing certificate",
+    "UNPOSTED_VOUCHERS": "Unposted vouchers",
+    "UNARCHIVED_CUSTOMER_DATA": "Unarchived Customer Data",
+    "ADD_TO_MY_CALENDAR": "Add to My Calendar",
+    "NO_DATA_AVAILABLE": "No Data Available",
+    "NO_DATA": "No Data"
+  },
+
+  "HEADER": {
+    "SEARCH": "Search",
+    "MY_ACCOUNT": "My Account",
+    "SUBSCRIPTION_AND_BILLS": "Subscription and Bills",
+    "LOGOUT": "Logout"
   },
 
   "MY_COMPANY_LIST_PAGE": {
