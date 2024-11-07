@@ -202,6 +202,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           <>
             <VoucherLineItem
               key={`${lineItem.id}-voucher-line`}
+              id={lineItem.id}
               deleteHandler={deleteVoucherLine}
               accountTitleHandler={accountTitleHandler}
               particularsChangeHandler={particularsChangeHandler}
@@ -239,6 +240,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
             {isShowReverse ? (
               <div className="col-start-1 col-end-13">
                 <button
+                  id="add-reverse-item-button"
                   type="button"
                   className="flex items-center gap-4px text-text-neutral-invert"
                   onClick={addReverseHandler}
@@ -299,7 +301,12 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       </div>
 
       {/* Info: (20240927 - Julian) Add button */}
-      <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
+      <Button
+        id="add-line-item-button"
+        type="button"
+        className="h-44px w-44px p-0"
+        onClick={addNewVoucherLine}
+      >
         <FaPlus size={20} />
       </Button>
     </div>

@@ -333,9 +333,6 @@ const AccountingSettingPageBody: React.FC = () => {
 
       {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
       <div className="ml-auto flex items-center">
-        <Button type="button" variant="tertiaryBorderless">
-          {t('common:COMMON.CANCEL')}
-        </Button>
         <Button type="button" variant="tertiary">
           {t('common:COMMON.SAVE')}
         </Button>
