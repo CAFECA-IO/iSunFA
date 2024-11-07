@@ -1,7 +1,9 @@
+import { IRole } from '@/interfaces/role';
+
 export interface IUserRole {
   id: number;
   userId: number;
-  roleId: number; // Info: (20241107 - Liz) 這邊會改成 roleName
+  role: IRole;
   lastLoginAt: number;
   createdAt: number;
   updatedAt: number;
