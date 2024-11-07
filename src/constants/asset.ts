@@ -90,7 +90,7 @@ export const AccountCodesOfAsset = [
   '1911', // Info: (20241007 - Julian) 無形探勘及評估資產成本
 ];
 
-export const AccountCodesOfAPandAR = [
+export const AccountCodesOfAR = [
   '1141', // Info: (20241007 - Julian) 合約資產－流動
   '1151', // Info: (20241007 - Julian) 應收票據
   '1152', // Info: (20241007 - Julian) 其他應收票據
@@ -146,6 +146,9 @@ export const AccountCodesOfAPandAR = [
   '194I', // Info: (20241007 - Julian) 長期應收營業租賃款—關係人
   '194L', // Info: (20241007 - Julian) 長期應收融資租賃款—關係人
   '1985', // Info: (20241007 - Julian) 長期預付租金
+];
+
+export const AccountCodesOfAP = [
   '2102', // Info: (20241007 - Julian) 銀行借款
   '2108', // Info: (20241007 - Julian) 其他短期借款
   '2131', // Info: (20241007 - Julian) 預收貨款
@@ -205,3 +208,4 @@ export const AccountCodesOfAPandAR = [
   '2675', // Info: (20241007 - Julian) 退款負債－非流動
   '2680', // Info: (20241007 - Julian) 財務保證負債－非流動
 ];
+export const AccountCodesOfAPandAR = [...AccountCodesOfAR, ...AccountCodesOfAP];

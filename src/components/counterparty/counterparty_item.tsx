@@ -1,68 +1,44 @@
-import React, { useState } from 'react';
-import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { numberWithCommas } from '@/lib/utils/common';
-import { FaUpload, FaDownload } from 'react-icons/fa';
-import { FiRepeat } from 'react-icons/fi';
-import { checkboxStyle } from '@/constants/display';
-import { VoucherType } from '@/constants/account';
-
-// Info: (20241004 - Anna) temp interface
-export interface ICounterpartyBeta {
-  id: number;
-  date: number;
-  voucherNo: string;
-  voucherType: VoucherType;
-  note: string;
-  accounting: {
-    code: string;
-    name: string;
-  }[];
-  credit: number[];
-  debit: number[];
-  balance: number[];
-}
+import React from 'react';
+import { CounterpartyType } from '@/constants/counterparty';
+import type { ICounterPartyEntity } from 'src/interfaces/counterparty';
+import Image from 'next/image';
+import { FiEdit } from 'react-icons/fi';
 
 interface ICounterpartyItemProps {
-  voucher: ICounterpartyBeta;
+  counterparty: ICounterPartyEntity; // Info: (20241106 - Anna) 符合 ICounterPartyEntity 資料格式
 }
 
-const CounterpartyItem = React.memo(({ voucher }: ICounterpartyItemProps) => {
-  const { date, voucherNo, voucherType, note, accounting, credit, debit } = voucher;
+const CounterpartyItem = React.memo(({ counterparty }: ICounterpartyItemProps) => {
+  const { name, type, note, taxId } = counterparty; // Info: (20241106 - Anna) 使用符合 ICounterPartyEntity 的屬性名稱
 
-  const [isChecked, setIsChecked] = useState(false);
-
-  const displayedCheckbox = (
-    <div className="relative top-20px px-8px">
-      <input
-        type="checkbox"
-        className={checkboxStyle}
-        checked={isChecked}
-        onChange={() => setIsChecked(!isChecked)}
-      />
-    </div>
+  const displayedName = (
+    <p className="flex h-full items-center justify-center px-1 font-normal text-text-neutral-tertiary">
+      {name}
+    </p>
   );
 
-  const displayedDate = (
-    <div className="flex h-full items-center justify-center py-4">
-      <CalendarIcon timestamp={date} />
-    </div>
+  const displayedTaxID = (
+    <p className="flex h-full items-center justify-center px-1 font-normal text-text-neutral-tertiary">
+      {taxId}
+    </p>
   );
 
-  const displayedVoucherNo =
-    voucherType === VoucherType.RECEIVE ? (
-      <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
-        <FaDownload size={14} className="text-surface-state-error-dark" />
-        <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
+  const displayedType =
+    // Info: (20241106 - Anna) 使用 CounterpartyType 來判斷
+    type === CounterpartyType.CLIENT ? (
+      <div className="relative mx-auto flex w-90px items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
+        <Image src="/icons/client.png" alt="client" width={16} height={16} />
+        <p className="text-sm text-text-state-error-solid">{type}</p>
       </div>
-    ) : voucherType === VoucherType.EXPENSE ? (
-      <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
-        <FaUpload size={14} className="text-surface-state-success-dark" />
-        <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
+    ) : type === CounterpartyType.SUPPLIER ? (
+      <div className="relative mx-auto flex w-90px items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
+        <Image src="/icons/supplier.png" alt="supplier" width={16} height={16} />
+        <p className="text-sm text-text-state-success-solid">{type}</p>
       </div>
     ) : (
-      <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
-        <FiRepeat size={14} className="text-surface-brand-secondary" />
-        <p className="text-sm text-badge-text-secondary-solid">{voucherNo}</p>
+      <div className="relative mx-auto flex w-90px items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
+        <Image src="/icons/both.png" alt="both" width={16} height={16} />
+        <p className="text-sm text-badge-text-secondary-solid">{type}</p>
       </div>
     );
 
@@ -72,75 +48,24 @@ const CounterpartyItem = React.memo(({ voucher }: ICounterpartyItemProps) => {
     </p>
   );
 
-  const displayedAccountingCode = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      {accounting.map((account) => (
-        <div key={account.code}>
-          <p className="m-0 flex items-center">{account.code}</p>
-        </div>
-      ))}
-    </div>
-  );
-  const displayedAccountingName = (
-    <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      {accounting.map((account) => (
-        <div key={account.code}>
-          <p className="m-0 flex items-center">{account.name}</p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const displayedCredit = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {/* Info: (20240920 - Julian) credit */}
-      {credit.map((cre) => (
-        <p key={cre} className="m-0 flex items-center text-text-neutral-primary">
-          {numberWithCommas(cre)}
-        </p>
-      ))}
-    </div>
-  );
-
-  const displayedDebit = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {debit.map((de) => (
-        <p key={de} className="text-text-neutral-primary">
-          {numberWithCommas(de)}
-        </p>
-      ))}
-    </div>
-  );
-
-  const displayedBalance = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {voucher.balance.map((bal) => (
-        <p key={`${bal}-${voucher.voucherNo}`} className="align-middle text-text-neutral-primary">
-          {numberWithCommas(bal)}
-        </p>
-      ))}
-    </div>
-  );
-
   return (
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
-      {/* Info: (20240920 - Julian) Select */}
-      <div className={`table-cell text-center`}>{displayedCheckbox}</div>
-      {/* Info: (20240920 - Julian) Issued Date */}
-      <div className="table-cell text-center">{displayedDate}</div>
-      {/* Info: (20241004 - Anna) Accounting */}
-      <div className="table-cell text-center align-middle">{displayedAccountingCode}</div>
-      <div className="table-cell text-center align-middle">{displayedAccountingName}</div>
-      {/* Info: (20240920 - Julian) Voucher No */}
-      <div className="table-cell py-8px text-right align-middle">{displayedVoucherNo}</div>
-      {/* Info: (20240920 - Julian) Note */}
+      {/* Info: (20241106 - Anna) Partner’s Name */}
+      <div className="table-cell text-center">{displayedName}</div>
+
+      {/* Info: (20241106 - Anna) TaxID */}
+      <div className="table-cell text-center align-middle">{displayedTaxID}</div>
+
+      {/* Info: (20241106 - Anna) Partner’s Type */}
+      <div className="table-cell py-8px text-right align-middle">{displayedType}</div>
+
+      {/* Info: (20241106 - Anna) Note */}
       <div className="table-cell py-8px text-right align-middle">{displayedNote}</div>
-      {/* Info: (202401101 - Anna) Debit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedDebit}</div>
-      {/* Info: (202401101 - Anna) Credit */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedCredit}</div>
-      {/* Info: (20241004 - Anna) Balance */}
-      <div className="table-cell py-8px pr-2 text-right align-middle">{displayedBalance}</div>
+
+      {/* Info: (20241106 - Anna) Action */}
+      <div className="table-cell py-8px text-center align-middle">
+        <FiEdit size={20} />
+      </div>
     </div>
   );
 });

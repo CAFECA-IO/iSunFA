@@ -29,7 +29,7 @@ export const CountriesMap: Record<LocaleKey, LocaleEntry> = {
 };
 
 // Info: (20241105 - Tzuhan) Phone Country Code Map
-export const PhoneCountryCodeMap: Record<LocaleKey, LocaleEntry> = {
+export const CountryCodeMap: Record<LocaleKey, LocaleEntry> = {
   en: { id: LocaleKey.en, name: 'English', icon: '/icons/en.svg' }, // Info: (20241105 - Tzuhan) No code since "en" is a language, not a country
   tw: { id: LocaleKey.tw, name: 'Taiwan', icon: '/icons/tw.svg', code: '+886' },
   cn: { id: LocaleKey.cn, name: 'China', icon: '/icons/cn.svg', code: '+86' },
