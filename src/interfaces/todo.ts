@@ -1,12 +1,18 @@
+import { ICompany } from './company';
+
 export interface ITodo {
   id: number;
-  userId: number;
-  companyId: number;
-  title: string;
-  content: string;
-  type: string;
-  time: number;
-  status: string;
+  name: string;
+  deadline: number;
+  note: string;
+  status: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ITodoCompany extends ITodo {
+  id: number;
+  company: ICompany;
   createdAt: number;
   updatedAt: number;
 }

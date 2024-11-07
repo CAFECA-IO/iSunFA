@@ -30,7 +30,13 @@ import {
   userRolePostSchema,
   userRoleSelectSchema,
 } from '@/lib/utils/zod_schema/user_role';
-import { todoListSchema, todoPostSchema } from '@/lib/utils/zod_schema/todo';
+import {
+  todoDeleteSchema,
+  todoGetSchema,
+  todoListSchema,
+  todoPostSchema,
+  todoPutSchema,
+} from '@/lib/utils/zod_schema/todo';
 import {
   voucherDeleteSchema,
   voucherDeleteValidatorV2,
@@ -134,6 +140,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
   [APIName.TODO_LIST]: todoListSchema,
   [APIName.CREATE_TODO]: todoPostSchema,
+  [APIName.TODO_GET_BY_ID]: todoGetSchema,
+  [APIName.TODO_UPDATE]: todoPutSchema,
+  [APIName.TODO_DELETE]: todoDeleteSchema,
   [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetSchema,
   [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutSchema,
   [APIName.USER_SETTING_GET]: userSettingGetSchema,
