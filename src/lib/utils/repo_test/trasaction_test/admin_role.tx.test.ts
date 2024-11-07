@@ -1,4 +1,4 @@
-import { ROLE_NAME } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import { transferOwnership } from '@/lib/utils/repo/transaction/admin_role.tx';
 import { deleteAdminByIdForTesting } from '@/lib/utils/repo/admin.repo';
 
@@ -17,7 +17,7 @@ describe('transferOwnership', () => {
     const formerOwner = result.find((admin) => admin.userId === currentOwnerId);
 
     expect(newOwner).toBeDefined();
-    expect(newOwner?.role.name).toBe(ROLE_NAME.OWNER);
+    expect(newOwner?.role.name).toBe(CompanyRoleName.OWNER);
 
     expect(formerOwner).toBeDefined();
     expect(formerOwner?.deletedAt).toBeGreaterThan(0);

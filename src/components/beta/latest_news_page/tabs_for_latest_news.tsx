@@ -1,6 +1,7 @@
 import { RiCoinsFill } from 'react-icons/ri';
 import { TbDatabaseSmile } from 'react-icons/tb';
 import { FiUserCheck } from 'react-icons/fi';
+import { useTranslation } from 'next-i18next';
 
 interface TabsProps {
   activeTab: React.SetStateAction<number>;
@@ -10,7 +11,9 @@ interface TabsProps {
 }
 
 const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: TabsProps) => {
-  const tabs = [
+  const { t } = useTranslation('common');
+
+  const TABS = [
     { id: 0, name: 'Financial', icon: <RiCoinsFill size={20} /> },
     { id: 1, name: 'System', icon: <TbDatabaseSmile size={20} /> },
     { id: 2, name: 'Matching', icon: <FiUserCheck size={20} /> },
@@ -26,7 +29,7 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
 
   return (
     <div className={`flex justify-between ${isPageStyle ? 'gap-40px' : ''}`}>
-      {tabs.map((tab) => (
+      {TABS.map((tab) => (
         <button
           key={tab.id}
           type="button"
@@ -34,7 +37,10 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
           className={`flex ${isPageStyle ? 'flex-auto' : ''} items-center justify-center gap-8px border-b-2 px-12px py-8px ${tab.id === activeTab ? 'border-b-tabs-stroke-active text-tabs-text-active' : 'border-b-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover'}`}
         >
           {tab.icon}
-          <p className="text-base font-medium">{tab.name}</p>
+
+          <p className="text-base font-medium">
+            {t(`common:BETA_DASHBOARD.${tab.name.toUpperCase()}`)}
+          </p>
         </button>
       ))}
     </div>
