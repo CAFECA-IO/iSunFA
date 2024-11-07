@@ -51,6 +51,9 @@ beforeEach(() => {
     requestPayload: {},
     httpStatusCode: 200,
     statusMessage: 'null',
+    createdAt: 1,
+    updatedAt: 1,
+    deletedAt: null,
   });
 });
 

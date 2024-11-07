@@ -61,18 +61,20 @@ const askAIGetResultBodyV2Schema = nullSchema;
  * - lineItem id will be negative, account in lineItem beta need fuzzy search to make sure id  or code is correct
  * - counterParty need fuzzy search in database to make sure id  is correct
  */
-const IAIResultVoucherSchema = z.object({
-  aiType: z.nativeEnum(AI_TYPE),
-  voucherDate: z
-    .number()
-    .describe('timestamp in second, allow user to set voucher date by themselves'),
-  type: z
-    .nativeEnum(VoucherType)
-    .describe('voucher type which need to be transform from EventType'),
-  note: z.string(),
-  counterParty: ICounterpartyValidator,
-  lineItems: z.array(ILineItemBetaValidator),
-});
+const IAIResultVoucherSchema = z
+  .object({
+    aiType: z.nativeEnum(AI_TYPE),
+    voucherDate: z
+      .number()
+      .describe('timestamp in second, allow user to set voucher date by themselves'),
+    type: z
+      .nativeEnum(VoucherType)
+      .describe('voucher type which need to be transform from EventType'),
+    note: z.string(),
+    counterParty: ICounterpartyValidator,
+    lineItems: z.array(ILineItemBetaValidator),
+  })
+  .strict(); // Info: (20241107 - Murky) strict可以過濾掉多餘的key
 
 const askAIGetResultOutputV2Schema = z
   .union([
@@ -107,7 +109,7 @@ const askAIGetResultOutputV2Schema = z
       case AI_TYPE.CERTIFICATE:
         return data;
       case AI_TYPE.VOUCHER: {
-        const aiVoucher: z.infer<typeof IAIResultVoucherSchema> = {
+        const aiVoucherData: z.infer<typeof IAIResultVoucherSchema> = {
           aiType: data.aiType,
           voucherDate: data.date,
           type: eventTypeToVoucherType(data.type),
@@ -115,6 +117,8 @@ const askAIGetResultOutputV2Schema = z
           counterParty: data.counterParty,
           lineItems: data.lineItems,
         };
+
+        const aiVoucher = IAIResultVoucherSchema.parse(aiVoucherData); // Info: (20241107 - Murky) 用parse過濾掉多餘的key
         return aiVoucher;
       }
       // case AI_TYPE.HELP:
