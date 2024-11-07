@@ -6,12 +6,7 @@ import type { ICompanyEntity } from '@/interfaces/company';
 import { generateRandomCounterParties } from '@/interfaces/counterparty';
 import { ProgressStatus } from '@/constants/account';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
-// Info: (20241030 - tzuhan) @Murky 這邊的 import InvoiceType 被我改成 InvoiceTypeUpdate 之後需要改回去（等我們InvoiceType統一）
-import {
-  InvoiceTransactionDirection,
-  InvoiceTaxType,
-  InvoiceTypeUpdate,
-} from '@/constants/invoice';
+import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
@@ -96,7 +91,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
         taxRatio, // Info: (20240920 - tzuhan) 隨機生成 5%, 10%, 15%
         taxPrice: (taxRatio / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算稅金
         totalPrice: priceBeforeTax + (taxRatio / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算總價
-        type: Object.values(InvoiceTypeUpdate)[Math.floor(Math.random() * 9)], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
+        type: Object.values(InvoiceType)[Math.floor(Math.random() * 18)], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
         counterParty: generateRandomCounterParties(1)[0],
         deductible: Math.random() > 0.5 ? true : !true, // Info: (20240920 - tzuhan) 隨機生成 Yes/No
         uploader: `Tzuhan`,

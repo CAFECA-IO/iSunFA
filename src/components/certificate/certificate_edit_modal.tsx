@@ -6,8 +6,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
-// Info: (20241030 - tzuhan) @Murky 這邊的 import InvoiceType 被我改成 InvoiceTypeUpdate 之後需要改回去（等我們InvoiceType統一）
-import { InvoiceTransactionDirection, InvoiceTypeUpdate } from '@/constants/invoice';
+import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { generateRandomCounterParties, ICounterparty } from '@/interfaces/counterparty';
 import { CounterpartyType } from '@/constants/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -67,8 +66,8 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const [totalPrice, setTotalPrice] = useState<number>(certificate.invoice.totalPrice ?? 0);
   const [searchName, setSearchName] = useState<string>('');
   const [searchTaxId, setSearchTaxId] = useState<string>('');
-  const [invoiceType, setInvoiceType] = useState<InvoiceTypeUpdate>(
-    certificate.invoice.type ?? InvoiceTypeUpdate.CUSTUMS_PAYMENT_CERTIFICATE
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>(
+    certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE
   );
   const [deductible, setDeductible] = useState(certificate.invoice.deductible);
   const {
@@ -603,7 +602,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                         ref={invoiceTypeMenuRef}
                         className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                       >
-                        {Object.values(InvoiceTypeUpdate).map((value) => (
+                        {Object.values(InvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
                             value={value}
