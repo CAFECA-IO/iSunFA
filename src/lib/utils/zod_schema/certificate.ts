@@ -19,9 +19,9 @@ import { IInvoiceBetaValidator } from '@/lib/utils/zod_schema/invoice';
 export const ICertificateValidator = z.object({
   id: z.number(),
   companyId: z.number(),
-  file: IFileUIBetaValidator, // 使用已定義的 IFileUIBetaValidator
+  file: IFileUIBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   unRead: z.boolean().optional(),
-  invoice: IInvoiceBetaValidator, // 使用已定義的 IInvoiceBetaValidator
+  invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),

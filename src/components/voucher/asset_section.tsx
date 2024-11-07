@@ -19,15 +19,14 @@ import { AssetModalType } from '@/interfaces/asset_modal';
 
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
-  assets: IAssetDetails[];
   lineItems: ILineItemBeta[];
 }
 
-const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, lineItems }) => {
+const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
-  const { deleteTemporaryAssetHandler } = useAccountingCtx();
+  const { deleteTemporaryAssetHandler, temporaryAssetList } = useAccountingCtx();
   const { toastHandler } = useModalContext();
 
   const { trigger, success, isLoading, data, error } = APIHandler<IAssetDetails>(
@@ -73,8 +72,8 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, assets, l
   }, [success, data, isLoading]);
 
   const displayedAssetList =
-    assets && assets.length > 0 ? (
-      assets.map((asset) => {
+    temporaryAssetList.length > 0 ? (
+      temporaryAssetList.map((asset) => {
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({

@@ -192,7 +192,8 @@
     "SEP_ABR": "九月",
     "OCT_ABR": "十月",
     "NOV_ABR": "十一月",
-    "DEC_ABR": "十二月"
+    "DEC_ABR": "十二月",
+    "EVERY": "每"
   },
   "SORTING": {
     "SORT_BY": "排序方式",
@@ -299,7 +300,10 @@
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
     "ENDING": "結束日",
-    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目"
+    "DISPLAY_SUB_ACCOUNTS": "顯示所有子科目",
+    "PARTNER_S_NAME": "交易夥伴名稱",
+    "TAX_ID": "統一編號",
+    "SUBMIT": "送出"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利潤變化",
@@ -544,5 +548,9 @@
     "FINANCIAL_NEWS": "財經新聞",
     "SYSTEM_NEWS": "系統新聞",
     "MATCH_NEWS": "媒合資訊"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入數字"
   }
 }

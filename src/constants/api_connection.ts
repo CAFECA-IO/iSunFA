@@ -80,6 +80,8 @@ export enum APIName {
   VOUCHER_DELETE_V2 = 'VOUCHER_DELETE_V2',
   VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
   VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
+  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = 'REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2',
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = 'VOUCHER_LIST_GET_BY_ACCOUNT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
   // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
@@ -139,6 +141,7 @@ export enum APIName {
   UPDATE_ASSET_V2 = 'UPDATE_ASSET_V2',
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
+  IP_LIST = 'IP_LIST',
 }
 
 export enum APIPath {
@@ -164,7 +167,7 @@ export enum APIPath {
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_DELETE__MULTIPLE_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
-  COUNTERPARTY_LIST = `${apiPrefix}/company/:companyId/counterparty`,
+  COUNTERPARTY_LIST = `${apiPrefixV2}/company/:companyId/counterparty`,
   COUNTERPARTY_ADD = `${apiPrefix}/company/:companyId/counterparty`,
   COUNTERPARTY_GET_BY_ID = `${apiPrefix}/company/:companyId/counterparty/:counterpartyId`,
   COUNTERPARTY_UPDATE = `${apiPrefix}/company/:companyId/counterparty/:counterpartyId`,
@@ -195,7 +198,9 @@ export enum APIPath {
   VOUCHER_POST_V2 = `${apiPrefixV2}/company/:companyId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
   VOUCHER_PUT_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
-  VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/:voucherId`,
+  REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
+  VOUCHER_DELETE_V2 = `${apiPrefixV2}/company/:companyId/voucher/account/:accountId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
@@ -256,6 +261,7 @@ export enum APIPath {
   UPDATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
+  IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
 }
 const createConfig = ({
   name,
@@ -701,6 +707,17 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.VOUCHER_LIST_V2,
   }),
+  [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: createConfig({
+    // Info: (20241106 - Murky) @Julian 這個是Reverse Voucher的時後可以get出account list的api
+    name: APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
+    method: HttpMethod.GET,
+    path: APIPath.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
+  }),
+  [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: createConfig({
+    name: APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
+    method: HttpMethod.GET,
+    path: APIPath.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
+  }),
   [APIName.ASK_AI_V2]: createConfig({
     name: APIName.ASK_AI_V2,
     method: HttpMethod.POST,
@@ -836,5 +853,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.TRIAL_BALANCE_LIST,
     method: HttpMethod.GET,
     path: APIPath.TRIAL_BALANCE_LIST,
+  }),
+  [APIName.IP_LIST]: createConfig({
+    name: APIName.IP_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.IP_LIST,
   }),
 };

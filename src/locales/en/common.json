@@ -192,7 +192,8 @@
     "SEP_ABR": "Sep",
     "OCT_ABR": "Oct",
     "NOV_ABR": "Nov",
-    "DEC_ABR": "Dec"
+    "DEC_ABR": "Dec",
+    "EVERY": "Every"
   },
   "SORTING": {
     "SORT_BY": "Sort By",
@@ -299,7 +300,10 @@
     "BEGINNING": "Beginning",
     "MIDTERM": "Midterm",
     "ENDING": "Ending",
-    "DISPLAY_SUB_ACCOUNTS": "Display Sub-Accounts"
+    "DISPLAY_SUB_ACCOUNTS": "Display Sub-Accounts",
+    "PARTNER_S_NAME": "Partner’s Name",
+    "TAX_ID": "Tax ID",
+    "SUBMIT": "Submit"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "Profit Change",
@@ -544,5 +548,9 @@
     "FINANCIAL_NEWS": "Financial News",
     "SYSTEM_NEWS": "System News",
     "MATCH_NEWS": "Match News"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Number"
   }
 }

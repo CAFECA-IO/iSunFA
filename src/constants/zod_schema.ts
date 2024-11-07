@@ -35,6 +35,7 @@ import {
   voucherDeleteSchema,
   voucherDeleteValidatorV2,
   voucherGetAllValidatorV2,
+  voucherGetByAccountSchema,
   voucherGetOneSchema,
   voucherGetOneValidatorV2,
   voucherListSchema,
@@ -63,6 +64,7 @@ import {
 } from '@/lib/utils/zod_schema/company_setting';
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
 import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
+import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -143,4 +145,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneSchema,
   [APIName.VOUCHER_PUT_V2]: voucherPutSchema,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
+  [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
+  [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
 };
