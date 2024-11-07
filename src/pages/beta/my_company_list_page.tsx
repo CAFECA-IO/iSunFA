@@ -33,7 +33,7 @@ const MyCompanyListPage = () => {
       <Layout
         isDashboard={false}
         pageTitle={t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
-        goBackUrl={ISUNFA_ROUTE.BETA_DASHBOARD}
+        goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
         <MyCompanyListPageBody />
       </Layout>

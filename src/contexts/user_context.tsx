@@ -51,7 +51,7 @@ interface UserContextType {
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
-  returnUrl: string | null;
+  // returnUrl: string | null;
   checkIsRegistered: () => Promise<{
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
@@ -89,7 +89,7 @@ export const UserContext = createContext<UserContextType>({
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
-  returnUrl: null,
+  // returnUrl: null,
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
@@ -118,7 +118,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
-  const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
+  // const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
   const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false);
   const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
@@ -170,6 +170,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const redirectToLoginPage = () => {
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 redirectToLoginPage (尚未導向)');
+
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       // Deprecated: (20241008 - Liz)
       // eslint-disable-next-line no-console
@@ -177,9 +181,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 redirectToLoginPage (但不一定真的重新導向喔)');
   };
 
   const goToSelectRolePage = () => {
@@ -192,7 +193,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
   const goToDashboard = () => {
-    router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   const goBackToOriginalPath = () => {
@@ -246,20 +247,20 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  const handleReturnUrl = () => {
-    if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
-      if (returnUrl) {
-        const urlString = decodeURIComponent(returnUrl);
-        setReturnUrl(null);
-        router.push(urlString);
-      } else if (
-        router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
-        (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
-      ) {
-        router.push(ISUNFA_ROUTE.DASHBOARD);
-      }
-    }
-  };
+  // const handleReturnUrl = () => {
+  //   if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
+  //     if (returnUrl) {
+  //       const urlString = decodeURIComponent(returnUrl);
+  //       setReturnUrl(null);
+  //       router.push(urlString);
+  //     } else if (
+  //       router.pathname.includes(ISUNFA_ROUTE.DASHBOARD) ||
+  //       (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
+  //     ) {
+  //       router.push(ISUNFA_ROUTE.DASHBOARD);
+  //     }
+  //   }
+  // };
 
   const signOut = async () => {
     await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
@@ -511,7 +512,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (response.success && response.data !== null) {
       setSelectedCompany(response.data);
       setSuccessSelectCompany(true);
-      handleReturnUrl();
+      // handleReturnUrl();
+      // Deprecated: (20241107 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleSelectCompanyResponse 並且 response.success && response.data !== null');
     }
     if (response.success === false) {
       setSelectedCompany(null);
@@ -637,7 +641,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!company && !isPublic) {
-      // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      // router.push(ISUNFA_ROUTE.DASHBOARD);
       return;
     }
     await handleSelectCompanyResponse(res);
@@ -660,6 +664,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
       throttledGetStatusInfo();
+      // Deprecated: (20241107 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動');
     }
   }, [throttledGetStatusInfo, router.pathname]);
 
@@ -732,7 +739,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
-      returnUrl: returnUrlRef.current,
+      // returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleUserAgree,
       authenticateUser,
@@ -746,7 +753,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
-      returnUrlRef.current,
+      // returnUrlRef.current,
       router.pathname,
       userAuthRef.current,
     ]

@@ -98,7 +98,7 @@ const CompanyInfoPageBody = () => {
     });
 
     selectCompany(null);
-    router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   const deleteCompanyClickHandler = () => {

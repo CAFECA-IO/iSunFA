@@ -60,7 +60,7 @@ const UserRole = ({
 
       if (data) {
         // Info: (20241107 - Liz) 選擇角色成功後，導向到儀表板
-        router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+        router.push(ISUNFA_ROUTE.DASHBOARD);
       }
     } catch (error) {
       // Deprecated: (20241107 - Liz)
@@ -159,7 +159,7 @@ const SelectRolePage = () => {
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
           <I18n />
 
-          <Link href={ISUNFA_ROUTE.BETA_DASHBOARD}>
+          <Link href={ISUNFA_ROUTE.DASHBOARD}>
             <FiHome size={20} />
           </Link>
         </div>
