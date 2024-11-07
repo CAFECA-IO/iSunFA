@@ -239,20 +239,14 @@
     "EMPTY_HINT": "请新增至少 1 笔资产！",
     "ADD_BTN": "新增资产"
   },
-  "REVERSE_SECTION": {
-    "TITLE": "冲销",
-    "REVERSE_VOUCHER": "冲销传票",
-    "REVERSE_VOUCHER_PLACEHOLDER": "请选择...",
-    "REVERSE_AMOUNT": "冲销金额",
-    "ADD_BTN": "新增更多冲销传票",
-    "EMPTY_HINT": "请新增至少 1 笔冲销传票！"
-  },
   "VOUCHER_LINE_BLOCK": {
     "ACCOUNTING": "会计科目",
     "PARTICULARS": "摘要",
     "CREDIT": "贷方金额",
     "DEBIT": "借方金额",
-    "EMPTY_HINT": "请新增至少 1 笔会计分录！"
+    "EMPTY_HINT": "请新增至少 1 笔会计分录！",
+    "REVERSE_ITEM": "冲销项目",
+    "REVERSE_HINT": "请新增至少 1 笔冲销传票！"
   },
   "VOUCHER_DETAIL_PAGE": {
     "TITLE": "传票",
@@ -295,5 +289,15 @@
     "FINISH_CONTENT": "AI 已完成分析，点击以让 AI",
     "FILL_UP_BTN": "填写您的传票",
     "WARNING_CONTENT": "AI 可能会出错，请仔细检查重要资讯。"
+  },
+  "REVERSE_MODAL": {
+    "MODAL_TITLE": "选择冲销项目",
+    "SELECT": "选择",
+    "TOTAL_REVERSE_AMOUNT": "总冲销金额",
+    "VOUCHER_NO": "传票号码",
+    "ACCOUNTING": "会计科目",
+    "PARTICULARS": "摘要",
+    "AMOUNT": "金额",
+    "REVERSE_AMOUNT": "冲销金额"
   }
 }

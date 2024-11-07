@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { FiSearch } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+// import FilterSection from '@/components/filter_section/filter_section';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -238,7 +239,9 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         </button>
 
         {/* Info: (20241104 - Julian) Modal title */}
-        <h2 className="text-xl font-bold text-card-text-primary">Select Reverse Items</h2>
+        <h2 className="text-xl font-bold text-card-text-primary">
+          {t('journal:REVERSE_MODAL.MODAL_TITLE')}
+        </h2>
 
         {/* Info: (20241104 - Julian) Modal body */}
         <div className="flex w-full flex-col items-center gap-16px px-20px">
@@ -246,7 +249,9 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
           <div className="flex w-full items-end gap-8px">
             {/* Info: (20241104 - Julian) Period */}
             <div className="flex w-1/2 flex-col items-start gap-8px">
-              <p className="font-semibold text-input-text-primary">Period</p>
+              <p className="font-semibold text-input-text-primary">
+                {t('journal:REVERSE_MODAL.PERIOD')}
+              </p>
               <DatePicker
                 type={DatePickerType.TEXT_PERIOD}
                 period={filteredPeriod}
@@ -272,15 +277,15 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
             <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
               {/* Info: (20241104 - Julian) Select */}
               <p className="text-text-neutral-secondary">
-                (Select {selectCount}/{totalItems})
+                ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
               </p>
               {/* Info: (20241104 - Julian) Total reverse amount */}
               <p className="text-text-neutral-secondary">
-                Total reverse amount:{' '}
+                {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
                 <span className="text-text-neutral-primary">
                   {numberWithCommas(totalReverseAmount)}
                 </span>{' '}
-                NTD
+                {t('common:COMMON.TWD')}
               </p>
             </div>
             <div className="flex flex-col items-center px-16px py-8px text-sm">
@@ -296,15 +301,19 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                   />
                 </div>
                 {/* Info: (20241104 - Julian) Voucher No */}
-                <div className="col-start-2 col-end-4">Voucher No</div>
+                <div className="col-start-2 col-end-4">{t('journal:REVERSE_MODAL.VOUCHER_NO')}</div>
                 {/* Info: (20241104 - Julian) Accounting */}
-                <div className="col-start-4 col-end-7">Accounting</div>
+                <div className="col-start-4 col-end-7">{t('journal:REVERSE_MODAL.ACCOUNTING')}</div>
                 {/* Info: (20241104 - Julian) Particulars */}
-                <div className="col-start-7 col-end-9">Particulars</div>
+                <div className="col-start-7 col-end-9">
+                  {t('journal:REVERSE_MODAL.PARTICULARS')}
+                </div>
                 {/* Info: (20241104 - Julian) Amount */}
-                <div className="col-start-9 col-end-11">Amount</div>
+                <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
                 {/* Info: (20241104 - Julian) Reverse Amount */}
-                <div className="col-start-11 col-end-15 text-right">Reverse Amount</div>
+                <div className="col-start-11 col-end-15 text-right">
+                  {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
+                </div>
               </div>
 
               {/* Info: (20241104 - Julian) Table body */}

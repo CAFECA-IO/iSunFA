@@ -244,7 +244,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
                   onClick={addReverseHandler}
                 >
                   <FaPlus />
-                  <p>Reverse item</p>
+                  <p>{t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}</p>
                 </button>
               </div>
             ) : null}

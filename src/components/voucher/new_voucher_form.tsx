@@ -947,7 +947,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ) : (
           <>
             {isShowReverseHint ? (
-              <p className="text-text-state-error">Please add reverse item!</p>
+              <p className="text-text-state-error">
+                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
+              </p>
             ) : null}
             <div ref={voucherLineRef} className="col-span-2">
               <VoucherLineBlock

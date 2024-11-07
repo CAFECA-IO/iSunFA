@@ -239,20 +239,14 @@
     "EMPTY_HINT": "Please add at least 1 asset!",
     "ADD_BTN": "Add New Asset"
   },
-  "REVERSE_SECTION": {
-    "TITLE": "Reverse",
-    "REVERSE_VOUCHER": "Reverse Voucher",
-    "REVERSE_VOUCHER_PLACEHOLDER": "Please select...",
-    "REVERSE_AMOUNT": "Reverse Amount",
-    "ADD_BTN": "Add more reverse voucher",
-    "EMPTY_HINT": "Please add at least 1 reverse voucher!"
-  },
   "VOUCHER_LINE_BLOCK": {
     "ACCOUNTING": "Accounting",
     "PARTICULARS": "Particulars",
     "CREDIT": "Credit",
     "DEBIT": "Debit",
-    "EMPTY_HINT": "Please add at least 1 accounting voucher!"
+    "EMPTY_HINT": "Please add at least 1 accounting voucher!",
+    "REVERSE_ITEM": "Reverse Item",
+    "REVERSE_HINT": "Please add at least 1 reverse voucher!"
   },
   "VOUCHER_DETAIL_PAGE": {
     "TITLE": "Voucher",
@@ -295,5 +289,15 @@
     "FINISH_CONTENT": "AI has done scanning. Click here to allow AI",
     "FILL_UP_BTN": "Fill up your voucher",
     "WARNING_CONTENT": "AI can make mistake, please double check important information."
+  },
+  "REVERSE_MODAL": {
+    "MODAL_TITLE": "Select Reverse Items",
+    "SELECT": "Select",
+    "TOTAL_REVERSE_AMOUNT": "Total Reverse Amount",
+    "VOUCHER_NO": "Voucher No",
+    "ACCOUNTING": "Accounting",
+    "PARTICULARS": "Particulars",
+    "AMOUNT": "Amount",
+    "REVERSE_AMOUNT": "Reverse Amount"
   }
 }
