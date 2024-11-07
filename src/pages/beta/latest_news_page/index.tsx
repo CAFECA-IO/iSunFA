@@ -33,7 +33,7 @@ const LatestNewsPage = () => {
       <Layout
         isDashboard={false}
         pageTitle={t('common:LATEST_NEWS_PAGE.LATEST_NEWS')}
-        goBackUrl={ISUNFA_ROUTE.BETA_DASHBOARD}
+        goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
         <LatestNewsPageBody />
       </Layout>

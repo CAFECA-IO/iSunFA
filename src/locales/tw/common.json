@@ -528,11 +528,6 @@
     "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤"
   },
 
-  "PLACEHOLDER": {
-    "ENTER_NAME": "輸入名稱",
-    "ENTER_NUMBER": "輸入數字"
-  },
-
   "CREATE_ROLE_PAGE": {
     "CREATE_ROLE_TITLE": "建立角色"
   },
@@ -583,6 +578,12 @@
     "FINANCIAL_NEWS": "財經新聞",
     "SYSTEM_NEWS": "系統新聞",
     "MATCH_NEWS": "媒合資訊"
+  },
+
+  "PLACEHOLDER": {
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入數字",
+    "ENTER_FULL_ADDRESS": "輸入完整地址"
   },
 
   "TO_DO_LIST_PAGE": {

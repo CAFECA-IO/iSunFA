@@ -12,6 +12,18 @@
     "WORK_TAG": "工作标签",
     "CREATE": "创建新公司"
   },
+  "EDIT": {
+    "BACK": "返回",
+    "INFO": "公司信息",
+    "COMPANY_NAME": "公司名称",
+    "BUSSINESS_TAX_ID": "营业税编号",
+    "TAX_SERIAL_NUMBER": "税务序号",
+    "COMPANY_REPRESENTATIVE_NAME": "公司代表名称",
+    "COUNTRY_OF_INCORPORATION": "注册国家",
+    "COMPANY_ADDRESS": "公司地址",
+    "PHONE_NUMBER": "电话号码",
+    "REMOVE_THIS_COMPANY": "移除此公司"
+  },
   "TAG": {
     "FINANCIAL": "财务",
     "TAX": "税务",

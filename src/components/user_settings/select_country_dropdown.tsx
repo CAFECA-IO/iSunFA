@@ -32,7 +32,7 @@ const SelectCountryDropdown: React.FC<SelectCountryDropdownProps> = ({ country, 
     <div ref={countryMenuRef} className="relative flex w-full">
       <button
         type="button"
-        className={`flex w-full items-center justify-between space-x-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
+        className={`flex w-full items-center justify-between gap-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
           isCountryMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
         }`}
         onClick={countryMenuClickHandler}
