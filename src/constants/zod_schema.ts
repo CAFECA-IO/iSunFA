@@ -71,6 +71,7 @@ import {
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
 import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
+import { roleListSchema } from '@/lib/utils/zod_schema/role';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -135,6 +136,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_ROLE_LIST]: userRoleListSchema,
   [APIName.USER_SELECT_ROLE]: userRoleSelectSchema,
   [APIName.USER_CREATE_ROLE]: userRolePostSchema,
+  [APIName.ROLE_LIST]: roleListSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
