@@ -1,4 +1,4 @@
-import { CompanyTag } from '@/constants/company';
+// import { LocaleKey } from '@/constants/normal_setting';
 
 export interface ICompanySetting {
   id: number;
@@ -7,16 +7,12 @@ export interface ICompanySetting {
   companyTaxId: string;
   taxSerialNumber: string;
   representativeName: string;
+  // Info: (202411007 - Tzuhan) @Jacky 希望可以將 country code 與 country 分開，並且 country 改成 LocaleKey
   country: string;
+  // Info: (202411007 - Tzuhan) @Jacky need add country code for phone number
+  // countryCode: LocaleKey;
   phone: string;
   address: string;
   createdAt: number;
   updatedAt: number;
-}
-
-export interface ICompanySettingList {
-  id: number;
-  partnerName: string;
-  taxId: string;
-  type: CompanyTag;
 }

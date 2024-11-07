@@ -534,12 +534,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         body: { roleName },
       });
 
+      // Info: (20241029 - Liz) 檢查建立角色的成功狀態
       if (success && userRole) {
         return userRole;
       }
 
+      // Info: (20241107 - Liz) 建立失敗回傳 null
       return null;
     } catch (error) {
+      // Info: (20241107 - Liz) 例外發生視為建立失敗回傳 null
       // console.error('Error creating role:', error);
       return null;
     }
@@ -580,7 +583,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return null;
     } catch (error) {
-      // Handle error if needed
+      // Info: (20241107 - Liz) Handle error if needed
       return null;
     }
   };

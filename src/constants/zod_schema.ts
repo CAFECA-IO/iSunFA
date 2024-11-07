@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { askAIGetResultValidatorV2, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
+import { askAIGetResultV2Schema, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
   certificateGetOneValidator,
@@ -30,7 +30,13 @@ import {
   userRolePostSchema,
   userRoleSelectSchema,
 } from '@/lib/utils/zod_schema/user_role';
-import { todoListSchema, todoPostSchema } from '@/lib/utils/zod_schema/todo';
+import {
+  todoDeleteSchema,
+  todoGetSchema,
+  todoListSchema,
+  todoPostSchema,
+  todoPutSchema,
+} from '@/lib/utils/zod_schema/todo';
 import {
   voucherDeleteSchema,
   voucherDeleteValidatorV2,
@@ -95,7 +101,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
-  [APIName.ASK_AI_RESULT_V2]: askAIGetResultValidatorV2,
   [APIName.ASK_AI_V2]: askAIPostValidatorV2,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
@@ -134,6 +139,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
   [APIName.TODO_LIST]: todoListSchema,
   [APIName.CREATE_TODO]: todoPostSchema,
+  [APIName.TODO_GET_BY_ID]: todoGetSchema,
+  [APIName.TODO_UPDATE]: todoPutSchema,
+  [APIName.TODO_DELETE]: todoDeleteSchema,
   [APIName.ACCOUNTING_SETTING_GET]: accountingSettingGetSchema,
   [APIName.ACCOUNTING_SETTING_UPDATE]: accountingSettingPutSchema,
   [APIName.USER_SETTING_GET]: userSettingGetSchema,
@@ -147,4 +155,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
+  [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
 };
