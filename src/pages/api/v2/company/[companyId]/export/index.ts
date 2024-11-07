@@ -1,47 +1,15 @@
+import { SortOrder } from '@/constants/sort';
 import { STATUS_MESSAGE } from '@/constants/status_code';
+import { AssetExportRequestBody, ExportFileType, ExportType } from '@/interfaces/export_file';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { convertToCSV } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-interface BaseExportRequestBody {
-  exportType: string;
-  fileType: ExportFileType;
-}
+// TODO: (20241107 - Shirley) | AnotherExportRequestBody 等等
+type ExportRequestBody = AssetExportRequestBody;
 
-enum ExportFileType {
-  CSV = 'csv',
-}
-
-enum ExportType {
-  ASSETS = 'assets',
-}
-
-interface AssetExportRequestBody extends BaseExportRequestBody {
-  exportType: ExportType.ASSETS;
-  filters?: {
-    type?: string;
-    status?: string;
-    startDate?: number;
-    endDate?: number;
-    searchQuery?: string;
-  };
-  sortOption?: string;
-  options?: {
-    language?: string;
-    timezone?: string;
-    fields?: string[];
-  };
-}
-
-// TODO: (20241107 - Shirley) 可以在這裡新增其他 exportType 的請求介面
-// interface AnotherExportRequestBody extends BaseExportRequestBody {
-//   exportType: 'anotherType';
-//   // 其他特定欄位
-// }
-
-type ExportRequestBody = AssetExportRequestBody; // TODO: (20241107 - Shirley) | AnotherExportRequestBody 等等
-
-interface Asset {
+// TODO: (20241107 - Shirley) 模擬資產資料
+interface AssetHeader {
   acquisitionDate: number;
   name: string;
   purchasePrice: number;
@@ -53,7 +21,8 @@ interface Asset {
   assetNumber: string;
 }
 
-const ASSET_FIELDS: (keyof Asset)[] = [
+// TODO: (20241107 - Shirley) 模擬資產資料
+const ASSET_FIELDS: (keyof AssetHeader)[] = [
   'acquisitionDate',
   'name',
   'purchasePrice',
@@ -66,7 +35,7 @@ const ASSET_FIELDS: (keyof Asset)[] = [
 ];
 
 // TODO: (20241107 - Shirley) 模擬資產資料
-const MOCK_ASSETS: Asset[] = [
+const MOCK_ASSETS: AssetHeader[] = [
   {
     name: '辦公桌',
     acquisitionDate: 1530959244,
@@ -113,15 +82,15 @@ const MOCK_ASSETS: Asset[] = [
   },
 ];
 
+// TODO: (20241107 - Shirley) mock 解析排序選項
 type SortField =
   | 'acquisitionDate'
   | 'purchasePrice'
   | 'accumulatedDepreciation'
   | 'residualValue'
   | 'remainingLife';
-type SortOrder = 'asc' | 'desc';
 
-// TODO: (20241107 - Shirley) 解析排序選項
+// TODO: (20241107 - Shirley) mock 解析排序選項
 function parseSortOptions(sortOption: string): Array<{ field: SortField; order: SortOrder }> {
   if (!sortOption) return [];
   return sortOption.split('-').map((option) => {
@@ -133,7 +102,7 @@ function parseSortOptions(sortOption: string): Array<{ field: SortField; order: 
   });
 }
 
-// TODO: (20241107 - Shirley) 排序資料
+// TODO: (20241107 - Shirley) mock排序資料
 function sortData<T>(data: T[], sortOptions: Array<{ field: keyof T; order: SortOrder }>): T[] {
   if (!sortOptions.length) return data;
   return [...data].sort((a, b) => {
@@ -154,8 +123,11 @@ function sortData<T>(data: T[], sortOptions: Array<{ field: keyof T; order: Sort
   });
 }
 
-// TODO: (20241107 - Shirley) 過濾資料
-function filterData<T extends Asset>(data: T[], filters?: AssetExportRequestBody['filters']): T[] {
+// TODO: (20241107 - Shirley) mock過濾資料
+function filterData<T extends AssetHeader>(
+  data: T[],
+  filters?: AssetExportRequestBody['filters']
+): T[] {
   if (!filters) return data;
   return data.filter((item) => {
     if (filters.type && item.type !== filters.type) return false;
@@ -167,7 +139,7 @@ function filterData<T extends Asset>(data: T[], filters?: AssetExportRequestBody
   });
 }
 
-// TODO: (20241107 - Shirley) 選擇欄位
+// TODO: (20241107 - Shirley) mock選擇欄位
 function selectFields<T>(data: T[], fields?: (keyof T)[]): T[] {
   if (!fields || fields.length === 0) return data;
   return data.map((item) => {
@@ -179,7 +151,7 @@ function selectFields<T>(data: T[], fields?: (keyof T)[]): T[] {
   });
 }
 
-// TODO: (20241107 - Shirley) 處理資產匯出
+// TODO: (20241107 - Shirley) mock 處理資產匯出
 async function handleAssetExport(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -193,23 +165,23 @@ async function handleAssetExport(
 
     const { exportType, fileType, filters, sortOption, options } = body;
 
-    // 驗證必要參數
+    // TODO: (20241107 - Shirley) error message 要改
     if (!exportType || !fileType) {
       throw new Error('Missing required fields');
     }
 
-    // 驗證 exportType
+    // TODO: (20241107 - Shirley) error message 要改
     if (exportType !== 'assets') {
       throw new Error('Invalid export type for handleAssetExport');
     }
 
-    // 驗證 fileType
-    if (!['csv'].includes(fileType)) {
+    // TODO: (20241107 - Shirley) error message 要改
+    if (fileType !== ExportFileType.CSV) {
       throw new Error('Invalid file type');
     }
 
     // TODO: (20241107 - Shirley) 從資料庫獲取資產資料
-    let assets: Asset[] = MOCK_ASSETS;
+    let assets: AssetHeader[] = MOCK_ASSETS;
 
     if (filters) {
       assets = filterData(assets, filters);
@@ -221,7 +193,7 @@ async function handleAssetExport(
     }
 
     if (options && options.fields) {
-      assets = selectFields(assets, options.fields as (keyof Asset)[]) as Asset[];
+      assets = selectFields(assets, options.fields as (keyof AssetHeader)[]) as AssetHeader[];
     }
 
     // TODO: (20241107 - Shirley) 處理時區轉換 (暫未實作)
@@ -232,9 +204,13 @@ async function handleAssetExport(
       //   : asset.acquisitionDate,
     }));
 
-    const fields: (keyof Asset)[] = (options?.fields as (keyof Asset)[]) || ASSET_FIELDS;
+    const fields: (keyof AssetHeader)[] =
+      (options?.fields as (keyof AssetHeader)[]) || ASSET_FIELDS;
 
-    const csv = convertToCSV<Record<keyof Asset, Asset[keyof Asset]>>(fields, newData as Asset[]);
+    const csv = convertToCSV<Record<keyof AssetHeader, AssetHeader[keyof AssetHeader]>>(
+      fields,
+      newData as AssetHeader[]
+    );
     const fileName = `assets_${getTimestampNow()}.csv`;
 
     res.setHeader('Content-Type', 'text/csv');
