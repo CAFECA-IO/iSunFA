@@ -60,7 +60,7 @@ async function certificateHandler(key: string, body: object) {
     // const { fileId } = bodyParsed.data;
     payload = {
       reason: key,
-      resultId: 'a1b2c3d4f5g6h7i8j9k0', // Placeholder resultId, replace with actual logic
+      resultId: 'a1b2c3d4f5g6h7i8j9k0', // Info: (20241107 - Murky) Placeholder resultId, replace with actual logic
       progressStatus: ProgressStatus.IN_PROGRESS,
     };
   }
@@ -87,7 +87,7 @@ async function voucherHandler(key: string, body: object) {
     // const { fileId } = bodyParsed.data;
     payload = {
       reason: key,
-      resultId: 'a1b2c3d4f5g6h7i8j9k0', // Placeholder resultId, replace with actual logic
+      resultId: 'a1b2c3d4f5g6h7i8j9k0', // Info: (20241107 - Murky) Placeholder resultId, replace with actual logic
       rogressStatus: ProgressStatus.IN_PROGRESS,
     };
   }
