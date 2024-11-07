@@ -5,11 +5,19 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 interface BaseExportRequestBody {
   exportType: string;
-  fileType: 'csv';
+  fileType: ExportFileType;
+}
+
+enum ExportFileType {
+  CSV = 'csv',
+}
+
+enum ExportType {
+  ASSETS = 'assets',
 }
 
 interface AssetExportRequestBody extends BaseExportRequestBody {
-  exportType: 'assets';
+  exportType: ExportType.ASSETS;
   filters?: {
     type?: string;
     status?: string;
@@ -240,9 +248,6 @@ async function handleAssetExport(
 }
 
 // TODO: (20241107 - Shirley) 可以在這裡新增其他 exportType 的處理函式
-// async function handleAnotherExport(req: NextApiRequest, res: NextApiResponse, body: AnotherExportRequestBody): Promise<void> {
-//   // 實作另一種匯出邏輯
-// }
 
 const methodHandlers: {
   [key: string]: (
@@ -253,13 +258,11 @@ const methodHandlers: {
 } = {
   POST: async (req, res, body) => {
     switch (body.exportType) {
-      case 'assets':
+      case ExportType.ASSETS:
         await handleAssetExport(req, res, body as AssetExportRequestBody);
         break;
-      // case 'anotherType':
-      //   await handleAnotherExport(req, res, body as AnotherExportRequestBody);
-      //   break;
       default:
+        // TODO: (20241107 - Shirley) error message 要改
         throw new Error('Unsupported export type');
     }
   },
