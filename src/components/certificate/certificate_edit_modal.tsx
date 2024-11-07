@@ -6,7 +6,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import Toggle from '@/components/toggle/toggle';
 import { Button } from '@/components/button/button';
-import { InvoiceType, InvoiceTransactionDirection } from '@/constants/invoice';
+import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { generateRandomCounterParties, ICounterparty } from '@/interfaces/counterparty';
 import { CounterpartyType } from '@/constants/counterparty';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -47,20 +47,28 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   const counterPartyList = generateRandomCounterParties(10);
   const [filteredCounterPartyList, setFilteredCounterPartyList] =
     useState<ICounterparty[]>(counterPartyList);
-  const [counterParty, setCounterParty] = useState(certificate.invoice.counterParty);
-  const [type, setType] = useState(certificate.invoice.inputOrOutput);
+  const [counterParty, setCounterParty] = useState<ICounterparty | undefined>(
+    certificate.invoice.counterParty
+  );
+  const [type, setType] = useState<InvoiceTransactionDirection>(
+    certificate.invoice.inputOrOutput ?? InvoiceTransactionDirection.INPUT
+  );
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.invoice.date,
+    startTimeStamp: certificate.invoice?.date ?? 0,
     endTimeStamp: 0,
   });
-  const [certificateNo, setCertificateNo] = useState(certificate.invoice.no);
-  const [priceBeforeTax, setPriceBeforeTax] = useState(certificate.invoice.priceBeforeTax);
-  const [taxRatio, setTaxRatio] = useState(certificate.invoice.taxRatio);
-  const [taxPrice, setTaxPrice] = useState(certificate.invoice.taxPrice);
-  const [totalPrice, setTotalPrice] = useState(certificate.invoice.totalPrice);
+  const [certificateNo, setCertificateNo] = useState<string>(certificate.invoice.no ?? '');
+  const [priceBeforeTax, setPriceBeforeTax] = useState<number>(
+    certificate.invoice.priceBeforeTax ?? 0
+  );
+  const [taxRatio, setTaxRatio] = useState<number>(certificate.invoice.taxRatio ?? 5);
+  const [taxPrice, setTaxPrice] = useState<number>(certificate.invoice.taxPrice ?? 0);
+  const [totalPrice, setTotalPrice] = useState<number>(certificate.invoice.totalPrice ?? 0);
   const [searchName, setSearchName] = useState<string>('');
   const [searchTaxId, setSearchTaxId] = useState<string>('');
-  const [invoiceType, setInvoiceType] = useState(certificate.invoice.type);
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>(
+    certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE
+  );
   const [deductible, setDeductible] = useState(certificate.invoice.deductible);
   const {
     isMessageModalVisible,
@@ -228,7 +236,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         id="counterparty-taxid"
         onChange={counterPartyInputHandler}
         type="number"
-        placeholder={counterParty.taxId.toString()}
+        placeholder={counterParty?.taxId}
         className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
       />
       <input
@@ -237,16 +245,16 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         id="counterparty-name"
         onChange={counterPartyInputHandler}
         type="text"
-        placeholder={counterParty.name}
+        placeholder={counterParty?.name}
         className="truncate bg-transparent px-12px py-10px outline-none"
       />
     </div>
   ) : (
     <p className={`flex truncate text-input-text-input-filled`}>
       <p className="w-100px border-r px-12px py-10px text-dropdown-text-primary">
-        {counterParty.taxId}
+        {counterParty?.taxId}
       </p>
-      <p className="px-12px py-10px text-dropdown-text-secondary">{counterParty.name}</p>
+      <p className="px-12px py-10px text-dropdown-text-secondary">{counterParty?.name}</p>
     </p>
   );
 
@@ -436,7 +444,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)}</p>
+                  <p>
+                    {certificate.invoice?.currencyAlias
+                      ? t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)
+                      : ''}
+                  </p>
                 </div>
               </div>
             </div>
@@ -496,7 +508,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                       alt="twd_icon"
                       className="rounded-full"
                     />
-                    <p>{t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)}</p>
+                    <p>
+                      {certificate.invoice?.currencyAlias
+                        ? t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)
+                        : ''}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -528,7 +544,11 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                     alt="twd_icon"
                     className="rounded-full"
                   />
-                  <p>{t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)}</p>
+                  <p>
+                    {certificate.invoice?.currencyAlias
+                      ? t(`common:COMMON.${certificate.invoice.currencyAlias.toUpperCase()}`)
+                      : ''}
+                  </p>
                 </div>
               </div>
             </div>
@@ -582,12 +602,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                         ref={invoiceTypeMenuRef}
                         className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px"
                       >
-                        {[
-                          // Info: (20241024 - Murky) @tzuhan 這邊我改用invoice 原生的type, special 改用PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC
-                          InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-                          InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
-                          InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
-                        ].map((value) => (
+                        {Object.values(InvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
                             value={value}

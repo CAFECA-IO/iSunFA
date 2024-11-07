@@ -6,7 +6,7 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { IAssetDetails } from '@/interfaces/asset';
 import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
-import { IReverseItem } from '@/interfaces/line_item';
+import { IReverseItemUI } from '@/interfaces/line_item';
 import { IVoucher } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -142,9 +142,9 @@ interface IAccountingContext {
 
   // Info: (20241105 - Julian) 反轉分錄列表
   reverseList: {
-    [key: number]: IReverseItem[];
+    [key: number]: IReverseItemUI[];
   };
-  addReverseListHandler: (lineItemId: number, item: IReverseItem[]) => void;
+  addReverseListHandler: (lineItemId: number, item: IReverseItemUI[]) => void;
   clearReverseListHandler: () => void;
 }
 
@@ -261,7 +261,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
 
   const [temporaryAssetList, setTemporaryAssetList] = useState<IAssetDetails[]>([]);
 
-  const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItem[] }>({});
+  const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
 
   const getAccountListHandler = (
     companyId: number,
@@ -756,7 +756,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   };
 
   // Info: (20241105 - Julian) 新增反轉分錄列表
-  const addReverseListHandler = (lineItemId: number, reverseItemList: IReverseItem[]) => {
+  const addReverseListHandler = (lineItemId: number, reverseItemList: IReverseItemUI[]) => {
     setReverseList((prev) => {
       return {
         ...prev,

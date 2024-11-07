@@ -3,12 +3,12 @@ import { IAccount } from '@/interfaces/accounting_account';
 
 export interface IReverseItemModal {
   account: IAccount | null;
-  lineItemId: number;
+  lineItemIndex: number;
 }
 
 export const defaultReverseItemModal: IReverseItemModal = {
   account: null,
-  lineItemId: 0,
+  lineItemIndex: 0,
 };
 
 // ------------ To be deleted later below this line ------------

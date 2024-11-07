@@ -22,7 +22,7 @@ export function parsePrismaEventToEventEntity(dto: PrismaEvent): IEventEntity {
 
   const eventEntity: IEventEntity = {
     ...data,
-    associateVouchers: data.associateVoucher || [],
+    associateVouchers: data.associateVouchers || [],
   };
 
   return eventEntity;

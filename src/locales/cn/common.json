@@ -192,7 +192,8 @@
     "SEP_ABR": "九月",
     "OCT_ABR": "十月",
     "NOV_ABR": "十一月",
-    "DEC_ABR": "十二月"
+    "DEC_ABR": "十二月",
+    "EVERY": "每"
   },
   "SORTING": {
     "SORT_BY": "排序方式",
@@ -299,7 +300,10 @@
     "BEGINNING": "起始日",
     "MIDTERM": "期中",
     "ENDING": "结束日",
-    "DISPLAY_SUB_ACCOUNTS": "显示所有子科目"
+    "DISPLAY_SUB_ACCOUNTS": "显示所有子科目",
+    "PARTNER_S_NAME": "交易伙伴名称",
+    "TAX_ID": "统一编号",
+    "SUBMIT": "送出"
   },
   "DASHBOARD": {
     "PROFIT_CHANGE": "利润变化",
@@ -574,5 +578,9 @@
     "FINANCIAL_NEWS": "财经新闻",
     "SYSTEM_NEWS": "系统新闻",
     "MATCH_NEWS": "媒合资讯"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "输入姓名",
+    "ENTER_NUMBER": "输入号码"
   }
 }

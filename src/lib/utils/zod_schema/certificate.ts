@@ -9,6 +9,25 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { CertificateSortBy } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { SortOrder } from '@/constants/sort';
+import { IFileUIBetaValidator } from '@/lib/utils/zod_schema/file';
+import { IInvoiceBetaValidator } from '@/lib/utils/zod_schema/invoice';
+
+/**
+ * Info: (20241105 - Murky)
+ * @description 這個是給前端用的 ICertificate
+ */
+export const ICertificateValidator = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  file: IFileUIBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
+  unRead: z.boolean().optional(),
+  invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
+  voucherNo: z.string().nullable(),
+  aiResultId: z.string().optional(),
+  aiStatus: z.string().optional(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
 
 const certificateListQueryValidator = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),

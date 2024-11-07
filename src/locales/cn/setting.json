@@ -70,5 +70,25 @@
     "PHONE_NUMBER": "电话号码",
     "COST": "成本",
     "CLIENT_SUPPLIER_SETTING": "交易伙伴设定"
+  },
+  "ACCOUNTING": {
+    "TITLE": "会计设定",
+    "TAX_SETTING_TITLE": "税务设定",
+    "TAX_SALES": "税（销售）",
+    "TAX_PURCHASE": "税（消费）",
+    "TAX_RETURN_PERIODICITY": "税务申报周期",
+    "CURRENCY_SETTING_TITLE": "货币设定",
+    "ACCOUNTING_SETTING_TITLE": "会计设定",
+    "PERIOD_SETTINGS_SUBTITLE": "期间设定",
+    "FISCAL_YEAR": "会计年度",
+    "FISCAL_YEAR_PERIOD": "会计年度期间",
+    "GENERATE_REPORT_1": "报告将在结束日期后",
+    "GENERATE_REPORT_2": "天生成。",
+    "DOWNLOAD_REPORT": "下载报告",
+    "ACCOUNTING_TITLE_SETTINGS_SUBTITLE": "会计科目设定",
+    "VIEW_ALL_ACCOUNTING": "查看所有会计科目",
+    "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
+    "IMPORT_FILE": "上传档案",
+    "MANUAL_ACCOUNT_OPENING": "手动开户"
   }
 }

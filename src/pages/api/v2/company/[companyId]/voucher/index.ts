@@ -220,6 +220,7 @@ export const handleGetRequest: IHandleRequest<
     originalEvents: [],
     resultEvents: [],
     certificates: [],
+    asset: [],
     sum: {
       debit: false, // Info: (20241104 - Murky) 這個其實永遠是false, 因為debit和credit相同, 然後總和放在credit
       amount: mockSum,

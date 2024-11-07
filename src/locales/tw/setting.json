@@ -70,5 +70,25 @@
     "PHONE_NUMBER": "電話號碼",
     "COST": "成本",
     "CLIENT_SUPPLIER_SETTING": "交易夥伴設定"
+  },
+  "ACCOUNTING": {
+    "TITLE": "會計設定",
+    "TAX_SETTING_TITLE": "稅務設定",
+    "TAX_SALES": "稅（銷售）",
+    "TAX_PURCHASE": "稅（消費）",
+    "TAX_RETURN_PERIODICITY": "稅務申報週期",
+    "CURRENCY_SETTING_TITLE": "貨幣設定",
+    "ACCOUNTING_SETTING_TITLE": "會計設定",
+    "PERIOD_SETTINGS_SUBTITLE": "期間設定",
+    "FISCAL_YEAR": "會計年度",
+    "FISCAL_YEAR_PERIOD": "會計年度期間",
+    "GENERATE_REPORT_1": "報告將在結束日期後",
+    "GENERATE_REPORT_2": "天生成。",
+    "DOWNLOAD_REPORT": "下載報告",
+    "ACCOUNTING_TITLE_SETTINGS_SUBTITLE": "會計科目設定",
+    "VIEW_ALL_ACCOUNTING": "查看所有會計科目",
+    "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
+    "IMPORT_FILE": "上傳檔案",
+    "MANUAL_ACCOUNT_OPENING": "手動開戶"
   }
 }

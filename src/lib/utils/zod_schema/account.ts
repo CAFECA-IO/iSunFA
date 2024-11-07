@@ -8,7 +8,7 @@ import { z } from 'zod';
 const basicAccountEntityValidator = z.object({
   id: z.number(),
   companyId: z.number(),
-  system: z.string(), // Info: (20241023 - Murky) Change to enum ['IFRS', 'GAAP'] if needed
+  system: z.nativeEnum(AccountSystem),
   type: z.nativeEnum(AccountType),
   debit: z.boolean(),
   liquidity: z.boolean(),

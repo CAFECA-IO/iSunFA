@@ -1,5 +1,4 @@
-import { IInvoiceBeta } from '@/interfaces/invoice';
-import type { IInvoiceEntity } from '@/interfaces/invoice';
+import type { IInvoiceBetaOptional, IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileUIBeta } from '@/interfaces/file';
 import type { IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
@@ -7,7 +6,7 @@ import type { ICompanyEntity } from '@/interfaces/company';
 import { generateRandomCounterParties } from '@/interfaces/counterparty';
 import { ProgressStatus } from '@/constants/account';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
-import { InvoiceType, InvoiceTransactionDirection, InvoiceTaxType } from '@/constants/invoice';
+import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
@@ -15,7 +14,7 @@ export interface ICertificate {
   companyId: number;
   file: IFileUIBeta;
   unRead?: boolean;
-  invoice: IInvoiceBeta;
+  invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
 
   aiResultId?: string;
@@ -92,7 +91,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
         taxRatio, // Info: (20240920 - tzuhan) 隨機生成 5%, 10%, 15%
         taxPrice: (taxRatio / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算稅金
         totalPrice: priceBeforeTax + (taxRatio / 100) * priceBeforeTax, // Info: (20240920 - tzuhan) 計算總價
-        type: Object.values(InvoiceType)[Math.floor(Math.random() * 3)], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
+        type: Object.values(InvoiceType)[Math.floor(Math.random() * 18)], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
         counterParty: generateRandomCounterParties(1)[0],
         deductible: Math.random() > 0.5 ? true : !true, // Info: (20240920 - tzuhan) 隨機生成 Yes/No
         uploader: `Tzuhan`,

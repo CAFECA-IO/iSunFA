@@ -2,6 +2,48 @@ import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constan
 import { z } from 'zod';
 
 /**
+ * Info: (20241105 - Murky)
+ * @description 這個是給前端用的 IRelatedVoucher, 放在 IAssetDetails 裡面
+ */
+const IRelatedVoucherValidator = z.object({
+  id: z.number(),
+  number: z.string(),
+});
+
+/**
+ * Info: (20241105 - Murky)
+ * @description 這個是給前端用的 IAssetItem, 放在 IAssetDetails 裡面
+ */
+const IAssetItemValidator = z.object({
+  id: z.number(),
+  currencyAlias: z.string(),
+  acquisitionDate: z.number(),
+  assetType: z.string(),
+  assetNumber: z.string(),
+  assetName: z.string(),
+  purchasePrice: z.number(),
+  accumulatedDepreciation: z.number(),
+  residualValue: z.number(),
+  remainingLife: z.number(),
+  assetStatus: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});
+
+/**
+ * Info: (20241105 - Murky)
+ * @description 這個是給前端用的 IAssetDetails
+ */
+export const IAssetDetailsValidator = IAssetItemValidator.extend({
+  depreciationStart: z.number(),
+  depreciationMethod: z.string(),
+  usefulLife: z.number(),
+  relatedVouchers: z.array(IRelatedVoucherValidator),
+  note: z.string().optional(),
+});
+
+/**
  * Info: (20241025 - Murky)
  * @description schema for init asset entity or parsed prisma asset
  * @todo assetVouchers and company need to be implemented
