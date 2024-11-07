@@ -3,7 +3,9 @@ import { askAIGetResultV2Schema, askAIPostValidatorV2 } from '@/lib/utils/zod_sc
 import {
   certificateDeleteValidator,
   certificateGetOneValidator,
+  certificateListSchema,
   certificateListValidator,
+  certificatePostSchema,
   certificatePostValidator,
   certificatePutValidator,
 } from '@/lib/utils/zod_schema/certificate';
@@ -156,4 +158,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
+  [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
+  [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
 };
