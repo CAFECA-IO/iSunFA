@@ -13,10 +13,11 @@ import { getTimestampNow } from '@/lib/utils/common';
 describe('News Repository', () => {
   describe('createNews', () => {
     it('should create a new news item', async () => {
+      const imageId = 555;
       const title = 'Test News Title';
       const content = 'Test News Content';
       const type = NewsType.FINANCIAL;
-      const news = await createNews(title, content, type);
+      const news = await createNews(imageId, title, content, type);
       await deleteNewsForTesting(news!.id);
       expect(news).toBeDefined();
       expect(news!.title).toBe(title);
@@ -73,10 +74,11 @@ describe('News Repository', () => {
 
   describe('getNewsById', () => {
     it('should return a news item by ID', async () => {
+      const imageId = 555;
       const title = 'Test News Title';
       const content = 'Test News Content';
       const type = NewsType.FINANCIAL;
-      const createdNews = await createNews(title, content, type);
+      const createdNews = await createNews(imageId, title, content, type);
       const news = await getNewsById(createdNews!.id);
       await deleteNewsForTesting(createdNews!.id);
       expect(news).toBeDefined();
