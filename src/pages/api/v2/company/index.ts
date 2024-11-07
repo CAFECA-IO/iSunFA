@@ -49,7 +49,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePostRequest: IHandleRequest<
-  APIName.COMPANY_ADD,
+  APIName.CREATE_COMPANY,
   {
     company: Company & { imageFile: File | null };
     role: Role;
