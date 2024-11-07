@@ -6,12 +6,17 @@ import {
   iLineItemValidator,
 } from '@/lib/utils/zod_schema/lineItem';
 import {
+  IVoucherDetailForFrontend,
+  IVoucherBeta,
+  IVoucherForSingleAccount,
+} from '@/interfaces/voucher';
+import {
   zodFilterSectionSortingOptions,
   zodStringToNumber,
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { EventType, VoucherType } from '@/constants/account';
+import { EventType, ProgressStatus, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
@@ -20,11 +25,22 @@ import { counterPartyEntityValidator } from '@/constants/counterparty';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
 import { userVoucherEntityValidator } from '@/lib/utils/zod_schema/user_voucher';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IVoucherBeta } from '@/interfaces/voucher';
 import { eventTypeToVoucherType } from '@/lib/utils/common';
 import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
 import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
-import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
+import {
+  paginatedDataSchema,
+  paginatedDataSchemaDataNotArray,
+} from '@/lib/utils/zod_schema/pagination';
+import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
+import { assetEntityValidator, IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
+import {
+  certificateEntityValidator,
+  ICertificateValidator,
+} from '@/lib/utils/zod_schema/certificate';
+import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
+import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
+import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -97,6 +113,7 @@ export const voucherEntityValidator = z.object({
   certificates: z.array(z.any()).optional(),
   issuer: z.any().optional(),
   readByUsers: z.array(z.any()).optional(),
+  asset: z.array(z.any()).optional(),
 });
 
 /**
@@ -124,6 +141,29 @@ export const IVoucherBetaValidator = z.object({
       amount: z.number(),
     }),
     lineItems: z.array(ILineItemBetaValidator),
+  }),
+});
+
+export const IVoucherForSingleAccountValidator = z.object({
+  id: z.number().describe('voucher id'),
+  date: z.number().describe('voucher date, selected by user'),
+  voucherNo: z.string().describe('voucher 流水號'),
+  voucherType: z.nativeEnum(VoucherType).describe('RECEIVE, TRANSFER, EXPENSE'),
+  note: z.string().describe('voucher note'),
+  lineItems: z
+    .array(
+      z.object({
+        id: z.number().describe('line item id'),
+        amount: z.number().describe('line item amount'),
+        description: z.string().describe('line item description (for `particular`)'),
+        debit: z.boolean().describe('line item debit or credit'),
+      })
+    )
+    .min(1)
+    .describe('particulars and amount for display'),
+  issuer: z.object({
+    avatar: z.string().url().describe('issuer avatar url'),
+    name: z.string().describe('issuer name'),
   }),
 });
 
@@ -156,7 +196,7 @@ const voucherGetAllQueryValidatorV2 = z.object({
   searchQuery: z.string().optional(),
 });
 
-const voucherGetAllBodyValidatorV2 = z.union([z.object({}), z.string()]);
+const voucherGetAllBodyValidatorV2 = z.object({});
 
 const voucherGetAllOutputValidatorV2 = paginatedDataSchemaDataNotArray(
   z.object({
@@ -254,18 +294,37 @@ const voucherGetAllFrontendValidatorV2 = paginatedDataSchemaDataNotArray(
   voucherGetAllFrontendDataValidatorV2
 );
 
+export const voucherGetAllValidatorV2: IZodValidator<
+  (typeof voucherGetAllQueryValidatorV2)['shape'],
+  (typeof voucherGetAllBodyValidatorV2)['shape']
+> = {
+  query: voucherGetAllQueryValidatorV2,
+  body: voucherGetAllBodyValidatorV2,
+};
+
 // Info: (20240927 - Murky) POST voucher v2 validator
 const voucherPostQueryValidatorV2 = z.object({});
 const voucherPostBodyValidatorV2 = z.object({
-  actions: z.array(z.nativeEnum(VoucherV2Action)),
+  actions: z.array(z.nativeEnum(VoucherV2Action)), // Info: (20241025 - Murky) [VoucherV2Action.ADD_ASSET, VoucherV2Action.REVERT]
   certificateIds: z.array(z.number().int()),
-  voucherDate: z.number().int(),
+  voucherDate: z.number().int(), // Info: (20241105 - Murky) timestamp in Second
   type: z.nativeEnum(EventType),
   note: z.string(),
   lineItems: z.array(iLineItemBodyValidatorV2),
   recurringInfo: recurringEventForVoucherPostValidatorV2.optional(),
-  assetIds: z.array(z.number().int()),
+  assetIds: z.array(z.number().int()), // Info: (20241105 - Murky) 沒有的話寫 []
   counterPartyId: z.number().int().optional(),
+  /**
+   * Info: (20241105 - Murky)
+   * [
+   *  {
+   *  voucherId: 1,
+   *    lineItemIdBeReversed: 1, 白色藍底的lineItem的id
+   *    lineItemIdReverseOther: 2, 藍色白底的lineItem的id: -1
+   *     amount: 1000
+   *  }
+   * ]
+   */
   reverseVouchers: z.array(
     z.object({
       voucherId: z.number().int(),
@@ -306,6 +365,209 @@ const voucherGetOneQueryValidatorV2 = z.object({
 
 const voucherGetOneBodyValidatorV2 = z.object({});
 
+const voucherGetOneOutputValidatorV2 = z
+  .object({
+    ...voucherEntityValidator.shape,
+    issuer: userEntityValidator,
+    accountSetting: accountingSettingEntityValidator,
+    counterParty: counterPartyEntityValidator,
+    originalEvents: z.array(eventEntityValidator),
+    resultEvents: z.array(eventEntityValidator),
+    asset: z.array(assetEntityValidator),
+    certificates: z.array(
+      z.object({
+        ...certificateEntityValidator.shape,
+        invoice: invoiceEntityValidator,
+        file: fileEntityValidator,
+      })
+    ),
+    lineItems: z.array(
+      z.object({
+        ...iLineItemBodyValidatorV2.shape,
+        id: z.number(),
+        account: accountEntityValidator,
+      })
+    ),
+    payableInfo: z
+      .object({
+        total: z.number(),
+        alreadyHappened: z.number(),
+        remain: z.number(),
+      })
+      .optional(),
+    receivingInfo: z
+      .object({
+        total: z.number(),
+        alreadyHappened: z.number(),
+        remain: z.number(),
+      })
+      .optional(),
+  })
+  .transform((data) => {
+    const voucherDetail: IVoucherDetailForFrontend = {
+      id: data.id,
+      voucherDate: data.date,
+      type: data.type,
+      note: data.note ?? '',
+      counterParty: {
+        id: data.counterParty.id,
+        companyId: data.counterParty.companyId,
+        name: data.counterParty.name,
+      },
+      // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
+      recurringInfo: {
+        type: '',
+        startDate: 0,
+        endDate: 0,
+        daysOfWeek: [],
+        monthsOfYear: [],
+      },
+      payableInfo: data.payableInfo,
+      receivingInfo: data.receivingInfo,
+      reverseVoucherIds:
+        data.originalEvents[0]?.associateVouchers?.map((associateVoucher) => ({
+          id: associateVoucher.resultVoucher.id,
+          voucherNo: associateVoucher.resultVoucher.no,
+        })) ?? [],
+      assets: data.asset.map((asset) => ({
+        id: asset.id,
+        currencyAlias: data.accountSetting.currency,
+        acquisitionDate: asset.acquisitionDate,
+        assetType: asset.type,
+        assetNumber: asset.number,
+        assetName: asset.name,
+        purchasePrice: asset.purchasePrice,
+        accumulatedDepreciation: asset.accumulatedDepreciation,
+        residualValue: asset.residualValue,
+        remainingLife: asset.remainingLife,
+        assetStatus: asset.status,
+        createdAt: asset.createdAt,
+        updatedAt: asset.updatedAt,
+        deletedAt: asset.deletedAt,
+        depreciationStart: asset.depreciationStart,
+        depreciationMethod: asset.depreciationMethod,
+        usefulLife: asset.usefulLife,
+        relatedVouchers: [],
+        note: asset.note,
+      })),
+      certificates: data.certificates.map((certificate) => ({
+        id: certificate.id,
+        companyId: certificate.companyId,
+        voucherNo: certificate.voucherNo,
+        invoice: {
+          id: certificate.invoice.id,
+          inputOrOutput: certificate.invoice.inputOrOutput,
+          date: certificate.invoice.date,
+          no: certificate.invoice.no,
+          currencyAlias: certificate.invoice.currencyAlias,
+          priceBeforeTax: certificate.invoice.priceBeforeTax,
+          taxType: certificate.invoice.taxType,
+          taxRatio: certificate.invoice.taxRatio,
+          taxPrice: certificate.invoice.taxPrice,
+          totalPrice: certificate.invoice.totalPrice,
+          type: certificate.invoice.type,
+          deductible: certificate.invoice.deductible,
+          counterPartyId: certificate.invoice.counterPartyId,
+          createdAt: certificate.invoice.createdAt,
+          updatedAt: certificate.invoice.updatedAt,
+          name: 'InvoiceName', // ToDo: (20241105 - Murky) DB 沒有這個欄位, 等待db更新
+          uploader: data.issuer.name,
+          counterParty: {
+            id: data.counterParty.id,
+            companyId: data.counterParty.companyId,
+            name: data.counterParty.name,
+            taxId: data.counterParty.taxId,
+            type: data.counterParty.type,
+            note: data.counterParty.note,
+            createdAt: data.counterParty.createdAt,
+            updatedAt: data.counterParty.updatedAt,
+          },
+        },
+        file: {
+          id: certificate.file.id,
+          name: certificate.file.name,
+          url: certificate.file.url,
+          size: certificate.file.size,
+          progress: 100,
+          status: ProgressStatus.SUCCESS,
+        },
+        createdAt: certificate.createdAt,
+        updatedAt: certificate.updatedAt,
+        deletedAt: certificate.deletedAt,
+      })),
+      lineItemsInfo: {
+        lineItems: data.lineItems.map((lineItem) => ({
+          id: lineItem.id,
+          description: lineItem.description,
+          debit: lineItem.debit,
+          amount: lineItem.amount,
+          account: {
+            id: lineItem.account.id,
+            companyId: lineItem.account.companyId,
+            system: lineItem.account.system,
+            debit: lineItem.account.debit,
+            liquidity: lineItem.account.liquidity,
+            name: lineItem.account.name,
+            code: lineItem.account.code,
+            type: lineItem.account.type,
+            createdAt: lineItem.account.createdAt,
+            updatedAt: lineItem.account.updatedAt,
+            deletedAt: lineItem.account.deletedAt,
+          },
+        })),
+      },
+    };
+
+    return voucherDetail;
+  });
+
+const IVoucherDetailForFrontendValidator = z.object({
+  id: z.number(),
+  voucherDate: z.number(),
+  type: z.nativeEnum(EventType),
+  note: z.string(),
+  counterParty: z.object({
+    id: z.number(),
+    companyId: z.number(),
+    name: z.string(),
+  }),
+  recurringInfo: z.object({
+    // Deprecated: (20241105 - Murky)
+    type: z.string(),
+    startDate: z.number(),
+    endDate: z.number(),
+    daysOfWeek: z.array(z.number()),
+    monthsOfYear: z.array(z.number()),
+  }),
+  payableInfo: z
+    .object({
+      total: z.number(),
+      alreadyHappened: z.number(),
+      remain: z.number(),
+    })
+    .optional(),
+  receivingInfo: z
+    .object({
+      total: z.number(),
+      alreadyHappened: z.number(),
+      remain: z.number(),
+    })
+    .optional(),
+  reverseVoucherIds: z.array(
+    z.object({
+      id: z.number(),
+      voucherNo: z.string(),
+    })
+  ),
+  assets: z.array(IAssetDetailsValidator),
+  certificates: z.array(ICertificateValidator),
+  lineItemsInfo: z.object({
+    lineItems: z.array(ILineItemBetaValidator),
+  }),
+});
+
+export const voucherGetOneFrontendValidatorV2 = IVoucherDetailForFrontendValidator;
+
 export const voucherGetOneValidatorV2: IZodValidator<
   (typeof voucherGetOneQueryValidatorV2)['shape'],
   (typeof voucherGetOneBodyValidatorV2)['shape']
@@ -344,11 +606,83 @@ export const voucherDeleteValidatorV2: IZodValidator<
 
 export const voucherRequestValidatorsV2 = {
   GET_ONE: voucherGetOneValidatorV2,
+  GET_LIST: voucherGetAllValidatorV2,
   PUT: voucherPutValidatorV2,
   POST: voucherPostValidatorV2,
   DELETE: voucherDeleteValidatorV2,
   WAS_READ: voucherWasReadValidatorV2,
 };
+
+// Info: (20241106 - Murky) api/v2/account/[accountId]/voucher.ts
+const voucherGetByAccountQueryValidatorV2 = z.object({
+  accountId: zodStringToNumber,
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  // type: z.nativeEnum(EventType).optional(),
+  // tab: z.nativeEnum(),
+  startDate: zodStringToNumberWithDefault(0),
+  endDate: zodStringToNumberWithDefault(Infinity),
+  sortOption: zodFilterSectionSortingOptions(),
+  searchQuery: z.string().optional(),
+});
+
+const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
+  z.object({
+    ...voucherEntityValidator.shape,
+    lineItems: z
+      .array(
+        z.object({
+          ...lineItemEntityValidator.shape,
+          id: z.number(),
+          account: accountEntityValidator,
+        })
+      )
+      .min(1),
+    issuer: z.object({
+      ...userEntityValidator.shape,
+      imageFile: fileEntityValidator,
+    }),
+  })
+).transform((data) => {
+  const vouchers = data.data.map((voucher) => {
+    const lineItems = voucher.lineItems.map((lineItem) => ({
+      id: lineItem.id,
+      amount: lineItem.amount,
+      description: lineItem.description,
+      debit: lineItem.debit,
+    }));
+    const voucherForSingleAccount: IVoucherForSingleAccount = {
+      id: voucher.id,
+      voucherNo: voucher.no,
+      date: voucher.date,
+      note: voucher.note ?? '',
+      voucherType: eventTypeToVoucherType(voucher.type),
+      lineItems,
+      issuer: {
+        avatar: voucher.issuer.imageFile.url,
+        name: voucher.issuer.name,
+      },
+    };
+
+    return voucherForSingleAccount;
+  });
+  const reverseItemsPagination: z.infer<typeof voucherGetByAccountFrontendValidatorV2> = {
+    page: data.page,
+    totalPages: data.totalPages,
+    totalCount: data.totalCount,
+    pageSize: data.pageSize,
+    hasNextPage: data.hasNextPage,
+    hasPreviousPage: data.hasPreviousPage,
+    sort: data.sort,
+    data: vouchers,
+  };
+
+  return reverseItemsPagination;
+});
+
+const voucherGetByAccountFrontendValidatorV2 = paginatedDataSchema(
+  IVoucherForSingleAccountValidator
+);
 
 // Info: (20241030 - Murky) Below is new version of middleware
 
@@ -370,4 +704,40 @@ export const voucherListSchema = {
   },
   outputSchema: voucherGetAllOutputValidatorV2,
   frontend: voucherGetAllFrontendValidatorV2,
+};
+
+export const voucherGetOneSchema = {
+  input: {
+    querySchema: voucherGetOneQueryValidatorV2,
+    bodySchema: voucherGetOneBodyValidatorV2,
+  },
+  outputSchema: voucherGetOneOutputValidatorV2,
+  frontend: voucherGetOneFrontendValidatorV2,
+};
+
+export const voucherPutSchema = {
+  input: {
+    querySchema: voucherPutQueryValidatorV2,
+    bodySchema: voucherPostBodyValidatorV2,
+  },
+  outputSchema: voucherEntityValidator,
+  frontend: voucherNullSchema,
+};
+
+export const voucherDeleteSchema = {
+  input: {
+    querySchema: voucherDeleteQueryValidatorV2,
+    bodySchema: voucherDeleteBodyValidatorV2,
+  },
+  outputSchema: voucherEntityValidator,
+  frontend: voucherNullSchema,
+};
+
+export const voucherGetByAccountSchema = {
+  input: {
+    querySchema: voucherGetByAccountQueryValidatorV2,
+    bodySchema: voucherNullSchema,
+  },
+  outputSchema: voucherGetByAccountOutputValidatorV2,
+  frontend: voucherGetByAccountFrontendValidatorV2,
 };
