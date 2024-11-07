@@ -7,7 +7,7 @@ import Layout from '@/components/beta/layout/layout';
 import AccountingSettingPageBody from '@/components/accounting_setting/accounting_setting_page_body';
 
 const AccountingSettingPage: React.FC = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'setting']);
 
   return (
     <>
@@ -27,17 +27,7 @@ const AccountingSettingPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['common', 'setting'])),
     locale,
   },
 });

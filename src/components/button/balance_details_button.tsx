@@ -54,7 +54,7 @@ const getVoucherIcon = (voucherType: VoucherType) => {
 };
 
 const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({ accountName, accountId }) => {
-  const { t } = useTranslation(['common', 'report_401']);
+  const { t } = useTranslation(['common', 'report_401', 'journal']);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(false); // Info: (20241107 - Anna) 控制是否應該請求資料
 

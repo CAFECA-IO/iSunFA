@@ -50,7 +50,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
 };
 
 const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
 
   const { selectedCompany } = useUserCtx();

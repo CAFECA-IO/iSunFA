@@ -20,7 +20,7 @@ import { AssetModalType } from '@/interfaces/asset_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'asset']);
   const router = useRouter();
 
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =

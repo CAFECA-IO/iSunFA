@@ -8,7 +8,7 @@ import VoucherDetailPageBody from '@/components/voucher/voucher_detail_page_body
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'journal']);
 
   const pageTitle = `${t('journal:VOUCHER_DETAIL_PAGE.TITLE')} ${voucherId}`;
 
@@ -30,16 +30,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-    ])),
+    ...(await serverSideTranslations(locale, ['common', 'journal'])),
   },
 });
 

@@ -37,7 +37,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   remainingLifeSort,
   setRemainingLifeSort,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'asset']);
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const defaultAssetList: IAssetItemUI[] = assetList.map((asset) => {

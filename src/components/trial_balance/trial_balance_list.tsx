@@ -38,7 +38,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   const [isLoading, setIsLoading] = useState(false); // Info: (20241105 - Anna) 追蹤 API 請求的加載狀態
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null); // Info: (20241105 - Anna) 追蹤之前的日期範圍
 
-  // ⭐ Info: (20241107 - Anna) API 請求邏輯
+  // Info: (20241107 - Anna) API 請求邏輯
   const fetchTrialBalanceData = useCallback(async () => {
     if (!selectedDateRange || selectedDateRange.endTimeStamp === 0) return;
 

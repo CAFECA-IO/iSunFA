@@ -28,7 +28,7 @@ const AssetStatusSettingModal: React.FC<IAssetStatusSettingModal> = ({
   updateAssetId,
   defaultStatus,
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'asset']);
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useModalContext();
 

@@ -13,7 +13,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 const AssetListPageBody: React.FC = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'asset']);
   const { selectedCompany } = useUserCtx();
   const { accountList, getAccountListHandler } = useAccountingCtx();
 

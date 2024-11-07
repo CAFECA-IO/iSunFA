@@ -40,7 +40,7 @@ const COLOR_CLASSES = [
 ];
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API

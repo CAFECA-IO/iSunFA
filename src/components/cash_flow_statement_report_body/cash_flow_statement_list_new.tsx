@@ -25,7 +25,7 @@ interface CashFlowStatementListProps {
 }
 
 const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({ selectedDateRange }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'report_401']);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   const { isAuthLoading, selectedCompany } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!selectedCompany?.id;
