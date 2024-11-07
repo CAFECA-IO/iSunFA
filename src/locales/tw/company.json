@@ -1,9 +1,6 @@
 {
   "LIST": {
     "TITLE": "公司列表",
-    "PARTNER_NAME": "合作夥伴名稱",
-    "TAX_ID": "稅務編號",
-    "TYPE": "類型",
     "ACTION": "操作"
   },
   "INFO": {
@@ -11,6 +8,18 @@
     "TAX_ID": "營業稅號",
     "WORK_TAG": "工作標籤",
     "CREATE": "建立新公司"
+  },
+  "EDIT": {
+    "BACK": "返回",
+    "INFO": "公司資訊",
+    "COMPANY_NAME": "公司名稱",
+    "BUSSINESS_TAX_ID": "營業稅編號",
+    "TAX_SERIAL_NUMBER": "稅務序號",
+    "COMPANY_REPRESENTATIVE_NAME": "公司代表名稱",
+    "COUNTRY_OF_INCORPORATION": "註冊國家",
+    "COMPANY_ADDRESS": "公司地址",
+    "PHONE_NUMBER": "電話號碼",
+    "REMOVE_THIS_COMPANY": "移除此公司"
   },
   "TAG": {
     "FINANCIAL": "財務",
