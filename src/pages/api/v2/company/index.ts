@@ -49,7 +49,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePostRequest: IHandleRequest<
-  APIName.COMPANY_ADD,
+  APIName.CREATE_COMPANY,
   {
     company: Company & { imageFile: File | null };
     role: Role;
@@ -108,7 +108,7 @@ const methodHandlers: {
   }>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.COMPANY_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.COMPANY_ADD, req, res, handlePostRequest),
+  POST: (req, res) => withRequestValidation(APIName.CREATE_COMPANY, req, res, handlePostRequest),
 };
 
 export default async function handler(

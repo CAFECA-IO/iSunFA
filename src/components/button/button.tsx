@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils/common';
 
 // Info: (20240319 - Shirley) 用 cva 來定義 button 的樣式
 const buttonVariants = cva(
-  '"gap space-x-2 ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
+  '"gap gap-8px ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -31,9 +31,10 @@ const buttonVariants = cva(
         errorBorderless: 'border-none text-text-state-error  disabled:text-button-text-disable',
       },
       size: {
-        default: 'px-6 py-3',
+        large: 'px-32px py-14px', // Info: (20241106 - Liz) 設計稿 Size: Large
+        default: 'px-24px py-10px', // Info: (20241106 - Liz) 設計稿 Size: Regular
         medium: 'px-5 py-2',
-        small: 'px-4 py-1',
+        small: 'px-16px py-8px', // Info: (20241106 - Liz) 設計稿 Size: Small
         extraSmall: 'px-2 py-1',
       },
     },
