@@ -2,7 +2,7 @@ import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_COMPANY_IMAGE_URL } from '@/constants/display';
-import { RoleName } from '@/constants/role_name';
+import { CompanyRoleName } from '@/constants/role';
 import { UploadType } from '@/constants/file';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useGlobalCtx } from '@/contexts/global_context';
@@ -61,7 +61,7 @@ const CompanyInfoPageBody = () => {
 
   const kycStatusDetail = companyData?.company.kycStatusDetail ?? null;
 
-  const isEditNameAllowed = role?.name === RoleName.OWNER;
+  const isEditNameAllowed = role?.name === CompanyRoleName.OWNER;
 
   useEffect(() => {
     if (getCompanyDataSuccessfully && companyData) {
@@ -132,7 +132,7 @@ const CompanyInfoPageBody = () => {
     <div className="">
       <Skeleton width={200} height={50} />
     </div>
-  ) : role?.name === RoleName.OWNER ? (
+  ) : role?.name === CompanyRoleName.OWNER ? (
     <>
       <div className="">
         <Button

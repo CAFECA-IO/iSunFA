@@ -527,16 +527,46 @@
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
   },
-  "SELECT_ROLE": {
-    "SELECT_ROLE_ISUNFA": "选择角色 - iSunFA"
+
+  "CREATE_ROLE_PAGE": {
+    "CREATE_ROLE_TITLE": "建立角色"
   },
 
-  "CREATED_ROLES": {
-    "CREATED_ROLES": "已建立角色"
+  "SELECT_ROLE_PAGE": {
+    "SELECT_ROLE_TITLE": "选择角色"
   },
 
   "BETA_DASHBOARD": {
-    "DASHBOARD": "仪表板"
+    "DASHBOARD": "仪表板",
+    "TO_DO_LIST": "待办事项",
+    "CALENDAR_NOT_YET_LINKED": "行事历尚未连结",
+    "LINK_MY_CALENDAR": "连结我的行事历",
+    "NO_SCHEDULE_FOR_TODAY": "今天没有安排待办事项",
+    "MY_COMPANY_LIST": "我的公司列表",
+    "COMPANY_NOT_YET_CREATED": "尚未创建公司",
+    "PLEASE_PROCEED_TO": "请前往",
+    "CREATE_A_COMPANY": "创建公司",
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL": "财经新闻",
+    "SYSTEM": "系统资讯",
+    "MATCHING": "媒合资讯",
+    "MORE": "更多",
+    "SEE_MORE": "查看更多",
+    "PENDING_TASKS": "待处理任务",
+    "PENDING_TASKS_TOTAL": "待处理任务 (全部)",
+    "MISSING_CERTIFICATE": "缺少凭证",
+    "UNPOSTED_VOUCHERS": "尚未入帐",
+    "UNARCHIVED_CUSTOMER_DATA": "尚未封存的客户资料",
+    "ADD_TO_MY_CALENDAR": "新增至我的行事历",
+    "NO_DATA_AVAILABLE": "没有可用资料",
+    "NO_DATA": "没有资料"
+  },
+
+  "HEADER": {
+    "SEARCH": "搜索",
+    "MY_ACCOUNT": "我的账户",
+    "SUBSCRIPTION_AND_BILLS": "订阅与账单",
+    "LOGOUT": "登出"
   },
 
   "MY_COMPANY_LIST_PAGE": {
@@ -549,8 +579,14 @@
     "SYSTEM_NEWS": "系统新闻",
     "MATCH_NEWS": "媒合资讯"
   },
+  
   "PLACEHOLDER": {
-    "ENTER_NAME": "输入姓名",
-    "ENTER_NUMBER": "输入号码"
+    "ENTER_NAME": "输入名称",
+    "ENTER_NUMBER": "输入号码",
+    "ENTER_FULL_ADDRESS": "输入完整地址"
+  },
+  
+  "TO_DO_LIST_PAGE": {
+    "TO_DO_LIST_TITLE": "待办事项"
   }
 }

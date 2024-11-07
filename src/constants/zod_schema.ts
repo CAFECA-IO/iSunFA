@@ -1,5 +1,5 @@
 import { APIName } from '@/constants/api_connection';
-import { askAIGetResultValidatorV2, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
+import { askAIGetResultV2Schema, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
   certificateGetOneValidator,
@@ -101,7 +101,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
-  [APIName.ASK_AI_RESULT_V2]: askAIGetResultValidatorV2,
   [APIName.ASK_AI_V2]: askAIPostValidatorV2,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
@@ -118,7 +117,7 @@ export const API_ZOD_SCHEMA = {
 
 export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_LIST]: companyListSchema,
-  [APIName.COMPANY_ADD]: companyPostSchema,
+  [APIName.CREATE_COMPANY]: companyPostSchema,
   [APIName.COMPANY_SELECT]: companySelectSchema,
   [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
@@ -132,9 +131,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
-  [APIName.ROLE_LIST]: userRoleListSchema,
-  [APIName.ROLE_SELECT]: userRoleSelectSchema,
-  [APIName.CREATE_ROLE]: userRolePostSchema,
+  [APIName.USER_ROLE_LIST]: userRoleListSchema,
+  [APIName.USER_SELECT_ROLE]: userRoleSelectSchema,
+  [APIName.USER_CREATE_ROLE]: userRolePostSchema,
   [APIName.NEWS_LIST]: newsListSchema,
   [APIName.CREATE_NEWS]: newsPostSchema,
   [APIName.NEWS_GET_BY_ID]: newsGetByIdSchema,
@@ -156,4 +155,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
+  [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
 };
