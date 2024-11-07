@@ -2,6 +2,7 @@
   {
     "id": 1001,
     "name": "Super Admin",
+    "type": "system",
     "permissions": [],
     "createdAt": 1,
     "updatedAt": 1
@@ -9,6 +10,7 @@
   {
     "id": 1002,
     "name": "Admin",
+    "type": "system",
     "permissions": [],
     "createdAt": 1,
     "updatedAt": 1
@@ -16,6 +18,7 @@
   {
     "id": 1003,
     "name": "Owner",
+    "type": "company",
     "permissions": [],
     "createdAt": 1,
     "updatedAt": 1
@@ -23,6 +26,7 @@
   {
     "id": 1004,
     "name": "Viewer",
+    "type": "company",
     "permissions": [],
     "createdAt": 1,
     "updatedAt": 1
@@ -30,6 +34,31 @@
   {
     "id": 1000,
     "name": "Test",
+    "type": "system",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1006,
+    "name": "Bookkeeper",
+    "type": "system",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1007,
+    "name": "Accountant",
+    "type": "system",
+    "permissions": [],
+    "createdAt": 1,
+    "updatedAt": 1
+  },
+  {
+    "id": 1008,
+    "name": "Educational Trial Version",
+    "type": "system",
     "permissions": [],
     "createdAt": 1,
     "updatedAt": 1

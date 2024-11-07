@@ -1,3 +1,4 @@
+import { CompanyTag } from '@/constants/company';
 import { IRole } from '@/interfaces/role';
 
 export interface ICompany {
@@ -5,7 +6,6 @@ export interface ICompany {
   imageId: string;
   name: string;
   taxId: string;
-  tag: string;
   startDate: number;
   createdAt: number;
   updatedAt: number;
@@ -23,6 +23,8 @@ export interface ICompanyAndRoleDetail {
 
 export interface ICompanyAndRole {
   company: ICompany;
+  tag: CompanyTag;
+  order: number;
   role: IRole;
 }
 

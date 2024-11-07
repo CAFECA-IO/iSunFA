@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { fileSchema } from '@/lib/utils/zod_schema/file';
 
-export const userSchema = z
+export const userOutputSchema = z
   .object({
     id: z.number().int(),
     name: z.string(),
