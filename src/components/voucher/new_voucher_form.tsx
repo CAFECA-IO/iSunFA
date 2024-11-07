@@ -242,6 +242,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   }, [isAIWorking, resultData]);
 
+  useEffect(() => {
+    const isReverse = reverses.length > 0;
+    setIsReverseRequired(isReverse);
+  }, [reverseList]);
+
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
     setSelectedIds(selectedCertificates.map((item) => item.id));
@@ -817,7 +822,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   useEffect(() => {
     setSelectedCertificates(Object.values(selectedData));
     setSelectedIds(Object.keys(selectedData).map(Number));
-  }, [selectedCertificates]);
+  }, [selectedData]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
@@ -948,7 +953,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               <VoucherLineBlock
                 lineItems={voucherLineItems}
                 setLineItems={setLineItems}
-                setIsReverseRequired={setIsReverseRequired}
                 flagOfClear={flagOfClear}
                 flagOfSubmit={flagOfSubmit}
                 setIsTotalZero={setIsTotalZero}
