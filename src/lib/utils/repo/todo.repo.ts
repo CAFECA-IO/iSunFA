@@ -2,7 +2,7 @@ import prisma from '@/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { Prisma, Todo } from '@prisma/client';
 
-// Info: (20241107 - Murky) Create a new Todo
+// Info: (20241107 - Jacky) Create a new Todo
 export async function createTodo(
   userId: number,
   companyId: number,
@@ -44,7 +44,7 @@ export async function createTodo(
   return newTodo;
 }
 
-// Info: (20241107 - Murky) List all Todos
+// Info: (20241107 - Jacky) List all Todos
 export async function listTodo(userId: number) {
   const todos = await prisma.todo.findMany({
     where: {
@@ -70,7 +70,7 @@ export async function listTodo(userId: number) {
   return todos;
 }
 
-// Info: (20241107 - Murky) Get a Todo by ID
+// Info: (20241107 - Jacky) Get a Todo by ID
 export async function getTodoById(id: number) {
   let todo = null;
   if (id > 0) {
@@ -95,7 +95,7 @@ export async function getTodoById(id: number) {
   return todo;
 }
 
-// Info: (20241107 - Murky) Update a Todo
+// Info: (20241107 - Jacky) Update a Todo
 export async function updateTodo(
   id: number,
   companyId: number,
@@ -141,7 +141,7 @@ export async function updateTodo(
   return updatedTodo;
 }
 
-// Info: (20241107 - Murky) Soft delete a Todo
+// Info: (20241107 - Jacky) Soft delete a Todo
 export async function deleteTodo(id: number) {
   const nowInSecond = getTimestampNow();
   const deletedTodo = await prisma.todo.update({
@@ -169,7 +169,7 @@ export async function deleteTodo(id: number) {
   return deletedTodo;
 }
 
-// Info: (20241107 - Murky) Real delete for testing
+// Info: (20241107 - Jacky) Real delete for testing
 export async function deleteTodoForTesting(id: number): Promise<Todo> {
   const where: Prisma.TodoWhereUniqueInput = {
     id,
