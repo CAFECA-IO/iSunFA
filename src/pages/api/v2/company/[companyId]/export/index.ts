@@ -1,5 +1,6 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { convertToCSV } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 interface BaseExportRequestBody {
@@ -24,13 +25,13 @@ interface AssetExportRequestBody extends BaseExportRequestBody {
   };
 }
 
-// 可以在這裡新增其他 exportType 的請求介面
+// TODO: (20241107 - Shirley) 可以在這裡新增其他 exportType 的請求介面
 // interface AnotherExportRequestBody extends BaseExportRequestBody {
 //   exportType: 'anotherType';
 //   // 其他特定欄位
 // }
 
-type ExportRequestBody = AssetExportRequestBody; // | AnotherExportRequestBody 等等
+type ExportRequestBody = AssetExportRequestBody; // TODO: (20241107 - Shirley) | AnotherExportRequestBody 等等
 
 interface Asset {
   acquisitionDate: number;
@@ -44,7 +45,19 @@ interface Asset {
   assetNumber: string;
 }
 
-// 模擬資產資料
+const ASSET_FIELDS: (keyof Asset)[] = [
+  'acquisitionDate',
+  'name',
+  'purchasePrice',
+  'accumulatedDepreciation',
+  'residualValue',
+  'remainingLife',
+  'type',
+  'status',
+  'assetNumber',
+];
+
+// TODO: (20241107 - Shirley) 模擬資產資料
 const MOCK_ASSETS: Asset[] = [
   {
     name: '辦公桌',
@@ -92,28 +105,6 @@ const MOCK_ASSETS: Asset[] = [
   },
 ];
 
-// 將物件陣列轉換為 CSV 字串
-function convertToCSV<T extends Record<string, any>>(fields: (keyof T)[], data: T[]): string {
-  const header = fields.join(',') + '\n';
-  const rows = data
-    .map((item) =>
-      fields
-        .map((field) => {
-          const value = item[field];
-          if (
-            typeof value === 'string' &&
-            (value.includes(',') || value.includes('\n') || value.includes('"'))
-          ) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        })
-        .join(',')
-    )
-    .join('\n');
-  return header + rows;
-}
-
 type SortField =
   | 'acquisitionDate'
   | 'purchasePrice'
@@ -122,7 +113,7 @@ type SortField =
   | 'remainingLife';
 type SortOrder = 'asc' | 'desc';
 
-// 解析排序選項
+// TODO: (20241107 - Shirley) 解析排序選項
 function parseSortOptions(sortOption: string): Array<{ field: SortField; order: SortOrder }> {
   if (!sortOption) return [];
   return sortOption.split('-').map((option) => {
@@ -134,7 +125,7 @@ function parseSortOptions(sortOption: string): Array<{ field: SortField; order: 
   });
 }
 
-// 排序資料
+// TODO: (20241107 - Shirley) 排序資料
 function sortData<T>(data: T[], sortOptions: Array<{ field: keyof T; order: SortOrder }>): T[] {
   if (!sortOptions.length) return data;
   return [...data].sort((a, b) => {
@@ -155,7 +146,7 @@ function sortData<T>(data: T[], sortOptions: Array<{ field: keyof T; order: Sort
   });
 }
 
-// 過濾資料
+// TODO: (20241107 - Shirley) 過濾資料
 function filterData<T extends Asset>(data: T[], filters?: AssetExportRequestBody['filters']): T[] {
   if (!filters) return data;
   return data.filter((item) => {
@@ -168,14 +159,11 @@ function filterData<T extends Asset>(data: T[], filters?: AssetExportRequestBody
   });
 }
 
-// 選擇欄位
-function selectFields<T extends { [key: string]: any }>(
-  data: T[],
-  fields?: (keyof T)[]
-): Partial<T>[] {
+// TODO: (20241107 - Shirley) 選擇欄位
+function selectFields<T>(data: T[], fields?: (keyof T)[]): T[] {
   if (!fields || fields.length === 0) return data;
   return data.map((item) => {
-    const selected: Partial<T> = {};
+    const selected = {} as T;
     fields.forEach((field) => {
       selected[field] = item[field];
     });
@@ -183,7 +171,7 @@ function selectFields<T extends { [key: string]: any }>(
   });
 }
 
-// 處理資產匯出
+// TODO: (20241107 - Shirley) 處理資產匯出
 async function handleAssetExport(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -212,26 +200,23 @@ async function handleAssetExport(
       throw new Error('Invalid file type');
     }
 
-    // ToDo: 從資料庫獲取資產資料
+    // TODO: (20241107 - Shirley) 從資料庫獲取資產資料
     let assets: Asset[] = MOCK_ASSETS;
 
-    // 處理過濾
     if (filters) {
       assets = filterData(assets, filters);
     }
 
-    // 處理排序
     if (sortOption) {
       const sortOptionsParsed = parseSortOptions(sortOption);
       assets = sortData(assets, sortOptionsParsed);
     }
 
-    // 處理欄位選擇
     if (options && options.fields) {
       assets = selectFields(assets, options.fields as (keyof Asset)[]) as Asset[];
     }
 
-    // 處理時區轉換 (暫未實作)
+    // TODO: (20241107 - Shirley) 處理時區轉換 (暫未實作)
     const newData = assets.map((asset) => ({
       ...asset,
       // acquisitionDate: timezone
@@ -239,24 +224,11 @@ async function handleAssetExport(
       //   : asset.acquisitionDate,
     }));
 
-    const fields: (keyof Asset)[] =
-      (options?.fields as (keyof Asset)[]) ||
-      ([
-        'acquisitionDate',
-        'name',
-        'purchasePrice',
-        'accumulatedDepreciation',
-        'residualValue',
-        'remainingLife',
-        'type',
-        'status',
-        'assetNumber',
-      ] as (keyof Asset)[]);
+    const fields: (keyof Asset)[] = (options?.fields as (keyof Asset)[]) || ASSET_FIELDS;
 
-    const csv = convertToCSV<Asset>(fields, newData as Asset[]);
-    const fileName = `assets_${Date.now()}.csv`;
+    const csv = convertToCSV<Record<keyof Asset, Asset[keyof Asset]>>(fields, newData as Asset[]);
+    const fileName = `assets_${getTimestampNow()}.csv`;
 
-    // 設置回應標頭以便下載檔案
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.status(200).send(csv);
@@ -267,7 +239,7 @@ async function handleAssetExport(
   }
 }
 
-// 可以在這裡新增其他 exportType 的處理函式
+// TODO: (20241107 - Shirley) 可以在這裡新增其他 exportType 的處理函式
 // async function handleAnotherExport(req: NextApiRequest, res: NextApiResponse, body: AnotherExportRequestBody): Promise<void> {
 //   // 實作另一種匯出邏輯
 // }
