@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 
 interface UserRoleProps {
   name: string;
+  roleId: number;
   roleIconSrc: string;
   roleIconAlt: string;
   avatar: string;
@@ -38,60 +39,36 @@ const USER_ROLES_ICON = [
   },
 ];
 
-// ToDo: (20241029 - Liz) 這是假資料，之後要改成從 API 拿
-// const USER_ROLES: IUserRole[] = [
-//   {
-//     id: 1,
-//     user: {
-//       id: 1,
-//       name: 'John Doe',
-//       email: 'john@gmail.com',
-//       imageId: '1',
-//       agreementList: ['agreement1', 'agreement2'],
-//       createdAt: 1730044800,
-//       updatedAt: 1730044800,
-//     },
-//     role: {
-//       id: 1,
-//       name: RoleName.BOOKKEEPER,
-//       permissions: ['READ', 'WRITE', 'DELETE'],
-//       createdAt: 1730044800,
-//       updatedAt: 1730044800,
-//     },
-//     lastLoginAt: 1730044800,
-//     createdAt: 1730044800,
-//     updatedAt: 1730044800,
-//   },
-//   {
-//     id: 2,
-//     user: {
-//       id: 1,
-//       name: 'John Doe',
-//       email: 'jo',
-//       imageId: '1',
-//       agreementList: ['agreement1', 'agreement2'],
-//       createdAt: 1730044800,
-//       updatedAt: 1730044800,
-//     },
-//     role: {
-//       id: 2,
-//       name: RoleName.EDUCATIONAL_TRIAL_VERSION,
-//       permissions: ['READ', 'WRITE'],
-//       createdAt: 1730131200,
-//       updatedAt: 1730131200,
-//     },
-//     lastLoginAt: 1730131200,
-//     createdAt: 1730131200,
-//     updatedAt: 1730131200,
-//   },
-// ];
+const UserRole = ({
+  name,
+  roleId,
+  roleIconSrc,
+  roleIconAlt,
+  avatar,
+  lastLoginAt,
+}: UserRoleProps) => {
+  const router = useRouter();
+  const { selectRole } = useUserCtx();
+  const [isLoading, setIsLoading] = useState(false);
 
-const UserRole = ({ name, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserRoleProps) => {
-  // ToDo: (20241009 - Liz) 選擇 Role 功能
-  const handleStart = () => {
-    // Deprecated: (20241009 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('選擇這個 Role 來開始工作');
+  const handleSelectRole = async () => {
+    setIsLoading(true);
+
+    try {
+      // Info: (20241009 - Liz) 呼叫 selectRole 並等待結果
+      const data = await selectRole(roleId);
+
+      if (data) {
+        // Info: (20241107 - Liz) 選擇角色成功後，導向到儀表板
+        router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+      }
+    } catch (error) {
+      // Deprecated: (20241107 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleSelectRole error (選擇角色失敗):', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -119,7 +96,8 @@ const UserRole = ({ name, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserR
       <button
         type="button"
         className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={handleStart}
+        onClick={handleSelectRole}
+        disabled={isLoading}
       >
         <p>Start</p>
         <FiArrowRight size={24} />
@@ -148,6 +126,7 @@ const SelectRolePage = () => {
     fetchUserRoleList();
   }, [router]);
 
+  // Info: (20241107 - Liz) 跳轉到建立角色頁面前的 Loading 畫面
   if (userRoleList === null) {
     // 顯示載入指示器，直到完成 `getUserRoleList` 的請求
     return <div>Loading...</div>;
@@ -203,6 +182,7 @@ const SelectRolePage = () => {
               <UserRole
                 key={userRole.id}
                 name={userRole.role.name}
+                roleId={userRole.role.id}
                 roleIconSrc={roleIcon?.roleIconSrc ?? ''}
                 roleIconAlt={roleIcon?.roleIconAlt ?? ''}
                 avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
@@ -226,17 +206,7 @@ const SelectRolePage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['common'])),
     },
   };
 };

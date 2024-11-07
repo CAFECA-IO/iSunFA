@@ -53,29 +53,36 @@ const DefaultIntroduction: React.FC = () => {
 };
 
 const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) => {
-  const { createRole } = useUserCtx();
+  const { createRole, selectRole } = useUserCtx();
   const router = useRouter();
 
-  const handleCreateRole = async () => {
+  const handleCreateAndSelectRole = async () => {
     try {
-      // Info: (20241029 - Liz) 呼叫 createRole 並等待結果
-      const isSuccess = await createRole(showingRole);
+      const userRole = await createRole(showingRole);
 
-      // Deprecated: (20241101 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('handleCreateRole isSuccess:', isSuccess);
-
-      // Info: (20241029 - Liz) 根據回傳的布林值執行不同的操作
-      if (isSuccess) {
-        // Info: (20241029 - Liz) 角色建立成功，在這裡執行成功的操作。例如，顯示成功訊息、更新介面等
-
-        router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
-      } else {
-        // ToDo: (20241029 - Liz) 角色建立失敗，在這裡執行失敗的操作。例如，顯示錯誤訊息、重試建立角色等
+      if (!userRole || !userRole.role || !userRole.role.id) {
+        // Deprecated: (20241107 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('角色建立失敗: 無效的 userRole 或 role ID', userRole);
+        return;
       }
+
+      // 角色建立成功，執行選擇角色的操作
+      const res = await selectRole(userRole.role.id);
+
+      // 檢查選擇角色是否成功，失敗則顯示錯誤訊息
+      if (!res) {
+        // Deprecated: (20241107 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('選擇角色失敗 userRole.role.id', userRole.role.id);
+        return;
+      }
+
+      // 選擇角色成功，導向至儀表板
+      router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
     } catch (error) {
-      // console.error("發生錯誤:", error);
       // Info: (20241029 - Liz) 處理錯誤的邏輯，例如顯示錯誤訊息
+      // console.error("發生錯誤:", error);
     }
   };
 
@@ -93,7 +100,7 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
       <button
         type="button"
         className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-32px py-14px text-lg font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-        onClick={handleCreateRole}
+        onClick={handleCreateAndSelectRole}
       >
         <p>Start</p>
         <FiArrowRight size={24} />

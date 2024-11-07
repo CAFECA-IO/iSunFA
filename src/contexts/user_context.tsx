@@ -8,7 +8,6 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
-import { IRole } from '@/interfaces/role';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
 import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
@@ -16,6 +15,7 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
+import { IRole } from '@/interfaces/role';
 import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { CompanyTag } from '@/constants/company';
@@ -29,8 +29,8 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
-  createRole: (roleName: RoleName) => Promise<boolean>;
-  selectRole: (roleName: string) => Promise<void>;
+  createRole: (roleName: RoleName) => Promise<IUserRole | null>;
+  selectRole: (roleId: number) => Promise<IUserRole | null>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
 
@@ -76,8 +76,8 @@ export const UserContext = createContext<UserContextType>({
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
-  createRole: async () => false,
-  selectRole: async () => {},
+  createRole: async () => null,
+  selectRole: async () => null,
   getUserRoleList: async () => null,
   selectedRole: null,
   createCompany: async () => ({ success: false, code: '' }),
@@ -520,43 +520,46 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20241107 - Liz) 獲得可以建立的所有角色，得到 roleId，建立、選擇角色都傳 roleId (in body) 給 API
+
   // Info: (20241029 - Liz) 建立角色的功能
   const createRole = async (roleName: RoleName) => {
     try {
-      const { success } = await createRoleAPI({
+      const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuth?.id },
         body: { roleName },
       });
 
-      // Info: (20241029 - Liz) 檢查建立角色的成功狀態
-      if (!success) {
-        return false; // 建立失敗
+      if (success && userRole) {
+        return userRole;
       }
 
-      return true; // 建立成功
+      return null;
     } catch (error) {
       // console.error('Error creating role:', error);
-      return false; // 建立失敗
+      return null;
     }
   };
 
   // Info: (20241101 - Liz) 選擇角色的功能
-  const selectRole = async (roleName: string) => {
+  const selectRole = async (roleId: number) => {
     setSelectedRole(null);
 
     try {
-      const { success } = await selectRoleAPI({
-        params: { userId: userAuth?.id },
-        body: { roleName },
+      const { success, data: userRole } = await selectRoleAPI({
+        params: { userId: userAuth?.id, roleId },
       });
 
-      if (success) {
-        setSelectedRole(roleName);
+      if (success && userRole) {
+        setSelectedRole(userRole.role.name);
+        return userRole;
       }
 
       setSelectedRole(null);
+      return null;
     } catch (error) {
       setSelectedRole(null);
+      return null;
     }
   };
 
@@ -634,7 +637,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!company && !isPublic) {
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      // router.push(ISUNFA_ROUTE.SELECT_COMPANY);
       return;
     }
     await handleSelectCompanyResponse(res);
