@@ -689,6 +689,8 @@ module.exports = {
 
         spotlight: 'radial-gradient(transparent 70%, #00000080 70%)',
 
+        ipGradient: 'linear-gradient(0deg, #0024620D 0%, #0024620D 100%, #FFF)',
+
         web: 'url("/elements/web.svg")',
         light_up: 'url("/elements/light_up.svg")',
         light_down: 'url("/elements/light_down.svg")',
@@ -951,7 +953,7 @@ module.exports = {
         // '100px': '100px',
         '105px': '105px',
         '110px': '110px',
-        // '120px': '120px',
+        '114px': '114px',
         '122px': '122px',
         '125px': '125px',
         '128px': '128px',
@@ -967,6 +969,7 @@ module.exports = {
         '182px': '182px',
         '190px': '190px',
         '200px': '200px',
+        '212px': '212px',
         '220px': '220px',
         '225px': '225px',
         '236px': '236px',
@@ -1189,6 +1192,7 @@ module.exports = {
         '80%': '80%',
         '95%': '95%',
 
+        '46vh': '46vh',
         '60vh': '60vh',
         '80vh': '80vh',
         '90vh': '90vh',
