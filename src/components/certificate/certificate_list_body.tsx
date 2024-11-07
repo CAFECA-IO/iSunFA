@@ -544,7 +544,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         <CertificateEditModal
           isOpen={isEditModalOpen}
           companyId={companyId}
-          toggleIsEditModalOpen={setIsEditModalOpen}
+          toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           certificate={editingId ? certificates[editingId] : undefined}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}

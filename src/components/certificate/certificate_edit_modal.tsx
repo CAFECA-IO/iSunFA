@@ -19,14 +19,14 @@ import { useModalContext } from '@/contexts/modal_context';
 import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { RxCross1 } from 'react-icons/rx';
+import { IoCloseOutline } from 'react-icons/io5';
 import { BiSave } from 'react-icons/bi';
 import { LuTrash2 } from 'react-icons/lu';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
   companyId?: number;
-  toggleIsEditModalOpen: (open: boolean) => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
+  toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   certificate?: ICertificateUI;
   onSave: (data: ICertificate) => void; // Info: (20240924 - tzuhan) 保存數據的回調函數
   onDelete: (id: number) => void;
@@ -35,7 +35,7 @@ interface CertificateEditModalProps {
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
   companyId,
-  toggleIsEditModalOpen,
+  toggleModel,
   certificate,
   onSave,
   onDelete,
@@ -91,6 +91,15 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
     componentVisible: isInvoiceTypeMenuOpen,
     setComponentVisible: setIsInvoiceTypeMenuOpen,
   } = useOuterClick<HTMLUListElement>(false);
+
+  const invoiceTypeMenuClickHandler = () => {
+    setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
+  };
+
+  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    setInvoiceType(id);
+    setIsInvoiceTypeMenuOpen(false);
+  };
 
   const selectTaxHandler = (value: number) => {
     setTaxRatio(value);
@@ -278,7 +287,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
       },
     };
     onSave(updatedData);
-    toggleIsEditModalOpen(false);
+    toggleModel();
   };
 
   const handleAddCounterParty = (data: {
@@ -324,9 +333,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         <button
           type="button"
           className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={() => toggleIsEditModalOpen(false)}
+          onClick={toggleModel}
         >
-          <RxCross1 size={32} />
+          <IoCloseOutline size={32} />
         </button>
 
         <div className="flex w-full flex-col items-center">
@@ -587,14 +596,13 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                 <div className="flex w-full items-center">
                   <div
                     id="invoice-type-menu"
-                    onClick={() => setIsInvoiceTypeMenuOpen(!isTaxRatioMenuOpen)}
+                    onClick={invoiceTypeMenuClickHandler}
                     className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
-                    <p>
-                      {t(`certificate:TYPE.${invoiceType.toUpperCase()}`)}{' '}
-                      {t('certificate:TYPE.UNIFORM_INVOICE')}
+                    <p className="flex h-46px items-center gap-1 overflow-y-scroll">
+                      <span>{t(`certificate:INVOICE_TYPE.${invoiceType}`)}</span>
+                      <IoIosArrowDown size={32} />
                     </p>
-                    <IoIosArrowDown />
                     <div
                       className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
@@ -607,10 +615,9 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
                             key={`taxable-${value}`}
                             value={value}
                             className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                            onClick={() => setInvoiceType(value)}
+                            onClick={invoiceTypeMenuOptionClickHandler.bind(null, value)}
                           >
-                            {t(`certificate:TYPE.${value.toUpperCase()}`)}{' '}
-                            {t('certificate:TYPE.UNIFORM_INVOICE')}
+                            {t(`certificate:INVOICE_TYPE.${value}`)}
                           </li>
                         ))}
                       </ul>
@@ -650,7 +657,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
               id="certificate-cancel-btn"
               type="button"
               className="px-16px py-8px"
-              onClick={() => toggleIsEditModalOpen(false)}
+              onClick={toggleModel}
               variant="tertiaryOutline"
             >
               <p>{t('common:COMMON.CANCEL')}</p>
