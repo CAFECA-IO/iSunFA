@@ -2,12 +2,17 @@ import Image from 'next/image';
 import React from 'react';
 import { useUserCtx } from '@/contexts/user_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-
-// ToDo: (20241014 - Liz) 從 user context 打 API 取得使用者大頭貼
-const userAvatarSrc = '/images/fake_user_avatar.png';
+import { useTranslation } from 'next-i18next';
 
 const Profile = () => {
-  const { signOut } = useUserCtx();
+  const { t } = useTranslation('common');
+  const { signOut, userAuth } = useUserCtx();
+
+  const userAvatarSrc = userAuth?.imageId || '/images/fake_user_avatar.png';
+
+  // Deprecated: (20241105 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('userAvatarSrc', userAvatarSrc);
 
   const {
     targetRef: profileRef,
@@ -46,7 +51,7 @@ const Profile = () => {
               width={16}
               height={16}
             ></Image>
-            <p>My Account</p>
+            <p>{t('common:HEADER.MY_ACCOUNT')}</p>
           </button>
 
           {/* // Info: (20241014 - Liz) ===== 訂閱與帳單 ===== */}
@@ -57,7 +62,7 @@ const Profile = () => {
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <Image src={'/icons/bell.svg'} alt="subscription_icon" width={16} height={16}></Image>
-            <p>Subscription & Bills</p>
+            <p>{t('common:HEADER.SUBSCRIPTION_AND_BILLS')}</p>
           </button>
 
           {/* // Info: (20241014 - Liz) ===== 登出 ===== */}
@@ -67,7 +72,7 @@ const Profile = () => {
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <Image src={'/icons/logout_icon.svg'} alt="logout_icon" width={16} height={16}></Image>
-            <p>Logout</p>
+            <p>{t('common:HEADER.LOGOUT')}</p>
           </button>
         </div>
       )}

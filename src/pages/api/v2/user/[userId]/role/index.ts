@@ -10,7 +10,7 @@ import { UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
 import { getRoleByName } from '@/lib/utils/repo/role.repo';
 
-const handleGetRequest: IHandleRequest<APIName.ROLE_LIST, UserRole[]> = async ({ query }) => {
+const handleGetRequest: IHandleRequest<APIName.USER_ROLE_LIST, UserRole[]> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: UserRole[] | null = null;
   const { userId } = query;
@@ -22,7 +22,7 @@ const handleGetRequest: IHandleRequest<APIName.ROLE_LIST, UserRole[]> = async ({
   return { statusMessage, payload };
 };
 
-const handlePostRequest: IHandleRequest<APIName.CREATE_ROLE, UserRole | null> = async ({
+const handlePostRequest: IHandleRequest<APIName.USER_CREATE_ROLE, UserRole | null> = async ({
   query,
   body,
 }) => {
@@ -48,8 +48,8 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IUserRole | IUserRole[] | null }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ROLE_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_ROLE, req, res, handlePostRequest),
+  GET: (req, res) => withRequestValidation(APIName.USER_ROLE_LIST, req, res, handleGetRequest),
+  POST: (req, res) => withRequestValidation(APIName.USER_CREATE_ROLE, req, res, handlePostRequest),
 };
 
 export default async function handler(

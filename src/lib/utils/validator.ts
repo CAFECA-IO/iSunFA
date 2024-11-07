@@ -106,18 +106,19 @@ export function validateRequestData<T extends keyof typeof ZOD_SCHEMA_API>(
 export function validateOutputData<T extends keyof typeof ZOD_SCHEMA_API>(
   apiName: T,
   data: unknown
-): output<T> | null {
+): { isOutputDataValid: boolean; outputData: output<T> | null } {
   let outputData = null;
+  let isOutputDataValid = true;
   const { outputSchema } = ZOD_SCHEMA_API[apiName];
 
   try {
     outputData = validateAndFormatData(outputSchema, data);
   } catch (error) {
-    // Info: (20240909 - Murky) if validator is z.ZodOptional (which used when query or body is not needed), it will return null
+    isOutputDataValid = false;
     outputData = null;
   }
 
-  return outputData;
+  return { isOutputDataValid, outputData };
 }
 
 export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
