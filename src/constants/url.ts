@@ -16,10 +16,9 @@ export const ISUNFA_ROUTE = {
   PRIVACY_POLICY: '/privacy-policy',
   LOGIN: '/users/login',
   // Info: (20241015 - Liz) Beta routes
-  BETA_LOGIN: '/beta/login',
   EXAMPLE: '/beta/example', // Info: (20241001 - Liz) Beta example page for testing login
-  SELECT_ROLE: '/beta/select_role',
-  JOB_RECORD: '/beta/job_record',
+  CREATE_ROLE: '/users/create_role',
+  SELECT_ROLE: '/users/select_role',
   BETA_DASHBOARD: '/beta/dashboard',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
   MY_COMPANY_LIST_PAGE: '/beta/my_company_list_page',

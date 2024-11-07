@@ -23,7 +23,10 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
 
   return (
     <div className="flex flex-col">
-      {isCreateCompanyModalOpen && <CreateCompanyModal toggleModal={toggleCreateCompanyModal} />}
+      <CreateCompanyModal
+        toggleModal={toggleCreateCompanyModal}
+        isModalOpen={isCreateCompanyModalOpen}
+      />
       {isCompanyListModalOpen && <CompanyListModal toggleModal={toggleCompanyListModal} />}
       <div id="company-setting-section" className="mb-lv-7 flex items-center gap-4">
         <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
