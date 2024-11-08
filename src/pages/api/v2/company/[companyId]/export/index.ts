@@ -1,14 +1,13 @@
+import prisma from '@/client';
 import { ExportFileType, ExportType } from '@/constants/export_file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAssetExportRequestBody, IAssetSort } from '@/interfaces/export_file';
+import { IAssetExportRequestBody, IExportRequestBody } from '@/interfaces/export_file';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
 import { convertToCSV } from '@/lib/utils/export_file';
+import { Prisma } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-// TODO: (20241107 - Shirley) 用 zod／| AnotherExportRequestBody 等等
-type IExportRequestBody = IAssetExportRequestBody;
-
-// TODO: (20241107 - Shirley) 模擬資產資料
+// 定義 AssetHeader 與 AssetHeaderWithStringDate
 interface AssetHeader {
   acquisitionDate: number;
   name: string;
@@ -18,14 +17,15 @@ interface AssetHeader {
   remainingLife: number;
   type: string;
   status: string;
-  assetNumber: string;
+  // assetNumber: string;
+  number: string;
 }
 
 interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitionDate'> {
   acquisitionDate: string;
 }
 
-// TODO: (20241107 - Shirley) 取得欄位名稱
+// 定義欄位名稱對應
 const ASSET_FIELDS_MAP: Record<keyof AssetHeader, string> = {
   acquisitionDate: '取得日期',
   name: '資產名稱',
@@ -35,127 +35,14 @@ const ASSET_FIELDS_MAP: Record<keyof AssetHeader, string> = {
   remainingLife: '剩餘使用年限',
   type: '資產類型',
   status: '狀態',
-  assetNumber: '資產編號',
+  // assetNumber: '資產編號',
+  number: '資產編號',
 };
 
-// TODO: (20241107 - Shirley) 取得欄位名稱
+// 定義需要匯出的欄位
 const ASSET_FIELDS = Object.keys(ASSET_FIELDS_MAP) as (keyof AssetHeader)[];
 
-// TODO: (20241107 - Shirley) 模擬資產資料
-// const MOCK_ASSETS: AssetHeader[] = [
-//   {
-//     name: '辦公桌',
-//     acquisitionDate: 1530959244,
-//     purchasePrice: 300000,
-//     accumulatedDepreciation: 5000,
-//     residualValue: 25000,
-//     remainingLife: 10000000,
-//     type: 'furniture',
-//     status: 'normal',
-//     assetNumber: 'A-7890',
-//   },
-//   {
-//     name: '滑鼠',
-//     acquisitionDate: 1530959244,
-//     purchasePrice: 200000,
-//     accumulatedDepreciation: 5000,
-//     residualValue: 15000,
-//     remainingLife: 10000000,
-//     type: 'equipment',
-//     status: 'normal',
-//     assetNumber: 'A-7891',
-//   },
-//   {
-//     name: '筆電',
-//     acquisitionDate: 1630959244,
-//     purchasePrice: 30000,
-//     accumulatedDepreciation: 5000,
-//     residualValue: 25000,
-//     remainingLife: 1000000,
-//     type: 'electronics',
-//     status: 'normal',
-//     assetNumber: 'A-7892',
-//   },
-//   {
-//     name: '手機',
-//     acquisitionDate: 1730959244,
-//     purchasePrice: 10000,
-//     accumulatedDepreciation: 2000,
-//     residualValue: 8000,
-//     remainingLife: 10000,
-//     type: 'electronics',
-//     status: 'maintenance',
-//     assetNumber: 'A-7893',
-//   },
-// ];
-// 生成隨機資產資料的函數
-function generateMockAsset(index: number): AssetHeader {
-  const types = ['furniture', 'equipment', 'electronics'];
-  const statuses = ['normal', 'maintenance'];
-  const names = ['辦公桌', '滑鼠', '筆電', '手機', '螢幕', '鍵盤', '印表機', '投影機'];
-
-  return {
-    name: `${names[Math.floor(Math.random() * names.length)]}_${index}`,
-    // acquisitionDate: Math.floor(1530959244 + Math.random() * 200000000),
-    acquisitionDate: 1731097774,
-    purchasePrice: Math.floor(1000 + Math.random() * 500000),
-    accumulatedDepreciation: Math.floor(1000 + Math.random() * 10000),
-    residualValue: Math.floor(1000 + Math.random() * 50000),
-    remainingLife: Math.floor(10000 + Math.random() * 10000000),
-    type: types[Math.floor(Math.random() * types.length)],
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    assetNumber: `A-${10000 + index}`,
-  };
-}
-
-// 生成大量模擬資料
-const MOCK_ASSETS: AssetHeader[] = Array.from({ length: 100000 }, (_, index) =>
-  generateMockAsset(index)
-);
-
-// TODO: (20241107 - Shirley) mock排序資料
-function sortData<T>(data: T[], sortOptions?: IAssetSort[]): T[] {
-  if (!sortOptions?.length) return data;
-
-  return [...data].sort((a, b) => {
-    return sortOptions.reduce((acc, { by, order }) => {
-      if (acc !== 0) return acc;
-
-      const field = by as keyof T;
-      if (a[field] === b[field]) return acc;
-
-      const multiplier = order === 'asc' ? 1 : -1;
-      const aValue = a[field];
-      const bValue = b[field];
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return multiplier * aValue.localeCompare(bValue);
-      }
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return multiplier * (aValue - bValue);
-      }
-      return 0;
-    }, 0);
-  });
-}
-
-// TODO: (20241107 - Shirley) mock過濾資料
-function filterData<T extends AssetHeader>(
-  data: T[],
-  filters?: IAssetExportRequestBody['filters']
-): T[] {
-  if (!filters) return data;
-  return data.filter((item) => {
-    if (filters.type && item.type !== filters.type) return false;
-    if (filters.status && item.status !== filters.status) return false;
-    if (filters.startDate && item.acquisitionDate < filters.startDate) return false;
-    if (filters.endDate && item.acquisitionDate > filters.endDate) return false;
-    if (filters.searchQuery && !item.name.includes(filters.searchQuery)) return false;
-    return true;
-  });
-}
-
-// TODO: (20241107 - Shirley) mock選擇欄位
+// 選擇欄位
 function selectFields<T>(data: T[], fields?: (keyof T)[]): T[] {
   if (!fields || fields.length === 0) return data;
   return data.map((item) => {
@@ -167,53 +54,97 @@ function selectFields<T>(data: T[], fields?: (keyof T)[]): T[] {
   });
 }
 
-// TODO: (20241107 - Shirley) mock 處理資產匯出
+// 處理資產匯出
 async function handleAssetExport(
   req: NextApiRequest,
   res: NextApiResponse,
   body: IAssetExportRequestBody
 ): Promise<void> {
   try {
-    const { companyId } = req.query;
-    if (!companyId || typeof companyId !== 'string') {
-      throw new Error('Invalid companyId');
-    }
-
     const { exportType, fileType, filters, sort, options } = body;
 
-    // TODO: (20241107 - Shirley) error message 要改
     if (!exportType || !fileType) {
-      throw new Error('Missing required fields');
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
-    // TODO: (20241107 - Shirley) error message 要改
-    if (exportType !== 'assets') {
-      throw new Error('Invalid export type for handleAssetExport');
+    if (exportType !== ExportType.ASSETS) {
+      throw new Error(STATUS_MESSAGE.INVALID_EXPORT_TYPE);
     }
 
-    // TODO: (20241107 - Shirley) error message 要改
     if (fileType !== ExportFileType.CSV) {
-      throw new Error('Invalid file type');
+      throw new Error(STATUS_MESSAGE.INVALID_FILE_TYPE);
     }
 
-    // TODO: (20241107 - Shirley) 從資料庫獲取資產資料
-    let assets: AssetHeader[] = MOCK_ASSETS;
+    const { companyId } = req.query;
+    if (!companyId || typeof companyId !== 'string') {
+      throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
+    }
 
+    // 構建 Prisma where 條件
+    const where: Prisma.AssetWhereInput = {
+      companyId: parseInt(companyId, 10),
+      deletedAt: null, // 假設需要過濾已刪除的資產
+    };
+
+    // 處理過濾條件
     if (filters) {
-      assets = filterData(assets, filters);
+      if (filters.type) {
+        where.type = filters.type;
+      }
+      if (filters.status) {
+        where.status = filters.status;
+      }
+      if (filters.startDate || filters.endDate) {
+        where.acquisitionDate = {
+          ...(filters.startDate && { gte: filters.startDate }),
+          ...(filters.endDate && { lte: filters.endDate }),
+        };
+      }
+
+      if (filters.searchQuery) {
+        where.name = {
+          contains: filters.searchQuery,
+        };
+      }
     }
 
-    if (sort) {
-      // TODO: (20241108 - Shirley) use safeParse by zod
-      assets = sortData(assets, sort as IAssetSort[]);
+    // 構建 Prisma orderBy 條件
+    const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
+    if (sort?.length) {
+      sort.forEach((sortOption) => {
+        orderBy.push({
+          [sortOption.by]: sortOption.order,
+        });
+      });
     }
 
-    if (options && options.fields) {
-      assets = selectFields(assets, options.fields as (keyof AssetHeader)[]) as AssetHeader[];
+    // 從資料庫獲取資產資料
+    const assets = await prisma.asset.findMany({
+      where,
+      orderBy: orderBy.length > 0 ? orderBy : undefined,
+      select: {
+        acquisitionDate: true,
+        name: true,
+        purchasePrice: true,
+        accumulatedDepreciation: true,
+        residualValue: true,
+        remainingLife: true,
+        type: true,
+        status: true,
+        number: true,
+      },
+    });
+
+    let processedAssets = assets;
+    if (options?.fields) {
+      processedAssets = selectFields(
+        processedAssets,
+        options.fields as (keyof AssetHeader)[]
+      ) as typeof assets;
     }
 
-    // TODO: (20241107 - Shirley) 處理時區轉換 (暫未實作)
-    const newData = assets.map((asset) => {
+    // 處理時區轉換
+    const newData = processedAssets.map((asset) => {
       const formattedDate = formatTimestampByTZ(
         asset.acquisitionDate,
         options?.timezone || '+0800',
@@ -223,6 +154,7 @@ async function handleAssetExport(
       return {
         ...asset,
         acquisitionDate: formattedDate,
+        number: asset.number, // 將 number 映射為 assetNumber
       };
     });
 
@@ -234,6 +166,7 @@ async function handleAssetExport(
       newData as AssetHeaderWithStringDate[],
       ASSET_FIELDS_MAP
     );
+
     const fileName = `assets_${getTimestampNow()}.csv`;
 
     res.setHeader('Content-Type', 'text/csv');
@@ -241,13 +174,15 @@ async function handleAssetExport(
     res.status(200).send(csv);
   } catch (error) {
     const err = error as Error;
-    const { httpCode, result } = formatApiResponse<null>(err.message, null);
+    const statusMessage =
+      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
     res.status(httpCode).json(result);
   }
 }
 
-// TODO: (20241107 - Shirley) 可以在這裡新增其他 exportType 的處理函式
-
+// 方法處理對應
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -261,12 +196,12 @@ const methodHandlers: {
         await handleAssetExport(req, res, body as IAssetExportRequestBody);
         break;
       default:
-        // TODO: (20241107 - Shirley) error message 要改
-        throw new Error('Unsupported export type');
+        throw new Error(STATUS_MESSAGE.UNSUPPORTED_EXPORT_TYPE);
     }
   },
 };
 
+// 預設的處理函式
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const handleRequest = methodHandlers[req.method || ''];
   if (handleRequest) {
@@ -275,7 +210,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await handleRequest(req, res, body);
     } catch (error) {
       const err = error as Error;
-      const { httpCode, result } = formatApiResponse<null>(err.message, null);
+      const statusMessage =
+        STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+        STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
       res.status(httpCode).json(result);
     }
   } else {
