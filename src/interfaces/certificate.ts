@@ -7,13 +7,14 @@ import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import type { IUserEntity } from '@/interfaces/user';
 import { CurrencyType } from '@/constants/currency';
+import type { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
   id: number;
   name: string;
   companyId: number;
-  unRead?: boolean; // Info: (20241108 - tzuhan) !!! not provided by backend yet @Murky
+  unRead: boolean; // Info: (20241108 - tzuhan) !!! not provided by backend yet @Murky
   file: IFileBeta; // Info: (20241108 - Tzuhan) !!! removed IFileBeta and update IFile
   invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
@@ -21,7 +22,7 @@ export interface ICertificate {
   aiStatus?: string;
   createdAt: number;
   updatedAt: number;
-  uploader?: string; // Info: (20241108 - tzuhan) moved from IInvoiceBetaOptional
+  uploader: string; // Info: (20241108 - tzuhan) moved from IInvoiceBetaOptional
 }
 
 export interface ICertificateUI extends ICertificate {
@@ -69,7 +70,7 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
       id: i,
       name: 'Invoice-' + String(i).padStart(8, '0'),
       companyId: randomNumber(),
-
+      unRead: true,
       file: {
         id: randomNumber(),
         name: 'fileName',
@@ -194,4 +195,6 @@ export interface ICertificateEntity {
   vouchers: IVoucherEntity[];
 
   uploader?: IUserEntity;
+
+  userCertificates: IUserCertificateEntity[];
 }

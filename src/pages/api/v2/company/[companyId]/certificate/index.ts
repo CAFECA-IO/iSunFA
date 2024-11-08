@@ -19,11 +19,13 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CounterpartyType } from '@/constants/counterparty';
 import { FileFolder } from '@/constants/file';
+import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 type ICertificateListItem = ICertificateEntity & {
   invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
   file: IFileEntity;
   uploader: IUserEntity & { imageFile: IFileEntity };
+  userCertificates: IUserCertificateEntity[];
 };
 
 type ICertificateListSummary = {
@@ -138,6 +140,17 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
       updatedAt: 1,
       deletedAt: null,
       vouchers: [],
+      userCertificates: [
+        {
+          id: 1,
+          userId: 1,
+          certificateId: 1,
+          isRead: false,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
+      ],
     };
 
     const mockCertificateList: ICertificateListSummary = {
@@ -202,6 +215,7 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
     updatedAt: 1,
     deletedAt: null,
     vouchers: [],
+    userCertificates: [],
     file: mockFile,
   };
 
