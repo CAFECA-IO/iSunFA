@@ -1,10 +1,12 @@
-import { exportAssets } from '@/lib/utils/repo/export_file.repo'; // 引入 exportAssets 函式
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { exportAssets } from '@/lib/utils/repo/export_file.repo';
 import { ExportFileType, ExportType } from '@/constants/export_file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAssetExportRequestBody, IExportRequestBody } from '@/interfaces/export_file';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
 import { convertToCSV } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { APIName } from '@/constants/api_connection';
 
 // 定義 AssetHeader 與 AssetHeaderWithStringDate
 interface AssetHeader {
@@ -16,7 +18,6 @@ interface AssetHeader {
   remainingLife: number;
   type: string;
   status: string;
-  // assetNumber: string;
   number: string;
 }
 
@@ -34,7 +35,6 @@ const ASSET_FIELDS_MAP: Record<keyof AssetHeader, string> = {
   remainingLife: '剩餘使用年限',
   type: '資產類型',
   status: '狀態',
-  // assetNumber: '資產編號',
   number: '資產編號',
 };
 
@@ -58,7 +58,7 @@ async function handleAssetExport(
   req: NextApiRequest,
   res: NextApiResponse,
   body: IAssetExportRequestBody
-): Promise<void> {
+): Promise<{ statusMessage: string; payload: string | null }> {
   try {
     const { exportType, fileType, filters, sort, options } = body;
 
@@ -112,7 +112,7 @@ async function handleAssetExport(
       return {
         ...asset,
         acquisitionDate: formattedDate,
-        number: asset.number, // 將 number 映射為 assetNumber
+        number: asset.number,
       };
     });
 
@@ -130,13 +130,14 @@ async function handleAssetExport(
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.status(200).send(csv);
+
+    return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
   } catch (error) {
     const err = error as Error;
     const statusMessage =
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
       STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
-    res.status(httpCode).json(result);
+    return { statusMessage, payload: null };
   }
 }
 
@@ -146,13 +147,12 @@ const methodHandlers: {
     req: NextApiRequest,
     res: NextApiResponse,
     body: IExportRequestBody
-  ) => Promise<void>;
+  ) => Promise<{ statusMessage: string; payload: string | null }>;
 } = {
   POST: async (req, res, body) => {
     switch (body.exportType) {
       case ExportType.ASSETS:
-        await handleAssetExport(req, res, body as IAssetExportRequestBody);
-        break;
+        return handleAssetExport(req, res, body as IAssetExportRequestBody);
       default:
         throw new Error(STATUS_MESSAGE.UNSUPPORTED_EXPORT_TYPE);
     }
@@ -161,22 +161,36 @@ const methodHandlers: {
 
 // 預設的處理函式
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const handleRequest = methodHandlers[req.method || ''];
-  if (handleRequest) {
-    try {
-      const body = req.body as IExportRequestBody;
-      await handleRequest(req, res, body);
-    } catch (error) {
-      const err = error as Error;
-      const statusMessage =
-        STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
-        STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-      const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
-      res.status(httpCode).json(result);
+  await withRequestValidation<APIName.FILE_EXPORT, string>(
+    APIName.FILE_EXPORT,
+    req,
+    res,
+    // TODO: 可用 query 跟 session
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async ({ query, body, session }) => {
+      const handleRequest = methodHandlers[req.method || ''];
+      if (handleRequest) {
+        try {
+          const response = await handleRequest(req, res, body as IExportRequestBody);
+          if (response.payload) {
+            res.status(200).send(response.payload);
+          } else {
+            res.status(200).json({ message: response.statusMessage });
+          }
+        } catch (error) {
+          const err = error as Error;
+          const statusMessage =
+            STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+            STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+          const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+          res.status(httpCode).json(result);
+        }
+      } else {
+        const statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+        res.status(httpCode).json(result);
+      }
+      return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
     }
-  } else {
-    const statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
-    res.status(httpCode).json(result);
-  }
+  );
 }
