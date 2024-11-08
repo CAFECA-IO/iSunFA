@@ -13,6 +13,7 @@ interface AddCounterPartyModalProps {
   onSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void;
   name?: string;
   taxId?: string;
+  note?: string;
 }
 
 const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
@@ -20,12 +21,13 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   onClose,
   name,
   taxId,
+  note = '', // Info: (20241108 - Anna) 設置 note 的預設值
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
-  const [inputNote, setInputNote] = useState<string>('');
+  const [inputNote, setInputNote] = useState<string>(note); // Info: (20241108 - Anna) 使用初始值設置 inputNote
   const [showHint, setShowHint] = useState(false);
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
@@ -113,7 +115,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
           <RxCross1 size={32} />
         </button>
         <h2 className="flex justify-center text-xl font-semibold">
-          {t('certificate:COUNTERPARTY.ADD_NEW')}
+          {t('certificate:COUNTERPARTY.EDIT_NEW')}
         </h2>
         <form
           onSubmit={addNewCounterParterHandler}

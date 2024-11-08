@@ -85,17 +85,7 @@ const JournalListPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['common', 'journal'])),
   },
 });
 

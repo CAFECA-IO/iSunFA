@@ -102,7 +102,8 @@
     "ENTER_NUMBER": "Enter Number",
     "PARTNER_TYPE": "Partner Type",
     "NOTE": "Note",
-    "ENTER_TEXT": "Enter Text"
+    "ENTER_TEXT": "Enter Text",
+    "EDIT_NEW": "Edit New Client/Supplier"
   },
   "LABEL": {
     "NEW": "New"

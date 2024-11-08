@@ -13,7 +13,7 @@ interface CounterpartyListProps {
 }
 
 const CounterpartyList: React.FunctionComponent<CounterpartyListProps> = ({ searchQuery }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'certificate']);
 
   // Info: (20241106 - Anna) 將 CounterPartyList 的狀態類型設為 ICounterPartyEntity[]
   const [counterPartyList, setCounterPartyList] = useState<ICounterPartyEntity[]>([]);

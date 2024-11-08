@@ -31,7 +31,7 @@ const CounterpartyPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['setting', 'certificate'])),
+    ...(await serverSideTranslations(locale, ['common', 'setting', 'certificate'])),
     locale,
   },
 });

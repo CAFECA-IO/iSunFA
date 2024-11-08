@@ -101,7 +101,8 @@
     "ENTER_NUMBER": "輸入編號",
     "PARTNER_TYPE": "合作夥伴類型",
     "NOTE": "備註",
-    "ENTER_TEXT": "輸入文字"
+    "ENTER_TEXT": "輸入文字",
+    "EDIT_NEW": "編輯客戶/供應商"
   },
   "LABEL": {
     "NEW": "新增"

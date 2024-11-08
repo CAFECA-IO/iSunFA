@@ -30,16 +30,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-    ])),
+    ...(await serverSideTranslations(locale, ['common'])),
   },
 });
 
