@@ -2,6 +2,7 @@ import { APIName } from '@/constants/api_connection';
 import { askAIGetResultV2Schema, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
+  certificateGetOneSchema,
   certificateGetOneValidator,
   certificateListSchema,
   certificateListValidator,
@@ -163,5 +164,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
+  [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
   [APIName.FILE_EXPORT]: fileExportSchema,
 };
