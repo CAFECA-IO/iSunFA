@@ -120,7 +120,7 @@ const certificateListOutputSchema = paginatedDataSchemaDataNotArray(
           unRead: !isRead,
           companyId: certificate.companyId,
           voucherNo: certificate.voucherNo,
-          name: 'certificate', // certificate.invoice.name,
+          name: 'certificate', // Info: (20241108 - tzuhan) certificate.invoice.name,
           uploader: certificate.uploader.name,
           aiStatus: certificate.aiStatus,
           invoice: {
