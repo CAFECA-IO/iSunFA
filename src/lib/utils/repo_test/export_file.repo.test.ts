@@ -97,7 +97,7 @@ describe('Export File Repository', () => {
       expect(Array.isArray(result)).toBe(true);
 
       if (result.length > 1) {
-        // 驗證排序是否正確
+        // Info: (20241108 - Shirley) 驗證排序是否正確
         for (let i = 0; i < result.length - 1; i += 1) {
           expect(result[i].purchasePrice).toBeGreaterThanOrEqual(result[i + 1].purchasePrice);
         }
