@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { FileFolder } from '@/constants/file';
-import { ProgressStatus } from '@/constants/account';
 
 export const fileSchema = z.object({
   id: z.number().int(),
@@ -43,6 +42,5 @@ export const IFileUIBetaValidator = z.object({
   name: z.string(),
   size: z.number(),
   url: z.string().url(),
-  progress: z.number().min(0).max(100).describe('上傳進度（0-100）'),
-  status: z.nativeEnum(ProgressStatus).describe('是否暫停'),
+  existed: z.boolean(),
 });

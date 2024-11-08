@@ -13,7 +13,6 @@ import { IInvoiceBetaValidator, invoiceEntityValidator } from '@/lib/utils/zod_s
 import { InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { counterPartyEntityValidator } from '@/constants/counterparty';
-import { ProgressStatus } from '@/constants/account';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
 
@@ -145,8 +144,7 @@ const certificateListOutputSchema = paginatedDataSchemaDataNotArray(
           name: certificate.file.name,
           url: certificate.file.url,
           size: certificate.file.size,
-          progress: 100,
-          status: ProgressStatus.SUCCESS,
+          existed: !!certificate.file,
         },
         createdAt: certificate.createdAt,
         updatedAt: certificate.updatedAt,

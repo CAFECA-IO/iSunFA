@@ -16,7 +16,7 @@ import {
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { EventType, ProgressStatus, VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
@@ -452,6 +452,7 @@ const voucherGetOneOutputValidatorV2 = z
       })),
       certificates: data.certificates.map((certificate) => ({
         id: certificate.id,
+        name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),
         companyId: certificate.companyId,
         voucherNo: certificate.voucherNo,
         invoice: {
@@ -488,8 +489,7 @@ const voucherGetOneOutputValidatorV2 = z
           name: certificate.file.name,
           url: certificate.file.url,
           size: certificate.file.size,
-          progress: 100,
-          status: ProgressStatus.SUCCESS,
+          existed: !!certificate.file,
         },
         createdAt: certificate.createdAt,
         updatedAt: certificate.updatedAt,
