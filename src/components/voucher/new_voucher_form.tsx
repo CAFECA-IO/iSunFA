@@ -364,11 +364,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       const noteIndex = focusableElements.findIndex((el) => el.id === 'voucher-note');
       const counterpartyIndex = focusableElements.findIndex(
         (el) => el.id === 'voucher-counterparty'
-      ); // Div
+      ); // Info: (20241108 - Julian) Div
       const assetIndex = focusableElements.findIndex((el) => el.id === 'voucher-asset');
       const accountTitleIndex = focusableElements.findIndex((el) =>
         el.id.includes('account-title')
-      ); // Div
+      ); // Info: (20241108 - Julian) Div
 
       const formIndexOrder = [
         dateIndex,
