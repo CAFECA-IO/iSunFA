@@ -133,7 +133,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
 
       <div className="flex flex-col gap-12px">
         {displayedAssetList}
-        <Button type="button" variant="secondaryOutline" onClick={addNewAssetHandler}>
+        <Button
+          id="voucher-asset"
+          type="button"
+          variant="secondaryOutline"
+          onClick={addNewAssetHandler}
+        >
           <FiPlus size={20} />
           <p>{t('journal:ASSET_SECTION.ADD_BTN')}</p>
         </Button>

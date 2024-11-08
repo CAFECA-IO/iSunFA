@@ -272,12 +272,12 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   const isEditAccounting = isAccountEditing ? (
     <input
-      id={`account_title_search_${id}`}
+      id={`account-title-search-${id}`}
       ref={accountInputRef}
       value={searchKeyword}
       onChange={accountSearchHandler}
       placeholder={accountTitle}
-      className="w-full truncate bg-transparent text-input-text-input-filled"
+      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
     />
   ) : (
     <p className={`truncate ${accountStyle}`}>{accountTitle}</p>
@@ -288,9 +288,17 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       {/* Info: (20240927 - Julian) Accounting */}
       <div className="relative col-span-3">
         <div
-          id={`account_title_${id}`}
+          id={`account-title-${id}`}
           ref={accountRef}
-          //  tabIndex={0}
+          // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              setIsAccountEditing(true);
+              setAccountingMenuOpen(true);
+            }
+          }}
           onClick={accountEditingHandler}
           className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
         >
@@ -304,7 +312,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       </div>
       {/* Info: (20240927 - Julian) Particulars */}
       <input
-        id={`particulars_input_${id}`}
+        id={`particulars-input-${id}`}
         type="string"
         value={particulars}
         onChange={particularsInputChangeHandler}
@@ -312,7 +320,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       />
       {/* Info: (20240927 - Julian) Debit */}
       <input
-        id={`debit_input_${id}`}
+        id={`debit-input-${id}`}
         type="string"
         value={debitInput}
         onChange={debitInputChangeHandler}
@@ -322,7 +330,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       />
       {/* Info: (20240927 - Julian) Credit */}
       <input
-        id={`credit_input_${id}`}
+        id={`credit-input-${id}`}
         type="string"
         value={creditInput}
         onChange={creditInputChangeHandler}
@@ -333,7 +341,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       {/* Info: (20240927 - Julian) Delete button */}
       <div className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover">
         <button
-          id={`delete_line_item_button_${id}`}
+          id={`delete-line-item-btn-${id}`}
           type="button"
           className="p-12px"
           onClick={deleteHandler}

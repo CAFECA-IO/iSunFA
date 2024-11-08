@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
@@ -38,6 +39,8 @@ import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { ToastType } from '@/interfaces/toastify';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -70,6 +73,7 @@ interface NewVoucherFormProps {
 
 const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
+  const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
   const {
@@ -79,7 +83,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     reverseList,
     clearReverseListHandler,
   } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
@@ -108,6 +113,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     data: counterpartyData,
     isLoading: isCounterpartyLoading,
   } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
+
+  const {
+    trigger: createVoucher,
+    success: createSuccess,
+    isLoading: isCreating,
+  } = APIHandler(APIName.VOUCHER_CREATE);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -337,27 +348,47 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     (event: KeyboardEvent) => {
       event.preventDefault(); // Info: (20241107 - Julian) 阻止預設事件
 
-      // Info: (20241107 - Julian) 獲取 form 元素中的所有 input, button, div 元素
+      // Info: (20241107 - Julian) 獲取 form 元素中的所有 input, button 元素
       const elementsInForm =
         formRef.current?.querySelectorAll<FocusableElement>('input, button, div') ?? [];
 
       // Info: (20241107 - Julian) 過濾出可聚焦的元素
       const focusableElements: FocusableElement[] = Array.from(elementsInForm).filter(
         // Info: (20241107 - Julian) 過濾掉 disabled 或 tabIndex < 0 的元素
-        (el) => el.tabIndex >= 0 && (el instanceof HTMLDivElement || !el.disabled)
+        (el) => el.tabIndex >= 0 && (el as HTMLInputElement | HTMLButtonElement).disabled !== true
       );
 
+      // Info: (20241107 - Julian) 獲取各個欄位的 index
+      const dateIndex = focusableElements.findIndex((el) => el.id === 'voucher-date');
+      const voucherTypeIndex = focusableElements.findIndex((el) => el.id === 'voucher-type');
+      // const noteIndex = focusableElements.findIndex((el) => el.id === 'voucher-note');
+      // const counterpartyIndex = focusableElements.findIndex(
+      //   (el) => el.id === 'voucher-counterparty'
+      // ); // Div
+      // const assetIndex = focusableElements.findIndex((el) => el.id === 'voucher-asset');
+      // const accountTitleIndex = focusableElements.findIndex((el) =>
+      //   el.id.includes('account-title')
+      // ); // Div
+
+      // Info: (20241107 - Julian) 獲取當前聚焦元素的 index
       const currentIndex = focusableElements.findIndex((el) => el === document.activeElement);
+
+      //  console.log('focusableElements', focusableElements);
+      // console.log('date.startTimeStamp !== 0', date.startTimeStamp !== 0);
+      // console.log('date.endTimeStamp !== 0', date.endTimeStamp !== 0);
+      // console.log('currentIndex === dateIndex', currentIndex === dateIndex);
 
       // Info: (20241107 - Julian) 如果沒有找到當前聚焦元素 || 當前聚焦元素是最後一個可聚焦元素，則聚焦到第一個可聚焦元素
       if (currentIndex === -1 || currentIndex === focusableElements.length - 1) {
         focusableElements[0]?.focus();
+      } else if (
+        // Info: (20241107 - Julian) 如果日期選擇好了，就直接跳到下一個欄位 Voucher Type
+        date.startTimeStamp !== 0 &&
+        date.endTimeStamp !== 0 &&
+        currentIndex === dateIndex
+      ) {
+        focusableElements[voucherTypeIndex]?.focus();
       } else {
-        // Info: (20241107 - Julian) 如果日期選擇好了，就直接跳到下一個欄位(index = 16)
-        // if (date.startTimeStamp === 0 && date.endTimeStamp === 0) {
-        //   focusableElements[16]?.focus();
-        //   return;
-        // }
         // Info: (20241107 - Julian) 獲取下一個聚焦元素的 index
         const nextIndex = currentIndex + 1 >= focusableElements.length ? 0 : currentIndex + 1;
 
@@ -543,12 +574,20 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setLineItems(aiLineItemsUI);
   };
 
-  // ToDo: (20240926 - Julian) Save voucher function
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
     if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
+
+    const lineItems = voucherLineItems.map((lineItem) => {
+      return {
+        accountId: lineItem.account?.id ?? '',
+        amount: lineItem.amount,
+        debit: lineItem.debit,
+        description: lineItem.description,
+      };
+    });
 
     // Info: (20241105 - Julian) 如果沒有新增資產，就回傳空陣列
     const assetIds =
@@ -580,15 +619,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       voucherDate: date.startTimeStamp,
       type,
       note,
-      lineItems: voucherLineItems,
+      counterPartyId: counterparty?.companyId ?? '',
+      lineItems,
       assetIds,
-      counterPartyId: counterparty,
       reverseVouchers,
     };
 
-    // Info: (20241004 - Julian) for debug
-    // eslint-disable-next-line no-console
-    console.log(body);
+    createVoucher({ params: { companyId }, body });
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -644,6 +681,22 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setFlagOfSubmit(!flagOfSubmit);
     }
   };
+
+  useEffect(() => {
+    if (isCreating === false) {
+      if (createSuccess) {
+        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241108 - Julian) Should be replaced by voucher detail page
+      } else {
+        toastHandler({
+          // ToDo: (20241108 - Julian) i18n
+          id: 'create-voucher-fail',
+          type: ToastType.ERROR,
+          content: 'Failed to create voucher, please try again later.',
+          closeable: true,
+        });
+      }
+    }
+  }, [createSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
     <div
@@ -929,6 +982,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             <span className="text-text-state-error">*</span>
           </p>
           <DatePicker
+            id="voucher-date"
             type={DatePickerType.TEXT_DATE}
             period={isShowAnalysisPreview ? aiDate : date}
             setFilteredPeriod={setDate}
@@ -964,7 +1018,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         <div className="col-span-2 flex flex-col gap-8px">
           <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
           <input
-            id="note-input"
+            id="voucher-note"
             type="text"
             value={note}
             onChange={noteChangeHandler}
@@ -974,12 +1028,16 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <div id="voucher-counterparty" className="relative col-span-2 flex flex-col gap-8px">
+          <div className="relative col-span-2 flex flex-col gap-8px">
             <p className="font-bold text-input-text-primary">
               {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
               <span className="text-text-state-error">*</span>
             </p>
             <div
+              id="voucher-counterparty"
+              // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+              tabIndex={0}
               ref={counterpartyRef}
               onClick={counterSearchToggleHandler}
               className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
