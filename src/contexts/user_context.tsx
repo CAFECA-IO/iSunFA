@@ -42,9 +42,8 @@ interface UserContextType {
     name: string;
     taxId: string;
     tag: CompanyTag;
-  }) => Promise<{ success: boolean; code: string }>;
+  }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  getCompanyList: () => Promise<ICompany[] | null>;
   selectedCompany: ICompany | null;
   selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
   successSelectCompany: boolean | undefined;
@@ -80,8 +79,7 @@ export const UserContext = createContext<UserContextType>({
   selectRole: async () => null,
   getUserRoleList: async () => null,
   selectedRole: null,
-  createCompany: async () => ({ success: false, code: '' }),
-  getCompanyList: async () => null,
+  createCompany: async () => ({ success: false, code: '', errorMsg: '' }),
 
   selectedCompany: null,
   selectCompany: async () => {},
@@ -147,8 +145,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createCompanyAPI } = APIHandler<{ name: string; taxId: string }>(
     APIName.CREATE_COMPANY
   );
-  // Info: (20241104 - Liz) 取得使用者公司列表 API
-  const { trigger: companyListAPI } = APIHandler<ICompany[]>(APIName.COMPANY_LIST);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -599,36 +595,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     tag: CompanyTag;
   }) => {
     try {
-      const { success, code } = await createCompanyAPI({
+      const { success, code, error } = await createCompanyAPI({
         body: { name, taxId, tag },
       });
 
       if (!success) {
-        return { success: false, code };
+        return { success: false, code, errorMsg: error?.message ?? '' };
       }
 
-      return { success: true, code: '' };
+      return { success: true, code: '', errorMsg: '' };
     } catch (error) {
-      // Handle error if needed
-      return { success: false, code: '' };
-    }
-  };
-
-  // Info: (20241104 - Liz) 取得使用者公司列表的功能
-  const getCompanyList = async () => {
-    try {
-      const { data: companyList, success } = await companyListAPI({
-        query: { userId: userAuth?.id },
-      });
-
-      if (success && companyList) {
-        return companyList;
-      }
-
-      return null;
-    } catch (error) {
-      // Handle error if needed
-      return null;
+      // ToDo: (20241108 - Liz) Handle error if needed
+      return { success: false, code: '', errorMsg: 'unknown error' };
     }
   };
 
@@ -734,7 +712,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getUserRoleList,
       selectedRole: selectedRoleRef.current,
       createCompany,
-      getCompanyList,
 
       selectedCompany: selectedCompanyRef.current,
       selectCompany,
