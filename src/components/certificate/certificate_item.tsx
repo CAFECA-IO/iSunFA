@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement } from 'react';
 import { useTranslation } from 'next-i18next';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
@@ -38,29 +38,6 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
   onEdit,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
-  const [dataImcomplete, setDataImcomplete] = useState(false);
-
-  useEffect(() => {
-    if (
-      !certificate.invoice.id ||
-      !certificate.invoice.inputOrOutput ||
-      !certificate.invoice.date ||
-      !certificate.invoice.currencyAlias ||
-      !certificate.invoice.taxRatio ||
-      !certificate.invoice.taxPrice ||
-      !certificate.invoice.totalPrice ||
-      !certificate.invoice.type ||
-      certificate.invoice.deductible === undefined ||
-      !certificate.invoice.createdAt ||
-      !certificate.invoice.name ||
-      !certificate.invoice.uploader ||
-      !certificate.invoice.counterParty
-    ) {
-      setDataImcomplete(true);
-    } else {
-      setDataImcomplete(false);
-    }
-  }, [certificate.invoice]);
 
   return (
     <div
@@ -91,10 +68,12 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex min-w-120px gap-1">
         <div className="flex items-center gap-2">
-          {!!dataImcomplete && <IoWarningOutline size={16} className="text-surface-state-error" />}
+          {!certificate.invoice?.isComplete && (
+            <IoWarningOutline size={16} className="text-surface-state-error" />
+          )}
           <div className="flex-col gap-2">
-            <div className="text-text-neutral-tertiary">{certificate.invoice.name ?? ''}</div>
-            <div className="text-text-neutral-primary">{certificate.invoice.no ?? ''}</div>
+            <div className="text-text-neutral-tertiary">{certificate.name ?? ''}</div>
+            <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
@@ -108,8 +87,8 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
           </div>
         </>
       </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="max-w-120px">
-        <div className="text-text-neutral-primary">
+      <BorderCell isSelected={certificate.isSelected} className="max-w-120px overflow-hidden">
+        <div className="overflow-scroll text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`certificate:INVOICE_TYPE.${certificate.invoice?.type}`)
             : ''}
@@ -168,12 +147,12 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
         <>
           <div className="text-link-text-primary">{certificate?.voucherNo ?? ''}</div>
           <div className="text-text-neutral-primary">
-            {certificate.invoice?.uploader && (
+            {certificate.uploader && (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
-                {certificate.invoice.uploader.slice(0, 2).toUpperCase()}
+                {certificate.uploader.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span>{certificate.invoice?.uploader ?? ''}</span>
+            <span>{certificate.uploader ?? ''}</span>
           </div>
         </>
       </BorderCell>

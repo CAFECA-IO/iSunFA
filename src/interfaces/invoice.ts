@@ -21,19 +21,19 @@ export interface IInvoice {
 
 /**
  * Info: (20241022 - tzuhan)
- *@description for frontend
+ * @description for frontend
  * @Murky, @Jacky 這裡是參考 data model 來更新 IInvoiceBeta 的介面，需要確認是否有遺漏或錯誤
  */
 export interface IInvoiceBeta {
   id: number;
-  // certificateId: number; // Info: (20241021 - tzuhan) @Jacky
-  // counterPartyId: number; // Info: (20241021 - tzuhan) To Jacky, UI 需要改成 ICounterParty
+  isComplete: boolean;
+  counterParty: ICounterparty; // Info: (20241108 - Tzuhan) !!! not provided by backend @Murky
   inputOrOutput: InvoiceTransactionDirection;
   date: number;
   no: string;
-  currencyAlias: string;
+  currencyAlias: CurrencyType;
   priceBeforeTax: number;
-  taxType: string; // Info: (20241021 - tzuhan) @Jacky 是指什麼？ 有 enum嗎？
+  taxType: InvoiceTaxType;
   taxRatio: number;
   taxPrice: number;
   totalPrice: number;
@@ -41,10 +41,6 @@ export interface IInvoiceBeta {
   deductible: boolean;
   createdAt: number;
   updatedAt: number;
-
-  name: string; // Info: (20241021 - tzuhan) @Jacky @Murky, UI 需要，目前DB沒有
-  uploader: string; // Info:(20241021 - tzuhan) @Jacky @Murkyy, 需要上傳者的資訊，目前DB沒有，可以在call create cerificate的時候透過userId存
-  counterParty: ICounterparty;
 }
 
 export type IInvoiceBetaOptional = Partial<IInvoiceBeta>;

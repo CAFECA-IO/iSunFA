@@ -366,3 +366,19 @@ export interface calculateAssetEntityDepreciation {
     remainingLife: number;
   };
 }
+
+export interface AssetHeader {
+  acquisitionDate: number;
+  name: string;
+  purchasePrice: number;
+  accumulatedDepreciation: number;
+  residualValue: number;
+  remainingLife: number;
+  type: string;
+  status: string;
+  number: string;
+}
+
+export interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitionDate'> {
+  acquisitionDate: string;
+}

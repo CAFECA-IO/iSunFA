@@ -13,9 +13,10 @@ import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { useUserCtx } from '@/contexts/user_context';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface InvoiceUploadProps {
-  companyId?: number;
   isDisabled: boolean;
   withScanner: boolean;
   toggleQRCode?: () => void;
@@ -24,35 +25,29 @@ interface InvoiceUploadProps {
 }
 
 const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
-  companyId,
   isDisabled,
   withScanner,
   toggleQRCode,
   setFiles,
   showErrorMessage,
 }) => {
-  const { t } = useTranslation('certificate');
+  const { t } = useTranslation(['certificate', 'common']);
+  const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
   const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
-  // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_POST_V2 API 需要的回傳資料格式
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const handleUploadCancelled = useCallback(() => {
     setFiles([]);
     messageModalVisibilityHandler();
-  }, []);
+  }, [setFiles, messageModalVisibilityHandler]);
 
-  const handleUploadFailed = useCallback((fileName: string, error?: Error) => {
-    setFiles((prevFiles) => {
-      const files = {
-        ...prevFiles,
-      };
-      const index = files.findIndex((f) => f.name === fileName);
-      files[index].status = ProgressStatus.FAILED;
-      return files;
-    });
-    if (error) {
+  const handleUploadFailed = useCallback(
+    (fileName: string, error?: Error) => {
+      setFiles((prevFiles) =>
+        prevFiles.map((f) => (f.name === fileName ? { ...f, status: ProgressStatus.FAILED } : f))
+      );
       if (error) {
         if (showErrorMessage) {
           messageModalDataHandler({
@@ -73,18 +68,23 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
           });
         }
       }
-    }
-  }, []);
+    },
+    [
+      setFiles,
+      showErrorMessage,
+      toastHandler,
+      messageModalDataHandler,
+      messageModalVisibilityHandler,
+    ]
+  );
 
-  const handleUpload = useCallback(async (file: File) => {
-    if (!companyId) return;
-    try {
-      const selectedCompanyIdStr = String(companyId);
-      const formData = new FormData();
-      formData.append('file', file);
+  const handleUpload = useCallback(
+    async (file: File) => {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      setFiles((prevFiles) => {
-        return [
+        setFiles((prevFiles) => [
           ...prevFiles,
           {
             id: null,
@@ -94,74 +94,61 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
             progress: 0,
             status: ProgressStatus.IN_PROGRESS,
           },
-        ];
-      });
+        ]);
 
-      const { success, data: fileMeta } = await uploadFileAPI({
-        params: {
-          companyId,
-        },
-        // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 FILE_UPLOAD API 的地方，以及query參數的組合
-        query: {
-          type: UploadType.INVOICE, // Info: (20241022 - tzuhan) @Murky, 這個是我新增的，請確認是否正確
-          targetId: selectedCompanyIdStr,
-        },
-        body: formData,
-      });
-
-      if (!success || !fileMeta) {
-        handleUploadFailed(file.name);
-        return;
-      }
-
-      if (success && fileMeta) {
-        setFiles((prevFiles) => {
-          const files = {
-            ...prevFiles,
-          };
-          const index = files.findIndex((f) => f.name === file.name);
-          files[index].id = fileMeta.id;
-          files[index].progress = 50;
-          return files;
-        });
-        // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_POST_V2 API 的地方，以及params、body參數的組合
-        const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: {
-            companyId,
+        const { success, data: fileMeta } = await uploadFileAPI({
+          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+          query: {
+            type: UploadType.INVOICE,
+            targetId: String(selectedCompany?.id ?? FREE_COMPANY_ID),
           },
-          body: {
-            fileId: fileMeta.id,
-          },
+          body: formData,
         });
-        if (!successCreated || !certificate) {
-          handleUploadFailed(file.name);
+
+        if (!success || !fileMeta) {
+          handleUploadFailed(file.name, new Error(t('certificate:UPLOAD.FAILED')));
           return;
         }
-        if (successCreated && certificate) {
-          setFiles((prevFiles) => {
-            const files = {
-              ...prevFiles,
-            };
-            const index = files.findIndex((f) => f.name === file.name);
-            files[index].progress = 100;
-            files[index].status = ProgressStatus.SUCCESS;
-            files[index].certificateId = certificate.id;
-            return files;
-          });
+
+        setFiles((prevFiles) =>
+          prevFiles.map((f) => (f.name === file.name ? { ...f, id: fileMeta.id, progress: 50 } : f))
+        );
+
+        const { success: successCreated, data: certificate } = await createCertificateAPI({
+          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+          body: { fileId: fileMeta.id },
+        });
+        if (!successCreated || !certificate) {
+          handleUploadFailed(file.name, new Error(t('certificate:CREATE.FAILED')));
+          return;
         }
+
+        setFiles((prevFiles) =>
+          prevFiles.map((f) => {
+            return f.name === file.name
+              ? {
+                  ...f,
+                  progress: 100,
+                  status: ProgressStatus.SUCCESS,
+                  certificateId: certificate.id,
+                }
+              : f;
+          })
+        );
+      } catch (error) {
+        handleUploadFailed(file.name, error as Error);
       }
-    } catch (error) {
-      handleUploadFailed(file.name, error as Error);
-    }
-  }, []);
+    },
+    [selectedCompany?.id, handleUploadFailed, setFiles, t, uploadFileAPI, createCertificateAPI]
+  );
 
-  const certificateCreatedHandler = useCallback((data: ICertificate) => {
-    setFiles((prevFiles) => {
-      return prevFiles.filter((f) => f.certificateId !== data.id);
-    });
-  }, []);
+  const certificateCreatedHandler = useCallback(
+    (data: ICertificate) => {
+      setFiles((prevFiles) => prevFiles.filter((f) => f.certificateId !== data.id));
+    },
+    [setFiles]
+  );
 
-  // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當 file 對應的 certificate 生成會刪除上傳列表的 file
   useEffect(() => {
     const pusher = getPusherInstance();
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
@@ -172,7 +159,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
       channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
       pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
-  }, []);
+  }, [certificateCreatedHandler]);
 
   return (
     <UploadArea
