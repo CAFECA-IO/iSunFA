@@ -1,10 +1,9 @@
-import prisma from '@/client';
+import { exportAssets } from '@/lib/utils/repo/export_file.repo'; // 引入 exportAssets 函式
 import { ExportFileType, ExportType } from '@/constants/export_file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAssetExportRequestBody, IExportRequestBody } from '@/interfaces/export_file';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
 import { convertToCSV } from '@/lib/utils/export_file';
-import { Prisma } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 // 定義 AssetHeader 與 AssetHeaderWithStringDate
@@ -80,60 +79,19 @@ async function handleAssetExport(
       throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
     }
 
-    // 構建 Prisma where 條件
-    const where: Prisma.AssetWhereInput = {
-      companyId: parseInt(companyId, 10),
-      deletedAt: null, // 假設需要過濾已刪除的資產
-    };
+    const parsedCompanyId = parseInt(companyId, 10);
 
-    // 處理過濾條件
-    if (filters) {
-      if (filters.type) {
-        where.type = filters.type;
-      }
-      if (filters.status) {
-        where.status = filters.status;
-      }
-      if (filters.startDate || filters.endDate) {
-        where.acquisitionDate = {
-          ...(filters.startDate && { gte: filters.startDate }),
-          ...(filters.endDate && { lte: filters.endDate }),
-        };
-      }
-
-      if (filters.searchQuery) {
-        where.name = {
-          contains: filters.searchQuery,
-        };
-      }
-    }
-
-    // 構建 Prisma orderBy 條件
-    const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
-    if (sort?.length) {
-      sort.forEach((sortOption) => {
-        orderBy.push({
-          [sortOption.by]: sortOption.order,
-        });
-      });
-    }
-
-    // 從資料庫獲取資產資料
-    const assets = await prisma.asset.findMany({
-      where,
-      orderBy: orderBy.length > 0 ? orderBy : undefined,
-      select: {
-        acquisitionDate: true,
-        name: true,
-        purchasePrice: true,
-        accumulatedDepreciation: true,
-        residualValue: true,
-        remainingLife: true,
-        type: true,
-        status: true,
-        number: true,
+    // 使用 exportAssets 函式獲取資產資料
+    const assets = await exportAssets(
+      {
+        exportType,
+        filters,
+        sort,
+        options,
+        fileType,
       },
-    });
+      parsedCompanyId
+    );
 
     let processedAssets = assets;
     if (options?.fields) {
