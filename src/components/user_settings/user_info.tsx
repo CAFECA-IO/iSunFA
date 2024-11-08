@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { FiEdit3, FiLink, FiMail } from 'react-icons/fi';
 import { TbUserCircle } from 'react-icons/tb';
 import { Button } from '@/components/button/button';
-import IPModal from './ip_modal';
+import IPModal from '@/components/user_settings/ip_modal';
 
 interface UserInfoProps {
   userId: number;

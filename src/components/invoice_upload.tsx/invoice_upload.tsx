@@ -14,6 +14,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { useUserCtx } from '@/contexts/user_context';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface InvoiceUploadProps {
   isDisabled: boolean;
@@ -80,9 +81,6 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   const handleUpload = useCallback(
     async (file: File) => {
       try {
-        if (!selectedCompany) {
-          throw new Error(t('certificate:ERROR.WENT_WRONG'));
-        }
         const formData = new FormData();
         formData.append('file', file);
 
@@ -99,8 +97,11 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         ]);
 
         const { success, data: fileMeta } = await uploadFileAPI({
-          params: { companyId: selectedCompany.id },
-          query: { type: UploadType.INVOICE, targetId: String(selectedCompany.id) },
+          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
+          query: {
+            type: UploadType.INVOICE,
+            targetId: String(selectedCompany?.id ?? FREE_COMPANY_ID),
+          },
           body: formData,
         });
 
@@ -114,7 +115,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         );
 
         const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: { companyId: selectedCompany.id },
+          params: { companyId: selectedCompany?.id ?? FREE_COMPANY_ID },
           body: { fileId: fileMeta.id },
         });
         if (!successCreated || !certificate) {

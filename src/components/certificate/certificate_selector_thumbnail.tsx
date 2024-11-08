@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { ICertificateUI } from '@/interfaces/certificate';
-import CertificatePreviewModal from './certificate_preview_modal';
+import CertificatePreviewModal from '@/components/certificate/certificate_preview_modal';
 
 interface CertificateSelectorThumbnailProps {
   certificate: ICertificateUI;

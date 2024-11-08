@@ -257,7 +257,7 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
                 <Caption caption="Setting" />
                 <SubMenuItem
                   linkText="General Setting"
-                  href={ISUNFA_ROUTE.EXAMPLE}
+                  href={ISUNFA_ROUTE.GENERAL_SETTING}
                   isCompanyNeeded
                   toggleOverlay={toggleOverlay}
                 />
