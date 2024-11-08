@@ -42,7 +42,7 @@ import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
 import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 import { isUserReadCertificate } from '@/lib/utils/user_certificate';
-import { userCertificateEntityValidator } from './user_certificate';
+import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
