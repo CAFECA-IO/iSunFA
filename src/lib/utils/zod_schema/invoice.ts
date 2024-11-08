@@ -28,7 +28,7 @@ export const IInvoiceBetaValidator = z.object({
   deductible: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  name: z.string().describe('name of invoice, not in IInvoiceBeta right now'),
+  // name: z.string().describe('name of invoice, not in IInvoiceBeta right now'),
 });
 
 const iInvoiceValidator = z.object({
