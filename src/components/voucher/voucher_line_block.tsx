@@ -301,12 +301,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       </div>
 
       {/* Info: (20240927 - Julian) Add button */}
-      <Button
-        id="add-line-item-button"
-        type="button"
-        className="h-44px w-44px p-0"
-        onClick={addNewVoucherLine}
-      >
+      <Button id="add-line-item-button" type="button" size={'square'} onClick={addNewVoucherLine}>
         <FaPlus size={20} />
       </Button>
     </div>
@@ -415,7 +410,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
 
         {/* Info: (20241018 - Julian) Add button */}
         <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0">
+          <Button type="button" size={'square'}>
             <FaPlus size={20} />
           </Button>
         </div>

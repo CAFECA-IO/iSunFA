@@ -303,7 +303,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
             variant="tertiary"
             onClick={deleteClickHandler}
             disabled={deleteDisabled}
-            className={deleteRemainingDays > 0 ? '' : 'h-48px w-48px p-0'}
+            size={'square'}
           >
             <FiTrash2 size={20} />
             {deleteRemainingStr}
@@ -312,7 +312,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
             id="edit-asset-btn"
             type="button"
             variant="tertiary"
-            className="h-48px w-48px p-0"
+            size={'square'}
             onClick={editClickHandler}
           >
             <FiEdit size={20} />

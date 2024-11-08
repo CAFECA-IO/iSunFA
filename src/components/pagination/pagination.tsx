@@ -118,7 +118,7 @@ const Pagination = forwardRef(
         onClick={firstPageHandler}
         disabled={isFirstPage}
         variant="secondaryOutline"
-        className="h-40px w-40px p-0"
+        size={'square'}
       >
         <RxTrackPrevious size={16} />
       </Button>
@@ -130,7 +130,7 @@ const Pagination = forwardRef(
         onClick={previousPageHandler}
         disabled={isFirstPage}
         variant="secondaryOutline"
-        className="h-40px w-40px p-0"
+        size={'square'}
       >
         <AiOutlineLeft size={16} />
       </Button>
@@ -142,7 +142,7 @@ const Pagination = forwardRef(
         onClick={lastPageHandler}
         disabled={isLastPage}
         variant="secondaryOutline"
-        className="h-40px w-40px p-0"
+        size={'square'}
       >
         <RxTrackNext size={16} />
       </Button>
@@ -154,7 +154,7 @@ const Pagination = forwardRef(
         onClick={nextPageHandler}
         disabled={isLastPage}
         variant="secondaryOutline"
-        className="h-40px w-40px p-0"
+        size={'square'}
       >
         <AiOutlineRight size={16} />
       </Button>
@@ -170,7 +170,7 @@ const Pagination = forwardRef(
         value={targetPageRef.current}
         onChange={pageChangeHandler}
         onKeyDown={handleKeyDown}
-        className="h-40px w-40px rounded border border-input-stroke-input bg-transparent text-center text-sm font-semibold text-date-picker-text-input-placeholder outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
+        className="h-44px w-44px rounded border border-input-stroke-input bg-transparent text-center text-sm font-semibold text-date-picker-text-input-placeholder outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
       />
     );
 
