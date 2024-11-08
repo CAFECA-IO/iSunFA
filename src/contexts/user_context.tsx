@@ -6,7 +6,7 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -142,9 +142,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
   // Info: (20241104 - Liz) 建立公司 API
-  const { trigger: createCompanyAPI } = APIHandler<{ name: string; taxId: string }>(
-    APIName.CREATE_COMPANY
-  );
+  const { trigger: createCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.CREATE_USER_COMPANY);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -268,6 +266,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const userId = localStorage.getItem('userId');
     const expiredAt = localStorage.getItem('expired_at');
     const isUserAuthAvailable = !!userAuthRef.current;
+    // Deprecated: (20241108 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(
+      'userId:',
+      userId,
+      'expiredAt:',
+      expiredAt,
+      'isUserAuthAvailable:',
+      isUserAuthAvailable
+    );
 
     // Info: (20240822-Tzuhan) 如果 state 中沒有用戶資料，且 localStorage 中有記錄，則應該重新獲取 profile
     if (!isUserAuthAvailable && userId && expiredAt) {
@@ -275,6 +283,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (Date.now() < Number(expiredAt)) {
         return true;
       } else {
+        // Deprecated: (20241108 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('isProfileFetchNeeded 並且 expiredAt 過期，執行 signOut');
         signOut();
         return false;
       }
@@ -596,6 +607,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }) => {
     try {
       const { success, code, error } = await createCompanyAPI({
+        params: { userId: userAuth?.id },
         body: { name, taxId, tag },
       });
 
@@ -605,11 +617,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return { success: true, code: '', errorMsg: '' };
     } catch (error) {
-      // ToDo: (20241108 - Liz) Handle error if needed
       return { success: false, code: '', errorMsg: 'unknown error' };
     }
   };
 
+  // ToDo: (20241108 - Liz) 選擇公司要重新串接 v2 API
   // Info: (20240513 - Julian) 選擇公司的功能
   const selectCompany = async (company: ICompany | null, isPublic = false) => {
     setSelectedCompany(null);

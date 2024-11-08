@@ -110,7 +110,7 @@ const MyCompanyListPageBody = () => {
         <FilterSection
           disableDateSearch
           className="flex-auto"
-          apiName="COMPANY_LIST"
+          apiName="LIST_USER_COMPANY"
           page={1}
           pageSize={5}
           onApiResponse={handleApiResponse}

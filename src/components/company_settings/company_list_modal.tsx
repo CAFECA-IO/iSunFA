@@ -12,6 +12,7 @@ import { CompanyTag } from '@/constants/company';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/company_settings/work_tag';
+import { useUserCtx } from '@/contexts/user_context';
 import CompanyEditModal from './company_edit_modal';
 
 interface CompanyListModalProps {
@@ -122,6 +123,7 @@ const dummyCompanies: ICompanyAndRole[] = [
 ];
 
 const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
+  const { userAuth } = useUserCtx();
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(dummyCompanies.length); // ToDo: (20241107 - Tzuhan) - Replace with real data
@@ -168,8 +170,8 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
         <section className="flex flex-col gap-lv-5">
           <FilterSection<ICompanyAndRole[]>
             className="mt-2"
-            params={{}}
-            apiName={APIName.COMPANY_LIST}
+            apiName={APIName.LIST_USER_COMPANY}
+            params={{ userId: userAuth?.id }}
             onApiResponse={handleApiResponse}
             page={page}
             pageSize={DEFAULT_PAGE_LIMIT}
