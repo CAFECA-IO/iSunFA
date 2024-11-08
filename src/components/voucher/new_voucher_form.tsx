@@ -361,42 +361,91 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241107 - Julian) 獲取各個欄位的 index
       const dateIndex = focusableElements.findIndex((el) => el.id === 'voucher-date');
       const voucherTypeIndex = focusableElements.findIndex((el) => el.id === 'voucher-type');
-      // const noteIndex = focusableElements.findIndex((el) => el.id === 'voucher-note');
-      // const counterpartyIndex = focusableElements.findIndex(
-      //   (el) => el.id === 'voucher-counterparty'
-      // ); // Div
-      // const assetIndex = focusableElements.findIndex((el) => el.id === 'voucher-asset');
-      // const accountTitleIndex = focusableElements.findIndex((el) =>
-      //   el.id.includes('account-title')
-      // ); // Div
+      const noteIndex = focusableElements.findIndex((el) => el.id === 'voucher-note');
+      const counterpartyIndex = focusableElements.findIndex(
+        (el) => el.id === 'voucher-counterparty'
+      ); // Div
+      const assetIndex = focusableElements.findIndex((el) => el.id === 'voucher-asset');
+      const accountTitleIndex = focusableElements.findIndex((el) =>
+        el.id.includes('account-title')
+      ); // Div
+
+      const formIndexOrder = [
+        dateIndex,
+        voucherTypeIndex,
+        noteIndex,
+        counterpartyIndex,
+        assetIndex,
+        accountTitleIndex,
+      ];
 
       // Info: (20241107 - Julian) 獲取當前聚焦元素的 index
       const currentIndex = focusableElements.findIndex((el) => el === document.activeElement);
 
-      //  console.log('focusableElements', focusableElements);
-      // console.log('date.startTimeStamp !== 0', date.startTimeStamp !== 0);
-      // console.log('date.endTimeStamp !== 0', date.endTimeStamp !== 0);
-      // console.log('currentIndex === dateIndex', currentIndex === dateIndex);
-
-      // Info: (20241107 - Julian) 如果沒有找到當前聚焦元素 || 當前聚焦元素是最後一個可聚焦元素，則聚焦到第一個可聚焦元素
-      if (currentIndex === -1 || currentIndex === focusableElements.length - 1) {
-        focusableElements[0]?.focus();
-      } else if (
-        // Info: (20241107 - Julian) 如果日期選擇好了，就直接跳到下一個欄位 Voucher Type
-        date.startTimeStamp !== 0 &&
-        date.endTimeStamp !== 0 &&
-        currentIndex === dateIndex
-      ) {
-        focusableElements[voucherTypeIndex]?.focus();
-      } else {
+      const ToNext = () => {
         // Info: (20241107 - Julian) 獲取下一個聚焦元素的 index
         const nextIndex = currentIndex + 1 >= focusableElements.length ? 0 : currentIndex + 1;
-
         // Info: (20241107 - Julian) 移動到下一個可聚焦元素
         focusableElements[nextIndex]?.focus();
+      };
+
+      // ToDo: (20241107 - Julian) ============ 施工中🔧 ============
+      if (currentIndex === -1 || currentIndex === focusableElements.length - 1) {
+        focusableElements[0]?.focus();
+      } else if (currentIndex >= formIndexOrder[0] && currentIndex < formIndexOrder[1]) {
+        // Info: (20241107 - Julian) 如果當前聚焦元素是日期欄位，且日期已選，則移動到類型欄位
+        if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
+          focusableElements[voucherTypeIndex]?.focus();
+        } else {
+          ToNext();
+        }
+      } else {
+        ToNext();
       }
+
+      // switch (currentIndex) {
+      //   case dateIndex:
+      //     if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
+      //       focusableElements[voucherTypeIndex]?.focus();
+      //     } else ToNext();
+      //     break;
+      //   case voucherTypeIndex:
+      //     console.log('voucherTypeIndex');
+      //     ToNext();
+      //     break;
+      //   case noteIndex:
+      //     console.log('noteIndex');
+      //     ToNext();
+      //     break;
+      //   case counterpartyIndex:
+      //     console.log('counterpartyIndex');
+      //     // Info: (20241107 - Julian) 如果需填入交易對象，但交易對象未選擇，則聚焦到交易對象欄位
+      //     if (isCounterpartyRequired && !counterparty) {
+      //       focusableElements[counterpartyIndex]?.click();
+      //     } else {
+      //       ToNext();
+      //     }
+      //     break;
+      //   case assetIndex:
+      //     console.log('assetIndex');
+      //     // Info: (20241107 - Julian) 如果需填入資產，但資產為空，則聚焦到資產欄位
+      //     if (isAssetRequired && temporaryAssetList.length === 0) {
+      //       focusableElements[assetIndex]?.focus();
+      //     } else {
+      //       ToNext();
+      //     }
+      //     break;
+      //   case accountTitleIndex:
+      //     console.log('accountTitleIndex');
+      //     ToNext();
+      //     break;
+      //   default:
+      //     console.log('default');
+      //     focusableElements[0]?.focus();
+      //     break;
+      // }
     },
-    [formRef]
+    [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetList]
   );
 
   useHotkeys('tab', handleTabPress);
@@ -1100,7 +1149,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           >
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
-          <Button id="voucher-save-button" type="submit">
+          <Button
+            id="voucher-save-button"
+            type="submit"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+          >
             <p>{t('common:COMMON.SAVE')}</p>
             <BiSave size={20} />
           </Button>

@@ -280,7 +280,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
         </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
       </div>
@@ -396,7 +396,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
         </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
 

@@ -167,7 +167,7 @@ const PopulateDates = ({
       <button
         key={el?.date}
         type="button"
-        disabled={el?.disable}
+        disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
         className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle}`}
         onClick={dateClickHandler}
       >
