@@ -16,7 +16,6 @@ import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
-import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { CompanyTag } from '@/constants/company';
 
@@ -29,9 +28,10 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
-  createRole: (roleName: RoleName) => Promise<IUserRole | null>;
+  createRole: (roleId: number) => Promise<IUserRole | null>;
   selectRole: (roleId: number) => Promise<IUserRole | null>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
+  getSystemRoleList: () => Promise<IRole[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
 
   createCompany: ({
@@ -78,6 +78,7 @@ export const UserContext = createContext<UserContextType>({
   createRole: async () => null,
   selectRole: async () => null,
   getUserRoleList: async () => null,
+  getSystemRoleList: async () => null,
   selectedRole: null,
   createCompany: async () => ({ success: false, code: '', errorMsg: '' }),
 
@@ -135,6 +136,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     company: ICompany;
     role: IRole;
   }>(APIName.STATUS_INFO_GET);
+  // Info: (20241108 - Liz) 取得系統角色列表 API
+  const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
   // Info: (20241104 - Liz) 取得使用者角色列表 API
   const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
   // Info: (20241104 - Liz) 建立角色 API
@@ -534,11 +537,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // ToDo: (20241107 - Liz) 獲得可以建立的所有角色，得到 roleId，建立、選擇角色都傳 roleId (in body) 給 API
 
   // Info: (20241029 - Liz) 建立角色的功能
-  const createRole = async (roleName: RoleName) => {
+  const createRole = async (roleId: number) => {
+    // Deprecated: (20241108 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('call createRole, roleId:', roleId);
+
+    const roleIdString = roleId.toString();
+
     try {
       const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuth?.id },
-        body: { roleName },
+        body: { roleIdString },
       });
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
@@ -559,9 +568,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const selectRole = async (roleId: number) => {
     setSelectedRole(null);
 
+    const roleIdString = roleId.toString();
+
     try {
       const { success, data: userRole } = await selectRoleAPI({
-        params: { userId: userAuth?.id, roleId },
+        params: { userId: userAuth?.id },
+        body: { roleIdString },
       });
 
       if (success && userRole) {
@@ -573,6 +585,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return null;
     } catch (error) {
       setSelectedRole(null);
+      return null;
+    }
+  };
+
+  // Info: (20241108 - Liz) 取得系統角色列表
+
+  const getSystemRoleList = async () => {
+    try {
+      const { data: systemRoleList, success } = await systemRoleListAPI({
+        query: { type: 'User' },
+      });
+
+      if (success && systemRoleList) {
+        return systemRoleList;
+      }
+
+      return null;
+    } catch (error) {
+      // Info: (20241107 - Liz) Handle error if needed
       return null;
     }
   };
@@ -722,6 +753,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       createRole,
       selectRole,
       getUserRoleList,
+      getSystemRoleList,
       selectedRole: selectedRoleRef.current,
       createCompany,
 

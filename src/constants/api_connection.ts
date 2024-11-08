@@ -222,7 +222,7 @@ export enum APIPath {
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
-  USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/role/:roleId/select`,
+  USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
   LIST_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
   ROLE_LIST = `${apiPrefixV2}/role`,
