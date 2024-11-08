@@ -13,7 +13,7 @@ import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/vouch
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
-import { ICounterparty, dummyCounterparty } from '@/interfaces/counterparty';
+import { ICounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
@@ -37,6 +37,7 @@ import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -50,7 +51,7 @@ interface IAIResultVoucher {
   voucherDate: number;
   type: string;
   note: string;
-  counterPartyId: number; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
+  counterParty?: ICounterparty; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
   lineItemsInfo: {
     lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
   };
@@ -60,7 +61,6 @@ const dummyAIResult: IAIResultVoucher = {
   voucherDate: 0,
   type: '',
   note: '',
-  counterPartyId: 0,
   lineItemsInfo: { lineItems: [] },
 };
 
@@ -81,15 +81,20 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   } = useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+
+  // Info: (20241108 - Julian) POST ASK AI
   const {
     trigger: askAI,
     success: askSuccess,
     data: askData,
+    isLoading: isAskingAI,
   } = APIHandler<{
     reason: string;
     resultId: string;
   }>(APIName.ASK_AI_V2);
 
+  // Info: (20241108 - Julian) GET AI RESULT
   const {
     trigger: getAIResult,
     data: resultData,
@@ -97,11 +102,19 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     success: analyzeSuccess,
   } = APIHandler<IAIResultVoucher>(APIName.ASK_AI_RESULT_V2);
 
+  // Info: (20241108 - Julian) 取得交易對象列表
+  const {
+    trigger: getCounterpartyList,
+    data: counterpartyData,
+    isLoading: isCounterpartyLoading,
+  } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
+
+  // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
     voucherDate: aiVoucherDate,
     type: aiType,
     note: aiNote,
-    counterPartyId: aiCounterPartyId,
+    counterParty: aiCounterParty,
     lineItemsInfo: { lineItems: aiLineItems },
   } = resultData ?? dummyAIResult;
 
@@ -152,11 +165,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 交易對象相關 state
   const [counterKeyword, setCounterKeyword] = useState<string>('');
-  const [counterparty, setCounterparty] = useState<string>(
-    t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')
-  );
-  const [filteredCounterparty, setFilteredCounterparty] =
-    useState<ICounterparty[]>(dummyCounterparty);
+  const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(undefined);
+  const [filteredCounterparty, setFilteredCounterparty] = useState<ICounterparty[]>([]);
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
@@ -168,7 +178,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) AI 分析相關 state
   const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
-  const [isAIStart, setIsAIStart] = useState<boolean>(false);
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
@@ -178,6 +187,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+
+  // Info: (20241108 - Julian) 需要交易對象的時候才拿 counterparty list
+  useEffect(() => {
+    if (isCounterpartyRequired) {
+      getCounterpartyList({ params: { companyId } });
+    }
+  }, [isCounterpartyRequired]);
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
@@ -203,10 +219,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     if (selectedCertificates.length > 0 && selectedIds.length > 0) {
       // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
       setAiState(AIState.WORKING);
-      setIsAIStart(true);
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAI({
-        params: { companyId: selectedCompany?.id },
+        params: { companyId },
         query: { reason: 'voucher' },
         body: { certificateId: selectedIds[0] },
       });
@@ -214,36 +229,31 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [selectedCertificates, selectedIds]);
 
   useEffect(() => {
-    if (askSuccess && askData) {
-      // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
-      getAIResult({
-        params: {
-          companyId: selectedCompany?.id,
-          resultId: 222, // ToDo: (20241021 - Julian) Replace with askData.resultId
-        },
-        query: {
-          reason: 'voucher',
-        },
-      });
-    } else if (isAIStart && !askSuccess) {
-      // Info: (20241021 - Julian) AI 分析失敗
-      setAiState(AIState.FAILED);
+    if (!isAskingAI) {
+      if (askSuccess && askData) {
+        // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
+        getAIResult({
+          params: { companyId, resultId: askData.resultId },
+          query: { reason: 'voucher' },
+        });
+      } else if (!askSuccess) {
+        //  Info: (20241021 - Julian) AI 分析失敗
+        setAiState(AIState.FAILED);
+      }
     }
-  }, [askSuccess, askData]);
+  }, [askSuccess, askData, isAskingAI]);
 
   // Info: (20241021 - Julian) AI 分析結果
   useEffect(() => {
-    if (isAIStart) {
-      if (!isAIWorking && resultData) {
+    if (!isAskingAI && !isAIWorking) {
+      if (resultData) {
         setAiState(AIState.FINISH);
-      } else if (!isAIWorking && !resultData) {
+      } else if (!resultData || !analyzeSuccess) {
+        // Info: (20241021 - Julian) AI 分析失敗
         setAiState(AIState.FAILED);
       }
-    } else if (!isAIWorking && !analyzeSuccess) {
-      // Info: (20241021 - Julian) AI 分析失敗
-      setAiState(AIState.FAILED);
     }
-  }, [isAIWorking, resultData]);
+  }, [isAIWorking, resultData, analyzeSuccess, isAskingAI]);
 
   useEffect(() => {
     const isReverse = reverses.length > 0;
@@ -386,20 +396,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 搜尋交易對象
   useEffect(() => {
-    const filteredList = dummyCounterparty.filter((counter) => {
-      // Info: (20241004 - Julian) 編號(數字)搜尋: 字首符合
-      if (counterKeyword.match(/^\d+$/)) {
-        const taxIdMatch = counter.taxId.toLowerCase().startsWith(counterKeyword.toLowerCase());
-        return taxIdMatch;
-      } else if (counterKeyword !== '') {
-        // Info: (20241004 - Julian) 名稱搜尋: 部分符合
-        const nameMatch = counter.name.toLowerCase().includes(counterKeyword.toLowerCase());
-        return nameMatch;
-      }
-      return true;
-    });
-    setFilteredCounterparty(filteredList);
+    getCounterpartyList({ params: { companyId }, query: { searchQuery: counterKeyword } });
   }, [counterKeyword]);
+  useEffect(() => {
+    if (counterpartyData && !isCounterpartyLoading) {
+      setFilteredCounterparty(counterpartyData.data);
+    }
+  }, [counterpartyData, isCounterpartyLoading]);
 
   // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
   // useEffect(() => {
@@ -415,7 +418,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 交易對象未選擇時顯示提示
   useEffect(() => {
-    if (counterparty !== '' && counterparty !== t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')) {
+    if (counterparty) {
       setIsShowCounterHint(false);
     }
   }, [counterparty]);
@@ -466,7 +469,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // };
 
   // Info: (20241018 - Julian) 欄位顯示
-  const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterPartyId);
+  const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterParty);
 
   // Info: (20240926 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
@@ -476,6 +479,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
     } else {
       return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+    }
+  };
+
+  const getCounterpartyStr = (counterParty: ICounterparty | undefined) => {
+    if (counterParty) {
+      return `${counterParty.companyId} - ${counterParty.name}`;
+    } else {
+      return t('journal:ADD_NEW_VOUCHER.COUNTERPARTY');
     }
   };
 
@@ -492,7 +503,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
     setNote('');
-    setCounterparty(t('journal:ADD_NEW_VOUCHER.COUNTERPARTY'));
+    setCounterparty(undefined);
     // setIsRecurring(false);
     // setRecurringPeriod(default30DayPeriodInSec);
     // setRecurringUnit(RecurringUnit.MONTH);
@@ -520,9 +531,16 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setDate(aiDate);
     setType(aiType);
     setNote(aiNote);
-    setCounterparty(aiCounterPartyId.toString());
+    setCounterparty(aiCounterParty);
     // ToDo: (20241021 - Julian) 等 API 格式確認後再處理
-    //  setLineItems(aiLineItems);
+    const aiLineItemsUI = aiLineItems.map((item) => {
+      return {
+        ...item,
+        isReverse: false,
+        reverseList: [],
+      } as ILineItemUI;
+    });
+    setLineItems(aiLineItemsUI);
   };
 
   // ToDo: (20240926 - Julian) Save voucher function
@@ -581,11 +599,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241007 - Julian) 日期不可為 0：顯示日期提示，並定位到日期欄位
       setIsShowDateHint(true);
       if (dateRef.current) dateRef.current.scrollIntoView();
-    } else if (
       // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
-      isCounterpartyRequired &&
-      (counterparty === '' || counterparty === t('journal:ADD_NEW_VOUCHER.COUNTERPARTY'))
-    ) {
+    } else if (isCounterpartyRequired && !counterparty) {
       setIsShowCounterHint(true);
       if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
       // } else if (
@@ -661,42 +676,45 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       ref={counterpartyInputRef}
       value={counterKeyword}
       onChange={counterKeywordChangeHandler}
-      placeholder={counterparty}
+      placeholder={getCounterpartyStr(counterparty)}
       className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
     />
   ) : (
     <p
       className={`truncate ${isShowCounterHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : inputStyle.NORMAL}`}
     >
-      {isShowAnalysisPreview ? aiCounterPartyId : counterparty}
+      {isShowAnalysisPreview
+        ? getCounterpartyStr(aiCounterParty)
+        : getCounterpartyStr(counterparty)}
     </p>
   );
 
-  const counterMenu =
-    filteredCounterparty && filteredCounterparty.length > 0 ? (
-      filteredCounterparty.map((counter) => {
-        const counterClickHandler = () => {
-          setCounterparty(`${counter.taxId} ${counter.name}`);
-          setCounterMenuOpen(false);
-        };
+  const counterMenu = isCounterpartyLoading ? (
+    <div className="px-12px py-8px text-sm text-input-text-input-placeholder">Loading...</div>
+  ) : filteredCounterparty && filteredCounterparty.length > 0 ? (
+    filteredCounterparty.map((counter) => {
+      const counterClickHandler = () => {
+        setCounterparty(counter);
+        setCounterMenuOpen(false);
+      };
 
-        return (
-          <button
-            key={counter.id}
-            type="button"
-            onClick={counterClickHandler}
-            className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
-          >
-            <p className="text-dropdown-text-primary">{counter.taxId}</p>
-            <p className="text-dropdown-text-secondary">{counter.name}</p>
-          </button>
-        );
-      })
-    ) : (
-      <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
-        {t('journal:ADD_NEW_VOUCHER.NO_COUNTERPARTY_FOUND')}
-      </p>
-    );
+      return (
+        <button
+          key={counter.id}
+          type="button"
+          onClick={counterClickHandler}
+          className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
+        >
+          <p className="text-dropdown-text-primary">{counter.taxId}</p>
+          <p className="text-dropdown-text-secondary">{counter.name}</p>
+        </button>
+      );
+    })
+  ) : (
+    <p className="px-12px py-8px text-sm text-input-text-input-placeholder">
+      {t('journal:ADD_NEW_VOUCHER.NO_COUNTERPARTY_FOUND')}
+    </p>
+  );
 
   const counterpartyDropMenu = isCounterMenuOpen ? (
     <div
