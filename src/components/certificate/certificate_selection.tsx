@@ -148,7 +148,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
             onClick={() => handleScroll('left')}
             variant="secondaryOutline"
             disabled={!canScrollLeft}
-            size={'square'}
+            size={'defaultSquare'}
           >
             <AiOutlineLeft size={16} />
           </Button>
@@ -157,7 +157,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
             onClick={() => handleScroll('right')}
             variant="secondaryOutline"
             disabled={!canScrollRight}
-            size={'square'}
+            size={'defaultSquare'}
           >
             <AiOutlineRight size={16} />
           </Button>

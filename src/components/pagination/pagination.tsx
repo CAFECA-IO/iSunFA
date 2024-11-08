@@ -118,7 +118,7 @@ const Pagination = forwardRef(
         onClick={firstPageHandler}
         disabled={isFirstPage}
         variant="secondaryOutline"
-        size={'square'}
+        size={'defaultSquare'}
       >
         <RxTrackPrevious size={16} />
       </Button>
@@ -130,7 +130,7 @@ const Pagination = forwardRef(
         onClick={previousPageHandler}
         disabled={isFirstPage}
         variant="secondaryOutline"
-        size={'square'}
+        size={'defaultSquare'}
       >
         <AiOutlineLeft size={16} />
       </Button>
@@ -142,7 +142,7 @@ const Pagination = forwardRef(
         onClick={lastPageHandler}
         disabled={isLastPage}
         variant="secondaryOutline"
-        size={'square'}
+        size={'defaultSquare'}
       >
         <RxTrackNext size={16} />
       </Button>
@@ -154,7 +154,7 @@ const Pagination = forwardRef(
         onClick={nextPageHandler}
         disabled={isLastPage}
         variant="secondaryOutline"
-        size={'square'}
+        size={'defaultSquare'}
       >
         <AiOutlineRight size={16} />
       </Button>

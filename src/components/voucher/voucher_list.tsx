@@ -167,7 +167,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       </Button>
       {/* Info: (20240920 - Julian) Delete button */}
       <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
-        <Button type="button" variant="tertiary" size={'square'} onClick={removeVoucherHandler}>
+        <Button
+          type="button"
+          variant="tertiary"
+          size={'defaultSquare'}
+          onClick={removeVoucherHandler}
+        >
           <FaRegTrashAlt />
         </Button>
       </div>

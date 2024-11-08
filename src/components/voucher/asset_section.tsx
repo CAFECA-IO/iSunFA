@@ -95,13 +95,13 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
               <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber}</p>
             </div>
             <div className="flex items-center gap-16px">
-              <Button type="button" variant="secondaryBorderless" size={'square'}>
+              <Button type="button" variant="secondaryBorderless" size={'defaultSquare'}>
                 <FiEdit size={20} />
               </Button>
               <Button
                 type="button"
                 variant="secondaryBorderless"
-                size={'square'}
+                size={'defaultSquare'}
                 onClick={deleteHandler}
               >
                 <FiTrash2 size={20} />

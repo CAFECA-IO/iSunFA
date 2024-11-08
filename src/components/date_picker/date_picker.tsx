@@ -466,7 +466,12 @@ const DatePicker = ({
 
           <div className="flex w-full items-center justify-between">
             {/* Info: (20240417 - Shirley) Previous button  */}
-            <Button type="button" onClick={goToPrevMonth} variant="tertiaryOutline" className="p-2">
+            <Button
+              type="button"
+              onClick={goToPrevMonth}
+              variant="tertiaryOutline"
+              size={'smallSquare'}
+            >
               <AiOutlineLeft size={12} />
             </Button>
             {/* Info: (20240417 - Shirley) Month and Year */}
@@ -476,7 +481,12 @@ const DatePicker = ({
             </div>
 
             {/* Info: (20240417 - Shirley) Next button */}
-            <Button type="button" onClick={goToNextMonth} variant="tertiaryOutline" className="p-2">
+            <Button
+              type="button"
+              onClick={goToNextMonth}
+              variant="tertiaryOutline"
+              size={'smallSquare'}
+            >
               <AiOutlineRight size={12} />
             </Button>
           </div>
