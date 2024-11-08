@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { Button } from '@/components/button/button';
+import { useTranslation } from 'next-i18next';
 import { RxCross1 } from 'react-icons/rx';
 import { ProgressStatus } from '@/constants/account';
 import UploadFileItem from '@/components/upload_certificate/upload_file_item';
@@ -20,6 +21,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
   onClose,
   onBack,
 }) => {
+  const { t } = useTranslation(['certificate', 'common']);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
 
   const updateFileStatus = (prevFiles: IFileUIBeta[], index: number) =>
@@ -49,7 +51,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/0">
-      <div className="relative flex max-h-450px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
+      <div className="relative ml-250px flex max-h-450px w-90vw max-w-800px flex-col gap-2 rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button
           type="button"
@@ -66,9 +68,11 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
           <GoArrowLeft size={28} />
         </button>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
-        <h2 className="flex justify-center text-xl font-semibold">Upload Certificates</h2>
+        <h2 className="flex justify-center text-xl font-semibold">
+          {t('certificate:UPLOAD.TITLE')}
+        </h2>
         <p className="flex justify-center text-card-text-secondary">
-          Upload the certificates you want to attach with the voucher
+          {t('certificate:UPLOAD.CONTENT')}
         </p>
         <InvoiceUpload withScanner isDisabled={false} setFiles={setFiles} showErrorMessage />
         <div className="h-60 rounded-t-lg border border-file-uploading-stroke-outline p-4">
@@ -85,7 +89,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
                 />
               ))
             ) : (
-              <div className="text-center text-gray-500">No files uploading</div>
+              <div className="text-center text-gray-500">{t('certificate:UPLOAD.NO_FILE')}</div>
             )}
           </div>
         </div>
@@ -94,7 +98,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             size={40} // Info: (20240926 - tzuhan) 圓的直徑
             progress={55} // Info: (20240926 - tzuhan) 進度百分比
             strokeWidth={2} // Info: (20240926 - tzuhan) 線條寬度
-            remainingText="2 left" // Info: (20240926 - tzuhan) 顯示的剩餘文字
+            remainingText={t('certificate:UPLOAD.REMAIN', { count: files.length })} // Info: (20240926 - tzuhan) 顯示的剩餘文字
           />
         </div>
         <div className="flex items-center justify-end gap-2">
@@ -105,7 +109,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             className="gap-x-4px px-4 py-2"
             onClick={onClose}
           >
-            Cancel
+            {t('common:COMMON.CANCEL')}
           </Button>
           <Button
             id="upload-image-button"
@@ -115,7 +119,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({
             onClick={() => {}}
             disabled
           >
-            Confirm
+            {t('common:COMMON.CONFIRM')}
           </Button>
         </div>
       </div>

@@ -131,5 +131,15 @@
     "SALES_SPECIAL_TAX_RETURNS": "特種稅額之銷貨退回或折讓證明單",
     "FOREIGN_SERVICE_PAYMENT": "進口勞務費用支付證明",
     "FOREIGN_TAX_EXEMPT_GOODS": "進口免稅物品進口證明"
+  },
+  "UPLOAD": {
+    "TITLE": "上傳發票",
+    "CONTENT": "請選擇您要上傳的發票",
+    "NO_FILE": "沒有上傳中的文件",
+    "REMAIN": "剩下 {{count}} 文件",
+    "FAILED": "上傳失敗"
+  },
+  "CREATE": {
+    "FAILED": "創建失敗"
   }
 }
