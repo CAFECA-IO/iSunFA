@@ -767,3 +767,67 @@ export function getLastDatesOfMonthsBetweenDates({
   }
   return result;
 }
+
+/** Info: (20241108 - Shirley)
+ * 將給定的 timestamp 和 時區偏移轉換為新的 timestamp。
+ *
+ * @param timestamp - 原始的時間戳（秒）
+ * @param timezone - 時區偏移，例如 '+0800', '-0530'
+ * @returns 轉換後的時間戳（秒）
+ */
+export const convertTimestampWithTimezone = (timestamp: number, timezone: string): number => {
+  // Info: (20241108 - Shirley) 檢查 timestamp 是否有效
+  if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
+    throw new Error('無效的 timestamp');
+  }
+
+  // Info: (20241108 - Shirley) 檢查 timezone 格式是否正確
+  const timezoneRegex = /^([+-])(\d{2})(\d{2})$/;
+  const match = timezone.match(timezoneRegex);
+  if (!match) {
+    throw new Error('無效的時區格式，應為 +HHMM 或 -HHMM');
+  }
+
+  const sign = match[1] === '+' ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const minutes = parseInt(match[3], 10);
+
+  // Info: (20241108 - Shirley) 計算總的分鐘數
+  const totalOffsetMinutes = sign * (hours * 60 + minutes);
+
+  // Info: (20241108 - Shirley) 將總分鐘轉換為秒數
+  const offsetInSeconds = totalOffsetMinutes * 60;
+
+  // Info: (20241108 - Shirley) 調整 timestamp
+  const adjustedTimestamp = timestamp + offsetInSeconds;
+
+  return adjustedTimestamp;
+};
+
+/** Info: (20241108 - Shirley)
+ * 將給定的 timestamp 和時區偏移轉換為指定格式的日期字串。
+ *
+ * @param timestamp - 原始的時間戳（秒）
+ * @param timezone - 時區偏移，例如 '+0800', '-0530'
+ * @param format - 日期格式，例如 'YYYY-MM-DD', 'YYYY/MM/DD', 'DD-MM-YYYY'
+ * @returns 轉換後的日期字串
+ */
+export const formatTimestampByTZ = (
+  timestamp: number,
+  timezone: string,
+  format: string = 'YYYY-MM-DD'
+): string => {
+  const adjustedTimestamp = convertTimestampWithTimezone(timestamp, timezone);
+  const date = new Date(adjustedTimestamp * 1000);
+
+  const components: Record<string, string> = {
+    YYYY: String(date.getUTCFullYear()),
+    MM: String(date.getUTCMonth() + 1).padStart(2, '0'),
+    DD: String(date.getUTCDate()).padStart(2, '0'),
+    HH: String(date.getUTCHours()).padStart(2, '0'),
+    mm: String(date.getUTCMinutes()).padStart(2, '0'),
+    ss: String(date.getUTCSeconds()).padStart(2, '0'),
+  };
+
+  return format.replace(/YYYY|MM|DD|HH|mm|ss/g, (match) => components[match]);
+};

@@ -1,17 +1,17 @@
-export interface BaseExportRequestBody {
+import { AssetSortBy, ExportFileType, ExportType } from '@/constants/export_file';
+import { SortOrder } from '@/constants/sort';
+
+export interface IBaseExportRequestBody {
   exportType: string;
   fileType: ExportFileType;
 }
 
-export enum ExportFileType {
-  CSV = 'csv',
+export interface IAssetSort {
+  by: AssetSortBy;
+  order: SortOrder;
 }
 
-export enum ExportType {
-  ASSETS = 'assets',
-}
-
-export interface AssetExportRequestBody extends BaseExportRequestBody {
+export interface IAssetExportRequestBody extends IBaseExportRequestBody {
   exportType: ExportType.ASSETS;
   filters?: {
     type?: string;
@@ -20,7 +20,7 @@ export interface AssetExportRequestBody extends BaseExportRequestBody {
     endDate?: number;
     searchQuery?: string;
   };
-  sortOption?: string;
+  sort?: IAssetSort[];
   options?: {
     language?: string;
     timezone?: string;
