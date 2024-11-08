@@ -30,7 +30,7 @@ const dummyCurrencies: ICurrency[] = [
 ];
 
 const AccountingSettingPageBody: React.FC = () => {
-  const { t } = useTranslation(['common', 'setting']);
+  const { t } = useTranslation('common');
 
   const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(dummyCurrencies[0]);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);

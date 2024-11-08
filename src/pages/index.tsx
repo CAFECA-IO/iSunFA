@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import React from 'react';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import LandingNavBar from '@/components/landing_page/landing_nav_bar';
 import LandingPageBody from '@/components/landing_page/landing_page_body';
@@ -46,5 +48,24 @@ function LandingPage({ locale }: ILandingPageProps) {
     </>
   );
 }
+
+const getStaticPropsFunction = async ({ locale }: ILocale) => ({
+  props: {
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+      'asset',
+    ])),
+    locale,
+  },
+});
+
+export const getStaticProps = getStaticPropsFunction;
 
 export default LandingPage;

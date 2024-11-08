@@ -10,7 +10,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 
 const LedgerPageBody = () => {
-  const { t } = useTranslation('journal');
+  const { t } = useTranslation(['common', 'journal']);
 
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆

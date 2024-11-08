@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 // Info: (20241016 - Anna) 改為動態搜尋，不使用reportId
 const BalanceSheetPageBody = () => {
-  const { t } = useTranslation('report_401');
+  const { t } = useTranslation(['common', 'report_401']);
 
   // Info: (20241017 - Anna) 定義日期篩選狀態
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({

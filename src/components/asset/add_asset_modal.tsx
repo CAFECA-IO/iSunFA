@@ -40,7 +40,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   modalVisibilityHandler,
   defaultData,
 }) => {
-  const { t } = useTranslation(['common', 'journal', 'asset']);
+  const { t } = useTranslation(['common', 'journal']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { selectedCompany } = useUserCtx();
