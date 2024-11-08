@@ -1,28 +1,28 @@
-import type { IInvoiceBetaOptional, IInvoiceEntity } from '@/interfaces/invoice';
-import { IFileUIBeta } from '@/interfaces/file';
-import type { IFileEntity } from '@/interfaces/file';
+import { type IInvoiceBetaOptional, type IInvoiceEntity } from '@/interfaces/invoice';
+import { IFileBeta, type IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/company';
 import { generateRandomCounterParties } from '@/interfaces/counterparty';
-import { ProgressStatus } from '@/constants/account';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { InvoiceTransactionDirection, InvoiceTaxType, InvoiceType } from '@/constants/invoice';
 import type { IUserEntity } from '@/interfaces/user';
+import { CurrencyType } from '@/constants/currency';
+import type { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 // Info: (20241022 - tzuhan) @Murky, @Jacky 這裡是參考 data model 來定義 Certificate 的介面，需要確認是否有遺漏或錯誤
 export interface ICertificate {
   id: number;
+  name: string;
   companyId: number;
-  file: IFileUIBeta;
-  unRead?: boolean;
+  unRead: boolean; // Info: (20241108 - tzuhan) !!! not provided by backend yet @Murky
+  file: IFileBeta; // Info: (20241108 - Tzuhan) !!! removed IFileBeta and update IFile
   invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
-
   aiResultId?: string;
   aiStatus?: string;
-
   createdAt: number;
   updatedAt: number;
+  uploader: string; // Info: (20241108 - tzuhan) moved from IInvoiceBetaOptional
 }
 
 export interface ICertificateUI extends ICertificate {
@@ -68,15 +68,15 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
     const priceBeforeTax = randomPrice();
     const certificate: ICertificate = {
       id: i,
+      name: 'Invoice-' + String(i).padStart(8, '0'),
       companyId: randomNumber(),
-
+      unRead: true,
       file: {
         id: randomNumber(),
         name: 'fileName',
         size: 10234,
         url: `images/demo_certifate.png`,
-        progress: 100,
-        status: ProgressStatus.SUCCESS,
+        existed: true,
       },
 
       invoice: {
@@ -85,7 +85,6 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
           Math.random() > 0.5
             ? InvoiceTransactionDirection.INPUT
             : InvoiceTransactionDirection.OUTPUT, // Info: (20240920 - tzuhan) 隨機生成 Input/Output
-        name: `Invoice ${i.toString().padStart(6, '0')}`,
         date: randomDate(new Date(2020, 0, 1), new Date(2024, 11, 31)), // Info: (20240920 - tzuhan) 隨機生成 2020 到 2024 年之間的日期
         no: generateRandomCode(),
         priceBeforeTax,
@@ -95,14 +94,14 @@ export const generateRandomCertificates = (num?: number): ICertificate[] => {
         type: Object.values(InvoiceType)[Math.floor(Math.random() * 18)], // Info: (20240920 - tzuhan) 隨機生成 Triplicate/Duplicate/Special
         counterParty: generateRandomCounterParties(1)[0],
         deductible: Math.random() > 0.5 ? true : !true, // Info: (20240920 - tzuhan) 隨機生成 Yes/No
-        uploader: `Tzuhan`,
 
-        currencyAlias: 'TWD',
+        currencyAlias: CurrencyType.TWD,
         taxType: InvoiceTaxType.TAXABLE,
         createdAt: Math.floor(new Date().getTime() / 1000),
         updatedAt: Math.floor(new Date().getTime() / 1000),
       },
       voucherNo: randomVoucherNo(i),
+      uploader: `Tzuhan`,
 
       createdAt: Math.floor(new Date().getTime() / 1000),
       updatedAt: Math.floor(new Date().getTime() / 1000),
@@ -196,4 +195,6 @@ export interface ICertificateEntity {
   vouchers: IVoucherEntity[];
 
   uploader?: IUserEntity;
+
+  userCertificates: IUserCertificateEntity[];
 }

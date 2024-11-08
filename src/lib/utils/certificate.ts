@@ -5,6 +5,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { ICompanyEntity } from '@/interfaces/company';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getTimestampNow } from '@/lib/utils/common';
+import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 /**
  * Info: (20241024 - Murky)
@@ -20,6 +21,7 @@ export function initCertificateEntity(
     invoice?: IInvoiceEntity;
     company?: ICompanyEntity;
     vouchers?: IVoucherEntity[];
+    userCertificates?: IUserCertificateEntity[];
   }
 ): ICertificateEntity {
   const nowInSecond = getTimestampNow();
@@ -37,6 +39,7 @@ export function initCertificateEntity(
     invoice: dto.invoice,
     company: dto.company,
     vouchers: dto.vouchers || [],
+    userCertificates: dto.userCertificates || [],
   };
 
   return certificateEntity;

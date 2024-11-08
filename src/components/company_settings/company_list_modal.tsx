@@ -12,7 +12,8 @@ import { CompanyTag } from '@/constants/company';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/company_settings/work_tag';
-import CompanyEditModal from './company_edit_modal';
+import CompanyEditModal from '@/components/company_settings/company_edit_modal';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface CompanyListModalProps {
   toggleModal: () => void;
@@ -130,6 +131,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
+  const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
     string: t('company:INFO.WORK_TAG'),
@@ -168,7 +170,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
         <section className="flex flex-col gap-lv-5">
           <FilterSection<ICompanyAndRole[]>
             className="mt-2"
-            params={{}}
+            params={{ userId: userAuth?.id }}
             apiName={APIName.COMPANY_LIST}
             onApiResponse={handleApiResponse}
             page={page}
