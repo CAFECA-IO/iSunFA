@@ -5,13 +5,11 @@ import { IAssetExportRequestBody } from '@/interfaces/export_file';
 export async function exportAssets(body: IAssetExportRequestBody, companyId: number) {
   const { filters, sort } = body;
 
-  // 構建 Prisma where 條件
   const where: Prisma.AssetWhereInput = {
     companyId,
     deletedAt: null,
   };
 
-  // 處理過濾條件
   if (filters) {
     if (filters.type) {
       where.type = filters.type;
@@ -33,7 +31,6 @@ export async function exportAssets(body: IAssetExportRequestBody, companyId: num
     }
   }
 
-  // 構建 Prisma orderBy 條件
   const orderBy: Prisma.AssetOrderByWithRelationInput[] = [];
   if (sort?.length) {
     sort.forEach((sortOption) => {
@@ -43,7 +40,6 @@ export async function exportAssets(body: IAssetExportRequestBody, companyId: num
     });
   }
 
-  // 從資料庫獲取資產資料
   const assets = await prisma.asset.findMany({
     where,
     orderBy: orderBy.length > 0 ? orderBy : undefined,

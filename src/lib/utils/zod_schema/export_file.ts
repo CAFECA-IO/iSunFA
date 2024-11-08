@@ -1,15 +1,16 @@
 import { z } from 'zod';
-import { ExportType, ExportFileType } from '@/constants/export_file';
+import { ExportType, ExportFileType, AssetSortBy, AssetFieldsMap } from '@/constants/export_file';
+import { SortOrder } from '@/constants/sort';
 
 /**
- * Export API 空白 schema
+ * Info: (20241108 - Shirley) Empty schema for Export API
  */
 const exportNullSchema = z.union([z.object({}), z.string()]);
 
 /**
- * Export API 請求驗證規則
+ * Info: (20241108 - Shirley) Query schema for Export API
  */
-const exportListQuerySchema = exportNullSchema; // 假設不需要 query 參數
+const exportListQuerySchema = exportNullSchema; // Info: (20241108 - Shirley) No need for query parameters
 
 const exportListBodySchema = z.object({
   exportType: z.enum([ExportType.ASSETS]),
@@ -26,30 +27,35 @@ const exportListBodySchema = z.object({
   sort: z
     .array(
       z.object({
-        by: z.string(),
-        order: z.enum(['asc', 'desc']),
+        by: z.enum([
+          AssetSortBy.ACQUISITION_DATE,
+          AssetSortBy.PURCHASE_PRICE,
+          AssetSortBy.REMAINING_LIFE,
+          AssetSortBy.ACCUMULATED_DEPRECIATION,
+          AssetSortBy.RESIDUAL_VALUE,
+        ]),
+        order: z.enum([SortOrder.ASC, SortOrder.DESC]),
       })
     )
     .optional(),
   options: z
     .object({
-      fields: z.array(z.string()).optional(),
-      timezone: z.string().optional(),
+      language: z.enum(['zh-TW', 'en-US']).optional().default('zh-TW'),
+      timezone: z.string().optional().default('+0800'),
+      fields: z.array(z.enum(Object.keys(AssetFieldsMap) as [string, ...string[]])).optional(),
     })
     .optional(),
 });
 
 /**
- * Export API 響應驗證規則
- * 根據實際需求定義輸出 schema
+ * Info: (20241108 - Shirley) Response schema for Export API
+ * Define the output schema based on actual needs
+ * 成功回應會是檔案，使用 any 類型
  */
-const exportListResponseSchema = z.object({
-  fileUrl: z.string().url(),
-  status: z.string(),
-});
+const exportListResponseSchema = z.any();
 
 /**
- * Export API 請求驗證器
+ * Info: (20241108 - Shirley) Request validator for Export API
  */
 export const exportListValidator = {
   query: exportListQuerySchema,
@@ -57,7 +63,7 @@ export const exportListValidator = {
 };
 
 /**
- * Export API schema
+ * Info: (20241108 - Shirley) Schema for Export API
  */
 export const fileExportSchema = {
   input: {

@@ -1,59 +1,19 @@
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { exportAssets } from '@/lib/utils/repo/export_file.repo';
-import { ExportFileType, ExportType } from '@/constants/export_file';
+import {
+  AssetFieldsMap,
+  DEFAULT_TIMEZONE,
+  ExportFileType,
+  ExportType,
+} from '@/constants/export_file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAssetExportRequestBody, IExportRequestBody } from '@/interfaces/export_file';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
-import { convertToCSV } from '@/lib/utils/export_file';
+import { convertToCSV, selectFields } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { APIName } from '@/constants/api_connection';
+import { AssetHeader, AssetHeaderWithStringDate } from '@/interfaces/asset';
 
-// 定義 AssetHeader 與 AssetHeaderWithStringDate
-interface AssetHeader {
-  acquisitionDate: number;
-  name: string;
-  purchasePrice: number;
-  accumulatedDepreciation: number;
-  residualValue: number;
-  remainingLife: number;
-  type: string;
-  status: string;
-  number: string;
-}
-
-interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitionDate'> {
-  acquisitionDate: string;
-}
-
-// 定義欄位名稱對應
-const ASSET_FIELDS_MAP: Record<keyof AssetHeader, string> = {
-  acquisitionDate: '取得日期',
-  name: '資產名稱',
-  purchasePrice: '購買價格',
-  accumulatedDepreciation: '累積折舊',
-  residualValue: '殘值',
-  remainingLife: '剩餘使用年限',
-  type: '資產類型',
-  status: '狀態',
-  number: '資產編號',
-};
-
-// 定義需要匯出的欄位
-const ASSET_FIELDS = Object.keys(ASSET_FIELDS_MAP) as (keyof AssetHeader)[];
-
-// 選擇欄位
-function selectFields<T>(data: T[], fields?: (keyof T)[]): T[] {
-  if (!fields || fields.length === 0) return data;
-  return data.map((item) => {
-    const selected = {} as T;
-    fields.forEach((field) => {
-      selected[field] = item[field];
-    });
-    return selected;
-  });
-}
-
-// 處理資產匯出
 async function handleAssetExport(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -81,7 +41,6 @@ async function handleAssetExport(
 
     const parsedCompanyId = parseInt(companyId, 10);
 
-    // 使用 exportAssets 函式獲取資產資料
     const assets = await exportAssets(
       {
         exportType,
@@ -94,6 +53,8 @@ async function handleAssetExport(
     );
 
     let processedAssets = assets;
+    const ASSET_FIELDS = Object.keys(AssetFieldsMap) as (keyof AssetHeader)[];
+
     if (options?.fields) {
       processedAssets = selectFields(
         processedAssets,
@@ -101,12 +62,11 @@ async function handleAssetExport(
       ) as typeof assets;
     }
 
-    // 處理時區轉換
     const newData = processedAssets.map((asset) => {
       const formattedDate = formatTimestampByTZ(
         asset.acquisitionDate,
-        options?.timezone || '+0800',
-        'YYYY-MM-DD HH:mm:ss'
+        options?.timezone || DEFAULT_TIMEZONE,
+        'YYYY-MM-DD'
       );
 
       return {
@@ -122,7 +82,7 @@ async function handleAssetExport(
     const csv = convertToCSV<Record<keyof AssetHeader, AssetHeader[keyof AssetHeader]>>(
       fields,
       newData as AssetHeaderWithStringDate[],
-      ASSET_FIELDS_MAP
+      AssetFieldsMap
     );
 
     const fileName = `assets_${getTimestampNow()}.csv`;
@@ -141,7 +101,6 @@ async function handleAssetExport(
   }
 }
 
-// 方法處理對應
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -159,7 +118,6 @@ const methodHandlers: {
   },
 };
 
-// 預設的處理函式
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await withRequestValidation<APIName.FILE_EXPORT, string>(
     APIName.FILE_EXPORT,
