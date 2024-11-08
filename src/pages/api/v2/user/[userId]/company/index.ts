@@ -28,7 +28,7 @@ const handleGetRequest: IHandleRequest<
       order: number;
     }>
   >
-> = async ({ query, session }) => {
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<
     Array<{
@@ -38,8 +38,7 @@ const handleGetRequest: IHandleRequest<
       order: number;
     }>
   > | null = null;
-  const { pageSize, page } = query;
-  const { userId } = session;
+  const { userId, pageSize, page } = query;
 
   const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize);
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -56,7 +55,7 @@ const handlePostRequest: IHandleRequest<
     tag: string;
     order: number;
   }
-> = async ({ body, session }) => {
+> = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: {
     company: Company & { imageFile: File | null };
@@ -64,8 +63,8 @@ const handlePostRequest: IHandleRequest<
     tag: string;
     order: number;
   } | null = null;
+  const { userId } = query;
   const { taxId, name, tag } = body;
-  const { userId } = session;
 
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
 
