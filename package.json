@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.8.5+47",
+  "version": "0.8.5+54",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -53,6 +53,7 @@
     "react-apexcharts": "^1.4.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
+    "react-hotkeys-hook": "^4.6.1",
     "react-i18next": "^15.0.1",
     "react-icons": "^5.0.1",
     "react-markdown": "^9.0.1",

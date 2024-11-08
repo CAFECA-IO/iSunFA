@@ -31,7 +31,7 @@ import { ProjectStage } from '@/constants/project';
 import EditBookmarkModal from '@/components/edit_bookmark_modal/edit_bookmark_modal';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
-import { ToastId } from '@/constants/toast_id';
+// import { ToastId } from '@/constants/toast_id';
 import { useTranslation } from 'next-i18next';
 import AddAccountTitleModal from '@/components/add_account_title_modal/add_account_title_modal';
 import EditAccountTitleModal from '@/components/edit_account_title_modal/edit_account_title_modal';
@@ -140,14 +140,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const { t } = useTranslation(['common', 'report_401']);
   const router = useRouter();
   const { pathname } = router;
-
-  const { isSignIn, selectedCompany, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
+  const { isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy } = useUserCtx();
   const { reportGeneratedStatus, reportPendingStatus, reportGeneratedStatusHandler } =
     useNotificationCtx();
 
   const {
     toastHandler,
-    eliminateToast,
     isMessageModalVisible,
     messageModalVisibilityHandler,
     messageModalData,
@@ -430,6 +428,7 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     // }
   }, [reportPendingStatus, reportGeneratedStatus, isSignIn, pathname]);
 
+  // ToDo: (20241107 - Liz) 預計將這一段在登入流程中處理(可能在 create role page 處理)
   useEffect(() => {
     if (isSignIn) {
       if (!isAgreeTermsOfService || !isAgreePrivacyPolicy) {
@@ -444,56 +443,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       }
     }
   }, [pathname, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
-
-  useEffect(() => {
-    if (isSignIn) {
-      if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-        eliminateToast(ToastId.ALPHA_TEST_REMINDER);
-        if (!router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY)) {
-          // Info: (20240807 - Anna) 在KYC頁面時，不顯示試用版Toast
-          if (!selectedCompany && !router.pathname.includes(ISUNFA_ROUTE.KYC)) {
-            // Info: (20240513 - Julian) 在使用者選擇公司前，不可以關閉這個 Toast
-            toastHandler({
-              id: ToastId.TRIAL,
-              type: ToastType.INFO,
-              closeable: false,
-              content: (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm">{t('common:COMMON.ISUNFA_TRIAL_VERSION')}</p>
-                  <Link
-                    href={ISUNFA_ROUTE.SELECT_COMPANY}
-                    className="text-base font-semibold text-link-text-primary"
-                  >
-                    {t('common:COMMON.END_OF_TRIAL')}
-                  </Link>
-                </div>
-              ),
-            });
-          }
-        } else {
-          eliminateToast(ToastId.TRIAL);
-        }
-      }
-    } else {
-      eliminateToast();
-      // Info: (20240909 - Anna) 為了不顯示「Alpha 版本的資料只用於測試」這個彈窗，所以先註解掉，未來需要用到時再解開
-      // if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      //   toastHandler({
-      //     id: ToastId.ALPHA_TEST_REMINDER,
-      //     type: ToastType.INFO,
-      //     closeable: true,
-      //     autoClose: false,
-      //     content: (
-      //       <div className="flex items-center justify-between">
-      //         <p className="font-barlow text-sm">{t('common:COMMON.ALPHA_TEST_REMINDER')}</p>
-      //       </div>
-      //     ),
-      //   });
-      // } else {
-      //   eliminateToast(ToastId.ALPHA_TEST_REMINDER);
-      // }
-    }
-  }, [pathname, isSignIn]);
 
   // Info: (20240830 - Anna) 為了拿掉react/jsx-no-constructed-context-values註解，所以使用useMemo hook
 

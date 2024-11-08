@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FiSearch } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
-import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import { IDatePeriod } from '@/interfaces/date_period';
-import { checkboxStyle, default30DayPeriodInSec } from '@/constants/display';
+import FilterSection from '@/components/filter_section/filter_section';
+import { checkboxStyle } from '@/constants/display';
+import { useUserCtx } from '@/contexts/user_context';
 import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IReverseItemModal } from '@/interfaces/reverse';
-import { IReverseItemUI } from '@/interfaces/line_item';
+import { IReverseItem, IReverseItemUI } from '@/interfaces/line_item';
 import { useAccountingCtx } from '@/contexts/accounting_context';
+import { APIName } from '@/constants/api_connection';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { FREE_COMPANY_ID } from '@/constants/config';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
@@ -30,6 +32,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   amountChangeHandler,
 }) => {
   const { t } = useTranslation('common');
+
   const { voucherId, voucherNo, account, description, amount, isSelected, reverseAmount } =
     reverseData;
 
@@ -110,6 +113,12 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const { addReverseListHandler } = useAccountingCtx();
+  const { selectedCompany } = useUserCtx();
+
+  const params = {
+    companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
+    accountId: modalData.account?.code,
+  };
 
   // Info: (20241104 - Julian) 取得會計科目以呼叫 API
   const { lineItemIndex } = modalData;
@@ -119,7 +128,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   const defaultUIReverseList: IReverseItemUI[] = rawReverseData.map((reverse) => {
     return {
       ...reverse,
-      lineItemIndex: 0,
+      lineItemIndex: modalData.lineItemIndex,
       reverseAmount: 0,
       isSelected: false,
     };
@@ -127,9 +136,6 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   const [uiReverseItemList, setUiReverseItemList] =
     useState<IReverseItemUI[]>(defaultUIReverseList);
-  // Info: (20241104 - Julian) Filter
-  const [filteredPeriod, setFilteredPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [searchKeyword, setSearchKeyword] = useState<string>('');
   // Info: (20241104 - Julian) Select All
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
   const [selectCount, setSelectCount] = useState<number>(0);
@@ -166,11 +172,26 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     modalVisibilityHandler();
   };
 
+  const handleApiResponse = (resData: IPaginatedData<IReverseItem[]>) => {
+    const reverseItemList: IReverseItemUI[] = resData.data.map((reverse) => {
+      return {
+        ...reverse,
+        lineItemIndex: 0,
+        reverseAmount: 0,
+        isSelected: false,
+      };
+    });
+
+    setUiReverseItemList(reverseItemList);
+  };
+
   // Info: (20241104 - Julian) 監聽 reverse item 選取狀態
   useEffect(() => {
     const selectedCount = uiReverseItemList.filter((reverse) => reverse.isSelected).length;
     setSelectCount(selectedCount);
-    setIsSelectedAll(selectedCount === totalItems);
+
+    const isSelectAll = selectedCount === totalItems && selectedCount > 0;
+    setIsSelectedAll(isSelectAll);
   }, [uiReverseItemList]);
 
   useEffect(() => {
@@ -188,102 +209,95 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     }
   }, [isModalVisible]);
 
-  const reverseList = uiReverseItemList.map((reverse) => {
-    // Info: (20241104 - Julian) 單選
-    const selectCountHandler = (id: number) => {
-      setUiReverseItemList((prev) => {
-        return prev.map((voucher) => {
-          if (voucher.voucherId === id) {
-            return {
-              ...voucher,
-              isSelected: !voucher.isSelected,
-            };
-          }
-          return voucher;
-        });
-      });
-    };
+  const reverseList =
+    uiReverseItemList.length > 0 ? (
+      uiReverseItemList.map((reverse) => {
+        // Info: (20241104 - Julian) 單選
+        const selectCountHandler = (id: number) => {
+          setUiReverseItemList((prev) => {
+            return prev.map((voucher) => {
+              if (voucher.voucherId === id) {
+                return {
+                  ...voucher,
+                  isSelected: !voucher.isSelected,
+                };
+              }
+              return voucher;
+            });
+          });
+        };
 
-    // Info: (20241104 - Julian) reverse 金額變更
-    const amountChangeHandler = (id: number, value: number) => {
-      setUiReverseItemList((prev) => {
-        return prev.map((item) => {
-          if (item.voucherId === id) {
-            return {
-              ...item,
-              reverseAmount: value,
-            };
-          }
-          return item;
-        });
-      });
-    };
+        // Info: (20241104 - Julian) reverse 金額變更
+        const amountChangeHandler = (id: number, value: number) => {
+          setUiReverseItemList((prev) => {
+            return prev.map((item) => {
+              if (item.voucherId === id) {
+                return {
+                  ...item,
+                  reverseAmount: value,
+                };
+              }
+              return item;
+            });
+          });
+        };
 
-    return (
-      <ReverseItem
-        key={reverse.voucherId}
-        reverseData={reverse}
-        selectHandler={selectCountHandler}
-        amountChangeHandler={amountChangeHandler}
-      />
+        return (
+          <ReverseItem
+            key={reverse.voucherId}
+            reverseData={reverse}
+            selectHandler={selectCountHandler}
+            amountChangeHandler={amountChangeHandler}
+          />
+        );
+      })
+    ) : (
+      <div className="col-start-1 col-end-15 text-center text-lg">No Reverse Item Found</div>
     );
-  });
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="relative flex w-90vw flex-col items-center gap-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg md:w-750px">
+      <div className="relative flex h-500px w-90vw flex-col items-center gap-16px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg md:w-750px">
         {/* Info: (20241104 - Julian) Close button */}
         <button type="button" onClick={modalVisibilityHandler} className="absolute right-4 top-4">
           <RxCross2 size={24} className="text-icon-surface-single-color-primary" />
         </button>
 
         {/* Info: (20241104 - Julian) Modal title */}
-        <h2 className="text-xl font-bold text-card-text-primary">Select Reverse Items</h2>
+        <h2 className="text-xl font-bold text-card-text-primary">
+          {t('journal:REVERSE_MODAL.MODAL_TITLE')}
+        </h2>
 
         {/* Info: (20241104 - Julian) Modal body */}
-        <div className="flex w-full flex-col items-center gap-16px px-20px">
+        <div className="flex w-full flex-1 flex-col items-center gap-16px px-20px">
           {/* Info: (20241104 - Julian) Filter */}
-          <div className="flex w-full items-end gap-8px">
-            {/* Info: (20241104 - Julian) Period */}
-            <div className="flex w-1/2 flex-col items-start gap-8px">
-              <p className="font-semibold text-input-text-primary">Period</p>
-              <DatePicker
-                type={DatePickerType.TEXT_PERIOD}
-                period={filteredPeriod}
-                setFilteredPeriod={setFilteredPeriod}
-              />
-            </div>
-            {/* Info: (20241104 - Julian) Search bar */}
-            <div className="flex w-1/2 items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-icon-surface-single-color-primary">
-              <input
-                type="string"
-                className="flex-1 bg-transparent outline-none placeholder:text-input-text-input-placeholder"
-                placeholder={t('common:COMMON.SEARCH')}
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-              />
-              <FiSearch size={20} />
-            </div>
-          </div>
+          <FilterSection<IReverseItem[]>
+            apiName={APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2}
+            page={1}
+            pageSize={1000} // Info: (20241104 - Julian) 一次取得所有 reverse item
+            params={params}
+            className="w-full"
+            onApiResponse={handleApiResponse}
+          />
 
           {/* Info: (20241104 - Julian) Table */}
-          <div className="flex w-full flex-col overflow-hidden rounded-md border border-stroke-neutral-quaternary">
+          <div className="flex w-full flex-1 flex-col overflow-hidden rounded-md border border-stroke-neutral-quaternary">
             {/* Info: (20241104 - Julian) summary */}
             <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
               {/* Info: (20241104 - Julian) Select */}
               <p className="text-text-neutral-secondary">
-                (Select {selectCount}/{totalItems})
+                ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
               </p>
               {/* Info: (20241104 - Julian) Total reverse amount */}
               <p className="text-text-neutral-secondary">
-                Total reverse amount:{' '}
+                {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
                 <span className="text-text-neutral-primary">
                   {numberWithCommas(totalReverseAmount)}
                 </span>{' '}
-                NTD
+                {t('common:COMMON.TWD')}
               </p>
             </div>
-            <div className="flex flex-col items-center px-16px py-8px text-sm">
+            <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
               {/* Info: (20241104 - Julian) Table header */}
               <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
                 {/* Info: (20241104 - Julian) Checkbox */}
@@ -296,19 +310,23 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                   />
                 </div>
                 {/* Info: (20241104 - Julian) Voucher No */}
-                <div className="col-start-2 col-end-4">Voucher No</div>
+                <div className="col-start-2 col-end-4">{t('journal:REVERSE_MODAL.VOUCHER_NO')}</div>
                 {/* Info: (20241104 - Julian) Accounting */}
-                <div className="col-start-4 col-end-7">Accounting</div>
+                <div className="col-start-4 col-end-7">{t('journal:REVERSE_MODAL.ACCOUNTING')}</div>
                 {/* Info: (20241104 - Julian) Particulars */}
-                <div className="col-start-7 col-end-9">Particulars</div>
+                <div className="col-start-7 col-end-9">
+                  {t('journal:REVERSE_MODAL.PARTICULARS')}
+                </div>
                 {/* Info: (20241104 - Julian) Amount */}
-                <div className="col-start-9 col-end-11">Amount</div>
+                <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
                 {/* Info: (20241104 - Julian) Reverse Amount */}
-                <div className="col-start-11 col-end-15 text-right">Reverse Amount</div>
+                <div className="col-start-11 col-end-15 text-right">
+                  {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
+                </div>
               </div>
 
               {/* Info: (20241104 - Julian) Table body */}
-              <div className="grid max-h-450px w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
+              <div className="grid w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
                 {reverseList}
               </div>
             </div>

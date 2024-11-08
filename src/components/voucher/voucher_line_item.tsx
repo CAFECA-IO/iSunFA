@@ -10,6 +10,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 
 interface IVoucherLineItemProps {
+  id: number;
   flagOfClear: boolean;
   flagOfSubmit: boolean;
   accountIsNull: boolean;
@@ -23,6 +24,7 @@ interface IVoucherLineItemProps {
 }
 
 const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
+  id,
   flagOfClear,
   flagOfSubmit,
   accountIsNull,
@@ -270,11 +272,12 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   const isEditAccounting = isAccountEditing ? (
     <input
+      id={`account_title_search_${id}`}
       ref={accountInputRef}
       value={searchKeyword}
       onChange={accountSearchHandler}
       placeholder={accountTitle}
-      className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
+      className="w-full truncate bg-transparent text-input-text-input-filled"
     />
   ) : (
     <p className={`truncate ${accountStyle}`}>{accountTitle}</p>
@@ -285,9 +288,11 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       {/* Info: (20240927 - Julian) Accounting */}
       <div className="relative col-span-3">
         <div
+          id={`account_title_${id}`}
           ref={accountRef}
+          //  tabIndex={0}
           onClick={accountEditingHandler}
-          className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px outline-none hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
+          className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isAccountingMenuOpen ? 'border-input-stroke-selected' : accountStyle}`}
         >
           {isEditAccounting}
           <div className="h-20px w-20px">
@@ -299,32 +304,40 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       </div>
       {/* Info: (20240927 - Julian) Particulars */}
       <input
+        id={`particulars_input_${id}`}
         type="string"
         value={particulars}
         onChange={particularsInputChangeHandler}
-        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled outline-none"
+        className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
       />
       {/* Info: (20240927 - Julian) Debit */}
       <input
+        id={`debit_input_${id}`}
         type="string"
         value={debitInput}
         onChange={debitInputChangeHandler}
         placeholder="0"
         disabled={isDebitDisabled}
-        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none disabled:bg-input-surface-input-disable`}
+        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
       />
       {/* Info: (20240927 - Julian) Credit */}
       <input
+        id={`credit_input_${id}`}
         type="string"
         value={creditInput}
         onChange={creditInputChangeHandler}
         placeholder="0"
         disabled={isCreditDisabled}
-        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right outline-none disabled:bg-input-surface-input-disable`}
+        className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
       />
       {/* Info: (20240927 - Julian) Delete button */}
       <div className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover">
-        <button type="button" className="p-12px" onClick={deleteHandler}>
+        <button
+          id={`delete_line_item_button_${id}`}
+          type="button"
+          className="p-12px"
+          onClick={deleteHandler}
+        >
           <LuTrash2 size={22} />
         </button>
       </div>

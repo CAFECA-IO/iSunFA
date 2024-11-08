@@ -8,7 +8,6 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompany } from '@/interfaces/company';
 import { IUser } from '@/interfaces/user';
-import { IRole } from '@/interfaces/role';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
 import { signIn as authSignIn, signOut as authSignOut } from 'next-auth/react';
@@ -16,6 +15,7 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
+import { IRole } from '@/interfaces/role';
 import { RoleName } from '@/constants/role';
 import { IUserRole } from '@/interfaces/user_role';
 import { CompanyTag } from '@/constants/company';
@@ -29,8 +29,8 @@ interface UserContextType {
   isAgreeTermsOfService: boolean;
   isAgreePrivacyPolicy: boolean;
   isSignInError: boolean;
-  createRole: (roleName: RoleName) => Promise<boolean>;
-  selectRole: (roleName: string) => Promise<void>;
+  createRole: (roleName: RoleName) => Promise<IUserRole | null>;
+  selectRole: (roleId: number) => Promise<IUserRole | null>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
 
@@ -51,7 +51,7 @@ interface UserContextType {
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
-  returnUrl: string | null;
+  // returnUrl: string | null;
   checkIsRegistered: () => Promise<{
     isRegistered: boolean;
     credentials: PublicKeyCredential | null;
@@ -76,8 +76,8 @@ export const UserContext = createContext<UserContextType>({
   isAgreeTermsOfService: false,
   isAgreePrivacyPolicy: false,
   isSignInError: false,
-  createRole: async () => false,
-  selectRole: async () => {},
+  createRole: async () => null,
+  selectRole: async () => null,
   getUserRoleList: async () => null,
   selectedRole: null,
   createCompany: async () => ({ success: false, code: '' }),
@@ -89,7 +89,7 @@ export const UserContext = createContext<UserContextType>({
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
-  returnUrl: null,
+  // returnUrl: null,
   checkIsRegistered: async () => {
     return { isRegistered: false, credentials: null };
   },
@@ -118,7 +118,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
-  const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
+  // const [returnUrl, setReturnUrl, returnUrlRef] = useStateRef<string | null>(null);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
   const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false);
   const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
@@ -170,6 +170,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20240530 - Shirley) 在瀏覽器被重新整理後，如果沒有登入，就 redirect to login page
   const redirectToLoginPage = () => {
+    // Deprecated: (20241001 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 redirectToLoginPage (尚未導向)');
+
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       // Deprecated: (20241008 - Liz)
       // eslint-disable-next-line no-console
@@ -177,9 +181,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 redirectToLoginPage (但不一定真的重新導向喔)');
   };
 
   const goToSelectRolePage = () => {
@@ -192,7 +193,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ToDo: (20241008 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
   const goToDashboard = () => {
-    router.push(ISUNFA_ROUTE.BETA_DASHBOARD);
+    router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
   const goBackToOriginalPath = () => {
@@ -246,20 +247,20 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  const handleReturnUrl = () => {
-    if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
-      if (returnUrl) {
-        const urlString = decodeURIComponent(returnUrl);
-        setReturnUrl(null);
-        router.push(urlString);
-      } else if (
-        router.pathname.includes(ISUNFA_ROUTE.SELECT_COMPANY) ||
-        (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
-      ) {
-        router.push(ISUNFA_ROUTE.DASHBOARD);
-      }
-    }
-  };
+  // const handleReturnUrl = () => {
+  //   if (isAgreeTermsOfServiceRef.current && isAgreePrivacyPolicyRef.current) {
+  //     if (returnUrl) {
+  //       const urlString = decodeURIComponent(returnUrl);
+  //       setReturnUrl(null);
+  //       router.push(urlString);
+  //     } else if (
+  //       router.pathname.includes(ISUNFA_ROUTE.DASHBOARD) ||
+  //       (selectedCompanyRef.current && router.pathname.includes(ISUNFA_ROUTE.LOGIN))
+  //     ) {
+  //       router.push(ISUNFA_ROUTE.DASHBOARD);
+  //     }
+  //   }
+  // };
 
   const signOut = async () => {
     await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
@@ -511,7 +512,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (response.success && response.data !== null) {
       setSelectedCompany(response.data);
       setSuccessSelectCompany(true);
-      handleReturnUrl();
+      // handleReturnUrl();
+      // Deprecated: (20241107 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleSelectCompanyResponse 並且 response.success && response.data !== null');
     }
     if (response.success === false) {
       setSelectedCompany(null);
@@ -520,43 +524,49 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // ToDo: (20241107 - Liz) 獲得可以建立的所有角色，得到 roleId，建立、選擇角色都傳 roleId (in body) 給 API
+
   // Info: (20241029 - Liz) 建立角色的功能
   const createRole = async (roleName: RoleName) => {
     try {
-      const { success } = await createRoleAPI({
+      const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuth?.id },
         body: { roleName },
       });
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
-      if (!success) {
-        return false; // Info: (20241107 - Liz) 建立失敗
+      if (success && userRole) {
+        return userRole;
       }
 
-      return true; // Info: (20241107 - Liz) 建立成功
+      // Info: (20241107 - Liz) 建立失敗回傳 null
+      return null;
     } catch (error) {
+      // Info: (20241107 - Liz) 例外發生視為建立失敗回傳 null
       // console.error('Error creating role:', error);
-      return false; // Info: (20241107 - Liz) 建立失敗
+      return null;
     }
   };
 
   // Info: (20241101 - Liz) 選擇角色的功能
-  const selectRole = async (roleName: string) => {
+  const selectRole = async (roleId: number) => {
     setSelectedRole(null);
 
     try {
-      const { success } = await selectRoleAPI({
-        params: { userId: userAuth?.id },
-        body: { roleName },
+      const { success, data: userRole } = await selectRoleAPI({
+        params: { userId: userAuth?.id, roleId },
       });
 
-      if (success) {
-        setSelectedRole(roleName);
+      if (success && userRole) {
+        setSelectedRole(userRole.role.name);
+        return userRole;
       }
 
       setSelectedRole(null);
+      return null;
     } catch (error) {
       setSelectedRole(null);
+      return null;
     }
   };
 
@@ -634,7 +644,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!company && !isPublic) {
-      router.push(ISUNFA_ROUTE.SELECT_COMPANY);
+      // router.push(ISUNFA_ROUTE.DASHBOARD);
       return;
     }
     await handleSelectCompanyResponse(res);
@@ -657,6 +667,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
       throttledGetStatusInfo();
+      // Deprecated: (20241107 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動');
     }
   }, [throttledGetStatusInfo, router.pathname]);
 
@@ -729,7 +742,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
-      returnUrl: returnUrlRef.current,
+      // returnUrl: returnUrlRef.current,
       checkIsRegistered,
       handleUserAgree,
       authenticateUser,
@@ -743,7 +756,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
-      returnUrlRef.current,
+      // returnUrlRef.current,
       router.pathname,
       userAuthRef.current,
     ]

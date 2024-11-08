@@ -28,7 +28,6 @@ interface IVoucherLineBlockProps {
   setIsVoucherLineEmpty: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否傳票列為空
   setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要 Counterparty
   setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要 Asset
-  setIsReverseRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要反轉分錄
 }
 
 interface IVoucherLinePreviewProps {
@@ -51,7 +50,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   setIsVoucherLineEmpty,
   setIsCounterpartyRequired,
   setIsAssetRequired,
-  setIsReverseRequired,
 }) => {
   const { t } = useTranslation('common');
   const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
@@ -96,18 +94,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
-    // Info: (20241104 - Julian) 會計科目有應付帳款且借方有值 || 會計科目有應收帳款且貸方有值，顯示 Reverse
-    const lineItemsHaveReverse = lineItems.map((item) => {
-      const isReverse =
-        (item.account?.code === '2171' && item.debit === true && item.amount > 0) || // Info: (20241009 - Julian) 應付帳款
-        (item.account?.code === '1172' && item.debit === false && item.amount > 0); // Info: (20241009 - Julian) 應收帳款
-      return {
-        ...item,
-        isReverse,
-      };
-    });
-    const isReverseRequired = lineItemsHaveReverse.some((item) => item.isReverse);
-
     setTotalDebit(debitTotal);
     setTotalCredit(creditTotal);
 
@@ -118,8 +104,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     setIsVoucherLineEmpty(lineItems.length === 0);
     setIsCounterpartyRequired(isAPorAR);
     setIsAssetRequired(isAsset);
-    setIsReverseRequired(isReverseRequired);
-    setLineItems(lineItemsHaveReverse);
   }, [lineItems]);
 
   useEffect(() => {
@@ -218,6 +202,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           <>
             <VoucherLineItem
               key={`${lineItem.id}-voucher-line`}
+              id={lineItem.id}
               deleteHandler={deleteVoucherLine}
               accountTitleHandler={accountTitleHandler}
               particularsChangeHandler={particularsChangeHandler}
@@ -255,12 +240,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
             {isShowReverse ? (
               <div className="col-start-1 col-end-13">
                 <button
+                  id="add-reverse-item-button"
                   type="button"
                   className="flex items-center gap-4px text-text-neutral-invert"
                   onClick={addReverseHandler}
                 >
                   <FaPlus />
-                  <p>Reverse item</p>
+                  <p>{t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}</p>
                 </button>
               </div>
             ) : null}
@@ -315,7 +301,12 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       </div>
 
       {/* Info: (20240927 - Julian) Add button */}
-      <Button type="button" className="h-44px w-44px p-0" onClick={addNewVoucherLine}>
+      <Button
+        id="add-line-item-button"
+        type="button"
+        className="h-44px w-44px p-0"
+        onClick={addNewVoucherLine}
+      >
         <FaPlus size={20} />
       </Button>
     </div>
