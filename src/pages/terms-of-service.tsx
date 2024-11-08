@@ -1,7 +1,5 @@
 import Head from 'next/head';
 import React from 'react';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import LandingNavBar from '@/components/landing_page/landing_nav_bar';
 import LandingFooter from '@/components/landing_page/landing_footer';
@@ -31,13 +29,5 @@ const TermsOfService = () => {
     </>
   );
 };
-
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, 'common')),
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
 
 export default TermsOfService;

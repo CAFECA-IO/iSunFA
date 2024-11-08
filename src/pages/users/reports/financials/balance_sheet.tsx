@@ -1,8 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { ILocale } from '@/interfaces/locale';
 import BalanceSheetPageBody from '@/components/balance_sheet_report_body/balance_sheet_report_body_new';
 import Layout from '@/components/beta/layout/layout';
 
@@ -28,14 +26,5 @@ const BalanceSheetPage = () => {
     </>
   );
 };
-
-const getStaticPropsFunction = async ({ locale }: ILocale) => ({
-  props: {
-    ...(await serverSideTranslations(locale, 'common')),
-    locale,
-  },
-});
-
-export const getStaticProps = getStaticPropsFunction;
 
 export default BalanceSheetPage;

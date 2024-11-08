@@ -57,7 +57,17 @@ const SalaryBookkeepingPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'salary'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+      'asset',
+    ])),
   },
 });
 

@@ -63,7 +63,17 @@ const MyReportsPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'report_401'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+      'asset',
+    ])),
   },
 });
 
