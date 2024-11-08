@@ -121,7 +121,8 @@ export type IAPIName =
   | 'UPDATE_ASSET_V2'
   | 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE'
   | 'TRIAL_BALANCE_LIST'
-  | 'IP_LIST';
+  | 'IP_LIST'
+  | 'FILE_EXPORT';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
