@@ -9,7 +9,11 @@ export interface IFile {
   existed: boolean;
 }
 
-// Info: only for frontend without confidential data (20241021 - tzuhan)
+export interface IFileBeta extends IFile {
+  url: string;
+}
+
+// (20241021 - tzuhan) Info: only for frontend without confidential data
 export interface IFileUIBeta {
   id: number | null;
   certificateId?: number;

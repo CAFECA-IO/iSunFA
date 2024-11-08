@@ -340,7 +340,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
         <div className="flex w-full flex-col items-center">
           <h2 className="flex justify-center gap-2 text-xl font-semibold">
-            {certificate.invoice.name}
+            {certificate.name}
             <Image alt="edit" src="/elements/edit.svg" width={16} height={16} />
           </h2>
           <p className="text-xs text-card-text-secondary">{t('certificate:EDIT.HEADER')}</p>
