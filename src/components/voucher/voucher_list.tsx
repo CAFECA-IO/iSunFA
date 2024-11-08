@@ -170,7 +170,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <Button
           type="button"
           variant="tertiary"
-          className="h-44px w-44px p-0"
+          size={'defaultSquare'}
           onClick={removeVoucherHandler}
         >
           <FaRegTrashAlt />

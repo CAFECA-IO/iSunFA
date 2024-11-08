@@ -280,7 +280,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
         </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
       </div>
@@ -304,7 +304,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       <Button
         id="add-line-item-button"
         type="button"
-        className="h-44px w-44px p-0"
+        size={'defaultSquare'}
         onClick={addNewVoucherLine}
       >
         <FaPlus size={20} />
@@ -396,7 +396,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.DEBIT')}
         </div>
-        <div className="col-span-3 col-end-14 font-semibold text-text-neutral-invert">
+        <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
 
@@ -415,7 +415,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
 
         {/* Info: (20241018 - Julian) Add button */}
         <div className="col-start-1 col-end-14 text-center">
-          <Button type="button" className="h-44px w-44px p-0">
+          <Button type="button" size={'defaultSquare'}>
             <FaPlus size={20} />
           </Button>
         </div>

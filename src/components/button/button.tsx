@@ -36,6 +36,8 @@ const buttonVariants = cva(
         medium: 'px-5 py-2',
         small: 'px-16px py-8px', // Info: (20241106 - Liz) 設計稿 Size: Small
         extraSmall: 'px-2 py-1',
+        defaultSquare: 'p-10px w-44px h-44px',
+        smallSquare: 'p-10px w-36px h-36px',
       },
     },
     defaultVariants: {
