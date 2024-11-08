@@ -119,13 +119,12 @@ const methodHandlers: {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // TODO: (20241108 - Shirley) Refine the coding style to use `withRequestValidation` as the complete middleware (less priority)
   await withRequestValidation<APIName.FILE_EXPORT, string>(
     APIName.FILE_EXPORT,
     req,
     res,
-    // TODO: 可用 query 跟 session
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async ({ query, body, session }) => {
+    async ({ body }) => {
       const handleRequest = methodHandlers[req.method || ''];
       if (handleRequest) {
         try {
