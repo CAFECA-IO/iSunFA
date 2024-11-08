@@ -75,7 +75,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
             </div>
           </div>
         </div>
-        <p className="text-xs font-medium text-text-neutral-primary">{certificate.invoice.name}</p>
+        <p className="text-xs font-medium text-text-neutral-primary">{certificate.name}</p>
       </div>
     </>
   );

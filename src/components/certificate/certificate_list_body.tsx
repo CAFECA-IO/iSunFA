@@ -9,7 +9,7 @@ import { CERTIFICATE_USER_INTERACT_OPERATION, InvoiceTabs } from '@/constants/ce
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { generateRandomCertificates, ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -50,7 +50,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     useModalContext();
   const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
   const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_PUT_V2);
-  const { trigger: deleteCertificateAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
   const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
@@ -165,32 +164,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         certificates: ICertificate[];
       }>
     ) => {
-      const dummyCertificateList = generateRandomCertificates(12);
-      const dummyData = {
-        data: {
-          totalInvoicePrice: dummyCertificateList.reduce(
-            (acc, item) => acc + (item.invoice.totalPrice || 0),
-            0
-          ),
-          unRead: {
-            withVoucher: 0,
-            withoutVoucher: 3,
-          },
-          currency: 'TWD',
-          certificates: dummyCertificateList,
-        },
-        page: 1,
-        totalPages: 2,
-        totalCount: 12,
-        pageSize: 10,
-        hasNextPage: true,
-        hasPreviousPage: false,
-        sort: [],
-      };
-      // Deprecated: (20241030 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-param-reassign
-      resData = dummyData;
-
       try {
         setTotalInvoicePrice(resData.data.totalInvoicePrice);
         setUnRead(resData.data.unRead);
@@ -265,14 +238,14 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates[id].invoice.name}?`,
+        notes: `${certificates[id].name}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
           try {
-            const { success } = await deleteCertificateAPI({
+            const { success } = await deleteCertificatesAPI({
               params: { companyId, certificateId: id },
-              query: { certificateId: id },
+              query: { certificateIds: id },
             });
             if (success) {
               toastHandler({

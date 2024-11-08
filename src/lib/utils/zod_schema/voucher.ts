@@ -16,7 +16,7 @@ import {
   zodStringToNumberWithDefault,
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { EventType, ProgressStatus, VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
 import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
@@ -41,6 +41,8 @@ import {
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
 import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
+import { isUserReadCertificate } from '@/lib/utils/user_certificate';
+import { userCertificateEntityValidator } from './user_certificate';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -379,6 +381,7 @@ const voucherGetOneOutputValidatorV2 = z
         ...certificateEntityValidator.shape,
         invoice: invoiceEntityValidator,
         file: fileEntityValidator,
+        userCertificates: z.array(userCertificateEntityValidator),
       })
     ),
     lineItems: z.array(
@@ -450,51 +453,55 @@ const voucherGetOneOutputValidatorV2 = z
         relatedVouchers: [],
         note: asset.note,
       })),
-      certificates: data.certificates.map((certificate) => ({
-        id: certificate.id,
-        companyId: certificate.companyId,
-        voucherNo: certificate.voucherNo,
-        invoice: {
-          id: certificate.invoice.id,
-          inputOrOutput: certificate.invoice.inputOrOutput,
-          date: certificate.invoice.date,
-          no: certificate.invoice.no,
-          currencyAlias: certificate.invoice.currencyAlias,
-          priceBeforeTax: certificate.invoice.priceBeforeTax,
-          taxType: certificate.invoice.taxType,
-          taxRatio: certificate.invoice.taxRatio,
-          taxPrice: certificate.invoice.taxPrice,
-          totalPrice: certificate.invoice.totalPrice,
-          type: certificate.invoice.type,
-          deductible: certificate.invoice.deductible,
-          counterPartyId: certificate.invoice.counterPartyId,
-          createdAt: certificate.invoice.createdAt,
-          updatedAt: certificate.invoice.updatedAt,
-          name: 'InvoiceName', // ToDo: (20241105 - Murky) DB 沒有這個欄位, 等待db更新
+      certificates: data.certificates.map((certificate) => {
+        const isRead = isUserReadCertificate(certificate.userCertificates);
+        const certificateInstance = {
+          id: certificate.id,
+          name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),
+          companyId: certificate.companyId,
+          voucherNo: certificate.voucherNo,
+          unRead: !isRead,
           uploader: data.issuer.name,
-          counterParty: {
-            id: data.counterParty.id,
-            companyId: data.counterParty.companyId,
-            name: data.counterParty.name,
-            taxId: data.counterParty.taxId,
-            type: data.counterParty.type,
-            note: data.counterParty.note,
-            createdAt: data.counterParty.createdAt,
-            updatedAt: data.counterParty.updatedAt,
+          invoice: {
+            id: certificate.invoice.id,
+            isComplete: true,
+            inputOrOutput: certificate.invoice.inputOrOutput,
+            date: certificate.invoice.date,
+            no: certificate.invoice.no,
+            currencyAlias: certificate.invoice.currencyAlias,
+            priceBeforeTax: certificate.invoice.priceBeforeTax,
+            taxType: certificate.invoice.taxType,
+            taxRatio: certificate.invoice.taxRatio,
+            taxPrice: certificate.invoice.taxPrice,
+            totalPrice: certificate.invoice.totalPrice,
+            type: certificate.invoice.type,
+            deductible: certificate.invoice.deductible,
+            createdAt: certificate.invoice.createdAt,
+            updatedAt: certificate.invoice.updatedAt,
+            name: 'InvoiceName',
+            counterParty: {
+              id: data.counterParty.id,
+              companyId: data.counterParty.companyId,
+              name: data.counterParty.name,
+              taxId: data.counterParty.taxId,
+              type: data.counterParty.type,
+              note: data.counterParty.note,
+              createdAt: data.counterParty.createdAt,
+              updatedAt: data.counterParty.updatedAt,
+            },
           },
-        },
-        file: {
-          id: certificate.file.id,
-          name: certificate.file.name,
-          url: certificate.file.url,
-          size: certificate.file.size,
-          progress: 100,
-          status: ProgressStatus.SUCCESS,
-        },
-        createdAt: certificate.createdAt,
-        updatedAt: certificate.updatedAt,
-        deletedAt: certificate.deletedAt,
-      })),
+          file: {
+            id: certificate.file.id,
+            name: certificate.file.name,
+            url: certificate.file.url,
+            size: certificate.file.size,
+            existed: !!certificate.file,
+          },
+          createdAt: certificate.createdAt,
+          updatedAt: certificate.updatedAt,
+        };
+        return certificateInstance;
+      }),
       lineItemsInfo: {
         lineItems: data.lineItems.map((lineItem) => ({
           id: lineItem.id,

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { FileFolder } from '@/constants/file';
-import { ProgressStatus } from '@/constants/account';
 
 export const fileSchema = z.object({
   id: z.number().int(),
@@ -35,7 +34,7 @@ export const fileEntityValidator = z.object({
 
 /**
  * Info: (20241105 - Murky)
- * @description for IFileUIBeta
+ * @description for IFileUIBeta (這個是前端上傳file的時候用的), 後端驗證Response請用下面的IFileBetaValidator
  */
 export const IFileUIBetaValidator = z.object({
   id: z.number().nullable(),
@@ -43,6 +42,17 @@ export const IFileUIBetaValidator = z.object({
   name: z.string(),
   size: z.number(),
   url: z.string().url(),
-  progress: z.number().min(0).max(100).describe('上傳進度（0-100）'),
-  status: z.nativeEnum(ProgressStatus).describe('是否暫停'),
+  existed: z.boolean(),
+});
+
+/**
+ * Info: (20241108 - Murky)
+ * @description for IFileBeta (這個是後端回傳file的時候用的), 前端驗證Request請用上面的IFileUIBetaValidator
+ */
+export const IFileBetaValidator = z.object({
+  id: z.number(),
+  name: z.string(),
+  size: z.number().describe('Bytes of file'),
+  existed: z.boolean(),
+  url: z.string(),
 });

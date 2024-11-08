@@ -8,14 +8,14 @@ import {
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceTabs } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
-import { fileEntityValidator, IFileUIBetaValidator } from '@/lib/utils/zod_schema/file';
+import { fileEntityValidator, IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import { IInvoiceBetaValidator, invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { counterPartyEntityValidator } from '@/constants/counterparty';
-import { ProgressStatus } from '@/constants/account';
 import { paginatedDataSchemaDataNotArray } from '@/lib/utils/zod_schema/pagination';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
+import { userCertificateEntityValidator } from './user_certificate';
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
@@ -25,15 +25,17 @@ const nullSchema = z.union([z.object({}), z.string()]);
  */
 export const ICertificateValidator = z.object({
   id: z.number(),
+  name: z.string().describe('Name of certificate, but get it from Invoice'),
   companyId: z.number(),
-  file: IFileUIBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
-  unRead: z.boolean().optional(),
+  unRead: z.boolean(),
+  file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
   invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
   voucherNo: z.string().nullable(),
   aiResultId: z.string().optional(),
   aiStatus: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
+  uploader: z.string(),
 });
 
 /**
@@ -55,6 +57,7 @@ export const certificateEntityValidator = z.object({
   company: z.any().optional(),
   vouchers: z.array(z.any()).optional(),
   uploader: z.any().optional(),
+  userCertificates: z.array(z.any()).optional(),
 });
 
 const certificateListQueryValidator = z.object({
@@ -99,6 +102,7 @@ const certificateListOutputSchema = paginatedDataSchemaDataNotArray(
         }),
         file: fileEntityValidator,
         uploader: userEntityValidator,
+        userCertificates: z.array(userCertificateEntityValidator),
       })
     ),
   })
@@ -107,51 +111,60 @@ const certificateListOutputSchema = paginatedDataSchemaDataNotArray(
     ...item,
     data: {
       ...item.data,
-      certificates: item.data.certificates.map((certificate) => ({
-        id: certificate.id,
-        companyId: certificate.companyId,
-        voucherNo: certificate.voucherNo,
-        invoice: {
-          id: certificate.invoice.id,
-          inputOrOutput: certificate.invoice.inputOrOutput,
-          date: certificate.invoice.date,
-          no: certificate.invoice.no,
-          currencyAlias: certificate.invoice.currencyAlias,
-          priceBeforeTax: certificate.invoice.priceBeforeTax,
-          taxType: certificate.invoice.taxType,
-          taxRatio: certificate.invoice.taxRatio,
-          taxPrice: certificate.invoice.taxPrice,
-          totalPrice: certificate.invoice.totalPrice,
-          type: certificate.invoice.type,
-          deductible: certificate.invoice.deductible,
-          counterPartyId: certificate.invoice.counterPartyId,
-          createdAt: certificate.invoice.createdAt,
-          updatedAt: certificate.invoice.updatedAt,
-          name: 'InvoiceName', // ToDo: (20241105 - Murky) DB 沒有這個欄位, 等待db更新
+      certificates: item.data.certificates.map((certificate) => {
+        const isRead = certificate.userCertificates.some(
+          (userCertificate) => userCertificate.isRead
+        );
+        return {
+          id: certificate.id,
+          unRead: !isRead,
+          companyId: certificate.companyId,
+          voucherNo: certificate.voucherNo,
+          name: 'certificate', // Info: (20241105 - Murky) certificate.invoice.name,
           uploader: certificate.uploader.name,
-          counterParty: {
-            id: certificate.invoice.counterParty.id,
-            companyId: certificate.invoice.counterParty.companyId,
-            name: certificate.invoice.counterParty.name,
-            taxId: certificate.invoice.counterParty.taxId,
-            type: certificate.invoice.counterParty.type,
-            note: certificate.invoice.counterParty.note,
-            createdAt: certificate.invoice.counterParty.createdAt,
-            updatedAt: certificate.invoice.counterParty.updatedAt,
+          aiStatus: certificate.aiStatus,
+          invoice: {
+            id: certificate.invoice.id,
+            isComplete: true,
+            inputOrOutput: certificate.invoice.inputOrOutput,
+            date: certificate.invoice.date,
+            no: certificate.invoice.no,
+            currencyAlias: certificate.invoice.currencyAlias,
+            priceBeforeTax: certificate.invoice.priceBeforeTax,
+            taxType: certificate.invoice.taxType,
+            taxRatio: certificate.invoice.taxRatio,
+            taxPrice: certificate.invoice.taxPrice,
+            totalPrice: certificate.invoice.totalPrice,
+            type: certificate.invoice.type,
+            deductible: certificate.invoice.deductible,
+            counterPartyId: certificate.invoice.counterPartyId,
+            createdAt: certificate.invoice.createdAt,
+            updatedAt: certificate.invoice.updatedAt,
+            name: 'InvoiceName', // ToDo: (20241105 - Murky) DB 沒有這個欄位, 等待db更新
+            uploader: certificate.uploader.name,
+            counterParty: {
+              id: certificate.invoice.counterParty.id,
+              companyId: certificate.invoice.counterParty.companyId,
+              name: certificate.invoice.counterParty.name,
+              taxId: certificate.invoice.counterParty.taxId,
+              type: certificate.invoice.counterParty.type,
+              note: certificate.invoice.counterParty.note,
+              createdAt: certificate.invoice.counterParty.createdAt,
+              updatedAt: certificate.invoice.counterParty.updatedAt,
+            },
           },
-        },
-        file: {
-          id: certificate.file.id,
-          name: certificate.file.name,
-          url: certificate.file.url,
-          size: certificate.file.size,
-          progress: 100,
-          status: ProgressStatus.SUCCESS,
-        },
-        createdAt: certificate.createdAt,
-        updatedAt: certificate.updatedAt,
-        deletedAt: certificate.deletedAt,
-      })),
+          file: {
+            id: certificate.file.id,
+            name: certificate.file.name,
+            url: certificate.file.url,
+            size: certificate.file.size,
+            existed: !!certificate.file,
+          },
+          createdAt: certificate.createdAt,
+          updatedAt: certificate.updatedAt,
+          deletedAt: certificate.deletedAt,
+        };
+      }),
     },
   };
 

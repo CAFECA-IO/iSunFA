@@ -24,6 +24,7 @@ export function parsePrismaCertificateToCertificateEntity(
   const certificate: ICertificateEntity = {
     ...data,
     vouchers: data.vouchers || [],
+    userCertificates: data.userCertificates || [],
   };
 
   return certificate;

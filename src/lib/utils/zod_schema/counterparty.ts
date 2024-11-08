@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { CounterpartyType } from '@/constants/counterparty';
 
 /**
  * Info: (20241105 - Murky)
@@ -12,7 +13,7 @@ export const ICounterpartyValidator = z.object({
   companyId: z.number(),
   name: z.string(),
   taxId: z.string(),
-  type: z.string(),
+  type: z.nativeEnum(CounterpartyType),
   note: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),

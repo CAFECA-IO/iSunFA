@@ -13,13 +13,14 @@ import { ICounterpartyValidator } from '@/lib/utils/zod_schema/counterparty';
  */
 export const IInvoiceBetaValidator = z.object({
   id: z.number(),
-  // certificateId: z.number(), // 若未來需要此欄位可以加入
+  isComplete: z.boolean(),
+  counterParty: ICounterpartyValidator,
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
   no: z.string(),
-  currencyAlias: z.string(),
+  currencyAlias: z.nativeEnum(CurrencyType),
   priceBeforeTax: z.number(),
-  taxType: z.string(), // 根據需求，若有 enum 可更新
+  taxType: z.nativeEnum(InvoiceTaxType),
   taxRatio: z.number(),
   taxPrice: z.number(),
   totalPrice: z.number(),
@@ -27,9 +28,7 @@ export const IInvoiceBetaValidator = z.object({
   deductible: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  name: z.string(),
-  uploader: z.string(),
-  counterParty: ICounterpartyValidator,
+  name: z.string().describe('name of invoice, not in IInvoiceBeta right now'),
 });
 
 const iInvoiceValidator = z.object({
