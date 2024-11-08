@@ -173,7 +173,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
             onApiResponse={handleApiResponse}
             page={page}
             pageSize={DEFAULT_PAGE_LIMIT}
-            diseableDateSearch
+            disableDateSearch
           />
           <div id="company-setting-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
