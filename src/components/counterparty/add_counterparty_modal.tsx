@@ -7,10 +7,18 @@ import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
-  onSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void;
+  onSave: (counterpartyData: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    note: string;
+  }) => void;
   name?: string;
   taxId?: string;
 }
@@ -22,6 +30,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
+  const { selectedCompany } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
@@ -92,12 +101,32 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
 
   const disabled = !inputName || !inputTaxId || !inputType;
 
-  const addNewCounterParterHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  // Info: (20241110 - Anna) 新增 API 佔位函數
+  const addCounterparty = async (counterpartyData: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    note: string;
+  }) => {
+    await APIHandler(APIName.COUNTERPARTY_ADD, {
+      body: counterpartyData,
+      params: { companyId: selectedCompany?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
+    });
+  };
+
+  const addNewCounterParterHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (disabled) {
       setShowHint(true);
     } else {
-      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote || '' });
+      const counterpartyData = {
+        name: inputName,
+        taxId: inputTaxId,
+        type: inputType,
+        note: inputNote || '',
+      };
+      await addCounterparty(counterpartyData); // Info: (20241110 - Anna) 呼叫 API 函數
+      onSave(counterpartyData);
     }
   };
 

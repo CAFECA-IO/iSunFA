@@ -7,8 +7,11 @@ import APIHandler from '@/lib/utils/api_handler';
 import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 import { Button } from '@/components/button/button';
 import { MdPersonAddAlt1 } from 'react-icons/md';
+import { useUserCtx } from '@/contexts/user_context';
 
 const CounterpartyPageBody = () => {
+  const { selectedCompany } = useUserCtx();
+
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
     forUser: true,
@@ -16,26 +19,24 @@ const CounterpartyPageBody = () => {
     sortOrder: 'asc',
   };
 
-  // Info: (20241104 - Anna) API call to fetch account data
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
+  const { trigger: getCounterpartyList, data: counterpartyList } = APIHandler<IPaginatedAccount>(
+    APIName.COUNTERPARTY_LIST,
     {
-      params: { companyId: 10000007 },
+      params: { companyId: selectedCompany?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
       query: queryCondition,
     },
     false,
     true
   );
-
   const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
   const [isModalOpen, setIsModalOpen] = useState(false); // Info: (20241106 - Anna) State to handle modal visibility
 
   useEffect(() => {
-    getAccountList({ query: { ...queryCondition } });
+    getCounterpartyList({ query: { ...queryCondition } });
   }, []);
 
   useEffect(() => {
-    if (accountTitleList) {
+    if (counterpartyList) {
       // eslint-disable-next-line no-console
       // console.log('API Response:', accountTitleList); // Info: (20241105 - Anna) 查看原始資料
       // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
@@ -49,39 +50,39 @@ const CounterpartyPageBody = () => {
       const otherComprehensiveIncomes: string[] = [];
 
       // Info: (20241105 - Anna) 遍歷 accountTitleList.data，依據 type 將科目分類
-      accountTitleList.data.forEach((account) => {
-        const accountName = `${account.code} ${account.name}`;
-        switch (account.type) {
+      counterpartyList.data.forEach((counterparty) => {
+        const counterpartyName = `${counterparty.code} ${counterparty.name}`;
+        switch (counterparty.type) {
           case 'asset':
-            assets.push(accountName);
+            assets.push(counterpartyName);
             break;
           case 'liability':
-            liabilities.push(accountName);
+            liabilities.push(counterpartyName);
             break;
           case 'equity':
-            equities.push(accountName);
+            equities.push(counterpartyName);
             break;
           case 'revenue':
-            revenues.push(accountName);
+            revenues.push(counterpartyName);
             break;
           case 'cost':
-            costs.push(accountName);
+            costs.push(counterpartyName);
             break;
           case 'expense':
-            expenses.push(accountName);
+            expenses.push(counterpartyName);
             break;
           case 'income':
-            incomes.push(accountName);
+            incomes.push(counterpartyName);
             break;
           case 'otherComprehensiveIncome':
-            otherComprehensiveIncomes.push(accountName);
+            otherComprehensiveIncomes.push(counterpartyName);
             break;
           default:
             break;
         }
       });
     }
-  }, [accountTitleList]);
+  }, [counterpartyList]);
 
   const handleModalOpen = () => {
     setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal

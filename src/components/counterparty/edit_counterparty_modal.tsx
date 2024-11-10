@@ -7,23 +7,34 @@ import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
 
-interface AddCounterPartyModalProps {
+interface EditCounterPartyModalProps {
   onClose: () => void;
-  onSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void;
+  onSave: (counterpartyData: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    note: string;
+  }) => void;
   name?: string;
   taxId?: string;
   note?: string;
+  counterpartyId: number; // Info: (20241110 - Anna) 新增 counterpartyId 属性
 }
 
-const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
+const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   onSave,
   onClose,
   name,
   taxId,
   note = '', // Info: (20241108 - Anna) 設置 note 的預設值
+  counterpartyId, // Info: (20241110 - Anna) 傳入 counterpartyId
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
+  const { selectedCompany } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
@@ -94,12 +105,34 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
 
   const disabled = !inputName || !inputTaxId || !inputType;
 
-  const addNewCounterParterHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  // Todo:(20241110 - Anna) Id要改成動態
+  const editCounterparty = async (counterpartyData: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    note: string;
+    counterpartyId: number; // Info:(20241110 - Anna) 新增 counterpartyId 属性
+  }) => {
+    await APIHandler(APIName.COUNTERPARTY_UPDATE, {
+      body: counterpartyData,
+      params: { companyId: selectedCompany?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
+    });
+  };
+
+  const EditNewCounterParterHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (disabled) {
       setShowHint(true);
     } else {
-      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote || '' });
+      const counterpartyData = {
+        name: inputName,
+        taxId: inputTaxId,
+        type: inputType,
+        note: inputNote || '',
+        counterpartyId, // Info:(20241110 - Anna) 使用傳入的 counterpartyId
+      };
+      await editCounterparty(counterpartyData); // Info:(20241110 - Anna)  呼叫 API 函數
+      onSave(counterpartyData);
     }
   };
 
@@ -118,7 +151,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
           {t('certificate:COUNTERPARTY.EDIT_NEW')}
         </h2>
         <form
-          onSubmit={addNewCounterParterHandler}
+          onSubmit={EditNewCounterParterHandler}
           className="flex w-full flex-col gap-4 text-sm text-input-text-primary"
         >
           <div className="flex flex-col gap-4">
@@ -217,4 +250,4 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   );
 };
 
-export default AddCounterPartyModal;
+export default EditCounterPartyModal;
