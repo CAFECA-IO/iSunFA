@@ -133,5 +133,15 @@
     "SALES_SPECIAL_TAX_RETURNS": "Sales Special Tax Returns",
     "FOREIGN_SERVICE_PAYMENT": "Foreign Service Payment",
     "FOREIGN_TAX_EXEMPT_GOODS": "Foreign Tax Exempt Goods"
+  },
+  "UPLOAD": {
+    "TITLE": "Upload Certificates",
+    "CONTENT": "Upload the certificates you want to attach with the voucher",
+    "NO_FILE": "No files uploading",
+    "REMAIN": "{{count}} left",
+    "FAILED": "Upload failed"
+  },
+  "CREATE": {
+    "FAILED": "Failed to create certificate"
   }
 }

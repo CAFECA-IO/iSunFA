@@ -182,7 +182,7 @@ describe('company/[companyId]/voucher/[voucherId]', () => {
   });
 });
 
-describe('company/[companyId]/voucher integration test', () => {
+describe('company/[companyId]/voucher/voucherId integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
   afterEach(() => {

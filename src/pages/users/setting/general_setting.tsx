@@ -9,7 +9,7 @@ import NoticeSettings from '@/components/notice_settings/notice_settings';
 import CompanySettings from '@/components/company_settings/company_settings';
 import AccountSettings from '@/components/account_settings/account_settings';
 
-const NormalSettingsPage: React.FC = () => {
+const GeneralSettingsPage: React.FC = () => {
   const { t } = useTranslation(['setting', 'common']);
 
   return (
@@ -41,4 +41,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default NormalSettingsPage;
+export default GeneralSettingsPage;

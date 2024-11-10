@@ -44,7 +44,18 @@ const AddNewVoucherPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'certificate',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+      'asset',
+    ])),
     locale,
   },
 });

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
@@ -13,6 +14,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 enum VoucherTabs {
   UPLOADED = 'UPLOADED_VOUCHER',
@@ -92,10 +94,12 @@ const VoucherListPageBody: React.FC = () => {
     <div className="relative flex flex-col items-center gap-40px p-40px">
       {/* Info: (20240920 - Julian) Add New Voucher button */}
       <div className="ml-auto">
-        <Button type="button">
-          <LuPlus />
-          <p>{t('journal:VOUCHER.ADD_NEW_VOUCHER')}</p>
-        </Button>
+        <Link href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}>
+          <Button type="button">
+            <LuPlus />
+            <p>{t('journal:VOUCHER.ADD_NEW_VOUCHER')}</p>
+          </Button>
+        </Link>
       </div>
       {/* Info: (20240920 - Julian) Voucher List */}
       <div className="flex w-full flex-col items-stretch gap-40px">

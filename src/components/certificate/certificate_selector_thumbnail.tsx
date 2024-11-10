@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { ICertificateUI } from '@/interfaces/certificate';
-import CertificatePreviewModal from './certificate_preview_modal';
+import CertificatePreviewModal from '@/components/certificate/certificate_preview_modal';
 
 interface CertificateSelectorThumbnailProps {
   certificate: ICertificateUI;
@@ -75,7 +75,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
             </div>
           </div>
         </div>
-        <p className="text-xs font-medium text-text-neutral-primary">{certificate.invoice.name}</p>
+        <p className="text-xs font-medium text-text-neutral-primary">{certificate.name}</p>
       </div>
     </>
   );

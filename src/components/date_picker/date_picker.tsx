@@ -38,6 +38,7 @@ interface IDatePickerProps {
   type: DatePickerType;
   period: IDatePeriod;
   setFilteredPeriod: Dispatch<SetStateAction<IDatePeriod>>;
+  id?: string;
   minDate?: Date;
   maxDate?: Date;
   loading?: boolean;
@@ -166,7 +167,7 @@ const PopulateDates = ({
       <button
         key={el?.date}
         type="button"
-        disabled={el?.disable}
+        disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
         className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle}`}
         onClick={dateClickHandler}
       >
@@ -187,6 +188,7 @@ const SECONDS_TO_TOMORROW = 86400 - 1;
 const MILLISECONDS_IN_A_SECOND = 1000;
 
 const DatePicker = ({
+  id,
   type,
   minDate,
   maxDate,
@@ -385,6 +387,7 @@ const DatePicker = ({
   const displayedButtonContent =
     type === DatePickerType.ICON_PERIOD || type === DatePickerType.ICON_DATE ? (
       <Button
+        id={id}
         disabled={disabled}
         type="button"
         variant={'tertiaryOutline'}
@@ -407,6 +410,7 @@ const DatePicker = ({
       </Button>
     ) : type === DatePickerType.TEXT_PERIOD || type === DatePickerType.TEXT_DATE ? (
       <Button
+        id={id}
         disabled={disabled}
         type="button"
         variant={'tertiaryOutline'}
@@ -456,6 +460,7 @@ const DatePicker = ({
         >
           {/* Info: (20240417 - Shirley) Today button */}
           <Button
+            id={`${id}-today-btn`}
             type="button"
             variant={'tertiaryOutline'}
             onClick={todayClickHandler}
@@ -466,7 +471,13 @@ const DatePicker = ({
 
           <div className="flex w-full items-center justify-between">
             {/* Info: (20240417 - Shirley) Previous button  */}
-            <Button type="button" onClick={goToPrevMonth} variant="tertiaryOutline" className="p-2">
+            <Button
+              id={`${id}-prev-btn`}
+              type="button"
+              onClick={goToPrevMonth}
+              variant="tertiaryOutline"
+              size={'smallSquare'}
+            >
               <AiOutlineLeft size={12} />
             </Button>
             {/* Info: (20240417 - Shirley) Month and Year */}
@@ -476,7 +487,13 @@ const DatePicker = ({
             </div>
 
             {/* Info: (20240417 - Shirley) Next button */}
-            <Button type="button" onClick={goToNextMonth} variant="tertiaryOutline" className="p-2">
+            <Button
+              id={`${id}-next-btn`}
+              type="button"
+              onClick={goToNextMonth}
+              variant="tertiaryOutline"
+              size={'smallSquare'}
+            >
               <AiOutlineRight size={12} />
             </Button>
           </div>

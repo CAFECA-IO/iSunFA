@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
@@ -26,29 +26,6 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [dataImcomplete, setDataImcomplete] = useState(false);
-
-  useEffect(() => {
-    if (
-      !data.invoice.id ||
-      !data.invoice.inputOrOutput ||
-      !data.invoice.date ||
-      !data.invoice.currencyAlias ||
-      !data.invoice.taxRatio ||
-      !data.invoice.taxPrice ||
-      !data.invoice.totalPrice ||
-      !data.invoice.type ||
-      data.invoice.deductible === undefined ||
-      !data.invoice.createdAt ||
-      !data.invoice.name ||
-      !data.invoice.uploader ||
-      !data.invoice.counterParty
-    ) {
-      setDataImcomplete(true);
-    } else {
-      setDataImcomplete(false);
-    }
-  }, [data.invoice]);
 
   return (
     <div
@@ -66,7 +43,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         {/* Info: (20240924 - Tzuhan) 縮略圖 */}
         <Image
           src={data.file.url}
-          alt={`Certificate ${data.invoice.name}`}
+          alt={`Certificate ${data.name}`}
           height={136}
           width={93}
           className="mx-auto h-134px w-90px overflow-hidden object-cover"
@@ -87,7 +64,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       )}
 
       {/* Info: (20240924 - Tzuhan) 資料不完整 */}
-      {dataImcomplete && (
+      {!data.invoice?.isComplete && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
           <IoWarningOutline size={16} />
         </div>
