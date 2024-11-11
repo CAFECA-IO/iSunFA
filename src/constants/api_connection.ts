@@ -93,6 +93,8 @@ export enum APIName {
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
   PUBLIC_FILE_UPLOAD = 'PUBLIC_FILE_UPLOAD',
+  ROOM_FILE_UPLOAD = 'ROOM_FILE_UPLOAD',
+  ROOM_FILE_GET = 'ROOM_FILE_GET',
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
@@ -129,8 +131,8 @@ export enum APIName {
   ZOD_EXAMPLE = 'ZOD_EXAMPLE', // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = 'CERTIFICATE_LIST',
   PUSHER = 'PUSHER',
-  ENCRYPT = 'ENCRYPT',
-  DECRYPT = 'DECRYPT',
+  ROOM_CREATE = 'ROOM_CREATE',
+  ROOM_DELETE = 'ROOM_DELETE',
   ASSET_LIST_V2 = 'ASSET_LIST_V2',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
   ACCOUNTING_SETTING_GET = 'ACCOUNTING_SETTING_GET',
@@ -216,6 +218,8 @@ export enum APIPath {
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   PUBLIC_FILE_UPLOAD = `${apiPrefixV2}/upload`,
+  ROOM_FILE_UPLOAD = `${apiPrefixV2}/room/:roomId/file`,
+  ROOM_FILE_GET = `${apiPrefixV2}/room/:roomId`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
@@ -252,8 +256,8 @@ export enum APIPath {
   ZOD_EXAMPLE = `${apiPrefix}/company/zod`, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate`,
   PUSHER = `${apiPrefixV2}/pusher`,
-  ENCRYPT = `${apiPrefixV2}/encrypt`,
-  DECRYPT = `${apiPrefixV2}/decrypt`,
+  ROOM_CREATE = `${apiPrefixV2}/room`,
+  ROOM_DELETE = `${apiPrefixV2}/decrypt`,
   ASSET_LIST_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
@@ -699,15 +703,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.PUSHER,
   }),
-  [APIName.ENCRYPT]: createConfig({
-    name: APIName.ENCRYPT,
+  [APIName.ROOM_CREATE]: createConfig({
+    name: APIName.ROOM_CREATE,
     method: HttpMethod.POST,
-    path: APIPath.ENCRYPT,
+    path: APIPath.ROOM_CREATE,
   }),
-  [APIName.DECRYPT]: createConfig({
-    name: APIName.DECRYPT,
-    method: HttpMethod.POST,
-    path: APIPath.DECRYPT,
+  [APIName.ROOM_DELETE]: createConfig({
+    name: APIName.ROOM_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.ROOM_DELETE,
   }),
   [APIName.VOUCHER_GET_BY_ID_V2]: createConfig({
     name: APIName.VOUCHER_GET_BY_ID_V2,
@@ -879,5 +883,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.FILE_EXPORT,
     method: HttpMethod.GET,
     path: APIPath.FILE_EXPORT,
+  }),
+  [APIName.ROOM_FILE_GET]: createConfig({
+    name: APIName.ROOM_FILE_GET,
+    method: HttpMethod.GET,
+    path: APIPath.ROOM_FILE_GET,
+  }),
+  [APIName.ROOM_FILE_UPLOAD]: createConfig({
+    name: APIName.ROOM_FILE_UPLOAD,
+    method: HttpMethod.POST,
+    path: APIPath.ROOM_FILE_UPLOAD,
   }),
 };
