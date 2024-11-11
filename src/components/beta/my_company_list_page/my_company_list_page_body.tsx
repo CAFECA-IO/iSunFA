@@ -11,6 +11,14 @@ import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { useUserCtx } from '@/contexts/user_context';
+import { APIName } from '@/constants/api_connection';
+import { DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST } from '@/constants/config';
+
+interface CompanyListProps {
+  companyList: ICompanyAndRole[];
+  toggleChangeTagModal: () => void;
+  setCompanyName: Dispatch<SetStateAction<string>>;
+}
 
 const NoData = () => {
   return (
@@ -24,12 +32,6 @@ const NoData = () => {
     </section>
   );
 };
-
-interface CompanyListProps {
-  companyList: ICompanyAndRole[];
-  toggleChangeTagModal: () => void;
-  setCompanyName: Dispatch<SetStateAction<string>>;
-}
 
 const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: CompanyListProps) => {
   const handleChangeTag = (companyName: string) => {
@@ -81,13 +83,25 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 
 const MyCompanyListPageBody = () => {
   const { userAuth } = useUserCtx();
+  // Deprecated: (20241111 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('(in MyCompanyListPageBody) userAuth:', userAuth);
+
+  const userId = userAuth?.id;
+
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
+  const [isCallingAPI, setIsCallingAPI] = useState(false);
+
   const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
   const [companyName, setCompanyName] = useState<string>('');
 
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
+
+  // Deprecated: (20241111 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('totalPage:', totalPage, 'currentPage:', currentPage, 'companyList:', companyList);
 
   const isNoData = companyList.length === 0;
 
@@ -102,20 +116,26 @@ const MyCompanyListPageBody = () => {
     setCompanyList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
+
+    // Deprecated: (20241111 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('(handleApiResponse) resData:', resData);
   };
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
-        <FilterSection
-          disableDateSearch
-          className="flex-auto"
-          apiName="LIST_USER_COMPANY"
-          page={1}
-          pageSize={5}
-          onApiResponse={handleApiResponse}
-          params={{ userId: userAuth?.id }}
-        />
+        {!isCallingAPI && userId && (
+          <FilterSection<ICompanyAndRole[]>
+            disableDateSearch
+            className="flex-auto"
+            params={{ userId }}
+            apiName={APIName.LIST_USER_COMPANY}
+            onApiResponse={handleApiResponse}
+            page={currentPage}
+            pageSize={DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST}
+          />
+        )}
 
         <div className="flex items-center gap-16px">
           <button
@@ -137,9 +157,8 @@ const MyCompanyListPageBody = () => {
         </div>
       </section>
 
-      {isNoData ? (
-        <NoData />
-      ) : (
+      {isNoData && <NoData />}
+      {!isNoData && !isCallingAPI && userId && (
         <>
           <CompanyList
             companyList={companyList}
@@ -158,6 +177,7 @@ const MyCompanyListPageBody = () => {
       <CreateCompanyModal
         isModalOpen={isCreateCompanyModalOpen}
         toggleModal={toggleCreateCompanyModal}
+        setIsCallingAPI={setIsCallingAPI}
       />
 
       <ChangeTagModal

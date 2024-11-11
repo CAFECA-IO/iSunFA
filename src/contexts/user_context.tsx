@@ -105,6 +105,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
+  // Deprecated: (20241111 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('userAuth:', userAuth, 'userAuthRef.current:', userAuthRef.current);
+
   // Info: (20241028 - Liz) 使用者目前選擇的角色(拿取 getStateInfoAPI 回傳的 Role 資料)
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
 
@@ -180,7 +184,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const goToSelectRolePage = () => {
     // Deprecated: (20241008 - Liz)
     // eslint-disable-next-line no-console
-    console.log('呼叫 goToSelectRolePage');
+    console.log('呼叫 goToSelectRolePage 重新導向到選擇角色頁面 (因為沒有選擇角色)');
 
     router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
@@ -188,6 +192,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241111 - Liz) 如果沒有選擇公司，重新導向到可以選擇公司的儀表板
   const goToDashboard = () => {
     router.push(ISUNFA_ROUTE.DASHBOARD);
+
+    // Deprecated: (20241111 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('呼叫 goToDashboard 重新導向到儀表板 (因為沒有選擇公司)');
   };
 
   const goBackToOriginalPath = () => {
@@ -242,6 +250,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Deprecated: (20241111 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('call signOut 登出並且清除 user context 所有狀態');
+
     await authSignOut({ redirect: false }); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
     redirectToLoginPage(); // Info: (20241004 - Liz) 重新導向到登入頁面

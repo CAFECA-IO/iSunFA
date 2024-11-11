@@ -55,6 +55,8 @@ export const DEFAULT_PAGE_START_AT = 1;
 export const DEFAULT_PAGE_LIMIT = 10;
 export const DEFAULT_PAGE_OFFSET = 0;
 
+export const DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST = 5;
+
 export const USER_ICON_BACKGROUND_COLORS = [
   // Info: (20230814 - Murky) color from surface/support/strong/Light_Mode and Dark_Mode
   {
