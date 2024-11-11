@@ -18,38 +18,13 @@ import { WEEK_FULL_LIST } from '@/constants/display';
 import { ToastType } from '@/interfaces/toastify';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { IVoucherDetailForFrontend } from '@/interfaces/voucher';
+import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 
-// Info: (20241014 - Julian) @Murky Interface for Voucher Detail
-// Info: (20241105 - Murky) @Julian IVoucherDetailForFrontend 搬到 interface/voucher
-const defaultVoucherDetail: IVoucherDetailForFrontend = {
-  id: 0,
-  voucherDate: 0,
-  type: '',
-  note: '',
-  counterParty: {
-    id: 0,
-    companyId: 0,
-    name: '',
-  },
-  recurringInfo: {
-    type: '',
-    startDate: 0,
-    endDate: 0,
-    daysOfWeek: [],
-    monthsOfYear: [],
-  },
-  payableInfo: undefined,
-  receivingInfo: undefined,
-  reverseVoucherIds: [],
-  assets: [],
-  certificates: [],
-  lineItemsInfo: {
-    lineItems: [],
-  },
-};
+interface IVoucherDetailPageBodyProps {
+  voucherId: string;
+}
 
-const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
+const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
@@ -57,7 +32,7 @@ const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
 
   const params = {
     companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-    voucherId: '123', // ToDo: (20241029 - Julian) Replace with real voucherId
+    voucherId,
   };
 
   // Info: (20241029 - Julian) Get voucher details from API
@@ -101,13 +76,6 @@ const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
     remain: remainAmount,
   } = payableInfo ||
     receivingInfo || { payableAmount: undefined, paidAmount: undefined, remainAmount: undefined };
-
-  const displayDaysOfWeek = recurringInfo.daysOfWeek
-    .map((day) => t(WEEK_FULL_LIST[day]))
-    .join(', ');
-
-  const recurringStr = t('journal:ADD_NEW_VOUCHER.EVERY') + displayDaysOfWeek; // ToDo: (20241014 - Julian) Replace with real recurring string
-  const recurringPeriodStr = `${t('common:COMMON.FROM')} ${timestampToString(recurringInfo.startDate).date} ${t('common:COMMON.TO')} ${timestampToString(recurringInfo.endDate).date}`;
 
   // ToDo: (20241016 - Julian) Call API to undo delete voucher
   const undoDeleteVoucher = async () => {
@@ -243,15 +211,6 @@ const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
     <Skeleton width={200} height={24} rounded />
   );
 
-  const isDisplayRecurringEntry = !isLoading ? (
-    <div className="flex flex-col text-right">
-      <p className="text-input-text-primary">{recurringStr}</p>
-      <p className="text-input-text-primary">{recurringPeriodStr}</p>
-    </div>
-  ) : (
-    <Skeleton width={200} height={48} rounded />
-  );
-
   const isDisplayReverseVoucher = !isLoading ? (
     <div className="flex flex-col">
       {reverseVoucherIds.map((reverseVoucher) => (
@@ -350,6 +309,29 @@ const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
       </div>
     ) : null;
 
+  const isRecurringEntry = recurringInfo ? (
+    <div className="flex justify-between">
+      <p className="text-text-neutral-tertiary">
+        {t('journal:VOUCHER_DETAIL_PAGE.RECURRING_ENTRY')}
+      </p>
+      {!isLoading ? (
+        <div className="flex flex-col text-right">
+          {/* ToDo: (20241111 - Julian) Replace with real recurring string */}
+          <p className="text-input-text-primary">
+            {t('journal:ADD_NEW_VOUCHER.EVERY')}{' '}
+            {recurringInfo.daysOfWeek.map((day) => t(WEEK_FULL_LIST[day])).join(', ')}
+          </p>
+          <p className="text-input-text-primary">
+            {t('common:COMMON.FROM')} {timestampToString(recurringInfo.startDate).date}{' '}
+            {t('common:COMMON.TO')} {timestampToString(recurringInfo.endDate).date}
+          </p>
+        </div>
+      ) : (
+        <Skeleton width={200} height={48} rounded />
+      )}
+    </div>
+  ) : null;
+
   return (
     <div className="overflow-y-auto px-40px pb-32px pt-10px">
       <div className="flex justify-end gap-2 p-4">
@@ -401,12 +383,7 @@ const VoucherDetailPageBody: React.FC<{ voucherId: string }> = () => {
           {isDisplayCounterParty}
         </div>
         {/* Info: (20241007 - Julian) Recurring Entry */}
-        <div className="flex justify-between">
-          <p className="text-text-neutral-tertiary">
-            {t('journal:VOUCHER_DETAIL_PAGE.RECURRING_ENTRY')}
-          </p>
-          {isDisplayRecurringEntry}
-        </div>
+        {isRecurringEntry}
         {/* Info: (20241007 - Julian) Payable Amount */}
         {isPayableAmount}
         {/* Info: (20241007 - Julian) Paid Amount */}
