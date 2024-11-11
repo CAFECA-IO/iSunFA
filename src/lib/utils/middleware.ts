@@ -46,7 +46,7 @@ export function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(
   return { query, body };
 }
 
-async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
+export async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
   session: ISessionData,
   apiName: T,
   req: NextApiRequest,
