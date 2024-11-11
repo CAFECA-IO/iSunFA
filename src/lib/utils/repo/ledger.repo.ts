@@ -1,0 +1,207 @@
+import prisma from '@/client';
+import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
+import { SortOrder } from '@/constants/sort';
+import { loggerError } from '@/lib/utils/logger_back';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { ILedgerPayload, ILedgerItem } from '@/interfaces/ledger';
+import { PUBLIC_COMPANY_ID } from '@/constants/company';
+import { VoucherType } from '@/constants/account';
+import { buildAccountForestForUser } from '@/lib/utils/account/common';
+
+import fs from 'fs';
+import path from 'path';
+
+interface ListLedgerParams {
+  companyId: number;
+  startDate: number;
+  endDate: number;
+  startAccountNo?: string;
+  endAccountNo?: string;
+  labelType?: 'general' | 'detailed' | 'all';
+  page?: number;
+  pageSize?: number | 'infinity';
+}
+
+export async function listLedger(params: ListLedgerParams): Promise<ILedgerPayload | null> {
+  const {
+    companyId,
+    startDate,
+    endDate,
+    startAccountNo,
+    endAccountNo,
+    labelType = 'general',
+    page = DEFAULT_PAGE_NUMBER,
+    pageSize = DEFAULT_PAGE_LIMIT,
+  } = params;
+  // eslint-disable-next-line no-console
+  console.log('labelType', labelType);
+
+  const pageNumber = page;
+  let size: number | undefined;
+  let skip: number = 0;
+
+  if (pageSize !== 'infinity') {
+    size = pageSize;
+    skip = pageToOffset(pageNumber, size);
+  }
+
+  let ledgerPayload: ILedgerPayload | null = null;
+
+  try {
+    if (pageNumber < 1 && pageSize !== 'infinity') {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
+
+    // 1. 取得會計設定的貨幣別
+    const accountingSettingData = await prisma.accountingSetting.findFirst({
+      where: { id: companyId },
+    });
+
+    let currencyAlias = 'TWD';
+    if (accountingSettingData) {
+      currencyAlias = accountingSettingData.currency || 'TWD';
+    }
+
+    // 2. 取得符合條件的會計科目
+    const accountsQuery = {
+      where: {
+        OR: [
+          {
+            companyId,
+            deletedAt: null,
+          },
+          {
+            companyId: PUBLIC_COMPANY_ID,
+            deletedAt: null,
+          },
+        ],
+        ...(startAccountNo && endAccountNo
+          ? {
+              code: {
+                gte: startAccountNo,
+                lte: endAccountNo,
+              },
+            }
+          : {}),
+        forUser: true,
+      },
+      include: {
+        lineItem: {
+          where: {
+            deletedAt: null,
+            voucher: {
+              date: {
+                gte: startDate,
+                lte: endDate,
+              },
+              deletedAt: null,
+            },
+          },
+          include: {
+            voucher: true,
+          },
+        },
+      },
+    };
+
+    const accounts = await prisma.account.findMany(accountsQuery);
+
+    const sortedAccounts = buildAccountForestForUser(accounts);
+
+    const DIR_NAME = 'tmp';
+    const NEW_FILE_NAME = 'sortedAccounts_1111_2016.json';
+    const logDir = path.join(process.cwd(), DIR_NAME);
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    const logPath = path.join(logDir, NEW_FILE_NAME);
+    fs.writeFileSync(logPath, JSON.stringify(sortedAccounts, null, 2), 'utf-8');
+
+    // 3. 整理分類帳資料
+    const ledgerItems: ILedgerItem[] = [];
+    let balance = 0;
+    let totalDebitAmount = 0;
+    let totalCreditAmount = 0;
+
+    accounts.forEach((account) => {
+      account.lineItem.forEach((item) => {
+        if (item.debit) {
+          balance += item.amount;
+          totalDebitAmount += item.amount;
+        } else {
+          balance -= item.amount;
+          totalCreditAmount += item.amount;
+        }
+
+        ledgerItems.push({
+          id: item.id,
+          voucherDate: item.voucher.date,
+          no: account.code,
+          accountingTitle: account.name,
+          voucherNumber: item.voucher.no,
+          voucherType: item.voucher.type as VoucherType,
+
+          particulars: item.description,
+          debitAmount: item.debit ? item.amount : 0,
+          creditAmount: item.debit ? 0 : item.amount,
+          balance,
+          createAt: item.createdAt,
+          updateAt: item.updatedAt,
+        });
+      });
+    });
+
+    // 4. 排序
+    ledgerItems.sort((a, b) => a.voucherDate - b.voucherDate);
+
+    // 5. 分頁處理
+    let paginatedData = ledgerItems;
+    let totalCount = ledgerItems.length;
+    let totalPages = 1;
+    let hasNextPage = false;
+    let hasPreviousPage = false;
+
+    if (pageSize !== 'infinity') {
+      paginatedData = ledgerItems.slice(skip, skip + (size || DEFAULT_PAGE_LIMIT));
+      totalCount = ledgerItems.length;
+      totalPages = Math.ceil(totalCount / (size || DEFAULT_PAGE_LIMIT));
+      hasNextPage = skip + (size || DEFAULT_PAGE_LIMIT) < totalCount;
+      hasPreviousPage = pageNumber > 1;
+    }
+
+    const now = getTimestampNow();
+
+    ledgerPayload = {
+      currencyAlias,
+      items: {
+        data: paginatedData,
+        page: pageNumber,
+        totalPages,
+        totalCount,
+        pageSize: pageSize === 'infinity' ? totalCount : size || DEFAULT_PAGE_LIMIT,
+        hasNextPage,
+        hasPreviousPage,
+        sort: [
+          {
+            sortBy: 'voucherDate',
+            sortOrder: SortOrder.ASC,
+          },
+        ],
+      },
+      total: {
+        totalDebitAmount,
+        totalCreditAmount,
+        createAt: now,
+        updateAt: now,
+      },
+    };
+  } catch (error) {
+    const logError = loggerError(0, 'listLedger in ledger.repo.ts failed', error as Error);
+    logError.error('Prisma related listLedger in ledger.repo.ts failed');
+  }
+
+  return ledgerPayload;
+}
