@@ -11,12 +11,15 @@ import { AUTH_CHECK } from '@/constants/auth';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { ISessionData } from '@/interfaces/session_data';
 import { convertStringToNumber } from '@/lib/utils/common';
-import loggerBack from './logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 
 export async function checkUser(session: ISessionData, req: NextApiRequest) {
+  let isAuth = true;
   const { userId: queryUserId } = req.query;
-  const queryUserIdNumber = convertStringToNumber(queryUserId);
-  let isAuth = session.userId === queryUserIdNumber;
+  if (queryUserId) {
+    const queryUserIdNumber = convertStringToNumber(queryUserId);
+    isAuth = session.userId === queryUserIdNumber;
+  }
   if (isAuth) {
     const user = await getUserById(session.userId);
     isAuth = !!user;
