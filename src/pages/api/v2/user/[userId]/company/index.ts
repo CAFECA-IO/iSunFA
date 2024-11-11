@@ -38,9 +38,9 @@ const handleGetRequest: IHandleRequest<
       order: number;
     }>
   > | null = null;
-  const { userId, pageSize, page } = query;
+  const { userId, pageSize, page, searchQuery } = query;
 
-  const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize);
+  const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize, searchQuery);
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   payload = listedCompanyAndRole;
 
