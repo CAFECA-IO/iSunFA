@@ -7,20 +7,19 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IntroductionProps {
-  showingRole: React.SetStateAction<RoleName | null>;
+  selectedRoleId: number;
+  showingRole: string;
   togglePreviewModal: () => void;
 }
 interface ButtonsProps {
-  showingRole: RoleName;
+  selectedRoleId: number;
   togglePreviewModal: () => void;
 }
 interface BookkeeperIntroductionProps {
-  showingRole: RoleName;
-  togglePreviewModal: () => void;
+  children: React.ReactNode;
 }
 interface EducationalTrialVersionIntroductionProps {
-  showingRole: RoleName;
-  togglePreviewModal: () => void;
+  children: React.ReactNode;
 }
 
 const DefaultIntroduction: React.FC = () => {
@@ -52,7 +51,7 @@ const DefaultIntroduction: React.FC = () => {
   );
 };
 
-const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) => {
+const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
   const { createRole, selectRole } = useUserCtx();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +60,7 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
     setIsLoading(true);
 
     try {
-      const userRole = await createRole(showingRole);
+      const userRole = await createRole(selectedRoleId);
 
       if (!userRole || !userRole.role || !userRole.role.id) {
         // Deprecated: (20241107 - Liz)
@@ -115,10 +114,7 @@ const Buttons: React.FC<ButtonsProps> = ({ togglePreviewModal, showingRole }) =>
   );
 };
 
-const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({
-  showingRole,
-  togglePreviewModal,
-}) => {
+const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ children }) => {
   return (
     <section className="relative h-full">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
@@ -138,7 +134,7 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({
           <p>General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports</p>
         </div>
 
-        <Buttons showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+        {children}
       </div>
 
       <div className="absolute right-0 top-0 z-0 w-500px screen1280:w-600px">
@@ -155,8 +151,7 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({
 };
 
 const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntroductionProps> = ({
-  showingRole,
-  togglePreviewModal,
+  children,
 }) => {
   return (
     <section className="relative h-full">
@@ -182,7 +177,7 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
           <p>General Ledger, Voucher Issuance</p>
         </div>
 
-        <Buttons showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+        {children}
       </div>
 
       <div className="absolute right-0 top-0 z-0 w-500px screen1280:w-600px">
@@ -198,18 +193,19 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
   );
 };
 
-const Introduction: React.FC<IntroductionProps> = ({ showingRole, togglePreviewModal }) => {
+const Introduction = ({ selectedRoleId, showingRole, togglePreviewModal }: IntroductionProps) => {
   return (
     <>
       {!showingRole && <DefaultIntroduction />}
       {showingRole === RoleName.BOOKKEEPER && (
-        <BookkeeperIntroduction showingRole={showingRole} togglePreviewModal={togglePreviewModal} />
+        <BookkeeperIntroduction>
+          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
+        </BookkeeperIntroduction>
       )}
       {showingRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
-        <EducationalTrialVersionIntroduction
-          showingRole={showingRole}
-          togglePreviewModal={togglePreviewModal}
-        />
+        <EducationalTrialVersionIntroduction>
+          <Buttons togglePreviewModal={togglePreviewModal} selectedRoleId={selectedRoleId} />
+        </EducationalTrialVersionIntroduction>
       )}
     </>
   );

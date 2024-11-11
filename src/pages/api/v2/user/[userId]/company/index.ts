@@ -19,7 +19,7 @@ import {
 import { Company, Role, File } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<
-  APIName.COMPANY_LIST,
+  APIName.LIST_USER_COMPANY,
   IPaginatedData<
     Array<{
       company: Company & { imageFile: File | null };
@@ -28,7 +28,7 @@ const handleGetRequest: IHandleRequest<
       order: number;
     }>
   >
-> = async ({ query, session }) => {
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<
     Array<{
@@ -38,8 +38,7 @@ const handleGetRequest: IHandleRequest<
       order: number;
     }>
   > | null = null;
-  const { pageSize, page } = query;
-  const { userId } = session;
+  const { userId, pageSize, page } = query;
 
   const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize);
   statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -49,14 +48,14 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePostRequest: IHandleRequest<
-  APIName.CREATE_COMPANY,
+  APIName.CREATE_USER_COMPANY,
   {
     company: Company & { imageFile: File | null };
     role: Role;
     tag: string;
     order: number;
   }
-> = async ({ body, session }) => {
+> = async ({ query, body }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: {
     company: Company & { imageFile: File | null };
@@ -64,8 +63,8 @@ const handlePostRequest: IHandleRequest<
     tag: string;
     order: number;
   } | null = null;
+  const { userId } = query;
   const { taxId, name, tag } = body;
-  const { userId } = session;
 
   const getCompany = await getCompanyAndRoleByTaxId(userId, taxId);
 
@@ -107,8 +106,9 @@ const methodHandlers: {
     payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.COMPANY_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_COMPANY, req, res, handlePostRequest),
+  GET: (req, res) => withRequestValidation(APIName.LIST_USER_COMPANY, req, res, handleGetRequest),
+  POST: (req, res) =>
+    withRequestValidation(APIName.CREATE_USER_COMPANY, req, res, handlePostRequest),
 };
 
 export default async function handler(

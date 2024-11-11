@@ -8,7 +8,6 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { createUserRole, listUserRole } from '@/lib/utils/repo/user_role.repo';
 import { UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
-import { getRoleByName } from '@/lib/utils/repo/role.repo';
 
 const handleGetRequest: IHandleRequest<APIName.USER_ROLE_LIST, UserRole[]> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -32,12 +31,9 @@ const handlePostRequest: IHandleRequest<APIName.USER_CREATE_ROLE, UserRole | nul
   // Deprecated: (20240924 - Jacky) Mock data for connection
   statusMessage = STATUS_MESSAGE.CREATED;
   const { userId } = query;
-  const { roleName } = body;
-  const role = await getRoleByName(roleName);
-  if (role) {
-    const createdUserRole = await createUserRole(userId, role.id);
-    payload = createdUserRole;
-  }
+  const { roleId } = body;
+  const createdUserRole = await createUserRole(userId, roleId);
+  payload = createdUserRole;
 
   return { statusMessage, payload };
 };

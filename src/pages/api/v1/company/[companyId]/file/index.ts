@@ -200,6 +200,7 @@ async function handlePostRequest(
           statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
           loggerBack.info(`API POST File: No file uploaded`);
         } else {
+          // ToDo: (20241108 - Jacky) Use createmany to create multiple files once
           const { fileId, fileName } = await handleFileUpload(
             type,
             file,
@@ -208,6 +209,7 @@ async function handlePostRequest(
             encryptedSymmetricKey,
             iv
           );
+          // ToDo: (20241108 - Jacky) return file list instead of single file
           payload = { id: fileId, name: fileName, size: file[0].size, existed: true };
           statusMessage = STATUS_MESSAGE.CREATED;
         }
