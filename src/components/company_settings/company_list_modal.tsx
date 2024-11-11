@@ -123,7 +123,6 @@ const dummyCompanies: ICompanyAndRole[] = [
 ];
 
 const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
-  const { userAuth } = useUserCtx();
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(dummyCompanies.length); // ToDo: (20241107 - Tzuhan) - Replace with real data
