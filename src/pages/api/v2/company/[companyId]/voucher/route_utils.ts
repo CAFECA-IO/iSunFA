@@ -7,14 +7,7 @@ import { initEventEntity } from '@/lib/utils/event';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { initLineItemEntity } from '@/lib/utils/line_item';
 import { Logger } from 'pino';
-import {
-  Voucher as PrismaVoucher,
-  LineItem as PrismaLineItem,
-  Counterparty as PrismaCounterParty,
-  Asset as PrismaAsset,
-  Company as PrismaCompany,
-  User as PrismaUser,
-} from '@prisma/client';
+
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
@@ -33,6 +26,14 @@ import { IUserEntity } from '@/interfaces/user';
 import { ICompanyEntity } from '@/interfaces/company';
 import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
 import { IAssetEntity } from '@/interfaces/asset';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
+import { getUserById } from '@/lib/utils/repo/user.repo';
+import { getOneVoucherByIdWithoutInclude, postVoucherV2 } from '@/lib/utils/repo/voucher.repo';
+import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
+import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
+import { getOneAssetByIdWithoutInclude } from '@/lib/utils/repo/asset.repo';
 /**
  * Info: (20241025 - Murky)
  * @description all function need for voucher Post
@@ -64,41 +65,63 @@ export const voucherAPIPostUtils = {
    * Info: (20241025 - Murky)
    * @todo implement check voucher exist by voucherId from prisma logic
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isVoucherExistById: async (voucherId: number) => {
-    return true;
+    const voucher = await getOneVoucherByIdWithoutInclude(voucherId);
+    return !!voucher;
   },
 
   /**
    * Info: (20241025 - Murky)
-   * @todo implement check asset exist by assetId from prisma logic
+   * @todo implement check line item exist by voucherId from prisma logic
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isLineItemExistById: async (lineItemId: number) => {
+    const lineItem = await getOneLineItemWithoutInclude(lineItemId);
+    return !!lineItem;
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @describe check asset exist by assetId from prisma
+   */
   isAssetExistById: async (assetId: number) => {
-    return true;
+    const asset = await getOneAssetByIdWithoutInclude(assetId);
+    return !!asset;
   },
 
   /**
    * Info: (20241025 - Murky)
-   * @todo implement get voucher from prisma logic
+   * @describe convert voucherId to IVoucherEntity
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initVoucherFromPrisma: async (voucherId: number) => {
-    // ToDo: (20241025 - Murky) implement get voucher from prisma logic
-    const voucherDto = {} as PrismaVoucher;
-    const voucher = parsePrismaVoucherToVoucherEntity(voucherDto);
+    const voucherDto = await getOneVoucherByIdWithoutInclude(voucherId);
+
+    if (!voucherDto) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `Voucher not found In Voucher Post, initVoucherFromPrisma, voucherId: ${voucherId}`,
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    const voucher = parsePrismaVoucherToVoucherEntity(voucherDto!);
     return voucher;
   },
 
   /**
    * Info: (20241025 - Murky)
-   * @todo implement get line item from prisma logic
+   * @description get lineItem From Prisma and transform to ILineItemEntity
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initLineItemFromPrisma: async (lineItemId: number) => {
     // ToDo: (20241025 - Murky) implement get voucher from prisma logic
-    const lineItemDto = {} as PrismaLineItem;
-    const lineItem = parsePrismaLineItemToLineItemEntity(lineItemDto);
+    const lineItemDto = await getOneLineItemWithoutInclude(lineItemId);
+
+    if (!lineItemDto) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `LineItem not found In Voucher Post, initLineItemFromPrisma, lineItemId: ${lineItemId}`,
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    const lineItem = parsePrismaLineItemToLineItemEntity(lineItemDto!);
     return lineItem;
   },
 
@@ -106,43 +129,70 @@ export const voucherAPIPostUtils = {
    * Info: (20241029 - Murky)
    * @todo implement get counter party from prisma logic
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initCounterPartyFromPrisma: async (counterPartyId: number) => {
-    const counterPartyDto = {} as PrismaCounterParty;
-    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
+    const counterPartyDto = await getCounterpartyById(counterPartyId);
+    if (!counterPartyDto) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `CounterParty not found In Voucher Post, initCounterPartyFromPrisma, counterPartyId: ${counterPartyId}`,
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto!);
     return counterParty;
   },
 
   /**
    * Info: (20241029 - Murky)
-   * @todo implement get asset from prisma logic
+   * @description get asset From Prisma and transform to IAssetEntity
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initAssetFromPrisma: async (assetId: number) => {
-    const assetDto = {} as PrismaAsset;
-    const asset = parsePrismaAssetToAssetEntity(assetDto);
+    const assetDto = await getOneAssetByIdWithoutInclude(assetId);
+
+    if (!assetDto) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `Asset not found In Voucher Post, initAssetFromPrisma, assetId: ${assetId}`,
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    const asset = parsePrismaAssetToAssetEntity(assetDto!);
     return asset;
   },
 
   /**
    * Info: (20241029 - Murky)
-   * @todo implement get company from prisma logic
+   * @description get company From Prisma and transform to ICompanyEntity
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  initCompanyFromPrisma: async (assetId: number) => {
-    const companyDto = {} as PrismaCompany;
-    const company = parsePrismaCompanyToCompanyEntity(companyDto);
+  initCompanyFromPrisma: async (companyId: number) => {
+    const companyDto = await getCompanyById(companyId);
+
+    if (!companyDto) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `Company not found In Voucher Post, initCompanyFromPrisma, companyId: ${companyId}`,
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    const company: ICompanyEntity = parsePrismaCompanyToCompanyEntity(companyDto!);
     return company;
   },
 
   /**
    * Info: (20241029 - Murky)
-   * @todo implement get issuer from prisma logic
+   * @description get user From Prisma and transform to IUserEntity
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initIssuerFromPrisma: async (issuerId: number) => {
-    const issuerDto = {} as PrismaUser;
-    const issuer = parsePrismaUserToUserEntity(issuerDto);
+    const issuerDto = await getUserById(issuerId);
+
+    if (!issuerDto) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `Issuer not found In Voucher Post, initIssuerFromPrisma, issuerId: ${issuerId}`,
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    const issuer = parsePrismaUserToUserEntity(issuerDto!);
     return issuer;
   },
   /**
@@ -401,6 +451,7 @@ export const voucherAPIPostUtils = {
     });
     return revertEvent;
   },
+
   /**
    * Info: (20241025 - Murky)
    * @description check all vouchers exist by voucherIds in prisma
@@ -408,6 +459,17 @@ export const voucherAPIPostUtils = {
   areAllVouchersExistById: async (voucherIds: number[]): Promise<boolean> => {
     const results = await Promise.all(
       voucherIds.map(async (id) => voucherAPIPostUtils.isVoucherExistById(id))
+    );
+    return results.every((result) => result === true);
+  },
+
+  /**
+   * Info: (20241025 - Murky)
+   * @description check all lineItem exist by lineItemIds in prisma
+   */
+  areAllLineItemsExistById: async (lineItemIds: number[]): Promise<boolean> => {
+    const results = await Promise.all(
+      lineItemIds.map(async (id) => voucherAPIPostUtils.isLineItemExistById(id))
     );
     return results.every((result) => result === true);
   },
@@ -452,17 +514,24 @@ export const voucherAPIPostUtils = {
    * @description convert associateVoucherInfo from front-end
    *  to "associateVouchers" in IEventEntity
    * @param originalVoucher - IVoucherEntity, for original voucher
+   * @param revertOtherLineItems - ILineItemEntity[], for lineItems post by front-end
    * @param reverseVouchersInfo - Array, for reverse vouchers relation
    * @param reverseVouchersInfo.voucherId - number, voucherId that be reversed
    * @param reverseVouchersInfo.amount - number, amount of reverse voucher
    * @param reverseVouchersInfo.lineItemIdBeReversed - number, lineItemId that be reversed
-   * @param reverseVouchersInfo.lineItemIdReverseOther - number, lineItemId that reverse other
+   * @param reverseVouchersInfo.lineItemIdReverseOther - number, lineItem Index (in originalLineItems) that reverse other,
+   * since lineItems that reverse others not yet created
+   * @returns Array, associateVouchers
+   * - originalVoucher 是從資料庫拿出來，用戶打勾選的
+   * - reversedVoucher 是這次新建的
    */
   initRevertAssociateVouchers: async ({
     originalVoucher,
+    revertOtherLineItems,
     reverseVouchersInfo,
   }: {
     originalVoucher: IVoucherEntity;
+    revertOtherLineItems: ILineItemEntity[];
     reverseVouchersInfo: Array<{
       voucherId: number;
       amount: number;
@@ -488,19 +557,21 @@ export const voucherAPIPostUtils = {
         });
 
         const lineItemBeReversed = await voucherAPIPostUtils.initLineItemFromPrisma(
-          reverseVoucher.voucherId
+          reverseVoucher.lineItemIdBeReversed
         );
 
-        const lineItemRevertOther = await voucherAPIPostUtils.initLineItemFromPrisma(
-          reverseVoucher.voucherId
-        );
+        // Info: (20241111 - Murky) [Warning!] 用來Reverse別人的lineItems根本還沒有建立，所以是originalLineItems 的id
+        // const lineItemRevertOther = await voucherAPIPostUtils.initLineItemFromPrisma(
+        //   reverseVoucher.voucherId
+        // );
+        const lineItemRevertOther = revertOtherLineItems[reverseVoucher.lineItemIdReverseOther];
 
-        reverseVoucherEntity.lineItems = [lineItemRevertOther];
-        originalVoucherCopy.lineItems = [lineItemBeReversed];
+        reverseVoucherEntity.lineItems = [lineItemBeReversed];
+        originalVoucherCopy.lineItems = [lineItemRevertOther];
 
         return {
-          originalVoucher: originalVoucherCopy,
-          resultVoucher: reverseVoucherEntity,
+          originalVoucher: reverseVoucherEntity,
+          resultVoucher: originalVoucherCopy,
           amount: reverseVoucher.amount,
         };
       })
@@ -610,6 +681,31 @@ export const voucherAPIPostUtils = {
     });
 
     return addAssetEvent;
+  },
+
+  saveVoucherToPrisma: async (options: {
+    nowInSecond: number;
+    company: ICompanyEntity;
+    originalVoucher: IVoucherEntity;
+    issuer: IUserEntity;
+    eventControlPanel: {
+      revertEvent: IEventEntity | null;
+      recurringEvent: IEventEntity | null;
+      assetEvent: IEventEntity | null;
+    };
+  }) => {
+    const newVoucher = await postVoucherV2(options);
+
+    // Deprecated: (20241111 - Murky) 如果沒有Post成功， 暫時先throw error
+
+    if (!newVoucher) {
+      voucherAPIPostUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Voucher not save in database',
+        statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR,
+      });
+    }
+
+    return newVoucher;
   },
 
   /**

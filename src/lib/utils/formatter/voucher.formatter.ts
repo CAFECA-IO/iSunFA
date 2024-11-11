@@ -2,6 +2,7 @@ import { Voucher as PrismaVoucher } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { voucherEntityValidator } from '@/lib/utils/zod_schema/voucher';
+import loggerBack from '@/lib/utils/logger_back';
 /**
  * Info: (20241022 - Murky)
  * @description 將 PrismaVoucher 資料轉換為符合 IVoucherEntity 介面的物件。
@@ -13,9 +14,19 @@ import { voucherEntityValidator } from '@/lib/utils/zod_schema/voucher';
  * @throws {FormatterError} 當傳入的 dto 無法通過 Zod 驗證時，拋出錯誤，包含錯誤訊息及細節。
  */
 export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherEntity {
-  const { data, success, error } = voucherEntityValidator.safeParse(dto);
+  const newDto = Object.assign(dto, {
+    originalEvents: [],
+    resultEvents: [],
+    lineItems: [],
+    certificates: [],
+    readByUsers: [],
+    asset: [],
+  });
+
+  const { data, success, error } = voucherEntityValidator.safeParse(newDto);
 
   if (!success) {
+    loggerBack.error(error);
     throw new FormatterError('VoucherEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,

@@ -82,6 +82,7 @@ export interface ICompanyEntity {
   deletedAt: number | null;
 
   // ToDo: (20241023 - Murky) imageFile
+  // ToDo: (20241023 - Murky) imageFileId
   // ToDo: (20241023 - Murky) admins
   // ToDo: (20241023 - Murky) accountingSettings
   // ToDo: (20241023 - Murky) assets

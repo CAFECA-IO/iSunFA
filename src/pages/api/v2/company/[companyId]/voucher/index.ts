@@ -290,7 +290,9 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       ...voucherInfo
     } = body;
 
-    const { companyId, userId } = session;
+    const { userId } = session;
+    // Info: (20241111 - Murky) 暫時先用1002
+    const companyId = 1002;
 
     /**
      * Info: (20241029 - Murky)
@@ -326,15 +328,15 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       command: VoucherV2Action.ADD_ASSET,
     });
 
-    const doRecurring = postUtils.isDoAction({
-      actions,
-      command: VoucherV2Action.RECURRING,
-    });
+    // const doRecurring = postUtils.isDoAction({
+    //   actions,
+    //   command: VoucherV2Action.RECURRING,
+    // });
 
     // Info: (20241025 - Murky) Is xxx exist
     // const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
-    const isRecurringInfoExist = postUtils.isItemExist(recurringInfo);
+    // const isRecurringInfoExist = postUtils.isItemExist(recurringInfo);
     const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
     const isAssetIdsHasItems = postUtils.isArrayHasItems(assetIds);
     const isReverseVouchersInfoHasItems = postUtils.isArrayHasItems(reverseVouchersInfo);
@@ -356,8 +358,10 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       });
     }
 
+    // Info: (20241111 - Murky) Init Company and Issuer Entity, For Voucher Meta Data and check if they exist in database
     const company = await postUtils.initCompanyFromPrisma(companyId);
     const issuer = await postUtils.initIssuerFromPrisma(userId);
+
     // Info: (20241025 - Murky) Init Voucher, counterParty LineItems Entity
     const newVoucherNo = ''; // Info: (20241025 - Murky) [Warning!] VoucherNo 需要在存入的transaction中取得
 
@@ -413,13 +417,22 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       const revertVoucherIds = reverseVouchersInfo.map(
         (reverseVoucher) => reverseVoucher.voucherId
       );
-
-      // ToDo: (20241025 - Murky) areAllVouchersExistById has not implemented yet
       const isAllRevertVoucherExist = postUtils.areAllVouchersExistById(revertVoucherIds);
-
       if (!isAllRevertVoucherExist) {
         postUtils.throwErrorAndLog(loggerBack, {
           errorMessage: `when post voucher with reverseVouchersInfo, all reverseVoucher need to exist in database`,
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+
+      // Info: (20241111 - Murky) 只要檢查被Reverse 的lineItems, Reverse 別人的lineItems還沒有被建立起來
+      const revertLineItemIds = reverseVouchersInfo.map(
+        (reverseVoucher) => reverseVoucher.lineItemIdBeReversed
+      );
+      const isAllRevertLineItemExist = postUtils.areAllLineItemsExistById(revertLineItemIds);
+      if (!isAllRevertLineItemExist) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: `when post voucher with reverseVouchersInfo, all reverseLineItem need to exist in database`,
           statusMessage: STATUS_MESSAGE.BAD_REQUEST,
         });
       }
@@ -428,6 +441,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
 
       const associateVouchersForRevertEvent = await postUtils.initRevertAssociateVouchers({
         originalVoucher: voucher,
+        revertOtherLineItems: lineItemEntities,
         reverseVouchersInfo,
       });
 
@@ -444,6 +458,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     }
 
     if (doAddAsset) {
+      // Info: (20241111 - Murky) 備註： Asset 在Post 的時候就會一起建立 所有折舊的傳票，所以在這邊不需要在建立折舊的傳票
       if (!isAssetIdsHasItems) {
         postUtils.throwErrorAndLog(loggerBack, {
           errorMessage: 'assetIds is required when post voucher with assetIds',
@@ -462,64 +477,70 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
 
       const assetEntities = await Promise.all(assetIds.map(postUtils.initAssetFromPrisma));
 
-      // Info: (20241029 - Murky) Generate all Depreciation Voucher
-      const depreciatedExpenseVouchers = assetEntities
-        .map((assetEntity) => {
-          return postUtils.initDepreciationVoucherFromAssetEntity(assetEntity, {
-            nowInSecond,
-            issuer,
-            company,
-          });
-        })
-        .flat();
+      // Deprecated: (20241111 - Murky) 不需要再建立Depreciation Voucher, 因為在Post Asset的時候就會一起建立
+      // Info: (20241111 - Murky) [Warning!] 這就這邊沒有建立event
 
-      const assetEventEntity = postUtils.initAddAssetEventEntity({
-        originalVoucher: voucher,
-        depreciatedExpenseVouchers,
-      });
+      // Info: (20241029 - Murky) Generate all Depreciation Voucher
+      // const depreciatedExpenseVouchers = assetEntities
+      //   .map((assetEntity) => {
+      //     return postUtils.initDepreciationVoucherFromAssetEntity(assetEntity, {
+      //       nowInSecond,
+      //       issuer,
+      //       company,
+      //     });
+      //   })
+      //   .flat();
+
+      // const assetEventEntity = postUtils.initAddAssetEventEntity({
+      //   originalVoucher: voucher,
+      //   depreciatedExpenseVouchers,
+      // });
 
       // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel , Prisma Transaction時一起建立
-      eventControlPanel.assetEvent = assetEventEntity;
+      // eventControlPanel.assetEvent = assetEventEntity;
+      voucher.asset = assetEntities;
     }
 
-    if (doRecurring) {
-      if (!isRecurringInfoExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: 'recurringInfo is required when post recurring voucher',
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
-      }
+    // Info: (20241111 - Murky) Recurring Logic 暫時不做
+    // if (doRecurring) {
+    //   if (!isRecurringInfoExist) {
+    //     postUtils.throwErrorAndLog(loggerBack, {
+    //       errorMessage: 'recurringInfo is required when post recurring voucher',
+    //       statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+    //     });
+    //   }
 
-      const recurringAssociateVouchers = postUtils.initRecurringAssociateVouchers({
-        originalVoucher: voucher,
-        recurringInfo: recurringInfo!,
-      });
+    //   const recurringAssociateVouchers = postUtils.initRecurringAssociateVouchers({
+    //     originalVoucher: voucher,
+    //     recurringInfo: recurringInfo!,
+    //   });
 
-      const recurringEventEntity = postUtils.initRecurringEventEntity({
-        startDateInSecond: recurringInfo!.startDate,
-        endDateInSecond: recurringInfo!.endDate,
-        associateVouchers: recurringAssociateVouchers,
-        frequency: recurringInfo!.type,
-        daysOfWeek: recurringInfo!.daysOfWeek,
-        monthsOfYear: recurringInfo!.monthsOfYear,
-      });
+    //   const recurringEventEntity = postUtils.initRecurringEventEntity({
+    //     startDateInSecond: recurringInfo!.startDate,
+    //     endDateInSecond: recurringInfo!.endDate,
+    //     associateVouchers: recurringAssociateVouchers,
+    //     frequency: recurringInfo!.type,
+    //     daysOfWeek: recurringInfo!.daysOfWeek,
+    //     monthsOfYear: recurringInfo!.monthsOfYear,
+    //   });
 
-      // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
-      eventControlPanel.recurringEvent = recurringEventEntity;
+    //   // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
+    //   eventControlPanel.recurringEvent = recurringEventEntity;
+    // }
+    const createdVoucher = await postVoucherV2({
+      nowInSecond,
+      originalVoucher: voucher,
+      eventControlPanel,
+      company,
+      issuer,
+    });
 
-      const createdVoucher = await postVoucherV2({
-        nowInSecond,
-        originalVoucher: voucher,
-        eventControlPanel,
-        company,
-        issuer,
-      });
-
-      payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
-    }
+    // Info: (20241111 - Murky) Output formatter 只要回傳新的voucherId就可以了
+    payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
+    loggerBack.error(error);
   }
 
   statusMessage = STATUS_MESSAGE.CREATED;
