@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
-import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { FiSearch } from 'react-icons/fi';
 import { useUserCtx } from '@/contexts/user_context';
-import { useAccountingCtx } from '@/contexts/accounting_context';
-import { AccountType } from '@/constants/account';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import AssetsSection from '@/components/account_settings/assets_section';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -19,63 +20,49 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 }) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
-  const { getAccountListHandler, accountList } = useAccountingCtx();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
-  useEffect(() => {
-    getAccountListHandler(companyId);
-  }, []);
+  const queryCondition = {
+    limit: 1000, // Info: (20241108 - Julian) 一次取得 1000 筆
+    forUser: true,
+    sortBy: 'code', // Info: (20241108 - Julian) 依 code 排序
+    sortOrder: 'asc',
+  };
 
-  // Info: (20241004 - Julian) Remove AccountType.OTHER_COMPREHENSIVE_INCOME, AccountType.CASH_FLOW, AccountType.OTHER
-  const accountTypeList = Object.values(AccountType).filter(
-    (value) =>
-      value !== AccountType.OTHER_COMPREHENSIVE_INCOME &&
-      value !== AccountType.CASH_FLOW &&
-      value !== AccountType.OTHER
+  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
+    APIName.ACCOUNT_LIST,
+    { params: { companyId }, query: queryCondition },
+    false,
+    true
   );
 
-  const accountTitleMenu = accountTypeList.map((value) => {
-    // Info: (20241004 - Julian) 子項目
-    const childAccountList = accountList.filter((account) => account.type === value);
-    const childAccountMenu = childAccountList.map((account) => {
-      return (
-        <div
-          key={account.id}
-          className="flex w-full items-center gap-4px rounded-full p-8px text-left text-xs font-semibold text-text-brand-secondary-lv1 hover:bg-dropdown-surface-menu-background-secondary"
-        >
-          <div className="flex w-36px items-center justify-center gap-4px">
-            <Image src="/icons/folder.svg" width={16} height={16} alt="folder_icon" />
-            <Image src="/icons/caret.svg" width={16} height={16} alt="caret_icon" />
-          </div>
+  const accountList = accountTitleList?.data ?? [];
 
-          <p>{account.code}</p>
-          <p className="truncate">{account.name}</p>
-        </div>
-      );
-    });
+  const [searchWord, setSearchWord] = useState<string>('');
+  const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
-    return (
-      // Info: (20241004 - Julian) 顯示有子項目的 AccountType
-      childAccountList.length > 0 ? (
-        <div key={value} className="flex flex-col">
-          <div className="flex items-center gap-8px">
-            <Image
-              src={`/icons/account_type_${value}.svg`} // ToDo: (20241108 - Julian) 還差 revenue, cost, income, expense 的 icon
-              width={16}
-              height={16}
-              alt={`${value}_icon`}
-            />
-            <p className="whitespace-nowrap text-sm text-divider-text-lv-1">
-              {t(`journal:ACCOUNT_TYPE.${value.toUpperCase()}`)}
-            </p>
-            <hr className="w-fit flex-1 border-divider-stroke-lv-1" />
-          </div>
-          <div className="flex flex-col py-4px">{childAccountMenu}</div>
-        </div>
-      ) : null
-    );
-  });
+  const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchWord(e.target.value);
+  };
+
+  // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
+  const handleSearchWordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      getAccountList({
+        params: { companyId },
+        query: { ...queryCondition, searchKey: searchWord },
+      });
+    }
+  };
+
+  useEffect(() => {
+    getAccountList({ params: { companyId } });
+  }, []);
+
+  useEffect(() => {
+    setFilteredAccountList(accountList);
+  }, [accountTitleList]);
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -101,6 +88,9 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
             <input
               id="accounting-title-search-input"
               type="text"
+              value={searchWord}
+              onChange={changeSearchWordHandler}
+              onKeyDown={handleSearchWordKeyDown}
               placeholder={t('common:COMMON.SEARCH')}
               className="flex-1 bg-transparent text-input-text-input-filled outline-none"
             />
@@ -111,9 +101,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
         {/* Info: (20241108 - Julian) Modal Body */}
         <div className="grid grid-cols-2 gap-24px">
           {/* Info: (20241108 - Julian) Left: Assets Section */}
-          <div className="flex max-h-600px flex-col overflow-y-auto rounded-sm bg-surface-brand-primary-5 p-24px shadow-Dropshadow_XS">
-            {accountTitleMenu}
-          </div>
+          <AssetsSection accountTitleList={filteredAccountList} />
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <div className="flex flex-col rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
             Add New Title Section
