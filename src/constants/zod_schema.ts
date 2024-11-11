@@ -121,8 +121,8 @@ export const API_ZOD_SCHEMA = {
 };
 
 export const ZOD_SCHEMA_API = {
-  [APIName.COMPANY_LIST]: companyListSchema,
-  [APIName.CREATE_COMPANY]: companyPostSchema,
+  [APIName.LIST_USER_COMPANY]: companyListSchema,
+  [APIName.CREATE_USER_COMPANY]: companyPostSchema,
   [APIName.COMPANY_SELECT]: companySelectSchema,
   [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
