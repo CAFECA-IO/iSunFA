@@ -12,7 +12,8 @@ import { CompanyTag } from '@/constants/company';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/company_settings/work_tag';
-import CompanyEditModal from './company_edit_modal';
+import CompanyEditModal from '@/components/company_settings/company_edit_modal';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface CompanyListModalProps {
   toggleModal: () => void;
@@ -130,6 +131,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
+  const { userAuth } = useUserCtx();
 
   const displayedType = SortingButton({
     string: t('company:INFO.WORK_TAG'),
@@ -168,12 +170,12 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
         <section className="flex flex-col gap-lv-5">
           <FilterSection<ICompanyAndRole[]>
             className="mt-2"
-            params={{}}
-            apiName={APIName.COMPANY_LIST}
+            apiName={APIName.LIST_USER_COMPANY}
+            params={{ userId: userAuth?.id }}
             onApiResponse={handleApiResponse}
             page={page}
             pageSize={DEFAULT_PAGE_LIMIT}
-            diseableDateSearch
+            disableDateSearch
           />
           <div id="company-setting-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />

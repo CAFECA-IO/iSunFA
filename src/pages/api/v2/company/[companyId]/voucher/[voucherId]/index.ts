@@ -27,6 +27,7 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import { IUserEntity } from '@/interfaces/user';
+import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
@@ -38,6 +39,7 @@ type GetOneVoucherResponse = IVoucherEntity & {
   certificates: (ICertificateEntity & {
     invoice: IInvoiceEntity;
     file: IFileEntity;
+    userCertificates: IUserCertificateEntity[];
   })[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   payableInfo?: {
@@ -132,6 +134,17 @@ export const handleGetRequest: IHandleRequest<
       updatedAt: 1,
       deletedAt: null,
       vouchers: [],
+      userCertificates: [
+        {
+          id: 1,
+          userId: 1,
+          certificateId: 1,
+          isRead: false,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
+      ],
     };
 
     const mockRevertLineItems: (ILineItemEntity & { account: IAccountEntity })[] = [

@@ -33,7 +33,6 @@ export enum APIName {
   USER_UPDATE = 'USER_UPDATE',
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   COMPANY_PENDING_TASK_GET = 'COMPANY_PENDING_TASK_GET',
-  COMPANY_LIST = 'COMPANY_LIST',
   COMPANY_ADD = 'COMPANY_ADD',
   COMPANY_GET = 'COMPANY_GET',
   COMPANY_ADD_BY_INVITATION_CODE = 'COMPANY_ADD_BY_INVITATION_CODE',
@@ -102,7 +101,8 @@ export enum APIName {
   USER_ROLE_LIST = 'USER_ROLE_LIST',
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
-  CREATE_COMPANY = 'CREATE_COMPANY',
+  CREATE_USER_COMPANY = 'CREATE_USER_COMPANY',
+  LIST_USER_COMPANY = 'LIST_USER_COMPANY',
   ROLE_LIST = 'ROLE_LIST',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
@@ -144,6 +144,7 @@ export enum APIName {
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
   IP_LIST = 'IP_LIST',
+  FILE_EXPORT = 'FILE_EXPORT',
 }
 
 export enum APIPath {
@@ -222,9 +223,9 @@ export enum APIPath {
   COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
-  USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/role/:roleId/select`,
-  CREATE_COMPANY = `${apiPrefixV2}/company`,
-  COMPANY_LIST = `${apiPrefixV2}/company`,
+  USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
+  CREATE_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
+  LIST_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
   ROLE_LIST = `${apiPrefixV2}/role`,
   ROLE_GET_BY_ID = `${apiPrefixV2}/role/:roleId`,
   ROLE_DELETE = `${apiPrefixV2}/role/:roleId`,
@@ -266,6 +267,7 @@ export enum APIPath {
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
   IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
+  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/export`,
 }
 const createConfig = ({
   name,
@@ -401,10 +403,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.USER_UPDATE,
   }),
-  COMPANY_LIST: createConfig({
-    name: APIName.COMPANY_LIST,
+  LIST_USER_COMPANY: createConfig({
+    name: APIName.LIST_USER_COMPANY,
     method: HttpMethod.GET,
-    path: APIPath.COMPANY_LIST,
+    path: APIPath.LIST_USER_COMPANY,
   }),
   COMPANY_ADD: createConfig({
     name: APIName.COMPANY_ADD,
@@ -577,10 +579,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.USER_SELECT_ROLE,
   }),
-  [APIName.CREATE_COMPANY]: createConfig({
-    name: APIName.CREATE_COMPANY,
+  [APIName.CREATE_USER_COMPANY]: createConfig({
+    name: APIName.CREATE_USER_COMPANY,
     method: HttpMethod.POST,
-    path: APIPath.CREATE_COMPANY,
+    path: APIPath.CREATE_USER_COMPANY,
   }),
   [APIName.ROLE_DELETE]: createConfig({
     name: APIName.ROLE_DELETE,
@@ -872,5 +874,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.IP_LIST,
     method: HttpMethod.GET,
     path: APIPath.IP_LIST,
+  }),
+  [APIName.FILE_EXPORT]: createConfig({
+    name: APIName.FILE_EXPORT,
+    method: HttpMethod.GET,
+    path: APIPath.FILE_EXPORT,
   }),
 };

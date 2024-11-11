@@ -19,7 +19,7 @@ import {
 import { Company, Role, File } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<
-  APIName.COMPANY_LIST,
+  APIName.LIST_USER_COMPANY,
   IPaginatedData<
     Array<{
       company: Company & { imageFile: File | null };
@@ -48,7 +48,7 @@ const handleGetRequest: IHandleRequest<
 };
 
 const handlePostRequest: IHandleRequest<
-  APIName.CREATE_COMPANY,
+  APIName.CREATE_USER_COMPANY,
   {
     company: Company & { imageFile: File | null };
     role: Role;
@@ -106,8 +106,9 @@ const methodHandlers: {
     payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.COMPANY_LIST, req, res, handleGetRequest),
-  POST: (req, res) => withRequestValidation(APIName.CREATE_COMPANY, req, res, handlePostRequest),
+  GET: (req, res) => withRequestValidation(APIName.LIST_USER_COMPANY, req, res, handleGetRequest),
+  POST: (req, res) =>
+    withRequestValidation(APIName.CREATE_USER_COMPANY, req, res, handlePostRequest),
 };
 
 export default async function handler(

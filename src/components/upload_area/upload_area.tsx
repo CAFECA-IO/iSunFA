@@ -17,42 +17,44 @@ const UploadArea: React.FC<UploadAreaProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (files) {
+      await Promise.all(Array.from(files).map(async (file) => handleUpload(file)));
+    }
+  };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (isDisabled) {
-      event.stopPropagation();
-      return;
+    if (!isDisabled) {
+      setIsDragOver(true);
     }
-    setIsDragOver(true);
   };
 
-  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragOver(false);
-  };
+  const handleDragLeave = () => setIsDragOver(false);
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (isDisabled) {
-      event.stopPropagation();
-      return;
-    }
+    if (isDisabled) return;
 
-    const { files } = event.dataTransfer;
-    if (files && files.length > 0) {
-      Array.from(files).map(async (droppedFile: File) => {
-        if (droppedFile) {
-          await handleUpload(droppedFile);
-        }
-        return null;
-      });
-      setIsDragOver(false);
+    handleFileUpload(event.dataTransfer.files);
+    setIsDragOver(false);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileUpload(event.target.files);
+  };
+
+  const openFileDialog = () => {
+    if (!isDisabled && fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
   return (
     <div
+      onClick={openFileDialog}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -66,12 +68,14 @@ const UploadArea: React.FC<UploadAreaProps> = ({
         type="button"
         className="group flex h-full flex-1 flex-col items-center justify-center rounded-l-lg"
         disabled={isDisabled}
+        aria-disabled={isDisabled}
       >
         <Image
           src="/icons/upload_file.svg"
           width={55}
           height={60}
-          alt="upload_file"
+          alt="upload file icon"
+          aria-hidden={isDisabled}
           className="group-disabled:grayscale"
         />
         <p className="mt-4 font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
@@ -85,12 +89,13 @@ const UploadArea: React.FC<UploadAreaProps> = ({
         </p>
 
         <input
+          ref={fileInputRef}
           id="certificate-upload"
           name="certificate-upload"
           accept="application/pdf, image/jpeg, image/png"
           type="file"
           className="hidden"
-          onChange={() => {}}
+          onChange={handleFileChange}
           disabled={isDisabled}
         />
       </button>
@@ -103,14 +108,17 @@ const UploadArea: React.FC<UploadAreaProps> = ({
 
           <button
             type="button"
+            onClick={toggleQRCode}
             className="group flex h-full flex-1 flex-col items-center justify-center rounded-r-lg"
             disabled={isDisabled}
+            aria-disabled={isDisabled}
           >
             <Image
               src="/icons/scan_qrcode.svg"
               width={55}
               height={60}
-              alt="scan_qr_code"
+              alt="scan QR code icon"
+              aria-hidden={isDisabled}
               className="group-disabled:grayscale"
             />
             <div className="mt-4 flex items-center gap-2">
@@ -118,15 +126,13 @@ const UploadArea: React.FC<UploadAreaProps> = ({
                 src="/icons/scan.svg"
                 width={20}
                 height={20}
-                alt="scan"
+                alt="scan icon"
+                aria-hidden={isDisabled}
                 className="group-disabled:grayscale"
               />
               <p className="font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
                 {t('journal:JOURNAL.USE_YOUR_PHONE_AS')}
-                <span
-                  className="cursor-pointer text-text-brand-primary-lv2 group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable"
-                  onClick={toggleQRCode}
-                >
+                <span className="cursor-pointer text-text-brand-primary-lv2 group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable">
                   {t('journal:JOURNAL.SCANNER')}
                 </span>
               </p>
