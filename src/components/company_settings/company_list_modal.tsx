@@ -170,12 +170,12 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
         <section className="flex flex-col gap-lv-5">
           <FilterSection<ICompanyAndRole[]>
             className="mt-2"
+            apiName={APIName.LIST_USER_COMPANY}
             params={{ userId: userAuth?.id }}
-            apiName={APIName.COMPANY_LIST}
             onApiResponse={handleApiResponse}
             page={page}
             pageSize={DEFAULT_PAGE_LIMIT}
-            diseableDateSearch
+            disableDateSearch
           />
           <div id="company-setting-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />

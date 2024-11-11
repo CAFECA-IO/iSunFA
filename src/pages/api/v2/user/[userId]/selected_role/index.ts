@@ -13,10 +13,12 @@ import { IUserRole } from '@/interfaces/user_role';
 const handlePutRequest: IHandleRequest<APIName.USER_SELECT_ROLE, UserRole> = async ({
   query,
   session,
+  body,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: UserRole | null = null;
-  const { userId, roleId } = query;
+  const { userId } = query;
+  const { roleId } = body;
   const userRole = await getUserRoleByUserAndRoleId(userId, roleId);
 
   if (userRole) {

@@ -30,7 +30,7 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
     setIsLoading(true); // 開始 API 請求時設為 loading 狀態
 
     try {
-      const { success, code } = await createCompany({ name: companyName, taxId, tag });
+      const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
 
       if (success) {
         toggleModal();
@@ -38,7 +38,11 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
         toastHandler({
           id: 'create-company-failed',
           type: ToastType.ERROR,
-          content: <p>Create company failed. Error code: {code}</p>,
+          content: (
+            <p>
+              Create company failed. Error code: {code} Error message: {errorMsg}
+            </p>
+          ),
           closeable: true,
           position: ToastPosition.TOP_CENTER,
         });
