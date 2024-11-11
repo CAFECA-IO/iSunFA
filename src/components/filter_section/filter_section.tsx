@@ -36,7 +36,7 @@ interface FilterSectionProps<T> {
     sort: SortBy;
     sortOrder: SortOrder;
   }[];
-  diseableDateSearch?: boolean;
+  disableDateSearch?: boolean;
 }
 
 const FilterSection = <T,>({
@@ -56,7 +56,7 @@ const FilterSection = <T,>({
   dateSort,
   setDateSort,
   otherSorts,
-  diseableDateSearch,
+  disableDateSearch,
 }: FilterSectionProps<T>) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { toastHandler } = useModalContext();
@@ -94,7 +94,7 @@ const FilterSection = <T,>({
       const { success, code, data } = await trigger({
         params,
         query: {
-          // Info: (20241025 - tzuhan) @Shirly, @Murky 這裡是共同處理 List all assets / get all certificate / get all voucher / list news / list reports 的地方，需要協助確認query格式，特別幫我注意一下sortOption，需要修改可以提
+          // Info: (20241025 - tzuhan) @Shirley, @Murky 這裡是共同處理 List all assets / get all certificate / get all voucher / list news / list reports 的地方，需要協助確認query格式，特別幫我注意一下sortOption，需要修改可以提
           page,
           pageSize,
           tab, // Info: (20241022 - tzuhan) @Murky, 這個不夠泛用，需要修改成 tab（for voucherList or certificateList)
@@ -228,7 +228,7 @@ const FilterSection = <T,>({
       )}
 
       {/* Info: (20240919 - tzuhan) 時間區間篩選 */}
-      {!diseableDateSearch && (
+      {!disableDateSearch && (
         <div className="flex min-w-250px flex-1 flex-col">
           <DatePicker
             period={selectedDateRange}
@@ -254,7 +254,7 @@ const FilterSection = <T,>({
           <div className="leading-none">
             {selectedSortOptions[SortBy.DATE].order === SortOrder.DESC
               ? t('common:SORTING.NEWEST')
-              : t('common:SORTING.ORDEST')}
+              : t('common:SORTING.OLDEST')}
           </div>
         </button>
       ) : (

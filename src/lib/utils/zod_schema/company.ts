@@ -12,6 +12,7 @@ const companyNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241016 - Jacky) Company list schema
 const companyListQuerySchema = z.object({
+  userId: zodStringToNumber,
   searchQuery: z.string().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
@@ -19,7 +20,7 @@ const companyListQuerySchema = z.object({
 
 // Info: (20241016 - Jacky) Company post schema
 const companyPostQuerySchema = z.object({
-  companyId: z.number().int(),
+  userId: zodStringToNumber,
 });
 const companyPostBodySchema = z.object({
   name: z.string(),
