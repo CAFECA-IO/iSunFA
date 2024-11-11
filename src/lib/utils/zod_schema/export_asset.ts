@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ExportType, ExportFileType, AssetSortBy, AssetFieldsMap } from '@/constants/export_file';
+import { ExportFileType, AssetSortBy, AssetFieldsMap } from '@/constants/export_asset';
 import { SortOrder } from '@/constants/sort';
 
 /**
@@ -13,7 +13,6 @@ const exportNullSchema = z.union([z.object({}), z.string()]);
 const exportListQuerySchema = exportNullSchema; // Info: (20241108 - Shirley) No need for query parameters
 
 const exportListBodySchema = z.object({
-  exportType: z.enum([ExportType.ASSETS]),
   fileType: z.enum([ExportFileType.CSV]),
   filters: z
     .object({

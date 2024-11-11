@@ -12,7 +12,7 @@ import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
 
-async function checkSessionUser(session: ISessionData) {
+export async function checkSessionUser(session: ISessionData) {
   let isLogin = true;
   if (!session.userId) {
     isLogin = false;
@@ -21,7 +21,7 @@ async function checkSessionUser(session: ISessionData) {
   return isLogin;
 }
 
-async function checkUserAuthorization(userId: number, apiName: string) {
+export async function checkUserAuthorization(userId: number, apiName: string) {
   const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
   if (!isAuth) {
     loggerError(
@@ -33,7 +33,10 @@ async function checkUserAuthorization(userId: number, apiName: string) {
   return isAuth;
 }
 
-function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req: NextApiRequest) {
+export function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(
+  apiName: T,
+  req: NextApiRequest
+) {
   const { query, body } = validateRequestData(apiName, req);
 
   if (query === null && body === null) {

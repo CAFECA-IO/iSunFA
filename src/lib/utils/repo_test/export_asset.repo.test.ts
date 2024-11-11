@@ -1,13 +1,12 @@
-import { exportAssets } from '@/lib/utils/repo/export_file.repo';
-import { IAssetExportRequestBody } from '@/interfaces/export_file';
-import { AssetSortBy, ExportFileType, ExportType } from '@/constants/export_file';
+import { exportAssets } from '@/lib/utils/repo/export_asset.repo';
+import { IAssetExportRequestBody } from '@/interfaces/export_asset';
+import { AssetSortBy, ExportFileType } from '@/constants/export_asset';
 import { SortOrder } from '@/constants/sort';
 
 describe('Export File Repository', () => {
   describe('exportAssets', () => {
     it('應該返回完整的資產列表', async () => {
       const params: IAssetExportRequestBody = {
-        exportType: ExportType.ASSETS,
         fileType: ExportFileType.CSV,
         filters: {
           type: '設備',
@@ -50,7 +49,6 @@ describe('Export File Repository', () => {
 
     it('應該處理無過濾條件的情況', async () => {
       const params: IAssetExportRequestBody = {
-        exportType: ExportType.ASSETS,
         fileType: ExportFileType.CSV,
         filters: {},
         sort: [],
@@ -79,7 +77,6 @@ describe('Export File Repository', () => {
 
     it('應該根據排序條件正確排序資產', async () => {
       const params: IAssetExportRequestBody = {
-        exportType: ExportType.ASSETS,
         fileType: ExportFileType.CSV,
         filters: {},
         sort: [

@@ -1,33 +1,22 @@
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { exportAssets } from '@/lib/utils/repo/export_file.repo';
-import {
-  AssetFieldsMap,
-  DEFAULT_TIMEZONE,
-  ExportFileType,
-  ExportType,
-} from '@/constants/export_file';
+import { exportAssets } from '@/lib/utils/repo/export_asset.repo';
+import { AssetFieldsMap, DEFAULT_TIMEZONE, ExportFileType } from '@/constants/export_asset';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAssetExportRequestBody, IExportRequestBody } from '@/interfaces/export_file';
+import { IAssetExportRequestBody, IExportRequestBody } from '@/interfaces/export_asset';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
 import { convertToCSV, selectFields } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { APIName } from '@/constants/api_connection';
 import { AssetHeader, AssetHeaderWithStringDate } from '@/interfaces/asset';
 
 async function handleAssetExport(
   req: NextApiRequest,
   res: NextApiResponse,
   body: IAssetExportRequestBody
-): Promise<{ statusMessage: string; payload: string | null }> {
+): Promise<void> {
   try {
-    const { exportType, fileType, filters, sort, options } = body;
+    const { fileType, filters, sort, options } = body;
 
-    if (!exportType || !fileType) {
+    if (!fileType) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-
-    if (exportType !== ExportType.ASSETS) {
-      throw new Error(STATUS_MESSAGE.INVALID_EXPORT_TYPE);
     }
 
     if (fileType !== ExportFileType.CSV) {
@@ -43,7 +32,6 @@ async function handleAssetExport(
 
     const assets = await exportAssets(
       {
-        exportType,
         filters,
         sort,
         options,
@@ -91,13 +79,15 @@ async function handleAssetExport(
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.status(200).send(csv);
 
-    return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
+    // return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
   } catch (error) {
     const err = error as Error;
     const statusMessage =
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
       STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-    return { statusMessage, payload: null };
+    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+    res.status(httpCode).json(result);
+    // return { statusMessage, payload: null };
   }
 }
 
@@ -106,48 +96,28 @@ const methodHandlers: {
     req: NextApiRequest,
     res: NextApiResponse,
     body: IExportRequestBody
-  ) => Promise<{ statusMessage: string; payload: string | null }>;
+  ) => Promise<void>;
 } = {
-  POST: async (req, res, body) => {
-    switch (body.exportType) {
-      case ExportType.ASSETS:
-        return handleAssetExport(req, res, body as IAssetExportRequestBody);
-      default:
-        throw new Error(STATUS_MESSAGE.UNSUPPORTED_EXPORT_TYPE);
-    }
-  },
+  POST: handleAssetExport,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // TODO: (20241108 - Shirley) Refine the coding style to use `withRequestValidation` as the complete middleware (less priority)
-  await withRequestValidation<APIName.FILE_EXPORT, string>(
-    APIName.FILE_EXPORT,
-    req,
-    res,
-    async ({ body }) => {
-      const handleRequest = methodHandlers[req.method || ''];
-      if (handleRequest) {
-        try {
-          const response = await handleRequest(req, res, body as IExportRequestBody);
-          if (response.payload) {
-            res.status(200).send(response.payload);
-          } else {
-            res.status(200).json({ message: response.statusMessage });
-          }
-        } catch (error) {
-          const err = error as Error;
-          const statusMessage =
-            STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
-            STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-          const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
-          res.status(httpCode).json(result);
-        }
-      } else {
-        const statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-        const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
-        res.status(httpCode).json(result);
-      }
-      return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
+  const handleRequest = methodHandlers[req.method || ''];
+  if (handleRequest) {
+    try {
+      const body = req.body as IExportRequestBody;
+      await handleRequest(req, res, body);
+    } catch (error) {
+      const err = error as Error;
+      const statusMessage =
+        STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+        STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+      res.status(httpCode).json(result);
     }
-  );
+  } else {
+    const statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
+    res.status(httpCode).json(result);
+  }
 }
