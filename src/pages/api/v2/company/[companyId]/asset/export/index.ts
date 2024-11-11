@@ -78,8 +78,6 @@ async function handleAssetExport(
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.status(200).send(csv);
-
-    // return { statusMessage: STATUS_MESSAGE.SUCCESS, payload: null };
   } catch (error) {
     const err = error as Error;
     const statusMessage =
@@ -87,7 +85,6 @@ async function handleAssetExport(
       STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
     res.status(httpCode).json(result);
-    // return { statusMessage, payload: null };
   }
 }
 
