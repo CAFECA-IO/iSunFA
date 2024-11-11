@@ -9,12 +9,20 @@ import { FiPlusCircle } from 'react-icons/fi';
 
 interface IAccountingTitleSettingModalProps {
   accountTitleList: IAccount[];
+  setAddAccountCode: React.Dispatch<React.SetStateAction<string>>;
   isLoading: boolean;
 }
 
-const AccountTitleItem: React.FC<{ titleAccount: IAccount; childList: IAccount[] }> = ({
+interface IAccountTitleItemProps {
+  titleAccount: IAccount;
+  childList: IAccount[];
+  setAddAccountCode: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
   titleAccount,
   childList,
+  setAddAccountCode,
 }) => {
   const {
     targetRef,
@@ -24,9 +32,9 @@ const AccountTitleItem: React.FC<{ titleAccount: IAccount; childList: IAccount[]
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
-  // ToDo: (20241111 - Julian) 新增 => 連動到右邊的 <AddNewTitleSection />
+  // Info: (20241111 - Julian) 將 code 傳到 modal 那層，以連動到右邊的 <AddNewTitleSection />
   const addButton = isExpanded ? (
-    <button type="button">
+    <button type="button" onClick={() => setAddAccountCode(titleAccount.code)}>
       <FiPlusCircle />
     </button>
   ) : null;
@@ -87,6 +95,7 @@ const AccountTitleItem: React.FC<{ titleAccount: IAccount; childList: IAccount[]
 const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   accountTitleList,
   isLoading,
+  setAddAccountCode,
 }) => {
   const { t } = useTranslation('common');
 
@@ -148,6 +157,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
               key={second.title.id}
               titleAccount={second.title}
               childList={thirdLayer}
+              setAddAccountCode={setAddAccountCode}
             />
           );
         });

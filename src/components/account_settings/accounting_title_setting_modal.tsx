@@ -45,6 +45,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   const [searchWord, setSearchWord] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
+  const [addAccountCode, setAddAccountCode] = useState<string>('');
 
   const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchWord(e.target.value);
@@ -108,10 +109,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
           <AccountTitleSection
             accountTitleList={filteredAccountList}
             isLoading={isLoading ?? true}
+            setAddAccountCode={setAddAccountCode}
           />
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <div className="flex flex-col rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
-            Add New Title Section
+            Add New Title Section: {addAccountCode}
           </div>
         </div>
       </div>
