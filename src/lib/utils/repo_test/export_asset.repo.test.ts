@@ -5,14 +5,14 @@ import { SortOrder } from '@/constants/sort';
 
 describe('Export File Repository', () => {
   describe('exportAssets', () => {
-    it('應該返回完整的資產列表', async () => {
+    it('should return a complete list of assets', async () => {
       const params: IAssetExportRequestBody = {
         fileType: ExportFileType.CSV,
         filters: {
-          type: '設備',
+          type: 'Equipment',
           startDate: 1609459200,
           endDate: 1640995200,
-          searchQuery: '資產',
+          searchQuery: 'asset',
         },
         sort: [
           {
@@ -47,7 +47,7 @@ describe('Export File Repository', () => {
       }
     });
 
-    it('應該處理無過濾條件的情況', async () => {
+    it('should handle cases with no filters', async () => {
       const params: IAssetExportRequestBody = {
         fileType: ExportFileType.CSV,
         filters: {},
@@ -75,7 +75,7 @@ describe('Export File Repository', () => {
       }
     });
 
-    it('應該根據排序條件正確排序資產', async () => {
+    it('should correctly sort assets based on sorting criteria', async () => {
       const params: IAssetExportRequestBody = {
         fileType: ExportFileType.CSV,
         filters: {},
@@ -94,7 +94,7 @@ describe('Export File Repository', () => {
       expect(Array.isArray(result)).toBe(true);
 
       if (result.length > 1) {
-        // Info: (20241108 - Shirley) 驗證排序是否正確
+        // Info: (20241108 - Shirley) Verify if sorting is correct
         for (let i = 0; i < result.length - 1; i += 1) {
           expect(result[i].purchasePrice).toBeGreaterThanOrEqual(result[i + 1].purchasePrice);
         }

@@ -1,6 +1,5 @@
-/* eslint-disable no-console */
 import { exportAssets } from '@/lib/utils/repo/export_asset.repo';
-import { AssetFieldsMap, DEFAULT_TIMEZONE, ExportFileType } from '@/constants/export_asset';
+import { AssetFieldsMap, DEFAULT_TIMEZONE } from '@/constants/export_asset';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAssetExportRequestBody } from '@/interfaces/export_asset';
 import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/utils/common';
@@ -15,6 +14,7 @@ import {
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
+import { loggerError } from '@/lib/utils/logger_back';
 
 async function handleAssetExport(
   req: NextApiRequest,
@@ -23,18 +23,6 @@ async function handleAssetExport(
 ): Promise<void> {
   try {
     const { fileType, filters, sort, options } = body;
-
-    console.log('body in handleAssetExport', body);
-    console.log('req', req);
-    console.log('res', res);
-
-    if (!fileType) {
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    }
-
-    if (fileType !== ExportFileType.CSV) {
-      throw new Error(STATUS_MESSAGE.INVALID_FILE_TYPE);
-    }
 
     const { companyId } = req.query;
     if (!companyId || typeof companyId !== 'string') {
@@ -93,12 +81,7 @@ async function handleAssetExport(
     res.status(200).send(csv);
   } catch (error) {
     const err = error as Error;
-    const statusMessage =
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
-      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-    const { httpCode, result } = formatApiResponse<null>(statusMessage, null);
-    console.log('error in handleAssetExport', err);
-    res.status(httpCode).json(result);
+    throw err;
   }
 }
 
@@ -112,55 +95,62 @@ const methodHandlers: {
   POST: handleAssetExport,
 };
 
+// TODO: (20241111 - Shirley) refactor and adopt middleware for validation and format response
+// TODO: (20241111 - Shirley) refactor the user validation to restrict the user to only export their own company's assets
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // validate user authorization
   let statusMessage = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: string | null = null;
 
   const session = await getSession(req, res);
-  const isLogin = await checkSessionUser(session);
-  console.log('session in handler function', session);
-  console.log('isLogin in handler function', isLogin);
-
-  if (!isLogin) {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-  } else {
-    const isAuth = await checkUserAuthorization(session.userId, APIName.ASSET_LIST_EXPORT);
-    console.log('isAuth in handler function', isAuth);
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req);
-      console.log('query in handler function', query);
-      console.log('body in handler function', body);
-      if (query !== null && body !== null) {
-        const handleRequest = methodHandlers[req.method || ''];
-        if (handleRequest) {
-          try {
-            const reqBody = req.body as IAssetExportRequestBody;
-            await handleRequest(req, res, reqBody);
-            // TODO: how to format and validate the output data as csv file mime type?
-          } catch (_error) {
-            const error = _error as Error;
-            statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-            payload = error.message;
-
-            const { httpCode, result } = formatApiResponse<string | null>(statusMessage, payload);
-            res.status(httpCode).json(result);
-          }
-        } else {
-          statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-          const { httpCode, result } = formatApiResponse<string | null>(statusMessage, payload);
-          res.status(httpCode).json(result);
-        }
-      } else {
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
-      }
+  try {
+    const isLogin = await checkSessionUser(session);
+    if (!isLogin) {
+      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
+      throw new Error(statusMessage);
     }
 
-    await logUserAction(session, APIName.ASSET_LIST_EXPORT, req, statusMessage);
+    const isAuth = await checkUserAuthorization(session.userId, APIName.ASSET_LIST_EXPORT);
+    if (!isAuth) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
+    }
 
-    const { httpCode, result } = formatApiResponse<string | null>(statusMessage, payload);
+    const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req);
+
+    if (query === null || body === null) {
+      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+      throw new Error(statusMessage);
+    }
+
+    res.setHeader('Content-Type', 'text/csv');
+    if (!res.getHeader('Content-Type') || res.getHeader('Content-Type') !== 'text/csv') {
+      throw new Error(STATUS_MESSAGE.INVALID_CONTENT_TYPE);
+    }
+
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      await handleRequest(req, res, body as IAssetExportRequestBody);
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+      throw new Error(statusMessage);
+    }
+
+    const responseBody = res.getHeader('Content-Disposition');
+    if (!responseBody || typeof responseBody !== 'string' || !responseBody.endsWith('.csv"')) {
+      throw new Error(STATUS_MESSAGE.INVALID_FILE_FORMAT);
+    }
+  } catch (error) {
+    const err = error as Error;
+    const { httpCode, result } = formatApiResponse<null>(
+      statusMessage || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
+      null
+    );
+    loggerError(
+      session.userId,
+      `Handler Request Error for ${APIName.ASSET_LIST_EXPORT} in middleware.ts`,
+      err
+    );
     res.status(httpCode).json(result);
+  } finally {
+    await logUserAction(session, APIName.ASSET_LIST_EXPORT, req, statusMessage);
   }
 }

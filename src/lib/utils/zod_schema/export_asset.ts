@@ -5,14 +5,14 @@ import { SortOrder } from '@/constants/sort';
 /**
  * Info: (20241108 - Shirley) Empty schema for Export API
  */
-const exportNullSchema = z.union([z.object({}), z.string()]);
+const assetExportNullSchema = z.union([z.object({}), z.string()]);
 
 /**
  * Info: (20241108 - Shirley) Query schema for Export API
  */
-const exportListQuerySchema = exportNullSchema; // Info: (20241108 - Shirley) No need for query parameters
+const assetExportQuerySchema = assetExportNullSchema; // Info: (20241108 - Shirley) No need for query parameters
 
-const exportListBodySchema = z.object({
+const assetExportBodySchema = z.object({
   fileType: z.enum([ExportFileType.CSV]),
   filters: z
     .object({
@@ -51,24 +51,24 @@ const exportListBodySchema = z.object({
  * Define the output schema based on actual needs
  * 成功回應會是檔案，使用 any 類型
  */
-const exportListResponseSchema = z.any();
+const assetExportResponseSchema = z.any();
 
 /**
  * Info: (20241108 - Shirley) Request validator for Export API
  */
-export const exportListValidator = {
-  query: exportListQuerySchema,
-  body: exportListBodySchema,
+export const assetExportValidator = {
+  query: assetExportQuerySchema,
+  body: assetExportBodySchema,
 };
 
 /**
  * Info: (20241108 - Shirley) Schema for Export API
  */
-export const fileExportSchema = {
+export const assetExportSchema = {
   input: {
-    querySchema: exportListQuerySchema,
-    bodySchema: exportListBodySchema,
+    querySchema: assetExportQuerySchema,
+    bodySchema: assetExportBodySchema,
   },
-  outputSchema: exportListResponseSchema,
-  frontend: exportNullSchema,
+  outputSchema: assetExportResponseSchema,
+  frontend: assetExportNullSchema,
 };

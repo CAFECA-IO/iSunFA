@@ -75,7 +75,7 @@ import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log'
 import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
 import { roleListSchema } from '@/lib/utils/zod_schema/role';
-import { fileExportSchema } from '@/lib/utils/zod_schema/export_asset';
+import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -165,5 +165,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
-  [APIName.ASSET_LIST_EXPORT]: fileExportSchema,
+  [APIName.ASSET_LIST_EXPORT]: assetExportSchema,
 };
