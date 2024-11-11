@@ -2,7 +2,6 @@ import useStateRef from 'react-usestateref';
 import eventManager from '@/lib/utils/event_manager';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -45,8 +44,7 @@ interface UserContextType {
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   selectedCompany: ICompany | null;
-  selectCompany: (company: ICompany | null, isPublic?: boolean) => Promise<void>;
-  successSelectCompany: boolean | undefined;
+  selectCompany: (companyId: number) => Promise<ICompany | null>;
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
@@ -82,8 +80,7 @@ export const UserContext = createContext<UserContextType>({
   createCompany: async () => ({ success: false, code: '', errorMsg: '' }),
 
   selectedCompany: null,
-  selectCompany: async () => {},
-  successSelectCompany: undefined,
+  selectCompany: async () => null,
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
@@ -113,9 +110,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
 
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
-  const [, setSuccessSelectCompany, successSelectCompanyRef] = useStateRef<boolean | undefined>(
-    undefined
-  );
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -130,7 +124,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const isRouteChanging = useRef(false);
 
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
-  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
   const { trigger: getStatusInfoAPI } = APIHandler<{
     user: IUser;
@@ -147,6 +140,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
   // Info: (20241104 - Liz) 建立公司 API
   const { trigger: createCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.CREATE_USER_COMPANY);
+  // Info: (20241111 - Liz) 選擇公司 API
+  const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -160,7 +155,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignInError(false);
     setSelectedRole(null);
     setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
     localStorage.removeItem('userId');
     localStorage.removeItem('expired_at');
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
@@ -323,17 +317,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('執行 processCompanyInfo 並且 company 存在:', company);
 
       setSelectedCompany(company);
-      setSuccessSelectCompany(true);
-
       return true;
     } else {
       // Deprecated: (20241008 - Liz)
       // eslint-disable-next-line no-console
       console.log('執行 processCompanyInfo 並且 company 不存在:', company);
 
-      setSuccessSelectCompany(undefined);
       setSelectedCompany(null);
-
       return false;
     }
   };
@@ -506,26 +496,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const handleSelectCompanyResponse = async (response: {
-    success: boolean;
-    data: ICompany | null;
-    code: string;
-    error: Error | null;
-  }) => {
-    if (response.success && response.data !== null) {
-      setSelectedCompany(response.data);
-      setSuccessSelectCompany(true);
-      // Deprecated: (20241107 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('handleSelectCompanyResponse 並且 response.success && response.data !== null');
-    }
-    if (response.success === false) {
-      setSelectedCompany(null);
-      setSuccessSelectCompany(false);
-      setErrorCode(response.code ?? '');
-    }
-  };
-
   // Info: (20241029 - Liz) 建立角色的功能
   const createRole = async (roleId: number) => {
     // Deprecated: (20241108 - Liz)
@@ -649,23 +619,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20241108 - Liz) 選擇公司要重新串接 v2 API
-  // Info: (20240513 - Julian) 選擇公司的功能
-  const selectCompany = async (company: ICompany | null, isPublic = false) => {
+  // Info: (20241111 - Liz) 選擇公司的功能
+  const selectCompany = async (companyId: number) => {
     setSelectedCompany(null);
-    setSuccessSelectCompany(undefined);
 
-    const res = await selectCompanyAPI({
-      params: {
-        companyId: !company && !isPublic ? -1 : (company?.id ?? FREE_COMPANY_ID),
-      },
-    });
+    try {
+      const { success, data: userCompanyList } = await selectCompanyAPI({
+        query: { companyId },
+      });
 
-    if (!company && !isPublic) {
-      // router.push(ISUNFA_ROUTE.DASHBOARD);
-      return;
+      if (success && userCompanyList) {
+        setSelectedCompany(userCompanyList);
+        return userCompanyList;
+      }
+      setSelectedCompany(null);
+      return null;
+    } catch (error) {
+      setSelectedCompany(null);
+      return null;
     }
-    await handleSelectCompanyResponse(res);
   };
 
   const throttledGetStatusInfo = useCallback(
@@ -753,10 +725,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getSystemRoleList,
       selectedRole: selectedRoleRef.current,
       createCompany,
-
-      selectedCompany: selectedCompanyRef.current,
       selectCompany,
-      successSelectCompany: successSelectCompanyRef.current,
+      selectedCompany: selectedCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
@@ -769,7 +739,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       credentialRef.current,
       selectedRoleRef.current,
       selectedCompanyRef.current,
-      successSelectCompanyRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,

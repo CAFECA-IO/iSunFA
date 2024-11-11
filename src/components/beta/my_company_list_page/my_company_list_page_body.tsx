@@ -13,6 +13,7 @@ import { ICompanyAndRole } from '@/interfaces/company';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST } from '@/constants/config';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
 
 interface CompanyListProps {
   companyList: ICompanyAndRole[];
@@ -34,6 +35,9 @@ const NoData = () => {
 };
 
 const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: CompanyListProps) => {
+  const { selectCompany, selectedCompany } = useUserCtx();
+
+  // ToDo: (20241111 - Liz) connect to the API to change the tag
   const handleChangeTag = (companyName: string) => {
     setCompanyName(companyName);
     toggleChangeTagModal();
@@ -41,42 +45,52 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 
   return (
     <section className="flex flex-auto flex-col gap-8px">
-      {companyList.map((myCompany) => (
-        <div
-          key={myCompany.company.id}
-          className="flex items-center justify-between gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
-        >
-          <Image
-            src={myCompany.company.imageId}
-            alt={myCompany.company.name}
-            width={60}
-            height={60}
-            className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
-          ></Image>
+      {companyList.map((myCompany) => {
+        const isCompanySelected = myCompany.company.id === selectedCompany?.id;
+        const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
 
-          <div className="flex flex-auto items-center gap-8px">
-            <p className="text-base font-medium text-text-neutral-solid-dark">
-              {myCompany.company.name}
-            </p>
-            <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
-          </div>
+        const handleConnect = () => {
+          selectCompany(companyId);
+        };
 
-          <div className="flex w-90px justify-center">
-            <WorkTag
-              type={myCompany.tag}
-              handleChangeTag={() => handleChangeTag(myCompany.company.name)}
-            />
-          </div>
-
-          <button
-            type="button"
-            className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+        return (
+          <div
+            key={myCompany.company.id}
+            className="flex items-center justify-between gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
           >
-            <p className="text-sm font-medium">Connect</p>
-            <IoArrowForward size={16} />
-          </button>
-        </div>
-      ))}
+            <Image
+              src={myCompany.company.imageId}
+              alt={myCompany.company.name}
+              width={60}
+              height={60}
+              className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
+            ></Image>
+
+            <div className="flex flex-auto items-center gap-8px">
+              <p className="text-base font-medium text-text-neutral-solid-dark">
+                {myCompany.company.name}
+              </p>
+              <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
+            </div>
+
+            <div className="flex w-90px justify-center">
+              <WorkTag
+                type={myCompany.tag}
+                handleChangeTag={() => handleChangeTag(myCompany.company.name)}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+              onClick={handleConnect}
+            >
+              <p className="text-sm font-medium">{isCompanySelected ? ' Cancel' : 'Connect'}</p>
+              <IoArrowForward size={16} />
+            </button>
+          </div>
+        );
+      })}
     </section>
   );
 };
