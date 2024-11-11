@@ -509,7 +509,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(response.error);
       }
     } catch (error) {
-      // TODO: (20240814-Tzuhan) [Beta] handle error
+      // ToDo: (20240814-Tzuhan) [Beta] handle error
     }
   };
 
@@ -534,24 +534,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // ToDo: (20241107 - Liz) 獲得可以建立的所有角色，得到 roleId，建立、選擇角色都傳 roleId (in body) 給 API
-
   // Info: (20241029 - Liz) 建立角色的功能
   const createRole = async (roleId: number) => {
     // Deprecated: (20241108 - Liz)
     // eslint-disable-next-line no-console
     console.log('call createRole, roleId:', roleId);
 
-    const roleIdString = roleId.toString();
-
     try {
       const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuth?.id },
-        body: { roleIdString },
+        body: { roleId },
       });
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
       if (success && userRole) {
+        // Deprecated: (20241111 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
         return userRole;
       }
 
@@ -568,12 +567,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const selectRole = async (roleId: number) => {
     setSelectedRole(null);
 
-    const roleIdString = roleId.toString();
-
     try {
       const { success, data: userRole } = await selectRoleAPI({
         params: { userId: userAuth?.id },
-        body: { roleIdString },
+        body: { roleId },
       });
 
       if (success && userRole) {
@@ -598,6 +595,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (success && systemRoleList) {
+        // Deprecated: (20241111 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 ROLE_LIST 成功, systemRoleList:', systemRoleList);
+
         return systemRoleList;
       }
 
@@ -616,6 +617,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (success && userRoleList) {
+        // Deprecated: (20241111 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 USER_ROLE_LIST 成功, userRoleList:', userRoleList);
+
         return userRoleList;
       }
 
