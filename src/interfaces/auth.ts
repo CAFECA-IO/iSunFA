@@ -1,10 +1,37 @@
-import { AuthFunctionsKeys } from '@/constants/auth';
+import { AuthFunctionsKeysNew } from '@/constants/auth';
 import { ISessionData } from '@/interfaces/session_data';
 import { NextApiRequest } from 'next';
 
-export type AuthFunctions = {
-  [key in AuthFunctionsKeys]: (session: ISessionData, req: NextApiRequest) => Promise<boolean>;
+export enum AuthFunctionsKeys {
+  user = 'user',
+  admin = 'admin',
+  owner = 'owner',
+  superAdmin = 'superAdmin',
+  CompanyAdminMatch = 'CompanyAdminMatch',
+  projectCompanyMatch = 'projectCompanyMatch',
+}
+
+export type AuthFunctionsNew = {
+  [key in AuthFunctionsKeysNew]: (session: ISessionData, req: NextApiRequest) => Promise<boolean>;
 };
+
+export interface AuthFunctions {
+  [AuthFunctionsKeys.user]: (params: { userId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.admin]: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.owner]: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.superAdmin]: (params: {
+    userId: number;
+    companyId: number;
+  }) => Promise<boolean>;
+  [AuthFunctionsKeys.CompanyAdminMatch]: (params: {
+    companyId: number;
+    adminId: number;
+  }) => Promise<boolean>;
+  [AuthFunctionsKeys.projectCompanyMatch]: (params: {
+    projectId: number;
+    companyId: number;
+  }) => Promise<boolean>;
+}
 
 export type AuthFunctionsParams = {
   [K in AuthFunctionsKeys]: Parameters<AuthFunctions[K]>[0];

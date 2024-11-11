@@ -1,114 +1,91 @@
-import { NextApiRequest } from 'next';
-import { CompanyRoleName } from '@/constants/role';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import {
   getAdminByCompanyIdAndUserId,
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import { AuthFunctions } from '@/interfaces/auth';
-import { AUTH_CHECK } from '@/constants/auth';
+import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import { CompanyRoleName } from '@/constants/role';
 import { getUserById } from '@/lib/utils/repo/user.repo';
-import { ISessionData } from '@/interfaces/session_data';
-import { convertStringToNumber } from '@/lib/utils/common';
-import loggerBack from '@/lib/utils/logger_back';
 
-export async function checkUser(session: ISessionData, req: NextApiRequest) {
+export async function checkUser(params: { userId: number }) {
+  const user = await getUserById(params.userId);
+  return !!user;
+}
+
+export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
+  const session = await getSession(req, res);
+  const { companyId, userId } = session;
+  if (!userId) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
+  if (!companyId) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  if (typeof companyId !== 'number' || typeof userId !== 'number') {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  if (!admin) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+  return session;
+}
+
+export async function checkUserAdmin(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserId(params.companyId, params.userId);
+  return !!admin;
+}
+
+export async function checkUserCompanyOwner(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+    params.companyId,
+    params.userId,
+    CompanyRoleName.OWNER
+  );
+  return !!admin;
+}
+
+export async function checkUserCompanySuperAdmin(params: {
+  userId: number;
+  companyId: number;
+}): Promise<boolean> {
+  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
+    params.companyId,
+    params.userId,
+    CompanyRoleName.SUPER_ADMIN
+  );
+  return !!admin;
+}
+
+export async function checkCompanyAdminMatch(params: {
+  companyId: number;
+  adminId: number;
+}): Promise<boolean> {
   let isAuth = true;
-  const { userId: queryUserId } = req.query;
-  if (queryUserId) {
-    const queryUserIdNumber = convertStringToNumber(queryUserId);
-    isAuth = session.userId === queryUserIdNumber;
+  const getAdmin = await getAdminById(params.adminId);
+  if (!getAdmin) {
+    isAuth = false;
+  } else if (getAdmin.companyId !== params.companyId) {
+    isAuth = false;
   }
-  if (isAuth) {
-    const user = await getUserById(session.userId);
-    isAuth = !!user;
-  }
-
   return isAuth;
 }
 
-export async function checkUserAdmin(session: ISessionData, req: NextApiRequest) {
-  const { userId: queryUserId, companyId: queryCompanyId } = req.query;
-  const { companyId: bodyCompanyId } = req.body;
-  const reqCompanyId = bodyCompanyId || queryCompanyId;
-  const queryUserIdNumber = convertStringToNumber(queryUserId);
-  const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserId(session.companyId, session.userId);
-    isAuth = !!admin;
-  }
-
-  return isAuth;
-}
-
-export async function checkUserCompanyOwner(session: ISessionData, req: NextApiRequest) {
-  const { userId: queryUserId, companyId: queryCompanyId } = req.query;
-  const { companyId: bodyCompanyId } = req.body;
-  const reqCompanyId = bodyCompanyId || queryCompanyId;
-  const queryUserIdNumber = convertStringToNumber(queryUserId);
-  const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-      session.companyId,
-      session.userId,
-      CompanyRoleName.OWNER
-    );
-    isAuth = !!admin;
-  }
-
-  return isAuth;
-}
-
-export async function checkUserCompanySuperAdmin(session: ISessionData, req: NextApiRequest) {
-  const { userId: queryUserId, companyId: queryCompanyId } = req.query;
-  const { companyId: bodyCompanyId } = req.body;
-  const reqCompanyId = bodyCompanyId || queryCompanyId;
-  const queryUserIdNumber = convertStringToNumber(queryUserId);
-  const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserIdAndRoleName(
-      session.companyId,
-      session.userId,
-      CompanyRoleName.SUPER_ADMIN
-    );
-    isAuth = !!admin;
-  }
-
-  return isAuth;
-}
-
-export async function checkCompanyAdminMatch(session: ISessionData, req: NextApiRequest) {
-  const { adminId: queryAdminId, companyId: queryCompanyId } = req.query;
-  const { companyId: bodyCompanyId } = req.body;
-  const reqCompanyId = bodyCompanyId || queryCompanyId;
-  const queryAdminIdNumber = convertStringToNumber(queryAdminId);
-  const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const admin = await getAdminById(queryAdminIdNumber);
-    isAuth = !!admin && admin.companyId === reqCompanyIdNumber;
-  }
-
-  return isAuth;
-}
-
-export async function checkProjectCompanyMatch(session: ISessionData, req: NextApiRequest) {
-  const { projectId: queryProjectId, companyId: queryCompanyId } = req.query;
-  const { companyId: bodyCompanyId } = req.body;
-  const reqCompanyId = bodyCompanyId || queryCompanyId;
-  const queryProjectIdNumber = convertStringToNumber(queryProjectId);
-  const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.companyId === reqCompanyIdNumber;
-  if (isAuth) {
-    const project = await getProjectById(queryProjectIdNumber);
-    isAuth = !!project && project.companyId === reqCompanyIdNumber;
-  }
-
-  return isAuth;
+export async function checkProjectCompanyMatch(params: { projectId: number; companyId: number }) {
+  const getProject = await getProjectById(params.projectId);
+  const match = getProject !== null && getProject.companyId === params.companyId;
+  return match;
 }
 
 // Info: (20240729 - Jacky) 檢查函數的映射表
@@ -121,45 +98,33 @@ export const authFunctions: AuthFunctions = {
   projectCompanyMatch: checkProjectCompanyMatch,
 };
 
-export async function checkAuthorization<T extends keyof typeof AUTH_CHECK>(
-  apiName: T,
-  req: NextApiRequest,
-  session: ISessionData
+export async function checkAuthorization<T extends AuthFunctionsKeys[]>(
+  requiredChecks: T,
+  authParams: AllRequiredParams<T>
 ): Promise<boolean> {
-  const checkList = AUTH_CHECK[apiName];
+  let isAuthorized = false;
 
-  // Info: (20241111 - Jacky) 若 checkList 不存在，標記 hasFailed 為 true
-  let hasFailed = false;
-
-  if (!checkList) {
-    hasFailed = true;
-    loggerBack.error(`Authorization checkList not found for ${apiName}`);
-    return false;
+  // Info: (20240729 - Jacky) 檢查 companyId 是否為 FREE_COMPANY_ID
+  if (
+    typeof authParams === 'object' &&
+    authParams !== null &&
+    'companyId' in authParams &&
+    authParams.companyId === FREE_COMPANY_ID
+  ) {
+    isAuthorized = true;
   } else {
     const results = await Promise.all(
-      checkList.map(async (check) => {
-        const authFunction = authFunctions[check];
-        let isFail = false;
-
-        // Info: (20241111 - Jacky) 若 authFunction 不存在或檢查未通過，回傳 true
-        if (!authFunction) {
-          loggerBack.error(`Authorization function not found for check: ${check}`);
-          isFail = true;
-        } else {
-          const isAuthorized = await authFunction(session, req);
-          if (!isAuthorized) {
-            loggerBack.error(`Authorization failed for check: ${check}`);
-            isFail = true;
-          }
-        }
-
-        return isFail;
+      requiredChecks.map(async (check) => {
+        const checkFunction = authFunctions[check] as (
+          params: typeof authParams
+        ) => Promise<boolean>;
+        const checked = await checkFunction(authParams);
+        return checked;
       })
     );
 
-    hasFailed = results.some((result) => result === true);
+    isAuthorized = results.every((result) => result);
   }
 
-  // Info: (20241111 - Jacky) 返回 hasFailed 的反向值，若 hasFailed 為 true 則回傳 false，反之亦然
-  return !hasFailed;
+  return isAuthorized;
 }

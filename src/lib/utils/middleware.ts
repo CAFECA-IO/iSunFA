@@ -2,7 +2,6 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ZOD_SCHEMA_API } from '@/constants/zod_schema';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { checkAuthorization } from '@/lib/utils/auth_check';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
@@ -11,6 +10,7 @@ import { APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
 import { AUTH_CHECK } from '@/constants/auth';
+import { checkAuthorizationNew } from '@/lib/utils/auth_check_v2';
 
 async function checkSessionUser(session: ISessionData) {
   let isLogin = true;
@@ -26,7 +26,7 @@ async function checkUserAuthorization<T extends keyof typeof AUTH_CHECK>(
   req: NextApiRequest,
   session: ISessionData
 ) {
-  const isAuth = await checkAuthorization(apiName, req, session);
+  const isAuth = await checkAuthorizationNew(apiName, req, session);
   if (!isAuth) {
     loggerError(
       session.userId,
