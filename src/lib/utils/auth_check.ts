@@ -1,6 +1,5 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { CompanyRoleName } from '@/constants/role';
 import { getSession } from '@/lib/utils/session';
 import { getProjectById } from '@/lib/utils/repo/project.repo';
 import {
@@ -8,26 +7,10 @@ import {
   getAdminByCompanyIdAndUserIdAndRoleName,
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
-import i18next from 'i18next';
 import { AllRequiredParams, AuthFunctions, AuthFunctionsKeys } from '@/interfaces/auth';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { getUserById } from './repo/user.repo';
-
-const getTranslatedRoleName = (roleName: CompanyRoleName): string => {
-  const t = i18next.t.bind(i18next);
-  const roleTranslations: Record<CompanyRoleName, string> = {
-    [CompanyRoleName.SUPER_ADMIN]: t('common:ROLE.SUPER_ADMIN'),
-    [CompanyRoleName.ADMIN]: t('common:ROLE.ADMIN'),
-    [CompanyRoleName.OWNER]: t('common:ROLE.OWNER'),
-    [CompanyRoleName.ACCOUNTANT]: t('common:ROLE.ACCOUNTANT'),
-    [CompanyRoleName.BOOKKEEPER]: t('common:ROLE.BOOKKEEPER'),
-    [CompanyRoleName.FINANCE]: t('common:ROLE.FINANCE'),
-    [CompanyRoleName.VIEWER]: t('common:ROLE.VIEWER'),
-    [CompanyRoleName.TEST]: t('common:ROLE.TEST'),
-  };
-
-  return roleTranslations[roleName] || roleName;
-};
+import { CompanyRoleName } from '@/constants/role';
+import { getUserById } from '@/lib/utils/repo/user.repo';
 
 export async function checkUser(params: { userId: number }) {
   const user = await getUserById(params.userId);
@@ -83,30 +66,6 @@ export async function checkUserCompanySuperAdmin(params: {
     CompanyRoleName.SUPER_ADMIN
   );
   return !!admin;
-}
-
-export async function checkRole(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  roleName: CompanyRoleName
-) {
-  const translatedRoleName = getTranslatedRoleName(roleName);
-  const session = await getSession(req, res);
-  const { companyId, userId } = session;
-  if (!userId) {
-    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
-  }
-  if (!companyId) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-  if (typeof companyId !== 'number' || typeof userId !== 'number') {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
-  }
-  const admin = await getAdminByCompanyIdAndUserIdAndRoleName(companyId, userId, roleName);
-  if (!admin) {
-    throw new Error(`${STATUS_MESSAGE.FORBIDDEN} - Missing role: ${translatedRoleName}`);
-  }
-  return session;
 }
 
 export async function checkCompanyAdminMatch(params: {

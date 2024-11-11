@@ -104,7 +104,7 @@ export const companyPostSchema = {
     querySchema: companyPostQuerySchema,
     bodySchema: companyPostBodySchema,
   },
-  outputSchema: companyRoleOutputSchema,
+  outputSchema: companyRoleOutputSchema.nullable(),
   frontend: companyNullSchema,
 };
 
