@@ -7,7 +7,7 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import AssetsSection from '@/components/account_settings/assets_section';
+import AccountTitleSection from '@/components/account_settings/account_title_section';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -30,7 +30,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     sortOrder: 'asc',
   };
 
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
+  const {
+    trigger: getAccountList,
+    data: accountTitleList,
+    isLoading,
+  } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
     { params: { companyId }, query: queryCondition },
     false,
@@ -100,8 +104,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
         {/* Info: (20241108 - Julian) Modal Body */}
         <div className="grid grid-cols-2 gap-24px">
-          {/* Info: (20241108 - Julian) Left: Assets Section */}
-          <AssetsSection accountTitleList={filteredAccountList} />
+          {/* Info: (20241108 - Julian) Left: Account Title Section */}
+          <AccountTitleSection
+            accountTitleList={filteredAccountList}
+            isLoading={isLoading ?? true}
+          />
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <div className="flex flex-col rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
             Add New Title Section
