@@ -9,7 +9,7 @@ import { ILedgerPayload, ILedgerItem } from '@/interfaces/ledger';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { VoucherType } from '@/constants/account';
 import { buildAccountForestForUser } from '@/lib/utils/account/common';
-
+// Deprecated: (20241115 - Shirley) 開發完成後要刪掉
 import fs from 'fs';
 import path from 'path';
 
@@ -23,6 +23,14 @@ interface ListLedgerParams {
   page?: number;
   pageSize?: number | 'infinity';
 }
+
+/* TODO: (20241111 - Shirley)
+1. Implement label type filtering (general/detailed/all)
+2. Fix balance calculation based on account type
+3. Add secondary sorting for same date entries
+4. Optimize query performance with SQL-level pagination
+5. Enhance error handling with specific error codes
+*/
 
 export async function listLedger(params: ListLedgerParams): Promise<ILedgerPayload | null> {
   const {
@@ -106,12 +114,43 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       },
     };
 
+    const allVoucherData = await prisma.voucher.findMany({
+      where: {
+        // companyId: 10000027,
+        companyId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const allVoucherIds = allVoucherData.map((voucher) => voucher.id);
+
+    const additionalLineItems = await prisma.lineItem.findMany({
+      where: {
+        voucherId: { in: allVoucherIds },
+        deletedAt: null,
+      },
+      include: {
+        voucher: true,
+      },
+    });
+
     const accounts = await prisma.account.findMany(accountsQuery);
 
     const sortedAccounts = buildAccountForestForUser(accounts);
 
+    sortedAccounts.forEach((account) => {
+      return {
+        ...account,
+        lineItem: additionalLineItems.filter((item) => item.accountId === account.id),
+      };
+    });
+
+    // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
     const DIR_NAME = 'tmp';
-    const NEW_FILE_NAME = 'sortedAccounts_1111_2016.json';
+    const NEW_FILE_NAME = 'sortedAccounts.json';
     const logDir = path.join(process.cwd(), DIR_NAME);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });

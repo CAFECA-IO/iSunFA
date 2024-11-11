@@ -5,7 +5,7 @@ describe('Ledger Repository', () => {
   describe('listLedger', () => {
     it('should return a paginated list of ledger items', async () => {
       const params = {
-        companyId: 1002, // Info: (20241105 - Shirley) 假設存在的公司 ID
+        companyId: 10000027, // Info: (20241105 - Shirley) 假設存在的公司 ID
         startDate: 1706745600, // 2024-02-01
         endDate: 1707350399, // 2024-02-07 23:59:59
         startAccountNo: '1141',
