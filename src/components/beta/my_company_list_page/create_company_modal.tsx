@@ -86,7 +86,9 @@ const CreateCompanyModal = ({
 
         <section className="flex flex-col gap-24px px-40px py-16px">
           <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">{t('company:INFO.NAME')}</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('company:INFO.COMPANY_NAME')}
+            </h4>
             <input
               type="text"
               placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
@@ -152,7 +154,7 @@ const CreateCompanyModal = ({
             onClick={toggleModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
-            Cancel
+            {t('company:PAGE_BODY.CANCEL')}
           </button>
 
           <button
@@ -161,7 +163,7 @@ const CreateCompanyModal = ({
             disabled={isLoading}
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            Submit
+            {t('company:PAGE_BODY.SUBMIT')}
           </button>
         </section>
       </div>

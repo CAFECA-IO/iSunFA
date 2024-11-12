@@ -38,7 +38,9 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
 
         <section className="flex flex-col gap-24px px-40px py-16px">
           <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">{t('company:INFO.NAME')}</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('company:INFO.COMPANY_NAME')}
+            </h4>
             <input
               type="text"
               placeholder={t('company:PLACEHOLDER.ENTER_NAME')}

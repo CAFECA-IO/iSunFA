@@ -10,6 +10,7 @@ import WorkTag from '@/components/beta/my_company_list_page/company_tag';
 import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
+import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST } from '@/constants/config';
@@ -22,13 +23,15 @@ interface CompanyListProps {
 }
 
 const NoData = () => {
+  const { t } = useTranslation(['company']);
+
   return (
     <section className="flex flex-auto flex-col items-center justify-center gap-16px">
       <Image src={'/images/empty.svg'} alt="empty" width={120} height={134.787}></Image>
 
       <div className="text-center text-base font-medium text-text-neutral-mute">
-        <p>No company data available.</p>
-        <p>Please add a new company.</p>
+        <p>{t('company:PAGE_BODY.NO_COMPANY_DATA_AVAILABLE')}</p>
+        <p>{t('company:PAGE_BODY.PLEASE_ADD_A_NEW_COMPANY')}</p>
       </div>
     </section>
   );
@@ -96,6 +99,8 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 };
 
 const MyCompanyListPageBody = () => {
+  const { t } = useTranslation(['company']);
+
   const { userAuth } = useUserCtx();
   // Deprecated: (20241111 - Liz)
   // eslint-disable-next-line no-console
@@ -158,7 +163,7 @@ const MyCompanyListPageBody = () => {
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <TbSquarePlus2 size={20} />
-            <p>Add New</p>
+            <p>{t('company:PAGE_BODY.ADD_NEW')}</p>
           </button>
 
           <button
@@ -166,7 +171,7 @@ const MyCompanyListPageBody = () => {
             className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <TbCodeCircle size={20} />
-            <p>Code</p>
+            <p>{t('company:PAGE_BODY.CODE')}</p>
           </button>
         </div>
       </section>
