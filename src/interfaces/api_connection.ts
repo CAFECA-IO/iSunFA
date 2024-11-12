@@ -124,7 +124,8 @@ export type IAPIName =
   | 'TRIAL_BALANCE_LIST'
   | 'IP_LIST'
   | 'ASSET_LIST_EXPORT'
-  | 'FILE_EXPORT';
+  | 'FILE_EXPORT'
+  | 'LEDGER_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

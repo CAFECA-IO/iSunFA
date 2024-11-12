@@ -77,6 +77,7 @@ import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_acc
 import { roleListSchema } from '@/lib/utils/zod_schema/role';
 import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
 import { nullAPISchema } from '@/lib/utils/zod_schema/common';
+import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { roomDeleteSchema, roomGetSchema, roomPostSchema } from '@/lib/utils/zod_schema/room';
 
 /*
@@ -251,4 +252,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.UPDATE_ASSET_V2]: nullAPISchema,
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.IP_LIST]: nullAPISchema,
+  [APIName.LEDGER_LIST]: ledgerListSchema,
 };

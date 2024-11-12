@@ -138,4 +138,5 @@ export const AUTH_CHECK = {
   [APIName.UPDATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: [AuthFunctionsKeysNew.user],
   [APIName.IP_LIST]: [AuthFunctionsKeysNew.user],
+  [APIName.LEDGER_LIST]: [AuthFunctionsKeysNew.user],
 };
