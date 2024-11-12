@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-// FIXME: 刪掉 disable
 import prisma from '@/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -11,9 +9,6 @@ import { ILedgerPayload } from '@/interfaces/ledger';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { VoucherType } from '@/constants/account';
 import { buildAccountForestForUser } from '@/lib/utils/account/common';
-// Deprecated: (20241115 - Shirley) 開發完成後要刪掉
-import fs from 'fs';
-import path from 'path';
 import { LabelType } from '@/constants/ledger';
 
 interface ListLedgerParams {
@@ -39,17 +34,9 @@ interface ILedgerItemForCalculation {
   creditAmount: number;
   balance: number;
   voucherType: VoucherType;
-  createAt: number;
-  updateAt: number;
+  createdAt: number;
+  updatedAt: number;
 }
-
-/* TODO: (20241111 - Shirley)
-1. Implement label type filtering (general/detailed/all)
-2. Fix balance calculation based on account type
-3. Add secondary sorting for same date entries
-4. Optimize query performance with SQL-level pagination
-5. Enhance error handling with specific error codes
-*/
 
 export async function listLedger(params: ListLedgerParams): Promise<ILedgerPayload | null> {
   const {
@@ -107,15 +94,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       where: {
         ...commonQueryConditions,
         OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
-
-        // ...(startAccountNo && endAccountNo
-        //   ? {
-        //       code: {
-        //         gte: startAccountNo,
-        //         lte: endAccountNo,
-        //       },
-        //     }
-        //   : {}),
         ...(startAccountNo && endAccountNo
           ? {
               AND: [
@@ -187,17 +165,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       },
     });
 
-    console.log(
-      'allVoucherData',
-      allVoucherData,
-      'allVoucherIds',
-      allVoucherIds,
-      'additionalLineItemsLength',
-      additionalLineItems.length
-      // 'additionalLineItems',
-      // additionalLineItems
-    );
-
     // const accounts = await prisma.account.findMany(accountsQuery);
 
     const sortedAccounts = buildAccountForestForUser(filteredAccounts);
@@ -210,35 +177,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
         }),
       };
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      'newSortedAccounts',
-      newSortedAccounts.length
-      // 'last one',
-      // newSortedAccounts[newSortedAccounts.length - 1]
-    );
-
-    // // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
-    const DIR_NAME = 'tmp';
-    const NEW_FILE_NAME = 'sortedAccounts.json';
-    const logDir = path.join(process.cwd(), DIR_NAME);
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
-    const logPath = path.join(logDir, NEW_FILE_NAME);
-    fs.writeFileSync(logPath, JSON.stringify(newSortedAccounts, null, 2), 'utf-8');
-
-    // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
-    // const DIR_NAME_1 = 'tmp';
-    // const NEW_FILE_NAME_1 = 'additionalLineItems.json';
-    // const logDir1 = path.join(process.cwd(), DIR_NAME_1);
-    // if (!fs.existsSync(logDir1)) {
-    //   fs.mkdirSync(logDir1, { recursive: true });
-    // }
-
-    // const logPath1 = path.join(logDir1, NEW_FILE_NAME_1);
-    // fs.writeFileSync(logPath1, JSON.stringify(additionalLineItems, null, 2), 'utf-8');
 
     // 3. 整理分類帳資料
     const ledgerItems: ILedgerItemForCalculation[] = [];
@@ -271,8 +209,8 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
           creditAmount: item.debit ? 0 : item.amount,
           balance,
           // FIXME: 改成 createdAt, updatedAt
-          createAt: item.createdAt,
-          updateAt: item.updatedAt,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
         });
       });
     });
@@ -280,17 +218,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     // 4. 排序
     // ledgerItems.sort((a, b) => a.voucherDate - b.voucherDate);
     ledgerItems.sort((a, b) => a.accountId - b.accountId);
-
-    // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
-    const DIR_NAME_2 = 'tmp';
-    const NEW_FILE_NAME_2 = 'ledgerItems.json';
-    const logDir2 = path.join(process.cwd(), DIR_NAME_2);
-    if (!fs.existsSync(logDir2)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
-    const logPath2 = path.join(logDir2, NEW_FILE_NAME_2);
-    fs.writeFileSync(logPath2, JSON.stringify(ledgerItems, null, 2), 'utf-8');
 
     // 5. 分頁處理
     let paginatedData = ledgerItems;
@@ -329,13 +256,10 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       total: {
         totalDebitAmount,
         totalCreditAmount,
-        createAt: now,
-        updateAt: now,
+        createdAt: now,
+        updatedAt: now,
       },
     };
-
-    // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
-    fs.writeFileSync('tmp/ledgerPayload.json', JSON.stringify(ledgerPayload, null, 2), 'utf-8');
   } catch (error) {
     const logError = loggerError(0, 'listLedger in ledger.repo.ts failed', error as Error);
     logError.error('Prisma related listLedger in ledger.repo.ts failed');

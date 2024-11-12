@@ -120,7 +120,8 @@ export type IAPIName =
   | 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE'
   | 'TRIAL_BALANCE_LIST'
   | 'IP_LIST'
-  | 'FILE_EXPORT';
+  | 'FILE_EXPORT'
+  | 'LEDGER_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

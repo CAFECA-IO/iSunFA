@@ -1,4 +1,5 @@
 import { VoucherType } from '@/constants/account';
+import { LabelType } from '@/constants/ledger';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 export interface ILedgerQueryParams {
@@ -6,7 +7,7 @@ export interface ILedgerQueryParams {
   endDate: number;
   startAccountNo?: string;
   endAccountNo?: string;
-  labelType?: string;
+  labelType?: LabelType;
   page?: number;
   pageSize?: number;
 }
@@ -22,15 +23,15 @@ export interface ILedgerItem {
   creditAmount: number;
   balance: number;
   voucherType: VoucherType;
-  createAt: number;
-  updateAt: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ILedgerTotal {
   totalDebitAmount: number;
   totalCreditAmount: number;
-  createAt: number;
-  updateAt: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ILedgerPayload {
@@ -54,8 +55,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
         creditAmount: 0,
         balance: 420000,
         voucherType: VoucherType.RECEIVE,
-        createAt: 1706745600,
-        updateAt: 1706745600,
+        createdAt: 1706745600,
+        updatedAt: 1706745600,
       },
       {
         id: 2,
@@ -68,8 +69,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
         creditAmount: 0,
         balance: 500000,
         voucherType: VoucherType.RECEIVE,
-        createAt: 1706745600,
-        updateAt: 1706745600,
+        createdAt: 1706745600,
+        updatedAt: 1706745600,
       },
       {
         id: 3,
@@ -82,8 +83,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
         creditAmount: 200000,
         balance: -200000,
         voucherType: VoucherType.EXPENSE,
-        createAt: 1706745600,
-        updateAt: 1706745600,
+        createdAt: 1706745600,
+        updatedAt: 1706745600,
       },
       {
         id: 4,
@@ -96,8 +97,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
         creditAmount: 0,
         balance: 100000,
         voucherType: VoucherType.TRANSFER,
-        createAt: 1706745600,
-        updateAt: 1706745600,
+        createdAt: 1706745600,
+        updatedAt: 1706745600,
       },
     ],
     page: 1,
@@ -116,7 +117,7 @@ export const MOCK_RESPONSE: ILedgerPayload = {
   total: {
     totalDebitAmount: 800000,
     totalCreditAmount: 800000,
-    createAt: 1706745600,
-    updateAt: 1708854635,
+    createdAt: 1706745600,
+    updatedAt: 1708854635,
   },
 };
