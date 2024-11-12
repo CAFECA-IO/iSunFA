@@ -646,7 +646,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     // Info: (20241105 - Julian) 如果有反轉傳票，則取得反轉傳票的資訊並加入 reverseVouchers，否則回傳空陣列
     const reverseVouchers: {
-      voucherId: string;
+      voucherId: number;
       lineItemIdBeReversed: number;
       lineItemIdReverseOther: number;
       amount: number;
@@ -654,9 +654,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       isReverseRequired && reverses.length > 0
         ? reverses.map((reverse) => {
             return {
-              voucherId: reverse.voucherNo,
-              lineItemIdBeReversed: reverse.voucherId, // Info: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
-              lineItemIdReverseOther: -1, // Info: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
+              voucherId: reverse.voucherId,
+              lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+              lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
               amount: reverse.amount,
             };
           })

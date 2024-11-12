@@ -89,7 +89,16 @@
     "VIEW_ALL_ACCOUNTING": "查看所有會計科目",
     "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
     "IMPORT_FILE": "上傳檔案",
-    "MANUAL_ACCOUNT_OPENING": "手動開戶"
+    "MANUAL_ACCOUNT_OPENING": "手動開戶",
+    "ACC_TYPE_ASSET": "資產",
+    "ACC_TYPE_LIABILITY": "負債",
+    "ACC_TYPE_EQUITY": "權益",
+    "ACC_TYPE_REVENUE": "銷貨收入",
+    "ACC_TYPE_INCOME": "其他收益",
+    "ACC_TYPE_COST": "成本",
+    "ACC_TYPE_EXPENSE": "費用",
+    "ACC_TYPE_NON_OPERATING": "營業外收支",
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他綜合損益"
   },
   "IP": {
     "INFO": "登入裝置與 IP 資訊",
