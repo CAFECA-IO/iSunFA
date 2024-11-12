@@ -115,6 +115,19 @@
     "CLEAR_ALL_BTN": "Clear All",
     "ADD_BTN": "Add"
   },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "Manual Account Opening",
+    "SUBCATEGORY_TYPE": "Subcategory Type",
+    "TITLE_NAME": "Title Name",
+    "TITLE_CODE": "Title Code",
+    "BEGINNING_DEBIT": "Beginning Debit",
+    "BEGINNING_CREDIT": "Beginning Credit",
+    "DROPMENU_PLACEHOLDER": "Please select...",
+    "NAME_PLACEHOLDER": "Enter name",
+    "ADD_LIST_BTN": "Add List",
+    "SUBMIT_BTN": "Submit",
+    "NO_ACCOUNTING_FOUND": "No Account Title Found."
+  },
   "IP": {
     "INFO": "Login device & IP information",
     "LIST": "Login device & IP list",

@@ -45,7 +45,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   data,
   subcategoryChangeHandler,
 }) => {
-  //  const { t } = useTranslation('common');
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { subcategory, titleName, isDebit } = data;
 
@@ -58,7 +58,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
   const subcategoryPlaceholder = selectSubcategory
     ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
-    : 'Please select';
+    : t('setting:MANUAL_ACCOUNT_OPENING_MODAL.DROPMENU_PLACEHOLDER');
 
   const debitDisabled = isDebit === null ? false : !isDebit;
   const creditDisabled = isDebit === null ? false : isDebit;
@@ -148,7 +148,9 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
         );
       })
     ) : (
-      <div className="text-xs text-input-text-input-placeholder">No Account Title Found</div>
+      <div className="text-xs text-input-text-input-placeholder">
+        {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.NO_ACCOUNTING_FOUND')}
+      </div>
     );
 
   const displaySubcategoryMenu = (
@@ -182,7 +184,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
           value={nameInput}
           onChange={changeNameInputHandler}
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-          placeholder={'Enter text'}
+          placeholder={t('setting:MANUAL_ACCOUNT_OPENING_MODAL.NAME_PLACEHOLDER')}
         />
       </div>
       {/* Info: (20241112 - Julian) Title Code */}
@@ -266,18 +268,20 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         {/* Info: (20241112 - Julian) table header */}
         <div className="table-row bg-surface-brand-secondary-5 text-xs font-medium text-text-brand-secondary-lv2">
           <div className={`${tableCellStyle} border-r border-stroke-neutral-quaternary`}>
-            Subcategory Type
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.SUBCATEGORY_TYPE')}
           </div>
           <div className={`${tableCellStyle} border-r border-stroke-neutral-quaternary`}>
-            Title Name
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.TITLE_NAME')}
           </div>
           <div className={`${tableCellStyle} border-r border-stroke-neutral-quaternary`}>
-            Title Code
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.TITLE_CODE')}
           </div>
           <div className={`${tableCellStyle} border-r border-stroke-neutral-quaternary`}>
-            Beginning debit
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_DEBIT')}
           </div>
-          <div className="table-cell px-16px py-8px">Beginning credit</div>
+          <div className="table-cell px-16px py-8px">
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.BEGINNING_CREDIT')}
+          </div>
         </div>
         {/* Info: (20241112 - Julian) table body */}
         {tableBody}
@@ -290,7 +294,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-fit">
         {/* Info: (20241112 - Julian) Title */}
         <h1 className="text-center text-xl font-bold text-text-neutral-primary">
-          Manual Account Opening
+          {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.MODAL_TITLE')}
         </h1>
 
         {/* Info: (20241112 - Julian) Close button */}
@@ -312,7 +316,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
             onClick={addListClickHandler}
             className="w-full"
           >
-            <FaPlus /> Add list
+            <FaPlus /> {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.ADD_LIST_BTN')}
           </Button>
         </div>
 

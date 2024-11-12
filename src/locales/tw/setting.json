@@ -115,6 +115,19 @@
     "CLEAR_ALL_BTN": "全部清除",
     "ADD_BTN": "新增"
   },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "手動開戶",
+    "SUBCATEGORY_TYPE": "類別",
+    "TITLE_NAME": "科目名稱",
+    "TITLE_CODE": "科目編號",
+    "BEGINNING_DEBIT": "初始借方",
+    "BEGINNING_CREDIT": "初始貸方",
+    "DROPMENU_PLACEHOLDER": "請選擇...",
+    "NAME_PLACEHOLDER": "輸入名稱",
+    "ADD_LIST_BTN": "新增清單",
+    "SUBMIT_BTN": "提交",
+    "NO_ACCOUNTING_FOUND": "找不到會計科目。"
+  },
   "IP": {
     "INFO": "登入裝置與 IP 資訊",
     "LIST": "登入裝置與 IP 列表",
