@@ -258,7 +258,7 @@ export enum APIPath {
   CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate`,
   PUSHER = `${apiPrefixV2}/pusher`,
   ROOM_CREATE = `${apiPrefixV2}/room`,
-  ROOM_DELETE = `${apiPrefixV2}/decrypt`,
+  ROOM_DELETE = `${apiPrefixV2}/room/:roomId`,
   ASSET_LIST_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   ASSET_GET_BY_ID_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ACCOUNTING_SETTING_GET = `${apiPrefixV2}/company/:companyId/accounting_setting`,
