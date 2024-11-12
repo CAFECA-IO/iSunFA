@@ -50,14 +50,14 @@ interface CompanyListProps {
 }
 
 const CompanyList = ({ list }: CompanyListProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   const isListNoData = list.length === 0;
 
   if (isListNoData) {
     return (
       <div className="text-center text-base font-medium text-text-neutral-mute">
-        {t('common:BETA_DASHBOARD.NO_DATA_AVAILABLE')}
+        {t('dashboard:DASHBOARD.NO_DATA_AVAILABLE')}
       </div>
     );
   }
@@ -129,7 +129,7 @@ const DonutChart = ({
 };
 
 const TaskType = ({ iconName, title }: { iconName: IconName; title: TaskTitle }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <div className="flex items-center gap-8px">
@@ -141,24 +141,24 @@ const TaskType = ({ iconName, title }: { iconName: IconName; title: TaskTitle })
         className="h-22px w-22px"
       ></Image>
       <h4 className="text-xs font-semibold text-text-neutral-primary">
-        {t(`common:BETA_DASHBOARD.${title}`)}
+        {t(`dashboard:DASHBOARD.${title}`)}
       </h4>
     </div>
   );
 };
 
 const PendingTasksNoData = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <section className="flex flex-col gap-24px">
       <h3 className="text-xl font-bold text-text-neutral-secondary">
-        {t('common:BETA_DASHBOARD.PENDING_TASKS')}
+        {t('dashboard:DASHBOARD.PENDING_TASKS')}
       </h3>
       <div className="flex flex-col items-center">
         <Image src={'/images/empty.svg'} alt="empty_image" width={120} height={134.787}></Image>
         <p className="text-base font-medium text-text-neutral-mute">
-          {t('common:BETA_DASHBOARD.NO_DATA')}
+          {t('dashboard:DASHBOARD.NO_DATA')}
         </p>
       </div>
     </section>
@@ -179,7 +179,7 @@ const PendingTasksForCompany = () => {
       ? 0
       : 100 - percentageForMissingCertificate - percentageForUnpostedVouchers;
 
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
   const handleAddToMyCalendar = () => {
     // ToDo: (20241105 - Liz)
   };
@@ -187,7 +187,7 @@ const PendingTasksForCompany = () => {
   return (
     <section className="flex flex-col gap-24px">
       <h3 className="text-xl font-bold text-text-neutral-secondary">
-        {t('common:BETA_DASHBOARD.PENDING_TASKS')}
+        {t('dashboard:DASHBOARD.PENDING_TASKS')}
       </h3>
 
       {/* --- Chart Section --- */}
@@ -241,7 +241,7 @@ const PendingTasksForCompany = () => {
               className="text-sm font-semibold text-link-text-primary"
               onClick={handleAddToMyCalendar}
             >
-              {t('common:BETA_DASHBOARD.ADD_TO_MY_CALENDAR')}
+              {t('dashboard:DASHBOARD.ADD_TO_MY_CALENDAR')}
             </button>
           </section>
         ))}
@@ -251,7 +251,7 @@ const PendingTasksForCompany = () => {
 };
 
 const PendingTasksForAll = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   // ToDo: (20241105 - Liz) MISSING_CERTIFICATE_LIST, UNPOSTED_VOUCHER_LIST, UNARCHIVED_CUSTOMER_DATA_LIST 是假資料，等之後串真正資料後再刪除
   const MISSING_CERTIFICATE_LIST: {
@@ -311,7 +311,7 @@ const PendingTasksForAll = () => {
   return (
     <section className="flex flex-col gap-24px">
       <h3 className="text-xl font-bold text-text-neutral-secondary">
-        {t('common:BETA_DASHBOARD.PENDING_TASKS_TOTAL')}
+        {t('dashboard:DASHBOARD.PENDING_TASKS_TOTAL')}
       </h3>
 
       {/* === Chart Section === */}

@@ -13,7 +13,7 @@
     "BACK": "返回",
     "INFO": "公司資訊",
     "COMPANY_NAME": "公司名稱",
-    "BUSSINESS_TAX_ID": "營業稅編號",
+    "BUSINESS_TAX_ID": "營業稅編號",
     "TAX_SERIAL_NUMBER": "稅務序號",
     "COMPANY_REPRESENTATIVE_NAME": "公司代表名稱",
     "COUNTRY_OF_INCORPORATION": "註冊國家",
@@ -25,5 +25,10 @@
     "FINANCIAL": "財務",
     "TAX": "稅務",
     "ALL": "全部"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入數字",
+    "ENTER_FULL_ADDRESS": "輸入完整地址"
   }
 }

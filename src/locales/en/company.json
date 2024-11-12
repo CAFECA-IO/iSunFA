@@ -16,7 +16,7 @@
     "BACK": "Back",
     "INFO": "Company Information",
     "COMPANY_NAME": "Company Name",
-    "BUSSINESS_TAX_ID": "Business Tax ID Number",
+    "BUSINESS_TAX_ID": "Business Tax ID Number",
     "TAX_SERIAL_NUMBER": "Tax Serial Number",
     "COMPANY_REPRESENTATIVE_NAME": "Company representative's name",
     "COUNTRY_OF_INCORPORATION": "Country of incorporation",
@@ -28,5 +28,10 @@
     "FINANCIAL": "Financial",
     "TAX": "Tax",
     "ALL": "All"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Number",
+    "ENTER_FULL_ADDRESS": "Please enter the full address"
   }
 }

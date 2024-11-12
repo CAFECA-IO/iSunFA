@@ -16,7 +16,7 @@
     "BACK": "返回",
     "INFO": "公司信息",
     "COMPANY_NAME": "公司名称",
-    "BUSSINESS_TAX_ID": "营业税编号",
+    "BUSINESS_TAX_ID": "营业税编号",
     "TAX_SERIAL_NUMBER": "税务序号",
     "COMPANY_REPRESENTATIVE_NAME": "公司代表名称",
     "COUNTRY_OF_INCORPORATION": "注册国家",
@@ -28,5 +28,10 @@
     "FINANCIAL": "财务",
     "TAX": "税务",
     "ALL": "全部"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "输入名称",
+    "ENTER_NUMBER": "输入号码",
+    "ENTER_FULL_ADDRESS": "输入完整地址"
   }
 }
