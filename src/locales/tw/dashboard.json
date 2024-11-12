@@ -26,7 +26,9 @@
   },
 
   "COMMON": {
-    "ERROR": "錯誤"
+    "ERROR": "錯誤",
+    "START": "開始",
+    "PREVIEW": "預覽"
   },
 
   "HEADER": {
@@ -40,14 +42,23 @@
 
   "ROLE": {
     "ACCOUNTANT": "會計",
-    "BOOKKEEPER": "記帳員",
+    "BOOKKEEPER": "記帳士",
     "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
     "EDUCATIONAL": "教育",
     "TRIAL_VERSION": "試用版"
   },
 
   "CREATE_ROLE_PAGE": {
-    "CREATE_ROLE_TITLE": "建立角色"
+    "CREATE_ROLE_TITLE": "建立角色",
+    "SELECT_YOUR_ROLE": "選擇您的角色",
+    "ROLE_FUNCTION_PREVIEW": "角色功能預覽",
+
+    "COMMON_FUNCTIONS": "常用功能",
+    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理總帳、開立憑證、製作財務及稅務報表",
+    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理總帳、開立憑證",
+    "DEFAULT_INTRODUCTION": "iSunFA提供了多種角色供使用者選擇，每個角色都有專屬介面和常用功能。您可以選擇最符合您需求的角色，讓 iSunFA 協助您的工作。iSunFA 的關鍵優勢在於角色優化的介面和 AI 整合會計，讓您更有效率地完成工作！",
+    "BOOKKEEPER_INTRODUCTION": "記帳士是專業的財務工作者，負責管理企業或個人的日常財務記錄和會計工作。他們的主要職責包括建立會計憑證、記錄分類帳分錄、對帳和產生財務報表，以確保財務資訊的正確性和完整性。",
+    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA學生版是為會計領域的學生和實習生量身訂製的教育工具。它提供了管理財務工作（例如建立會計憑證、日記帳分錄和對帳）的實用實務經驗。它非常適合在財務管理方面打下堅實的基礎，並為專業簿記或會計職位做好準備。"
   },
 
   "SELECT_ROLE_PAGE": {

@@ -7,7 +7,7 @@ import ToDoListPageBody from '@/components/beta/to_do_list_page/to_do_list_page_
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const ToDoListPage = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['dashboard']);
 
   return (
     <>
@@ -15,7 +15,7 @@ const ToDoListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}</title>
+        <title>{t('dashboard:TO_DO_LIST_PAGE.TO_DO_LIST_TITLE')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -32,7 +32,7 @@ const ToDoListPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('common:TO_DO_LIST_PAGE.TO_DO_LIST_TITLE')}
+        pageTitle={t('dashboard:TO_DO_LIST_PAGE.TO_DO_LIST_TITLE')}
         goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
         <ToDoListPageBody />
@@ -44,17 +44,7 @@ const ToDoListPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['dashboard'])),
     },
   };
 };

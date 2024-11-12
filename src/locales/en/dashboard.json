@@ -26,7 +26,9 @@
   },
 
   "COMMON": {
-    "ERROR": "Error"
+    "ERROR": "Error",
+    "START": "Start",
+    "PREVIEW": "Preview"
   },
 
   "HEADER": {
@@ -47,7 +49,16 @@
   },
 
   "CREATE_ROLE_PAGE": {
-    "CREATE_ROLE_TITLE": "Create Role"
+    "CREATE_ROLE_TITLE": "Create Role",
+    "SELECT_YOUR_ROLE": "Select Your Role",
+    "ROLE_FUNCTION_PREVIEW": "Role Function Preview",
+
+    "COMMON_FUNCTIONS": "Common Functions",
+    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports",
+    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "General Ledger, Voucher Issuance",
+    "DEFAULT_INTRODUCTION": "iSunFA offers various roles for users to choose from, each with its own dedicated interface and commonly used features. You can select the role that best suits your needs, allowing iSunFA to assist you in your work. The key advantage of iSunFA lies in its role-optimized interface and AI-integrated accounting, enabling you to complete tasks more efficiently!",
+    "BOOKKEEPER_INTRODUCTION": "A bookkeeper is a professional financial worker responsible for managing the daily financial records and accounting tasks of a business or individual. Their primary duties include preparing accounting vouchers, recording entries in ledgers, reconciling accounts, and generating financial statements to ensure the accuracy and completeness of financial information.",
+    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "The iSunFA Student Version is an educational tool tailored for students and interns in the accounting field. It offers practical hands-on experience in managing financial tasks such as creating accounting vouchers, journal entries, and reconciling accounts. It's ideal for building a solid foundation in financial management and preparing for professional bookkeeping or accounting roles."
   },
 
   "SELECT_ROLE_PAGE": {

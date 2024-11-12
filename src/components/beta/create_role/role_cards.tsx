@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { RoleName } from '@/constants/role';
 import { IRole } from '@/interfaces/role';
+import { useTranslation } from 'react-i18next';
 
 interface RoleCardsProps {
   roleList: IRole[];
@@ -44,6 +45,9 @@ const Card = ({
   setShowingRole,
   setSelectedRoleId,
 }: CardProps) => {
+  const { t } = useTranslation('dashboard');
+  const translatedRoleName = t(`dashboard:ROLE.${roleName.toUpperCase().replace(/ /g, '_')}`);
+
   const isRoleSelected = showingRole === roleName;
 
   const handleClick = () => {
@@ -63,7 +67,7 @@ const Card = ({
       <p
         className={`-skew-x-20 pl-110px text-center font-bold screen1280:w-300px screen1280:pl-100px ${roleName === RoleName.EDUCATIONAL_TRIAL_VERSION ? 'pl-100px laptop:text-lg screen1280:text-28px' : 'laptop:text-xl screen1280:text-32px'}`}
       >
-        {roleName}
+        {translatedRoleName}
       </p>
       <Image
         src={imageSrc}

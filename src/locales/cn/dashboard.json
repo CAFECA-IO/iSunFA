@@ -26,7 +26,9 @@
   },
 
   "COMMON": {
-    "ERROR": "错误"
+    "ERROR": "错误",
+    "START": "开始",
+    "PREVIEW": "预览"
   },
 
   "HEADER": {
@@ -47,7 +49,16 @@
   },
 
   "CREATE_ROLE_PAGE": {
-    "CREATE_ROLE_TITLE": "建立角色"
+    "CREATE_ROLE_TITLE": "建立角色",
+    "SELECT_YOUR_ROLE": "选择您的角色",
+    "ROLE_FUNCTION_PREVIEW": "角色功能预览",
+
+    "COMMON_FUNCTIONS": "常用功能",
+    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理总帐、开立凭证、制作财务及税务报表",
+    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理总帐、开立凭证",
+    "DEFAULT_INTRODUCTION": "iSunFA提供了多种角色供使用者选择，每个角色都有专属介面和常用功能。您可以选择最符合您需求的角色，让 iSunFA 协助您完成工作。 iSunFA 的关键优势在于角色优化的介面和 AI 整合会计，让您更有效率地完成任务！",
+    "BOOKKEEPER_INTRODUCTION": "记帐士是专业的财务工作者，负责管理企业或个人的日常财务记录和会计工作。他们的主要职责包括建立会计凭证、记录分类帐分录、对帐和产生财务报表，以确保财务资讯的正确性和完整性。",
+    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA学生版是为会计领域的学生和实习生量身订制的教育工具。它提供了管理财务工作（例如建立会计凭证、日记帐分录和对帐）的实用实务经验。它非常适合在财务管理方面打下坚实的基础，并为专业簿记或会计职位做好准备。"
   },
 
   "SELECT_ROLE_PAGE": {
