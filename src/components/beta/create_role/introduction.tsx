@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { FiEye, FiArrowRight } from 'react-icons/fi';
 import { RoleName } from '@/constants/role';
+import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -23,18 +24,16 @@ interface EducationalTrialVersionIntroductionProps {
 }
 
 const DefaultIntroduction: React.FC = () => {
+  const { t } = useTranslation('dashboard');
+
   return (
     <section className="relative h-full">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
         <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-          Select Your Role
+          {t('dashboard:CREATE_ROLE_PAGE.SELECT_YOUR_ROLE')}
         </h1>
         <p className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-          iSunFA offers various roles for users to choose from, each with its own dedicated
-          interface and commonly used features. You can select the role that best suits your needs,
-          allowing iSunFA to assist you in your work. The key advantage of iSunFA lies in its
-          role-optimized interface and AI-integrated accounting, enabling you to complete tasks more
-          efficiently!
+          {t('dashboard:CREATE_ROLE_PAGE.DEFAULT_INTRODUCTION')}
         </p>
       </div>
 
@@ -52,6 +51,7 @@ const DefaultIntroduction: React.FC = () => {
 };
 
 const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
+  const { t } = useTranslation('dashboard');
   const { createRole, selectRole } = useUserCtx();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +97,7 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
         className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary px-32px py-14px text-lg font-medium text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable"
         onClick={togglePreviewModal}
       >
-        <p>Preview</p>
+        <p>{t('dashboard:COMMON.PREVIEW')}</p>
         <FiEye size={24} />
       </button>
 
@@ -107,7 +107,7 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
         onClick={handleCreateAndSelectRole}
         disabled={isLoading}
       >
-        <p>Start</p>
+        <p>{t('dashboard:COMMON.START')}</p>
         <FiArrowRight size={24} />
       </button>
     </div>
@@ -115,11 +115,15 @@ const Buttons = ({ selectedRoleId, togglePreviewModal }: ButtonsProps) => {
 };
 
 const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ children }) => {
+  const { t } = useTranslation('dashboard');
+
   return (
     <section className="relative h-full">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
         <div className="flex items-center gap-24px">
-          <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">Bookkeeper</h1>
+          <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
+            {t('dashboard:ROLE.BOOKKEEPER')}
+          </h1>
           <Image
             src={'/icons/information_desk.svg'}
             alt="information_desk"
@@ -129,9 +133,11 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ childre
         </div>
 
         <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-          <p>{`A bookkeeper is a professional financial worker responsible for managing the daily financial records and accounting tasks of a business or individual. Their primary duties include preparing accounting vouchers, recording entries in ledgers, reconciling accounts, and generating financial statements to ensure the accuracy and completeness of financial information.`}</p>
-          <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">Common Functions</h3>
-          <p>General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports</p>
+          <p>{t('dashboard:CREATE_ROLE_PAGE.BOOKKEEPER_INTRODUCTION')}</p>
+          <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
+            {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
+          </h3>
+          <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_BOOKKEEPER')}</p>
         </div>
 
         {children}
@@ -153,13 +159,17 @@ const BookkeeperIntroduction: React.FC<BookkeeperIntroductionProps> = ({ childre
 const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntroductionProps> = ({
   children,
 }) => {
+  const { t } = useTranslation('dashboard');
+
   return (
     <section className="relative h-full">
       <div className="flex flex-col gap-40px pl-60px pt-60px">
         <div className="flex items-center gap-24px">
           <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-            Educational
-            <span className="ml-8px text-28px text-text-neutral-tertiary">(Trial Version)</span>
+            {t('dashboard:ROLE.EDUCATIONAL')}
+            <span className="ml-8px text-28px text-text-neutral-tertiary">
+              {'(' + t('dashboard:ROLE.TRIAL_VERSION') + ')'}
+            </span>
           </h1>
           <Image
             src={'/icons/graduation_cap.svg'}
@@ -170,11 +180,11 @@ const EducationalTrialVersionIntroduction: React.FC<EducationalTrialVersionIntro
         </div>
 
         <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-          <p>
-            {`The iSunFA Student Version is an educational tool tailored for students and interns in the accounting field. It offers practical hands-on experience in managing financial tasks such as creating accounting vouchers, journal entries, and reconciling accounts. It's ideal for building a solid foundation in financial management and preparing for professional bookkeeping or accounting roles.`}
-          </p>
-          <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">Common Functions</h3>
-          <p>General Ledger, Voucher Issuance</p>
+          <p>{t('dashboard:CREATE_ROLE_PAGE.EDUCATIONAL_TRIAL_VERSION_INTRODUCTION')}</p>
+          <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
+            {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
+          </h3>
+          <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION')}</p>
         </div>
 
         {children}

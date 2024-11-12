@@ -9,7 +9,7 @@ import { NewsType } from '@/constants/news';
 
 const LatestNews = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   /* === Fake Data === */
   // Deprecated: (20241018 - Liz) FINANCIAL_NEWS, SYSTEM_NEWS, MATCHING_NEWS 是假資料，之後會改成從 user context 打 API 拿資料
@@ -133,7 +133,7 @@ const LatestNews = () => {
       <section className="flex flex-col gap-24px">
         <section className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-text-neutral-secondary">
-            {t('common:BETA_DASHBOARD.LATEST_NEWS')}
+            {t('dashboard:DASHBOARD.LATEST_NEWS')}
           </h1>
           <MoreLink href={ISUNFA_ROUTE.LATEST_NEWS_PAGE} />
         </section>

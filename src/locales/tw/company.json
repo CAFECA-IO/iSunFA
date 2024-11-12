@@ -1,10 +1,13 @@
 {
   "LIST": {
     "TITLE": "公司列表",
+    "PARTNER_NAME": "合作夥伴名稱",
+    "TAX_ID": "稅務編號",
+    "TYPE": "類型",
     "ACTION": "操作"
   },
   "INFO": {
-    "NAME": "公司名稱",
+    "COMPANY_NAME": "公司名稱",
     "TAX_ID": "營業稅號",
     "WORK_TAG": "工作標籤",
     "CREATE": "建立新公司"
@@ -13,7 +16,7 @@
     "BACK": "返回",
     "INFO": "公司資訊",
     "COMPANY_NAME": "公司名稱",
-    "BUSSINESS_TAX_ID": "營業稅編號",
+    "BUSINESS_TAX_ID": "營業稅編號",
     "TAX_SERIAL_NUMBER": "稅務序號",
     "COMPANY_REPRESENTATIVE_NAME": "公司代表名稱",
     "COUNTRY_OF_INCORPORATION": "註冊國家",
@@ -25,5 +28,20 @@
     "FINANCIAL": "財務",
     "TAX": "稅務",
     "ALL": "全部"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_NUMBER": "輸入數字",
+    "ENTER_FULL_ADDRESS": "輸入完整地址"
+  },
+  "PAGE_BODY": {
+    "NO_COMPANY_DATA_AVAILABLE": "沒有可用的公司資料",
+    "PLEASE_ADD_A_NEW_COMPANY": "請新增公司",
+    "ADD_NEW": "新增",
+    "CODE": "程式碼",
+    "CANCEL": "取消",
+    "SUBMIT": "提交",
+    "CHANGE_WORK_TAG": "變更標籤",
+    "SAVE": "儲存"
   }
 }

@@ -5,7 +5,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
 
 const Profile = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
   const { signOut, userAuth } = useUserCtx();
 
   const userAvatarSrc = userAuth?.imageId || '/images/fake_user_avatar.png';
@@ -51,7 +51,7 @@ const Profile = () => {
               width={16}
               height={16}
             ></Image>
-            <p>{t('common:HEADER.MY_ACCOUNT')}</p>
+            <p>{t('dashboard:HEADER.MY_ACCOUNT')}</p>
           </button>
 
           {/* // Info: (20241014 - Liz) ===== 訂閱與帳單 ===== */}
@@ -62,7 +62,7 @@ const Profile = () => {
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <Image src={'/icons/bell.svg'} alt="subscription_icon" width={16} height={16}></Image>
-            <p>{t('common:HEADER.SUBSCRIPTION_AND_BILLS')}</p>
+            <p>{t('dashboard:HEADER.SUBSCRIPTION_AND_BILLS')}</p>
           </button>
 
           {/* // Info: (20241014 - Liz) ===== 登出 ===== */}
@@ -72,7 +72,7 @@ const Profile = () => {
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
           >
             <Image src={'/icons/logout_icon.svg'} alt="logout_icon" width={16} height={16}></Image>
-            <p>{t('common:HEADER.LOGOUT')}</p>
+            <p>{t('dashboard:HEADER.LOGOUT')}</p>
           </button>
         </div>
       )}
