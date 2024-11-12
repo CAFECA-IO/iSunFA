@@ -20,7 +20,7 @@ const Loader = () => {
 };
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
   const { toastHandler } = useModalContext();
   const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
 
@@ -30,7 +30,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
         toastHandler({
           id: `user-agree-error`,
           type: ToastType.ERROR,
-          content: `${t('common:COMMON.ERROR')}: ${userAgreeResponse.code}`,
+          content: `${t('dashboard:COMMON.ERROR')}: ${userAgreeResponse.code}`,
           closeable: true,
         });
       }
@@ -60,7 +60,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
         <div className="z-10 flex flex-col items-center">
           <div className="mb-80px flex gap-10px text-48px font-bold">
             <p className="text-text-brand-primary-lv2">iSunFA</p>
-            <p className="text-text-brand-secondary-lv1">{t('common:LOGIN_PAGE_BODY.LOG_IN')}</p>
+            <p className="text-text-brand-secondary-lv1">{t('dashboard:HEADER.LOGIN')}</p>
           </div>
 
           <div className="mb-40px flex flex-col justify-center rounded-full">
@@ -93,28 +93,9 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
     </div>
   );
 
-  // return (
-  //   <div className="relative flex h-screen flex-col items-center justify-center text-center">
-  //     <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
-  //     {isAuthLoading ? (
-  //       <Loader />
-  //     ) : (
-  //       <div className="z-10 mb-8 flex flex-col items-center">
-  //         <h1 className="mb-6 text-4xl font-bold text-gray-800">
-  //           {t('common:LOGIN_PAGE_BODY.LOG_IN')}
-  //         </h1>
-  //         <div className="mx-2.5 mb-6 flex flex-col justify-center rounded-full">
-  //           <AvatarSVG size="large" />
-  //         </div>
-  //         <div className="flex flex-col space-y-4">
-  //           <AuthButton onClick={googleAuthSignIn} provider={Provider.GOOGLE} />
-  //           {/* Info: (20240819-Tzuhan) [Beta] Apple login is not supported in the beta version
-  //           <AuthButton onClick={appleAuthSignIn} provider="Apple" /> */}
-  //         </div>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
+  // <AuthButton onClick={googleAuthSignIn} provider={Provider.GOOGLE} />
+  // {/* Info: (20240819-Tzuhan) [Beta] Apple login is not supported in the beta version
+  // <AuthButton onClick={appleAuthSignIn} provider="Apple" /> */}
 };
 
 export default LoginPageBody;

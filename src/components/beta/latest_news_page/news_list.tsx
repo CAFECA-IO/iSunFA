@@ -22,7 +22,7 @@ interface NewsProps {
 }
 
 const News = ({ news }: NewsProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   let link = '';
 
@@ -56,7 +56,7 @@ const News = ({ news }: NewsProps) => {
       </p>
 
       <Link href={link} className="flex-none text-sm font-semibold text-link-text-primary">
-        {t('common:BETA_DASHBOARD.SEE_MORE')}
+        {t('dashboard:DASHBOARD.SEE_MORE')}
       </Link>
     </div>
   );

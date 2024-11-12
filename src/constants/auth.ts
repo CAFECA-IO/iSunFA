@@ -57,6 +57,9 @@ export const AUTH_CHECK = {
   [APIName.CERTIFICATE_GET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.FILE_EXPORT]: [AuthFunctionsKeysNew.user], // ToDo: (20241112 - Luphia) need to define the schema for file export
+  [APIName.ROOM_ADD]: [AuthFunctionsKeysNew.user],
+  [APIName.ROOM_GET_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.ROOM_DELETE]: [AuthFunctionsKeysNew.user],
 
   [APIName.AGREE_TO_TERMS]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_CHALLENGE]: [AuthFunctionsKeysNew.user],
