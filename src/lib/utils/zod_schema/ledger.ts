@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import {
+  zodStringToNumber,
   zodStringToNumberWithDefault,
   zodTimestampInSecondsNoDefault,
 } from '@/lib/utils/zod_schema/common';
@@ -14,6 +15,7 @@ const ledgerNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241112 - Shirley) 定義 Ledger 列表查詢參數的驗證器
 const ledgerListQueryValidator = z.object({
+  companyId: zodStringToNumber,
   startDate: zodTimestampInSecondsNoDefault(),
   endDate: zodTimestampInSecondsNoDefault(),
   startAccountNo: z.string().optional(),

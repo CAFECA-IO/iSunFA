@@ -10,17 +10,10 @@ import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { VoucherType } from '@/constants/account';
 import { buildAccountForestForUser } from '@/lib/utils/account/common';
 import { LabelType } from '@/constants/ledger';
+import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
+import { z } from 'zod';
 
-interface ListLedgerParams {
-  companyId: number;
-  startDate: number;
-  endDate: number;
-  startAccountNo?: string;
-  endAccountNo?: string;
-  labelType?: LabelType;
-  page?: number;
-  pageSize?: number | 'infinity';
-}
+type ListLedgerParams = z.infer<typeof ledgerListSchema.input.querySchema>;
 
 interface ILedgerItemForCalculation {
   id: number;
@@ -50,6 +43,9 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     pageSize = DEFAULT_PAGE_LIMIT,
   } = params;
 
+  // eslint-disable-next-line no-console
+  console.log('params listLedger in ledger.repo.ts', params);
+
   const pageNumber = page;
   let size: number | undefined;
   let skip: number = 0;
@@ -62,7 +58,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
   let ledgerPayload: ILedgerPayload | null = null;
 
   try {
-    // TODO: 寫在 zod 裡驗證
     if (pageNumber < 1 && pageSize !== 'infinity') {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
@@ -208,7 +203,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
           debitAmount: item.debit ? item.amount : 0,
           creditAmount: item.debit ? 0 : item.amount,
           balance,
-          // FIXME: 改成 createdAt, updatedAt
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
         });

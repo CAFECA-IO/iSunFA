@@ -108,6 +108,7 @@ describe('Ledger Repository', () => {
         endDate: 1787350399,
         page: 1,
         pageSize: 10,
+        labelType: LabelType.GENERAL,
       };
 
       const ledger = await listLedger(params);
