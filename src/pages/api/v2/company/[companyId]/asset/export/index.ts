@@ -6,12 +6,7 @@ import { formatApiResponse, formatTimestampByTZ, getTimestampNow } from '@/lib/u
 import { convertToCSV, selectFields } from '@/lib/utils/export_file';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AssetHeader, AssetHeaderWithStringDate } from '@/interfaces/asset';
-import {
-  checkRequestData,
-  checkSessionUser,
-  checkUserAuthorization,
-  logUserAction,
-} from '@/lib/utils/middleware';
+import { checkRequestData, checkSessionUser, logUserAction } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
 import { APIName } from '@/constants/api_connection';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -108,11 +103,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(statusMessage);
     }
 
-    const isAuth = await checkUserAuthorization(session.userId, APIName.ASSET_LIST_EXPORT);
+    /* ToDo: (20241112 - Luphia)
+     * Use @/lib/utils/auth_check_v2 to check if the user has the right to access the API
+     * The function checkAuthorizationNew is a new version of checkAuthorization
+     * It will return a boolean value to indicate if the user has the right to access the API
+
+    const isAuth = await checkAuthorizationNew(APIName.ASSET_LIST_EXPORT, req, session);
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       throw new Error(statusMessage);
     }
+     */
 
     const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req);
 
