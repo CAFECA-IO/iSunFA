@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 
 interface ChangeTagModalProps {
@@ -10,7 +10,8 @@ interface ChangeTagModalProps {
 const DROPDOWN_ITEMS = ['All', 'Financial', 'Tax'];
 
 const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModalProps) => {
-  // ToDo: (20241025 - Liz) 拿 companyName 打 API 去變更公司的 tag。
+  // ToDo: (20241025 - Liz) 打 API 去變更公司的 tag
+
   // Deprecated: (20241025 - Liz)
   // eslint-disable-next-line no-console
   console.log('Company Name:', companyName);

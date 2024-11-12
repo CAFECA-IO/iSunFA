@@ -21,7 +21,7 @@ export const ISUNFA_ROUTE = {
   SELECT_ROLE: '/users/select_role',
   DASHBOARD: '/users/dashboard',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
-  MY_COMPANY_LIST_PAGE: '/beta/my_company_list_page',
+  MY_COMPANY_LIST_PAGE: '/users/my_company_list_page',
   LATEST_NEWS_PAGE: '/beta/latest_news_page',
   FINANCIAL_NEWS_PAGE: '/beta/latest_news_page/financial_news_page',
   SYSTEM_NEWS_PAGE: '/beta/latest_news_page/system_news_page',
