@@ -64,7 +64,8 @@ export const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetOneVoucherResponse | null = null;
 
-  const { userId, companyId } = session;
+  const { userId } = session;
+  const accountSettingCompanyId = 1001;
   try {
     const { voucherId } = query;
     const voucherFromPrisma: IGetOneVoucherResponse =
@@ -74,7 +75,7 @@ export const handleGetRequest: IHandleRequest<
     const lineItems: (ILineItemEntity & { account: IAccountEntity })[] =
       getUtils.initLineItemEntities(voucherFromPrisma);
     const accountSetting: PrismaAccountingSetting =
-      await getUtils.getAccountingSettingFromPrisma(companyId);
+      await getUtils.getAccountingSettingFromPrisma(accountSettingCompanyId);
     const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
     const counterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
     const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);

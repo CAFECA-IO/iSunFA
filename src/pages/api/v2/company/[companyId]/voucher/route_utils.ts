@@ -446,7 +446,7 @@ export const voucherAPIPostUtils = {
       startDate: startDateInSecond,
       endDate: endDateInSecond,
       associateVouchers,
-      dateOfWeek: daysOfWeek,
+      daysOfWeek,
       monthsOfYear,
     });
     return revertEvent;

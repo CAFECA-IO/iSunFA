@@ -612,7 +612,7 @@ export async function postVoucherV2({
               frequence: revertEvent.frequency,
               startDate: revertEvent.startDate,
               endDate: revertEvent.endDate,
-              daysOfWeek: revertEvent.dateOfWeek,
+              daysOfWeek: revertEvent.daysOfWeek,
               monthsOfYear: revertEvent.monthsOfYear,
               createdAt: nowInSecond,
               updatedAt: nowInSecond,
