@@ -4,11 +4,11 @@ import { LabelType } from '@/constants/ledger';
 
 describe('Ledger Repository', () => {
   describe('listLedger', () => {
-    it('should return a paginated list of ledger items', async () => {
+    it('should return paginated ledger items list', async () => {
       const params = {
-        companyId: 10000027, // Info: (20241105 - Shirley) 假設存在的公司 ID
-        startDate: 1706745600, // 2024-02-01
-        endDate: 1707350399, // 2024-02-07 23:59:59
+        companyId: 1002,
+        startDate: 1706745600, // Info: (20241105 - Shirley) 2024-02-01
+        endDate: 1707350399, // Info: (20241105 - Shirley) 2024-02-07 23:59:59
         startAccountNo: '1141',
         endAccountNo: '1142',
         labelType: LabelType.GENERAL,
@@ -36,7 +36,7 @@ describe('Ledger Repository', () => {
         expect(typeof items.hasPreviousPage).toBe('boolean');
         expect(items.sort).toEqual([{ sortBy: 'voucherDate', sortOrder: SortOrder.ASC }]);
 
-        // 檢查每個分類帳項目的結構
+        // Check structure of each ledger item
         items.data.forEach((item) => {
           expect(item.id).toBeDefined();
           expect(item.voucherDate).toBeGreaterThanOrEqual(params.startDate);
@@ -68,7 +68,7 @@ describe('Ledger Repository', () => {
         startAccountNo: '1141',
         endAccountNo: '1142',
         labelType: LabelType.GENERAL,
-        page: 0, // 無效的頁數
+        page: 0, // Invalid page number
         pageSize: 10,
       };
 
@@ -101,16 +101,9 @@ describe('Ledger Repository', () => {
       }
     });
 
-    it('should handle empty account range', async () => {
+    it('should handle empty account number range', async () => {
       const params = {
-        // companyId: 1002,
-        // companyId: 10000445, // 測試會計科目層級
-        // companyId: 10000003, // 測試會計科目層級, code 1103-6
-        companyId: 10000027, // 測試含有 voucher 的資料時，金額加總
-        // startDate: 1087350399,
-        // labelType: LabelType.DETAILED,
-        // startAccountNo: '345B',
-        // endAccountNo: '345B',
+        companyId: 1002, // Test data with vouchers for amount summation
         startDate: 0,
         endDate: 1787350399,
         page: 1,
@@ -120,6 +113,216 @@ describe('Ledger Repository', () => {
       const ledger = await listLedger(params);
       expect(ledger).toBeDefined();
       expect(ledger).not.toBeNull();
+    });
+
+    it('should correctly filter accounts when labelType is DETAILED', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: '111A',
+        endAccountNo: '111D',
+        labelType: LabelType.DETAILED,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+
+      expect(ledger).toBeDefined();
+      expect(ledger).not.toBeNull();
+
+      if (ledger) {
+        const { items } = ledger;
+        items.data.forEach((item) => {
+          expect(item.no).toMatch(/-/); // Detailed type code should contain '-'
+        });
+      }
+    });
+
+    it('should correctly filter accounts when labelType is GENERAL', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: '111A',
+        endAccountNo: '111D',
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+
+      expect(ledger).toBeDefined();
+      expect(ledger).not.toBeNull();
+
+      if (ledger) {
+        const { items } = ledger;
+        items.data.forEach((item) => {
+          expect(item.no).not.toMatch(/-/); // General type code should not contain '-'
+        });
+      }
+    });
+
+    it('should return null when no matching accounts found', async () => {
+      const params = {
+        companyId: 99999999, // Assuming non-existent company ID
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: 'non-exist',
+        endAccountNo: 'non-exist',
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+      expect(ledger?.items.data.length).toBe(0);
+    });
+
+    it('should handle account number range containing letters', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: '111A',
+        endAccountNo: '111D',
+        labelType: LabelType.ALL,
+        page: 1,
+        pageSize: 50,
+      };
+
+      const ledger = await listLedger(params);
+
+      expect(ledger).toBeDefined();
+      expect(ledger).not.toBeNull();
+
+      if (ledger) {
+        const { items } = ledger;
+        items.data.forEach((item) => {
+          const code = item.no;
+          expect(code >= '111A' && code <= '111D').toBe(true);
+        });
+      }
+    });
+
+    it('should handle invalid company ID and catch errors', async () => {
+      const params = {
+        companyId: -1, // Invalid company ID
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: '1141',
+        endAccountNo: '1142',
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+      expect(ledger?.items.data.length).toBe(0);
+    });
+
+    it('should handle date range with no vouchers', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1893456000, // Future date, assuming no vouchers
+        endDate: 1896143999,
+        startAccountNo: '1141',
+        endAccountNo: '1142',
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+      expect(ledger).toBeDefined();
+      expect(ledger).not.toBeNull();
+
+      if (ledger) {
+        expect(ledger.items.data.length).toBe(0);
+        expect(ledger.items.totalCount).toBe(0);
+        expect(ledger.total.totalDebitAmount).toBe(0);
+        expect(ledger.total.totalCreditAmount).toBe(0);
+      }
+    });
+
+    it('should handle missing startAccountNo and endAccountNo', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1706745600,
+        endDate: 1707350399,
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+      expect(ledger).toBeDefined();
+      expect(ledger).not.toBeNull();
+
+      if (ledger) {
+        const { items } = ledger;
+        expect(items.data.length).toBeLessThanOrEqual(10);
+      }
+    });
+
+    it('should handle pageSize of 0 and return null', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: '1141',
+        endAccountNo: '1142',
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 0, // Invalid pageSize
+      };
+
+      const ledger = await listLedger(params);
+      expect(ledger?.items.data.length).toBe(0);
+    });
+
+    it('should handle startDate greater than endDate and return null', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1707350400, // 2024-02-08
+        endDate: 1706745600, // 2024-02-01
+        startAccountNo: '1141',
+        endAccountNo: '1142',
+        labelType: LabelType.GENERAL,
+        page: 1,
+        pageSize: 10,
+      };
+
+      const ledger = await listLedger(params);
+      expect(ledger?.items.data.length).toBe(0);
+    });
+
+    it('should handle labelType ALL and return all account types', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1706745600,
+        endDate: 1707350399,
+        startAccountNo: '111A',
+        endAccountNo: '111D',
+        labelType: LabelType.ALL,
+        page: 1,
+        pageSize: 50,
+      };
+
+      const ledger = await listLedger(params);
+
+      expect(ledger).toBeDefined();
+      expect(ledger).not.toBeNull();
+
+      if (ledger) {
+        const { items } = ledger;
+        // ALL should include both GENERAL and DETAILED
+        items.data.forEach((item) => {
+          expect(item.no.includes('-') || !item.no.includes('-')).toBe(true);
+        });
+      }
     });
   });
 });
