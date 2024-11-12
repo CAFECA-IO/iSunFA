@@ -28,4 +28,5 @@ export const IReverseItemValidator = z.object({
   description: z.string(),
   account: IAccountValidator,
   debit: z.boolean(),
+  lineItemBeReversedId: z.number(),
 });

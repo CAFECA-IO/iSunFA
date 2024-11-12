@@ -53,7 +53,7 @@ export const userRolePostSchema = {
     querySchema: userRoleQuerySchema,
     bodySchema: userRolePostBodySchema,
   },
-  outputSchema: userRoleOutputSchema,
+  outputSchema: userRoleOutputSchema.nullable(),
   frontend: userRoleNullSchema,
 };
 

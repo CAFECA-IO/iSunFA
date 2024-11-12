@@ -101,7 +101,7 @@ export interface IVoucherDetailForFrontend {
     companyId: number;
     name: string;
   };
-  recurringInfo: {
+  recurringInfo?: {
     // Info: (20241105 - Murky) @Julian 如過不需要的話可以加上?
     type: string;
     startDate: number;
@@ -133,6 +133,33 @@ export interface IVoucherDetailForFrontend {
     lineItems: ILineItemBeta[];
   };
 }
+
+export const defaultVoucherDetail: IVoucherDetailForFrontend = {
+  id: 0,
+  voucherDate: 0,
+  type: '',
+  note: '',
+  counterParty: {
+    id: 0,
+    companyId: 0,
+    name: '',
+  },
+  recurringInfo: {
+    type: '',
+    startDate: 0,
+    endDate: 0,
+    daysOfWeek: [],
+    monthsOfYear: [],
+  },
+  payableInfo: undefined,
+  receivingInfo: undefined,
+  reverseVoucherIds: [],
+  assets: [],
+  certificates: [],
+  lineItemsInfo: {
+    lineItems: [],
+  },
+};
 
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
