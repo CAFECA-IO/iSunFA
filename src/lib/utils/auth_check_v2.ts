@@ -12,6 +12,7 @@ import { getUserById } from '@/lib/utils/repo/user.repo';
 import { ISessionData } from '@/interfaces/session_data';
 import { convertStringToNumber } from '@/lib/utils/common';
 import loggerBack from '@/lib/utils/logger_back';
+import { APIName } from '@/constants/api_connection';
 
 export async function checkUser(session: ISessionData, req: NextApiRequest) {
   let isAuth = true;
@@ -121,7 +122,7 @@ export const authFunctionsNew: AuthFunctionsNew = {
   projectCompanyMatch: checkProjectCompanyMatch,
 };
 
-export async function checkAuthorizationNew<T extends keyof typeof AUTH_CHECK>(
+export async function checkAuthorizationNew<T extends APIName>(
   apiName: T,
   req: NextApiRequest,
   session: ISessionData

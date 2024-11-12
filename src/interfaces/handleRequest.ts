@@ -1,8 +1,8 @@
-import { ZOD_SCHEMA_API } from '@/constants/zod_schema';
+import { APIName } from '@/constants/api_connection';
 import { ISessionData } from '@/interfaces/session_data';
 import { body, query } from '@/lib/utils/validator';
 
-export interface IHandleRequest<T extends keyof typeof ZOD_SCHEMA_API, U> {
+export interface IHandleRequest<T extends APIName, U> {
   (input: {
     query: query<T>;
     body: body<T>;
