@@ -46,6 +46,7 @@ import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
 import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
 import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
 import AccountingTitleSettingModal from '@/components/account_settings/accounting_title_setting_modal';
+import ManualAccountOpeningModal from '@/components/account_settings/manual_account_opening_modal';
 
 interface IGlobalContext {
   width: number;
@@ -130,6 +131,9 @@ interface IGlobalContext {
 
   isAccountingTitleSettingModalVisible: boolean;
   accountingTitleSettingModalVisibilityHandler: () => void;
+
+  isManualAccountOpeningModalVisible: boolean;
+  manualAccountOpeningModalVisibilityHandler: () => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -233,6 +237,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     useState<IReverseItemModal>(defaultReverseItemModal);
 
   const [isAccountingTitleSettingModalVisible, setIsAccountingTitleSettingModalVisible] =
+    useState(false);
+
+  const [isManualAccountOpeningModalVisible, setIsManualAccountOpeningModalVisible] =
     useState(false);
 
   const { width, height } = windowSize;
@@ -394,6 +401,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsAccountingTitleSettingModalVisible(!isAccountingTitleSettingModalVisible);
   };
 
+  const manualAccountOpeningModalVisibilityHandler = () => {
+    setIsManualAccountOpeningModalVisible(!isManualAccountOpeningModalVisible);
+  };
+
   useEffect(() => {
     if (!isSignIn) return;
 
@@ -528,6 +539,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isAccountingTitleSettingModalVisible,
       accountingTitleSettingModalVisibilityHandler,
 
+      isManualAccountOpeningModalVisible,
+      manualAccountOpeningModalVisibilityHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -599,6 +613,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isAccountingTitleSettingModalVisible,
       accountingTitleSettingModalVisibilityHandler,
+
+      isManualAccountOpeningModalVisible,
+      manualAccountOpeningModalVisibilityHandler,
 
       termsOfServiceConfirmModalVisibilityHandler,
     ]
@@ -770,6 +787,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <AccountingTitleSettingModal
         isModalVisible={isAccountingTitleSettingModalVisible}
         modalVisibilityHandler={accountingTitleSettingModalVisibilityHandler}
+      />
+
+      <ManualAccountOpeningModal
+        isModalVisible={isManualAccountOpeningModalVisible}
+        modalVisibilityHandler={manualAccountOpeningModalVisibilityHandler}
       />
 
       {children}

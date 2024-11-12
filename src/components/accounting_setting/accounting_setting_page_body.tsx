@@ -33,7 +33,10 @@ const dummyCurrencies: ICurrency[] = [
 const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
 
-  const { accountingTitleSettingModalVisibilityHandler } = useGlobalCtx();
+  const {
+    accountingTitleSettingModalVisibilityHandler,
+    manualAccountOpeningModalVisibilityHandler,
+  } = useGlobalCtx();
 
   const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(dummyCurrencies[0]);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -324,7 +327,7 @@ const AccountingSettingPageBody: React.FC = () => {
               />
               <button
                 type="button"
-                disabled
+                onClick={manualAccountOpeningModalVisibilityHandler}
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
               >
                 {t('setting:ACCOUNTING.MANUAL_ACCOUNT_OPENING')}

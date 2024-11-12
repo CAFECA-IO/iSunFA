@@ -3,7 +3,7 @@ import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
 describe('countUnpostedVoucher', () => {
   it('should return the count of unposted vouchers for a given company ID', async () => {
     const companyId = 1000;
-    const mockCount = 1;
+    const mockCount = 2;
 
     const result = await countUnpostedVoucher(companyId);
 

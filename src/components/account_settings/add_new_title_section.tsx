@@ -70,6 +70,14 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     setTitleNote(e.target.value);
   };
 
+  const clearAllHandler = () => {
+    setSelectCategory('');
+    setSelectSubcategory(null);
+    setTitleName('');
+    setTitleCode('');
+    setTitleNote('');
+  };
+
   useEffect(() => {
     // Info: (20241112 - Julian) 連動左邊的 <AccountTitleSection />，如果有選擇的會計科目，則將其顯示在表單中
     if (selectedAccountTitle) {
@@ -246,8 +254,8 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       </div>
 
       {/* Info: (20241112 - Julian) Buttons */}
-      <div className="ml-auto flex items-center">
-        <Button type="button" variant="secondaryBorderless">
+      <div className="ml-auto flex items-center gap-12px">
+        <Button type="button" variant="secondaryBorderless" onClick={clearAllHandler}>
           {t('setting:ACCOUNTING_SETTING_MODAL.CLEAR_ALL_BTN')}
         </Button>
         <Button type="submit" variant="default" disabled={submitDisabled}>
