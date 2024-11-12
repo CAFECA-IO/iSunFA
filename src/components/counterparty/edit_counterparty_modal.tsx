@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
@@ -10,6 +10,9 @@ import { inputStyle } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
+import { RiDeleteBinLine } from 'react-icons/ri';
+import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface EditCounterPartyModalProps {
   onClose: () => void;
@@ -23,6 +26,7 @@ interface EditCounterPartyModalProps {
   taxId?: string;
   note?: string;
   counterpartyId: number; // Info: (20241110 - Anna) 新增 counterpartyId 属性
+  type?: CounterpartyType; // Info: (20241111 - Anna) 添加 type 作為可選屬性
 }
 
 const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
@@ -31,15 +35,27 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   name,
   taxId,
   note = '', // Info: (20241108 - Anna) 設置 note 的預設值
+  type = CounterpartyType.BOTH, // Info: (20241111 - Anna)  預設為 BOTH
   counterpartyId, // Info: (20241110 - Anna) 傳入 counterpartyId
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const { selectedCompany } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
-  const [inputType, setInputType] = useState<null | CounterpartyType>(null);
+
+  // Info: (20241111 - Anna)設定 inputType 的初始值避免 null 類型錯誤
+  const [inputType, setInputType] = useState<CounterpartyType>(type); // Info: (20241111 - Anna) 據初始 type 設置
   const [inputNote, setInputNote] = useState<string>(note); // Info: (20241108 - Anna) 使用初始值設置 inputNote
   const [showHint, setShowHint] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false); // Info: (20241111 - Anna) 新增 hasChanges 狀態
+
+  useEffect(() => {
+    // Info: (20241108 - Anna) 檢查是否有任何更動
+    setHasChanges(
+      inputName !== name || inputTaxId !== taxId || inputType !== type || inputNote !== note
+    );
+  }, [inputName, inputTaxId, inputType, inputNote, name, taxId, type, note]);
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -56,16 +72,16 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   };
 
   const typeItems = [CounterpartyType.BOTH, CounterpartyType.CLIENT, CounterpartyType.SUPPLIER].map(
-    (type) => {
+    (optionType) => {
       const accountClickHandler = () => {
-        setInputType(type);
+        setInputType(optionType);
         setTypeMenuOpen(false);
         setIsTypeSelecting(false);
       };
 
       return (
         <button
-          key={type}
+          key={optionType}
           type="button"
           onClick={accountClickHandler}
           className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
@@ -105,18 +121,56 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
 
   const disabled = !inputName || !inputTaxId || !inputType;
 
-  // Todo:(20241110 - Anna) Id要改成動態
-  const editCounterparty = async (counterpartyData: {
-    name: string;
-    taxId: string;
-    type: CounterpartyType;
-    note: string;
-    counterpartyId: number; // Info:(20241110 - Anna) 新增 counterpartyId 属性
-  }) => {
-    await APIHandler(APIName.COUNTERPARTY_UPDATE, {
-      body: counterpartyData,
-      params: { companyId: selectedCompany?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
+  // Info:(20241111 - Anna) 添加 deleteCounterpartyHandler 函數以處理刪除交易夥伴
+  const deleteCounterpartyHandler = () => {
+    messageModalDataHandler({
+      title: '刪除交易夥伴',
+      content: '您確定要刪除這個交易夥伴嗎？',
+      notes: inputName, // 🌟 傳遞交易夥伴名稱
+      messageType: MessageType.WARNING,
+      submitBtnStr: t('setting:SETTING.REMOVE'),
+      submitBtnFunction: async () => {
+        try {
+          await APIHandler(APIName.COUNTERPARTY_DELETE, {
+            params: { companyId: selectedCompany?.id || 0, counterpartyId },
+          });
+          onClose();
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Error deleting counterparty:', error);
+        }
+      },
+      backBtnStr: t('common:COMMON.CANCEL'),
     });
+    messageModalVisibilityHandler();
+  };
+
+  // Todo:(20241110 - Anna) Id要改成動態
+  // const editCounterparty = async (counterpartyData: {
+  //   name: string;
+  //   taxId: string;
+  //   type: CounterpartyType;
+  //   note: string;
+  //   counterpartyId: number; // Info:(20241110 - Anna) 新增 counterpartyId 属性
+  // }) => {
+  //   await APIHandler(APIName.COUNTERPARTY_UPDATE, {
+  //     body: counterpartyData,
+  //     params: { companyId: selectedCompany?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
+  //   });
+  // };
+
+  const editCounterparty = async () => {
+    if (!hasChanges) return; // Info: (20241111 - Anna)  判斷是否有更動
+    try {
+      await APIHandler(APIName.COUNTERPARTY_UPDATE, {
+        body: { name: inputName, taxId: inputTaxId, type: inputType, note: inputNote },
+        params: { companyId: selectedCompany?.id || 0 },
+      });
+      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error updating counterparty:', error);
+    }
   };
 
   const EditNewCounterParterHandler = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -124,15 +178,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     if (disabled) {
       setShowHint(true);
     } else {
-      const counterpartyData = {
-        name: inputName,
-        taxId: inputTaxId,
-        type: inputType,
-        note: inputNote || '',
-        counterpartyId, // Info:(20241110 - Anna) 使用傳入的 counterpartyId
-      };
-      await editCounterparty(counterpartyData); // Info:(20241110 - Anna)  呼叫 API 函數
-      onSave(counterpartyData);
+      await editCounterparty(); // Info: (20241111 - tzuhan) 呼叫無參數的 editCounterparty
     }
   };
 
@@ -230,6 +276,14 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
               />
             </div>
           </div>
+          {/* Info: (20241111 - Anna) 绑定删除操作 */}
+          <div
+            className="flex cursor-pointer items-center justify-start gap-2 py-6"
+            onClick={deleteCounterpartyHandler}
+          >
+            <RiDeleteBinLine className="text-neutral-500" />
+            <p className="text-red-600">Remove this Client/Supplier</p>
+          </div>
           <div className="flex items-center justify-end gap-12px">
             <Button
               className="px-16px py-8px"
@@ -239,7 +293,13 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
             >
               {t('common:COMMON.CANCEL')}
             </Button>
-            <Button className="px-16px py-8px" type="submit" variant="tertiary" disabled={disabled}>
+            <Button
+              className="px-16px py-8px"
+              type="submit"
+              variant="tertiary"
+              // Info: (20241111 - Anna) 保存按鈕根據 hasChanges 狀態啟用
+              disabled={!hasChanges}
+            >
               <p>{t('common:COMMON.SAVE')}</p>
               <BiSave size={20} />
             </Button>

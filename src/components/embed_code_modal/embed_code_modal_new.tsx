@@ -9,6 +9,11 @@ import { IoIosArrowDown, IoMdCheckmark } from 'react-icons/io';
 import { PiCopySimpleBold } from 'react-icons/pi';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { ReportTypeToBaifaReportType } from '@/interfaces/report_type';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -17,6 +22,8 @@ interface IEmbedCodeModal {
 
 const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
   const { t } = useTranslation(['common', 'report_401']);
+  const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
   const balanceSheetRef = useRef<HTMLInputElement>(null);
   const incomeStatementRef = useRef<HTMLInputElement>(null);
   const cashFlowStatementRef = useRef<HTMLInputElement>(null);
@@ -35,7 +42,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   // Info: (20241111 - Anna) 使用 APIHandler 設置 REPORT_GENERATE API 的觸發功能
   const {
-    trigger: generateReport, // Info: (20241111 - Anna) API 觸發方法
+    trigger: generateFinancialReport, // Info: (20241111 - Anna) API 觸發方法
     code: reportId, // Info: (20241111 - Anna) 生成的報告 ID
     isLoading: isGenerating, // Info: (20241111 - Anna) 是否正在生成
     success: generateSuccess, // Info: (20241111 - Anna) 生成是否成功
@@ -65,9 +72,29 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   };
 
   const copyClickHandler = () => {
-    navigator.clipboard.writeText(generatedCode);
+    navigator.clipboard
+      .writeText(generatedCode)
+      .then(() => {
+        // Info: (20241111 - Anna) 使用 toastHandler 顯示複製成功提示
+        toastHandler({
+          id: 'copy-success', // Info: (20241111 - Anna) 固定的唯一標識
+          type: ToastType.SUCCESS,
+          content: '複製成功！',
+          closeable: true,
+        });
+      })
+      .catch(() => {
+        // Info: (20241111 - Anna) 使用 toastHandler 顯示複製失敗提示
+        toastHandler({
+          id: 'copy-error', // Info: (20241111 - Anna) 固定的唯一標識
+          type: ToastType.ERROR,
+          content: '複製失敗！',
+          closeable: true,
+        });
+      });
   };
 
+  // Info: (20241111 - Anna) 在 generateClickHandler 中設置生成報告所需的參數並使用 todayDate
   const generateClickHandler = async () => {
     setStep(1);
 
@@ -77,27 +104,40 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       isCashFlowStatementChecked ? 'cash-flow' : null,
     ].filter(Boolean);
 
-    // Info: (20241111 - Anna) 呼叫 generateReport 來觸發報告生成
-    try {
-      await generateReport({
-        body: {
-          date: todayDate,
-          language: selectedReportLanguage,
-          reportTypes,
-        },
-      });
-    } catch (error) {
+    // Info: (20241111 - Anna) 確保包含 selectedCompany 作為參數
+    if (selectedCompany) {
+      try {
+        await generateFinancialReport({
+          params: {
+            companyId: selectedCompany.id,
+          },
+          body: {
+            date: todayDate, // Info: (20241111 - Anna) 使用當前預設日期
+            language: selectedReportLanguage,
+            reportTypes,
+          },
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error generating report:', generateError);
+      }
+    } else {
       // eslint-disable-next-line no-console
-      console.error('Error generating report:', generateError);
+      console.warn('No company selected for report generation');
     }
   };
 
   // Info: (20241111 - Anna) 使用 useEffect 監聽生成成功，並更新 iframe 嵌入代碼
   useEffect(() => {
     if (generateSuccess && reportId) {
-      const balanceLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=balance`;
-      const comprehensiveIncomeLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=comprehensive-income`;
-      const cashFlowLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=cash-flow`;
+      //   const balanceLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=balance`;
+      //   const comprehensiveIncomeLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=comprehensive-income`;
+      //   const cashFlowLink = `https://isunfa.com/users/reports/financials/view/${reportId}?report_type=cash-flow`;
+
+      // Info: (20241111 - Anna) 使用 ISUNFA_ROUTE 和 ReportTypeToBaifaReportType 的新鏈接格式
+      const balanceLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.balance_sheet}`;
+      const comprehensiveIncomeLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.comprehensive_income_statement}`;
+      const cashFlowLink = `${ISUNFA_ROUTE.USERS_FINANCIAL_REPORTS_VIEW}/${reportId}?report_type=${ReportTypeToBaifaReportType.cash_flow_statement}`;
 
       let code = '';
 
@@ -120,14 +160,14 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       ) {
         code = `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600} />`;
       } else {
-        //  Info: (20241111 - Anna) 如果選擇多個或全部報告，生成多個 <iframe> 標籤
+        // Info: (20241111 - Anna)  如果選擇多個或全部報告，生成多個 <iframe> 標籤
         code = `
-        <div>
-          ${balanceSheetRef.current?.checked ? `<iframe src="${balanceLink}" title="balance-sheet" width={600} height={600}></iframe>` : ''}
-          ${incomeStatementRef.current?.checked ? `<iframe src="${comprehensiveIncomeLink}" title="comprehensive-income-statement" width={600} height={600}></iframe>` : ''}
-          ${cashFlowStatementRef.current?.checked ? `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600}></iframe>` : ''}
-        </div>
-      `;
+      <div>
+        ${balanceSheetRef.current?.checked ? `<iframe src="${balanceLink}" title="balance-sheet" width={600} height={600}></iframe>` : ''}
+        ${incomeStatementRef.current?.checked ? `<iframe src="${comprehensiveIncomeLink}" title="comprehensive-income-statement" width={600} height={600}></iframe>` : ''}
+        ${cashFlowStatementRef.current?.checked ? `<iframe src="${cashFlowLink}" title="cash-flow-statement" width={600} height={600}></iframe>` : ''}
+      </div>
+    `;
       }
 
       setGeneratedCode(code);
