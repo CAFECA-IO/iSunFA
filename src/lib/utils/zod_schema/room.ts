@@ -31,7 +31,7 @@ export const roomGetSchema = {
     querySchema: roomGetQuerySchema,
     bodySchema: roomGetBodySchema,
   },
-  outputSchema: roomSchema,
+  outputSchema: roomSchema.nullable(),
   frontend: nullSchema,
 };
 

@@ -68,7 +68,7 @@ const methodHandlers: {
     payload: IRoom | IRoom[] | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ROOM_GET_BY_ID, req, res, handlePostRequest),
+  POST: (req, res) => withRequestValidation(APIName.ROOM_GET_BY_ID, req, res, handlePostRequest),
   DELETE: (req, res) => withRequestValidation(APIName.ROOM_DELETE, req, res, handleDeleteRequest),
 };
 
