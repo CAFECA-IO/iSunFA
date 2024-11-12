@@ -4,22 +4,13 @@ import Pagination from '@/components/pagination/pagination';
 import { TbSquarePlus2, TbCodeCircle } from 'react-icons/tb';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoArrowForward } from 'react-icons/io5';
-import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
-import { LuFileCheck } from 'react-icons/lu';
-import { FiSearch } from 'react-icons/fi';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-
-// ToDo: (20241022 - Liz) 使用共用元件代替 Search
+import WorkTag from '@/components/beta/my_company_list_page/company_tag';
 import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { ICompany } from '@/interfaces/company';
-
-enum CompanyType {
-  Financial = 'Financial',
-  Tax = 'Tax',
-  All = 'ALL',
-}
+import { ICompanyAndRole } from '@/interfaces/company';
+import { useUserCtx } from '@/contexts/user_context';
 
 const NoData = () => {
   return (
@@ -34,62 +25,8 @@ const NoData = () => {
   );
 };
 
-interface WorkTagProps {
-  type: CompanyType;
-  handleChangeTag: () => void;
-}
-
-const WorkTag = ({ type, handleChangeTag }: WorkTagProps) => {
-  let backgroundColor = '';
-  let textColor = '';
-  let icon = null;
-
-  switch (type) {
-    case CompanyType.Financial:
-      backgroundColor = 'bg-badge-surface-strong-secondary';
-      textColor = 'text-badge-text-invert';
-      icon = <RiCoinsFill size={16} />;
-      break;
-
-    case CompanyType.Tax:
-      backgroundColor = 'bg-badge-surface-strong-primary';
-      textColor = 'text-badge-text-invert';
-      icon = <RiCheckboxMultipleLine size={16} />;
-      break;
-
-    case CompanyType.All:
-      backgroundColor = 'bg-badge-surface-soft-secondary';
-      textColor = 'text-badge-text-secondary-solid';
-      icon = <LuFileCheck size={16} />;
-      break;
-
-    default:
-      backgroundColor = 'bg-badge-surface-strong-secondary';
-      textColor = 'text-badge-text-invert';
-      icon = null;
-      break;
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleChangeTag}
-      className={`flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
-    >
-      {icon}
-      <p className="px-4px">{type}</p>
-    </button>
-  );
-};
-
 interface CompanyListProps {
-  companyList: {
-    id: number;
-    name: string;
-    type: CompanyType;
-    logoSrc: string;
-    alt: string;
-  }[];
+  companyList: ICompanyAndRole[];
   toggleChangeTagModal: () => void;
   setCompanyName: Dispatch<SetStateAction<string>>;
 }
@@ -102,26 +39,31 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 
   return (
     <section className="flex flex-auto flex-col gap-8px">
-      {companyList.map((company) => (
+      {companyList.map((myCompany) => (
         <div
-          key={company.id}
+          key={myCompany.company.id}
           className="flex items-center justify-between gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
         >
           <Image
-            src={company.logoSrc}
-            alt={company.alt}
+            src={myCompany.company.imageId}
+            alt={myCompany.company.name}
             width={60}
             height={60}
             className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
           ></Image>
 
           <div className="flex flex-auto items-center gap-8px">
-            <p className="text-base font-medium text-text-neutral-solid-dark">{company.name}</p>
+            <p className="text-base font-medium text-text-neutral-solid-dark">
+              {myCompany.company.name}
+            </p>
             <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
           </div>
 
           <div className="flex w-90px justify-center">
-            <WorkTag type={company.type} handleChangeTag={() => handleChangeTag(company.name)} />
+            <WorkTag
+              type={myCompany.tag}
+              handleChangeTag={() => handleChangeTag(myCompany.company.name)}
+            />
           </div>
 
           <button
@@ -138,103 +80,16 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 };
 
 const MyCompanyListPageBody = () => {
-  // ToDo: (20241022 - Liz) 這裡是假資料，之後會改成從 API 取得資料。
-  const COMPANY_LIST = [
-    {
-      id: 1,
-      name: 'Company A',
-      type: CompanyType.Financial,
-      logoSrc: '/images/fake_company_log_01.png',
-      alt: 'fake_company_log_01',
-    },
-    {
-      id: 2,
-      name: 'Company B',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_02.png',
-      alt: 'fake_company_log_02',
-    },
-    {
-      id: 3,
-      name: 'Company C',
-      type: CompanyType.All,
-      logoSrc: '/images/fake_company_log_03.png',
-      alt: 'fake_company_log_03',
-    },
-    {
-      id: 4,
-      name: 'Company Special Liz',
-      type: CompanyType.Financial,
-      logoSrc: '/images/fake_company_log_01.png',
-      alt: 'fake_company_log_01',
-    },
-    {
-      id: 5,
-      name: 'Company Super Liz',
-      type: CompanyType.Financial,
-      logoSrc: '/images/fake_company_log_02.png',
-      alt: 'fake_company_log_02',
-    },
-    {
-      id: 6,
-      name: 'Company Liz 6',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_03.png',
-      alt: 'fake_company_log_03',
-    },
-    {
-      id: 7,
-      name: 'Company Liz 7',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_01.png',
-      alt: 'fake_company_log_01',
-    },
-    {
-      id: 8,
-      name: 'Company Liz 8',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_02.png',
-      alt: 'fake_company_log_02',
-    },
-    {
-      id: 9,
-      name: 'Company Liz 9',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_03.png',
-      alt: 'fake_company_log_03',
-    },
-    {
-      id: 10,
-      name: 'Company Liz 10',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_01.png',
-      alt: 'fake_company_log_01',
-    },
-    {
-      id: 11,
-      name: 'Company Liz 11',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_02.png',
-      alt: 'fake_company_log_02',
-    },
-    {
-      id: 12,
-      name: 'Company Liz 12',
-      type: CompanyType.Tax,
-      logoSrc: '/images/fake_company_log_03.png',
-      alt: 'fake_company_log_03',
-    },
-  ];
-
-  const isNoData = COMPANY_LIST.length === 0;
-
+  const { userAuth } = useUserCtx();
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
   const [companyName, setCompanyName] = useState<string>('');
 
+  const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCompanies, setFilteredCompanies] = useState(COMPANY_LIST);
+  const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
+
+  const isNoData = companyList.length === 0;
 
   const toggleChangeTagModal = () => {
     setIsChangeTagModalOpen((prev) => !prev);
@@ -243,74 +98,24 @@ const MyCompanyListPageBody = () => {
     setIsCreateCompanyModalOpen((prev) => !prev);
   };
 
-  const itemsPerPage = 5;
-  const totalItems = filteredCompanies.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const slicedCompanyList = filteredCompanies.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Info: (20241022 - Liz) 管理搜尋欄位的值。當輸入值改變時，更新搜尋欄位的值。不執行搜尋。
-  const handleSearchTerm = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-
-    if (e.target.value === '') {
-      setFilteredCompanies(COMPANY_LIST);
-      setCurrentPage(1);
-    }
-  };
-
-  // Info: (20241022 - Liz) 這是搜尋功能。按下按鈕，根據輸入值來搜尋公司名稱。
-  const handleSearch = () => {
-    const filtered = COMPANY_LIST.filter((company) => {
-      return company.name.toLowerCase().includes(searchTerm.toLowerCase());
-    });
-    setFilteredCompanies(filtered);
-    setCurrentPage(1);
-  };
-
-  // 檢查是否按下 Enter 鍵
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const handleApiResponse = (resData: IPaginatedData<ICompany[]>) => {
-    // Deprecated: (20241104 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(resData);
+  const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
+    setCompanyList(resData.data);
+    setTotalPage(resData.totalPages);
+    setCurrentPage(resData.page);
   };
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
-        {/* Filter // ToDo: (20241104 - Liz) 把日曆隱藏 */}
         <FilterSection
+          disableDateSearch
           className="flex-auto"
-          apiName="COMPANY_LIST"
+          apiName="LIST_USER_COMPANY"
           page={1}
           pageSize={5}
           onApiResponse={handleApiResponse}
+          params={{ userId: userAuth?.id }}
         />
-
-        {/* Search */}
-        <div className="flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-          <input
-            type="text"
-            placeholder="Search"
-            className="grow rounded-l-sm bg-transparent px-12px py-10px outline-none"
-            value={searchTerm}
-            onChange={handleSearchTerm}
-            onKeyDown={handleKeyDown}
-          />
-
-          <button type="button" onClick={handleSearch} className="px-12px py-10px">
-            <FiSearch size={20} />
-          </button>
-        </div>
 
         <div className="flex items-center gap-16px">
           <button
@@ -337,21 +142,19 @@ const MyCompanyListPageBody = () => {
       ) : (
         <>
           <CompanyList
-            companyList={slicedCompanyList}
+            companyList={companyList}
             toggleChangeTagModal={toggleChangeTagModal}
             setCompanyName={setCompanyName}
           />
           <Pagination
-            totalCount={totalItems}
-            totalPages={totalPages}
+            totalPages={totalPage}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
           />
         </>
       )}
 
-      {/* Modal */}
-
+      {/* // Info: (20241108 - Liz)  Modals */}
       <CreateCompanyModal
         isModalOpen={isCreateCompanyModalOpen}
         toggleModal={toggleCreateCompanyModal}
