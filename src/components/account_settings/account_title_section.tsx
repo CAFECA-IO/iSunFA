@@ -118,6 +118,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   const skeletonList = (
     <div className="flex flex-col gap-8px">
       {Array.from({ length: 3 }).map((_, index) => (
+        // Deprecated: (20241112 - Julian) to be fixed
         // eslint-disable-next-line react/no-array-index-key
         <Skeleton key={index} width={260} height={25} />
       ))}
