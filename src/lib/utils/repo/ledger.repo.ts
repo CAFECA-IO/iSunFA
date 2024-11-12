@@ -58,8 +58,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     endDate,
     startAccountNo,
     endAccountNo,
-    // FIXME: 預設值先設定為 general
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     labelType = LabelType.GENERAL,
     page = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_LIMIT,
@@ -109,36 +107,38 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       where: {
         ...commonQueryConditions,
         OR: [{ companyId }, { companyId: PUBLIC_COMPANY_ID }],
-        /** FIXME:
-         * 如果 startAccountNo 為 111A 、 endAccountNo 為 111D 的話，應該要包含 111A, 111B, 111C, 111D 的科目
-         * 如果 startAccountNo 為 1110 、 endAccountNo 為 111D 的話，應該要包含 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 111A, 111B, 111C, 111D 的科目
-         */
+
+        // ...(startAccountNo && endAccountNo
+        //   ? {
+        //       code: {
+        //         gte: startAccountNo,
+        //         lte: endAccountNo,
+        //       },
+        //     }
+        //   : {}),
         ...(startAccountNo && endAccountNo
           ? {
-              code: {
-                gte: startAccountNo,
-                lte: endAccountNo,
-              },
+              AND: [
+                {
+                  code: {
+                    gte: startAccountNo,
+                  },
+                },
+                {
+                  code: {
+                    lte: endAccountNo,
+                  },
+                },
+              ],
             }
           : {}),
         forUser: true,
-        // rootCode: '1100',
-        // parentCode: '1103',
-        // code: '1103-5',
       },
       include: {
         lineItem: {
           where: {
             ...commonQueryConditions,
             voucher: commonVoucherConditions(startDate, endDate),
-            // deletedAt: null,
-            // voucher: {
-            //   date: {
-            //     gte: startDate,
-            //     lte: endDate,
-            //   },
-            //   deletedAt: null,
-            // },
           },
           include: {
             voucher: true,
@@ -156,19 +156,11 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     } else if (labelType === LabelType.DETAILED) {
       filteredAccounts = accounts.filter((account) => account.code.includes('-'));
     }
-    // LabelType.ALL 不需要過濾
 
-    // search voucher by the sort order of Ascending
     const allVoucherData = await prisma.voucher.findMany({
       where: {
-        companyId,
         ...commonVoucherConditions(startDate, endDate),
-        // deletedAt: null,
-        // createdAt: {
-        //   gte: startDate,
-        //   lte: endDate,
-        // },
-        // ...commonQueryConditions,
+        companyId,
       },
       select: {
         id: true,
@@ -180,13 +172,12 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
 
     const additionalLineItems = await prisma.lineItem.findMany({
       where: {
+        ...commonQueryConditions,
         voucherId: { in: allVoucherIds },
-        deletedAt: null,
         createdAt: {
           gte: startDate,
           lte: endDate,
         },
-        // ...commonQueryConditions,
       },
       include: {
         voucher: true,
@@ -212,38 +203,11 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     const sortedAccounts = buildAccountForestForUser(filteredAccounts);
 
     const newSortedAccounts = sortedAccounts.map((account) => {
-      /*
-      console.log('account in the iterative sortedAccounts', account);
-
-      // 資料結構如下
-      account in the iterative sortedAccounts：
-      {
-        id: 10001447,
-        companyId: 1002,
-        system: 'IFRS',
-        type: 'equity',
-        debit: false,
-        liquidity: false,
-        code: '345C',
-        name: '對交易相關之被避險項目進行避險之選擇權時間價值-母公司',
-        forUser: true,
-        parentCode: '3451',
-        rootCode: '3450',
-        createdAt: 0,
-        updatedAt: 0,
-        level: 4,
-        deletedAt: null,
-        lineItem: [],
-        children: [],
-        amount: 0
-      }
-      */
       return {
         ...account,
         lineItem: additionalLineItems.filter((lineItem) => {
           return lineItem.accountId === account.id;
         }),
-        // newLineItem: additionalLineItems.filter((lineItem) => lineItem.accountId === account.id),
       };
     });
     // eslint-disable-next-line no-console
@@ -314,8 +278,8 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     });
 
     // 4. 排序
-    ledgerItems.sort((a, b) => a.voucherDate - b.voucherDate);
-    // ledgerItems.sort((a, b) => a.accountId - b.accountId);
+    // ledgerItems.sort((a, b) => a.voucherDate - b.voucherDate);
+    ledgerItems.sort((a, b) => a.accountId - b.accountId);
 
     // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
     const DIR_NAME_2 = 'tmp';

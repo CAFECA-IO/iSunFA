@@ -109,6 +109,8 @@ describe('Ledger Repository', () => {
         companyId: 10000027, // 測試含有 voucher 的資料時，金額加總
         // startDate: 1087350399,
         // labelType: LabelType.DETAILED,
+        // startAccountNo: '345B',
+        // endAccountNo: '345B',
         startDate: 0,
         endDate: 1787350399,
         page: 1,
