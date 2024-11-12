@@ -209,4 +209,145 @@ describe('company/[companyId]/voucher integration test', () => {
       expect(success).toBe(true);
     });
   });
+
+  describe('Post voucher', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {},
+        body: {
+          actions: ['add_asset', 'revert'],
+          certificateIds: [],
+          voucherDate: 1,
+          type: 'payment',
+          note: '',
+          lineItems: [
+            {
+              description: '存入銀行',
+              amount: 1000,
+              debit: true,
+              accountId: 10000000,
+            },
+            {
+              description: '存入銀行',
+              amount: 1000,
+              debit: false,
+              accountId: 10000001,
+            },
+          ],
+          assetIds: [1],
+          counterPartyId: 1001,
+          reverseVouchers: [
+            {
+              voucherId: 1001,
+              lineItemIdBeReversed: 10000000,
+              lineItemIdReverseOther: 0,
+              amount: 100,
+            },
+          ],
+        },
+        method: 'POST',
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiRequest>;
+
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
+
+      await handler(req, res);
+      const apiResponse = res.json.mock.calls[0][0];
+      const assetVoucher = await prisma.assetVoucher.findFirst({
+        where: {
+          assetId: req.body.assetIds[0],
+          voucherId: apiResponse.payload,
+        },
+      });
+
+      if (assetVoucher) {
+        await prisma.assetVoucher.delete({
+          where: {
+            id: assetVoucher.id,
+          },
+        });
+      }
+
+      const associateVoucher = await prisma.accociateVoucher.findFirst({
+        where: {
+          originalVoucherId: req.body.reverseVouchers[0].voucherId,
+        },
+      });
+
+      const associateLineItem = await prisma.accociateLineItem.findFirst({
+        where: {
+          originalLineItemId: req.body.reverseVouchers[0].lineItemIdBeReversed,
+        },
+      });
+
+      const event = await prisma.event.findFirst({
+        where: {
+          id: associateVoucher?.eventId,
+        },
+      });
+
+      if (associateLineItem) {
+        await prisma.accociateLineItem.delete({
+          where: {
+            id: associateLineItem.id,
+          },
+        });
+      }
+      if (associateVoucher) {
+        await prisma.accociateVoucher.delete({
+          where: {
+            id: associateVoucher.id,
+          },
+        });
+      }
+
+      if (event) {
+        await prisma.event.delete({
+          where: {
+            id: event.id,
+          },
+        });
+      }
+
+      const voucher = await prisma.voucher.findFirst({
+        where: {
+          id: apiResponse.payload,
+        },
+        include: {
+          lineItems: true,
+        },
+      });
+
+      if (voucher) {
+        await Promise.all(
+          voucher.lineItems.map((lineItem) => {
+            const deletedLineItem = prisma.lineItem.delete({
+              where: {
+                id: lineItem.id,
+              },
+            });
+
+            return deletedLineItem;
+          })
+        );
+
+        await prisma.voucher.delete({
+          where: {
+            id: voucher.id,
+          },
+        });
+      }
+      expect(apiResponse.message).toBe(STATUS_MESSAGE.CREATED);
+      expect(apiResponse.payload).toBeGreaterThanOrEqual(10000000);
+      expect(associateLineItem).toBeDefined();
+
+      expect(associateVoucher).toBeDefined();
+
+      expect(event).toBeDefined();
+    });
+  });
 });

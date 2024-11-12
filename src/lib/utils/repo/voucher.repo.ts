@@ -487,6 +487,9 @@ export async function postVoucherV2({
   // const isAssetEvent = !!assetEvent;
   const isRevertEvent = !!revertEvent;
 
+  // Info: (20241111 - Murky) 目前沒有event, 折舊在post voucher的時候執行
+  const isAssetEvent = originalVoucher.asset.length > 0;
+
   const voucherCreated = await prisma.$transaction(async (tx) => {
     const originalVoucherNo = await getLatestVoucherNoInPrisma(company.id, {
       voucherDate: originalVoucher.date,
@@ -533,7 +536,34 @@ export async function postVoucherV2({
           })),
         },
       },
+      include: {
+        lineItems: true,
+      },
     });
+
+    if (isAssetEvent) {
+      await Promise.all(
+        originalVoucher.asset.map(async (asset) => {
+          const assetVoucher = await tx.assetVoucher.create({
+            data: {
+              asset: {
+                connect: {
+                  id: asset.id,
+                },
+              },
+              voucher: {
+                connect: {
+                  id: originalVoucherInDB.id,
+                },
+              },
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            },
+          });
+          return assetVoucher;
+        })
+      );
+    }
 
     if (isRevertEvent) {
       const { associateVouchers } = revertEvent;
@@ -542,56 +572,114 @@ export async function postVoucherV2({
         associateVouchers,
         'associateVouchers is not provided in postVoucherV2 in voucher.repo.ts'
       );
+
       assert(
         associateVouchers.length > 0,
         'associateVouchers is empty in postVoucherV2 in voucher.repo.ts'
       );
 
-      associateVouchers.map(async (associateVoucher) => {
-        const { originalVoucher: original } = associateVoucher;
-        const { resultVoucher } = associateVoucher;
+      await Promise.all(
+        associateVouchers.map(async (associateVoucher) => {
+          const { originalVoucher: original, resultVoucher } = associateVoucher;
+          // const { resultVoucher } = associateVoucher;
 
-        // ToDo: (20241030 - Murky) 需要存放lineItems和lineItems的對應關係
-        // const originalLineItems = original.lineItems[0]
-        // const resultLineItems = resultVoucher.lineItems[0]
+          const originalLineItem = original.lineItems[0];
 
-        const eventInDB = await tx.event.create({
-          data: {
-            eventType: revertEvent.eventType,
-            frequence: revertEvent.frequency,
-            startDate: revertEvent.startDate,
-            endDate: revertEvent.endDate,
-            daysOfWeek: revertEvent.dateOfWeek,
-            monthsOfYear: revertEvent.monthsOfYear,
-            createdAt: nowInSecond,
-            updatedAt: nowInSecond,
-          },
-        });
+          // Info: (20241111 - Murky) Patch, 找出原始 voucher 被反轉的 lineItem
+          const resultLineItem = originalVoucherInDB.lineItems.find((lineItem) => {
+            const targetLineItem = resultVoucher.lineItems[0];
+            return (
+              lineItem.accountId === targetLineItem.accountId &&
+              lineItem.debit === targetLineItem.debit &&
+              lineItem.amount === targetLineItem.amount &&
+              lineItem.description === targetLineItem.description
+            );
+          });
 
-        await tx.accociateVoucher.create({
-          data: {
-            originalVoucher: {
-              connect: {
-                id: original.id,
+          assert(
+            !!resultLineItem,
+            'resultLineItem is not found in postVoucherV2 in voucher.repo.ts'
+          );
+
+          if (!resultLineItem) {
+            throw new Error('resultLineItem is not found in postVoucherV2 in voucher.repo.ts');
+          }
+
+          await tx.event.create({
+            data: {
+              eventType: revertEvent.eventType,
+              frequence: revertEvent.frequency,
+              startDate: revertEvent.startDate,
+              endDate: revertEvent.endDate,
+              daysOfWeek: revertEvent.dateOfWeek,
+              monthsOfYear: revertEvent.monthsOfYear,
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+              associateVouchers: {
+                create: {
+                  originalVoucher: {
+                    connect: {
+                      id: original.id,
+                    },
+                  },
+                  resultVoucher: {
+                    connect: {
+                      id: originalVoucherInDB.id,
+                    },
+                  },
+                  createdAt: nowInSecond,
+                  updatedAt: nowInSecond,
+                  associateLineItems: {
+                    create: {
+                      originalLineItem: {
+                        connect: {
+                          id: originalLineItem.id,
+                        },
+                      },
+                      resultLineItem: {
+                        connect: {
+                          id: resultLineItem.id,
+                        },
+                      },
+                      createdAt: nowInSecond,
+                      updatedAt: nowInSecond,
+                      debit: originalLineItem.debit,
+                      amount: originalLineItem.amount,
+                    },
+                  },
+                },
               },
             },
-            resultVoucher: {
-              connect: {
-                id: resultVoucher.id,
-              },
+            include: {
+              associateVouchers: true,
             },
-            event: {
-              connect: {
-                id: eventInDB.id,
-              },
-            },
-            createdAt: nowInSecond,
-            updatedAt: nowInSecond,
-          },
-        });
-      });
+          });
+        })
+      );
     }
     return originalVoucherInDB;
   });
   return voucherCreated;
+}
+
+export async function getOneVoucherByIdWithoutInclude(voucherId: number) {
+  try {
+    const voucher = await prisma.voucher.findUnique({
+      where: {
+        id: voucherId,
+      },
+    });
+
+    return voucher;
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'get one voucher by id without include in getOneVoucherByIdWithoutInclude failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related get one voucher by id without include in getOneVoucherByIdWithoutInclude in voucher.repo.ts failed'
+    );
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
 }
