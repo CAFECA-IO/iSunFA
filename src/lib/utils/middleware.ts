@@ -1,18 +1,16 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ZOD_SCHEMA_API } from '@/constants/zod_schema';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
-import { APIPath } from '@/constants/api_connection';
+import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
-import { AUTH_CHECK } from '@/constants/auth';
 import { checkAuthorizationNew } from '@/lib/utils/auth_check_v2';
 
-async function checkSessionUser(session: ISessionData) {
+export async function checkSessionUser(session: ISessionData) {
   let isLogin = true;
   if (!session.userId) {
     isLogin = false;
@@ -21,7 +19,7 @@ async function checkSessionUser(session: ISessionData) {
   return isLogin;
 }
 
-async function checkUserAuthorization<T extends keyof typeof AUTH_CHECK>(
+async function checkUserAuthorization<T extends APIName>(
   apiName: T,
   req: NextApiRequest,
   session: ISessionData
@@ -37,7 +35,7 @@ async function checkUserAuthorization<T extends keyof typeof AUTH_CHECK>(
   return isAuth;
 }
 
-function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req: NextApiRequest) {
+export function checkRequestData<T extends APIName>(apiName: T, req: NextApiRequest) {
   const { query, body } = validateRequestData(apiName, req);
 
   if (query === null && body === null) {
@@ -47,7 +45,7 @@ function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req
   return { query, body };
 }
 
-async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
+export async function logUserAction<T extends APIName>(
   session: ISessionData,
   apiName: T,
   req: NextApiRequest,
@@ -60,14 +58,15 @@ async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
     actionDescription: apiName,
     ipAddress: req.headers['x-forwarded-for'] as string,
     userAgent: req.headers['user-agent'] as string,
-    apiEndpoint: APIPath[apiName],
+    apiEndpoint: APIPath[apiName as keyof typeof APIPath],
     httpMethod: req.method || '',
     requestPayload: req.body,
     statusMessage,
   });
 }
 
-export async function withRequestValidation<T extends keyof typeof ZOD_SCHEMA_API, U>(
+// TODO: (20241111 - Shirley) separate middleware according to different functionality
+export async function withRequestValidation<T extends APIName, U>(
   apiName: T,
   req: NextApiRequest,
   res: NextApiResponse,

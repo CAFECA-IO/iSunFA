@@ -1,6 +1,6 @@
 import prisma from '@/client';
 import { Prisma } from '@prisma/client';
-import { IAssetExportRequestBody } from '@/interfaces/export_file';
+import { IAssetExportRequestBody } from '@/interfaces/export_asset';
 
 export async function exportAssets(body: IAssetExportRequestBody, companyId: number) {
   const { filters, sort } = body;
