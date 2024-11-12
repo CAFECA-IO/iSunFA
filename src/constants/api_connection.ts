@@ -145,6 +145,7 @@ export enum APIName {
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
   IP_LIST = 'IP_LIST',
   ASSET_LIST_EXPORT = 'ASSET_LIST_EXPORT',
+  FILE_EXPORT = 'FILE_EXPORT',
 }
 
 export enum APIPath {
@@ -268,6 +269,7 @@ export enum APIPath {
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
   IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
   ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
+  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`
 }
 const createConfig = ({
   name,
@@ -879,5 +881,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ASSET_LIST_EXPORT,
     method: HttpMethod.GET,
     path: APIPath.ASSET_LIST_EXPORT,
+  }),
+  [APIName.FILE_EXPORT]: createConfig({
+    name: APIName.FILE_EXPORT,
+    method: HttpMethod.POST,
+    path: APIPath.FILE_EXPORT,
   }),
 };
