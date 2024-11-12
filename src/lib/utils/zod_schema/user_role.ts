@@ -15,13 +15,17 @@ const userRoleListQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) UserRole post schema
 const userRolePostBodySchema = z.object({
-  roleName: z.string(),
+  roleId: z.number().int(),
 });
 
-// Info: (20241015 - Jacky) UserRole select schema
+// Info: (20241015 - Jacky) UserRole select query schema
 const userRoleSelectQuerySchema = z.object({
   userId: zodStringToNumber,
-  roleId: zodStringToNumber,
+});
+
+// Info: (20241111 - Jacky) UserRole select body schema
+const userRoleSelectBodySchema = z.object({
+  roleId: z.number().int(),
 });
 
 const userRoleOutputSchema = z.object({
@@ -49,14 +53,14 @@ export const userRolePostSchema = {
     querySchema: userRoleQuerySchema,
     bodySchema: userRolePostBodySchema,
   },
-  outputSchema: userRoleOutputSchema,
+  outputSchema: userRoleOutputSchema.nullable(),
   frontend: userRoleNullSchema,
 };
 
 export const userRoleSelectSchema = {
   input: {
     querySchema: userRoleSelectQuerySchema,
-    bodySchema: userRoleNullSchema,
+    bodySchema: userRoleSelectBodySchema,
   },
   outputSchema: userRoleOutputSchema,
   frontend: userRoleNullSchema,

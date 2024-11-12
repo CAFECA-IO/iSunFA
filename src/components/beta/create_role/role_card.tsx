@@ -1,84 +1,73 @@
 import React from 'react';
 import Image from 'next/image';
 import { RoleName } from '@/constants/role';
+import { IRole } from '@/interfaces/role';
 
-interface RoleCardProps {
-  showingRole: React.SetStateAction<RoleName | null>;
-  setShowingRole: React.Dispatch<React.SetStateAction<RoleName | null>>;
+interface RoleCardsProps {
+  roleList: IRole[];
+  showingRole: string;
+  setShowingRole: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
 }
 
 interface CardProps {
-  roleName: RoleName;
-  isRoleDisabled: boolean;
-  title: string;
+  roleId: number;
+  roleName: string;
   imageSrc: string;
-  altText: string;
-  showingRole: React.SetStateAction<RoleName | null>;
-  setShowingRole: React.Dispatch<React.SetStateAction<RoleName | null>>;
+  showingRole: string;
+  setShowingRole: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedRoleId: React.Dispatch<React.SetStateAction<number>>;
 }
 
-// Info: (20241007 - Liz) 每個角色卡片的資訊
-const cards: {
-  roleName: RoleName;
-  isRoleDisabled: boolean;
-  title: string;
-  imageSrc: string;
-  altText: string;
-}[] = [
+// Info: (20241007 - Liz) 每個角色對應的圖片
+const ROLES_IMAGE = [
   {
     roleName: RoleName.BOOKKEEPER,
-    isRoleDisabled: false,
-    title: 'Bookkeeper',
     imageSrc: '/images/bookkeeper.png',
-    altText: 'bookkeeper',
   },
   {
     roleName: RoleName.EDUCATIONAL_TRIAL_VERSION,
-    isRoleDisabled: false,
-    title: 'Educational Trial Version',
     imageSrc: '/images/educational_trial.png',
-    altText: 'educational_trial',
   },
   {
     roleName: RoleName.ACCOUNTANT,
-    isRoleDisabled: true,
-    title: 'Accountant',
     imageSrc: '/images/accountant.png',
-    altText: 'accountant',
   },
 ];
 
 // Info: (20241007 - Liz) 卡片元件
-const Card: React.FC<CardProps> = ({
+const Card = ({
   roleName,
-  isRoleDisabled,
-  title,
+  roleId,
   imageSrc,
-  altText,
   showingRole,
   setShowingRole,
-}) => {
+  setSelectedRoleId,
+}: CardProps) => {
   const isRoleSelected = showingRole === roleName;
 
   const handleClick = () => {
     setShowingRole(roleName);
+    setSelectedRoleId(roleId);
   };
+
+  const isDisabled = roleName === RoleName.ACCOUNTANT;
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={isRoleDisabled}
-      className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:opacity-50 screen1280:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'} ${isRoleDisabled && 'pointer-events-none'}`}
+      disabled={isDisabled}
+      className={`relative flex h-120px w-240px skew-x-20 items-center rounded-sm text-text-neutral-primary shadow-Dropshadow_XS disabled:opacity-50 screen1280:w-360px ${isRoleSelected ? 'border-2 border-stroke-brand-primary bg-surface-brand-primary-30' : 'bg-surface-neutral-surface-lv2 hover:bg-surface-brand-primary-10'}`}
     >
       <p
         className={`-skew-x-20 pl-110px text-center font-bold screen1280:w-300px screen1280:pl-100px ${roleName === RoleName.EDUCATIONAL_TRIAL_VERSION ? 'pl-100px laptop:text-lg screen1280:text-28px' : 'laptop:text-xl screen1280:text-32px'}`}
       >
-        {title}
+        {roleName}
       </p>
       <Image
         src={imageSrc}
-        alt={altText}
+        alt="role_image"
         width={48}
         height={48}
         className={`absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full ${showingRole === roleName ? 'border-4 border-stroke-brand-primary' : ''}`}
@@ -87,23 +76,32 @@ const Card: React.FC<CardProps> = ({
   );
 };
 
-const RoleCard = ({ showingRole, setShowingRole }: RoleCardProps) => {
+const RoleCards = ({
+  roleList,
+  showingRole,
+  setShowingRole,
+  setSelectedRoleId,
+}: RoleCardsProps) => {
   return (
     <div className="flex justify-center gap-80px">
-      {cards.map((card) => (
-        <Card
-          key={card.roleName}
-          roleName={card.roleName}
-          isRoleDisabled={card.isRoleDisabled}
-          title={card.title}
-          imageSrc={card.imageSrc}
-          altText={card.altText}
-          showingRole={showingRole}
-          setShowingRole={setShowingRole}
-        />
-      ))}
+      {roleList.map((role) => {
+        const imageSrc =
+          ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === role.name)?.imageSrc ?? '';
+
+        return (
+          <Card
+            key={role.id}
+            roleId={role.id}
+            roleName={role.name}
+            imageSrc={imageSrc}
+            showingRole={showingRole}
+            setShowingRole={setShowingRole}
+            setSelectedRoleId={setSelectedRoleId}
+          />
+        );
+      })}
     </div>
   );
 };
 
-export default RoleCard;
+export default RoleCards;
