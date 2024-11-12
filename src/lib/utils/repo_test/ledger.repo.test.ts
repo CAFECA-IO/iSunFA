@@ -36,7 +36,7 @@ describe('Ledger Repository', () => {
         expect(typeof items.hasPreviousPage).toBe('boolean');
         expect(items.sort).toEqual([{ sortBy: 'voucherDate', sortOrder: SortOrder.ASC }]);
 
-        // Check structure of each ledger item
+        // Info: (20241112 - Shirley) Check structure of each ledger item
         items.data.forEach((item) => {
           expect(item.id).toBeDefined();
           expect(item.voucherDate).toBeGreaterThanOrEqual(params.startDate);
@@ -68,7 +68,7 @@ describe('Ledger Repository', () => {
         startAccountNo: '1141',
         endAccountNo: '1142',
         labelType: LabelType.GENERAL,
-        page: 0, // Invalid page number
+        page: 0, // Info: (20241112 - Shirley) Invalid page number
         pageSize: 10,
       };
 
@@ -78,7 +78,7 @@ describe('Ledger Repository', () => {
 
     it('should handle empty account number range', async () => {
       const params = {
-        companyId: 1002, // Test data with vouchers for amount summation
+        companyId: 1002, // Info: (20241112 - Shirley) Test data with vouchers for amount summation
         startDate: 0,
         endDate: 1787350399,
         page: 1,
@@ -111,7 +111,7 @@ describe('Ledger Repository', () => {
       if (ledger) {
         const { items } = ledger;
         items.data.forEach((item) => {
-          expect(item.no).toMatch(/-/); // Detailed type code should contain '-'
+          expect(item.no).toMatch(/-/); // Info: (20241112 - Shirley) Detailed type code should contain '-'
         });
       }
     });
@@ -136,14 +136,14 @@ describe('Ledger Repository', () => {
       if (ledger) {
         const { items } = ledger;
         items.data.forEach((item) => {
-          expect(item.no).not.toMatch(/-/); // General type code should not contain '-'
+          expect(item.no).not.toMatch(/-/); // Info: (20241112 - Shirley) General type code should not contain '-'
         });
       }
     });
 
     it('should return null when no matching accounts found', async () => {
       const params = {
-        companyId: 99999999, // Assuming non-existent company ID
+        companyId: 99999999, // Info: (20241112 - Shirley) Assuming non-existent company ID
         startDate: 1706745600,
         endDate: 1707350399,
         startAccountNo: 'non-exist',
@@ -185,7 +185,7 @@ describe('Ledger Repository', () => {
 
     it('should handle invalid company ID and catch errors', async () => {
       const params = {
-        companyId: -1, // Invalid company ID
+        companyId: -1, // Info: (20241112 - Shirley) Invalid company ID
         startDate: 1706745600,
         endDate: 1707350399,
         startAccountNo: '1141',
@@ -202,7 +202,7 @@ describe('Ledger Repository', () => {
     it('should handle date range with no vouchers', async () => {
       const params = {
         companyId: 1002,
-        startDate: 1893456000, // Future date, assuming no vouchers
+        startDate: 1893456000, // Info: (20241112 - Shirley) Future date, assuming no vouchers
         endDate: 1896143999,
         startAccountNo: '1141',
         endAccountNo: '1142',
@@ -252,7 +252,7 @@ describe('Ledger Repository', () => {
         endAccountNo: '1142',
         labelType: LabelType.GENERAL,
         page: 1,
-        pageSize: 0, // Invalid pageSize
+        pageSize: 0, // Info: (20241112 - Shirley) Invalid pageSize
       };
 
       const ledger = await listLedger(params);
@@ -262,8 +262,8 @@ describe('Ledger Repository', () => {
     it('should handle startDate greater than endDate and return null', async () => {
       const params = {
         companyId: 1002,
-        startDate: 1707350400, // 2024-02-08
-        endDate: 1706745600, // 2024-02-01
+        startDate: 1707350400, // Info: (20241112 - Shirley) timestamp of 2024-02-08
+        endDate: 1706745600, // Info: (20241112 - Shirley) timestamp of 2024-02-01
         startAccountNo: '1141',
         endAccountNo: '1142',
         labelType: LabelType.GENERAL,
@@ -294,7 +294,7 @@ describe('Ledger Repository', () => {
 
       if (ledger) {
         const { items } = ledger;
-        // ALL should include both GENERAL and DETAILED
+        // Info: (20241112 - Shirley) ALL should include both GENERAL and DETAILED
         items.data.forEach((item) => {
           expect(item.no.includes('-') || !item.no.includes('-')).toBe(true);
         });
