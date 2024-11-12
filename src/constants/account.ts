@@ -35,6 +35,19 @@ export enum AccountType {
   OTHER = 'other',
 }
 
+// Info: (20241112 - Julian) 11/11 和 Anna 確認的會計科目類型，目前用於 Account Setting
+export enum AccountTypeBeta {
+  ASSET = 'asset', // 資產
+  LIABILITY = 'liability', // 負債
+  EQUITY = 'equity', // 權益
+  REVENUE = 'revenue', // 銷貨收入
+  INCOME = 'income', // 其他收益
+  COST = 'cost', // 成本
+  EXPENSE = 'expense', // 費用
+  NON_OPERATING = 'non_operating', // 營業外收支
+  OTHER_COMPREHENSIVE_INCOME = 'other_comprehensive_income', // 其他綜合損益
+}
+
 export enum VoucherType {
   RECEIVE = 'receive',
   EXPENSE = 'expense',

@@ -6,23 +6,24 @@ import { useTranslation } from 'next-i18next';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import Skeleton from '@/components/skeleton/skeleton';
 import { FiPlusCircle } from 'react-icons/fi';
+import { AccountTypeBeta } from '@/constants/account';
 
 interface IAccountingTitleSettingModalProps {
   accountTitleList: IAccount[];
-  setAddAccountCode: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
   isLoading: boolean;
 }
 
 interface IAccountTitleItemProps {
   titleAccount: IAccount;
   childList: IAccount[];
-  setAddAccountCode: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
 }
 
 const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
   titleAccount,
   childList,
-  setAddAccountCode,
+  setSelectedAccountTitle,
 }) => {
   const {
     targetRef,
@@ -31,10 +32,11 @@ const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
+  const clickAddButton = () => setSelectedAccountTitle(titleAccount);
 
   // Info: (20241111 - Julian) 將 code 傳到 modal 那層，以連動到右邊的 <AddNewTitleSection />
   const addButton = isExpanded ? (
-    <button type="button" onClick={() => setAddAccountCode(titleAccount.code)}>
+    <button type="button" onClick={clickAddButton}>
       <FiPlusCircle />
     </button>
   ) : null;
@@ -95,22 +97,12 @@ const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
 const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   accountTitleList,
   isLoading,
-  setAddAccountCode,
+  setSelectedAccountTitle,
 }) => {
   const { t } = useTranslation('common');
 
-  // ToDo: (20241004 - Julian) 資產、負債、權益、銷貨收入、其他收益、成本、費用、營業外收支、其他綜合損益
-  const accountTypeList = [
-    'asset',
-    'liability',
-    'equity',
-    'revenue',
-    'income',
-    'cost',
-    'expense',
-    'non_operating',
-    'other_comprehensive_income',
-  ];
+  // Info: (20241111 - Julian) 資產、負債、權益、銷貨收入、其他收益、成本、費用、營業外收支、其他綜合損益
+  const accountTypeList = Object.values(AccountTypeBeta);
 
   const accountTitleSecondList = accountTitleList.filter((account) => !account.code.includes('-'));
   const accountTitleThirdList = accountTitleList.filter((account) => account.code.includes('-'));
@@ -124,6 +116,10 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
     </div>
   );
 
+  /* Info: (20241112 - Julian) 將 accountTitleList 分成三層
+  /* 第一層是會計類型列表，共有 9 種
+  /* 第二層是代碼中沒有 '-' 的會計科目，也就是原本的會計科目列表
+  /* 第三層是代碼中有 '-' 的會計科目，也就是用戶自訂的會計科目 */
   const nestedAccountTitleList = accountTypeList.map((firstLayer) => {
     const accountTitleSecondLayer = accountTitleSecondList.filter(
       (account) => account.type === firstLayer
@@ -157,7 +153,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
               key={second.title.id}
               titleAccount={second.title}
               childList={thirdLayer}
-              setAddAccountCode={setAddAccountCode}
+              setSelectedAccountTitle={setSelectedAccountTitle}
             />
           );
         });
@@ -171,8 +167,8 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
             height={16}
             alt={`${mainTitle}_icon`}
           />
-          <p className="whitespace-nowrap text-sm text-divider-text-lv-1">
-            {t(`setting:ACCOUNTING.ACC_TYPE_${mainTitle.toUpperCase()}`)}
+          <p className="whitespace-nowrap text-sm font-medium text-divider-text-lv-1">
+            {t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${mainTitle.toUpperCase()}`)}
           </p>
           <hr className="w-fit flex-1 border-divider-stroke-lv-1" />
         </div>

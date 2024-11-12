@@ -89,7 +89,11 @@
     "VIEW_ALL_ACCOUNTING": "查看所有會計科目",
     "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
     "IMPORT_FILE": "上傳檔案",
-    "MANUAL_ACCOUNT_OPENING": "手動開戶",
+    "MANUAL_ACCOUNT_OPENING": "手動開戶"
+  },
+  "ACCOUNTING_SETTING_MODAL": {
+    "MODAL_TITLE": "會計科目設定",
+    "SEARCH_ACCOUNTING_TITLE": "搜尋會計科目",
     "ACC_TYPE_ASSET": "資產",
     "ACC_TYPE_LIABILITY": "負債",
     "ACC_TYPE_EQUITY": "權益",
@@ -98,7 +102,18 @@
     "ACC_TYPE_COST": "成本",
     "ACC_TYPE_EXPENSE": "費用",
     "ACC_TYPE_NON_OPERATING": "營業外收支",
-    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他綜合損益"
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他綜合損益",
+    "ADD_NEW_TITLE": "新增科目",
+    "CATEGORY_TYPE": "主類別",
+    "SUBCATEGORY_TYPE": "次類別",
+    "TITLE_NAME": "科目名稱",
+    "TITLE_CODE": "科目編號",
+    "TITLE_NOTE": "科目備註",
+    "DROPMENU_PLACEHOLDER": "請選擇...",
+    "TITLE_NAME_PLACEHOLDER": "輸入此會計科目的名稱。",
+    "TITLE_NOTE_PLACEHOLDER": "輸入此會計科目的描述。",
+    "CLEAR_ALL_BTN": "全部清除",
+    "ADD_BTN": "新增"
   },
   "IP": {
     "INFO": "登入裝置與 IP 資訊",
