@@ -12,7 +12,7 @@ import { ISessionData } from '@/interfaces/session_data';
 import { AUTH_CHECK } from '@/constants/auth';
 import { checkAuthorizationNew } from '@/lib/utils/auth_check_v2';
 
-async function checkSessionUser(session: ISessionData) {
+export async function checkSessionUser(session: ISessionData) {
   let isLogin = true;
   if (!session.userId) {
     isLogin = false;
@@ -37,7 +37,10 @@ async function checkUserAuthorization<T extends keyof typeof AUTH_CHECK>(
   return isAuth;
 }
 
-function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req: NextApiRequest) {
+export function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(
+  apiName: T,
+  req: NextApiRequest
+) {
   const { query, body } = validateRequestData(apiName, req);
 
   if (query === null && body === null) {
@@ -47,7 +50,7 @@ function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req
   return { query, body };
 }
 
-async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
+export async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
   session: ISessionData,
   apiName: T,
   req: NextApiRequest,
@@ -67,6 +70,7 @@ async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
   });
 }
 
+// TODO: (20241111 - Shirley) separate middleware according to different functionality
 export async function withRequestValidation<T extends keyof typeof ZOD_SCHEMA_API, U>(
   apiName: T,
   req: NextApiRequest,
