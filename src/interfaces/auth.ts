@@ -1,3 +1,7 @@
+import { AuthFunctionsKeysNew } from '@/constants/auth';
+import { ISessionData } from '@/interfaces/session_data';
+import { NextApiRequest } from 'next';
+
 export enum AuthFunctionsKeys {
   user = 'user',
   admin = 'admin',
@@ -6,6 +10,10 @@ export enum AuthFunctionsKeys {
   CompanyAdminMatch = 'CompanyAdminMatch',
   projectCompanyMatch = 'projectCompanyMatch',
 }
+
+export type AuthFunctionsNew = {
+  [key in AuthFunctionsKeysNew]: (session: ISessionData, req: NextApiRequest) => Promise<boolean>;
+};
 
 export interface AuthFunctions {
   [AuthFunctionsKeys.user]: (params: { userId: number }) => Promise<boolean>;

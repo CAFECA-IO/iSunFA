@@ -5,7 +5,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { createUserRole, listUserRole } from '@/lib/utils/repo/user_role.repo';
+import {
+  createUserRole,
+  getUserRoleByUserAndRoleId,
+  listUserRole,
+} from '@/lib/utils/repo/user_role.repo';
 import { UserRole } from '@prisma/client';
 import { IUserRole } from '@/interfaces/user_role';
 
@@ -32,8 +36,13 @@ const handlePostRequest: IHandleRequest<APIName.USER_CREATE_ROLE, UserRole | nul
   statusMessage = STATUS_MESSAGE.CREATED;
   const { userId } = query;
   const { roleId } = body;
-  const createdUserRole = await createUserRole(userId, roleId);
-  payload = createdUserRole;
+  const getUserRole = await getUserRoleByUserAndRoleId(userId, roleId);
+  if (getUserRole) {
+    statusMessage = STATUS_MESSAGE.DUPLICATE_ROLE;
+  } else {
+    const createdUserRole = await createUserRole(userId, roleId);
+    payload = createdUserRole;
+  }
 
   return { statusMessage, payload };
 };

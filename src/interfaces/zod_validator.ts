@@ -13,3 +13,12 @@ export interface IZodValidator<
   query: T extends z.ZodRawShape ? z.ZodObject<T> : z.ZodUndefined;
   body: U extends z.ZodRawShape ? z.ZodObject<U> : z.ZodUndefined;
 }
+
+export interface ZodAPISchema {
+  input: {
+    querySchema: z.ZodTypeAny;
+    bodySchema: z.ZodTypeAny;
+  };
+  outputSchema: z.ZodTypeAny;
+  frontend: z.ZodTypeAny;
+}
