@@ -14,6 +14,7 @@ import { buildAccountForestForUser } from '@/lib/utils/account/common';
 // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
 import fs from 'fs';
 import path from 'path';
+import { LabelType } from '@/constants/ledger';
 
 interface ListLedgerParams {
   companyId: number;
@@ -21,7 +22,7 @@ interface ListLedgerParams {
   endDate: number;
   startAccountNo?: string;
   endAccountNo?: string;
-  labelType?: 'general' | 'detailed' | 'all';
+  labelType?: LabelType;
   page?: number;
   pageSize?: number | 'infinity';
 }
@@ -48,23 +49,6 @@ interface ILedgerItemForCalculation {
 3. Add secondary sorting for same date entries
 4. Optimize query performance with SQL-level pagination
 5. Enhance error handling with specific error codes
-
-1. **標籤類型處理 (Label Type)**
-    - 目前程式碼中的 labelType 參數只有記錄在 console.log，沒有實際處理
-    - 需要根據 'general'、'detailed' 和 'all' 三種類型來過濾或格式化輸出資料
-2. **餘額計算邏輯修正**
-    - 目前的餘額計算是累加的，但根據圖片顯示，不同日期的餘額計算應該要考慮借貸方向
-    - 需要根據會計科目的性質（資產、負債、收入、費用等）來決定餘額的增減方向
-3. **分類帳排序優化**
-    - 目前只有按照 voucherDate 排序
-    - 需要增加相同日期時的次要排序條件（如傳票編號）
-4. **效能優化**
-    - 目前的查詢方式是先取得所有資料再做記憶體處理
-    - 建議改用 SQL 層級的分頁和排序
-    - 移除不必要的 fs 寫入操作（目前的 sortedAccounts.json）
-5. **錯誤處理完善**
-    - 需要更詳細的錯誤訊息分類
-    - 對各種可能的錯誤情況提供明確的錯誤代碼和訊息
 */
 
 export async function listLedger(params: ListLedgerParams): Promise<ILedgerPayload | null> {
@@ -76,7 +60,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     endAccountNo,
     // FIXME: 預設值先設定為 general
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    labelType = 'general',
+    labelType = LabelType.GENERAL,
     page = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_LIMIT,
   } = params;
@@ -119,6 +103,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
         lte: endTimestamp,
       },
     });
+
     // 2. 取得符合條件的會計科目
     const accountsQuery = {
       where: {
@@ -164,26 +149,32 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
 
     const accounts = await prisma.account.findMany(accountsQuery);
 
-    console.log('accountsInPrismaLength', accounts.length);
+    // 根據 labelType 過濾會計科目
+    let filteredAccounts = accounts;
+    if (labelType === LabelType.GENERAL) {
+      filteredAccounts = accounts.filter((account) => !account.code.includes('-'));
+    } else if (labelType === LabelType.DETAILED) {
+      filteredAccounts = accounts.filter((account) => account.code.includes('-'));
+    }
+    // LabelType.ALL 不需要過濾
 
     // search voucher by the sort order of Ascending
     const allVoucherData = await prisma.voucher.findMany({
       where: {
         companyId,
-        deletedAt: null,
+        ...commonVoucherConditions(startDate, endDate),
+        // deletedAt: null,
+        // createdAt: {
+        //   gte: startDate,
+        //   lte: endDate,
+        // },
         // ...commonQueryConditions,
       },
       select: {
         id: true,
       },
-      // orderBy: {
-      //   id: 'asc', // 按照 id 進行升序排序
-      //   createdAt: 'asc',
-      // },
       orderBy: [{ id: 'asc' }, { createdAt: 'asc' }],
     });
-
-    console.log('allVoucherDataLength', allVoucherData.length);
 
     const allVoucherIds = allVoucherData.map((voucher) => voucher.id);
 
@@ -191,7 +182,10 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       where: {
         voucherId: { in: allVoucherIds },
         deletedAt: null,
-
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
         // ...commonQueryConditions,
       },
       include: {
@@ -215,7 +209,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
 
     // const accounts = await prisma.account.findMany(accountsQuery);
 
-    const sortedAccounts = buildAccountForestForUser(accounts);
+    const sortedAccounts = buildAccountForestForUser(filteredAccounts);
 
     const newSortedAccounts = sortedAccounts.map((account) => {
       /*
@@ -377,7 +371,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     };
 
     // Deprecated: (20241115 - Shirley) 開發完成後要刪掉
-
     fs.writeFileSync('tmp/ledgerPayload.json', JSON.stringify(ledgerPayload, null, 2), 'utf-8');
   } catch (error) {
     const logError = loggerError(0, 'listLedger in ledger.repo.ts failed', error as Error);

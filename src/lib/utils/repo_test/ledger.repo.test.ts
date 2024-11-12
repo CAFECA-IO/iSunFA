@@ -1,5 +1,6 @@
 import { listLedger } from '@/lib/utils/repo/ledger.repo';
 import { SortOrder } from '@/constants/sort';
+import { LabelType } from '@/constants/ledger';
 
 describe('Ledger Repository', () => {
   describe('listLedger', () => {
@@ -10,7 +11,7 @@ describe('Ledger Repository', () => {
         endDate: 1707350399, // 2024-02-07 23:59:59
         startAccountNo: '1141',
         endAccountNo: '1142',
-        labelType: 'general' as const,
+        labelType: LabelType.GENERAL,
         page: 1,
         pageSize: 10,
       };
@@ -66,7 +67,7 @@ describe('Ledger Repository', () => {
         endDate: 1707350399,
         startAccountNo: '1141',
         endAccountNo: '1142',
-        labelType: 'general' as const,
+        labelType: LabelType.GENERAL,
         page: 0, // 無效的頁數
         pageSize: 10,
       };
@@ -82,7 +83,7 @@ describe('Ledger Repository', () => {
         endDate: 1707350399,
         startAccountNo: '1141',
         endAccountNo: '1142',
-        labelType: 'general' as const,
+        labelType: LabelType.GENERAL,
         page: 1,
         pageSize: 'infinity' as const,
       };
@@ -103,10 +104,12 @@ describe('Ledger Repository', () => {
     it('should handle empty account range', async () => {
       const params = {
         // companyId: 1002,
-        companyId: 10000445, // 測試會計科目層級
+        // companyId: 10000445, // 測試會計科目層級
         // companyId: 10000003, // 測試會計科目層級, code 1103-6
-        // companyId: 10000027, // 測試含有 voucher 的資料時，金額加總
-        startDate: 1087350399,
+        companyId: 10000027, // 測試含有 voucher 的資料時，金額加總
+        // startDate: 1087350399,
+        // labelType: LabelType.DETAILED,
+        startDate: 0,
         endDate: 1787350399,
         page: 1,
         pageSize: 10,
