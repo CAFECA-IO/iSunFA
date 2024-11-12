@@ -166,4 +166,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
   [APIName.ASSET_LIST_EXPORT]: assetExportSchema,
+  [APIName.FILE_EXPORT]: assetExportSchema, // ToDo: (20241112 - Luphia) need to define the schema for file export
 };
