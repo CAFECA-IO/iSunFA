@@ -47,12 +47,13 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
       payload = ledgerData;
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     } else {
-      // TODO:
+      // TODO: (20241112 - Shirley) ask Shirley what she wants
       statusMessage = STATUS_MESSAGE.MISSING_ERROR_FROM_BACKEND_API;
     }
   } catch (error) {
     const err = error as Error;
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // Deprecate: (20241112 - Shirley) debug
     // eslint-disable-next-line no-console
     console.log('error in ledger API handleGetRequest', err);
   }
@@ -83,6 +84,7 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // Deprecate: (20241112 - Shirley) debug
     // eslint-disable-next-line no-console
     console.log('error in ledger API handler', error);
     payload = null;
