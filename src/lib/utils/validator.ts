@@ -5,7 +5,7 @@ import { z } from 'zod';
 // import { APIPath } from '@/constants/api_connection';
 import { ApiValidationError } from '@/lib/utils/error/api_validation_error';
 import { NextApiRequest } from 'next';
-import { APIPath } from '@/constants/api_connection';
+import { APIName, APIPath } from '@/constants/api_connection';
 import { loggerRequest, loggerError } from '@/lib/utils/logger_back';
 
 /*
@@ -22,15 +22,9 @@ export type API_ZodSchema = typeof API_ZOD_SCHEMA;
 export type QueryType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['query']>;
 export type BodyType<T extends keyof API_ZodSchema> = z.infer<API_ZodSchema[T]['body']>;
 
-export type query<T extends keyof typeof ZOD_SCHEMA_API> = z.infer<
-  (typeof ZOD_SCHEMA_API)[T]['input']['querySchema']
->;
-export type body<T extends keyof typeof ZOD_SCHEMA_API> = z.infer<
-  (typeof ZOD_SCHEMA_API)[T]['input']['bodySchema']
->;
-export type output<T extends keyof typeof ZOD_SCHEMA_API> = z.infer<
-  (typeof ZOD_SCHEMA_API)[T]['outputSchema']
->;
+export type query<T extends APIName> = z.infer<(typeof ZOD_SCHEMA_API)[T]['input']['querySchema']>;
+export type body<T extends APIName> = z.infer<(typeof ZOD_SCHEMA_API)[T]['input']['bodySchema']>;
+export type output<T extends APIName> = z.infer<(typeof ZOD_SCHEMA_API)[T]['outputSchema']>;
 
 /**
  * // Info: (20241023 - Jacky) Validates and formats data using a Zod schema.
@@ -82,7 +76,7 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
   }
 }
 
-export function validateRequestData<T extends keyof typeof ZOD_SCHEMA_API>(
+export function validateRequestData<T extends APIName>(
   apiName: T,
   req: NextApiRequest
 ): { query: query<T> | null; body: body<T> | null } {

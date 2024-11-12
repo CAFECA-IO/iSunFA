@@ -55,4 +55,15 @@ export enum SortBy {
    * @tzuhan @Julian 這個是Voucher 在 payment或receive list畫面中的 `Remain Amount` 排序
    */
   PAY_RECEIVE_REMAIN = 'Remain',
+
+  /**
+   * Info: (20241111 - Shirley)
+   * @description 試算表項目排序
+   */
+  BEGINNING_CREDIT_AMOUNT = 'BeginningCreditAmount',
+  BEGINNING_DEBIT_AMOUNT = 'BeginningDebitAmount',
+  MIDTERM_CREDIT_AMOUNT = 'MidtermCreditAmount',
+  MIDTERM_DEBIT_AMOUNT = 'MidtermDebitAmount',
+  ENDING_CREDIT_AMOUNT = 'EndingCreditAmount',
+  ENDING_DEBIT_AMOUNT = 'EndingDebitAmount',
 }

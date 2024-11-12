@@ -96,6 +96,44 @@ export function buildAccountForest(accounts: PrismaAccount[]): IAccountNode[] {
   return rootAccounts;
 }
 
+function transformAccountsToMapAndCodeSet(accounts: PrismaAccount[]): {
+  accountMap: Map<string, IAccountNode>;
+  accountCode: Set<string>;
+} {
+  const accountMap = new Map<string, IAccountNode>();
+  const accountCode = new Set<string>();
+
+  accounts.forEach((account) => {
+    accountCode.add(account.code);
+    accountMap.set(account.code, {
+      ...account,
+      children: [],
+      amount: 0,
+    });
+  });
+
+  return { accountMap, accountCode };
+}
+
+export function buildAccountForestForUser(accounts: PrismaAccount[]): IAccountNode[] {
+  const { accountMap, accountCode } = transformAccountsToMapAndCodeSet(accounts);
+  const rootAccounts: IAccountNode[] = [];
+
+  accountMap.forEach((account) => {
+    // Info: (20241111 - Shirley) 如果 parentCode 不在 forUserCodeSet 中，則為 rootAccount
+    if (!accountCode.has(account.parentCode)) {
+      rootAccounts.push(account);
+    } else {
+      const parentAccount = accountMap.get(account.parentCode);
+      if (parentAccount) {
+        parentAccount.children.push(account);
+      }
+    }
+  });
+
+  return rootAccounts;
+}
+
 function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<number, number>) {
   let newAmount = lineItemsMap.get(account.id) || 0;
 

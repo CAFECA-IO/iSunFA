@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { useTranslation } from 'react-i18next';
 
 interface ChangeTagModalProps {
   companyName: string;
@@ -10,7 +11,10 @@ interface ChangeTagModalProps {
 const DROPDOWN_ITEMS = ['All', 'Financial', 'Tax'];
 
 const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModalProps) => {
-  // ToDo: (20241025 - Liz) 拿 companyName 打 API 去變更公司的 tag。
+  const { t } = useTranslation(['company']);
+
+  // ToDo: (20241025 - Liz) 打 API 去變更公司的 tag
+
   // Deprecated: (20241025 - Liz)
   // eslint-disable-next-line no-console
   console.log('Company Name:', companyName);
@@ -31,7 +35,7 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            Change Work Tag
+            {t('company:PAGE_BODY.CHANGE_WORK_TAG')}
           </h1>
           <button type="button" onClick={toggleModal}>
             <IoCloseOutline size={24} />
@@ -41,7 +45,9 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
         <section className="flex flex-col gap-24px px-40px py-16px">
           {/* Company Name */}
           <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">Company Name</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('company:INFO.COMPANY_NAME')}
+            </h4>
             <input
               disabled
               type="text"
@@ -51,9 +57,9 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
             />
           </div>
 
-          {/* Work Tag */}
+          {/* Work Tag / Company Tag */}
           <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">Work Tag</h4>
+            <h4 className="font-semibold text-input-text-primary">{t('company:INFO.WORK_TAG')}</h4>
 
             <div className="relative flex">
               <button
@@ -95,7 +101,7 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
             onClick={toggleModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
-            Cancel
+            {t('company:PAGE_BODY.CANCEL')}
           </button>
 
           <button
@@ -103,7 +109,7 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
             onClick={handleSubmit}
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            Save
+            {t('company:PAGE_BODY.SAVE')}
           </button>
         </section>
       </div>

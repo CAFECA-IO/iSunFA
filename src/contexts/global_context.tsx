@@ -45,6 +45,7 @@ import AssetStatusSettingModal from '@/components/asset_status_setting_modal/ass
 import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
 import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
 import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
+import AccountingTitleSettingModal from '@/components/account_settings/accounting_title_setting_modal';
 
 interface IGlobalContext {
   width: number;
@@ -126,6 +127,9 @@ interface IGlobalContext {
   isSelectReverseItemsModalVisible: boolean;
   selectReverseItemsModalVisibilityHandler: () => void;
   selectReverseDataHandler: (data: IReverseItemModal) => void;
+
+  isAccountingTitleSettingModalVisible: boolean;
+  accountingTitleSettingModalVisibilityHandler: () => void;
 
   termsOfServiceConfirmModalVisibilityHandler: (visibility: boolean) => void;
 }
@@ -227,6 +231,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [isSelectReverseItemsModalVisible, setIsSelectReverseItemsModalVisible] = useState(false);
   const [selectedReverseData, setSelectedReverseData] =
     useState<IReverseItemModal>(defaultReverseItemModal);
+
+  const [isAccountingTitleSettingModalVisible, setIsAccountingTitleSettingModalVisible] =
+    useState(false);
 
   const { width, height } = windowSize;
 
@@ -383,6 +390,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setSelectedReverseData(data);
   };
 
+  const accountingTitleSettingModalVisibilityHandler = () => {
+    setIsAccountingTitleSettingModalVisible(!isAccountingTitleSettingModalVisible);
+  };
+
   useEffect(() => {
     if (!isSignIn) return;
 
@@ -514,6 +525,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       selectReverseItemsModalVisibilityHandler,
       selectReverseDataHandler,
 
+      isAccountingTitleSettingModalVisible,
+      accountingTitleSettingModalVisibilityHandler,
+
       termsOfServiceConfirmModalVisibilityHandler,
     }),
     [
@@ -582,6 +596,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isSelectReverseItemsModalVisible,
       selectReverseItemsModalVisibilityHandler,
       selectReverseDataHandler,
+
+      isAccountingTitleSettingModalVisible,
+      accountingTitleSettingModalVisibilityHandler,
 
       termsOfServiceConfirmModalVisibilityHandler,
     ]
@@ -748,6 +765,11 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isSelectReverseItemsModalVisible}
         modalVisibilityHandler={selectReverseItemsModalVisibilityHandler}
         modalData={selectedReverseData}
+      />
+
+      <AccountingTitleSettingModal
+        isModalVisible={isAccountingTitleSettingModalVisible}
+        modalVisibilityHandler={accountingTitleSettingModalVisibilityHandler}
       />
 
       {children}

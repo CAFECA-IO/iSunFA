@@ -1,3 +1,4 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
@@ -51,7 +52,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     if (isUpdateTeamLoading) return;
 
     if (updateTeamSuccess && updatedTeam) {
-      selectCompany(updatedTeam);
+      selectCompany(updatedTeam.id);
     } else if (updateTeamError) {
       toastHandler({
         id: `update_team-${updateTeamCode}`,

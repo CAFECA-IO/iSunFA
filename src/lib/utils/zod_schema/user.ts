@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { fileSchema } from '@/lib/utils/zod_schema/file';
+import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 
 export const userOutputSchema = z
   .object({
     id: z.number().int(),
     name: z.string(),
     email: z.string(),
-    imageFile: fileSchema,
+    imageFile: filePrismaSchema,
     agreementList: z.array(z.string()),
     createdAt: z.number().int(),
     updatedAt: z.number().int(),

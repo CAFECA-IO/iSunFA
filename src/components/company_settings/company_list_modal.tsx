@@ -195,7 +195,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
               <div className="table-header-group h-60px w-full rounded-sm bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
                 <div className="table-row w-full">
                   <div className="table-cell min-w-134px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
-                    <div>{t('company:INFO.NAME')}</div>
+                    <div>{t('company:INFO.COMPANY_NAME')}</div>
                   </div>
                   <div className="table-cell min-w-84px border-b border-r border-stroke-neutral-quaternary p-2 text-center align-middle">
                     <div>{t('company:INFO.TAX_ID')}</div>

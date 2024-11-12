@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiCalendar } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
@@ -31,6 +32,8 @@ const dummyCurrencies: ICurrency[] = [
 
 const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
+
+  const { accountingTitleSettingModalVisibilityHandler } = useGlobalCtx();
 
   const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(dummyCurrencies[0]);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
@@ -286,8 +289,8 @@ const AccountingSettingPageBody: React.FC = () => {
               />
               <button
                 type="button"
-                disabled
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
+                onClick={accountingTitleSettingModalVisibilityHandler}
               >
                 {t('setting:ACCOUNTING.VIEW_ALL_ACCOUNTING')}
               </button>

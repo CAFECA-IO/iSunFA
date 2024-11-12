@@ -1,18 +1,16 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { ZOD_SCHEMA_API } from '@/constants/zod_schema';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { checkAuthorization } from '@/lib/utils/auth_check';
 import { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
-import { APIPath } from '@/constants/api_connection';
+import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
+import { checkAuthorizationNew } from '@/lib/utils/auth_check_v2';
 
-async function checkSessionUser(session: ISessionData) {
+export async function checkSessionUser(session: ISessionData) {
   let isLogin = true;
   if (!session.userId) {
     isLogin = false;
@@ -21,11 +19,15 @@ async function checkSessionUser(session: ISessionData) {
   return isLogin;
 }
 
-async function checkUserAuthorization(userId: number, apiName: string) {
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.user], { userId });
+async function checkUserAuthorization<T extends APIName>(
+  apiName: T,
+  req: NextApiRequest,
+  session: ISessionData
+) {
+  const isAuth = await checkAuthorizationNew(apiName, req, session);
   if (!isAuth) {
     loggerError(
-      userId,
+      session.userId,
       `Forbidden Access for ${apiName} in middleware.ts`,
       'User is not authorized'
     );
@@ -33,7 +35,7 @@ async function checkUserAuthorization(userId: number, apiName: string) {
   return isAuth;
 }
 
-function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req: NextApiRequest) {
+export function checkRequestData<T extends APIName>(apiName: T, req: NextApiRequest) {
   const { query, body } = validateRequestData(apiName, req);
 
   if (query === null && body === null) {
@@ -43,7 +45,7 @@ function checkRequestData<T extends keyof typeof ZOD_SCHEMA_API>(apiName: T, req
   return { query, body };
 }
 
-async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
+export async function logUserAction<T extends APIName>(
   session: ISessionData,
   apiName: T,
   req: NextApiRequest,
@@ -56,14 +58,15 @@ async function logUserAction<T extends keyof typeof ZOD_SCHEMA_API>(
     actionDescription: apiName,
     ipAddress: req.headers['x-forwarded-for'] as string,
     userAgent: req.headers['user-agent'] as string,
-    apiEndpoint: APIPath[apiName],
+    apiEndpoint: APIPath[apiName as keyof typeof APIPath],
     httpMethod: req.method || '',
     requestPayload: req.body,
     statusMessage,
   });
 }
 
-export async function withRequestValidation<T extends keyof typeof ZOD_SCHEMA_API, U>(
+// TODO: (20241111 - Shirley) separate middleware according to different functionality
+export async function withRequestValidation<T extends APIName, U>(
   apiName: T,
   req: NextApiRequest,
   res: NextApiResponse,
@@ -77,12 +80,12 @@ export async function withRequestValidation<T extends keyof typeof ZOD_SCHEMA_AP
   if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await checkUserAuthorization(session.userId, apiName);
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      const { query, body } = checkRequestData(apiName, req);
-      if (query !== null && body !== null) {
+    const { query, body } = checkRequestData(apiName, req);
+    if (query !== null && body !== null) {
+      const isAuth = await checkUserAuthorization(apiName, req, session);
+      if (!isAuth) {
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      } else {
         try {
           const { statusMessage: handlerStatusMessage, payload: handlerOutput } = await handler({
             query,
@@ -104,9 +107,9 @@ export async function withRequestValidation<T extends keyof typeof ZOD_SCHEMA_AP
             handlerError as Error
           );
         }
-      } else {
-        statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       }
+    } else {
+      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
   }
 
