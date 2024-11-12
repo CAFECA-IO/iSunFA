@@ -102,9 +102,12 @@ describe('Ledger Repository', () => {
 
     it('should handle empty account range', async () => {
       const params = {
-        companyId: 1002,
-        startDate: 1706745600,
-        endDate: 1707350399,
+        // companyId: 1002,
+        companyId: 10000445, // 測試會計科目層級
+        // companyId: 10000003, // 測試會計科目層級, code 1103-6
+        // companyId: 10000027, // 測試含有 voucher 的資料時，金額加總
+        startDate: 1087350399,
+        endDate: 1787350399,
         page: 1,
         pageSize: 10,
       };
