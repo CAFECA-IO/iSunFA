@@ -1,4 +1,5 @@
-import { EventType, VoucherType } from '@/constants/account';
+import { ILedgerResponse } from '@/lib/utils/zod_schema/ledger';
+import { VoucherType } from '@/constants/account';
 import { LabelType } from '@/constants/ledger';
 import { IPaginatedData } from '@/interfaces/pagination';
 
@@ -12,27 +13,8 @@ export interface ILedgerQueryParams {
   pageSize?: number;
 }
 
-export interface ILedgerItem {
-  id: number;
-  voucherDate: number;
-  no: string;
-  accountingTitle: string;
-  voucherNumber: string;
-  particulars: string;
-  debitAmount: number;
-  creditAmount: number;
-  balance: number;
-  voucherType: VoucherType | EventType;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface ILedgerTotal {
-  totalDebitAmount: number;
-  totalCreditAmount: number;
-  createdAt: number;
-  updatedAt: number;
-}
+export type ILedgerItem = ILedgerResponse['items']['data'][number];
+export type ILedgerTotal = ILedgerResponse['total'];
 
 export interface ILedgerPayload {
   currencyAlias: string;

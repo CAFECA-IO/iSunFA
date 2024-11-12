@@ -82,3 +82,6 @@ export const ledgerListSchema = {
   outputSchema: ledgerListResponseSchema,
   frontend: ledgerNullSchema,
 };
+
+export type ILedgerQueryParams = z.infer<typeof ledgerListQuerySchema>;
+export type ILedgerResponse = z.infer<typeof ledgerListResponseSchema>;
