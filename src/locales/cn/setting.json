@@ -89,7 +89,16 @@
     "VIEW_ALL_ACCOUNTING": "查看所有会计科目",
     "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
     "IMPORT_FILE": "上传档案",
-    "MANUAL_ACCOUNT_OPENING": "手动开户"
+    "MANUAL_ACCOUNT_OPENING": "手动开户",
+    "ACC_TYPE_ASSET": "资产",
+    "ACC_TYPE_LIABILITY": "负债",
+    "ACC_TYPE_EQUITY": "权益",
+    "ACC_TYPE_REVENUE": "销货收入",
+    "ACC_TYPE_INCOME": "其他收益",
+    "ACC_TYPE_COST": "成本",
+    "ACC_TYPE_EXPENSE": "费用",
+    "ACC_TYPE_NON_OPERATING": "营业外收支",
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他综合损益"
   },
   "IP": {
     "INFO": "登录设备与 IP 信息",

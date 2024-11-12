@@ -1,3 +1,4 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import { Button } from '@/components/button/button';
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
@@ -23,6 +24,7 @@ import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import { LuArrowLeftRight } from 'react-icons/lu';
 import { IoArrowForward } from 'react-icons/io5';
 import { FaCheck } from 'react-icons/fa6';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
 
 const CompanyInfoPageBody = () => {
   const { t } = useTranslation(['common', 'kyc']);
@@ -97,7 +99,7 @@ const CompanyInfoPageBody = () => {
       },
     });
 
-    selectCompany(null);
+    selectCompany(CANCEL_COMPANY_ID);
     router.push(ISUNFA_ROUTE.DASHBOARD);
   };
 
