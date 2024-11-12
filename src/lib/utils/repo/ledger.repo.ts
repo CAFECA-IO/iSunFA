@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
+import { getTimestampNow } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
@@ -31,10 +31,22 @@ interface ILedgerItemForCalculation {
   updatedAt: number;
 }
 
+const commonQueryConditions = {
+  deletedAt: null,
+};
+
+const commonVoucherConditions = (startTimestamp: number, endTimestamp: number) => ({
+  ...commonQueryConditions,
+  date: {
+    gte: startTimestamp,
+    lte: endTimestamp,
+  },
+});
+
 export async function listLedger(params: ListLedgerParams): Promise<ILedgerPayload | null> {
   const {
     companyId,
-    startDate,
+    startDate = 0,
     endDate,
     startAccountNo,
     endAccountNo,
@@ -43,26 +55,16 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     pageSize = DEFAULT_PAGE_LIMIT,
   } = params;
 
-  // eslint-disable-next-line no-console
-  console.log('params listLedger in ledger.repo.ts', params);
-
   const pageNumber = page;
-  let size: number | undefined;
-  let skip: number = 0;
-
-  if (pageSize !== 'infinity') {
-    size = pageSize;
-    skip = pageToOffset(pageNumber, size);
-  }
 
   let ledgerPayload: ILedgerPayload | null = null;
 
   try {
-    if (pageNumber < 1 && pageSize !== 'infinity') {
+    if (pageNumber < 1) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
-    // 1. 取得會計設定的貨幣別
+    // Info: (20241112 - Shirley) 1. 取得會計設定的貨幣別
     const accountingSettingData = await prisma.accountingSetting.findFirst({
       where: { id: companyId },
     });
@@ -72,19 +74,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       currencyAlias = accountingSettingData.currency || 'TWD';
     }
 
-    const commonQueryConditions = {
-      deletedAt: null,
-    };
-
-    const commonVoucherConditions = (startTimestamp: number, endTimestamp: number) => ({
-      ...commonQueryConditions,
-      date: {
-        gte: startTimestamp,
-        lte: endTimestamp,
-      },
-    });
-
-    // 2. 取得符合條件的會計科目
+    // Info: (20241112 - Shirley) 2. 取得符合條件的會計科目
     const accountsQuery = {
       where: {
         ...commonQueryConditions,
@@ -122,7 +112,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
 
     const accounts = await prisma.account.findMany(accountsQuery);
 
-    // 根據 labelType 過濾會計科目
+    // Info: (20241112 - Shirley) 根據 labelType 過濾會計科目
     let filteredAccounts = accounts;
     if (labelType === LabelType.GENERAL) {
       filteredAccounts = accounts.filter((account) => !account.code.includes('-'));
@@ -160,8 +150,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       },
     });
 
-    // const accounts = await prisma.account.findMany(accountsQuery);
-
     const sortedAccounts = buildAccountForestForUser(filteredAccounts);
 
     const newSortedAccounts = sortedAccounts.map((account) => {
@@ -173,7 +161,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       };
     });
 
-    // 3. 整理分類帳資料
+    // Info: (20241112 - Shirley) 3. 整理分類帳資料
     const ledgerItems: ILedgerItemForCalculation[] = [];
     let balance = 0;
     let totalDebitAmount = 0;
@@ -209,24 +197,16 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
       });
     });
 
-    // 4. 排序
-    // ledgerItems.sort((a, b) => a.voucherDate - b.voucherDate);
+    // Info: (20241112 - Shirley) 4. 排序
     ledgerItems.sort((a, b) => a.accountId - b.accountId);
 
-    // 5. 分頁處理
-    let paginatedData = ledgerItems;
-    let totalCount = ledgerItems.length;
-    let totalPages = 1;
-    let hasNextPage = false;
-    let hasPreviousPage = false;
+    // Info: (20241112 - Shirley) 5. 分頁處理
+    const paginatedData = ledgerItems.map(({ accountId, ...rest }) => rest);
 
-    if (pageSize !== 'infinity') {
-      paginatedData = ledgerItems.slice(skip, skip + (size || DEFAULT_PAGE_LIMIT));
-      totalCount = ledgerItems.length;
-      totalPages = Math.ceil(totalCount / (size || DEFAULT_PAGE_LIMIT));
-      hasNextPage = skip + (size || DEFAULT_PAGE_LIMIT) < totalCount;
-      hasPreviousPage = pageNumber > 1;
-    }
+    const totalCount = ledgerItems.length;
+    const totalPages = 1;
+    const hasNextPage = false;
+    const hasPreviousPage = false;
 
     const now = getTimestampNow();
 
@@ -237,7 +217,7 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
         page: pageNumber,
         totalPages,
         totalCount,
-        pageSize: pageSize === 'infinity' ? totalCount : size || DEFAULT_PAGE_LIMIT,
+        pageSize,
         hasNextPage,
         hasPreviousPage,
         sort: [

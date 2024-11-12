@@ -1,4 +1,4 @@
-import { VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
 import { LabelType } from '@/constants/ledger';
 import { IPaginatedData } from '@/interfaces/pagination';
 
@@ -22,7 +22,7 @@ export interface ILedgerItem {
   debitAmount: number;
   creditAmount: number;
   balance: number;
-  voucherType: VoucherType;
+  voucherType: VoucherType | EventType;
   createdAt: number;
   updatedAt: number;
 }

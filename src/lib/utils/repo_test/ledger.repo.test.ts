@@ -76,31 +76,6 @@ describe('Ledger Repository', () => {
       expect(result).toBeNull();
     });
 
-    it('should return all items when pageSize is infinity', async () => {
-      const params = {
-        companyId: 1002,
-        startDate: 1706745600,
-        endDate: 1707350399,
-        startAccountNo: '1141',
-        endAccountNo: '1142',
-        labelType: LabelType.GENERAL,
-        page: 1,
-        pageSize: 'infinity' as const,
-      };
-
-      const ledger = await listLedger(params);
-
-      expect(ledger).toBeDefined();
-      expect(ledger).not.toBeNull();
-
-      if (ledger) {
-        expect(ledger.items.data.length).toBe(ledger.items.totalCount);
-        expect(ledger.items.pageSize).toBe(ledger.items.totalCount);
-        expect(ledger.items.hasNextPage).toBe(false);
-        expect(ledger.items.hasPreviousPage).toBe(false);
-      }
-    });
-
     it('should handle empty account number range', async () => {
       const params = {
         companyId: 1002, // Test data with vouchers for amount summation

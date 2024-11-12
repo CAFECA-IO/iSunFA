@@ -7,7 +7,6 @@ import { listLedger } from '@/lib/utils/repo/ledger.repo';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 
 interface IPayload extends ILedgerPayload {}
 
@@ -22,24 +21,27 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPayload | null = null;
 
-  const { companyId, startDate, endDate, startAccountNo, endAccountNo, labelType, page, pageSize } =
-    query;
-  // eslint-disable-next-line no-console
-  console.log('query handleGetRequest in ledger API', query);
+  // const { companyId, startDate, endDate, startAccountNo, endAccountNo, labelType, page, pageSize } =
+  //   query;
 
   try {
-    const parsedParams = ledgerListSchema.input.querySchema.parse({
-      companyId,
-      startDate,
-      endDate,
-      startAccountNo,
-      endAccountNo,
-      labelType,
-      page,
-      pageSize,
-    });
+    // const parsedParams = ledgerListSchema.input.querySchema.parse({
+    //   companyId,
+    //   startDate,
+    //   endDate,
+    //   startAccountNo,
+    //   endAccountNo,
+    //   labelType,
+    //   page,
+    //   pageSize,
+    // });
 
-    const ledgerData = await listLedger(parsedParams);
+    // // eslint-disable-next-line no-console
+    // console.log('parsedParams handleGetRequest in ledger API', parsedParams);
+
+    // const ledgerData = await listLedger(parsedParams);
+
+    const ledgerData = await listLedger(query);
 
     if (ledgerData) {
       payload = ledgerData;
@@ -51,6 +53,8 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
   } catch (error) {
     const err = error as Error;
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // eslint-disable-next-line no-console
+    console.log('error in ledger API handleGetRequest', err);
   }
 
   return { statusMessage, payload };
@@ -79,6 +83,8 @@ export default async function handler(
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // eslint-disable-next-line no-console
+    console.log('error in ledger API handler', error);
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<IPayload | null>(statusMessage, payload);

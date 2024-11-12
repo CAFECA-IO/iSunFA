@@ -4,14 +4,14 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { checkboxStyle } from '@/constants/display';
-import { VoucherType } from '@/constants/account';
+import { EventType, VoucherType } from '@/constants/account';
 
 // Info: (20241004 - Anna) temp interface
 export interface ILedgerBeta {
   id: number;
   date: number;
   voucherNo: string;
-  voucherType: VoucherType;
+  voucherType: VoucherType | EventType;
   note: string;
   accounting: {
     code: string;
