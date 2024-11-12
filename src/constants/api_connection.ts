@@ -89,6 +89,9 @@ export enum APIName {
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
   REPORT_GET_V2 = 'REPORT_GET_V2',
   REPORT_GENERATE = 'REPORT_GENERATE',
+  ROOM_ADD = 'ROOM_ADD',
+  ROOM_GET_BY_ID = 'ROOM_GET_BY_ID',
+  ROOM_DELETE = 'ROOM_DELETE',
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
@@ -212,6 +215,9 @@ export enum APIPath {
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
   REPORT_GET_V2 = `${apiPrefixV2}/company/:companyId/report`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
+  ROOM_ADD = `${apiPrefixV2}/room`,
+  ROOM_GET_BY_ID = `${apiPrefixV2}/room/:roomId`,
+  ROOM_DELETE = `${apiPrefixV2}/room/:roomId`,
   STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
@@ -269,7 +275,7 @@ export enum APIPath {
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
   IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
   ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
-  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`
+  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
 }
 const createConfig = ({
   name,
@@ -490,6 +496,21 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REPORT_GENERATE,
     method: HttpMethod.POST,
     path: APIPath.REPORT_GENERATE,
+  }),
+  [APIName.ROOM_ADD]: createConfig({
+    name: APIName.ROOM_ADD,
+    method: HttpMethod.POST,
+    path: APIPath.ROOM_ADD,
+  }),
+  [APIName.ROOM_GET_BY_ID]: createConfig({
+    name: APIName.ROOM_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ROOM_GET_BY_ID,
+  }),
+  [APIName.ROOM_DELETE]: createConfig({
+    name: APIName.ROOM_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.ROOM_DELETE,
   }),
   [APIName.LABOR_COST_CHART]: createConfig({
     name: APIName.LABOR_COST_CHART,
