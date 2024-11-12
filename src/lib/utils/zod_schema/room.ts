@@ -17,14 +17,19 @@ export const roomPostSchema = {
   frontend: nullSchema,
 };
 
+// Info: (20241112 - Jacky) Due to the security concern, we should pass the password in the body instead of the query.
 const roomGetQuerySchema = z.object({
   roomId: z.string(),
+});
+
+const roomGetBodySchema = z.object({
+  password: z.string(),
 });
 
 export const roomGetSchema = {
   input: {
     querySchema: roomGetQuerySchema,
-    bodySchema: nullSchema,
+    bodySchema: roomGetBodySchema,
   },
   outputSchema: roomSchema,
   frontend: nullSchema,
@@ -34,10 +39,14 @@ const roomDeleteQuerySchema = z.object({
   roomId: z.string(),
 });
 
+const roomDeleteBodySchema = z.object({
+  password: z.string(),
+});
+
 export const roomDeleteSchema = {
   input: {
     querySchema: roomDeleteQuerySchema,
-    bodySchema: nullSchema,
+    bodySchema: roomDeleteBodySchema,
   },
   outputSchema: roomSchema.nullable(),
   frontend: nullSchema,

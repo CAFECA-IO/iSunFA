@@ -8,15 +8,27 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { roomManager } from '@/lib/utils/room';
 
-const handleGetRequest: IHandleRequest<APIName.ROOM_GET_BY_ID, IRoom> = async (req) => {
+/* Info: (20241112 - Jacky)
+ * Handles a GET request to retrieve a room by its ID.
+ * Use POST because we need to send a password to verify the room.
+ */
+const handlePostRequest: IHandleRequest<APIName.ROOM_GET_BY_ID, IRoom> = async ({
+  query,
+  body,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IRoom | null = null;
 
-  const { roomId } = req.query;
-  const room = roomManager.getRoomById(roomId);
-
-  statusMessage = STATUS_MESSAGE.SUCCESS;
-  payload = room;
+  const { roomId } = query;
+  const { password } = body;
+  const isPass = roomManager.verifyRoomPassword(roomId, password);
+  if (!isPass) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else {
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+    const room = roomManager.getRoomById(roomId);
+    payload = room;
+  }
 
   return { statusMessage, payload };
 };
@@ -28,7 +40,11 @@ const handleDeleteRequest: IHandleRequest<APIName.ROOM_DELETE, IRoom> = async (r
   const { roomId } = req.query;
   const room = roomManager.getRoomById(roomId);
 
-  if (!room) {
+  const { password } = req.body;
+  const isPass = roomManager.verifyRoomPassword(roomId, password);
+  if (!isPass) {
+    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  } else if (!room) {
     statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
   } else {
     const deleted = roomManager.deleteRoom(roomId);
@@ -52,7 +68,7 @@ const methodHandlers: {
     payload: IRoom | IRoom[] | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.ROOM_GET_BY_ID, req, res, handleGetRequest),
+  GET: (req, res) => withRequestValidation(APIName.ROOM_GET_BY_ID, req, res, handlePostRequest),
   DELETE: (req, res) => withRequestValidation(APIName.ROOM_DELETE, req, res, handleDeleteRequest),
 };
 
