@@ -4,7 +4,7 @@ import { CompanyTag, CompanyUpdateAction } from '@/constants/company';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
-import { fileSchema } from '@/lib/utils/zod_schema/file';
+import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { ZodAPISchema } from '@/interfaces/zod_validator';
 
@@ -55,7 +55,7 @@ const companySelectQuerySchema = z.object({
 
 const companyPrismaSchema = z.object({
   id: z.number().int(),
-  imageFile: fileSchema,
+  imageFile: filePrismaSchema,
   name: z.string(),
   taxId: z.string(),
   startDate: z.number().int(),
