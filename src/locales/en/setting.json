@@ -89,7 +89,16 @@
     "VIEW_ALL_ACCOUNTING": "View all Accounting title",
     "ACCOUNTING_IMPORT_SUBTITLE": "Accounting Import",
     "IMPORT_FILE": "Import file",
-    "MANUAL_ACCOUNT_OPENING": "Manual account opening"
+    "MANUAL_ACCOUNT_OPENING": "Manual account opening",
+    "ACC_TYPE_ASSET": "Asset",
+    "ACC_TYPE_LIABILITY": "Liability",
+    "ACC_TYPE_EQUITY": "Equity",
+    "ACC_TYPE_REVENUE": "Revenue",
+    "ACC_TYPE_INCOME": "Income",
+    "ACC_TYPE_COST": "Cost",
+    "ACC_TYPE_EXPENSE": "Expense",
+    "ACC_TYPE_NON_OPERATING": "Non-operating",
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income"
   },
   "IP": {
     "INFO": "Login device & IP information",

@@ -1,3 +1,4 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
@@ -41,7 +42,7 @@ const CompanyInvitationModal = ({
       const company = adminData.company as ICompany;
       // Info: (20240613 - Julian) Reset modal and redirect to dashboard
       if (company) {
-        selectCompany(company);
+        selectCompany(company.id);
         setCodeInput('');
         modalVisibilityHandler();
         // Info: (20240515 - Julian) Toastify

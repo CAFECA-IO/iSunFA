@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
 import { CompanyTag } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
+// import { useRouter } from 'next/router'; // Deprecated: (20241111 - Liz)
 
 interface CreateCompanyModalProps {
   isModalOpen: boolean;
   toggleModal: () => void;
+  setIsCallingAPI?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProps) => {
+const CreateCompanyModal = ({
+  isModalOpen,
+  toggleModal,
+  setIsCallingAPI,
+}: CreateCompanyModalProps) => {
   const { t } = useTranslation(['company', 'common']);
+  // const router = useRouter(); // Deprecated: (20241111 - Liz)
+
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
   const [tag, setTag] = useState<CompanyTag>(CompanyTag.ALL);
@@ -28,6 +36,10 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
 
   const handleSubmit = async () => {
     setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+
+    if (setIsCallingAPI) {
+      setIsCallingAPI((prevState) => !prevState);
+    }
 
     try {
       const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
@@ -53,6 +65,10 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
       console.log('CreateCompanyModal handleSubmit error:', error);
     } finally {
       setIsLoading(false); // API 回傳後解除 loading 狀態
+      // ToDo: (20241111 - Liz) 需要讓頁面重新渲染，才能看到新增的公司
+      if (setIsCallingAPI) {
+        setIsCallingAPI((prevState) => !prevState);
+      }
     }
   };
 

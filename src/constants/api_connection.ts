@@ -144,6 +144,7 @@ export enum APIName {
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
   IP_LIST = 'IP_LIST',
+  ASSET_LIST_EXPORT = 'ASSET_LIST_EXPORT',
   FILE_EXPORT = 'FILE_EXPORT',
   LEDGER_LIST = 'LEDGER_LIST',
 }
@@ -161,7 +162,6 @@ export enum APIPath {
   COMPANY_PENDING_TASK_GET = `${apiPrefix}/company/:companyId/pending_task`,
   COMPANY_ADD = `${apiPrefix}/company`,
   COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
-  COMPANY_SELECT = `${apiPrefixV2}/user/:userId/selected_company`,
   COMPANY_SETTING_GET = `${apiPrefixV2}/company/:companyId/setting`,
   COMPANY_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/setting`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -227,6 +227,7 @@ export enum APIPath {
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
   LIST_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
+  COMPANY_SELECT = `${apiPrefixV2}/user/:userId/selected_company`,
   ROLE_LIST = `${apiPrefixV2}/role`,
   ROLE_GET_BY_ID = `${apiPrefixV2}/role/:roleId`,
   ROLE_DELETE = `${apiPrefixV2}/role/:roleId`,
@@ -268,7 +269,8 @@ export enum APIPath {
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
   IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
-  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/export`,
+  ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
+  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
 }
 const createConfig = ({
@@ -877,9 +879,14 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.IP_LIST,
   }),
+  [APIName.ASSET_LIST_EXPORT]: createConfig({
+    name: APIName.ASSET_LIST_EXPORT,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_LIST_EXPORT,
+  }),
   [APIName.FILE_EXPORT]: createConfig({
     name: APIName.FILE_EXPORT,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.FILE_EXPORT,
   }),
   [APIName.LEDGER_LIST]: createConfig({

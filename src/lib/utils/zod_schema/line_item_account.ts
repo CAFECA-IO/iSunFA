@@ -51,6 +51,7 @@ const lineItemGetByAccountOutputValidatorV2 = paginatedDataSchema(
   )
 ).transform((data) => {
   const reverseItems = data.data.map((voucher) => {
+    // Info: (20241111 - Murky) [Warning] 需要確保每個voucher都只會回一筆lineItem
     const [lineItem] = voucher.lineItems;
     return {
       voucherId: voucher.id,
@@ -58,6 +59,7 @@ const lineItemGetByAccountOutputValidatorV2 = paginatedDataSchema(
       amount: lineItem.amount,
       description: lineItem.description,
       debit: lineItem.debit,
+      lineItemBeReversedId: lineItem.id,
       account: {
         id: lineItem.account.id,
         companyId: lineItem.account.companyId,

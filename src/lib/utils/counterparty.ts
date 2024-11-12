@@ -4,6 +4,10 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { CounterpartyType } from '@/constants/counterparty';
 import { ICompanyEntity } from '@/interfaces/company';
 
+/**
+ * Info: (20241111 - Murky)
+ * @note id is 0 when not saved in database
+ */
 export function initCounterPartyEntity(
   dto: Partial<PrismaCounterParty> & {
     companyId: number;

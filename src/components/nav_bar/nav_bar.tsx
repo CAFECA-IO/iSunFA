@@ -1,3 +1,4 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import React, { useState } from 'react';
@@ -25,6 +26,7 @@ import { TranslateFunction } from '@/interfaces/locale';
 // import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -90,7 +92,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    selectCompany(null);
+    selectCompany(CANCEL_COMPANY_ID);
   };
 
   const redirectTo = (target: string) => {
