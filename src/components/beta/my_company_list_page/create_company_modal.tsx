@@ -43,6 +43,9 @@ const CreateCompanyModal = ({
       const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
 
       if (success) {
+        setCompanyName('');
+        setTaxId('');
+        setTag(CompanyTag.ALL);
         toggleModal();
       } else {
         toastHandler({
@@ -63,9 +66,6 @@ const CreateCompanyModal = ({
       console.log('CreateCompanyModal handleSubmit error:', error);
     } finally {
       setIsLoading(false); // API 回傳後解除 loading 狀態
-      setCompanyName('');
-      setTaxId('');
-      setTag(CompanyTag.ALL);
       if (setIsCallingAPI) {
         setIsCallingAPI((prevState) => !prevState);
       }
