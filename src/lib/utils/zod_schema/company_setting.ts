@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { LocaleKey } from '@/constants/normal_setting';
 
 // Info: (20241029 - Jacky) Company setting null schema
 const companySettingNullSchema = z.union([z.object({}), z.string()]);
@@ -20,7 +21,8 @@ const companySettingPutBodySchema = z.object({
   companyTaxId: z.string(),
   taxSerialNumber: z.string(),
   representativeName: z.string(),
-  country: z.string(),
+  country: z.nativeEnum(LocaleKey),
+  countryCode: z.nativeEnum(LocaleKey),
   phone: z.string(),
   address: z.string(),
   createdAt: z.number(),
@@ -51,7 +53,8 @@ export const companySettingOutputSchema = z
     companyTaxId: companySetting.company.taxId || '',
     taxSerialNumber: companySetting.taxSerialNumber || '',
     representativeName: companySetting.representativeName || '',
-    country: companySetting.country || '',
+    country: LocaleKey.en || null,
+    countryCode: LocaleKey.en,
     phone: companySetting.phone || '',
     address: companySetting.address || '',
     createdAt: companySetting.createdAt,
