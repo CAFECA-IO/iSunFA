@@ -25,7 +25,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
   const [uploadedFileCount, setUploadFileCount] = useState<number>(0);
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState<boolean>(false);
   const { trigger: delectRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
-  const { trigger: getRoomFilesAPI } = APIHandler<IFileUIBeta[]>(APIName.FILE_GET);
+  const { trigger: getRoomFilesAPI } = APIHandler<IFileUIBeta[]>(APIName.ROOM_GET_BY_ID);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const pauseFileUpload = useCallback((file: IFileUIBeta, index: number) => {
@@ -104,7 +104,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
   const handleNewFilesComing = useCallback(async () => {
     const { success: successGetNewFiles, data: newFiles } = await getRoomFilesAPI({
-      params: { companyId },
       query: { token },
     });
     if (successGetNewFiles && newFiles) {
@@ -118,9 +117,6 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
   const handleRoomDelete = useCallback(async () => {
     await delectRoomAPI({
-      params: {
-        companyId,
-      },
       query: {
         token,
       },

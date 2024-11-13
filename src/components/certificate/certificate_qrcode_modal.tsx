@@ -7,7 +7,6 @@ import { useQRCode } from 'next-qrcode';
 import { IoCloseOutline } from 'react-icons/io5';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { useUserCtx } from '@/contexts/user_context';
 import Image from 'next/image';
 
 interface CertificateQRCodeModalProps {
@@ -21,21 +20,8 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const { Canvas } = useQRCode();
-  const { selectedCompany } = useUserCtx();
   const isDev = true; // Deprecated: (20241122 - tzuhan) debug purpose
-  const {
-    success,
-    data: token,
-    code,
-  } = APIHandler<string>(
-    APIName.ROOM_ADD,
-    {
-      params: {
-        companyId: selectedCompany?.id,
-      },
-    },
-    true
-  );
+  const { success, data: token, code } = APIHandler<string>(APIName.ROOM_ADD, {}, true);
 
   const displayedQRCode = success && token && (
     <div className="mx-20 my-10 flex flex-col items-center">

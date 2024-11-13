@@ -83,7 +83,6 @@ export enum APIName {
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = 'VOUCHER_LIST_GET_BY_ACCOUNT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
-  // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
@@ -96,8 +95,6 @@ export enum APIName {
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
   PUBLIC_FILE_UPLOAD = 'PUBLIC_FILE_UPLOAD',
-  // ROOM_FILE_UPLOAD = 'ROOM_FILE_UPLOAD',
-  // ROOM_FILE_GET = 'ROOM_FILE_GET',
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
@@ -212,7 +209,6 @@ export enum APIPath {
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
-  // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`, // Info: (20240720 - Tzuhan)
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/journal/:journalId`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
@@ -225,8 +221,6 @@ export enum APIPath {
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   PUBLIC_FILE_UPLOAD = `${apiPrefixV2}/upload`,
-  // ROOM_FILE_UPLOAD = `${apiPrefixV2}/room/:roomId/file`,
-  // ROOM_FILE_GET = `${apiPrefixV2}/room/:roomId`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
@@ -913,14 +907,4 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LEDGER_LIST,
   }),
-  // [APIName.ROOM_FILE_GET]: createConfig({
-  //   name: APIName.ROOM_FILE_GET,
-  //   method: HttpMethod.GET,
-  //   path: APIPath.ROOM_FILE_GET,
-  // }),
-  // [APIName.ROOM_FILE_UPLOAD]: createConfig({
-  //   name: APIName.ROOM_FILE_UPLOAD,
-  //   method: HttpMethod.POST,
-  //   path: APIPath.ROOM_FILE_UPLOAD,
-  // }),
 };
