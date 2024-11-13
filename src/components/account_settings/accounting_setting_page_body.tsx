@@ -6,10 +6,13 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiCalendar } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
+import { RxTriangleDown } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
+
+type ITaxRate = '5%' | 'zeroTax' | 'zeroTaxThroughCustoms' | 'zeroTaxNotThroughCustoms' | 'taxFree';
 
 interface ICurrency {
   countryName: string;
@@ -38,9 +41,23 @@ const AccountingSettingPageBody: React.FC = () => {
     manualAccountOpeningModalVisibilityHandler,
   } = useGlobalCtx();
 
+  const [currentSalesTax, setCurrentSalesTax] = useState<ITaxRate>('5%');
+  const [currentPurchaseTax, setCurrentPurchaseTax] = useState<ITaxRate>('5%');
   const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(dummyCurrencies[0]);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
+
+  const {
+    targetRef: salesTaxRef,
+    componentVisible: salesTaxVisible,
+    setComponentVisible: setSalesTaxVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: purchaseTaxRef,
+    componentVisible: purchaseTaxVisible,
+    setComponentVisible: setPurchaseTaxVisible,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const {
     targetRef: currencyMenuRef,
@@ -48,7 +65,46 @@ const AccountingSettingPageBody: React.FC = () => {
     setComponentVisible: setCurrencyMenuVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const toggleSalesTaxMenu = () => setSalesTaxVisible(!salesTaxVisible);
+  const togglePurchaseTaxMenu = () => setPurchaseTaxVisible(!purchaseTaxVisible);
   const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
+
+  const showTaxStr = (taxRate: ITaxRate) => {
+    switch (taxRate) {
+      case '5%':
+        return (
+          <div className="flex flex-1 items-center justify-between">
+            <p className="text-input-text-input-filled">Taxable</p>
+            <p className="text-input-text-input-placeholder">5%</p>
+          </div>
+        );
+      case 'zeroTax':
+        return (
+          <div className="flex flex-1 items-center justify-between">
+            <p className="text-input-text-input-filled">Zero-tax-rate (None)</p>
+            <p className="text-input-text-input-placeholder">0%</p>
+          </div>
+        );
+      case 'zeroTaxThroughCustoms':
+        return (
+          <div className="flex flex-1 items-center justify-between">
+            <p className="text-input-text-input-filled">Zero-tax-rate (Through customs)</p>
+            <p className="text-input-text-input-placeholder">0%</p>
+          </div>
+        );
+      case 'zeroTaxNotThroughCustoms':
+        return (
+          <div className="flex flex-1 items-center justify-between">
+            <p className="text-input-text-input-filled">Zero-tax-rate (Not through customs)</p>
+            <p className="text-input-text-input-placeholder">0%</p>
+          </div>
+        );
+      case 'taxFree':
+        return <p className="flex-1 text-input-text-input-filled">Tax-Free</p>;
+      default:
+        return <p className="flex-1 text-input-text-input-placeholder">-</p>;
+    }
+  };
 
   const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -68,6 +124,87 @@ const AccountingSettingPageBody: React.FC = () => {
       setReportGenerateDay(10);
     }
   };
+
+  // Info: (20241113 - Julian) 稅率的下拉選單內容
+  const getTaxDropdown = (
+    dropdownRef: React.RefObject<HTMLDivElement>,
+    dropdownVisible: boolean,
+    setTaxState: React.Dispatch<React.SetStateAction<ITaxRate>>
+  ) => {
+    const fivePercentClickHandler = () => setTaxState('5%');
+    const zeroTaxClickHandler = () => setTaxState('zeroTax');
+    const zeroTaxThroughCustomsClickHandler = () => setTaxState('zeroTaxThroughCustoms');
+    const zeroTaxNotThroughCustomsClickHandler = () => setTaxState('zeroTaxNotThroughCustoms');
+    const taxFreeClickHandler = () => setTaxState('taxFree');
+
+    return (
+      <div
+        ref={dropdownRef}
+        className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${
+          dropdownVisible ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'
+        } overflow-hidden bg-dropdown-surface-menu-background-primary transition-all duration-300 ease-in-out`}
+      >
+        <div className="flex flex-col rounded-sm border border-dropdown-stroke-menu p-8px">
+          {/* Info: (20241113 - Julian) 5% */}
+          <button
+            type="button"
+            onClick={fivePercentClickHandler}
+            className="flex items-center gap-12px px-12px py-8px hover:bg-dropdown-surface-item-hover"
+          >
+            <p className="text-dropdown-text-primary">Taxable</p>
+            <p className="text-dropdown-text-secondary">5%</p>
+          </button>
+          {/* Info: (20241113 - Julian) 0% */}
+          <div className="flex flex-col">
+            <div className="flex flex-1 items-center gap-12px px-12px py-8px">
+              <p className="text-dropdown-text-primary">Zero-tax-rate</p>
+              <p className="text-dropdown-text-secondary">0%</p>
+              <RxTriangleDown />
+            </div>
+            {/* Info: (20241113 - Julian) 子項目 */}
+            <div className="flex flex-col px-12px">
+              <button
+                type="button"
+                onClick={zeroTaxClickHandler}
+                className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
+              >
+                <p className="text-dropdown-text-primary">None</p>
+              </button>
+              <button
+                type="button"
+                onClick={zeroTaxThroughCustomsClickHandler}
+                className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
+              >
+                <p className="text-dropdown-text-primary">Through Customs</p>
+              </button>
+              <button
+                type="button"
+                onClick={zeroTaxNotThroughCustomsClickHandler}
+                className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
+              >
+                <p className="text-dropdown-text-primary">Not Trough Customs</p>
+              </button>
+            </div>
+          </div>
+          {/* Info: (20241113 - Julian) 免稅 */}
+          <button
+            type="button"
+            onClick={taxFreeClickHandler}
+            className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
+          >
+            <p className="text-dropdown-text-primary">Tax-Free</p>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const salesTaxDropdown = getTaxDropdown(salesTaxRef, salesTaxVisible, setCurrentSalesTax);
+  const purchaseTaxDropdown = getTaxDropdown(
+    purchaseTaxRef,
+    purchaseTaxVisible,
+    setCurrentPurchaseTax
+  );
 
   const currencyDropdown = (
     <div
@@ -117,14 +254,16 @@ const AccountingSettingPageBody: React.FC = () => {
           <div className="flex flex-col gap-10px">
             <p className="text-sm text-input-text-primary">{t('setting:ACCOUNTING.TAX_SALES')}</p>
             {/* Info: (20241106 - Julian) ===== 銷售稅下拉選單 ===== */}
-            <div className="flex items-center gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px">
-              <div className="flex flex-1 items-center justify-between">
-                <p className="text-input-text-input-filled">Taxable</p>
-                <p className="text-input-text-input-placeholder">5%</p>
-              </div>
+            <div
+              onClick={toggleSalesTaxMenu}
+              className="relative flex items-center gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px font-medium hover:cursor-pointer"
+            >
+              {showTaxStr(currentSalesTax)}
               <div className="text-icon-surface-single-color-primary">
                 <FaChevronDown />
               </div>
+              {/* Info: (20241113 - Julian) ===== 銷售稅下拉選單內容 ===== */}
+              {salesTaxDropdown}
             </div>
           </div>
 
@@ -134,14 +273,16 @@ const AccountingSettingPageBody: React.FC = () => {
               {t('setting:ACCOUNTING.TAX_PURCHASE')}
             </p>
             {/* Info: (20241106 - Julian) ===== 消費稅下拉選單 ===== */}
-            <div className="flex items-center gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px">
-              <div className="flex flex-1 items-center justify-between">
-                <p className="text-input-text-input-filled">Taxable</p>
-                <p className="text-input-text-input-placeholder">5%</p>
-              </div>
+            <div
+              onClick={togglePurchaseTaxMenu}
+              className="relative flex items-center gap-8px rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px font-medium hover:cursor-pointer"
+            >
+              {showTaxStr(currentPurchaseTax)}
               <div className="text-icon-surface-single-color-primary">
                 <FaChevronDown />
               </div>
+              {/* Info: (20241113 - Julian) ===== 消費稅下拉選單內容 ===== */}
+              {purchaseTaxDropdown}
             </div>
           </div>
 
