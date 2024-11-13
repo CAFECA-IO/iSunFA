@@ -1,4 +1,4 @@
-import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
+import { countUnpostedVoucher, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
 
 describe('countUnpostedVoucher', () => {
   it('should return the count of unposted vouchers for a given company ID', async () => {
@@ -17,5 +17,12 @@ describe('countUnpostedVoucher', () => {
     const result = await countUnpostedVoucher(companyId);
 
     expect(result).toBe(mockCount);
+  });
+});
+
+describe('getOneVoucherV2', () => {
+  it('should get voucher by id', async () => {
+    const voucher = await getOneVoucherV2(1002);
+    expect(voucher).toBeDefined();
   });
 });
