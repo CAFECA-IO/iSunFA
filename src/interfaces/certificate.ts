@@ -136,7 +136,7 @@ export interface ICertificateEntity {
    * Info: (20241024 - Murky)
    * @description 傳票流水號
    */
-  voucherNo: string | null;
+  // voucherNo: string | null;
 
   /**
    * Info: (20241024 - Murky)
