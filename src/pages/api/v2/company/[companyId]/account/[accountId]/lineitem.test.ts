@@ -3,11 +3,12 @@ import handler from '@/pages/api/v2/company/[companyId]/account/[accountId]/line
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
+import { SPECIAL_ACCOUNTS } from '@/constants/account';
 
 jest.mock('../../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1001,
-    companyId: 1001,
+    companyId: 1000,
     roleId: 1001,
     cookie: {
       httpOnly: false,
@@ -57,6 +58,14 @@ afterEach(() => {
 describe('company/[companyId]/voucher/account/[accountId] integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
+  let accountId: number;
+  beforeEach(async () => {
+    const accountPayable = await prisma.account.findFirst({
+      where: { code: SPECIAL_ACCOUNTS.ACCOUNT_PAYABLE.code },
+    });
+
+    accountId = accountPayable?.id || 10000981;
+  });
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -65,7 +74,7 @@ describe('company/[companyId]/voucher/account/[accountId] integration test', () 
       req = {
         headers: {},
         query: {
-          accountId: '1',
+          accountId: `${accountId}`,
           page: '1',
           pageSize: '10',
           // tab: VoucherListTabV2.UPLOADED,

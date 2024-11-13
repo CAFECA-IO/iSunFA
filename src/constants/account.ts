@@ -826,4 +826,16 @@ export const SPECIAL_ACCOUNTS: {
     rootCode: '2200',
     level: 3,
   },
+  ACCOUNT_PAYABLE: {
+    system: 'IFRS',
+    type: AccountType.LIABILITY,
+    debit: false,
+    liquidity: true,
+    code: '2171',
+    name: '應付帳款',
+    forUser: true,
+    parentCode: '2170',
+    rootCode: '2170',
+    level: 3,
+  },
 };
