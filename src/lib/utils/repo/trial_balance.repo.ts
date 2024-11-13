@@ -293,26 +293,32 @@ const sortTrialBalance1 = (
 
         switch (option.sortBy) {
           case SortBy.BEGINNING_CREDIT_AMOUNT:
+            // console.log(`case ${SortBy.BEGINNING_CREDIT_AMOUNT}`);
             fieldA = a.beginningCreditAmount;
             fieldB = b.beginningCreditAmount;
             break;
           case SortBy.BEGINNING_DEBIT_AMOUNT:
+            // console.log(`case ${SortBy.BEGINNING_DEBIT_AMOUNT}`);
             fieldA = a.beginningDebitAmount;
             fieldB = b.beginningDebitAmount;
             break;
           case SortBy.MIDTERM_CREDIT_AMOUNT:
+            // console.log(`case ${SortBy.MIDTERM_CREDIT_AMOUNT}`);
             fieldA = a.midtermCreditAmount;
             fieldB = b.midtermCreditAmount;
             break;
           case SortBy.MIDTERM_DEBIT_AMOUNT:
+            // console.log(`case ${SortBy.MIDTERM_DEBIT_AMOUNT}`);
             fieldA = a.midtermDebitAmount;
             fieldB = b.midtermDebitAmount;
             break;
           case SortBy.ENDING_CREDIT_AMOUNT:
+            // console.log(`case ${SortBy.ENDING_CREDIT_AMOUNT}`);
             fieldA = a.endingCreditAmount;
             fieldB = b.endingCreditAmount;
             break;
           case SortBy.ENDING_DEBIT_AMOUNT:
+            // console.log(`case ${SortBy.ENDING_DEBIT_AMOUNT}`);
             fieldA = a.endingDebitAmount;
             fieldB = b.endingDebitAmount;
             break;
@@ -346,7 +352,7 @@ interface ListTrialBalanceParams {
   companyId: number;
   startDate: number;
   endDate: number;
-  sortOptions?: string;
+  sortOption?: string;
   page?: number;
   pageSize?: number;
 }
@@ -358,7 +364,7 @@ export async function listTrialBalance(
     companyId,
     startDate,
     endDate,
-    sortOptions,
+    sortOption,
     page = DEFAULT_PAGE_NUMBER,
     pageSize = DEFAULT_PAGE_LIMIT,
   } = params;
@@ -374,35 +380,32 @@ export async function listTrialBalance(
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
-    /** FIXME: DEV
-     * 1. 解析 sortOptions
-     * 2. 將 accountForest 轉為 AccountWithSub
-     *   2.1 將 voucher 的 line item 合併到 account 的 line item 裡
-     * 3. 根據 startDate, endDate 計算試算表項目
-     * 4. 將 trialBalance 展平，獲得 flattenTrialBalance
-     * 5. 將 flattenTrialBalance 加總，獲得 total
-     * 6. 將 trialBalance 排序，注意 subAccounts 也要排序，獲得 sortedTrialBalance
-     * 7. 將 sortedTrialBalance 分頁，獲得 paginatedTrialBalance
-     * 8. 將 total 放到 trialBalancePayload 裡
-     */
+    let sortOptionsParsed: { sortBy: SortBy; sortOrder: SortOrder }[] = [];
 
+    console.log('sortOptions in trial_balance_repo before anything', sortOption);
+
+    // if (sortOptions) {
+    //   sortOptionsParsed = parseSortOptions(sortOptions);
+    // } else {
+    //   sortOptionsParsed = DEFAULT_SORT_OPTIONS;
+    // }
     // 解析 sortOptions 使用 zodFilterSectionSortingOptions
-    let sortOptionsParsed = [];
-    if (sortOptions) {
-      const parseResult = zodFilterSectionSortingOptions().safeParse(sortOptions);
-      if (parseResult.success) {
-        sortOptionsParsed = parseResult.data;
-      } else {
-        // TODO: 修改錯誤訊息
-        throw new Error('Invalid sortOptions format');
-      }
-    } else {
-      sortOptionsParsed = [{ sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.DESC }];
-    }
+    // let sortOptionsParsed = [];
+    // if (sortOptions) {
+    //   const parseResult = zodFilterSectionSortingOptions().safeParse(sortOptions);
+    //   if (parseResult.success) {
+    //     sortOptionsParsed = parseResult.data;
+    //   } else {
+    //     // TODO: 修改錯誤訊息
+    //     throw new Error('Invalid sortOptions format');
+    //   }
+    // } else {
+    //   sortOptionsParsed = [{ sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.DESC }];
+    // }
 
     // Info: (20241105 - Shirley) 1. 搜尋 accounting setting table 取得貨幣別
     const accountingSettingData = await prisma.accountingSetting.findFirst({
-      where: { id: companyId },
+      where: { companyId },
     });
 
     let currencyAlias = 'TWD';
@@ -457,6 +460,16 @@ export async function listTrialBalance(
       },
     });
 
+    // log the accounts that have lineItem
+    // const accountsWithLineItemTEST = accounts
+    //   .filter((account) => account.lineItem.length > 0)
+    //   .map((account) => ({
+    //     code: account.code,
+    //     name: account.name,
+    //     lineItem: account.lineItem,
+    //   }));
+    // console.log('accountsWithLineItemTEST', accountsWithLineItemTEST);
+
     const allVoucherData = await prisma.voucher.findMany({
       where: {
         companyId,
@@ -480,6 +493,8 @@ export async function listTrialBalance(
       },
     });
 
+    // console.log('additionalLineItemsLength', additionalLineItems.length);
+
     // Info: (20241105 - Shirley) 合併 account 表中的 line items 與 voucher 表中的 line items
     accounts.forEach((account) => {
       const voucherLineItems = additionalLineItems.filter(
@@ -498,26 +513,42 @@ export async function listTrialBalance(
     });
 
     // FIXME: DEV
-    // const parsedSortOptions = parseSortOptions(sortOptions);
-    const parsedSortOptions = parseSortOptions(
-      `sortOption=${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.ASC}`
-
-      // `sortOption=${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.DESC}-${SortBy.BEGINNING_DEBIT_AMOUNT}:${SortOrder.ASC}`
-    );
+    /** FIXME: DEV
+     * 1. 解析 sortOptions
+     * 2. 將 accountForest 轉為 AccountWithSub
+     *   2.1 將 voucher 的 line item 合併到 account 的 line item 裡
+     * 3. 根據 startDate, endDate 計算試算表項目
+     * 4. 將 trialBalance 展平，獲得 flattenTrialBalance
+     * 5. 將 flattenTrialBalance 加總，獲得 total
+     * 6. 將 trialBalance 排序，注意 subAccounts 也要排序，獲得 sortedTrialBalance
+     * 7. 將 sortedTrialBalance 分頁，獲得 paginatedTrialBalance
+     * 8. 將 total 放到 trialBalancePayload 裡
+     * FIXME:
+     * 9. 將餘額全部為 0 的科目過濾掉
+     */
+    const parsedSortOptions = parseSortOptions(sortOption);
+    // const parsedSortOptions = parseSortOptions(
+    //   `sortOption=${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.ASC}`
+    //   `sortOption=${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.DESC}-${SortBy.BEGINNING_DEBIT_AMOUNT}:${SortOrder.ASC}`
+    // );
     const accountForest = buildAccountForestForUser(accounts);
     const accountWithSub = transformAccountForestToAccountWithSub(accountForest);
     const accountWithSubWithVoucherLineItem = addVoucherLineItemToAccount(
       accountWithSub,
       additionalLineItems
     );
-    const trialBalance1 = accountWithSubWithVoucherLineItem.map((account) =>
-      calculateTrialBalance1({
-        startDate,
-        endDate,
-        account,
-      })
-    );
-    const flattenedTrialBalance1 = flattenTrialBalance1(trialBalance1);
+    console.log('accountWithSubWithVoucherLineItem', accountWithSubWithVoucherLineItem);
+    const trialBalance1 = accountWithSubWithVoucherLineItem
+      .filter((account) => account.lineItem.length > 0)
+      .map((account) =>
+        calculateTrialBalance1({
+          startDate,
+          endDate,
+          account,
+        })
+      );
+
+    const flattenedTrialBalance1 = flattenTrialBalance1(trialBalance1 as AccountWithSubResult1[]);
     const total1 = {
       beginningCreditAmount: flattenedTrialBalance1.reduce(
         (sum, item) => sum + item.beginningCreditAmount,
@@ -554,19 +585,20 @@ export async function listTrialBalance(
     };
     console.log(
       'parsedSortOptions',
-      parsedSortOptions,
-      'accountsFromPrismaLength',
-      accounts.length,
-      'accountForestLength',
-      accountForest.length,
-      'accountWithSubWithVoucherLineItemLength',
-      accountWithSubWithVoucherLineItem.length,
-      'trialBalance1Length',
-      trialBalance1.length
+      parsedSortOptions
+      // 'accountsFromPrismaLength',
+      // accounts.length,
+      // 'accountForestLength',
+      // accountForest.length,
+      // 'accountWithSubWithVoucherLineItemLength',
+      // accountWithSubWithVoucherLineItem.length,
+      // 'trialBalance1Length',
+      // trialBalance1.length
     );
     // 寫入 sortedTrialBalance1 到 json 檔案裡
     const DIR_NAME = 'tmp';
-    const NEW_FILE_NAME = 'sortedTrialBalance1.json';
+    // const NEW_FILE_NAME = 'sortedTrialBalance1.json';
+    const NEW_FILE_NAME = 'newTrialBalancePayload.json';
     const logDir = path.join(process.cwd(), DIR_NAME);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -575,211 +607,31 @@ export async function listTrialBalance(
     const logPath = path.join(logDir, NEW_FILE_NAME);
     fs.writeFileSync(logPath, JSON.stringify(newTrialBalancePayload, null, 2), 'utf-8');
 
-    // 排序需要注意 subAccount 也要排序
-
-    // const sortedTrialBalance1 = sortTrialBalance1(flattenedTrialBalance1, parsedSortOptions);
-
-    // const
-    // gather line item
-
-    // Info: (20241105 - Shirley) 建立科目樹狀結構，透過 parent code 追溯
-    const rootAccounts: AccountWithSub[] = [];
-    accounts.forEach((account) => {
-      if (account.parentCode) {
-        const parent = accountMap[account.parentCode];
-        if (parent && account.code !== account.parentCode) {
-          parent.subAccounts.push(accountMap[account.code]);
-        } else {
-          // Info: (20241105 - Shirley) 當 code === parentCode 或找不到父代碼時，視為最頂層
-          rootAccounts.push(accountMap[account.code]);
-        }
-      } else {
-        // Info: (20241105 - Shirley) 沒有 parentCode 時，視為最頂層
-        rootAccounts.push(accountMap[account.code]);
-      }
-    });
-
-    // Info: (20241105 - Shirley) 計算試算表項目
-    const calculateTrialBalance = (account: AccountWithSub): AccountWithSubResult => {
-      // Info: (20241105 - Shirley) 計算期初金額
-      const beginningCreditAmount = account.lineItem
-        .filter((item: LineItem) => !item.debit && item.voucher.date < startDate)
-        .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
-      const beginningDebitAmount = account.lineItem
-        .filter((item: LineItem) => item.debit && item.voucher.date < startDate)
-        .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
-
-      // Info: (20241105 - Shirley) 計算期中金額
-      const midtermCreditAmount = account.lineItem
-        .filter(
-          (item: LineItem) =>
-            !item.debit && item.voucher.date >= startDate && item.voucher.date <= endDate
-        )
-        .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
-      const midtermDebitAmount = account.lineItem
-        .filter(
-          (item: LineItem) =>
-            item.debit && item.voucher.date >= startDate && item.voucher.date <= endDate
-        )
-        .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
-
-      const endingCreditAmount = beginningCreditAmount + midtermCreditAmount;
-      const endingDebitAmount = beginningDebitAmount + midtermDebitAmount;
-
-      // Info: (20241105 - Shirley) 處理子科目
-      const subAccounts = account.subAccounts.map(calculateTrialBalance);
-
-      const now = getTimestampNow();
-
-      return {
-        id: account.id,
-        no: account.code,
-        accountingTitle: account.name,
-        beginningCreditAmount,
-        beginningDebitAmount,
-        midtermCreditAmount,
-        midtermDebitAmount,
-        endingCreditAmount,
-        endingDebitAmount,
-        subAccounts,
-        createAt: now,
-        updateAt: now,
-      };
-    };
-
-    const trialBalanceItems = rootAccounts.map(calculateTrialBalance);
-
-    // Info: (20241105 - Shirley) 根據排序選項排序試算表項目
-
-    if (sortOptionsParsed.length > 0) {
-      trialBalanceItems.sort((a, b) => {
-        return sortOptionsParsed.reduce((acc, option) => {
-          if (acc !== 0) return acc;
-
-          let fieldA: number | string;
-          let fieldB: number | string;
-
-          switch (option.sortBy) {
-            case SortBy.BEGINNING_CREDIT_AMOUNT:
-              fieldA = a.beginningCreditAmount;
-              fieldB = b.beginningCreditAmount;
-              break;
-            case SortBy.BEGINNING_DEBIT_AMOUNT:
-              fieldA = a.beginningDebitAmount;
-              fieldB = b.beginningDebitAmount;
-              break;
-            case SortBy.MIDTERM_CREDIT_AMOUNT:
-              fieldA = a.midtermCreditAmount;
-              fieldB = b.midtermCreditAmount;
-              break;
-            case SortBy.MIDTERM_DEBIT_AMOUNT:
-              fieldA = a.midtermDebitAmount;
-              fieldB = b.midtermDebitAmount;
-              break;
-            case SortBy.ENDING_CREDIT_AMOUNT:
-              fieldA = a.endingCreditAmount;
-              fieldB = b.endingCreditAmount;
-              break;
-            case SortBy.ENDING_DEBIT_AMOUNT:
-              fieldA = a.endingDebitAmount;
-              fieldB = b.endingDebitAmount;
-              break;
-            default:
-              fieldA = a.accountingTitle;
-              fieldB = b.accountingTitle;
-              break;
-          }
-
-          if (fieldA < fieldB) {
-            return option.sortOrder === SortOrder.ASC ? -1 : 1;
-          }
-          if (fieldA > fieldB) {
-            return option.sortOrder === SortOrder.ASC ? 1 : -1;
-          }
-          return 0; // 若相等，繼續判斷下一個排序條件
-        }, 0);
-      });
-    }
-
-    // Info: (20241105 - Shirley) 扁平化所有試算表項目以便計算總金額
-    const flattenTrialBalance = (items: AccountWithSubResult[]): AccountWithSubResult[] => {
-      let flat: AccountWithSubResult[] = [];
-      items.forEach((item) => {
-        flat.push(item);
-        if (item.subAccounts && item.subAccounts.length > 0) {
-          flat = flat.concat(flattenTrialBalance(item.subAccounts));
-        }
-      });
-      return flat;
-    };
-
-    const flatItems = flattenTrialBalance(trialBalanceItems);
-
-    // eslint-disable-next-line no-console
-    console.log('flatItemsLength in trialBalanceRepo', flatItems.length);
-
-    // Info: (20241105 - Shirley) 計算總金額
-
-    const total = {
-      beginningCreditAmount: flatItems.reduce((sum, item) => sum + item.beginningCreditAmount, 0),
-      beginningDebitAmount: flatItems.reduce((sum, item) => sum + item.beginningDebitAmount, 0),
-      midtermCreditAmount: flatItems.reduce((sum, item) => sum + item.midtermCreditAmount, 0),
-      midtermDebitAmount: flatItems.reduce((sum, item) => sum + item.midtermDebitAmount, 0),
-      endingCreditAmount: flatItems.reduce((sum, item) => sum + item.endingCreditAmount, 0),
-      endingDebitAmount: flatItems.reduce((sum, item) => sum + item.endingDebitAmount, 0),
-      createAt: Math.floor(Date.now() / 1000),
-      updateAt: Math.floor(Date.now() / 1000),
-    };
-
-    let paginatedData = trialBalanceItems;
-    let totalCount = trialBalanceItems.length;
+    let paginatedData = sortedTrialBalance1;
+    let totalCount = sortedTrialBalance1.length;
     let totalPages = 1;
     let hasNextPage = false;
     let hasPreviousPage = false;
 
-    paginatedData = trialBalanceItems.slice(skip, skip + (size || DEFAULT_PAGE_LIMIT));
-    totalCount = trialBalanceItems.length;
+    paginatedData = sortedTrialBalance1.slice(skip, skip + (size || DEFAULT_PAGE_LIMIT));
+    totalCount = sortedTrialBalance1.length;
     totalPages = Math.ceil(totalCount / (size || DEFAULT_PAGE_LIMIT));
     hasNextPage = skip + (size || DEFAULT_PAGE_LIMIT) < totalCount;
     hasPreviousPage = pageNumber > 1;
 
-    // const sort = [{ sortBy, sortOrder }];
-    // 修改排序部分
-    const sort = sortOptionsParsed.map((option) => ({
-      sortBy: option.sortBy,
-      sortOrder: option.sortOrder,
-    }));
-
-    // eslint-disable-next-line no-console
-    // console.log('sort in trial_balance_repo', sort);
-
-    const responseItems = paginatedData.map((item) => {
-      const { subAccounts, ...rest } = item;
-      return {
-        ...rest,
-        subAccounts: subAccounts.map((sub: AccountWithSubResult) => {
-          const { subAccounts: subSub, ...subRest } = sub;
-          return {
-            ...subRest,
-            subAccounts: subSub,
-          };
-        }),
-      };
-    });
-
     trialBalancePayload = {
       currencyAlias,
       items: {
-        data: responseItems,
+        data: paginatedData,
         page: pageNumber,
         totalPages,
         totalCount,
         pageSize,
         hasNextPage,
         hasPreviousPage,
-        sort,
+        sort: parsedSortOptions,
       },
-      total,
+      total: total1,
     };
 
     const NEW_FILE_NAME2 = 'beforeRefactorTrialBalance1.json';
