@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -8,36 +9,38 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData } from '@/interfaces/pagination';
 
-export const handleGetRequest: IHandleRequest<
-  APIName.TRIAL_BALANCE_LIST,
-  {
-    currencyAlias: string;
-    items: IPaginatedData<TrialBalanceItem[]>;
-    total: ITrialBalanceTotal;
-  }
-> = async ({ query }) => {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: {
-    currencyAlias: string;
-    items: IPaginatedData<TrialBalanceItem[]>;
-    total: ITrialBalanceTotal;
-  } | null = null;
-  // Deprecated: (20241110 - Shirley) 測試用
-  // eslint-disable-next-line no-console
-  console.log(query);
+export const handleGetRequest =
+  // : IHandleRequest<
+  //   APIName.TRIAL_BALANCE_LIST,
+  //   {
+  //     currencyAlias: string;
+  //     items: IPaginatedData<TrialBalanceItem[]>;
+  //     total: ITrialBalanceTotal;
+  //   }
+  // >
+  async ({ query }: any) => {
+    let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+    let payload: {
+      currencyAlias: string;
+      items: IPaginatedData<TrialBalanceItem[]>;
+      total: ITrialBalanceTotal;
+    } | null = null;
+    // Deprecated: (20241110 - Shirley) 測試用
+    // eslint-disable-next-line no-console
+    console.log(query);
 
-  // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
-  // ToDo: (20240927 - Shirley) 從請求中獲取session資料
-  // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
-  // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
-  // ToDo: (20240927 - Shirley) 將試算表資料格式化為TrialBalanceItem介面
+    // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
+    // ToDo: (20240927 - Shirley) 從請求中獲取session資料
+    // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
+    // ToDo: (20240927 - Shirley) 從資料庫獲取試算表資料的邏輯
+    // ToDo: (20240927 - Shirley) 將試算表資料格式化為TrialBalanceItem介面
 
-  // Deprecated: 連接的模擬資料
-  payload = MOCK_RESPONSE;
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    // Deprecated: 連接的模擬資料
+    payload = MOCK_RESPONSE;
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
-  return { statusMessage, payload };
-};
+    return { statusMessage, payload };
+  };
 
 const methodHandlers: {
   [key: string]: (
@@ -52,7 +55,8 @@ const methodHandlers: {
     } | null;
   }>;
 } = {
-  GET: (req, res) => withRequestValidation(APIName.TRIAL_BALANCE_LIST, req, res, handleGetRequest),
+  // GET: (req, res) => withRequestValidation(APIName.TRIAL_BALANCE_LIST, req, res, handleGetRequest),
+  GET: handleGetRequest, // 直接使用 handleGetRequest
 };
 
 export default async function handler(

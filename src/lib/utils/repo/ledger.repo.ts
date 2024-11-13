@@ -200,7 +200,22 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     // Info: (20241112 - Shirley) 4. 排序
     ledgerItems.sort((a, b) => a.accountId - b.accountId);
 
-    // Info: (20241112 - Shirley) 5. 分頁處理
+    // TODO: (20241112 - Shirley) 5. 分頁處理
+    /*
+    let paginatedData = trialBalanceItems;
+    let totalCount = trialBalanceItems.length;
+    let totalPages = 1;
+    let hasNextPage = false;
+    let hasPreviousPage = false;
+
+    paginatedData = trialBalanceItems.slice(skip, skip + (size || DEFAULT_PAGE_LIMIT));
+    totalCount = trialBalanceItems.length;
+    totalPages = Math.ceil(totalCount / (size || DEFAULT_PAGE_LIMIT));
+    hasNextPage = skip + (size || DEFAULT_PAGE_LIMIT) < totalCount;
+    hasPreviousPage = pageNumber > 1;
+
+    */
+
     const paginatedData = ledgerItems.map(({ accountId, ...rest }) => rest);
 
     const totalCount = ledgerItems.length;

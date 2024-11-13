@@ -58,7 +58,7 @@ export enum SortBy {
 
   /**
    * Info: (20241111 - Shirley)
-   * @description 試算表項目排序
+   * @Anna 試算表項目排序
    */
   BEGINNING_CREDIT_AMOUNT = 'BeginningCreditAmount',
   BEGINNING_DEBIT_AMOUNT = 'BeginningDebitAmount',
