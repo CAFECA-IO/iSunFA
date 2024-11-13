@@ -76,10 +76,16 @@
     "TAX_SETTING_TITLE": "Tax Settings",
     "TAX_SALES": "Tax (Sales)",
     "TAX_PURCHASE": "Tax (Purchase)",
+    "TAX_OPTION_TAXABLE": "Taxable",
+    "TAX_OPTION_ZERO_TAX_RATE": "Zero-Tax-Rate",
+    "TAX_OPTION_TAX_FREE": "Tax-Free",
     "TAX_RETURN_PERIODICITY": "Tax Return Periodicity",
     "CURRENCY_SETTING_TITLE": "Currency Settings",
     "ACCOUNTING_SETTING_TITLE": "Accounting Settings",
     "PERIOD_SETTINGS_SUBTITLE": "Period settings",
+    "EVERY": "Every",
+    "MONTH": "Month",
+    "WEEK": "Week",
     "FISCAL_YEAR": "Fiscal Year",
     "FISCAL_YEAR_PERIOD": "Fiscal year period",
     "GENERATE_REPORT_1": "The reports are generated",
@@ -89,7 +95,8 @@
     "VIEW_ALL_ACCOUNTING": "View all Accounting title",
     "ACCOUNTING_IMPORT_SUBTITLE": "Accounting Import",
     "IMPORT_FILE": "Import file",
-    "MANUAL_ACCOUNT_OPENING": "Manual account opening"
+    "MANUAL_ACCOUNT_OPENING": "Manual account opening",
+    "SAVE_BTN": "Save"
   },
   "ACCOUNTING_SETTING_MODAL": {
     "MODAL_TITLE": "Accounting Title Setting",

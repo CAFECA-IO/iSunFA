@@ -76,10 +76,16 @@
     "TAX_SETTING_TITLE": "稅務設定",
     "TAX_SALES": "稅（銷售）",
     "TAX_PURCHASE": "稅（消費）",
+    "TAX_OPTION_TAXABLE": "應稅",
+    "TAX_OPTION_ZERO_TAX_RATE": "零稅率",
+    "TAX_OPTION_TAX_FREE": "免稅",
     "TAX_RETURN_PERIODICITY": "稅務申報週期",
     "CURRENCY_SETTING_TITLE": "貨幣設定",
     "ACCOUNTING_SETTING_TITLE": "會計設定",
     "PERIOD_SETTINGS_SUBTITLE": "期間設定",
+    "EVERY": "每",
+    "MONTH": "月",
+    "WEEK": "週",
     "FISCAL_YEAR": "會計年度",
     "FISCAL_YEAR_PERIOD": "會計年度期間",
     "GENERATE_REPORT_1": "報告將在結束日期後",
@@ -89,7 +95,8 @@
     "VIEW_ALL_ACCOUNTING": "查看所有會計科目",
     "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
     "IMPORT_FILE": "上傳檔案",
-    "MANUAL_ACCOUNT_OPENING": "手動開戶"
+    "MANUAL_ACCOUNT_OPENING": "手動開戶",
+    "SAVE_BTN": "保存"
   },
   "ACCOUNTING_SETTING_MODAL": {
     "MODAL_TITLE": "會計科目設定",
