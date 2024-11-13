@@ -20,6 +20,7 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import { useGlobalCtx } from '@/contexts/global_context';
+import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -42,9 +43,21 @@ const COLOR_CLASSES = [
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }) => {
   const { t } = useTranslation('common');
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  // Info: (20241112 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = () => {
+    setIsPrinting(true); // Info: (20241112 - Anna) 開啟列印模式
+    window.print(); // Info: (20241112 - Anna) 觸發列印
+  };
+
+  // Info: (20241112 - Anna) 動態應用分頁樣式
+  const printContainerClass = isPrinting ? 'mx-auto w-a4-width origin-top overflow-x-auto' : '';
+  const printContentClass = isPrinting ? 'relative h-a4-height overflow-hidden' : '';
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+
   // Info: (20241023 - Anna) 使用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
 
@@ -218,6 +231,22 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       setIsSubAccountsCollapsed(initialCollapseState);
     }
   }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
+
+  useEffect(() => {
+    // Info: (20241112 - Anna) 列印之前啟動列印模式
+    const handleBeforePrint = () => setIsPrinting(true);
+    // Info: (20241112 - Anna) 列印之後退出列印模式
+    const handleAfterPrint = () => setIsPrinting(false);
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    // Info: (20241112 - Anna) 清除事件監聽器
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -451,13 +480,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       </div>
       <div className="ml-auto flex items-center gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-        <PrintButton onClick={() => {}} disabled={false} />
+        <PrintButton onClick={handlePrint} disabled={false} />
       </div>
     </div>
   );
 
   const ItemSummary = (
-    <div id="1" className="relative overflow-y-hidden">
+    <div id="1" className={`${printContentClass} relative overflow-y-hidden`}>
       {/* Info: (20240723 - Shirley) watermark logo */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -517,7 +546,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ItemDetail = (
-    <div id="2" className="relative overflow-y-hidden">
+    <div id="2" className={`${printContentClass} relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
@@ -562,7 +591,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ProportionalTable = (
-    <div id="3" className="relative overflow-y-hidden">
+    <div id="3" className={`${printContentClass} relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產負債比例表</p>
@@ -614,7 +643,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const AssetItem = (
-    <div id="4" className="relative overflow-y-hidden">
+    <div id="4" className={`${printContentClass} relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產分布圖</p>
@@ -667,7 +696,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const TurnoverDay = (
-    <div id="5" className="relative overflow-y-hidden">
+    <div id="5" className={`${printContentClass} relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>應收帳款週轉天數</p>
@@ -731,18 +760,20 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   );
 
   return (
-    <div className="mx-auto w-full origin-top overflow-x-auto">
+    <div className={`${printContainerClass} mx-auto w-full origin-top overflow-x-auto`}>
       <hr className="mb-40px break-before-page" />
-      {displayedSelectArea}
-      {ItemSummary}
-      <hr className="break-before-page" />
-      {ItemDetail}
-      <hr className="break-before-page" />
-      {ProportionalTable}
-      <hr className="mb-16px mt-32px break-before-page" />
-      {AssetItem}
-      <hr className="break-before-page" />
-      {TurnoverDay}
+      <BalanceSheetA4Template reportFinancial={reportFinancial} curDate={curDate}>
+        {displayedSelectArea}
+        {ItemSummary}
+        <hr className="break-before-page" />
+        {ItemDetail}
+        <hr className="break-before-page" />
+        {ProportionalTable}
+        <hr className="mb-16px mt-32px break-before-page" />
+        {AssetItem}
+        <hr className="break-before-page" />
+        {TurnoverDay}
+      </BalanceSheetA4Template>
     </div>
   );
 };

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { CounterpartyType } from '@/constants/counterparty';
-import type { ICounterPartyEntity } from 'src/interfaces/counterparty';
+import { ICounterparty } from '@/interfaces/counterparty';
 import Image from 'next/image';
 import { FiEdit } from 'react-icons/fi';
 import EditCounterPartyModal from '@/components/counterparty/edit_counterparty_modal';
 
 interface ICounterpartyItemProps {
-  counterparty: ICounterPartyEntity; // Info: (20241106 - Anna) 符合 ICounterPartyEntity 資料格式
+  counterparty: ICounterparty; // Info: (20241106 - Anna) 符合 ICounterparty 資料格式
 }
 
 const CounterpartyItem = React.memo(({ counterparty }: ICounterpartyItemProps) => {
-  const { name, type, note, taxId, id: counterpartyId } = counterparty; // Info: (20241110 - Anna) 使用符合 ICounterPartyEntity 的屬性名稱，將 id 重命名為 counterpartyId
+  const { name, type, note, taxId, id: counterpartyId } = counterparty; // Info: (20241110 - Anna) 使用符合 ICounterparty 的屬性名稱，將 id 重命名為 counterpartyId
 
   // Info: (20241108 - Anna) 添加狀態來控制彈窗的開關
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

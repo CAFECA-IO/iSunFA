@@ -101,17 +101,34 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
 
   const disabled = !inputName || !inputTaxId || !inputType;
 
-  // Info: (20241110 - Anna) 新增 API 佔位函數
+  // Info: (20241112 - Anna) 使用 APIHandler 呼叫 COUNTERPARTY_ADD API
   const addCounterparty = async (counterpartyData: {
     name: string;
     taxId: string;
     type: CounterpartyType;
     note: string;
   }) => {
-    await APIHandler(APIName.COUNTERPARTY_ADD, {
-      body: counterpartyData,
-      params: { companyId: selectedCompany?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
-    });
+    const { trigger: addCounterpartyTrigger } = APIHandler(
+      APIName.COUNTERPARTY_ADD,
+      {
+        body: counterpartyData,
+        params: { companyId: selectedCompany?.id || 10000001 }, // Info: (20241112 - Anna) 如果為 null，使用一個預設值
+      },
+      false,
+      true
+    );
+
+    // Info: (20241112 - Anna) 執行 API 請求並回應
+    const response = await addCounterpartyTrigger();
+    if (response.success) {
+      // eslint-disable-next-line no-console
+      console.log('Counterparty created successfully:', response.data); // Info: (20241112 - Anna) 顯示成功訊息
+      return true;
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('Failed to create counterparty:', response.error); // Info: (20241112 - Anna) 顯示錯誤訊息
+      return false;
+    }
   };
 
   const addNewCounterParterHandler = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -125,8 +142,11 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
         type: inputType,
         note: inputNote || '',
       };
-      await addCounterparty(counterpartyData); // Info: (20241110 - Anna) 呼叫 API 函數
-      onSave(counterpartyData);
+      const success = await addCounterparty(counterpartyData); // Info: (20241112 - Anna) 呼叫 API 並接收成功/失敗狀態
+      if (success) {
+        onSave(counterpartyData); // Info: (20241112 - Anna) 如果成功，則呼叫 onSave
+        onClose(); // Info: (20241112 - Anna) 關閉彈窗
+      }
     }
   };
 
