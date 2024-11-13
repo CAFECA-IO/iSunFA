@@ -53,7 +53,7 @@ export const companySettingOutputSchema = z
     companyTaxId: companySetting.company.taxId || '',
     taxSerialNumber: companySetting.taxSerialNumber || '',
     representativeName: companySetting.representativeName || '',
-    country: companySetting.country || '',
+    country: LocaleKey.en || null,
     countryCode: LocaleKey.en,
     phone: companySetting.phone || '',
     address: companySetting.address || '',
