@@ -21,7 +21,7 @@ const companySettingPutBodySchema = z.object({
   companyTaxId: z.string(),
   taxSerialNumber: z.string(),
   representativeName: z.string(),
-  country: z.string(),
+  country: z.nativeEnum(LocaleKey),
   countryCode: z.nativeEnum(LocaleKey),
   phone: z.string(),
   address: z.string(),

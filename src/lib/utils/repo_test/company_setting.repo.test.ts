@@ -50,7 +50,7 @@ describe('Company Setting Repository', () => {
         companyTaxId: '123456789',
         taxSerialNumber: '123456789',
         representativeName: 'Jane Doe',
-        country: 'US',
+        country: LocaleKey.en,
         countryCode: LocaleKey.en,
         phone: '9876543210',
         address: '123 Main St',
@@ -64,7 +64,7 @@ describe('Company Setting Repository', () => {
       expect(companySetting).toBeDefined();
       expect(companySetting!.taxSerialNumber).toBe('123456789');
       expect(companySetting!.representativeName).toBe('Jane Doe');
-      expect(companySetting!.country).toBe('US');
+      expect(companySetting!.country).toBe('en');
       expect(companySetting!.phone).toBe('9876543210');
       expect(companySetting!.address).toBe('123 Main St');
     });

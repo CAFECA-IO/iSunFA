@@ -2,9 +2,6 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
-// import { useModalContext } from '@/contexts/modal_context';
-// import { ToastId } from '@/constants/toast_id';
-// import { ToastType } from '@/interfaces/toastify';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICompanySetting } from '@/interfaces/company_setting';
@@ -33,14 +30,16 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const { toastHandler } = useModalContext();
-  const { trigger: getCompanySetting } = APIHandler<ICompanySetting>(APIName.COMPANY_SETTING_GET);
-  const { trigger: updateCompanySetting } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
+  const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
+    APIName.COMPANY_SETTING_GET
+  );
+  const { trigger: updateCompanySettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (companyAndRole) {
       try {
-        const res = await updateCompanySetting({
+        const res = await updateCompanySettingAPI({
           params: {
             companyId: companyAndRole.company.id,
           },
@@ -77,31 +76,36 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
     }
   };
 
-  useEffect(() => {
+  const getCompanySetting = async () => {
     if (companyAndRole) {
-      getCompanySetting({ params: { companyId: companyAndRole.company.id } })
-        .then((res) => {
-          const { success, data } = res;
-          if (success && data) {
-            setCompanyName(data.companyName);
-            setBusinessTaxId(data.companyTaxId);
-            setTaxSerialNumber(data.taxSerialNumber);
-            setRepresentativeName(data.representativeName);
-            setCompanyAddress(data.address);
-            setCountry(data.country as LocaleKey); // Info: (202411007 - Tzuhan)  需跟後端確認是否可以直接轉型
-            setCountryCode(LocaleKey.en); // ToDo: (202411007 - Tzuhan) 需跟後端確認是否有 countryCode
-            setPhoneNumber(data.phone);
-          }
-        })
-        .catch((err) => {
-          toastHandler({
-            id: ToastId.COMPANY_SETTING_GET_ERROR,
-            type: ToastType.ERROR,
-            content: err.message,
-            closeable: true,
-          });
+      try {
+        const res = await getCompanySettingAPI({
+          params: { companyId: companyAndRole.company.id },
         });
+        const { success, data } = res;
+        if (success && data) {
+          setCompanyName(data.companyName);
+          setBusinessTaxId(data.companyTaxId);
+          setTaxSerialNumber(data.taxSerialNumber);
+          setRepresentativeName(data.representativeName);
+          setCompanyAddress(data.address);
+          setCountry(data.country as LocaleKey); // Info: (202411007 - Tzuhan)  需跟後端確認是否可以直接轉型
+          setCountryCode(LocaleKey.en); // ToDo: (202411007 - Tzuhan) 需跟後端確認是否有 countryCode
+          setPhoneNumber(data.phone);
+        }
+      } catch (err) {
+        toastHandler({
+          id: ToastId.COMPANY_SETTING_GET_ERROR,
+          type: ToastType.ERROR,
+          content: (err as Error).message,
+          closeable: true,
+        });
+      }
     }
+  };
+
+  useEffect(() => {
+    getCompanySetting();
   }, []);
 
   return (
