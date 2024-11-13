@@ -15,10 +15,6 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
 
   // ToDo: (20241025 - Liz) 打 API 去變更公司的 tag
 
-  // Deprecated: (20241025 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('Company Name:', companyName);
-
   const [tag, setTag] = useState('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 

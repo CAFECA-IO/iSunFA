@@ -100,12 +100,7 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 
 const MyCompanyListPageBody = () => {
   const { t } = useTranslation(['company']);
-
   const { userAuth } = useUserCtx();
-  // Deprecated: (20241111 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('(in MyCompanyListPageBody) userAuth:', userAuth);
-
   const userId = userAuth?.id;
 
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
@@ -117,10 +112,6 @@ const MyCompanyListPageBody = () => {
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
-
-  // Deprecated: (20241111 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('totalPage:', totalPage, 'currentPage:', currentPage, 'companyList:', companyList);
 
   const isNoData = companyList.length === 0;
 
@@ -135,10 +126,6 @@ const MyCompanyListPageBody = () => {
     setCompanyList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
-
-    // Deprecated: (20241111 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('(handleApiResponse) resData:', resData);
   };
 
   return (
