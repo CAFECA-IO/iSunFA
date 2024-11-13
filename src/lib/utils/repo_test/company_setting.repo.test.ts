@@ -7,6 +7,7 @@ import {
 } from '@/lib/utils/repo/company_setting.repo';
 import companySettings from '@/seed_json/company_setting.json';
 import { formatCompanySetting } from '@/lib/utils/formatter/company_setting.formatter';
+import { LocaleKey } from '@/constants/normal_setting';
 
 describe('Company Setting Repository', () => {
   describe('createCompanySetting', () => {
@@ -50,6 +51,7 @@ describe('Company Setting Repository', () => {
         taxSerialNumber: '123456789',
         representativeName: 'Jane Doe',
         country: 'US',
+        countryCode: LocaleKey.en,
         phone: '9876543210',
         address: '123 Main St',
         createdAt: 1635244800,
