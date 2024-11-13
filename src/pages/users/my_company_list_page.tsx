@@ -7,7 +7,7 @@ import MyCompanyListPageBody from '@/components/beta/my_company_list_page/my_com
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 const MyCompanyListPage = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['dashboard']);
 
   return (
     <>
@@ -15,7 +15,7 @@ const MyCompanyListPage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}</title>
+        <title>{t('dashboard:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -32,7 +32,7 @@ const MyCompanyListPage = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('common:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
+        pageTitle={t('dashboard:MY_COMPANY_LIST_PAGE.MY_COMPANY_LIST')}
         goBackUrl={ISUNFA_ROUTE.DASHBOARD}
       >
         <MyCompanyListPageBody />
@@ -44,7 +44,7 @@ const MyCompanyListPage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['common', 'company'])),
+      ...(await serverSideTranslations(locale as string, ['dashboard', 'company'])),
     },
   };
 };

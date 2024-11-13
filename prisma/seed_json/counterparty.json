@@ -15,7 +15,7 @@
     "companyId": 1000,
     "name": "XYZ Ltd",
     "taxId": "987654321",
-    "type": "CUSTOMER",
+    "type": "CLIENT",
     "note": "Regular customer",
     "createdAt": 1622548800,
     "updatedAt": 1625130800,

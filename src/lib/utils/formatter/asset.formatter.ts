@@ -9,7 +9,11 @@ import { assetEntityValidator } from '@/lib/utils/zod_schema/asset';
  * @note please check assetEntityValidator for how validation is parsed
  */
 export function parsePrismaAssetToAssetEntity(dto: PrismaAsset): IAssetEntity {
-  const { data, success, error } = assetEntityValidator.safeParse(dto);
+  const newDto = Object.assign(dto, {
+    assetVouchers: [],
+  });
+
+  const { data, success, error } = assetEntityValidator.safeParse(newDto);
 
   if (!success) {
     throw new FormatterError('parsePrismaAssetToAssetEntity', {

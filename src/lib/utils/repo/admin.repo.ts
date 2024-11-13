@@ -366,6 +366,7 @@ export async function listCompanyAndRole(
   userId: number,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
+  searchQuery: string = '',
   sortOrder: SortOrder = SortOrder.ASC
 ): Promise<{
   data: Array<{
@@ -395,7 +396,12 @@ export async function listCompanyAndRole(
         userId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
         company: {
-          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+          AND: [
+            { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+            {
+              OR: [{ name: { contains: searchQuery, mode: 'insensitive' } }],
+            },
+          ],
         },
       },
       orderBy: {

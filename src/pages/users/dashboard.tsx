@@ -6,7 +6,7 @@ import Layout from '@/components/beta/layout/layout';
 import DashboardBody from '@/components/beta/dashboard/dashboard_body';
 
 const Dashboard = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['dashboard']);
 
   return (
     <>
@@ -14,7 +14,7 @@ const Dashboard = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:BETA_DASHBOARD.DASHBOARD')}</title>
+        <title>{t('dashboard:DASHBOARD.DASHBOARD')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -39,17 +39,7 @@ const Dashboard = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, [
-        'common',
-        'report_401',
-        'journal',
-        'kyc',
-        'project',
-        'setting',
-        'terms',
-        'salary',
-        'asset',
-      ])),
+      ...(await serverSideTranslations(locale as string, ['dashboard'])),
     },
   };
 };

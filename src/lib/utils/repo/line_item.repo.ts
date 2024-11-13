@@ -36,3 +36,13 @@ export async function getLineItemsInPrisma(
 
   return lineItemsFromDB;
 }
+
+export async function getOneLineItemWithoutInclude(lineItemId: number) {
+  const lineItem = await prisma.lineItem.findFirst({
+    where: {
+      id: lineItemId,
+    },
+  });
+
+  return lineItem;
+}

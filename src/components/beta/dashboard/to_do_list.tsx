@@ -5,21 +5,21 @@ import { PiLinkBold } from 'react-icons/pi';
 import { useTranslation } from 'next-i18next';
 
 const ToDoListNotLink = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <section className="flex flex-col gap-24px">
       <h3 className="text-xl font-bold text-text-neutral-secondary">
-        {t('common:BETA_DASHBOARD.TO_DO_LIST')}
+        {t('dashboard:DASHBOARD.TO_DO_LIST')}
       </h3>
 
       <div className="flex flex-col items-center gap-8px">
         <p className="font-medium text-text-neutral-mute">
-          {t('common:BETA_DASHBOARD.CALENDAR_NOT_YET_LINKED')}
+          {t('dashboard:DASHBOARD.CALENDAR_NOT_YET_LINKED')}
         </p>
         <button type="button" className="flex items-center gap-8px text-text-neutral-link">
           <PiLinkBold size={16} />
-          <p className="font-medium">{t('common:BETA_DASHBOARD.LINK_MY_CALENDAR')}</p>
+          <p className="font-medium">{t('dashboard:DASHBOARD.LINK_MY_CALENDAR')}</p>
         </button>
       </div>
     </section>
@@ -27,13 +27,13 @@ const ToDoListNotLink = () => {
 };
 
 const ToDoListEmpty = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <section className="flex flex-col gap-24px">
       <div className="flex justify-between">
         <h3 className="text-xl font-bold text-text-neutral-secondary">
-          {t('common:BETA_DASHBOARD.TO_DO_LIST')}
+          {t('dashboard:DASHBOARD.TO_DO_LIST')}
         </h3>
         <MoreLink href={'/'} />
       </div>
@@ -44,7 +44,7 @@ const ToDoListEmpty = () => {
         </div>
 
         <p className="text-base font-medium text-text-neutral-mute">
-          {t('common:BETA_DASHBOARD.NO_SCHEDULE_FOR_TODAY')}
+          {t('dashboard:DASHBOARD.NO_SCHEDULE_FOR_TODAY')}
         </p>
       </div>
     </section>
@@ -67,13 +67,13 @@ const ToDoListHasPlan = () => {
     },
   ];
 
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <section className="flex flex-col gap-24px">
       <div className="flex justify-between">
         <h3 className="text-xl font-bold text-text-neutral-secondary">
-          {t('common:BETA_DASHBOARD.TO_DO_LIST')}
+          {t('dashboard:DASHBOARD.TO_DO_LIST')}
         </h3>
         <MoreLink href={'/'} />
       </div>

@@ -89,6 +89,9 @@ export enum APIName {
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
   REPORT_GET_V2 = 'REPORT_GET_V2',
   REPORT_GENERATE = 'REPORT_GENERATE',
+  ROOM_ADD = 'ROOM_ADD',
+  ROOM_GET_BY_ID = 'ROOM_GET_BY_ID',
+  ROOM_DELETE = 'ROOM_DELETE',
   STATUS_INFO_GET = 'STATUS_INFO_GET',
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
@@ -144,7 +147,9 @@ export enum APIName {
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
   IP_LIST = 'IP_LIST',
+  ASSET_LIST_EXPORT = 'ASSET_LIST_EXPORT',
   FILE_EXPORT = 'FILE_EXPORT',
+  LEDGER_LIST = 'LEDGER_LIST',
 }
 
 export enum APIPath {
@@ -160,7 +165,6 @@ export enum APIPath {
   COMPANY_PENDING_TASK_GET = `${apiPrefix}/company/:companyId/pending_task`,
   COMPANY_ADD = `${apiPrefix}/company`,
   COMPANY_ADD_BY_INVITATION_CODE = `${apiPrefix}/user/:userId/invitation`,
-  COMPANY_SELECT = `${apiPrefixV2}/user/:userId/selected_company`,
   COMPANY_SETTING_GET = `${apiPrefixV2}/company/:companyId/setting`,
   COMPANY_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/setting`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -212,6 +216,9 @@ export enum APIPath {
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
   REPORT_GET_V2 = `${apiPrefixV2}/company/:companyId/report`,
   REPORT_GENERATE = `${apiPrefix}/company/:companyId/report`,
+  ROOM_ADD = `${apiPrefixV2}/room`,
+  ROOM_GET_BY_ID = `${apiPrefixV2}/room/:roomId`,
+  ROOM_DELETE = `${apiPrefixV2}/room/:roomId`,
   STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
@@ -226,6 +233,7 @@ export enum APIPath {
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
   LIST_USER_COMPANY = `${apiPrefixV2}/user/:userId/company`,
+  COMPANY_SELECT = `${apiPrefixV2}/user/:userId/selected_company`,
   ROLE_LIST = `${apiPrefixV2}/role`,
   ROLE_GET_BY_ID = `${apiPrefixV2}/role/:roleId`,
   ROLE_DELETE = `${apiPrefixV2}/role/:roleId`,
@@ -267,7 +275,9 @@ export enum APIPath {
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
   IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
-  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/export`,
+  ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
+  FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
+  LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
 }
 const createConfig = ({
   name,
@@ -488,6 +498,21 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.REPORT_GENERATE,
     method: HttpMethod.POST,
     path: APIPath.REPORT_GENERATE,
+  }),
+  [APIName.ROOM_ADD]: createConfig({
+    name: APIName.ROOM_ADD,
+    method: HttpMethod.POST,
+    path: APIPath.ROOM_ADD,
+  }),
+  [APIName.ROOM_GET_BY_ID]: createConfig({
+    name: APIName.ROOM_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.ROOM_GET_BY_ID,
+  }),
+  [APIName.ROOM_DELETE]: createConfig({
+    name: APIName.ROOM_DELETE,
+    method: HttpMethod.DELETE,
+    path: APIPath.ROOM_DELETE,
   }),
   [APIName.LABOR_COST_CHART]: createConfig({
     name: APIName.LABOR_COST_CHART,
@@ -875,9 +900,19 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.IP_LIST,
   }),
+  [APIName.ASSET_LIST_EXPORT]: createConfig({
+    name: APIName.ASSET_LIST_EXPORT,
+    method: HttpMethod.GET,
+    path: APIPath.ASSET_LIST_EXPORT,
+  }),
   [APIName.FILE_EXPORT]: createConfig({
     name: APIName.FILE_EXPORT,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.FILE_EXPORT,
+  }),
+  [APIName.LEDGER_LIST]: createConfig({
+    name: APIName.LEDGER_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.LEDGER_LIST,
   }),
 };

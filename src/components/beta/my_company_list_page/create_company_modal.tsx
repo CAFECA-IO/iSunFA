@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
 import { CompanyTag } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
+// import { useRouter } from 'next/router'; // Deprecated: (20241111 - Liz)
 
 interface CreateCompanyModalProps {
   isModalOpen: boolean;
   toggleModal: () => void;
+  setIsCallingAPI?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProps) => {
-  const { t } = useTranslation(['company', 'common']);
+const CreateCompanyModal = ({
+  isModalOpen,
+  toggleModal,
+  setIsCallingAPI,
+}: CreateCompanyModalProps) => {
+  const { t } = useTranslation(['company']);
+  // const router = useRouter(); // Deprecated: (20241111 - Liz)
+
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
   const [tag, setTag] = useState<CompanyTag>(CompanyTag.ALL);
@@ -28,6 +36,10 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
 
   const handleSubmit = async () => {
     setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+
+    if (setIsCallingAPI) {
+      setIsCallingAPI((prevState) => !prevState);
+    }
 
     try {
       const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
@@ -53,6 +65,10 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
       console.log('CreateCompanyModal handleSubmit error:', error);
     } finally {
       setIsLoading(false); // API 回傳後解除 loading 狀態
+      // ToDo: (20241111 - Liz) 需要讓頁面重新渲染，才能看到新增的公司
+      if (setIsCallingAPI) {
+        setIsCallingAPI((prevState) => !prevState);
+      }
     }
   };
 
@@ -70,10 +86,12 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
 
         <section className="flex flex-col gap-24px px-40px py-16px">
           <div className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">{t('company:INFO.NAME')}</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('company:INFO.COMPANY_NAME')}
+            </h4>
             <input
               type="text"
-              placeholder={t('common:PLACEHOLDER.ENTER_NAME')}
+              placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
@@ -84,7 +102,7 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
             <h4 className="font-semibold text-input-text-primary">{t('company:INFO.TAX_ID')}</h4>
             <input
               type="text"
-              placeholder={t('common:PLACEHOLDER.ENTER_NUMBER')}
+              placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
               value={taxId}
               onChange={(e) => setTaxId(e.target.value)}
@@ -136,7 +154,7 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
             onClick={toggleModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
-            Cancel
+            {t('company:PAGE_BODY.CANCEL')}
           </button>
 
           <button
@@ -145,7 +163,7 @@ const CreateCompanyModal = ({ isModalOpen, toggleModal }: CreateCompanyModalProp
             disabled={isLoading}
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
-            Submit
+            {t('company:PAGE_BODY.SUBMIT')}
           </button>
         </section>
       </div>

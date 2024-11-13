@@ -318,14 +318,18 @@ const voucherPostBodyValidatorV2 = z.object({
   counterPartyId: z.number().int().optional(),
   /**
    * Info: (20241105 - Murky)
-   * [
-   *  {
-   *  voucherId: 1,
-   *    lineItemIdBeReversed: 1, 白色藍底的lineItem的id
-   *    lineItemIdReverseOther: 2, 藍色白底的lineItem的id: -1
-   *     amount: 1000
-   *  }
-   * ]
+   * @Julian Post Voucher的時候 reverseVouchers[0].lineItemIdBeReversed 填寫 REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 取得的id,
+   * reverseVouchers[0].lineItemIdReverseOther 放的則是要被Reverse的lineItem 在 Post lineItem array中的id
+   * @example
+   * ```
+   *  [{
+   *    voucherId: 1,
+   *    lineItemIdBeReversed: 1, // 白色藍底的lineItem的id
+   *    lineItemIdReverseOther: 2, // 藍色白底的lineItem 的編號，這邊不是只在database中的id, 而是post 中在 lineItems array中的index
+   *    amount: 1000
+   *  },]
+   * ```
+
    */
   reverseVouchers: z.array(
     z.object({
@@ -336,6 +340,11 @@ const voucherPostBodyValidatorV2 = z.object({
     })
   ),
 });
+
+const voucherPostOutputValidatorV2 = voucherEntityValidator.transform((data) => {
+  return data.id;
+});
+const voucherPostFrontendValidatorV2 = z.number();
 
 export const voucherPostValidatorV2: IZodValidator<
   (typeof voucherPostQueryValidatorV2)['shape'],
@@ -700,8 +709,8 @@ export const voucherPostSchema = {
     querySchema: voucherPostQueryValidatorV2,
     bodySchema: voucherPostBodyValidatorV2,
   },
-  outputSchema: voucherEntityValidator,
-  frontend: voucherNullSchema,
+  outputSchema: voucherPostOutputValidatorV2,
+  frontend: voucherPostFrontendValidatorV2,
 };
 
 export const voucherListSchema = {

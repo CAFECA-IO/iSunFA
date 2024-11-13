@@ -13,7 +13,7 @@ interface II18nProps {
 }
 
 const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('dashboard');
 
   const [openMenu, setOpenMenu] =
     typeof setLangIsOpen !== 'function' ? useState(false) : [langIsOpen, setLangIsOpen];
@@ -124,7 +124,7 @@ const I18n = ({ langIsOpen, setLangIsOpen }: II18nProps) => {
       >
         <div className="flex w-full items-center gap-8px">
           <VscGlobe size={20} />
-          <p> {t('common:NAV_BAR.LANGUAGE')}</p>
+          <p> {t('dashboard:HEADER.LANGUAGE')}</p>
         </div>
 
         <IoIosArrowForward size={20} />

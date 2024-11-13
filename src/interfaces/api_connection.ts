@@ -54,6 +54,9 @@ export type IAPIName =
   | 'REPORT_GET_BY_ID'
   | 'REPORT_GET_V2'
   | 'REPORT_GENERATE'
+  | 'ROOM_ADD'
+  | 'ROOM_GET_BY_ID'
+  | 'ROOM_DELETE'
   | 'STATUS_INFO_GET'
   | 'ACCOUNT_LIST'
   | 'FILE_UPLOAD'
@@ -120,7 +123,9 @@ export type IAPIName =
   | 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE'
   | 'TRIAL_BALANCE_LIST'
   | 'IP_LIST'
-  | 'FILE_EXPORT';
+  | 'ASSET_LIST_EXPORT'
+  | 'FILE_EXPORT'
+  | 'LEDGER_LIST';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

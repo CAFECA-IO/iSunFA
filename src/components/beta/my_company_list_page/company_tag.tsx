@@ -1,6 +1,7 @@
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
 import { CompanyTag } from '@/constants/company';
+import { useTranslation } from 'react-i18next';
 
 interface WorkTagProps {
   type: CompanyTag;
@@ -8,6 +9,8 @@ interface WorkTagProps {
 }
 
 const WorkTag = ({ type, handleChangeTag }: WorkTagProps) => {
+  const { t } = useTranslation(['company']);
+
   let backgroundColor = '';
   let textColor = '';
   let icon = null;
@@ -45,7 +48,7 @@ const WorkTag = ({ type, handleChangeTag }: WorkTagProps) => {
       className={`flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
     >
       {icon}
-      <p className="px-4px capitalize">{type}</p>
+      <p className="px-4px capitalize">{t(`company:TAG.${type.toUpperCase()}`)}</p>
     </button>
   );
 };

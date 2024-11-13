@@ -1,3 +1,4 @@
+// Deprecated: (20241111 - Liz) 這是 Alpha 版本的元件
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/button/button';
@@ -86,7 +87,7 @@ const CreateCompanyModal = ({ isModalVisible, modalVisibilityHandler }: ICreateC
     if (createCompanySuccess && companyAndRole) {
       // Info: (20240520 - Julian) 如果成功，將公司名稱傳入 user context，並導向 dashboard
       resetValues();
-      selectCompany(companyAndRole.company);
+      selectCompany(companyAndRole.company.id);
       modalVisibilityHandler();
     } else if (createCompanyError) {
       if (createCompanyCode === STATUS_CODE[STATUS_MESSAGE.DUPLICATE_COMPANY]) {

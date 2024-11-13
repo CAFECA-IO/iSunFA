@@ -24,9 +24,9 @@ interface CompanyEditModalProps {
 
 const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
-  const [companyName, setCompanytName] = React.useState('');
-  const [bussinessTaxId, setBussinessTaxId] = React.useState('');
-  const [taxSerialNumer, setTaxSerialNumer] = React.useState('');
+  const [companyName, setCompanyName] = React.useState('');
+  const [businessTaxId, setBusinessTaxId] = React.useState('');
+  const [taxSerialNumber, setTaxSerialNumber] = React.useState('');
   const [representativeName, setRepresentativeName] = React.useState('');
   const [companyAddress, setCompanyAddress] = React.useState('');
   const [country, setCountry] = React.useState<LocaleKey | null>(null);
@@ -45,8 +45,8 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
         },
         body: {
           companyName,
-          companyTaxId: bussinessTaxId,
-          taxSerialNumber: taxSerialNumer,
+          companyTaxId: businessTaxId,
+          taxSerialNumber,
           representativeName,
           address: companyAddress,
           country,
@@ -83,9 +83,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
         .then((res) => {
           const { success, data } = res;
           if (success && data) {
-            setCompanytName(data.companyName);
-            setBussinessTaxId(data.companyTaxId);
-            setTaxSerialNumer(data.taxSerialNumber);
+            setCompanyName(data.companyName);
+            setBusinessTaxId(data.companyTaxId);
+            setTaxSerialNumber(data.taxSerialNumber);
             setRepresentativeName(data.representativeName);
             setCompanyAddress(data.address);
             setCountry(data.country as LocaleKey); // Info: (202411007 - Tzuhan)  需跟後端確認是否可以直接轉型
@@ -141,24 +141,24 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
                 {t('company:EDIT.NAME')}
               </p>
               <input
-                id="comany-name-input"
+                id="company-name-input"
                 type="text"
                 value={companyName}
-                onChange={(e) => setCompanytName(e.target.value)}
-                placeholder={t('common:PLACEHOLDER.ENTER_NAME')}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
-                {t('company:EDIT.BUSSINESS_TAX_ID')}
+                {t('company:EDIT.BUSINESS_TAX_ID')}
               </p>
               <input
                 id="company-tax-id-input"
                 type="text"
-                value={bussinessTaxId}
-                onChange={(e) => setBussinessTaxId(e.target.value)}
-                placeholder={t('common:PLACEHOLDER.ENTER_NUMBER')}
+                value={businessTaxId}
+                onChange={(e) => setBusinessTaxId(e.target.value)}
+                placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -169,9 +169,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
               <input
                 id="company-tax-serial-number-input"
                 type="text"
-                value={taxSerialNumer}
-                onChange={(e) => setTaxSerialNumer(e.target.value)}
-                placeholder={t('common:PLACEHOLDER.ENTER_NUMBER')}
+                value={taxSerialNumber}
+                onChange={(e) => setTaxSerialNumber(e.target.value)}
+                placeholder={t('company:PLACEHOLDER.ENTER_NUMBER')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -186,7 +186,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
                 type="text"
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
-                placeholder={t('common:PLACEHOLDER.ENTER_NAME')}
+                placeholder={t('company:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
@@ -208,7 +208,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
                 type="text"
                 value={companyAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
-                placeholder={t('common:PLACEHOLDER.ENTER_FULL_ADDRESS')}
+                placeholder={t('company:PLACEHOLDER.ENTER_FULL_ADDRESS')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
