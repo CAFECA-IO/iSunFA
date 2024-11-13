@@ -3,10 +3,16 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
 import { Button } from '@/components/button/button';
 import { AccountTypeBeta } from '@/constants/account';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { TitleFormType } from '@/constants/accounting_setting';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IAddNewTitleSectionProps {
   accountTitleList: IAccount[];
@@ -20,6 +26,25 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   selectedAccountTitle,
 }) => {
   const { t } = useTranslation('common');
+
+  const { toastHandler } = useModalContext();
+  const { selectedCompany } = useUserCtx();
+
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+
+  // Info: (20241112 - Julian) 新增會計科目的 API
+  const {
+    trigger: createNewAccount,
+    isLoading: isCreating,
+    success: createSuccess,
+  } = APIHandler(APIName.CREATE_NEW_SUB_ACCOUNT);
+
+  // Info: (20241112 - Julian) 更新會計科目的 API
+  const {
+    trigger: updateNewAccount,
+    isLoading: isUpdating,
+    success: updateSuccess,
+  } = APIHandler<IPaginatedAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID);
 
   const {
     targetRef: categoryRef,
@@ -87,10 +112,36 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   };
 
   useEffect(() => {
+    if (createSuccess && !isCreating) {
+      toastHandler({
+        id: 'create-accounting-title',
+        type: ToastType.SUCCESS,
+        content: 'Accounting title created successfully!',
+        closeable: true,
+      });
+      clearAllHandler();
+    }
+  }, [createSuccess, isCreating]);
+
+  useEffect(() => {
+    if (updateSuccess && !isUpdating) {
+      toastHandler({
+        id: 'update-accounting-title',
+        type: ToastType.SUCCESS,
+        content: 'Accounting title updated successfully!',
+        closeable: true,
+      });
+      clearAllHandler();
+    }
+  }, [createSuccess, isCreating]);
+
+  useEffect(() => {
     // Info: (20241112 - Julian) 連動左邊的 <AccountTitleSection />，如果有選擇的會計科目，則將其顯示在表單中
     if (selectedAccountTitle) {
       setSelectCategory(selectedAccountTitle.type);
       setSelectSubcategory(selectedAccountTitle);
+      // Info: (20241113 - Julian) 如果是新增，則名稱為空；如果是編輯，則名稱為原本的名稱
+      setTitleName(formType === TitleFormType.add ? '' : selectedAccountTitle.name);
       // Info: (20241113 - Julian) 如果是新增，則代碼為空；如果是編輯，則代碼為原本的代碼
       setTitleCode(formType === TitleFormType.add ? '-' : selectedAccountTitle.code);
       // ToDo: (20241113 - Julian) IAcount 的 note 欄位還沒有實作
@@ -166,15 +217,35 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     </div>
   );
 
+  const addBtnClickHandler = async () => {
+    createNewAccount({ params: { companyId } });
+  };
+
+  const updateBtnClickHandler = async () => {
+    if (selectedAccountTitle) {
+      updateNewAccount({ params: { companyId, accountId: selectedAccountTitle.id } });
+    }
+  };
+
   const submitBtn =
     formType === TitleFormType.add ? (
       // ToDo: (20241113 - Julian) Create API
-      <Button type="submit" variant="default" disabled={submitDisabled}>
+      <Button
+        type="submit"
+        variant="default"
+        disabled={submitDisabled}
+        onClick={addBtnClickHandler}
+      >
         {t('setting:ACCOUNTING_SETTING_MODAL.ADD_BTN')}
       </Button>
     ) : (
       // ToDo: (20241113 - Julian) Update API
-      <Button type="submit" variant="default" disabled={submitDisabled}>
+      <Button
+        type="submit"
+        variant="default"
+        disabled={submitDisabled}
+        onClick={updateBtnClickHandler}
+      >
         {t('setting:ACCOUNTING_SETTING_MODAL.SAVE_BTN')}
       </Button>
     );

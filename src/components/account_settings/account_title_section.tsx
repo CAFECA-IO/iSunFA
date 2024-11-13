@@ -39,7 +39,7 @@ const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
 }) => {
   return (
     <div
-      className={`flex w-full items-center rounded-full px-8px py-4px hover:cursor-pointer ${isActive ? 'bg-surface-brand-primary-30' : 'hover:bg-surface-brand-primary-10'}`}
+      className={`mt-4px flex w-full items-center rounded-full px-8px py-4px hover:cursor-pointer ${isActive ? 'bg-surface-brand-primary-30' : 'hover:bg-surface-brand-primary-10'}`}
     >
       <div
         onClick={clickHandler} // Info: (20241113 - Julian) 將點擊事件放在這層，和刪除紐分開
@@ -87,29 +87,28 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
     </button>
   ) : null;
 
-  const displayChildList = childList.map((child) => {
-    // Info: (20241111 - Julian) 如果 activeChild 存在，且 activeChild 的 id 等於 child 的 id，則 isActive 為 true
-    const isActive = activeChild ? activeChild.id === child.id : false;
+  const displayChildList =
+    childList.length > 0
+      ? childList.map((child) => {
+          // Info: (20241111 - Julian) 如果 activeChild 存在，且 activeChild 的 id 等於 child 的 id，則 isActive 為 true
+          const isActive = activeChild ? activeChild.id === child.id : false;
 
-    /* Info: (20241111 - Julian) 點擊子項目時
-    /* 1. 將 activeChild 設為該子項目
-    /* 2. 將 formType 設為 edit
-    /* 3. 將 title 傳到右邊的 <AddNewTitleSection /> */
-    const clickChildHandler = () => {
-      setActiveChild(child);
-      setFormType(TitleFormType.edit);
-      setSelectedAccountTitle(child);
-    };
-    return (
-      <AccountThirdLayerItem
-        key={child.id}
-        isActive={isActive}
-        titleCode={child.code}
-        titleName={child.name}
-        clickHandler={clickChildHandler}
-      />
-    );
-  });
+          const clickChildHandler = () => {
+            setActiveChild(child); // Info: (20241113 - Julian) 將 activeChild 設為該子項目
+            setFormType(TitleFormType.edit); // Info: (20241113 - Julian) 將 formType 設為 edit
+            setSelectedAccountTitle(child); // Info: (20241113 - Julian)  將 title 傳到右邊的 <AddNewTitleSection />
+          };
+          return (
+            <AccountThirdLayerItem
+              key={child.id}
+              isActive={isActive}
+              titleCode={child.code}
+              titleName={child.name}
+              clickHandler={clickChildHandler}
+            />
+          );
+        })
+      : null;
 
   return (
     <div ref={targetRef} className="flex flex-col">
@@ -141,7 +140,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
           <div className="w-20px pl-15px">
             <div className="h-full w-px bg-tree-stroke-divider"></div>
           </div>
-          <div className="flex flex-1 flex-col py-4px">{displayChildList}</div>
+          <div className="flex flex-1 flex-col">{displayChildList}</div>
         </div>
       </div>
     </div>
