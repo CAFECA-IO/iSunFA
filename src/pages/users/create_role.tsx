@@ -4,7 +4,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/create_role/introduction';
-import RoleCard from '@/components/beta/create_role/role_card';
+import RoleCard from '@/components/beta/create_role/role_cards';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { IRole } from '@/interfaces/role';
@@ -23,7 +23,7 @@ const findUniqueRolesOptimized = (systemRoles: IRole[], userRoles: IUserRole[]):
 };
 
 const CreateRolePage = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['dashboard']);
   const { getSystemRoleList, getUserRoleList } = useUserCtx();
   // Info: (20241108 - Liz) 畫面顯示的角色
   const [showingRole, setShowingRole] = useState<string>('');
@@ -72,7 +72,7 @@ const CreateRolePage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:CREATE_ROLE_PAGE.CREATE_ROLE_TITLE')} - iSunFA</title>
+        <title>{t('dashboard:CREATE_ROLE_PAGE.CREATE_ROLE_TITLE')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -114,7 +114,7 @@ const CreateRolePage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, ['dashboard'])),
     },
   };
 };

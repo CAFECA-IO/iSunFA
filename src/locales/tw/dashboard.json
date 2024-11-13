@@ -1,0 +1,82 @@
+{
+  "DASHBOARD": {
+    "DASHBOARD": "儀表板",
+    "TO_DO_LIST": "待辦事項",
+    "CALENDAR_NOT_YET_LINKED": "行事曆尚未連結",
+    "LINK_MY_CALENDAR": "連結我的行事曆",
+    "NO_SCHEDULE_FOR_TODAY": "今天沒有安排待辦事項",
+    "MY_COMPANY_LIST": "我的公司列表",
+    "COMPANY_NOT_YET_CREATED": "尚未建立公司",
+    "PLEASE_PROCEED_TO": "請前往",
+    "CREATE_A_COMPANY": "建立公司",
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL": "財經新聞",
+    "SYSTEM": "系統資訊",
+    "MATCHING": "媒合資訊",
+    "MORE": "更多",
+    "SEE_MORE": "查看更多",
+    "PENDING_TASKS": "待處理任務",
+    "PENDING_TASKS_TOTAL": "待處理任務 (全部)",
+    "MISSING_CERTIFICATE": "缺少憑證",
+    "UNPOSTED_VOUCHERS": "尚未入帳",
+    "UNARCHIVED_CUSTOMER_DATA": "尚未封存的客戶資料",
+    "ADD_TO_MY_CALENDAR": "新增至我的行事曆",
+    "NO_DATA_AVAILABLE": "沒有可用資料",
+    "NO_DATA": "沒有資料"
+  },
+
+  "COMMON": {
+    "ERROR": "錯誤",
+    "START": "開始",
+    "PREVIEW": "預覽"
+  },
+
+  "HEADER": {
+    "SEARCH": "搜尋",
+    "MY_ACCOUNT": "我的帳號",
+    "SUBSCRIPTION_AND_BILLS": "訂閱與帳單",
+    "LOGOUT": "登出",
+    "LOGIN": "登入",
+    "LANGUAGE": "語言"
+  },
+
+  "ROLE": {
+    "ACCOUNTANT": "會計",
+    "BOOKKEEPER": "記帳士",
+    "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
+    "EDUCATIONAL": "教育",
+    "TRIAL_VERSION": "試用版"
+  },
+
+  "CREATE_ROLE_PAGE": {
+    "CREATE_ROLE_TITLE": "建立角色",
+    "SELECT_YOUR_ROLE": "選擇您的角色",
+    "ROLE_FUNCTION_PREVIEW": "角色功能預覽",
+
+    "COMMON_FUNCTIONS": "常用功能",
+    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理總帳、開立憑證、製作財務及稅務報表",
+    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理總帳、開立憑證",
+    "DEFAULT_INTRODUCTION": "iSunFA提供了多種角色供使用者選擇，每個角色都有專屬介面和常用功能。您可以選擇最符合您需求的角色，讓 iSunFA 協助您的工作。iSunFA 的關鍵優勢在於角色優化的介面和 AI 整合會計，讓您更有效率地完成工作！",
+    "BOOKKEEPER_INTRODUCTION": "記帳士是專業的財務工作者，負責管理企業或個人的日常財務記錄和會計工作。他們的主要職責包括建立會計憑證、記錄分類帳分錄、對帳和產生財務報表，以確保財務資訊的正確性和完整性。",
+    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA學生版是為會計領域的學生和實習生量身訂製的教育工具。它提供了管理財務工作（例如建立會計憑證、日記帳分錄和對帳）的實用實務經驗。它非常適合在財務管理方面打下堅實的基礎，並為專業簿記或會計職位做好準備。"
+  },
+
+  "SELECT_ROLE_PAGE": {
+    "SELECT_ROLE_TITLE": "選擇角色"
+  },
+
+  "MY_COMPANY_LIST_PAGE": {
+    "MY_COMPANY_LIST": "我的公司列表"
+  },
+
+  "LATEST_NEWS_PAGE": {
+    "LATEST_NEWS": "最新消息",
+    "FINANCIAL_NEWS": "財經新聞",
+    "SYSTEM_NEWS": "系統新聞",
+    "MATCH_NEWS": "媒合資訊"
+  },
+
+  "TO_DO_LIST_PAGE": {
+    "TO_DO_LIST_TITLE": "待辦事項"
+  }
+}

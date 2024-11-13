@@ -2,7 +2,11 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ILedgerPayload, MOCK_RESPONSE } from '@/interfaces/ledger';
+import { ILedgerPayload } from '@/interfaces/ledger';
+import { listLedger } from '@/lib/utils/repo/ledger.repo';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
 
 interface IPayload extends ILedgerPayload {}
 
@@ -11,28 +15,56 @@ interface IResponse {
   payload: IPayload | null;
 }
 
-// ToDo: (20240927 - Shirley) 從資料庫獲取分類帳資料的邏輯
-export async function handleGetRequest() {
+export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = async ({
+  query,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPayload | null = null;
 
-  // ToDo: (20240927 - Shirley) 從請求中獲取session資料
-  // ToDo: (20240927 - Shirley) 檢查用戶是否有權訪問此API
-  // ToDo: (20240927 - Shirley) 從請求參數中獲取startDate, endDate, startAccountNo, endAccountNo, labelType, page, pageSize
-  // ToDo: (20240927 - Shirley) 從資料庫獲取分類帳資料的邏輯
-  // ToDo: (20240927 - Shirley) 將分類帳資料格式化為ILedgerItem介面
+  // const { companyId, startDate, endDate, startAccountNo, endAccountNo, labelType, page, pageSize } =
+  //   query;
 
-  // Deprecated: (20241010 - Shirley) 連接的模擬資料
-  payload = MOCK_RESPONSE;
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  try {
+    // const parsedParams = ledgerListSchema.input.querySchema.parse({
+    //   companyId,
+    //   startDate,
+    //   endDate,
+    //   startAccountNo,
+    //   endAccountNo,
+    //   labelType,
+    //   page,
+    //   pageSize,
+    // });
+
+    // // eslint-disable-next-line no-console
+    // console.log('parsedParams handleGetRequest in ledger API', parsedParams);
+
+    // const ledgerData = await listLedger(parsedParams);
+
+    const ledgerData = await listLedger(query);
+
+    if (ledgerData) {
+      payload = ledgerData;
+      statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    } else {
+      // TODO: (20241112 - Shirley) ask Shirley what she wants
+      statusMessage = STATUS_MESSAGE.MISSING_ERROR_FROM_BACKEND_API;
+    }
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // Deprecate: (20241112 - Shirley) debug
+    // eslint-disable-next-line no-console
+    console.log('error in ledger API handleGetRequest', err);
+  }
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
 } = {
-  GET: handleGetRequest,
+  GET: (req, res) => withRequestValidation(APIName.LEDGER_LIST, req, res, handleGetRequest),
 };
 
 export default async function handler(
@@ -51,7 +83,10 @@ export default async function handler(
     }
   } catch (_error) {
     const error = _error as Error;
-    statusMessage = error.message;
+    statusMessage = error.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    // Deprecate: (20241112 - Shirley) debug
+    // eslint-disable-next-line no-console
+    console.log('error in ledger API handler', error);
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<IPayload | null>(statusMessage, payload);

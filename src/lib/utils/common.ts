@@ -778,14 +778,14 @@ export function getLastDatesOfMonthsBetweenDates({
 export const convertTimestampWithTimezone = (timestamp: number, timezone: string): number => {
   // Info: (20241108 - Shirley) 檢查 timestamp 是否有效
   if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
-    throw new Error('無效的 timestamp');
+    throw new Error(STATUS_MESSAGE.INVALID_TIMESTAMP);
   }
 
   // Info: (20241108 - Shirley) 檢查 timezone 格式是否正確
   const timezoneRegex = /^([+-])(\d{2})(\d{2})$/;
   const match = timezone.match(timezoneRegex);
   if (!match) {
-    throw new Error('無效的時區格式，應為 +HHMM 或 -HHMM');
+    throw new Error(STATUS_MESSAGE.INVALID_TIMEZONE_FORMAT);
   }
 
   const sign = match[1] === '+' ? 1 : -1;

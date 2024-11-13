@@ -14,6 +14,8 @@ export enum AssetStatus {
  */
 export enum AssetEntityType {
   LAND = '1602',
+  BUILDING = '1611',
+  OFFICE_EQUIPMENT = '1691',
 }
 
 /**

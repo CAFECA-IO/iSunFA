@@ -46,6 +46,12 @@ export const initialVoucherLine: ILineItemUI = {
   reverseList: [],
 };
 
+/**
+ * Info: (20241111 - Murky)
+ * @description REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2, 後端提供用來取得某個account 可以revert的 line_item
+ * @julian Post Voucher的時候 reverseVouchers[0].lineItemIdBeReversed 填寫這邊取得的id,
+ * reverseVouchers[0].lineItemIdReverseOther 放的則是要被Reverse的lineItem 在 Post lineItem array中的id
+ */
 export interface IReverseItem {
   voucherId: number;
   amount: number;
@@ -53,6 +59,12 @@ export interface IReverseItem {
   debit: boolean;
   account: IAccount;
   voucherNo: string;
+  /**
+   * Info: (20241111 - Murky)
+   * @description 在 Post Voucher 的時候, 需要填入被Reverse的 LineItem 的 id,
+   * 而id 可以在 REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2, 中取得
+   */
+  lineItemBeReversedId: number;
 }
 
 export interface IReverseItemUI extends IReverseItem {

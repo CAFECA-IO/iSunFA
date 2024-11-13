@@ -11,7 +11,7 @@ interface TabsProps {
 }
 
 const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: TabsProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   const TABS = [
     { id: 0, name: 'Financial', icon: <RiCoinsFill size={20} /> },
@@ -39,7 +39,7 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
           {tab.icon}
 
           <p className="text-base font-medium">
-            {t(`common:BETA_DASHBOARD.${tab.name.toUpperCase()}`)}
+            {t(`dashboard:DASHBOARD.${tab.name.toUpperCase()}`)}
           </p>
         </button>
       ))}

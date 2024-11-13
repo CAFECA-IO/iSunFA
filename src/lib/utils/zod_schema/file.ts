@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { FileFolder } from '@/constants/file';
 
-export const fileSchema = z.object({
+export const filePrismaSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   size: z.number(),
@@ -14,6 +14,14 @@ export const fileSchema = z.object({
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
   deletedAt: z.number().int().nullable(),
+});
+
+export const fileSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  size: z.number(),
+  existed: z.boolean(),
+  url: z.string(),
 });
 
 /**

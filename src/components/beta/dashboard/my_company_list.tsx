@@ -54,17 +54,17 @@ const COMPANY_LIST: ICompanyAndRole[] = [
 const isCompanyListEmpty = COMPANY_LIST.length === 0;
 
 const EmptyCompanyList = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <div className="flex flex-col items-center justify-center py-26px">
       <p className="text-base text-text-neutral-mute">
-        {t('common:BETA_DASHBOARD.COMPANY_NOT_YET_CREATED')}
+        {t('dashboard:DASHBOARD.COMPANY_NOT_YET_CREATED')}
       </p>
       <p className="text-base text-text-neutral-mute">
-        {t('common:BETA_DASHBOARD.PLEASE_PROCEED_TO')}{' '}
+        {t('dashboard:DASHBOARD.PLEASE_PROCEED_TO')}{' '}
         <Link href={'/'} className="text-text-neutral-link underline underline-offset-4">
-          {t('common:BETA_DASHBOARD.CREATE_A_COMPANY')}
+          {t('dashboard:DASHBOARD.CREATE_A_COMPANY')}
         </Link>
       </p>
     </div>
@@ -101,14 +101,14 @@ const CompanyList = () => {
 };
 
 const MyCompanyList = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('dashboard');
 
   return (
     <DashboardCardLayout>
       <section className="flex flex-col gap-32px">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-text-neutral-secondary">
-            {t('common:BETA_DASHBOARD.MY_COMPANY_LIST')}
+            {t('dashboard:DASHBOARD.MY_COMPANY_LIST')}
           </h3>
 
           <MoreLink href={ISUNFA_ROUTE.MY_COMPANY_LIST_PAGE} />

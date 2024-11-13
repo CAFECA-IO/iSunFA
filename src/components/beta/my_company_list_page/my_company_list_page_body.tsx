@@ -10,20 +10,11 @@ import WorkTag from '@/components/beta/my_company_list_page/company_tag';
 import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
+import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-
-const NoData = () => {
-  return (
-    <section className="flex flex-auto flex-col items-center justify-center gap-16px">
-      <Image src={'/images/empty.svg'} alt="empty" width={120} height={134.787}></Image>
-
-      <div className="text-center text-base font-medium text-text-neutral-mute">
-        <p>No company data available.</p>
-        <p>Please add a new company.</p>
-      </div>
-    </section>
-  );
-};
+import { APIName } from '@/constants/api_connection';
+import { DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST } from '@/constants/config';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
 
 interface CompanyListProps {
   companyList: ICompanyAndRole[];
@@ -31,7 +22,25 @@ interface CompanyListProps {
   setCompanyName: Dispatch<SetStateAction<string>>;
 }
 
+const NoData = () => {
+  const { t } = useTranslation(['company']);
+
+  return (
+    <section className="flex flex-auto flex-col items-center justify-center gap-16px">
+      <Image src={'/images/empty.svg'} alt="empty" width={120} height={134.787}></Image>
+
+      <div className="text-center text-base font-medium text-text-neutral-mute">
+        <p>{t('company:PAGE_BODY.NO_COMPANY_DATA_AVAILABLE')}</p>
+        <p>{t('company:PAGE_BODY.PLEASE_ADD_A_NEW_COMPANY')}</p>
+      </div>
+    </section>
+  );
+};
+
 const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: CompanyListProps) => {
+  const { selectCompany, selectedCompany } = useUserCtx();
+
+  // ToDo: (20241111 - Liz) connect to the API to change the tag
   const handleChangeTag = (companyName: string) => {
     setCompanyName(companyName);
     toggleChangeTagModal();
@@ -39,55 +48,79 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
 
   return (
     <section className="flex flex-auto flex-col gap-8px">
-      {companyList.map((myCompany) => (
-        <div
-          key={myCompany.company.id}
-          className="flex items-center justify-between gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
-        >
-          <Image
-            src={myCompany.company.imageId}
-            alt={myCompany.company.name}
-            width={60}
-            height={60}
-            className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
-          ></Image>
+      {companyList.map((myCompany) => {
+        const isCompanySelected = myCompany.company.id === selectedCompany?.id;
+        const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
 
-          <div className="flex flex-auto items-center gap-8px">
-            <p className="text-base font-medium text-text-neutral-solid-dark">
-              {myCompany.company.name}
-            </p>
-            <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
-          </div>
+        const handleConnect = () => {
+          selectCompany(companyId);
+        };
 
-          <div className="flex w-90px justify-center">
-            <WorkTag
-              type={myCompany.tag}
-              handleChangeTag={() => handleChangeTag(myCompany.company.name)}
-            />
-          </div>
-
-          <button
-            type="button"
-            className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+        return (
+          <div
+            key={myCompany.company.id}
+            className="flex items-center justify-between gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
           >
-            <p className="text-sm font-medium">Connect</p>
-            <IoArrowForward size={16} />
-          </button>
-        </div>
-      ))}
+            <Image
+              src={myCompany.company.imageId}
+              alt={myCompany.company.name}
+              width={60}
+              height={60}
+              className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
+            ></Image>
+
+            <div className="flex flex-auto items-center gap-8px">
+              <p className="text-base font-medium text-text-neutral-solid-dark">
+                {myCompany.company.name}
+              </p>
+              <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
+            </div>
+
+            <div className="flex w-90px justify-center">
+              <WorkTag
+                type={myCompany.tag}
+                handleChangeTag={() => handleChangeTag(myCompany.company.name)}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+              onClick={handleConnect}
+            >
+              <p className="text-sm font-medium">{isCompanySelected ? ' Cancel' : 'Connect'}</p>
+              <IoArrowForward size={16} />
+            </button>
+          </div>
+        );
+      })}
     </section>
   );
 };
 
 const MyCompanyListPageBody = () => {
+  const { t } = useTranslation(['company']);
+
   const { userAuth } = useUserCtx();
+  // Deprecated: (20241111 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('(in MyCompanyListPageBody) userAuth:', userAuth);
+
+  const userId = userAuth?.id;
+
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
+  const [isCallingAPI, setIsCallingAPI] = useState(false);
+
   const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
   const [companyName, setCompanyName] = useState<string>('');
 
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
+
+  // Deprecated: (20241111 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('totalPage:', totalPage, 'currentPage:', currentPage, 'companyList:', companyList);
 
   const isNoData = companyList.length === 0;
 
@@ -102,20 +135,26 @@ const MyCompanyListPageBody = () => {
     setCompanyList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
+
+    // Deprecated: (20241111 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('(handleApiResponse) resData:', resData);
   };
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
-        <FilterSection
-          disableDateSearch
-          className="flex-auto"
-          apiName="LIST_USER_COMPANY"
-          page={1}
-          pageSize={5}
-          onApiResponse={handleApiResponse}
-          params={{ userId: userAuth?.id }}
-        />
+        {!isCallingAPI && userId && (
+          <FilterSection<ICompanyAndRole[]>
+            disableDateSearch
+            className="flex-auto"
+            params={{ userId }}
+            apiName={APIName.LIST_USER_COMPANY}
+            onApiResponse={handleApiResponse}
+            page={currentPage}
+            pageSize={DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST}
+          />
+        )}
 
         <div className="flex items-center gap-16px">
           <button
@@ -124,7 +163,7 @@ const MyCompanyListPageBody = () => {
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <TbSquarePlus2 size={20} />
-            <p>Add New</p>
+            <p>{t('company:PAGE_BODY.ADD_NEW')}</p>
           </button>
 
           <button
@@ -132,14 +171,13 @@ const MyCompanyListPageBody = () => {
             className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <TbCodeCircle size={20} />
-            <p>Code</p>
+            <p>{t('company:PAGE_BODY.CODE')}</p>
           </button>
         </div>
       </section>
 
-      {isNoData ? (
-        <NoData />
-      ) : (
+      {isNoData && <NoData />}
+      {!isNoData && !isCallingAPI && userId && (
         <>
           <CompanyList
             companyList={companyList}
@@ -158,6 +196,7 @@ const MyCompanyListPageBody = () => {
       <CreateCompanyModal
         isModalOpen={isCreateCompanyModalOpen}
         toggleModal={toggleCreateCompanyModal}
+        setIsCallingAPI={setIsCallingAPI}
       />
 
       <ChangeTagModal

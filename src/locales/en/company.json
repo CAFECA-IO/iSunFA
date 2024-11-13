@@ -1,13 +1,13 @@
 {
   "LIST": {
     "TITLE": "Company List",
-    "PARTNER_NAME": "Partner’s Name",
+    "PARTNER_NAME": "Partner's Name",
     "TAX_ID": "Tax ID",
     "TYPE": "Type",
     "ACTION": "Action"
   },
   "INFO": {
-    "NAME": "Company Name",
+    "COMPANY_NAME": "Company Name",
     "TAX_ID": "Business Tax ID Number",
     "WORK_TAG": "Work Tag",
     "CREATE": "Create New Company"
@@ -16,7 +16,7 @@
     "BACK": "Back",
     "INFO": "Company Information",
     "COMPANY_NAME": "Company Name",
-    "BUSSINESS_TAX_ID": "Business Tax ID Number",
+    "BUSINESS_TAX_ID": "Business Tax ID Number",
     "TAX_SERIAL_NUMBER": "Tax Serial Number",
     "COMPANY_REPRESENTATIVE_NAME": "Company representative's name",
     "COUNTRY_OF_INCORPORATION": "Country of incorporation",
@@ -28,5 +28,20 @@
     "FINANCIAL": "Financial",
     "TAX": "Tax",
     "ALL": "All"
+  },
+  "PLACEHOLDER": {
+    "ENTER_NAME": "Enter Name",
+    "ENTER_NUMBER": "Enter Number",
+    "ENTER_FULL_ADDRESS": "Please enter the full address"
+  },
+  "PAGE_BODY": {
+    "NO_COMPANY_DATA_AVAILABLE": "No company data available.",
+    "PLEASE_ADD_A_NEW_COMPANY": "Please add a new company.",
+    "ADD_NEW": "Add New",
+    "CODE": "Code",
+    "CANCEL": "Cancel",
+    "SUBMIT": "Submit",
+    "CHANGE_WORK_TAG": "Change Work Tag",
+    "SAVE": "Save"
   }
 }
