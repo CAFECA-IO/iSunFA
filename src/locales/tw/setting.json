@@ -111,6 +111,7 @@
     "ACC_TYPE_NON_OPERATING": "營業外收支",
     "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他綜合損益",
     "ADD_NEW_TITLE": "新增科目",
+    "EDIT_TITLE": "編輯會計科目",
     "CATEGORY_TYPE": "主類別",
     "SUBCATEGORY_TYPE": "次類別",
     "TITLE_NAME": "科目名稱",
@@ -120,7 +121,8 @@
     "TITLE_NAME_PLACEHOLDER": "輸入此會計科目的名稱。",
     "TITLE_NOTE_PLACEHOLDER": "輸入此會計科目的描述。",
     "CLEAR_ALL_BTN": "全部清除",
-    "ADD_BTN": "新增"
+    "ADD_BTN": "新增",
+    "SAVE_BTN": "保存"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手動開戶",

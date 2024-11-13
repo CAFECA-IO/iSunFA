@@ -111,6 +111,7 @@
     "ACC_TYPE_NON_OPERATING": "营业外收支",
     "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他综合损益",
     "ADD_NEW_TITLE": "新增科目",
+    "EDIT_TITLE": "编辑会计科目",
     "CATEGORY_TYPE": "主类别",
     "SUBCATEGORY_TYPE": "次类别",
     "TITLE_NAME": "科目名称",
@@ -120,7 +121,8 @@
     "TITLE_NAME_PLACEHOLDER": "输入此会计科目的名称。",
     "TITLE_NOTE_PLACEHOLDER": "输入此会计科目的描述。",
     "CLEAR_ALL_BTN": "全部清除",
-    "ADD_BTN": "新增"
+    "ADD_BTN": "新增",
+    "SAVE_BTN": "保存"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手动开户",

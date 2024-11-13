@@ -111,6 +111,7 @@
     "ACC_TYPE_NON_OPERATING": "Non-operating",
     "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income",
     "ADD_NEW_TITLE": "Add New Title",
+    "EDIT_TITLE": "Edit Accounting Title",
     "CATEGORY_TYPE": "Category Type",
     "SUBCATEGORY_TYPE": "Subcategory Type",
     "TITLE_NAME": "Title Name",
@@ -120,7 +121,8 @@
     "TITLE_NAME_PLACEHOLDER": "Enter a name for this accounting title.",
     "TITLE_NOTE_PLACEHOLDER": "Enter a description for this accounting title.",
     "CLEAR_ALL_BTN": "Clear All",
-    "ADD_BTN": "Add"
+    "ADD_BTN": "Add",
+    "SAVE_BTN": "Save"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "Manual Account Opening",
