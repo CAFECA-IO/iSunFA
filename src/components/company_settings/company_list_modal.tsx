@@ -8,7 +8,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import FilterSection from '@/components/filter_section/filter_section';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/company_settings/work_tag';
@@ -30,7 +30,7 @@ const dummyCompanies: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.ALL,
+    tag: COMPANY_TAG.ALL,
     order: 1,
     role: {
       id: 1,
@@ -50,7 +50,7 @@ const dummyCompanies: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.ALL,
+    tag: COMPANY_TAG.ALL,
     order: 2,
     role: {
       id: 2,
@@ -70,7 +70,7 @@ const dummyCompanies: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.ALL,
+    tag: COMPANY_TAG.ALL,
     order: 3,
     role: {
       id: 3,
@@ -90,7 +90,7 @@ const dummyCompanies: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.TAX,
+    tag: COMPANY_TAG.TAX,
     order: 4,
     role: {
       id: 4,
@@ -110,7 +110,7 @@ const dummyCompanies: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.FINANCIAL,
+    tag: COMPANY_TAG.FINANCIAL,
     order: 5,
     role: {
       id: 5,

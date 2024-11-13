@@ -16,7 +16,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -40,11 +40,21 @@ interface UserContextType {
   }: {
     name: string;
     taxId: string;
-    tag: CompanyTag;
+    tag: COMPANY_TAG;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   selectedCompany: ICompany | null;
   selectCompany: (companyId: number) => Promise<ICompany | null>;
+  updateCompany: ({
+    companyId,
+    action,
+    tag,
+  }: {
+    companyId: number;
+    action: string;
+    tag: COMPANY_TAG;
+  }) => Promise<ICompanyAndRole | null>;
+
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
@@ -81,6 +91,8 @@ export const UserContext = createContext<UserContextType>({
 
   selectedCompany: null,
   selectCompany: async () => null,
+  updateCompany: async () => null,
+
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
@@ -107,7 +119,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Deprecated: (20241113 - Liz)
   // eslint-disable-next-line no-console
-  console.log('selectedCompanyRef.current:', selectedCompanyRef.current);
+  console.log('(in userContext) selectedCompanyRef.current:', selectedCompanyRef.current);
 
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
@@ -141,6 +153,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.CREATE_USER_COMPANY);
   // Info: (20241111 - Liz) 選擇公司 API
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  // Info: (20241113 - Liz) 更新公司 API
+  const { trigger: updateCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -605,7 +619,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }: {
     name: string;
     taxId: string;
-    tag: CompanyTag;
+    tag: COMPANY_TAG;
   }) => {
     try {
       const { success, code, error } = await createCompanyAPI({
@@ -626,14 +640,39 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241111 - Liz) 選擇公司的功能
   const selectCompany = async (companyId: number) => {
     try {
-      const { success, data: userCompanyList } = await selectCompanyAPI({
+      const { success, data: userCompany } = await selectCompanyAPI({
         params: { userId: userAuthRef.current?.id },
         body: { companyId },
       });
 
-      if (success && userCompanyList) {
-        setSelectedCompany(userCompanyList);
-        return userCompanyList;
+      if (success) {
+        setSelectedCompany(userCompany);
+        return userCompany;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Info: (20241113 - Liz) 更新公司的功能(標籤 / 設為置頂)
+  const updateCompany = async ({
+    companyId,
+    action,
+    tag,
+  }: {
+    companyId: number;
+    action: string;
+    tag: COMPANY_TAG;
+  }) => {
+    try {
+      const { success, data: companyAndRole } = await updateCompanyAPI({
+        params: { companyId },
+        body: { action, tag },
+      });
+
+      if (success && companyAndRole) {
+        return companyAndRole;
       }
       return null;
     } catch (error) {
@@ -727,6 +766,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedRole: selectedRoleRef.current,
       createCompany,
       selectCompany,
+      updateCompany,
       selectedCompany: selectedCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,

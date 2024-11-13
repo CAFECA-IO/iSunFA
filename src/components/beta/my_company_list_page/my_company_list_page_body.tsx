@@ -6,10 +6,10 @@ import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoArrowForward } from 'react-icons/io5';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-import WorkTag from '@/components/beta/my_company_list_page/company_tag';
+import CompanyTag from '@/components/beta/my_company_list_page/company_tag';
 import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { ICompany, ICompanyAndRole } from '@/interfaces/company';
 import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
@@ -19,7 +19,7 @@ import { CANCEL_COMPANY_ID } from '@/constants/company';
 interface CompanyListProps {
   companyList: ICompanyAndRole[];
   toggleChangeTagModal: () => void;
-  setCompanyName: Dispatch<SetStateAction<string>>;
+  setCompanyToEdit: Dispatch<SetStateAction<ICompany | null>>;
 }
 
 const NoData = () => {
@@ -37,12 +37,12 @@ const NoData = () => {
   );
 };
 
-const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: CompanyListProps) => {
+const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyToEdit }: CompanyListProps) => {
   const { selectCompany, selectedCompany } = useUserCtx();
+  const [isLoading, setIsLoading] = useState(false);
 
-  // ToDo: (20241111 - Liz) connect to the API to change the tag
-  const handleChangeTag = (companyName: string) => {
-    setCompanyName(companyName);
+  const openChangeTagModal = (company: ICompany) => {
+    setCompanyToEdit(company);
     toggleChangeTagModal();
   };
 
@@ -52,8 +52,36 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
         const isCompanySelected = myCompany.company.id === selectedCompany?.id;
         const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
 
-        const handleConnect = () => {
-          selectCompany(companyId);
+        // Deprecated: (20241113 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(
+          'isCompanySelected:',
+          isCompanySelected,
+          '這個按鈕是 myCompany.company.id:',
+          myCompany.company.id,
+          'user context 目前存的狀態 selectedCompany?.id:',
+          selectedCompany?.id,
+          '按下去會傳給選擇公司 api 的 companyId:',
+          companyId
+        );
+
+        // Info: (20241113 - Liz) 執行 selectCompany api
+        const handleConnect = async () => {
+          setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+
+          try {
+            const data = selectCompany(companyId);
+
+            // Deprecated: (20241113 - Liz)
+            // eslint-disable-next-line no-console
+            console.log('執行 selectCompany api 回傳:', data);
+          } catch (error) {
+            // Deprecated: (20241113 - Liz)
+            // eslint-disable-next-line no-console
+            console.log('CompanyList handleConnect error:', error);
+          } finally {
+            setIsLoading(false); // API 回傳後解除 loading 狀態
+          }
         };
 
         return (
@@ -77,9 +105,9 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
             </div>
 
             <div className="flex w-90px justify-center">
-              <WorkTag
-                type={myCompany.tag}
-                handleChangeTag={() => handleChangeTag(myCompany.company.name)}
+              <CompanyTag
+                tag={myCompany.tag}
+                onClinkCompanyTag={() => openChangeTagModal(myCompany.company)}
               />
             </div>
 
@@ -87,6 +115,7 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: Comp
               type="button"
               className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
               onClick={handleConnect}
+              disabled={isLoading}
             >
               <p className="text-sm font-medium">{isCompanySelected ? ' Cancel' : 'Connect'}</p>
               <IoArrowForward size={16} />
@@ -107,7 +136,7 @@ const MyCompanyListPageBody = () => {
   const [isCallingAPI, setIsCallingAPI] = useState(false);
 
   const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
-  const [companyName, setCompanyName] = useState<string>('');
+  const [companyToEdit, setCompanyToEdit] = useState<ICompany | null>(null);
 
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -169,7 +198,7 @@ const MyCompanyListPageBody = () => {
           <CompanyList
             companyList={companyList}
             toggleChangeTagModal={toggleChangeTagModal}
-            setCompanyName={setCompanyName}
+            setCompanyToEdit={setCompanyToEdit}
           />
           <Pagination
             totalPages={totalPage}
@@ -179,7 +208,7 @@ const MyCompanyListPageBody = () => {
         </>
       )}
 
-      {/* // Info: (20241108 - Liz)  Modals */}
+      {/* // Info: (20241108 - Liz) Modals */}
       <CreateCompanyModal
         isModalOpen={isCreateCompanyModalOpen}
         toggleModal={toggleCreateCompanyModal}
@@ -187,9 +216,10 @@ const MyCompanyListPageBody = () => {
       />
 
       <ChangeTagModal
-        companyName={companyName}
+        companyToEdit={companyToEdit}
         isModalOpen={isChangeTagModalOpen}
         toggleModal={toggleChangeTagModal}
+        setIsCallingAPI={setIsCallingAPI}
       />
     </main>
   );

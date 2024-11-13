@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
@@ -21,7 +21,7 @@ const CreateCompanyModal = ({
 
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [tag, setTag] = useState<CompanyTag>(CompanyTag.ALL);
+  const [tag, setTag] = useState<COMPANY_TAG>(COMPANY_TAG.ALL);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +45,7 @@ const CreateCompanyModal = ({
       if (success) {
         setCompanyName('');
         setTaxId('');
-        setTag(CompanyTag.ALL);
+        setTag(COMPANY_TAG.ALL);
         toggleModal();
       } else {
         toastHandler({
@@ -129,7 +129,7 @@ const CreateCompanyModal = ({
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(CompanyTag).map((item) => (
+                  {Object.values(COMPANY_TAG).map((item) => (
                     <button
                       key={item}
                       type="button"

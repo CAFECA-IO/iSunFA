@@ -1,29 +1,74 @@
 import React, { useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'react-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import { ICompany } from '@/interfaces/company';
+import { COMPANY_TAG } from '@/constants/company';
 
 interface ChangeTagModalProps {
-  companyName: string;
+  companyToEdit: ICompany | null;
   isModalOpen: boolean;
   toggleModal: () => void;
+  setIsCallingAPI?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const DROPDOWN_ITEMS = ['All', 'Financial', 'Tax'];
-
-const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModalProps) => {
+const ChangeTagModal = ({
+  companyToEdit,
+  isModalOpen,
+  toggleModal,
+  setIsCallingAPI,
+}: ChangeTagModalProps) => {
   const { t } = useTranslation(['company']);
+  const { updateCompany } = useUserCtx();
 
-  // ToDo: (20241025 - Liz) 打 API 去變更公司的 tag
-
-  const [tag, setTag] = useState('All');
+  const [tag, setTag] = useState<COMPANY_TAG>(COMPANY_TAG.ALL);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
   };
 
-  const handleSubmit = () => {
-    // Handle submit logic
+  // Info: (20241113 - Liz) 打 API 變更公司的 tag
+  const handleChangeTag = async () => {
+    if (!companyToEdit) return;
+
+    setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+
+    if (setIsCallingAPI) {
+      setIsCallingAPI((prevState) => !prevState);
+    }
+
+    try {
+      const data = await updateCompany({
+        companyId: companyToEdit.id,
+        action: 'updateTag',
+        tag,
+      });
+
+      if (data) {
+        // Info: (20241113 - Liz) 更新成功後清空表單並關閉 modal
+        setTag(COMPANY_TAG.ALL);
+        toggleModal();
+
+        // Deprecated: (20241113 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('打 API 變更標籤成功, api return data:', data);
+      } else {
+        // Deprecated: (20241113 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('變更公司標籤失敗');
+      }
+    } catch (error) {
+      // Deprecated: (20241113 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('ChangeTagModal handleChangeTag error:', error);
+    } finally {
+      setIsLoading(false); // API 回傳後解除 loading 狀態
+      if (setIsCallingAPI) {
+        setIsCallingAPI((prevState) => !prevState);
+      }
+    }
   };
 
   return isModalOpen ? (
@@ -49,7 +94,7 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={companyName}
+              value={companyToEdit?.name}
             />
           </div>
 
@@ -63,7 +108,9 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
                 className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
                 onClick={toggleDropdown}
               >
-                <p className="px-12px py-10px text-base font-medium">{tag}</p>
+                <p className="px-12px py-10px text-base font-medium">
+                  {t(`company:TAG.${tag.toUpperCase()}`)}
+                </p>
 
                 <div className="px-12px py-10px">
                   {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
@@ -72,7 +119,7 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {DROPDOWN_ITEMS.map((item) => (
+                  {Object.values(COMPANY_TAG).map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -82,7 +129,7 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
                       }}
                       className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                     >
-                      {item}
+                      {t(`company:TAG.${item.toUpperCase()}`)}
                     </button>
                   ))}
                 </div>
@@ -102,7 +149,8 @@ const ChangeTagModal = ({ companyName, isModalOpen, toggleModal }: ChangeTagModa
 
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={handleChangeTag}
+            disabled={isLoading}
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             {t('company:PAGE_BODY.SAVE')}

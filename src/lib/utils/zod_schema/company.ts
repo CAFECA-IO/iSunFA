@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CompanyTag, CompanyUpdateAction } from '@/constants/company';
+import { COMPANY_TAG, CompanyUpdateAction } from '@/constants/company';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
@@ -24,7 +24,7 @@ const companyPostQuerySchema = z.object({
 const companyPostBodySchema = z.object({
   name: z.string(),
   taxId: z.string(),
-  tag: z.nativeEnum(CompanyTag),
+  tag: z.nativeEnum(COMPANY_TAG),
 });
 
 // Info: (20241016 - Jacky) Company get schema
@@ -38,7 +38,7 @@ const companyPutQuerySchema = z.object({
 });
 const companyPutBodySchema = z.object({
   action: z.nativeEnum(CompanyUpdateAction),
-  tag: z.nativeEnum(CompanyTag).optional(),
+  tag: z.nativeEnum(COMPANY_TAG).optional(),
 });
 
 // Info: (20241016 - Jacky) Company delete schema
@@ -76,7 +76,7 @@ export const companyOutputSchema = companyPrismaSchema.transform((data) => {
 
 const companyRolePrismaSchema = z.object({
   company: companyPrismaSchema,
-  tag: z.nativeEnum(CompanyTag),
+  tag: z.nativeEnum(COMPANY_TAG),
   order: z.number().int(),
   role: rolePrimsaSchema,
 });
