@@ -130,7 +130,7 @@ const MobileUploadPage: React.FC = () => {
 
         const { success, data: filedId } = await uploadFileAPI({
           query: {
-            type: UploadType.MOBILE_UPLOAD,
+            type: UploadType.ROOM,
             token: token as string,
           },
           body: formData,

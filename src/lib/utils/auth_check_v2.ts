@@ -7,7 +7,7 @@ import {
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
 import { AuthFunctionsNew } from '@/interfaces/auth';
-import { AUTH_CHECK } from '@/constants/auth';
+import { AUTH_CHECK, AUTH_WHITELIST } from '@/constants/auth';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { ISessionData } from '@/interfaces/session_data';
 import { convertStringToNumber } from '@/lib/utils/common';
@@ -112,6 +112,22 @@ export async function checkProjectCompanyMatch(session: ISessionData, req: NextA
   return isAuth;
 }
 
+// 簡化的白名單檢查函數，僅使用陣列方法
+function isWhitelisted(apiName: APIName, req: NextApiRequest): boolean {
+  const whitelistConditions = AUTH_WHITELIST[apiName as keyof typeof AUTH_WHITELIST];
+  if (!whitelistConditions) return false;
+
+  // 檢查 query 條件
+  if (whitelistConditions.query) {
+    const queryMatches = Object.entries(whitelistConditions.query).every(
+      ([key, value]) => req.query[key] === value
+    );
+    if (!queryMatches) return false;
+  }
+
+  return true;
+}
+
 // Info: (20240729 - Jacky) 檢查函數的映射表
 export const authFunctionsNew: AuthFunctionsNew = {
   user: checkUser,
@@ -128,6 +144,13 @@ export async function checkAuthorizationNew<T extends APIName>(
   session: ISessionData
 ): Promise<boolean> {
   const checkList = AUTH_CHECK[apiName];
+
+  if (isWhitelisted(apiName, req)) {
+    loggerBack.info(
+      `Auth check passed for whitelisted API: ${apiName} and query: ${JSON.stringify(req.query)}`
+    );
+    return true;
+  }
 
   // Info: (20241111 - Jacky) 若 checkList 不存在，標記 hasFailed 為 true
   let hasFailed = false;

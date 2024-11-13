@@ -87,10 +87,12 @@ export async function withRequestValidation<T extends APIName, U>(
         statusMessage = STATUS_MESSAGE.FORBIDDEN;
       } else {
         try {
+          // Todo: (20241113 - Jacky) req in handler is for parse formdata, should be removed after refactor
           const { statusMessage: handlerStatusMessage, payload: handlerOutput } = await handler({
             query,
             body,
             session,
+            req,
           });
           statusMessage = handlerStatusMessage;
           const { isOutputDataValid, outputData } = validateOutputData(apiName, handlerOutput);

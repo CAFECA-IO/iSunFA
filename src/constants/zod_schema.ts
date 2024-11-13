@@ -79,6 +79,7 @@ import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
 import { nullAPISchema } from '@/lib/utils/zod_schema/common';
 import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { roomDeleteSchema, roomGetSchema, roomPostSchema } from '@/lib/utils/zod_schema/room';
+import { filePostSchema } from '@/lib/utils/zod_schema/file';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -222,7 +223,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.REPORT_GENERATE]: nullAPISchema,
   [APIName.STATUS_INFO_GET]: nullAPISchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
-  [APIName.FILE_UPLOAD]: nullAPISchema,
+  [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.PUBLIC_FILE_UPLOAD]: nullAPISchema,
   [APIName.FILE_DELETE]: nullAPISchema,
   [APIName.FILE_GET]: nullAPISchema,

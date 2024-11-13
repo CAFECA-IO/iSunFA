@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { FileFolder } from '@/constants/file';
+import { FileFolder, UploadType } from '@/constants/file';
+import { nullSchema } from '@/lib/utils/zod_schema/common';
+
+const filePostBodySchema = z.object({
+  type: z.nativeEnum(UploadType),
+  targetId: z.string(),
+});
 
 export const filePrismaSchema = z.object({
   id: z.number().int(),
@@ -64,3 +70,12 @@ export const IFileBetaValidator = z.object({
   existed: z.boolean(),
   url: z.string(),
 });
+
+export const filePostSchema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: filePostBodySchema,
+  },
+  outputSchema: fileSchema,
+  frontend: nullSchema,
+};
