@@ -96,6 +96,8 @@ export enum APIName {
   ACCOUNT_LIST = 'ACCOUNT_LIST',
   FILE_UPLOAD = 'FILE_UPLOAD',
   PUBLIC_FILE_UPLOAD = 'PUBLIC_FILE_UPLOAD',
+  // ROOM_FILE_UPLOAD = 'ROOM_FILE_UPLOAD',
+  // ROOM_FILE_GET = 'ROOM_FILE_GET',
   FILE_DELETE = 'FILE_DELETE',
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
@@ -223,6 +225,8 @@ export enum APIPath {
   ACCOUNT_LIST = `${apiPrefix}/company/:companyId/account`,
   FILE_UPLOAD = `${apiPrefix}/company/:companyId/file`,
   PUBLIC_FILE_UPLOAD = `${apiPrefixV2}/upload`,
+  // ROOM_FILE_UPLOAD = `${apiPrefixV2}/room/:roomId/file`,
+  // ROOM_FILE_GET = `${apiPrefixV2}/room/:roomId`,
   FILE_DELETE = `${apiPrefix}/company/:companyId/file/:fileId`,
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
@@ -468,12 +472,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ASSET_MANAGEMENT_UPDATE,
   }),
-  // Info: (20240720 - Tzuhan)
-  // JOURNAL_UPDATE: createConfig({
-  //   name: APIName.JOURNAL_UPDATE,
-  //   method: HttpMethod.PUT,
-  //   path: APIPath.JOURNAL_UPDATE,
-  // }),
   JOURNAL_DELETE: createConfig({
     name: APIName.JOURNAL_DELETE,
     method: HttpMethod.DELETE,
@@ -915,4 +913,14 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LEDGER_LIST,
   }),
+  // [APIName.ROOM_FILE_GET]: createConfig({
+  //   name: APIName.ROOM_FILE_GET,
+  //   method: HttpMethod.GET,
+  //   path: APIPath.ROOM_FILE_GET,
+  // }),
+  // [APIName.ROOM_FILE_UPLOAD]: createConfig({
+  //   name: APIName.ROOM_FILE_UPLOAD,
+  //   method: HttpMethod.POST,
+  //   path: APIPath.ROOM_FILE_UPLOAD,
+  // }),
 };

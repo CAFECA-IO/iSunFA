@@ -98,6 +98,8 @@ export type IAPIName =
   | 'PUSHER'
   | 'ENCRYPT'
   | 'DECRYPT'
+  // | 'ROOM_FILE_UPLOAD'
+  // | 'ROOM_FILE_GET'
   | 'VOUCHER_GET_BY_ID_V2'
   | 'ASSET_GET_BY_ID_V2'
   | 'VOUCHER_LIST_V2'
