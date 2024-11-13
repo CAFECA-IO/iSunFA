@@ -902,7 +902,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.ASSET_LIST_EXPORT]: createConfig({
     name: APIName.ASSET_LIST_EXPORT,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.ASSET_LIST_EXPORT,
   }),
   [APIName.FILE_EXPORT]: createConfig({
