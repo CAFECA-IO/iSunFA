@@ -139,7 +139,10 @@
     "CONTENT": "Upload the certificates you want to attach with the voucher",
     "NO_FILE": "No files uploading",
     "REMAIN": "{{count}} left",
-    "FAILED": "Upload failed"
+    "FAILED": "Upload failed",
+    "LOADING": "Uploadng...",
+    "URL": "Url",
+    "FOR_MOBILE": "For mobile upload"
   },
   "CREATE": {
     "FAILED": "Failed to create certificate"

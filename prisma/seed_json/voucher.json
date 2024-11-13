@@ -28,5 +28,20 @@
     "createdAt": 1672617600,
     "updatedAt": 1672617600,
     "deletedAt": null
+  },
+  {
+    "id": 1002,
+    "issuerId": 1000,
+    "counterPartyId": 1000,
+    "companyId": 1000,
+    "status": "journal:JOURNAL.UPLOADED",
+    "editable": true,
+    "no": "VCH003",
+    "date": 1672531200,
+    "type": "payment",
+    "note": "First voucher",
+    "createdAt": 1672531200,
+    "updatedAt": 1672531200,
+    "deletedAt": null
   }
 ]

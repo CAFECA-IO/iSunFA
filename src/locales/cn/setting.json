@@ -89,7 +89,11 @@
     "VIEW_ALL_ACCOUNTING": "查看所有会计科目",
     "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
     "IMPORT_FILE": "上传档案",
-    "MANUAL_ACCOUNT_OPENING": "手动开户",
+    "MANUAL_ACCOUNT_OPENING": "手动开户"
+  },
+  "ACCOUNTING_SETTING_MODAL": {
+    "MODAL_TITLE": "会计科目设定",
+    "SEARCH_ACCOUNTING_TITLE": "搜寻会计科目",
     "ACC_TYPE_ASSET": "资产",
     "ACC_TYPE_LIABILITY": "负债",
     "ACC_TYPE_EQUITY": "权益",
@@ -98,7 +102,31 @@
     "ACC_TYPE_COST": "成本",
     "ACC_TYPE_EXPENSE": "费用",
     "ACC_TYPE_NON_OPERATING": "营业外收支",
-    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他综合损益"
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他综合损益",
+    "ADD_NEW_TITLE": "新增科目",
+    "CATEGORY_TYPE": "主类别",
+    "SUBCATEGORY_TYPE": "次类别",
+    "TITLE_NAME": "科目名称",
+    "TITLE_CODE": "科目编号",
+    "TITLE_NOTE": "科目备注",
+    "DROPMENU_PLACEHOLDER": "请选择...",
+    "TITLE_NAME_PLACEHOLDER": "输入此会计科目的名称。",
+    "TITLE_NOTE_PLACEHOLDER": "输入此会计科目的描述。",
+    "CLEAR_ALL_BTN": "全部清除",
+    "ADD_BTN": "新增"
+  },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "手动开户",
+    "SUBCATEGORY_TYPE": "类别",
+    "TITLE_NAME": "科目名称",
+    "TITLE_CODE": "科目编号",
+    "BEGINNING_DEBIT": "初始借方",
+    "BEGINNING_CREDIT": "初始贷方",
+    "DROPMENU_PLACEHOLDER": "请选择...",
+    "NAME_PLACEHOLDER": "输入名称",
+    "ADD_LIST_BTN": "新增清单",
+    "SUBMIT_BTN": "提交",
+    "NO_ACCOUNTING_FOUND": "找不到会计科目。"
   },
   "IP": {
     "INFO": "登录设备与 IP 信息",

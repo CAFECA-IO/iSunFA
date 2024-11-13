@@ -2,17 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
+import Image from 'next/image';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { IFileUIBeta } from '@/interfaces/file';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { UploadType } from '@/constants/file';
-import useStateRef from 'react-usestateref';
 import { ProgressStatus } from '@/constants/account';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { Button } from '@/components/button/button';
-import Image from 'next/image';
 import { FiUpload } from 'react-icons/fi';
 import { ImFilePicture } from 'react-icons/im';
 import { FaPlus } from 'react-icons/fa6';
@@ -23,7 +22,8 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
+import { getPusherInstance } from '@/lib/utils/pusher_client';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
@@ -35,20 +35,17 @@ const MobileUploadPage: React.FC = () => {
   const { query } = router;
   const [token, setToken] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [selectedCertificates, setSelectedCertificates, selectedCertificatesRef] = useStateRef<
-    IFileUIBetaWithFile[]
-  >([]);
-  const [uploadedCertificates, setUploadedCertificates] = useState<IFileUIBeta[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<IFileUIBetaWithFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
   // Info: (20241023 - tzuhan) @Murky, <...> 裡面是 public file upload API 期望的回傳格式，希望回傳 fileId
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
-  const { trigger: pusherAPI } = APIHandler<void>(APIName.PUSHER);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const [selectedCertificate, setSelectedCertificate] = useState<IFileUIBetaWithFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<IFileUIBetaWithFile | null>(null);
 
-  const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (e.target.files) {
         const certificates = Array.from(e.target.files).map(
@@ -64,8 +61,8 @@ const MobileUploadPage: React.FC = () => {
             }) as IFileUIBetaWithFile
         );
         // Deprecated: (20241019 - tzuhan) 如果是拍照模式使用下列code就只能拍一張照片
-        // .filter((file) => !selectedCertificatesRef.current.some((f) => f.name === file.name));
-        setSelectedCertificates((prev) => [...prev, ...certificates]);
+        // .filter((file) => !selectedFilesRef.current.some((f) => f.name === file.name));
+        setSelectedFiles((prev) => [...prev, ...certificates]);
       }
     } catch (error) {
       messageModalDataHandler({
@@ -82,17 +79,17 @@ const MobileUploadPage: React.FC = () => {
   };
 
   const handleRemoveFile = (file: IFileUIBetaWithFile) => {
-    if (selectedCertificate && selectedCertificate.name === file.name) {
-      setSelectedCertificate(null);
+    if (selectedFile && selectedFile.name === file.name) {
+      setSelectedFile(null);
     }
-    setSelectedCertificates(selectedCertificates.filter((f) => f.name !== file.name));
+    setSelectedFiles(selectedFiles.filter((f) => f.name !== file.name));
     URL.revokeObjectURL(file.url);
   };
 
-  const uploadCertificates = async () => {
+  const uploadFiles = async () => {
     setIsUploading(true);
     try {
-      const certificatesPayload = [...selectedCertificatesRef.current];
+      // const certificatesPayload = [...selectedFilesRef.current];
 
       if (!token) {
         toastHandler({
@@ -104,27 +101,7 @@ const MobileUploadPage: React.FC = () => {
         return;
       }
 
-      const { success: successPush } = await pusherAPI({
-        query: {
-          channel: PRIVATE_CHANNEL.CERTIFICATE,
-          event: CERTIFICATE_EVENT.UPLOAD,
-        },
-        body: {
-          token: token as string,
-          files: certificatesPayload,
-        },
-      });
-
-      if (successPush === false) {
-        toastHandler({
-          id: ToastId.NOTIFY_WEB_ERROR,
-          type: ToastType.WARNING,
-          content: t('certificate:ERROR.NOTIFY_WEB'),
-          closeable: true,
-        });
-      }
-
-      selectedCertificates.map(async (certificate) => {
+      selectedFiles.map(async (certificate) => {
         const formData = new FormData();
         formData.append('file', certificate.file);
 
@@ -149,15 +126,15 @@ const MobileUploadPage: React.FC = () => {
           uploadingCertificate.progress = 0;
         }
 
-        const { success: successPushAgain } = await pusherAPI({
-          query: {
-            channel: PRIVATE_CHANNEL.CERTIFICATE,
-          },
-          body: {
-            token: token as string,
+        const pusher = getPusherInstance();
+
+        const successPushAgain = pusher.send_event(
+          ROOM_EVENT.NEW_FILE,
+          {
             files: [uploadingCertificate],
           },
-        });
+          PRIVATE_CHANNEL.ROOM
+        );
 
         if (successPushAgain === false) {
           if (success) {
@@ -178,7 +155,7 @@ const MobileUploadPage: React.FC = () => {
             });
           }
         }
-        setUploadedCertificates((prev) => [...prev, uploadingCertificate]);
+        setUploadedFiles((prev) => [...prev, uploadingCertificate]);
       });
     } catch (error) {
       setSuccessUpload(false);
@@ -202,37 +179,37 @@ const MobileUploadPage: React.FC = () => {
     }
   };
 
-  const handleSelectCertificate = (certificate: IFileUIBetaWithFile) => {
-    if (selectedCertificate && selectedCertificate.name === certificate.name) {
-      setSelectedCertificate(null);
+  const handleSelectFile = (file: IFileUIBetaWithFile) => {
+    if (selectedFile && selectedFile.name === file.name) {
+      setSelectedFile(null);
       return;
     }
-    setSelectedCertificate(certificate);
+    setSelectedFile(file);
   };
 
   const handleBack = () => {
     setIsUploading(false);
-    setSelectedCertificates([]);
-    setUploadedCertificates([]);
+    setSelectedFiles([]);
+    setUploadedFiles([]);
   };
 
   useEffect(() => {
     clearAllItems();
     if (router.isReady && query.token) {
       setToken(query.token as string);
+      // Info: (20241111- tzuhan) 1. pusher emit ROOM_EVENT.JOIN
+      const pusher = getPusherInstance();
+      pusher.send_event(ROOM_EVENT.JOIN, { token: query.token }, PRIVATE_CHANNEL.ROOM);
     }
   }, [router]);
 
   useEffect(() => {
-    if (
-      selectedCertificates.length === uploadedCertificates.length &&
-      selectedCertificates.length > 0
-    ) {
+    if (selectedFiles.length === uploadedFiles.length && selectedFiles.length > 0) {
       setTimeout(() => {
         setSuccessUpload(true);
       }, 1000);
     }
-  }, [uploadedCertificates, selectedCertificates]);
+  }, [uploadedFiles, selectedFiles]);
 
   return (
     <>
@@ -252,26 +229,26 @@ const MobileUploadPage: React.FC = () => {
           <div className="flex items-center justify-center gap-2">
             <div className="p-2 text-stroke-neutral-invert">{t('certificate:TITLE.SELECT')}:</div>
             <div className="rounded-full bg-badge-surface-soft-primary px-4px py-2px text-xs tracking-tight text-badge-text-primary-solid">
-              {selectedCertificates.length}
+              {selectedFiles.length}
             </div>
           </div>
           <Button
             id="camera-upload-image-button"
             type="button"
             variant="default"
-            onClick={uploadCertificates}
+            onClick={uploadFiles}
             className={`mr-1 rounded-xs p-3`}
-            disabled={!token || selectedCertificates.length === 0}
+            disabled={!token || selectedFiles.length === 0}
           >
             <FiUpload size={20} className="leading-none text-button-text-secondary" />
           </Button>
         </div>
 
-        {selectedCertificate ? (
+        {selectedFile ? (
           <div className="mx-auto h-full w-full">
             <Image
-              src={selectedCertificate.url}
-              alt={selectedCertificate.name}
+              src={selectedFile.url}
+              alt={selectedFile.name}
               layout="fill"
               objectFit="contain"
             />
@@ -292,12 +269,12 @@ const MobileUploadPage: React.FC = () => {
                 />
               </button>
             </div>
-            {selectedCertificates.map((file) => (
+            {selectedFiles.map((file) => (
               <div
                 key={file.name}
                 className="relative w-full"
                 style={{ aspectRatio: '1 / 1' }}
-                onClick={() => handleSelectCertificate(file)}
+                onClick={() => handleSelectFile(file)}
               >
                 <Image
                   src={file.url}
@@ -315,7 +292,7 @@ const MobileUploadPage: React.FC = () => {
         )}
         <div className="z-10 flex h-105px shrink-0 items-center justify-between overflow-x-hidden rounded-t-lg bg-surface-neutral-solid-dark p-2">
           <div className="flex h-full w-full items-center gap-2 overflow-x-auto">
-            {selectedCertificates.map((file) => (
+            {selectedFiles.map((file) => (
               <div
                 key={file.name}
                 className="relative w-full"
@@ -329,8 +306,8 @@ const MobileUploadPage: React.FC = () => {
                   className="rounded-xs"
                 />
                 <div
-                  className={`absolute left-0 top-0 h-50px w-50px ${selectedCertificate && selectedCertificate.url === file.url ? 'bg-black/50' : 'bg-transparent'}`}
-                  onClick={() => handleSelectCertificate(file)}
+                  className={`absolute left-0 top-0 h-50px w-50px ${selectedFile && selectedFile.url === file.url ? 'bg-black/50' : 'bg-transparent'}`}
+                  onClick={() => handleSelectFile(file)}
                 ></div>
                 <Button
                   type="button"
@@ -356,7 +333,7 @@ const MobileUploadPage: React.FC = () => {
               multiple
               className="hidden"
               ref={inputRef}
-              onChange={handleCertificateChange}
+              onChange={handleFilesSelect}
             />
           </Button>
         </div>
@@ -369,11 +346,11 @@ const MobileUploadPage: React.FC = () => {
                   className="rounded-xs"
                   width={150}
                   height={150}
-                  alt="Uploading..."
+                  alt={t('certificate:UPLOAD.LOADING')}
                 />
-                <div>Uploading...</div>
+                <div>{t('certificate:UPLOAD.LOADING')}</div>
                 <div className="text-sm text-text-neutral-tertiary">
-                  ({`${uploadedCertificates.length}/${selectedCertificates.length}`})
+                  ({`${uploadedFiles.length}/${selectedFiles.length}`})
                 </div>
               </div>
             ) : (
@@ -408,7 +385,18 @@ const MobileUploadPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'certificate'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'certificate',
+      'journal',
+      'kyc',
+      'project',
+      'report_401',
+      'salary',
+      'setting',
+      'terms',
+      'asset',
+    ])),
     locale,
   },
 });

@@ -132,7 +132,7 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_LIST_V2, objec
     const mockCertificate: ICertificateListItem = {
       id: 1,
       companyId: 1003,
-      voucherNo: '',
+      // voucherNo: '',
       invoice: mockInvoice,
       file: mockInvoiceFile,
       uploader: mockUploader,
@@ -210,7 +210,7 @@ export const handlePostRequest: IHandleRequest<APIName.CERTIFICATE_POST_V2, obje
   const mockCertificate: ICertificatePostResponse = {
     id: 1,
     companyId,
-    voucherNo: null,
+    // voucherNo: null,
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,

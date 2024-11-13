@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler, {
   handleDeleteRequest,
-  handleGetRequest,
   handlePutRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -63,33 +62,6 @@ afterEach(() => {
 
 describe('company/[companyId]/voucher/[voucherId]', () => {
   const mockVoucherId = 1;
-  describe('GET One Voucher', () => {
-    it('should pass', async () => {
-      const session = {
-        userId: 1001,
-        companyId: 1001,
-        roleId: 1001,
-        cookie: {
-          httpOnly: false,
-          path: 'string',
-          secure: false,
-        },
-      };
-      const query = {
-        voucherId: mockVoucherId,
-      };
-
-      const body = {};
-
-      const { statusMessage } = await handleGetRequest({
-        query,
-        body,
-        session,
-      });
-
-      expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
-    });
-  });
 
   describe('PUT One Voucher', () => {
     it('should pass', async () => {
@@ -193,7 +165,7 @@ describe('company/[companyId]/voucher/voucherId integration test', () => {
       req = {
         headers: {},
         query: {
-          voucherId: '1',
+          voucherId: '1000',
         },
         method: 'GET',
         json: jest.fn(),
