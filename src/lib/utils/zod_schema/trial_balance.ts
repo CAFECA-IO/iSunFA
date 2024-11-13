@@ -1,14 +1,7 @@
 import { z } from 'zod';
-import { IZodValidator } from '@/interfaces/zod_validator';
-import { SortOrder } from '@/constants/sort';
-import {
-  zodFilterSectionSortingOptions,
-  zodStringToNumber,
-  zodStringToNumberWithDefault,
-} from '@/lib/utils/zod_schema/common';
+import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { TrialBalanceSortBy } from '@/constants/trial_balance';
 
 const trialBalanceNullSchema = z.union([z.object({}), z.string()]);
 
@@ -17,10 +10,7 @@ const trialBalanceListQueryValidator = z.object({
   companyId: zodStringToNumber,
   startDate: zodStringToNumber,
   endDate: zodStringToNumber,
-  // sortOptions: zodFilterSectionSortingOptions().optional(),
   sortOption: z.string().optional(),
-  // sortBy: z.nativeEnum(TrialBalanceSortBy).optional().default(TrialBalanceSortBy.CREATED_AT),
-  // sortOrder: z.nativeEnum(SortOrder).optional().default(SortOrder.DESC),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
 });
@@ -60,27 +50,25 @@ const trialBalanceTotalSchema = z.object({
 });
 
 // Info: (20241022 - Shirley) Trial balance list response validator
-// export const trialBalanceListResponseValidator = z.object({
-//   currencyAlias: z.string(),
-//   items: z.object({
-//     data: z.array(trialBalanceItemSchema),
-//     page: z.number(),
-//     totalPages: z.number(),
-//     totalCount: z.number(),
-//     pageSize: z.number(),
-//     hasNextPage: z.boolean(),
-//     hasPreviousPage: z.boolean(),
-//     sort: z.array(
-//       z.object({
-//         sortBy: z.string(),
-//         sortOrder: z.string(),
-//       })
-//     ),
-//   }),
-//   total: trialBalanceTotalSchema,
-// });
-
-export const trialBalanceListResponseValidator = z.any();
+export const trialBalanceListResponseValidator = z.object({
+  currencyAlias: z.string(),
+  items: z.object({
+    data: z.array(trialBalanceItemSchema),
+    page: z.number(),
+    totalPages: z.number(),
+    totalCount: z.number(),
+    pageSize: z.number(),
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    sort: z.array(
+      z.object({
+        sortBy: z.string(),
+        sortOrder: z.string(),
+      })
+    ),
+  }),
+  total: trialBalanceTotalSchema,
+});
 
 export const trialBalanceListSchema = {
   input: {

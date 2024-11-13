@@ -21,8 +21,6 @@ export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = a
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPayload | null = null;
 
-  console.log('query in ledger API', query, typeof query.companyId);
-
   try {
     const ledgerData = await listLedger(query);
     if (ledgerData) {

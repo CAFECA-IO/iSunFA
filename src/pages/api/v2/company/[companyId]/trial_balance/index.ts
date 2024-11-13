@@ -24,10 +24,6 @@ export const handleGetRequest: IHandleRequest<
     items: IPaginatedData<TrialBalanceItem[]>;
     total: ITrialBalanceTotal;
   } | null = null;
-  // Deprecated: (20241110 - Shirley) 測試用
-  // eslint-disable-next-line no-console
-  console.log(query);
-
   try {
     const trialBalanceData = await listTrialBalance(query);
     if (trialBalanceData) {
@@ -36,8 +32,6 @@ export const handleGetRequest: IHandleRequest<
     }
   } catch (error) {
     const err = error as Error;
-    // eslint-disable-next-line no-console
-    console.log('error in trial balance API', err);
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 

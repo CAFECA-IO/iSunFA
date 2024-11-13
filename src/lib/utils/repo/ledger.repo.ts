@@ -55,8 +55,6 @@ export async function listLedger(params: ListLedgerParams): Promise<ILedgerPaylo
     pageSize = DEFAULT_PAGE_LIMIT,
   } = params;
 
-  console.log('companyId', companyId, typeof companyId);
-
   const pageNumber = page;
 
   let ledgerPayload: ILedgerPayload | null = null;

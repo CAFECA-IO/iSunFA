@@ -1,7 +1,5 @@
-/* eslint-disable */
-// FIXME: 拿掉 disable
 import prisma from '@/client';
-import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
+import { pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { SortOrder, SortBy } from '@/constants/sort';
@@ -9,11 +7,8 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { ITrialBalancePayload } from '@/interfaces/trial_balance';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { zodFilterSectionSortingOptions } from '@/lib/utils/zod_schema/common';
 import { buildAccountForestForUser } from '@/lib/utils/account/common';
 import { IAccountNode } from '@/interfaces/accounting_account';
-import fs from 'fs';
-import path from 'path';
 
 /* Info: (20241105 - Shirley) Trial balance repository 實作
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
@@ -21,7 +16,7 @@ company id (public company || targeted company) 去找 account table 拿到所�
 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
   2.1 整理 account 資料結構
 3. 用 my company id 搜尋 voucher table 取得所有憑證
-4. 用 my company id & 所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item
+4. 用我的 company id & 所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item
 5. 依照期初、期中、期末分別計算所有會計科目的借方跟貸方金額
 6. 處理子科目
 7. 加總所有子科目金額
@@ -50,33 +45,6 @@ interface AccountWithSub {
   name: string;
   subAccounts: AccountWithSub[];
   lineItem: LineItem[];
-}
-
-interface AccountWithSubResult {
-  id: number;
-  no: string;
-  accountingTitle: string;
-  beginningCreditAmount: number;
-  beginningDebitAmount: number;
-  midtermCreditAmount: number;
-  midtermDebitAmount: number;
-  endingCreditAmount: number;
-  endingDebitAmount: number;
-  subAccounts: AccountWithSubResult[];
-  // FIXME: 改成 createdAt, updatedAt 或者刪掉
-  createAt: number;
-  updateAt: number;
-
-  _total?: {
-    beginningCreditAmount: number;
-    beginningDebitAmount: number;
-    midtermCreditAmount: number;
-    midtermDebitAmount: number;
-    endingCreditAmount: number;
-    endingDebitAmount: number;
-    createAt: number;
-    updateAt: number;
-  };
 }
 
 interface AccountWithSub1 {
@@ -109,20 +77,6 @@ interface AccountWithSubResult1 {
 }
 
 const DEFAULT_SORT_OPTIONS = [{ sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.ASC }];
-
-// function parseSortOptions(sortOptions: string | undefined): {
-//   sortBy: SortBy;
-//   sortOrder: SortOrder;
-// }[] {
-//   const parseResult = zodFilterSectionSortingOptions().safeParse(sortOptions);
-//   console.log('parseResult', JSON.stringify(parseResult, null, 2));
-//   if (parseResult.success) {
-//     return parseResult.data;
-//   } else {
-//     return DEFAULT_SORT_OPTIONS;
-//     // throw new Error('Invalid sortOptions format');
-//   }
-// }
 
 function parseSortOptions(sortOptions: string | undefined): {
   sortBy: SortBy;
@@ -203,7 +157,7 @@ function addVoucherLineItemToAccount(
   return newAccounts;
 }
 
-function calculateTrialBalance1({
+function calculateTrialBalance({
   startDate,
   endDate,
   account,
@@ -234,16 +188,11 @@ function calculateTrialBalance1({
     )
     .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
 
-  const endingCreditAmount = account.lineItem
-    .filter((item: LineItem) => !item.debit && item.voucher.date > endDate)
-    .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
-
-  const endingDebitAmount = account.lineItem
-    .filter((item: LineItem) => item.debit && item.voucher.date > endDate)
-    .reduce((sum: number, item: LineItem) => sum + item.amount, 0);
+  const endingCreditAmount = beginningCreditAmount + midtermCreditAmount;
+  const endingDebitAmount = beginningDebitAmount + midtermDebitAmount;
 
   const subAccounts = account.subAccounts.map((subAccount) =>
-    calculateTrialBalance1({ startDate, endDate, account: subAccount })
+    calculateTrialBalance({ startDate, endDate, account: subAccount })
   );
 
   const now = 0;
@@ -265,18 +214,18 @@ function calculateTrialBalance1({
   };
 }
 
-const flattenTrialBalance1 = (items: AccountWithSubResult1[]): AccountWithSubResult1[] => {
+const flattenTrialBalance = (items: AccountWithSubResult1[]): AccountWithSubResult1[] => {
   let flat: AccountWithSubResult1[] = [];
   items.forEach((item) => {
     flat.push(item);
     if (item.subAccounts && item.subAccounts.length > 0) {
-      flat = flat.concat(flattenTrialBalance1(item.subAccounts));
+      flat = flat.concat(flattenTrialBalance(item.subAccounts));
     }
   });
   return flat;
 };
 
-const sortTrialBalance1 = (
+const sortTrialBalance = (
   items: AccountWithSubResult1[],
   sortOptions: {
     sortBy: SortBy;
@@ -341,7 +290,7 @@ const sortTrialBalance1 = (
     // 遞迴排序 subAccounts
     items.forEach((item) => {
       if (item.subAccounts && item.subAccounts.length > 0) {
-        sortTrialBalance1(item.subAccounts, sortOptions);
+        sortTrialBalance(item.subAccounts, sortOptions);
       }
     });
   }
@@ -380,30 +329,10 @@ export async function listTrialBalance(
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
-    let sortOptionsParsed: { sortBy: SortBy; sortOrder: SortOrder }[] = [];
+    // 解析 sortOptions
+    const parsedSortOptions = parseSortOptions(sortOption);
 
-    console.log('sortOptions in trial_balance_repo before anything', sortOption);
-
-    // if (sortOptions) {
-    //   sortOptionsParsed = parseSortOptions(sortOptions);
-    // } else {
-    //   sortOptionsParsed = DEFAULT_SORT_OPTIONS;
-    // }
-    // 解析 sortOptions 使用 zodFilterSectionSortingOptions
-    // let sortOptionsParsed = [];
-    // if (sortOptions) {
-    //   const parseResult = zodFilterSectionSortingOptions().safeParse(sortOptions);
-    //   if (parseResult.success) {
-    //     sortOptionsParsed = parseResult.data;
-    //   } else {
-    //     // TODO: 修改錯誤訊息
-    //     throw new Error('Invalid sortOptions format');
-    //   }
-    // } else {
-    //   sortOptionsParsed = [{ sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.DESC }];
-    // }
-
-    // Info: (20241105 - Shirley) 1. 搜尋 accounting setting table 取得貨幣別
+    // 1. 搜尋 accounting setting table 取得貨幣別
     const accountingSettingData = await prisma.accountingSetting.findFirst({
       where: { companyId },
     });
@@ -414,7 +343,7 @@ export async function listTrialBalance(
       currencyAlias = accountingSettingData.currency || 'TWD';
     }
 
-    // Info: (20241105 - Shirley) 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
+    // 2. 用 public company id & my company id 搜尋 account table 取得所有會計科目
     const accounts = await prisma.account.findMany({
       where: {
         OR: [
@@ -424,53 +353,12 @@ export async function listTrialBalance(
         forUser: true,
       },
       include: {
-        lineItem: {
-          where: {
-            deletedAt: null,
-            voucher: {
-              date: {
-                lte: endDate,
-                gte: 0, // 取得所有日期的資料以計算期初
-              },
-            },
-          },
-          include: {
-            voucher: true,
-          },
-        },
-        child: {
-          where: { deletedAt: null },
-          include: {
-            lineItem: {
-              where: {
-                deletedAt: null,
-                voucher: {
-                  date: {
-                    lte: endDate,
-                    gte: 0,
-                  },
-                },
-              },
-              include: {
-                voucher: true,
-              },
-            },
-          },
-        },
+        lineItem: true,
       },
     });
 
-    // log the accounts that have lineItem
-    // const accountsWithLineItemTEST = accounts
-    //   .filter((account) => account.lineItem.length > 0)
-    //   .map((account) => ({
-    //     code: account.code,
-    //     name: account.name,
-    //     lineItem: account.lineItem,
-    //   }));
-    // console.log('accountsWithLineItemTEST', accountsWithLineItemTEST);
-
-    const allVoucherData = await prisma.voucher.findMany({
+    // 3. 用 companyId 搜尋 voucher table 取得所有憑證
+    const vouchers = await prisma.voucher.findMany({
       where: {
         companyId,
         deletedAt: null,
@@ -480,40 +368,45 @@ export async function listTrialBalance(
       },
     });
 
-    const allVoucherIds = allVoucherData.map((voucher) => voucher.id);
+    const allVoucherIds = vouchers.map((voucher) => voucher.id);
 
-    // Info: (20241105 - Shirley) 4. 用所有憑證 id 搜尋 line item table 取得所有憑證對應的 line item（補充）
-    const additionalLineItems = await prisma.lineItem.findMany({
+    // 4. 用憑證 id 搜尋 line item table 取得所有憑證對應的 line item
+    // TODO:
+    const lineItems = await prisma.lineItem.findMany({
       where: {
         voucherId: { in: allVoucherIds },
         deletedAt: null,
+        createdAt: {
+          // gte: startDate,
+          lte: endDate,
+        },
       },
       include: {
         voucher: true,
       },
     });
 
-    // console.log('additionalLineItemsLength', additionalLineItems.length);
+    const accountsWithLineItemProperties = accounts.map((account) => ({
+      ...account,
+      lineItem: [] as LineItem[],
+    }));
 
-    // Info: (20241105 - Shirley) 合併 account 表中的 line items 與 voucher 表中的 line items
-    accounts.forEach((account) => {
-      const voucherLineItems = additionalLineItems.filter(
-        (item) => item.accountId === account.id && !account.lineItem.some((li) => li.id === item.id)
-      );
+    // 合併 account 表中的 line items 與 voucher 表中的 line items
+    accountsWithLineItemProperties.forEach((account) => {
+      const voucherLineItems = lineItems.filter((item) => item.accountId === account.id);
       account.lineItem.push(...voucherLineItems);
     });
 
-    // Info: (20241105 - Shirley) 2.1 整理 account 資料結構，依照 parent code 追溯
+    // 2.1 整理 account 資料結構，依照 parent code 追溯
     const accountMap: { [key: string]: AccountWithSub } = {};
-    accounts.forEach((account) => {
+    accountsWithLineItemProperties.forEach((account) => {
       accountMap[account.code] = {
         ...account,
         subAccounts: [],
       };
     });
 
-    // FIXME: DEV
-    /** FIXME: DEV
+    /**
      * 1. 解析 sortOptions
      * 2. 將 accountForest 轉為 AccountWithSub
      *   2.1 將 voucher 的 line item 合併到 account 的 line item 裡
@@ -523,32 +416,25 @@ export async function listTrialBalance(
      * 6. 將 trialBalance 排序，注意 subAccounts 也要排序，獲得 sortedTrialBalance
      * 7. 將 sortedTrialBalance 分頁，獲得 paginatedTrialBalance
      * 8. 將 total 放到 trialBalancePayload 裡
-     * FIXME:
      * 9. 將餘額全部為 0 的科目過濾掉
      */
-    const parsedSortOptions = parseSortOptions(sortOption);
-    // const parsedSortOptions = parseSortOptions(
-    //   `sortOption=${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.ASC}`
-    //   `sortOption=${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.DESC}-${SortBy.BEGINNING_DEBIT_AMOUNT}:${SortOrder.ASC}`
-    // );
-    const accountForest = buildAccountForestForUser(accounts);
+    const accountForest = buildAccountForestForUser(accountsWithLineItemProperties);
     const accountWithSub = transformAccountForestToAccountWithSub(accountForest);
     const accountWithSubWithVoucherLineItem = addVoucherLineItemToAccount(
       accountWithSub,
-      additionalLineItems
+      lineItems
     );
-    console.log('accountWithSubWithVoucherLineItem', accountWithSubWithVoucherLineItem);
     const trialBalance1 = accountWithSubWithVoucherLineItem
       .filter((account) => account.lineItem.length > 0)
       .map((account) =>
-        calculateTrialBalance1({
+        calculateTrialBalance({
           startDate,
           endDate,
           account,
         })
       );
 
-    const flattenedTrialBalance1 = flattenTrialBalance1(trialBalance1 as AccountWithSubResult1[]);
+    const flattenedTrialBalance1 = flattenTrialBalance(trialBalance1 as AccountWithSubResult1[]);
     const total1 = {
       beginningCreditAmount: flattenedTrialBalance1.reduce(
         (sum, item) => sum + item.beginningCreditAmount,
@@ -577,35 +463,7 @@ export async function listTrialBalance(
       createAt: Math.floor(Date.now() / 1000),
       updateAt: Math.floor(Date.now() / 1000),
     };
-    const sortedTrialBalance1 = sortTrialBalance1(flattenedTrialBalance1, parsedSortOptions);
-    // const sortedTrialBalance1 = flattenedTrialBalance1;
-    const newTrialBalancePayload = {
-      sortedTrialBalance1,
-      total1,
-    };
-    console.log(
-      'parsedSortOptions',
-      parsedSortOptions
-      // 'accountsFromPrismaLength',
-      // accounts.length,
-      // 'accountForestLength',
-      // accountForest.length,
-      // 'accountWithSubWithVoucherLineItemLength',
-      // accountWithSubWithVoucherLineItem.length,
-      // 'trialBalance1Length',
-      // trialBalance1.length
-    );
-    // 寫入 sortedTrialBalance1 到 json 檔案裡
-    const DIR_NAME = 'tmp';
-    // const NEW_FILE_NAME = 'sortedTrialBalance1.json';
-    const NEW_FILE_NAME = 'newTrialBalancePayload.json';
-    const logDir = path.join(process.cwd(), DIR_NAME);
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
-    const logPath = path.join(logDir, NEW_FILE_NAME);
-    fs.writeFileSync(logPath, JSON.stringify(newTrialBalancePayload, null, 2), 'utf-8');
+    const sortedTrialBalance1 = sortTrialBalance(flattenedTrialBalance1, parsedSortOptions);
 
     let paginatedData = sortedTrialBalance1;
     let totalCount = sortedTrialBalance1.length;
@@ -633,15 +491,6 @@ export async function listTrialBalance(
       },
       total: total1,
     };
-
-    const NEW_FILE_NAME2 = 'beforeRefactorTrialBalance1.json';
-    const logDir2 = path.join(process.cwd(), DIR_NAME);
-    if (!fs.existsSync(logDir2)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
-    const logPath2 = path.join(logDir2, NEW_FILE_NAME2);
-    fs.writeFileSync(logPath2, JSON.stringify(trialBalancePayload, null, 2), 'utf-8');
   } catch (error) {
     const logError = loggerError(
       0,
