@@ -15,7 +15,7 @@ import { listLineItemsByAccount } from '@/lib/utils/repo/line_item.beta.repo';
  * @description for src/pages/api/v2/company/[companyId]/account/[accountId]/lineitem.ts
  */
 export const lineItemGetByAccountAPIUtils = {
-  reversibleAccountSet: new Set(AccountCodesOfAPandAR),
+  reversibleAccountSetRegex: new RegExp(`^(${AccountCodesOfAPandAR.join('|')})`),
   /**
    * Info: (20241025 - Murky)
    * @description throw StatusMessage as Error, but it can log the errorMessage
@@ -95,7 +95,7 @@ export const lineItemGetByAccountAPIUtils = {
    * @description 判斷這個lineItem是否可以被反轉的科目code
    */
   isLineItemCanBeReversed: (lineItem: IGetLineItemByAccount): boolean => {
-    const canBeReversed = lineItemGetByAccountAPIUtils.reversibleAccountSet.has(
+    const canBeReversed = lineItemGetByAccountAPIUtils.reversibleAccountSetRegex.test(
       lineItem.account.code
     );
     return canBeReversed;

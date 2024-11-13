@@ -256,6 +256,20 @@ describe('lineItemGetByAccountAPIUtils', () => {
       const canBeReversed = lineItemGetByAccountAPIUtils.isLineItemCanBeReversed(fakeLineItem);
       expect(canBeReversed).toBe(true);
     });
+
+    it('should return true if line item is sub', () => {
+      const [fakeLineItem] = fakeLineItemsFromDB;
+      fakeLineItem.account.code = '2171-1';
+      const canBeReversed = lineItemGetByAccountAPIUtils.isLineItemCanBeReversed(fakeLineItem);
+      expect(canBeReversed).toBe(true);
+    });
+
+    it('should return false if line item can not be reversed', () => {
+      const [fakeLineItem] = fakeLineItemsFromDB;
+      fakeLineItem.account.code = '2170';
+      const canBeReversed = lineItemGetByAccountAPIUtils.isLineItemCanBeReversed(fakeLineItem);
+      expect(canBeReversed).toBe(false);
+    });
   });
 
   describe('isLineItemStillReversible', () => {
