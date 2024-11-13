@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useModalContext } from '@/contexts/modal_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiCalendar } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
@@ -11,8 +13,25 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { APIName } from '@/constants/api_connection';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import APIHandler from '@/lib/utils/api_handler';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
+import { ToastType } from '@/interfaces/toastify';
 
-type ITaxRate = '5%' | 'zeroTax' | 'zeroTaxThroughCustoms' | 'zeroTaxNotThroughCustoms' | 'taxFree';
+type ITaxType =
+  | number
+  | 'zeroTax'
+  | 'zeroTaxThroughCustoms'
+  | 'zeroTaxNotThroughCustoms'
+  | 'taxFree';
+
+type ITaxPeriod = 'Month' | 'Week';
+
+enum TaxPeriod {
+  Month = 'Month',
+  Week = 'Week',
+}
 
 interface ICurrency {
   countryName: string;
@@ -31,6 +50,11 @@ const dummyCurrencies: ICurrency[] = [
     currencyName: 'TWD',
     iconSrc: '/icons/tw.svg',
   },
+  {
+    countryName: 'Eurozone',
+    currencyName: 'EUR',
+    iconSrc: '/icons/eu.svg',
+  },
 ];
 
 const AccountingSettingPageBody: React.FC = () => {
@@ -40,10 +64,79 @@ const AccountingSettingPageBody: React.FC = () => {
     accountingTitleSettingModalVisibilityHandler,
     manualAccountOpeningModalVisibilityHandler,
   } = useGlobalCtx();
+  const { toastHandler } = useModalContext();
+  const { selectedCompany } = useUserCtx();
 
-  const [currentSalesTax, setCurrentSalesTax] = useState<ITaxRate>('5%');
-  const [currentPurchaseTax, setCurrentPurchaseTax] = useState<ITaxRate>('5%');
-  const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(dummyCurrencies[0]);
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+
+  // Info: (20241113 - Julian) 取得會計設定資料
+  const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
+    APIName.ACCOUNTING_SETTING_GET,
+    {
+      params: { companyId },
+    },
+    true
+  );
+
+  const {
+    trigger: updateSetting,
+    data: updatedSettingData,
+    isLoading: isUpdating,
+  } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE, {
+    params: { companyId },
+  });
+
+  const initialAccountingSetting: IAccountingSetting = {
+    id: 0,
+    companyId: 0,
+    currency: 'USD',
+    taxSettings: {
+      salesTax: {
+        taxable: true,
+        rate: 5,
+      },
+      purchaseTax: {
+        taxable: true,
+        rate: 5,
+      },
+      returnPeriodicity: TaxPeriod.Month,
+    },
+    shortcutList: [],
+  };
+
+  const {
+    taxSettings: {
+      salesTax: initialSalesTax,
+      purchaseTax: initialPurchaseTax,
+      returnPeriodicity: initialTaxPeriod,
+    },
+    currency: initialCurrency,
+  } = accountingSetting ?? initialAccountingSetting;
+
+  // Info: (20241113 - Julian) Transfer API data to frontend data
+  const defaultSalesTax = initialSalesTax.taxable
+    ? initialSalesTax.rate !== 0
+      ? initialSalesTax.rate
+      : 'zeroTax'
+    : 'taxFree';
+
+  const defaultPurchaseTax = initialPurchaseTax.taxable
+    ? initialPurchaseTax.rate !== 0
+      ? initialPurchaseTax.rate
+      : 'zeroTax'
+    : 'taxFree';
+
+  const defaultCurrency =
+    dummyCurrencies.find((currency) => currency.currencyName === initialCurrency) ??
+    dummyCurrencies[0];
+
+  // Info: (20241113 - Julian) Form State
+  const [currentSalesTax, setCurrentSalesTax] = useState<ITaxType>(defaultSalesTax);
+  const [currentPurchaseTax, setCurrentPurchaseTax] = useState<ITaxType>(defaultPurchaseTax);
+  const [currentTaxPeriod, setCurrentTaxPeriod] = useState<ITaxPeriod>(
+    initialTaxPeriod as ITaxPeriod
+  );
+  const [currentCurrency, setCurrentCurrency] = useState<ICurrency>(defaultCurrency);
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
 
@@ -60,6 +153,12 @@ const AccountingSettingPageBody: React.FC = () => {
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
+    targetRef: periodRef,
+    componentVisible: periodVisible,
+    setComponentVisible: setPeriodVisible,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
     targetRef: currencyMenuRef,
     componentVisible: currencyMenuVisible,
     setComponentVisible: setCurrencyMenuVisible,
@@ -67,17 +166,72 @@ const AccountingSettingPageBody: React.FC = () => {
 
   const toggleSalesTaxMenu = () => setSalesTaxVisible(!salesTaxVisible);
   const togglePurchaseTaxMenu = () => setPurchaseTaxVisible(!purchaseTaxVisible);
+  const togglePeriodMenu = () => setPeriodVisible(!periodVisible);
   const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
 
-  const showTaxStr = (taxRate: ITaxRate) => {
+  const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (value < 1) {
+      setReportGenerateDay(1);
+    } else if (value > 31) {
+      setReportGenerateDay(31);
+    } else {
+      setReportGenerateDay(value);
+    }
+  };
+
+  // Info: (20241106 - Julian) 如果輸入的值不是數字，則在聚焦離開時將值設為 10
+  const handleReportGenerateDayBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (Number.isNaN(value)) {
+      setReportGenerateDay(10);
+    }
+  };
+
+  const saveClickHandler = async () => {
+    const salesTaxRate = typeof currentSalesTax === 'number' ? currentSalesTax : 0;
+    const purchaseTaxRate = typeof currentPurchaseTax === 'number' ? currentPurchaseTax : 0;
+
+    const body: IAccountingSetting = {
+      id: accountingSetting?.id ?? 0,
+      companyId,
+      currency: currentCurrency.currencyName,
+      taxSettings: {
+        salesTax: {
+          taxable: currentSalesTax !== 'taxFree',
+          rate: salesTaxRate,
+        },
+        purchaseTax: {
+          taxable: currentPurchaseTax !== 'taxFree',
+          rate: purchaseTaxRate,
+        },
+        returnPeriodicity: currentTaxPeriod,
+      },
+      shortcutList: [],
+    };
+
+    updateSetting({
+      params: { companyId },
+      query: { body },
+    });
+  };
+
+  useEffect(() => {
+    if (updatedSettingData) {
+      toastHandler({
+        id: 'accounting-setting-updated',
+        type: ToastType.SUCCESS,
+        content: 'Accounting setting updated successfully!',
+        closeable: true,
+      });
+
+      getAccountSetting({ params: { companyId } });
+    }
+  }, [updatedSettingData, isUpdating]);
+
+  // Info: (20241113 - Julian) 文字顯示設定
+  const showTaxStr = (taxRate: ITaxType) => {
     switch (taxRate) {
-      case '5%':
-        return (
-          <div className="flex flex-1 items-center justify-between">
-            <p className="text-input-text-input-filled">Taxable</p>
-            <p className="text-input-text-input-placeholder">5%</p>
-          </div>
-        );
       case 'zeroTax':
         return (
           <div className="flex flex-1 items-center justify-between">
@@ -102,26 +256,12 @@ const AccountingSettingPageBody: React.FC = () => {
       case 'taxFree':
         return <p className="flex-1 text-input-text-input-filled">Tax-Free</p>;
       default:
-        return <p className="flex-1 text-input-text-input-placeholder">-</p>;
-    }
-  };
-
-  const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (value < 1) {
-      setReportGenerateDay(1);
-    } else if (value > 31) {
-      setReportGenerateDay(31);
-    } else {
-      setReportGenerateDay(value);
-    }
-  };
-
-  // Info: (20241106 - Julian) 如果輸入的值不是數字，則在聚焦離開時將值設為 10
-  const handleReportGenerateDayBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (Number.isNaN(value)) {
-      setReportGenerateDay(10);
+        return (
+          <div className="flex flex-1 items-center justify-between">
+            <p className="text-input-text-input-filled">Taxable</p>
+            <p className="text-input-text-input-placeholder">{taxRate}%</p>
+          </div>
+        );
     }
   };
 
@@ -129,9 +269,9 @@ const AccountingSettingPageBody: React.FC = () => {
   const getTaxDropdown = (
     dropdownRef: React.RefObject<HTMLDivElement>,
     dropdownVisible: boolean,
-    setTaxState: React.Dispatch<React.SetStateAction<ITaxRate>>
+    setTaxState: React.Dispatch<React.SetStateAction<ITaxType>>
   ) => {
-    const fivePercentClickHandler = () => setTaxState('5%');
+    const fivePercentClickHandler = () => setTaxState(5);
     const zeroTaxClickHandler = () => setTaxState('zeroTax');
     const zeroTaxThroughCustomsClickHandler = () => setTaxState('zeroTaxThroughCustoms');
     const zeroTaxNotThroughCustomsClickHandler = () => setTaxState('zeroTaxNotThroughCustoms');
@@ -206,6 +346,36 @@ const AccountingSettingPageBody: React.FC = () => {
     setCurrentPurchaseTax
   );
 
+  // Info: (20241113 - Julian) 會計期間的下拉選單內容
+  const periodDropdown = (
+    <div
+      ref={periodRef}
+      className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${
+        periodVisible
+          ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
+          : 'grid-rows-0 border-transparent'
+      } overflow-hidden transition-all duration-300 ease-in-out`}
+    >
+      <div className="flex flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px">
+        <div className="flex flex-col gap-8px">
+          {Object.values(TaxPeriod).map((period) => {
+            const periodClickHandler = () => setCurrentTaxPeriod(period as ITaxPeriod);
+            return (
+              <button
+                type="button"
+                onClick={periodClickHandler}
+                className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
+              >
+                <p className="text-dropdown-text-primary">{period}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Info: (20241113 - Julian) 貨幣的下拉選單內容
   const currencyDropdown = (
     <div
       ref={currencyMenuRef}
@@ -292,15 +462,19 @@ const AccountingSettingPageBody: React.FC = () => {
               {t('setting:ACCOUNTING.TAX_RETURN_PERIODICITY')}
             </p>
             {/* Info: (20241106 - Julian) ===== 稅務申報週期下拉選單 ===== */}
-            <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+            <div className="relative flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
               <div className="px-12px py-10px text-input-text-input-placeholder">
                 {t('common:DATE_PICKER.EVERY')}
               </div>
-              <div className="flex flex-1 items-center justify-between px-12px py-10px">
-                <p className="text-input-text-input-filled">Month</p>
+              <div
+                onClick={togglePeriodMenu}
+                className="flex flex-1 items-center justify-between px-12px py-10px font-medium hover:cursor-pointer"
+              >
+                <p className="text-input-text-input-filled">{currentTaxPeriod}</p>
                 <div className="text-icon-surface-single-color-primary">
                   <FaChevronDown />
                 </div>
+                {periodDropdown}
               </div>
             </div>
           </div>
@@ -480,7 +654,7 @@ const AccountingSettingPageBody: React.FC = () => {
 
       {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
       <div className="ml-auto flex items-center">
-        <Button type="button" variant="tertiary">
+        <Button type="button" variant="tertiary" onClick={saveClickHandler}>
           {t('common:COMMON.SAVE')}
         </Button>
       </div>
