@@ -89,7 +89,11 @@
     "VIEW_ALL_ACCOUNTING": "View all Accounting title",
     "ACCOUNTING_IMPORT_SUBTITLE": "Accounting Import",
     "IMPORT_FILE": "Import file",
-    "MANUAL_ACCOUNT_OPENING": "Manual account opening",
+    "MANUAL_ACCOUNT_OPENING": "Manual account opening"
+  },
+  "ACCOUNTING_SETTING_MODAL": {
+    "MODAL_TITLE": "Accounting Title Setting",
+    "SEARCH_ACCOUNTING_TITLE": "Search Accounting Title",
     "ACC_TYPE_ASSET": "Asset",
     "ACC_TYPE_LIABILITY": "Liability",
     "ACC_TYPE_EQUITY": "Equity",
@@ -98,7 +102,31 @@
     "ACC_TYPE_COST": "Cost",
     "ACC_TYPE_EXPENSE": "Expense",
     "ACC_TYPE_NON_OPERATING": "Non-operating",
-    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income"
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income",
+    "ADD_NEW_TITLE": "Add New Title",
+    "CATEGORY_TYPE": "Category Type",
+    "SUBCATEGORY_TYPE": "Subcategory Type",
+    "TITLE_NAME": "Title Name",
+    "TITLE_CODE": "Title Code",
+    "TITLE_NOTE": "Title Note",
+    "DROPMENU_PLACEHOLDER": "Please select...",
+    "TITLE_NAME_PLACEHOLDER": "Enter a name for this accounting title.",
+    "TITLE_NOTE_PLACEHOLDER": "Enter a description for this accounting title.",
+    "CLEAR_ALL_BTN": "Clear All",
+    "ADD_BTN": "Add"
+  },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "Manual Account Opening",
+    "SUBCATEGORY_TYPE": "Subcategory Type",
+    "TITLE_NAME": "Title Name",
+    "TITLE_CODE": "Title Code",
+    "BEGINNING_DEBIT": "Beginning Debit",
+    "BEGINNING_CREDIT": "Beginning Credit",
+    "DROPMENU_PLACEHOLDER": "Please select...",
+    "NAME_PLACEHOLDER": "Enter name",
+    "ADD_LIST_BTN": "Add List",
+    "SUBMIT_BTN": "Submit",
+    "NO_ACCOUNTING_FOUND": "No Account Title Found."
   },
   "IP": {
     "INFO": "Login device & IP information",
