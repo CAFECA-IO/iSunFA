@@ -19,8 +19,8 @@ const CounterpartyPageBody = () => {
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
     forUser: true,
-    sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
-    sortOrder: 'asc',
+    // sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
+    // sortOrder: 'asc',
   };
 
   // Info: (20241112 - Anna) 使用 APIHandler 來呼叫 COUNTERPARTY_LIST API

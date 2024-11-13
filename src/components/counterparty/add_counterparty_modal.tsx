@@ -9,7 +9,6 @@ import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { useUserCtx } from '@/contexts/user_context';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
@@ -30,7 +29,6 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
-  const { selectedCompany } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
@@ -55,6 +53,8 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     (type) => {
       const accountClickHandler = () => {
         setInputType(type);
+        // eslint-disable-next-line no-console
+        console.log('Selected Type:', type); // Info: (20241113 - Anna) 確認選擇的類型是否正確
         setTypeMenuOpen(false);
         setIsTypeSelecting(false);
       };
@@ -99,7 +99,9 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     setInputNote(event.target.value);
   };
 
-  const disabled = !inputName || !inputTaxId || !inputType;
+  // Info: (20241113 - Anna) 檢查是否有未填寫的欄位
+  // const disabled = !inputName || !inputTaxId || !inputType;
+  const disabled = !(inputName && inputTaxId && inputType);
 
   // Info: (20241112 - Anna) 使用 APIHandler 呼叫 COUNTERPARTY_ADD API
   const addCounterparty = async (counterpartyData: {
@@ -108,44 +110,74 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     type: CounterpartyType;
     note: string;
   }) => {
-    const { trigger: addCounterpartyTrigger } = APIHandler(
-      APIName.COUNTERPARTY_ADD,
-      {
-        body: counterpartyData,
-        params: { companyId: selectedCompany?.id || 10000001 }, // Info: (20241112 - Anna) 如果為 null，使用一個預設值
-      },
-      false,
-      true
-    );
+    // Info: (20241113 - Anna) 將 CounterpartyType 轉換為 string 類型
+       const apiData = {
+         ...counterpartyData,
+         type: counterpartyData.type.toString(), // Info: (20241113 - Anna) 轉換 type 為 string
+       };
 
-    // Info: (20241112 - Anna) 執行 API 請求並回應
-    const response = await addCounterpartyTrigger();
-    if (response.success) {
+    // eslint-disable-next-line no-console
+    console.log('Attempting to add counterparty with data:', apiData); // Info: (20241113 - Anna) 確認方法是否有被呼叫
+
+    try {
+      const { trigger: addCounterpartyTrigger } = APIHandler(
+        APIName.COUNTERPARTY_ADD,
+        {
+          body: apiData, // Info: (20241113 - Anna) 傳遞轉換後的 apiData
+          params: { companyId: 10000016 }, // Todo: Info: (20241113 - Anna) 如果為 null，使用一個預設值
+        },
+        false,
+        true
+      );
+
+      const response = await addCounterpartyTrigger();
       // eslint-disable-next-line no-console
-      console.log('Counterparty created successfully:', response.data); // Info: (20241112 - Anna) 顯示成功訊息
-      return true;
-    } else {
+      console.log('API Response:', response);
+
+      if (response && response.success) {
+        // eslint-disable-next-line no-console
+        console.log('Counterparty created successfully:', response.data);
+        return true;
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('Failed to create counterparty:', response?.error || 'No error message');
+        return false;
+      }
+    } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Failed to create counterparty:', response.error); // Info: (20241112 - Anna) 顯示錯誤訊息
+      console.error('Error in API call:', error);
       return false;
     }
   };
 
   const addNewCounterParterHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (disabled) {
       setShowHint(true);
     } else {
       const counterpartyData = {
         name: inputName,
         taxId: inputTaxId,
-        type: inputType,
+        type: inputType as CounterpartyType, // Info: (20241113 - Anna) 確保為 CounterpartyType 類型
         note: inputNote || '',
       };
-      const success = await addCounterparty(counterpartyData); // Info: (20241112 - Anna) 呼叫 API 並接收成功/失敗狀態
+
+      const success = await addCounterparty(counterpartyData); // Info: (20241113 - Anna) 呼叫 API 並接收成功/失敗狀態
+      // eslint-disable-next-line no-console
+      console.log('API Request Success:', success); //  Info: (20241113 - Anna) 確認API請求返回的結果
       if (success) {
-        onSave(counterpartyData); // Info: (20241112 - Anna) 如果成功，則呼叫 onSave
-        onClose(); // Info: (20241112 - Anna) 關閉彈窗
+        // eslint-disable-next-line no-console
+        console.log('Saving data and closing modal');
+        onSave(counterpartyData); // Info: (20241113 - Anna) 呼叫 onSave 時保留 CounterpartyType 類型
+        // eslint-disable-next-line no-console
+        console.log('onSave function:', onSave);
+        onClose(); // Info: (20241113 - Anna) 關閉彈窗
+        // eslint-disable-next-line no-console
+        console.log('onClose function:', onClose);
+      } else {
+        // eslint-disable-next-line no-console
+        console.log('Failed to save data');
       }
     }
   };
