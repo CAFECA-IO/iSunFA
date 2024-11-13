@@ -11,7 +11,7 @@ export const eventEntityValidator = z.object({
   frequency: z.nativeEnum(EventEntityFrequency),
   startDate: z.number(),
   endDate: z.number(),
-  dateOfWeek: z.array(z.number().max(6).min(0)),
+  daysOfWeek: z.array(z.number().max(6).min(0)),
   monthsOfYear: z.array(z.number().max(11).min(0)),
   createdAt: z.number(),
   updatedAt: z.number(),

@@ -47,7 +47,7 @@ export const ICertificateValidator = z.object({
 export const certificateEntityValidator = z.object({
   id: z.number(),
   companyId: z.number(),
-  voucherNo: z.string().nullable(),
+  // voucherNo: z.string().nullable(),
   aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
   aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
   createdAt: z.number(),
@@ -120,7 +120,7 @@ const certificateListOutputSchema = paginatedDataSchemaDataNotArray(
           id: certificate.id,
           unRead: !isRead,
           companyId: certificate.companyId,
-          voucherNo: certificate.voucherNo,
+          voucherNo: null,
           name: 'certificate', // Info: (20241105 - Murky) certificate.invoice.name,
           uploader: certificate.uploader.name,
           aiStatus: certificate.aiStatus,
@@ -204,7 +204,7 @@ const certificateGetOneOutputSchema = z
       id: certificate.id,
       unRead: !isRead,
       companyId: certificate.companyId,
-      voucherNo: certificate.voucherNo,
+      voucherNo: null, // certificate.voucherNo,
       name: 'certificate', // Info: (20241108 - Murky) certificate.invoice.name,
       uploader: certificate.uploader.name,
       aiStatus: certificate.aiStatus,

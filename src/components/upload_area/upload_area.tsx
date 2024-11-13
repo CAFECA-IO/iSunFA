@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 
@@ -17,19 +17,23 @@ const UploadArea: React.FC<UploadAreaProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const handleFileUpload = async (files: FileList | null) => {
-    if (files) {
+  const handleFileUpload = useCallback(
+    async (files: FileList | null) => {
+      if (isUploading || isDisabled || !files) return;
+
+      setIsUploading(true);
       await Promise.all(Array.from(files).map(async (file) => handleUpload(file)));
-    }
-  };
+      setIsUploading(false);
+    },
+    [isUploading, isDisabled, handleUpload]
+  );
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (!isDisabled) {
-      setIsDragOver(true);
-    }
+    if (!isDisabled) setIsDragOver(true);
   };
 
   const handleDragLeave = () => setIsDragOver(false);
@@ -44,6 +48,9 @@ const UploadArea: React.FC<UploadAreaProps> = ({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     handleFileUpload(event.target.files);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const openFileDialog = () => {
