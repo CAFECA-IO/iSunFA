@@ -5,7 +5,6 @@ import { useUserCtx } from '@/contexts/user_context';
 import { CompanyTag } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
-// import { useRouter } from 'next/router'; // Deprecated: (20241111 - Liz)
 
 interface CreateCompanyModalProps {
   isModalOpen: boolean;
@@ -19,7 +18,6 @@ const CreateCompanyModal = ({
   setIsCallingAPI,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['company']);
-  // const router = useRouter(); // Deprecated: (20241111 - Liz)
 
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
@@ -65,7 +63,9 @@ const CreateCompanyModal = ({
       console.log('CreateCompanyModal handleSubmit error:', error);
     } finally {
       setIsLoading(false); // API 回傳後解除 loading 狀態
-      // ToDo: (20241111 - Liz) 需要讓頁面重新渲染，才能看到新增的公司
+      setCompanyName('');
+      setTaxId('');
+      setTag(CompanyTag.ALL);
       if (setIsCallingAPI) {
         setIsCallingAPI((prevState) => !prevState);
       }
