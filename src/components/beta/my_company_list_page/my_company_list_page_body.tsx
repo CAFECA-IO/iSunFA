@@ -38,6 +38,7 @@ const NoData = () => {
 };
 
 const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyToEdit }: CompanyListProps) => {
+  const { t } = useTranslation(['company']);
   const { selectCompany, selectedCompany } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -122,7 +123,9 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyToEdit }: Co
               onClick={handleConnect}
               disabled={isLoading}
             >
-              <p className="text-sm font-medium">{isCompanySelected ? ' Cancel' : 'Connect'}</p>
+              <p className="text-sm font-medium">
+                {isCompanySelected ? t('company:PAGE_BODY.CANCEL') : t('company:PAGE_BODY.CONNECT')}
+              </p>
               <IoArrowForward size={16} />
             </button>
           </div>
