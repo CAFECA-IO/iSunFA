@@ -43,5 +43,9 @@
     "SUBMIT": "Submit",
     "CHANGE_WORK_TAG": "Change Work Tag",
     "SAVE": "Save"
+  },
+  "DELETE": {
+    "TITLE" : "Remove the Company",
+    "WARNING": "Are you sure you want to Remove the Company?"
   }
 }

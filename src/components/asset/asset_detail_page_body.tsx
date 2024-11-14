@@ -18,6 +18,7 @@ import { ASSET_DELETE_TERM } from '@/constants/common';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { AssetModalType } from '@/interfaces/asset_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { ToastId } from '@/constants/toast_id';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const { t } = useTranslation('common');
@@ -138,7 +139,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
         // Info: (20241029 - Julian) 刪除成功後，跳轉至列表頁，並顯示成功 toast
         router.push(ISUNFA_ROUTE.ASSET_LIST);
         toastHandler({
-          id: 'delete-asset-toast',
+          id: ToastId.ASSET_DELETE_SUCCESS,
           type: ToastType.SUCCESS,
           content: (
             <div className="flex min-w-120px items-center justify-between gap-20px">
@@ -158,14 +159,14 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
         });
       } else if (deleteError) {
         toastHandler({
-          id: 'delete-asset-toast',
+          id: ToastId.ASSET_DELETE_ERROR,
           type: ToastType.ERROR,
           content: t('asset:ASSET_DETAIL_PAGE.DELETE_FAIL_TOAST'),
           closeable: true,
         });
       }
     }
-  }, [isDeleting, deleteSuccess]);
+  }, [isDeleting, deleteSuccess, deleteError]);
 
   const remainingProcessBar = (
     <div className="relative h-5px w-120px overflow-hidden rounded-full bg-surface-neutral-depth">

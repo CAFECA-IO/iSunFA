@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const session = await getSession(req, res);
   try {
-    const isLogin = await checkSessionUser(session);
+    const isLogin = await checkSessionUser(session, APIName.ASSET_LIST_EXPORT, req);
     if (!isLogin) {
       statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
       throw new Error(statusMessage);

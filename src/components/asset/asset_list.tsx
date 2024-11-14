@@ -106,10 +106,10 @@ const AssetList: React.FC<IAssetListProps> = ({
       // Info: (20241024 - Julian) 未選取任何 asset
       messageModalDataHandler({
         messageType: MessageType.WARNING,
-        title: 'Warning',
-        content: 'Please select at least one asset to export',
+        title: t('asset:ASSET.EXPORT_ASSET_LIST_WARNING_TITLE'),
+        content: t('asset:ASSET.EXPORT_ASSET_LIST_WARNING_CONTENT'),
         submitBtnFunction: messageModalVisibilityHandler,
-        submitBtnStr: t('common:COMMON.OK'),
+        submitBtnStr: t('asset:ASSET.OK_BTN'),
       });
       messageModalVisibilityHandler();
     } else {

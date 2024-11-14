@@ -1,4 +1,5 @@
 import { APIName } from '@/constants/api_connection';
+import { UploadType } from './file';
 
 export enum AuthFunctionsKeysNew {
   user = 'user',
@@ -8,6 +9,10 @@ export enum AuthFunctionsKeysNew {
   CompanyAdminMatch = 'CompanyAdminMatch',
   projectCompanyMatch = 'projectCompanyMatch',
 }
+
+export const AUTH_WHITELIST = {
+  [APIName.FILE_UPLOAD]: { query: { type: UploadType.ROOM } },
+};
 
 // ToDo: (20241111 - Jacky) Add more auth functions
 export const AUTH_CHECK = {
@@ -92,6 +97,7 @@ export const AUTH_CHECK = {
   [APIName.INVOICE_CREATE]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.IMAGE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_STATUS]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_V2]: [AuthFunctionsKeysNew.user],
