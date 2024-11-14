@@ -202,7 +202,7 @@ const AccountingSettingPageBody: React.FC = () => {
         toastHandler({
           id: ToastId.ACCOUNTING_SETTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: 'Accounting setting updated successfully!',
+          content: t('setting:ACCOUNTING.TOAST_UPDATE_SUCCESS'),
           closeable: true,
         });
 
@@ -212,7 +212,7 @@ const AccountingSettingPageBody: React.FC = () => {
         toastHandler({
           id: ToastId.ACCOUNTING_SETTING_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: 'Failed to update accounting setting! Please try again later.',
+          content: t('setting:ACCOUNTING.TOAST_UPDATE_FAIL'),
           closeable: true,
         });
       }

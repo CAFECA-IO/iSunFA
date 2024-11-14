@@ -121,7 +121,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: 'Accounting title created successfully!',
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
           closeable: true,
         });
 
@@ -131,7 +131,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_CREATE_ERROR,
           type: ToastType.ERROR,
-          content: 'Accounting title created failed! Please try again later.',
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_FAIL'),
           closeable: true,
         });
       }
@@ -145,7 +145,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: 'Accounting title updated successfully!',
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
           closeable: true,
         });
 
@@ -155,7 +155,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: 'Accounting title updated failed! Please try again later.',
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_FAIL'),
           closeable: true,
         });
       }

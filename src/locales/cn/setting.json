@@ -96,6 +96,8 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
     "IMPORT_FILE": "上传档案",
     "MANUAL_ACCOUNT_OPENING": "手动开户",
+    "TOAST_UPDATE_SUCCESS": "会计设定更新成功！",
+    "TOAST_UPDATE_FAIL": "无法更新会计设定！请稍后重试。",
     "SAVE_BTN": "保存"
   },
   "ACCOUNTING_SETTING_MODAL": {
@@ -120,9 +122,19 @@
     "DROPMENU_PLACEHOLDER": "请选择...",
     "TITLE_NAME_PLACEHOLDER": "输入此会计科目的名称。",
     "TITLE_NOTE_PLACEHOLDER": "输入此会计科目的描述。",
+    "REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE": "删除会计科目",
+    "REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT": "您确定要删除这个会计科目吗？",
+    "TOAST_ACCOUNT_TITLE_CREATE_SUCCESS": "会计科目创建成功。",
+    "TOAST_ACCOUNT_TITLE_CREATE_FAIL": "无法创建会计科目，请稍后重试。",
+    "TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS": "会计科目更新成功。",
+    "TOAST_ACCOUNT_TITLE_UPDATE_FAIL": "无法更新会计科目，请稍后重试。",
+    "TOAST_ACCOUNT_TITLE_DELETE_SUCCESS": "会计科目删除成功。",
+    "TOAST_ACCOUNT_TITLE_DELETE_FAIL": "无法删除会计科目，请稍后重试。",
     "CLEAR_ALL_BTN": "全部清除",
+    "CANCEL_BTN": "取消",
     "ADD_BTN": "新增",
-    "SAVE_BTN": "保存"
+    "SAVE_BTN": "保存",
+    "DELETE_BTN": "是的，刪除科目"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手动开户",

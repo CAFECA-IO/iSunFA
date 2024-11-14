@@ -47,15 +47,16 @@ const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
   clickHandler,
   deleteHandler,
 }) => {
+  const { t } = useTranslation('common');
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const deleteBtnClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
-      title: 'Remove this account',
-      content: 'Are you sure you want to delete this account?',
-      backBtnStr: 'Cancel',
-      submitBtnStr: 'Yes, Delete Account',
+      title: t('setting:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE'),
+      content: t('setting:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT'),
+      backBtnStr: t('setting:ACCOUNTING_SETTING_MODAL.CANCEL_BTN'),
+      submitBtnStr: t('setting:ACCOUNTING_SETTING_MODAL.DELETE_BTN'),
       submitBtnFunction: deleteHandler,
     });
     messageModalVisibilityHandler();
@@ -94,6 +95,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   childList,
   setSelectedAccountTitle,
 }) => {
+  const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { toastHandler } = useModalContext();
 
@@ -135,7 +137,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_DELETE_SUCCESS,
           type: ToastType.SUCCESS,
-          content: 'Account deleted successfully!',
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_SUCCESS'),
           closeable: true,
         });
       } else if (error) {
@@ -143,12 +145,12 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
         toastHandler({
           id: ToastId.ACCOUNTING_DELETE_ERROR,
           type: ToastType.ERROR,
-          content: 'Failed to delete account! Please try again later.',
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_FAIL'),
           closeable: true,
         });
       }
     }
-  }, [success, isLoading]);
+  }, [success, isLoading, error]);
 
   const displayChildList =
     childList.length > 0
