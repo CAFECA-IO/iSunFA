@@ -1,4 +1,10 @@
-import { Prisma } from '@prisma/client';
+import {
+  Prisma,
+  Voucher as PrismaVoucher,
+  AccociateVoucher as PrismaAssociateVoucher,
+  LineItem as PrismaLineItem,
+  Account as PrismaAccount,
+} from '@prisma/client';
 import { IAccount } from '@/interfaces/accounting_account';
 import type { IAccountEntity } from '@/interfaces/accounting_account';
 import type { IVoucherEntity } from '@/interfaces/voucher';
@@ -146,3 +152,20 @@ export interface ILineItemEntity {
    */
   voucher?: IVoucherEntity;
 }
+/**
+ * Info: (20241113 - Murky)
+ * @description for src/pages/api/v2/company/[companyId]/account/[accountId]/lineitem.ts,
+ * one item in the response data
+ */
+export type IGetLineItemByAccount = PrismaLineItem & {
+  account: PrismaAccount;
+  voucher: PrismaVoucher & {
+    originalVouchers: (PrismaAssociateVoucher & {
+      resultVoucher: PrismaVoucher & {
+        lineItems: (PrismaLineItem & {
+          account: PrismaAccount;
+        })[];
+      };
+    })[];
+  };
+};
