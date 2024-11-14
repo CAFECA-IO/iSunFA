@@ -42,6 +42,7 @@
     "CANCEL": "取消",
     "SUBMIT": "提交",
     "CHANGE_WORK_TAG": "變更標籤",
-    "SAVE": "儲存"
+    "SAVE": "儲存",
+    "CONNECT": "連結"
   }
 }

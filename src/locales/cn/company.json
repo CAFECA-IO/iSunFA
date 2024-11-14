@@ -42,6 +42,7 @@
     "CANCEL": "取消",
     "SUBMIT": "提交",
     "CHANGE_WORK_TAG": "更改标签",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "CONNECT": "连接"
   }
 }
