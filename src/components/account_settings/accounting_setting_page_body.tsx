@@ -18,6 +18,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
 import { CurrencyType } from '@/constants/currency';
+import { ToastId } from '@/constants/toast_id';
 
 type ITaxTypeForFrontend =
   | number
@@ -57,8 +58,9 @@ const AccountingSettingPageBody: React.FC = () => {
 
   const {
     trigger: updateSetting,
-    data: updatedSettingData,
     isLoading: isUpdating,
+    success: updatedSuccess,
+    error: updatedError,
   } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE, {
     params: { companyId },
   });
@@ -194,17 +196,28 @@ const AccountingSettingPageBody: React.FC = () => {
   };
 
   useEffect(() => {
-    if (updatedSettingData) {
-      toastHandler({
-        id: 'accounting-setting-updated',
-        type: ToastType.SUCCESS,
-        content: 'Accounting setting updated successfully!',
-        closeable: true,
-      });
+    if (!isUpdating) {
+      // Info: (20241114 - Julian) 更新成功顯示 Toast，並重新取得 Accounting setting 資料
+      if (updatedSuccess) {
+        toastHandler({
+          id: ToastId.ACCOUNTING_SETTING_UPDATE_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: 'Accounting setting updated successfully!',
+          closeable: true,
+        });
 
-      getAccountSetting({ params: { companyId } });
+        getAccountSetting({ params: { companyId } });
+      } else if (updatedError) {
+        // Info: (20241114 - Julian) 更新失敗顯示 Toast
+        toastHandler({
+          id: ToastId.ACCOUNTING_SETTING_UPDATE_ERROR,
+          type: ToastType.ERROR,
+          content: 'Failed to update accounting setting! Please try again later.',
+          closeable: true,
+        });
+      }
     }
-  }, [updatedSettingData, isUpdating]);
+  }, [updatedSuccess, isUpdating, updatedError]);
 
   // Info: (20241113 - Julian) 文字顯示設定
   const showTaxStr = (taxRate: ITaxTypeForFrontend) => {

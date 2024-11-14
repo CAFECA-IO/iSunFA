@@ -22,4 +22,12 @@ export enum ToastId {
   COMPANY_SETTING_GET_ERROR = 'toast-company-setting-get-error',
   COMPANY_SETTING_UPDATE_SUCCESS = 'toast-company-setting-update-success',
   COMPANY_SETTING_UPDATE_ERROR = 'toast-company-setting-update-error',
+  ACCOUNTING_SETTING_UPDATE_SUCCESS = 'toast-accounting-setting-update-success',
+  ACCOUNTING_SETTING_UPDATE_ERROR = 'toast-accounting-setting-update-error',
+  ACCOUNTING_CREATE_SUCCESS = 'toast-accounting-create-success',
+  ACCOUNTING_CREATE_ERROR = 'toast-accounting-create-error',
+  ACCOUNTING_UPDATE_SUCCESS = 'toast-accounting-update-success',
+  ACCOUNTING_UPDATE_ERROR = 'toast-accounting-update-error',
+  ACCOUNTING_DELETE_SUCCESS = 'toast-accounting-delete-success',
+  ACCOUNTING_DELETE_ERROR = 'toast-accounting-delete-error',
 }
