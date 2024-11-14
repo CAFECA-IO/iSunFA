@@ -10,7 +10,6 @@ export interface IUser {
   agreementList: string[];
   createdAt: number;
   updatedAt: number;
-  deletedAt: number;
 }
 
 /**
