@@ -18,11 +18,11 @@ import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
 
 interface CompanyEditModalProps {
-  company: ICompanyAndRole;
+  companyAndRole: ICompanyAndRole;
   toggleModal: () => void;
 }
 
-const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModal }) => {
+const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [companyName, setCompanyName] = React.useState('');
   const [businessTaxId, setBusinessTaxId] = React.useState('');
@@ -36,50 +36,50 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
   const { trigger: getCompanySetting } = APIHandler<ICompanySetting>(APIName.COMPANY_SETTING_GET);
   const { trigger: updateCompanySetting } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (company) {
-      updateCompanySetting({
-        params: {
-          companyId: company.company.id,
-        },
-        body: {
-          companyName,
-          companyTaxId: businessTaxId,
-          taxSerialNumber,
-          representativeName,
-          address: companyAddress,
-          country,
-          countryCode,
-          phone: phoneNumber,
-        },
-      })
-        .then((res) => {
-          const { success } = res;
-          if (success) {
-            toastHandler({
-              id: ToastId.COMPANY_SETTING_UPDATE_SUCCESS,
-              type: ToastType.SUCCESS,
-              content: t('company:EDIT.UPDATE_SUCCESS'),
-              closeable: true,
-            });
-            toggleModal();
-          }
-        })
-        .catch((err) => {
+    if (companyAndRole) {
+      try {
+        const res = await updateCompanySetting({
+          params: {
+            companyId: companyAndRole.company.id,
+          },
+          body: {
+            companyName,
+            companyTaxId: businessTaxId,
+            taxSerialNumber,
+            representativeName,
+            address: companyAddress,
+            country,
+            countryCode,
+            phone: phoneNumber,
+          },
+        });
+
+        const { success } = res;
+        if (success) {
           toastHandler({
-            id: ToastId.COMPANY_SETTING_UPDATE_ERROR,
-            type: ToastType.ERROR,
-            content: err.message,
+            id: ToastId.COMPANY_SETTING_UPDATE_SUCCESS,
+            type: ToastType.SUCCESS,
+            content: t('company:EDIT.UPDATE_SUCCESS'),
             closeable: true,
           });
+          toggleModal();
+        }
+      } catch (err) {
+        toastHandler({
+          id: ToastId.COMPANY_SETTING_UPDATE_ERROR,
+          type: ToastType.ERROR,
+          content: (err as Error).message,
+          closeable: true,
         });
+      }
     }
   };
 
   useEffect(() => {
-    if (company) {
-      getCompanySetting({ params: { companyId: company.company.id } })
+    if (companyAndRole) {
+      getCompanySetting({ params: { companyId: companyAndRole.company.id } })
         .then((res) => {
           const { success, data } = res;
           if (success && data) {
@@ -113,7 +113,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ company, toggleModa
             <p>{t('company:EDIT.BACK')}</p>
           </Button>
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {company.company.name}
+            {companyAndRole.company.name}
           </h1>
           <Button variant="secondaryBorderless" className="p-0" onClick={toggleModal}>
             <IoCloseOutline size={24} />

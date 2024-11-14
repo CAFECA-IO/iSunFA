@@ -125,9 +125,9 @@ const dummyCompanies: ICompanyAndRole[] = [
 const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(dummyCompanies.length); // ToDo: (20241107 - Tzuhan) - Replace with real data
-  const [totalPages, setTotalPages] = useState(1);
-  const [companies, setCompanies] = useState<ICompanyAndRole[]>(dummyCompanies);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [companies, setCompanies] = useState<ICompanyAndRole[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
@@ -154,7 +154,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
     <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       {isEditModalOpen && selectedCompany && (
         <CompanyEditModal
-          company={selectedCompany}
+          companyAndRole={selectedCompany}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}
