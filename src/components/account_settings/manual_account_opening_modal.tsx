@@ -19,6 +19,8 @@ interface IManualAccountOpeningItemProps {
   data: IManualAccountOpeningItem;
   setFocusIndex: React.Dispatch<React.SetStateAction<number | null>>;
   setSearchWord: React.Dispatch<React.SetStateAction<string>>;
+  setTitleName: (name: string) => void;
+  setAmount: (amount: number, isDebit: boolean) => void;
 }
 
 // Info: (20241112 - Julian) ========= May move to interfaces =========
@@ -47,11 +49,18 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   data,
   setFocusIndex,
   setSearchWord,
+  setTitleName,
+  setAmount,
 }) => {
   const { t } = useTranslation('common');
-  const { id, subcategory, titleName, isDebit } = data;
+  const { id, subcategory, titleName, beginningAmount, isDebit } = data;
 
-  const [nameInput, setNameInput] = useState<string>(titleName);
+  const debitValue = isDebit !== null && isDebit ? beginningAmount : 0;
+  const creditValue = isDebit !== null && !isDebit ? beginningAmount : 0;
+
+  const [nameInputValue, setNameInputValue] = useState(titleName);
+  const [debitInputValue, setDebitInputValue] = useState(debitValue);
+  const [creditInputValue, setCreditInputValue] = useState(creditValue);
 
   const subcategoryPlaceholder = subcategory
     ? `${subcategory.code} ${subcategory.name}`
@@ -69,8 +78,18 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   const toggleEditing = () => setEditing(!isEditing);
   const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
     setSearchWord(e.target.value);
-  const changeNameInputHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setNameInput(e.target.value);
+  const changeNameInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInputValue(e.target.value);
+    setTitleName(e.target.value);
+  };
+  const changeDebitAmountHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDebitInputValue(Number(e.target.value));
+    setAmount(Number(e.target.value), true);
+  };
+  const changeCreditAmountHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCreditInputValue(Number(e.target.value));
+    setAmount(Number(e.target.value), false);
+  };
 
   useEffect(() => {
     // Info: (20241112 - Julian) 編輯模式時，自動 focus 到 subcategoryInput
@@ -119,7 +138,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
         <input
           id="manual-account-name-input"
           type="text"
-          value={nameInput}
+          value={nameInputValue}
           onChange={changeNameInputHandler}
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
           placeholder={t('setting:MANUAL_ACCOUNT_OPENING_MODAL.NAME_PLACEHOLDER')}
@@ -141,6 +160,8 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
           id="manual-account-debit-input"
           type="number"
           onWheel={(e) => e.currentTarget.blur()} // Info: (20241112 - Julian) 防止滾輪滾動
+          value={debitInputValue}
+          onChange={changeDebitAmountHandler}
           min={0}
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
           placeholder="0"
@@ -153,6 +174,8 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
           id="manual-account-credit-input"
           type="number"
           onWheel={(e) => e.currentTarget.blur()} // Info: (20241112 - Julian) 防止滾輪滾動
+          value={creditInputValue}
+          onChange={changeCreditAmountHandler}
           min={0}
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
           placeholder="0"
@@ -200,7 +223,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   // Info: (20241114 - Julian) 如果有 focusIndex，則代表有展開的 subcategory menu
   const isExpanded = focusIndex !== null;
   // Info: (20241114 - Julian) 根據 focusIndex 來決定 subcategory menu 的位置
-  const topStyle = focusIndex && focusIndex !== 0 ? `top-${90 + 60 * focusIndex}px` : 'top-90px';
+  // const topStyle = focusIndex && focusIndex !== 0 ? `top-${90 + 60 * focusIndex}px` : 'top-90px';
 
   const addListClickHandler = () => {
     const lastItem = manualAccountOpeningList[manualAccountOpeningList.length - 1];
@@ -208,6 +231,12 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     const newItem = { ...defaultManualAccountOpeningItem, id: newId };
 
     setManualAccountOpeningList([...manualAccountOpeningList, newItem]);
+  };
+
+  const submitHandler = async () => {
+    // ToDo: (20241114 - Julian) For debug
+    // eslint-disable-next-line no-console
+    console.log(manualAccountOpeningList);
   };
 
   useEffect(() => {
@@ -232,18 +261,37 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     }
   }, [focusIndex]);
 
-  // useEffect(() => {
-  //   console.log('manual', manualAccountOpeningList);
-  // }, [manualAccountOpeningList]);
+  const tableBody = manualAccountOpeningList.map((item) => {
+    const duplicateItem = { ...item };
+    const nameChangeHandler = (name: string) => {
+      setManualAccountOpeningList(
+        manualAccountOpeningList.map((list) => {
+          return list.id === duplicateItem.id ? { ...list, titleName: name } : list;
+        })
+      );
+    };
 
-  const tableBody = manualAccountOpeningList.map((item) => (
-    <ManualAccountOpeningItem
-      key={item.id}
-      data={item}
-      setFocusIndex={setFocusIndex}
-      setSearchWord={setSearchWord}
-    />
-  ));
+    const amountChangeHandler = (amount: number, isDebit: boolean) => {
+      setManualAccountOpeningList(
+        manualAccountOpeningList.map((list) => {
+          return list.id === duplicateItem.id
+            ? { ...list, beginningAmount: amount, isDebit }
+            : list;
+        })
+      );
+    };
+
+    return (
+      <ManualAccountOpeningItem
+        key={item.id}
+        data={item}
+        setFocusIndex={setFocusIndex}
+        setSearchWord={setSearchWord}
+        setTitleName={nameChangeHandler}
+        setAmount={amountChangeHandler}
+      />
+    );
+  });
 
   const subcategoryMenu =
     subcategoryList.length > 0 ? (
@@ -264,7 +312,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           <div
             key={title.id}
             onClick={subcategoryClickHandler}
-            className="flex items-center gap-4px px-12px py-8px text-left text-xs hover:bg-drag-n-drop-surface-hover"
+            className="flex items-center gap-4px px-12px py-8px text-left text-xs hover:cursor-pointer hover:bg-drag-n-drop-surface-hover"
           >
             <p className="text-dropdown-text-primary">{title.code}</p>
             <p className="text-dropdown-text-secondary">{title.name}</p>
@@ -279,7 +327,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 
   const displaySubcategoryMenu = (
     <div
-      className={`absolute left-0 ${topStyle} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
+      className={`absolute left-0 ${'top-10px'} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
     >
       <div className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
         {subcategoryMenu}
@@ -334,11 +382,11 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         {/* Info: (20241112 - Julian) body */}
         <div className="flex flex-col items-center gap-24px">
           {/* Info: (20241112 - Julian) table */}
-          <div className="relative flex flex-col">
+          <div className="flex flex-col">
             <div className="max-h-300px overflow-y-auto rounded-md shadow-Dropshadow_XS">
               {displayTable}
             </div>
-            {displaySubcategoryMenu}
+            <div className="relative">{displaySubcategoryMenu}</div>
           </div>
 
           <Button
@@ -354,10 +402,10 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         {/* Info: (20241112 - Julian) buttons */}
         <div className="ml-auto flex items-center gap-12px">
           <Button type="button" variant="secondaryBorderless" onClick={modalVisibilityHandler}>
-            {t('common:COMMON.CANCEL')}
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.CANCEL_BTN')}
           </Button>
-          <Button type="submit" variant="tertiary">
-            {t('common:COMMON.SUBMIT')} <FaArrowRight />
+          <Button type="button" variant="tertiary" onClick={submitHandler}>
+            {t('setting:MANUAL_ACCOUNT_OPENING_MODAL.SUBMIT_BTN')} <FaArrowRight />
           </Button>
         </div>
       </div>

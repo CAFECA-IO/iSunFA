@@ -146,6 +146,7 @@
     "DROPMENU_PLACEHOLDER": "Please select...",
     "NAME_PLACEHOLDER": "Enter name",
     "ADD_LIST_BTN": "Add List",
+    "CANCEL_BTN": "Cancel",
     "SUBMIT_BTN": "Submit",
     "NO_ACCOUNTING_FOUND": "No Account Title Found."
   },

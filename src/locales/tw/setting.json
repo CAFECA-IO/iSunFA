@@ -146,6 +146,7 @@
     "DROPMENU_PLACEHOLDER": "請選擇...",
     "NAME_PLACEHOLDER": "輸入名稱",
     "ADD_LIST_BTN": "新增清單",
+    "CANCEL_BTN": "取消",
     "SUBMIT_BTN": "提交",
     "NO_ACCOUNTING_FOUND": "找不到會計科目。"
   },
