@@ -7,8 +7,15 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { ITrialBalancePayload } from '@/interfaces/trial_balance';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { buildAccountForestForUser } from '@/lib/utils/account/common';
+import {
+  buildAccountForestForUser,
+  transformLineItemsFromDBToMap,
+  updateAccountAmountsForTrialBalance,
+} from '@/lib/utils/account/common';
 import { IAccountNode } from '@/interfaces/accounting_account';
+import fs from 'fs';
+import path from 'path';
+import { zodFilterSectionSortingOptions } from '@/lib/utils/zod_schema/common';
 
 /* Info: (20241105 - Shirley) Trial balance repository 實作
 company id (public company || targeted company) 去找 account table 拿到所有會計科目 -> voucher -> item -> account
@@ -76,41 +83,29 @@ interface AccountWithSubResult1 {
   parentCode: string;
 }
 
-const DEFAULT_SORT_OPTIONS = [{ sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.ASC }];
+const DEFAULT_SORT_OPTIONS = [
+  { sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.DESC },
+];
 
-function parseSortOptions(sortOptions: string | undefined): {
+function parseSortOption(sortOption: string | undefined): {
   sortBy: SortBy;
   sortOrder: SortOrder;
 }[] {
-  if (!sortOptions) {
-    return DEFAULT_SORT_OPTIONS;
-  }
-
-  // 檢查是否包含 'sortOption=' 前綴
-  const optionsString = sortOptions.startsWith('sortOption=')
-    ? sortOptions.substring('sortOption='.length)
-    : sortOptions;
-
   try {
-    // 將多個排序選項分割，例如 "field1:order1-field2:order2"
-    const sortPairs = optionsString.split('-');
+    if (!sortOption) {
+      return DEFAULT_SORT_OPTIONS;
+    }
 
-    return sortPairs.map((pair) => {
-      const [field, order] = pair.split(':');
+    const optionsString = sortOption.startsWith('sortOption=')
+      ? sortOption.substring('sortOption='.length)
+      : sortOption;
 
-      // 驗證排序欄位和順序是否有效
-      if (
-        !Object.values(SortBy).includes(field as SortBy) ||
-        !Object.values(SortOrder).includes(order as SortOrder)
-      ) {
-        throw new Error('Invalid sort parameters');
-      }
-
-      return {
-        sortBy: field as SortBy,
-        sortOrder: order as SortOrder,
-      };
-    });
+    const parseResult = zodFilterSectionSortingOptions().safeParse(optionsString);
+    if (!parseResult.success) {
+      return DEFAULT_SORT_OPTIONS;
+    }
+    const sortOptionParsed = parseResult.data;
+    return sortOptionParsed;
   } catch (error) {
     return DEFAULT_SORT_OPTIONS;
   }
@@ -227,14 +222,14 @@ const flattenTrialBalance = (items: AccountWithSubResult1[]): AccountWithSubResu
 
 const sortTrialBalance = (
   items: AccountWithSubResult1[],
-  sortOptions: {
+  sortOption: {
     sortBy: SortBy;
     sortOrder: SortOrder;
   }[]
 ): AccountWithSubResult1[] => {
-  if (sortOptions.length > 0) {
+  if (sortOption.length > 0) {
     items.sort((a, b) => {
-      return sortOptions.reduce((acc, option) => {
+      return sortOption.reduce((acc, option) => {
         if (acc !== 0) return acc;
 
         let fieldA: number | string;
@@ -242,32 +237,26 @@ const sortTrialBalance = (
 
         switch (option.sortBy) {
           case SortBy.BEGINNING_CREDIT_AMOUNT:
-            // console.log(`case ${SortBy.BEGINNING_CREDIT_AMOUNT}`);
             fieldA = a.beginningCreditAmount;
             fieldB = b.beginningCreditAmount;
             break;
           case SortBy.BEGINNING_DEBIT_AMOUNT:
-            // console.log(`case ${SortBy.BEGINNING_DEBIT_AMOUNT}`);
             fieldA = a.beginningDebitAmount;
             fieldB = b.beginningDebitAmount;
             break;
           case SortBy.MIDTERM_CREDIT_AMOUNT:
-            // console.log(`case ${SortBy.MIDTERM_CREDIT_AMOUNT}`);
             fieldA = a.midtermCreditAmount;
             fieldB = b.midtermCreditAmount;
             break;
           case SortBy.MIDTERM_DEBIT_AMOUNT:
-            // console.log(`case ${SortBy.MIDTERM_DEBIT_AMOUNT}`);
             fieldA = a.midtermDebitAmount;
             fieldB = b.midtermDebitAmount;
             break;
           case SortBy.ENDING_CREDIT_AMOUNT:
-            // console.log(`case ${SortBy.ENDING_CREDIT_AMOUNT}`);
             fieldA = a.endingCreditAmount;
             fieldB = b.endingCreditAmount;
             break;
           case SortBy.ENDING_DEBIT_AMOUNT:
-            // console.log(`case ${SortBy.ENDING_DEBIT_AMOUNT}`);
             fieldA = a.endingDebitAmount;
             fieldB = b.endingDebitAmount;
             break;
@@ -290,7 +279,7 @@ const sortTrialBalance = (
     // 遞迴排序 subAccounts
     items.forEach((item) => {
       if (item.subAccounts && item.subAccounts.length > 0) {
-        sortTrialBalance(item.subAccounts, sortOptions);
+        sortTrialBalance(item.subAccounts, sortOption);
       }
     });
   }
@@ -329,8 +318,8 @@ export async function listTrialBalance(
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
     }
 
-    // 解析 sortOptions
-    const parsedSortOptions = parseSortOptions(sortOption);
+    // 解析 sortOption
+    const parsedSortOption = parseSortOption(sortOption);
 
     // 1. 搜尋 accounting setting table 取得貨幣別
     const accountingSettingData = await prisma.accountingSetting.findFirst({
@@ -352,9 +341,9 @@ export async function listTrialBalance(
         ],
         forUser: true,
       },
-      include: {
-        lineItem: true,
-      },
+      // include: {
+      //   lineItem: true,
+      // },
     });
 
     // 3. 用 companyId 搜尋 voucher table 取得所有憑證
@@ -371,7 +360,6 @@ export async function listTrialBalance(
     const allVoucherIds = vouchers.map((voucher) => voucher.id);
 
     // 4. 用憑證 id 搜尋 line item table 取得所有憑證對應的 line item
-    // TODO:
     const lineItems = await prisma.lineItem.findMany({
       where: {
         voucherId: { in: allVoucherIds },
@@ -383,6 +371,7 @@ export async function listTrialBalance(
       },
       include: {
         voucher: true,
+        account: true,
       },
     });
 
@@ -407,7 +396,7 @@ export async function listTrialBalance(
     });
 
     /**
-     * 1. 解析 sortOptions
+     * 1. 解析 sortOption
      * 2. 將 accountForest 轉為 AccountWithSub
      *   2.1 將 voucher 的 line item 合併到 account 的 line item 裡
      * 3. 根據 startDate, endDate 計算試算表項目
@@ -424,6 +413,22 @@ export async function listTrialBalance(
       accountWithSub,
       lineItems
     );
+
+    // FIXME: 將樹狀結構的 account 更新 amount
+    const lineItemsMap = transformLineItemsFromDBToMap(lineItems);
+    // const updatedForest = updateAccountAmounts(accountForest, lineItemsMap);
+    const updatedForest = updateAccountAmountsForTrialBalance(accountForest, lineItemsMap);
+
+    const DIR_NAME = 'tmp';
+    const NEW_FILE_NAME = 'updateAccountAmountsForTrialBalance.json';
+    const logDir = path.join(process.cwd(), DIR_NAME);
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    const logPath = path.join(logDir, NEW_FILE_NAME);
+    fs.writeFileSync(logPath, JSON.stringify(updatedForest, null, 2), 'utf-8');
+
     const trialBalance1 = accountWithSubWithVoucherLineItem
       .filter((account) => account.lineItem.length > 0)
       .map((account) =>
@@ -463,7 +468,7 @@ export async function listTrialBalance(
       createAt: Math.floor(Date.now() / 1000),
       updateAt: Math.floor(Date.now() / 1000),
     };
-    const sortedTrialBalance1 = sortTrialBalance(flattenedTrialBalance1, parsedSortOptions);
+    const sortedTrialBalance1 = sortTrialBalance(flattenedTrialBalance1, parsedSortOption);
 
     let paginatedData = sortedTrialBalance1;
     let totalCount = sortedTrialBalance1.length;
@@ -487,7 +492,7 @@ export async function listTrialBalance(
         pageSize,
         hasNextPage,
         hasPreviousPage,
-        sort: parsedSortOptions,
+        sort: parsedSortOption,
       },
       total: total1,
     };
