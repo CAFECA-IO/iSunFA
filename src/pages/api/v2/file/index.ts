@@ -84,7 +84,7 @@ async function handleFileUpload(
     id: fileId,
     name: fileName,
     size: fileSize,
-    url: fileUrl,
+    url: `/image/${fileId}`,
     existed: true,
   };
 
