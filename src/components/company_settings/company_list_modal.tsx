@@ -19,7 +19,7 @@ interface CompanyListModalProps {
   toggleModal: () => void;
 }
 
-const dummyCompanies: ICompanyAndRole[] = [
+const DUMMY_COMPANIES: ICompanyAndRole[] = [
   {
     company: {
       id: 1,
@@ -125,9 +125,9 @@ const dummyCompanies: ICompanyAndRole[] = [
 const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(dummyCompanies.length); // ToDo: (20241107 - Tzuhan) - Replace with real data
+  const [totalCount, setTotalCount] = useState(DUMMY_COMPANIES.length); // ToDo: (20241107 - Tzuhan) - Replace with real data
   const [totalPages, setTotalPages] = useState(1);
-  const [companies, setCompanies] = useState<ICompanyAndRole[]>(dummyCompanies);
+  const [companies, setCompanies] = useState<ICompanyAndRole[]>(DUMMY_COMPANIES);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
