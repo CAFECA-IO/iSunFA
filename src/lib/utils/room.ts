@@ -1,3 +1,4 @@
+import { IFileBeta } from '@/interfaces/file';
 import { IRoom } from '@/interfaces/room';
 import loggerBack from '@/lib/utils/logger_back';
 
@@ -110,6 +111,15 @@ class RoomManager {
    */
   public getRoomById(roomId: string): IRoom | null {
     return this.findRoomById(roomId);
+  }
+
+  public addFileToRoom(roomId: string, file: IFileBeta): boolean {
+    const room = this.findRoomById(roomId);
+    if (!room) return false;
+
+    room.fileList.push(file);
+    loggerBack.info(`File with id ${file.id} added to room with id ${roomId}.`);
+    return true;
   }
 }
 

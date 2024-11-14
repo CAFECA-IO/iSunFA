@@ -158,5 +158,10 @@
     "ADDRESS": "登入地址",
     "DETECT_DIFFERENT_IP_LOGIN": "偵測到來自不同 IP 位址的登入。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "請驗證您的帳戶安全性以防止資料外洩。"
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "使用者設定更新成功。",
+    "DELETE_WARNING": "此帳戶將在三個工作天內被刪除。",
+    "DELETE_HINT": "請確保資料備份。如需取消刪除過程，請前往設定頁面。"
   }
 }
