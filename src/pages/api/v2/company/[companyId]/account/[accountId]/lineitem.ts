@@ -11,99 +11,73 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ILineItemEntity } from '@/interfaces/line_item';
+import { ILineItemEntity, IReverseItem } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { JOURNAL_EVENT } from '@/constants/journal';
-import { AccountType, EventType } from '@/constants/account';
+import { lineItemGetByAccountAPIUtils as getUtils } from '@/pages/api/v2/company/[companyId]/account/[accountId]/route_utils';
 
-type IVoucherEntityWithLineItems = IVoucherEntity &
-  IVoucherEntity & {
-    lineItems: (ILineItemEntity & { account: IAccountEntity })[];
-  };
-type GetVoucherByAccountResponse = IPaginatedData<IVoucherEntityWithLineItems[]>;
+type ILineItemWithAccountAndVoucher = ILineItemEntity & {
+  account: IAccountEntity;
+  voucher: IVoucherEntity;
+};
+type GetVoucherByAccountResponse = IPaginatedData<ILineItemWithAccountAndVoucher[]>;
 
 const handleGetRequest: IHandleRequest<
   APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
   GetVoucherByAccountResponse
-> = async ({ query }) => {
-  // const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
-  const { pageSize, page, sortOption } = query;
+> = async ({ query, session }) => {
+  const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
+  const { userId, companyId } = session;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetVoucherByAccountResponse | null = null;
 
-  const mockLineItem: ILineItemEntity & { account: IAccountEntity } = {
-    id: 3,
-    description: '原價屋',
-    amount: 1000,
-    debit: false,
-    accountId: 1,
-    voucherId: 1,
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    account: {
-      id: 1,
-      companyId: 1002,
-      system: 'IFRS',
-      type: AccountType.ASSET,
-      debit: true,
-      liquidity: true,
-      code: '1172',
-      name: '應收帳款',
-      forUser: true,
-      parentCode: '1170',
-      rootCode: '1170',
-      level: 3,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    },
-  };
+  const logger = loggerError(userId, 'GET', 'Get reverse line item by account');
 
-  const mockVoucher: IVoucherEntityWithLineItems = {
-    id: 1,
-    issuerId: 1,
-    counterPartyId: 1,
-    companyId: 1002,
-    status: JOURNAL_EVENT.UPLOADED,
-    editable: true,
-    no: '1001',
-    date: 1,
-    type: EventType.INCOME,
-    note: 'this is note',
-    createdAt: 1,
-    updatedAt: 1,
-    deletedAt: null,
-    lineItems: [mockLineItem],
-    readByUsers: [],
-    originalEvents: [],
-    resultEvents: [],
-    certificates: [],
-    asset: [],
-  };
+  try {
+    const paginatedLineItemsFromDB = await getUtils.getLineItemsByAccountIdFromPrisma({
+      accountId,
+      companyId,
+      startDate,
+      endDate,
+      page,
+      pageSize,
+      sortOption,
+      searchQuery,
+    });
 
-  const mockPaginatedData: GetVoucherByAccountResponse = {
-    page,
-    totalPages: 10,
-    totalCount: 100,
-    pageSize,
-    hasNextPage: true,
-    hasPreviousPage: false,
-    sort: sortOption,
-    data: [mockVoucher],
-  };
+    const { data: lineItemsFromDB } = paginatedLineItemsFromDB;
 
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-  payload = mockPaginatedData;
+    const lineItemsStillCanReverse = lineItemsFromDB.filter(
+      getUtils.isLineItemCanBeReversedAndStillReversible
+    );
+
+    const lineItemEntities = lineItemsStillCanReverse.map(getUtils.initLineItemEntity);
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    payload = {
+      page,
+      totalPages: paginatedLineItemsFromDB.totalPages,
+      totalCount: paginatedLineItemsFromDB.totalCount,
+      pageSize,
+      hasNextPage: paginatedLineItemsFromDB.hasNextPage,
+      hasPreviousPage: paginatedLineItemsFromDB.hasPreviousPage,
+      sort: sortOption,
+      data: lineItemEntities,
+    };
+  } catch (_error) {
+    const error = _error as Error;
+    logger.error(error);
+    statusMessage = error.message;
+  }
+
   return {
     statusMessage,
     payload,
   };
 };
 
-type APIResponse = object | number | null;
+type APIResponse = IPaginatedData<IReverseItem[]> | null;
 
 const methodHandlers: {
   [key: string]: (

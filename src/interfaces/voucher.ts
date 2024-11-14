@@ -3,7 +3,23 @@ import { JOURNAL_EVENT } from '@/constants/journal';
 import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
 import type { ILineItemEntity } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
-import { Prisma } from '@prisma/client';
+import {
+  Prisma,
+  Voucher as PrismaVoucher,
+  User as PrismaUser,
+  Counterparty as PrismaCounterParty,
+  AccociateVoucher as PrismaAssociateVoucher,
+  Event as PrismaEvent,
+  LineItem as PrismaLineItem,
+  AssetVoucher as PrismaAssetVoucher,
+  Asset as PrismaAsset,
+  Certificate as PrismaCertificate,
+  VoucherCertificate as PrismaVoucherCertificate,
+  Account as PrismaAccount,
+  Invoice as PrismaInvoice,
+  File as PrismaFile,
+  UserCertificate as PrismaUserCertificate,
+} from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
 import type { ICounterPartyEntity } from '@/interfaces/counterparty';
@@ -643,3 +659,38 @@ export interface IVoucherEntity {
    */
   readByUsers: IUserVoucherEntity[];
 }
+
+export type IGetOneVoucherResponse = PrismaVoucher & {
+  issuer: PrismaUser;
+  voucherCertificates: (PrismaVoucherCertificate & {
+    certificate: PrismaCertificate & {
+      invoices: PrismaInvoice[];
+      file: PrismaFile;
+      UserCertificate: PrismaUserCertificate[];
+    };
+  })[];
+  counterparty: PrismaCounterParty;
+  originalVouchers: (PrismaAssociateVoucher & {
+    event: PrismaEvent;
+    resultVoucher: PrismaVoucher & {
+      lineItems: (PrismaLineItem & {
+        account: PrismaAccount;
+      })[];
+    };
+  })[];
+
+  resultVouchers: (PrismaAssociateVoucher & {
+    event: PrismaEvent;
+    originalVoucher: PrismaVoucher & {
+      lineItems: (PrismaLineItem & {
+        account: PrismaAccount;
+      })[];
+    };
+  })[];
+  assetVouchers: (PrismaAssetVoucher & {
+    asset: PrismaAsset;
+  })[];
+  lineItems: (PrismaLineItem & {
+    account: PrismaAccount;
+  })[];
+};

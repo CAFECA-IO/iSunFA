@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IAccount } from '@/interfaces/accounting_account';
@@ -6,23 +6,65 @@ import { useTranslation } from 'next-i18next';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import Skeleton from '@/components/skeleton/skeleton';
 import { FiPlusCircle } from 'react-icons/fi';
+import { AccountTypeBeta } from '@/constants/account';
+import { TitleFormType } from '@/constants/accounting_setting';
 
 interface IAccountingTitleSettingModalProps {
   accountTitleList: IAccount[];
-  setAddAccountCode: React.Dispatch<React.SetStateAction<string>>;
+  setFormType: React.Dispatch<React.SetStateAction<TitleFormType>>;
+  setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
   isLoading: boolean;
 }
 
-interface IAccountTitleItemProps {
+interface IAccountSecondLayerItemProps {
   titleAccount: IAccount;
+  setFormType: React.Dispatch<React.SetStateAction<TitleFormType>>;
   childList: IAccount[];
-  setAddAccountCode: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
 }
 
-const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
+interface IAccountThirdLayerItemProps {
+  isActive: boolean;
+  titleCode: string;
+  titleName: string;
+  clickHandler: () => void;
+}
+
+// Info: (20241111 - Julian) 會計科目的第三層項目(最底層)
+const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
+  isActive,
+  titleCode,
+  titleName,
+  clickHandler,
+}) => {
+  return (
+    <div
+      className={`mt-4px flex w-full items-center rounded-full px-8px py-4px hover:cursor-pointer ${isActive ? 'bg-surface-brand-primary-30' : 'hover:bg-surface-brand-primary-10'}`}
+    >
+      <div
+        onClick={clickHandler} // Info: (20241113 - Julian) 將點擊事件放在這層，和刪除紐分開
+        className="flex w-150px flex-1 items-center gap-4px whitespace-nowrap text-left text-xs font-semibold text-text-neutral-link"
+      >
+        <div className="flex w-16px shrink-0 items-center justify-center gap-4px">
+          <Image src="/icons/caret.svg" width={16} height={16} alt="caret_icon" />
+        </div>
+        <p>{titleCode}</p>
+        <p className="truncate">{titleName}</p>
+      </div>
+      {/* Info: (20241111 - Julian) 刪除按鈕 */}
+      <button type="button" className="shrink-0 text-icon-surface-single-color-primary">
+        <RiDeleteBinLine />
+      </button>
+    </div>
+  );
+};
+
+// Info: (20241111 - Julian) 會計科目的第二層項目(原本的會計科目，不可刪除和修改)
+const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   titleAccount,
+  setFormType,
   childList,
-  setAddAccountCode,
+  setSelectedAccountTitle,
 }) => {
   const {
     targetRef,
@@ -30,20 +72,49 @@ const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
     setComponentVisible: setIsExpanded,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const [activeChild, setActiveChild] = useState<IAccount | null>(null);
+
   const toggleExpand = () => setIsExpanded(!isExpanded);
+  const clickAddButton = () => {
+    setFormType(TitleFormType.add); // Info: (20241111 - Julian) 將 formType 設為 add
+    setSelectedAccountTitle(titleAccount); // Info: (20241111 - Julian) 將 title 傳到右邊的 <AddNewTitleSection />
+  };
 
   // Info: (20241111 - Julian) 將 code 傳到 modal 那層，以連動到右邊的 <AddNewTitleSection />
   const addButton = isExpanded ? (
-    <button type="button" onClick={() => setAddAccountCode(titleAccount.code)}>
+    <button type="button" onClick={clickAddButton}>
       <FiPlusCircle />
     </button>
   ) : null;
+
+  const displayChildList =
+    childList.length > 0
+      ? childList.map((child) => {
+          // Info: (20241111 - Julian) 如果 activeChild 存在，且 activeChild 的 id 等於 child 的 id，則 isActive 為 true
+          const isActive = activeChild ? activeChild.id === child.id : false;
+
+          const clickChildHandler = () => {
+            setActiveChild(child); // Info: (20241113 - Julian) 將 activeChild 設為該子項目
+            setFormType(TitleFormType.edit); // Info: (20241113 - Julian) 將 formType 設為 edit
+            setSelectedAccountTitle(child); // Info: (20241113 - Julian)  將 title 傳到右邊的 <AddNewTitleSection />
+          };
+          return (
+            <AccountThirdLayerItem
+              key={child.id}
+              isActive={isActive}
+              titleCode={child.code}
+              titleName={child.name}
+              clickHandler={clickChildHandler}
+            />
+          );
+        })
+      : null;
 
   return (
     <div ref={targetRef} className="flex flex-col">
       {/* Info: (20241108 - Julian) 項目標題 */}
       <div
-        className={`flex items-center rounded-full px-8px py-4px ${isExpanded ? 'bg-surface-brand-primary-30' : 'hover:bg-surface-brand-primary-10'} hover:cursor-pointer`}
+        className={`flex items-center rounded-full px-8px py-4px ${isExpanded ? 'bg-surface-brand-primary-10' : 'hover:bg-surface-brand-primary-10'} hover:cursor-pointer`}
       >
         <div
           onClick={toggleExpand}
@@ -69,23 +140,7 @@ const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
           <div className="w-20px pl-15px">
             <div className="h-full w-px bg-tree-stroke-divider"></div>
           </div>
-          <div className="flex flex-1 flex-col">
-            {childList.map((child) => (
-              <div key={child.id} className="flex w-full items-center rounded-full px-8px py-4px">
-                <div className="flex w-150px flex-1 items-center gap-4px whitespace-nowrap text-left text-xs font-semibold text-text-neutral-link">
-                  <div className="flex w-16px shrink-0 items-center justify-center gap-4px">
-                    <Image src="/icons/caret.svg" width={16} height={16} alt="caret_icon" />
-                  </div>
-                  <p>{child.code}</p>
-                  <p className="truncate">{child.name}</p>
-                </div>
-                {/* Info: (20241111 - Julian) 刪除按鈕 */}
-                <button type="button" className="shrink-0 text-icon-surface-single-color-primary">
-                  <RiDeleteBinLine />
-                </button>
-              </div>
-            ))}
-          </div>
+          <div className="flex flex-1 flex-col">{displayChildList}</div>
         </div>
       </div>
     </div>
@@ -95,22 +150,13 @@ const AccountTitleItem: React.FC<IAccountTitleItemProps> = ({
 const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   accountTitleList,
   isLoading,
-  setAddAccountCode,
+  setFormType,
+  setSelectedAccountTitle,
 }) => {
   const { t } = useTranslation('common');
 
-  // ToDo: (20241004 - Julian) 資產、負債、權益、銷貨收入、其他收益、成本、費用、營業外收支、其他綜合損益
-  const accountTypeList = [
-    'asset',
-    'liability',
-    'equity',
-    'revenue',
-    'income',
-    'cost',
-    'expense',
-    'non_operating',
-    'other_comprehensive_income',
-  ];
+  // Info: (20241111 - Julian) 資產、負債、權益、銷貨收入、其他收益、成本、費用、營業外收支、其他綜合損益
+  const accountTypeList = Object.values(AccountTypeBeta);
 
   const accountTitleSecondList = accountTitleList.filter((account) => !account.code.includes('-'));
   const accountTitleThirdList = accountTitleList.filter((account) => account.code.includes('-'));
@@ -125,6 +171,10 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
     </div>
   );
 
+  /* Info: (20241112 - Julian) 將 accountTitleList 分成三層
+  /* 第一層是會計類型列表，共有 9 種
+  /* 第二層是代碼中沒有 '-' 的會計科目，也就是原本的會計科目列表
+  /* 第三層是代碼中有 '-' 的會計科目，也就是用戶自訂的會計科目 */
   const nestedAccountTitleList = accountTypeList.map((firstLayer) => {
     const accountTitleSecondLayer = accountTitleSecondList.filter(
       (account) => account.type === firstLayer
@@ -154,11 +204,12 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
       : secondLayer.map((second) => {
           const { thirdLayer } = second;
           return (
-            <AccountTitleItem
+            <AccountSecondLayerItem
               key={second.title.id}
               titleAccount={second.title}
+              setFormType={setFormType}
               childList={thirdLayer}
-              setAddAccountCode={setAddAccountCode}
+              setSelectedAccountTitle={setSelectedAccountTitle}
             />
           );
         });
@@ -172,8 +223,8 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
             height={16}
             alt={`${mainTitle}_icon`}
           />
-          <p className="whitespace-nowrap text-sm text-divider-text-lv-1">
-            {t(`setting:ACCOUNTING.ACC_TYPE_${mainTitle.toUpperCase()}`)}
+          <p className="whitespace-nowrap text-sm font-medium text-divider-text-lv-1">
+            {t(`setting:ACCOUNTING_SETTING_MODAL.ACC_TYPE_${mainTitle.toUpperCase()}`)}
           </p>
           <hr className="w-fit flex-1 border-divider-stroke-lv-1" />
         </div>
