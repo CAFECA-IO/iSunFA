@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 import { Button } from '@/components/button/button';
 
 interface CreateCompanyModalProps {
@@ -13,7 +13,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
 
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [tag, setTag] = useState(Object.keys(CompanyTag)[0]);
+  const [tag, setTag] = useState(Object.keys(COMPANY_TAG)[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -79,7 +79,7 @@ const CreateCompanyModal = ({ toggleModal }: CreateCompanyModalProps) => {
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.keys(CompanyTag).map((item) => (
+                  {Object.keys(COMPANY_TAG).map((item) => (
                     <button
                       key={item}
                       type="button"

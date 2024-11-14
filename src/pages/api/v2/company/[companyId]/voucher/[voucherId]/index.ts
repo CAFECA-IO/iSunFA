@@ -6,21 +6,17 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
-import { CounterpartyType } from '@/constants/counterparty';
 import { IEventEntity } from '@/interfaces/event';
-import { EventEntityFrequency, EventEntityType } from '@/constants/event';
-import { AccountType, EventType } from '@/constants/account';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
-import { IVoucherEntity } from '@/interfaces/voucher';
-import { JOURNAL_EVENT } from '@/constants/journal';
+import {
+  IGetOneVoucherResponse,
+  IVoucherDetailForFrontend,
+  IVoucherEntity,
+} from '@/interfaces/voucher';
 import { IAssetEntity } from '@/interfaces/asset';
-import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { IInvoiceEntity } from '@/interfaces/invoice';
-import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { CurrencyType } from '@/constants/currency';
 import { IFileEntity } from '@/interfaces/file';
-import { FileFolder } from '@/constants/file';
 import { ICertificateEntity } from '@/interfaces/certificate';
 import { voucherAPIGetOneUtils as getUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -58,356 +54,58 @@ export const handleGetRequest: IHandleRequest<
   APIName.VOUCHER_GET_BY_ID_V2,
   GetOneVoucherResponse
 > = async ({ query, session }) => {
+  /**
+   * Info: (20241112 - Murky)
+   * @todo
+   * - Get voucher with all needed in GetOneVoucherResponse
+   * - Init every part of GetOneVoucherResponse
+   * - Calculate payableInfo and receivingInfo
+   */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetOneVoucherResponse | null = null;
+
   const { userId } = session;
+  const accountSettingCompanyId = 1001;
+  try {
+    const { voucherId } = query;
+    const voucherFromPrisma: IGetOneVoucherResponse =
+      await getUtils.getVoucherFromPrisma(voucherId);
 
-  // ToDo: (20240927 - Murky) Remember to add auth check
-  if (query) {
-    const mockIssuer: IUserEntity = {
-      id: 1,
-      name: 'Murky',
-      email: 'murky@isunfa.com',
-      imageFileId: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      imageFile: undefined,
-    };
-    const mockAccountingSetting: PrismaAccountingSetting = {
-      id: 1,
-      companyId: 1002,
-      currency: 'TWD',
-      salesTaxRate: 5,
-      salesTaxTaxable: true,
-      purchaseTaxRate: 5,
-      purchaseTaxTaxable: true,
-      returnPeriodicity: 'monthly',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
+    const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+    const lineItems: (ILineItemEntity & { account: IAccountEntity })[] =
+      getUtils.initLineItemEntities(voucherFromPrisma);
+    const accountSetting: PrismaAccountingSetting =
+      await getUtils.getAccountingSettingFromPrisma(accountSettingCompanyId);
+    const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
+    const counterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
+    const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
+    const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
+    const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
+    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
 
-    const mockOriginalInvoice: IInvoiceEntity = {
-      id: 1,
-      certificateId: 1,
-      counterPartyId: 1,
-      inputOrOutput: InvoiceTransactionDirection.INPUT,
-      date: 1,
-      no: '1001',
-      currencyAlias: CurrencyType.TWD,
-      priceBeforeTax: 2000,
-      taxType: InvoiceTaxType.TAXABLE,
-      taxRatio: 5,
-      taxPrice: 100,
-      totalPrice: 2100,
-      type: InvoiceType.SALES_TRIPLICATE_INVOICE,
-      deductible: true,
-
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
-
-    const mockOriginFile: IFileEntity = {
-      id: 1,
-      name: 'murky.jpg',
-      size: 1000,
-      mimeType: 'image/jpeg',
-      type: FileFolder.TMP,
-      url: 'https://isunfa.com/elements/avatar_default.svg?w=256&q=75',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
-
-    const mockCertificate: ICertificateEntity & {
-      invoice: IInvoiceEntity;
-      file: IFileEntity;
-    } = {
-      id: 1,
-      companyId: 1002,
-      voucherNo: '1001',
-      invoice: mockOriginalInvoice,
-      file: mockOriginFile,
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      vouchers: [],
-      userCertificates: [
-        {
-          id: 1,
-          userId: 1,
-          certificateId: 1,
-          isRead: false,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      ],
-    };
-
-    const mockRevertLineItems: (ILineItemEntity & { account: IAccountEntity })[] = [
-      {
-        id: 1,
-        description: '存入銀行',
-        amount: 600,
-        debit: true,
-        accountId: 1,
-        voucherId: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-        account: {
-          id: 1,
-          companyId: 1002,
-          system: 'IFRS',
-          type: AccountType.ASSET,
-          debit: true,
-          liquidity: true,
-          code: '1103',
-          name: '銀行存款',
-          forUser: true,
-          parentCode: '1100',
-          rootCode: '1100',
-          level: 3,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      },
-      {
-        id: 2,
-        description: '存入銀行',
-        amount: 600,
-        debit: true,
-        accountId: 1,
-        voucherId: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-        account: {
-          id: 2,
-          companyId: 1002,
-          system: 'IFRS',
-          type: AccountType.ASSET,
-          debit: true,
-          liquidity: true,
-          code: '1101',
-          name: '庫存現金',
-          forUser: true,
-          parentCode: '1100',
-          rootCode: '1100',
-          level: 3,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      },
-      {
-        id: 3,
-        description: '原價屋',
-        amount: 1000,
-        debit: false,
-        accountId: 1,
-        voucherId: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-        account: {
-          id: 1,
-          companyId: 1002,
-          system: 'IFRS',
-          type: AccountType.ASSET,
-          debit: true,
-          liquidity: true,
-          code: '1172',
-          name: '應收帳款',
-          forUser: true,
-          parentCode: '1170',
-          rootCode: '1170',
-          level: 3,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      },
-    ];
-
-    const mockRevertVoucher: IVoucherEntity = {
-      id: 1,
-      issuerId: 1,
-      counterPartyId: 1,
-      companyId: 1002,
-      status: JOURNAL_EVENT.UPLOADED,
-      editable: true,
-      no: '1001',
-      date: 1,
-      type: EventType.INCOME,
-      note: 'this is note',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      lineItems: mockRevertLineItems,
-      readByUsers: [],
-      originalEvents: [],
-      resultEvents: [],
-      certificates: [],
-      asset: [],
-    };
-
-    const mockOriginalLineItems: (ILineItemEntity & { account: IAccountEntity })[] = [
-      {
-        id: 4,
-        description: '原價屋',
-        amount: 2000,
-        debit: true,
-        accountId: 1,
-        voucherId: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-        account: {
-          id: 1,
-          companyId: 1002,
-          system: 'IFRS',
-          type: AccountType.ASSET,
-          debit: true,
-          liquidity: true,
-          code: '1172',
-          name: '應收帳款',
-          forUser: true,
-          parentCode: '1170',
-          rootCode: '1170',
-          level: 3,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      },
-      {
-        id: 1,
-        description: '賣電腦',
-        amount: 2000,
-        debit: true,
-        accountId: 1,
-        voucherId: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        deletedAt: null,
-        account: {
-          id: 1,
-          companyId: 1002,
-          system: 'IFRS',
-          type: AccountType.REVENUE,
-          debit: false,
-          liquidity: true,
-          code: '4111',
-          name: '銷貨收入',
-          forUser: false,
-          parentCode: '4110',
-          rootCode: '4110',
-          level: 3,
-          createdAt: 1,
-          updatedAt: 1,
-          deletedAt: null,
-        },
-      },
-    ];
-
-    const mockOriginalVoucher: IVoucherEntity = {
-      id: 1,
-      issuerId: 1,
-      counterPartyId: 1,
-      companyId: 1002,
-      status: JOURNAL_EVENT.UPLOADED,
-      editable: true,
-      no: '1001',
-      date: 1,
-      type: EventType.INCOME,
-      note: 'this is note',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      lineItems: mockOriginalLineItems,
-      readByUsers: [],
-      originalEvents: [],
-      resultEvents: [],
-      certificates: [],
-      asset: [],
-    };
-
-    const mockCounterParty: ICounterPartyEntity = {
-      id: 1,
-      companyId: 1003,
-      name: '原價屋',
-      taxId: '27749036',
-      type: CounterpartyType.CLIENT,
-      note: '買電腦',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-    };
-
-    const revertEvent: IEventEntity = {
-      id: 1,
-      eventType: EventEntityType.REVERT,
-      frequency: EventEntityFrequency.ONCE,
-      startDate: 1,
-      endDate: 1,
-      dateOfWeek: [],
-      monthsOfYear: [],
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      associateVouchers: [
-        {
-          originalVoucher: mockOriginalVoucher,
-          resultVoucher: mockRevertVoucher,
-        },
-      ],
-    };
-
-    const mockAsset: IAssetEntity = {
-      id: 1,
-      companyId: 1002,
-      name: '電腦',
-      type: AssetEntityType.LAND,
-      number: '1172',
-      acquisitionDate: 1,
-      purchasePrice: 1000,
-      accumulatedDepreciation: 100,
-      residualValue: 100,
-      remainingLife: 5,
-      status: AssetStatus.NORMAL,
-      depreciationStart: 1,
-      depreciationMethod: AssetDepreciationMethod.STRAIGHT_LINE,
-      usefulLife: 5,
-      note: '',
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      assetVouchers: [],
-    };
-
-    const { payableInfo, receivingInfo } = getUtils.getPayableReceivableInfo(revertEvent);
-
+    // ToDo: (20241112 - Murky) 剩下下面這兩個
+    const { payableInfo, receivingInfo } =
+      getUtils.getPayableReceivableInfoFromVoucher(originalEvents);
     const mockVoucher: GetOneVoucherResponse = {
-      ...mockOriginalVoucher,
-      issuer: mockIssuer,
-      accountSetting: mockAccountingSetting,
-      counterParty: mockCounterParty,
-      originalEvents: [revertEvent],
-      resultEvents: [],
-      asset: [mockAsset],
-      certificates: [mockCertificate],
-      lineItems: mockOriginalLineItems,
+      ...voucher,
+      issuer,
+      accountSetting,
+      counterParty,
+      originalEvents,
+      resultEvents,
+      asset,
+      certificates,
+      lineItems,
       payableInfo,
       receivingInfo,
     };
     payload = mockVoucher;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  } catch (_error) {
+    const error = _error as Error;
+    loggerError(userId, 'Voucher Get One handleGetRequest', error.message).error(error);
   }
+
   return {
     statusMessage,
     payload,
@@ -428,7 +126,7 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
   const { userId } = session;
-  const mockPutVoucherId = 1002;
+  const mockPutVoucherId = 1000;
 
   // ToDo: (20240927 - Murky) Remember to add auth check
   if (query && body) {
@@ -469,7 +167,7 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
   };
 };
 
-type APIResponse = object | number | null;
+type APIResponse = IVoucherDetailForFrontend | object | number | null;
 
 const methodHandlers: {
   [key: string]: (

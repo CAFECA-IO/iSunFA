@@ -4,7 +4,7 @@ import DashboardCardLayout from '@/components/beta/dashboard/dashboard_card_layo
 import MoreLink from '@/components/beta/dashboard/more_link';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 import { useTranslation } from 'next-i18next';
 
 // ToDo: (20241016 - Liz) 從 user context 中打 API 取得公司列表、判斷是否為空
@@ -19,7 +19,7 @@ const COMPANY_LIST: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.ALL,
+    tag: COMPANY_TAG.ALL,
     order: 1,
     role: {
       id: 1,
@@ -39,7 +39,7 @@ const COMPANY_LIST: ICompanyAndRole[] = [
       createdAt: 1622505600,
       updatedAt: 1622505600,
     },
-    tag: CompanyTag.ALL,
+    tag: COMPANY_TAG.ALL,
     order: 2,
     role: {
       id: 1,
