@@ -8,7 +8,6 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import FilterSection from '@/components/filter_section/filter_section';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
-import { COMPANY_TAG } from '@/constants/company';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/company_settings/work_tag';
@@ -19,115 +18,12 @@ interface CompanyListModalProps {
   toggleModal: () => void;
 }
 
-const DUMMY_COMPANIES: ICompanyAndRole[] = [
-  {
-    company: {
-      id: 1,
-      imageId: 'img123',
-      name: 'Tech Corp',
-      taxId: '123456789',
-      startDate: 1622505600,
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-    tag: COMPANY_TAG.ALL,
-    order: 1,
-    role: {
-      id: 1,
-      name: 'Admin',
-      permissions: ['read', 'write', 'delete'],
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-  },
-  {
-    company: {
-      id: 2,
-      imageId: 'img456',
-      name: 'Tech Corp 2',
-      taxId: '987654321',
-      startDate: 1622505600,
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-    tag: COMPANY_TAG.ALL,
-    order: 2,
-    role: {
-      id: 2,
-      name: 'Admin',
-      permissions: ['read', 'write', 'delete'],
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-  },
-  {
-    company: {
-      id: 3,
-      imageId: 'img456',
-      name: 'Tech Corp 3',
-      taxId: '987654321',
-      startDate: 1622505600,
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-    tag: COMPANY_TAG.ALL,
-    order: 3,
-    role: {
-      id: 3,
-      name: 'Admin',
-      permissions: ['read', 'write', 'delete'],
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-  },
-  {
-    company: {
-      id: 4,
-      imageId: 'img456',
-      name: 'Tech Corp 4',
-      taxId: '987654321',
-      startDate: 1622505600,
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-    tag: COMPANY_TAG.TAX,
-    order: 4,
-    role: {
-      id: 4,
-      name: 'Admin',
-      permissions: ['read', 'write', 'delete'],
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-  },
-  {
-    company: {
-      id: 5,
-      imageId: 'img456',
-      name: 'Tech Corp 5',
-      taxId: '987654321',
-      startDate: 1622505600,
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-    tag: COMPANY_TAG.FINANCIAL,
-    order: 5,
-    role: {
-      id: 5,
-      name: 'Admin',
-      permissions: ['read', 'write', 'delete'],
-      createdAt: 1622505600,
-      updatedAt: 1622505600,
-    },
-  },
-];
-
 const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(DUMMY_COMPANIES.length); // ToDo: (20241107 - Tzuhan) - Replace with real data
-  const [totalPages, setTotalPages] = useState(1);
-  const [companies, setCompanies] = useState<ICompanyAndRole[]>(DUMMY_COMPANIES);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [companies, setCompanies] = useState<ICompanyAndRole[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
@@ -154,7 +50,7 @@ const CompanyListModal: React.FC<CompanyListModalProps> = ({ toggleModal }) => {
     <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
       {isEditModalOpen && selectedCompany && (
         <CompanyEditModal
-          company={selectedCompany}
+          companyAndRole={selectedCompany}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}
