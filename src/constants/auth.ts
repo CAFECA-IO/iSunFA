@@ -97,6 +97,7 @@ export const AUTH_CHECK = {
   [APIName.INVOICE_CREATE]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.IMAGE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_STATUS]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_V2]: [AuthFunctionsKeysNew.user],

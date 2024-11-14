@@ -18,6 +18,7 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { roomManager } from '@/lib/utils/room';
+import { File } from '@prisma/client';
 
 export const config = {
   api: {
@@ -111,7 +112,7 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  return returnFile;
+  return fileInDB;
 }
 
 function extractKeyAndIvFromFields(fields: formidable.Fields) {
@@ -131,12 +132,9 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
   };
 }
 
-const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, IFileBeta> = async ({
-  query,
-  req,
-}) => {
+const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, File> = async ({ query, req }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IFileBeta | null = null;
+  let payload: File | null = null;
 
   const { type, targetId } = query;
 

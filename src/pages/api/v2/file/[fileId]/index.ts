@@ -2,134 +2,76 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { promises as fs } from 'fs';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IFile } from '@/interfaces/file';
-import { getSession } from '@/lib/utils/session';
-import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
-import { deleteFileById, findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
+import { IFileBeta } from '@/interfaces/file';
+import { formatApiResponse } from '@/lib/utils/common';
+import { deleteFileById, findFileById } from '@/lib/utils/repo/file.repo';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
 import { File } from '@prisma/client';
 
-async function handleGetRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
-) {
+const handleGetRequest: IHandleRequest<APIName.FILE_GET, File> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IFile | null = null;
+  let payload: File | null = null;
 
-  const session = await getSession(req, res);
-  const { userId, companyId } = session;
+  try {
+    const { fileId } = query;
 
-  if (!userId) {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-  } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      try {
-        const { fileId } = req.query;
-        const fileName = String(fileId);
-
-        let file: File | null;
-
-        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
-        if (isStringNumber(fileName)) {
-          const fileIdInt = Number(fileName);
-          file = await findFileById(fileIdInt);
-        } else {
-          file = await findFileInDBByName(fileName);
-        }
-
-        if (file) {
-          const filePath = file.url;
-          const stat = await fs.stat(filePath);
-          payload = { id: file.id, name: file.name, size: stat.size, existed: true };
-        } else {
-          payload = { id: -1, name: 'not found', size: 0, existed: false };
-        }
-        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-      } catch (error) {
-        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-      }
-    }
+    const file = await findFileById(fileId);
+    payload = file;
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
   return { statusMessage, payload };
-}
+};
 
-async function handleDeleteRequest(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
-) {
+const handleDeleteRequest: IHandleRequest<APIName.FILE_DELETE, File> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IFile | null = null;
+  let payload: File | null = null;
 
-  const session = await getSession(req, res);
-  const { userId, companyId } = session;
+  try {
+    const { fileId } = query;
 
-  if (!userId) {
-    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-  } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    const file = await deleteFileById(fileId);
 
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
+    if (file) {
       try {
-        const { fileId } = req.query;
-        const fileName = fileId as string;
+        await fs.unlink(file.url);
 
-        let file: File | null = null;
-
-        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
-        if (isStringNumber(fileName)) {
-          const fileIdInt = Number(fileName);
-          file = await deleteFileById(fileIdInt);
-        } else {
-          const fileForDelete = await findFileInDBByName(fileName);
-          if (fileForDelete) {
-            file = await deleteFileById(fileForDelete.id);
-          }
-        }
-
-        if (file) {
-          const stat = await fs.stat(file.url);
-          await fs.unlink(file.url);
-
-          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-          payload = { id: file.id, name: file.name, size: stat.size, existed: false };
-        } else {
-          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-          payload = { id: -1, name: 'not found', size: 0, existed: false };
-        }
-      } catch (error) {
-        // ToDo: (20240828 - Jacky) Log error message
+        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+        payload = file;
+      } catch (fsError) {
         statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
+    } else {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      payload = file;
     }
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
   return { statusMessage, payload };
-}
+};
 
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
-    res: NextApiResponse<IResponseData<IFile | null>>
-  ) => Promise<{ statusMessage: string; payload: IFile | null }>;
+    res: NextApiResponse
+  ) => Promise<{ statusMessage: string; payload: IFileBeta | null }>;
 } = {
-  GET: handleGetRequest,
-  DELETE: handleDeleteRequest,
+  GET: (req, res) => withRequestValidation(APIName.FILE_GET, req, res, handleGetRequest),
+  DELETE: (req, res) => withRequestValidation(APIName.FILE_DELETE, req, res, handleDeleteRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
+  res: NextApiResponse<IResponseData<IFileBeta | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IFile | null = null;
+  let payload: IFileBeta | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -142,7 +84,7 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<IFile | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IFileBeta | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

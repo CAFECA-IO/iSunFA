@@ -1,10 +1,18 @@
 import { z } from 'zod';
 import { FileFolder, UploadType } from '@/constants/file';
-import { nullSchema } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 const filePostQuerySchema = z.object({
   type: z.nativeEnum(UploadType),
   targetId: z.string(),
+});
+
+const fileGetQuerySchema = z.object({
+  fileId: zodStringToNumber,
+});
+
+const fileDeleteQuerySchema = z.object({
+  fileId: zodStringToNumber,
 });
 
 export const filePrismaSchema = z.object({
@@ -28,6 +36,16 @@ export const fileSchema = z.object({
   size: z.number(),
   existed: z.boolean(),
   url: z.string(),
+});
+
+const fileOutputSchema = filePrismaSchema.transform((data) => {
+  return {
+    id: data.id,
+    name: data.name,
+    size: data.size,
+    existed: true,
+    url: data.url,
+  };
 });
 
 /**
@@ -76,6 +94,24 @@ export const filePostSchema = {
     querySchema: filePostQuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: fileSchema.nullable(),
+  outputSchema: fileOutputSchema.nullable(),
+  frontend: nullSchema,
+};
+
+export const fileGetSchema = {
+  input: {
+    querySchema: fileGetQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: fileOutputSchema.nullable(),
+  frontend: nullSchema,
+};
+
+export const fileDeleteSchema = {
+  input: {
+    querySchema: fileDeleteQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: fileOutputSchema.nullable(),
   frontend: nullSchema,
 };

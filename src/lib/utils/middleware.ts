@@ -8,10 +8,19 @@ import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { ISessionData } from '@/interfaces/session_data';
-import { checkAuthorizationNew } from '@/lib/utils/auth_check_v2';
+import { checkAuthorizationNew, isWhitelisted } from '@/lib/utils/auth_check_v2';
 
-export async function checkSessionUser(session: ISessionData) {
+export async function checkSessionUser(
+  session: ISessionData,
+  apiName: APIName,
+  req: NextApiRequest
+) {
   let isLogin = true;
+
+  if (isWhitelisted(apiName, req)) {
+    return true;
+  }
+
   if (!session.userId) {
     isLogin = false;
     loggerError(0, 'Unauthorized Access', 'User ID is missing in session');
@@ -24,6 +33,10 @@ async function checkUserAuthorization<T extends APIName>(
   req: NextApiRequest,
   session: ISessionData
 ) {
+  if (isWhitelisted(apiName, req)) {
+    return true;
+  }
+
   const isAuth = await checkAuthorizationNew(apiName, req, session);
   if (!isAuth) {
     loggerError(
@@ -76,7 +89,7 @@ export async function withRequestValidation<T extends APIName, U>(
   let payload: output<T> | null = null;
 
   const session = await getSession(req, res);
-  const isLogin = await checkSessionUser(session);
+  const isLogin = await checkSessionUser(session, apiName, req);
   if (!isLogin) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
