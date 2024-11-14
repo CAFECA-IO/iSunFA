@@ -1,10 +1,10 @@
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 import React from 'react';
 import { LuFileCheck } from 'react-icons/lu';
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 
 interface WorkTagProps {
-  type: CompanyTag;
+  type: COMPANY_TAG;
 }
 const WorkTag = ({ type }: WorkTagProps) => {
   let backgroundColor = '';
@@ -12,19 +12,19 @@ const WorkTag = ({ type }: WorkTagProps) => {
   let icon = null;
 
   switch (type) {
-    case CompanyTag.FINANCIAL:
+    case COMPANY_TAG.FINANCIAL:
       backgroundColor = 'bg-badge-surface-strong-secondary';
       textColor = 'text-badge-text-invert';
       icon = <RiCoinsFill size={16} />;
       break;
 
-    case CompanyTag.TAX:
+    case COMPANY_TAG.TAX:
       backgroundColor = 'bg-badge-surface-strong-primary';
       textColor = 'text-badge-text-invert';
       icon = <RiCheckboxMultipleLine size={16} />;
       break;
 
-    case CompanyTag.ALL:
+    case COMPANY_TAG.ALL:
       backgroundColor = 'bg-badge-surface-soft-secondary';
       textColor = 'text-badge-text-secondary-solid';
       icon = <LuFileCheck size={16} />;

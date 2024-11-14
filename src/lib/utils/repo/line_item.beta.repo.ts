@@ -372,6 +372,7 @@ export async function listLineItemsByAccount({
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
+  // Deprecate: (20241113 - Murky) incomplete
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orderBy = sortOption.reduce((acc: { [key: string]: any }, { sortBy, sortOrder }) => {
     switch (sortBy) {
