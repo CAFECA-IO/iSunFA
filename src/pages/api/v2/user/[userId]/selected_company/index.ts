@@ -9,24 +9,30 @@ import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { getCompanyAndRoleByUserIdAndCompanyId } from '@/lib/utils/repo/admin.repo';
 import { Company } from '@prisma/client';
+import { NON_EXISTING_COMPANY_ID } from '@/constants/config';
 
 const handlePutRequest: IHandleRequest<APIName.COMPANY_SELECT, Company> = async ({
   query,
+  body,
   session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: Company | null = null;
 
-  const { companyId } = query;
-  const { userId } = session;
-
-  const getCompanyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, companyId);
-  if (getCompanyAndRole) {
+  const { companyId } = body;
+  const { userId } = query;
+  if (companyId === NON_EXISTING_COMPANY_ID) {
     await setSession(session, { companyId });
     statusMessage = STATUS_MESSAGE.SUCCESS;
-    payload = getCompanyAndRole.company;
   } else {
-    statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    const companyAndRole = await getCompanyAndRoleByUserIdAndCompanyId(userId, companyId);
+    if (companyAndRole) {
+      await setSession(session, { companyId });
+      statusMessage = STATUS_MESSAGE.SUCCESS;
+      payload = companyAndRole.company;
+    } else {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    }
   }
 
   return { statusMessage, payload };

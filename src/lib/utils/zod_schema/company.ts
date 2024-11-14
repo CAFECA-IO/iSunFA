@@ -1,12 +1,10 @@
 import { z } from 'zod';
-// import { IZodSchema } from '@/interfaces/zod_schema';
 import { CompanyTag, CompanyUpdateAction } from '@/constants/company';
 import { zodStringToNumber, zodStringToNumberWithDefault } from '@/lib/utils/zod_schema/common';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { rolePrimsaSchema } from '@/lib/utils/zod_schema/role';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { DEFAULT_PAGE_START_AT, DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { ZodAPISchema } from '@/interfaces/zod_validator';
 
 // Info: (20241028 - Jacky) Company null schema
 const companyNullSchema = z.union([z.object({}), z.string()]);
@@ -50,7 +48,11 @@ const companyDeleteQuerySchema = z.object({
 
 // Info: (20241015 - Jacky) Company select schema
 const companySelectQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  userId: zodStringToNumber,
+});
+
+const companySelectBodySchema = z.object({
+  companyId: z.number().int(),
 });
 
 const companyPrismaSchema = z.object({
@@ -136,10 +138,10 @@ export const companyDeleteSchema = {
   frontend: companyNullSchema,
 };
 
-export const companySelectSchema: ZodAPISchema = {
+export const companySelectSchema = {
   input: {
     querySchema: companySelectQuerySchema,
-    bodySchema: companyNullSchema,
+    bodySchema: companySelectBodySchema,
   },
   outputSchema: companyOutputSchema.nullable(),
   frontend: companyNullSchema,
