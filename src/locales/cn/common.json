@@ -26,13 +26,7 @@
     "NOTIFICATION": "通知",
     "LINK_NOT_OPEN": "此功能目前尚未開放使用"
   },
-  "USER": {
-    "MY_ADDRESS": "我的地址",
-    "FINANCIAL_ANALYSIS": "财务分析",
-    "CLOUD_DRIVE": "云端硬碟",
-    "AUDITING_HISTORY": "审计历史记录",
-    "LOGOUT": "登出"
-  },
+
   "HOME_PAGE": {
     "BREADCRUMB_TITLE": "首页",
     "CHAINS_TITLE": "条区块链",
@@ -336,24 +330,7 @@
   "LOADING_MODAL": {
     "LOADING": "正在加载中，请稍等..."
   },
-  "LOGIN_PAGE_BODY": {
-    "PLEASE": "请",
-    "REGISTER_YOUR_DEVICE": "注册您的设备。",
-    "OR_TRY_OTHER_PASSKY": "或尝试其他Passkey",
-    "OOPS": "哎呀！出了些问题。请重试或联络客服。",
-    "HELP": "帮助",
-    "REGISTER_YOUR_DEVICE_ARROW": "注册您的装置 → ",
-    "SCAN_THE_QR_CODE": "使用您注册的装置扫描二维码",
-    "LOG_IN_WITH_DEVICE": "使用装置登入",
-    "REGISTER_MY_DEVICE": "注册我的设备",
-    "LOGIN_ENVIRONMENT_TIPS": "登入环境提示",
-    "SET_USER_NAME": "设置用户名",
-    "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "该用户名将应用于您的设备。",
-    "REGISTER": "注册",
-    "LOG_IN": "登录",
-    "LOGIN_WITH_PROVIDER": "用{{provider}}登录",
-    "USERNAME": "用户名"
-  },
+
   "PASSKEY_SUPPORT_MODAL": {
     "ANDROID": "Android OS9 或更高版本",
     "MACOS": "MacOS 13.5 或更高版本",
@@ -381,16 +358,7 @@
     "FRI": "五",
     "SAT": "六"
   },
-  "ROLE": {
-    "SUPER_ADMIN": "最终管理员",
-    "ADMIN": "管理员",
-    "OWNER": "拥有者",
-    "ACCOUNTANT": "会计",
-    "BOOKKEEPER": "记帐员",
-    "FINANCE": "财务",
-    "VIEWER": "检视者",
-    "TEST": "测试"
-  },
+
   "BOOKMARK_LIST": {
     "ADD_NEW_CONTRACT": "新增合同",
     "ADD_NEW_KYC": "新增KYC",

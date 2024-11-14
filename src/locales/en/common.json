@@ -26,13 +26,7 @@
     "NOTIFICATION": "Notification",
     "LINK_NOT_OPEN": "This feature is not currently open for use"
   },
-  "USER": {
-    "MY_ADDRESS": "My Address page",
-    "FINANCIAL_ANALYSIS": "Financial Analysis",
-    "CLOUD_DRIVE": "Cloud Drive",
-    "AUDITING_HISTORY": "Auditing History",
-    "LOGOUT": "Log out"
-  },
+
   "HOME_PAGE": {
     "BREADCRUMB_TITLE": "Home",
     "CHAINS_TITLE": "Chains",
@@ -336,24 +330,7 @@
   "LOADING_MODAL": {
     "LOADING": "It is loading, please wait..."
   },
-  "LOGIN_PAGE_BODY": {
-    "PLEASE": "Please",
-    "REGISTER_YOUR_DEVICE": "register your device,",
-    "OR_TRY_OTHER_PASSKY": "Or try other passkey methods.",
-    "OOPS": "Oops! Something went wrong. Please try again or contact customer support.",
-    "HELP": "Help",
-    "REGISTER_YOUR_DEVICE_ARROW": "Register your device → ",
-    "SCAN_THE_QR_CODE": "Scan the QR code with the device you registered with",
-    "LOG_IN_WITH_DEVICE": "Log in with Device",
-    "REGISTER_MY_DEVICE": "Register my Device",
-    "LOGIN_ENVIRONMENT_TIPS": "Login Environment Tips",
-    "SET_USER_NAME": "Set User Name",
-    "THIS_USERNAME_WILL_BE_APPLIED_TO_YOUR_DEVICE.": "This username will be applied to your device.",
-    "REGISTER": "Register",
-    "LOG_IN": "Log In",
-    "LOGIN_WITH_PROVIDER": "Log In with {{provider}}",
-    "USERNAME": "Username"
-  },
+
   "PASSKEY_SUPPORT_MODAL": {
     "ANDROID": "Android OS9 or later",
     "MACOS": "MacOS 13.5 or later",
@@ -381,16 +358,7 @@
     "FRI": "F",
     "SAT": "S"
   },
-  "ROLE": {
-    "SUPER_ADMIN": "Super Admin",
-    "ADMIN": "Admin",
-    "OWNER": "Owner",
-    "ACCOUNTANT": "Accountant",
-    "BOOKKEEPER": "Bookkeeper",
-    "FINANCE": "Finance",
-    "VIEWER": "Viewer",
-    "TEST": "Test"
-  },
+
   "BOOKMARK_LIST": {
     "ADD_NEW_CONTRACT": "Add New Contract",
     "ADD_NEW_KYC": "Add New KYC",
