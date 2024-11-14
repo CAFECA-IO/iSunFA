@@ -53,7 +53,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   setAmount,
 }) => {
   const { t } = useTranslation('common');
-  const { id, subcategory, titleName, beginningAmount, isDebit } = data;
+  const { id, subcategory, titleName, titleCode, beginningAmount, isDebit } = data;
 
   const debitValue = isDebit !== null && isDebit ? beginningAmount : 0;
   const creditValue = isDebit !== null && !isDebit ? beginningAmount : 0;
@@ -150,7 +150,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
           id="manual-account-code-input"
           type="text"
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-          placeholder="-" // ToDo: (20241112 - Julian) get code from API
+          placeholder={titleCode}
           disabled
         />
       </div>
@@ -299,8 +299,11 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         const subcategoryClickHandler = () => {
           // Info: (20241114 - Julian) 根據 focusIndex 來決定要修改哪一筆資料
           if (focusIndex !== null) {
+            // Info: (20241114 - Julian)  先複製一份資料
             const duplicateList = { ...manualAccountOpeningList[focusIndex] };
             duplicateList.subcategory = title;
+            duplicateList.titleCode = title.code ?? '-';
+            // Info: (20241114 - Julian)  更新資料
             setManualAccountOpeningList(
               manualAccountOpeningList.map((list, index) => {
                 return index === focusIndex ? duplicateList : list;
