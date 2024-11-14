@@ -16,7 +16,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 
 interface UserContextType {
   credential: string | null;
@@ -40,11 +40,21 @@ interface UserContextType {
   }: {
     name: string;
     taxId: string;
-    tag: CompanyTag;
+    tag: COMPANY_TAG;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   selectedCompany: ICompany | null;
   selectCompany: (companyId: number) => Promise<ICompany | null>;
+  updateCompany: ({
+    companyId,
+    action,
+    tag,
+  }: {
+    companyId: number;
+    action: string;
+    tag: COMPANY_TAG;
+  }) => Promise<ICompanyAndRole | null>;
+
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
@@ -81,6 +91,8 @@ export const UserContext = createContext<UserContextType>({
 
   selectedCompany: null,
   selectCompany: async () => null,
+  updateCompany: async () => null,
+
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
@@ -99,17 +111,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
-  const [userAuth, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
+  const [, setUserAuth, userAuthRef] = useStateRef<IUser | null>(null);
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
-  // Deprecated: (20241111 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('userAuth:', userAuth, 'userAuthRef.current:', userAuthRef.current);
-
-  // Info: (20241028 - Liz) 使用者目前選擇的角色(拿取 getStateInfoAPI 回傳的 Role 資料)
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
-
   const [, setSelectedCompany, selectedCompanyRef] = useStateRef<ICompany | null>(null);
+
+  // Deprecated: (20241113 - Liz)
+  // eslint-disable-next-line no-console
+  console.log('(in userContext) selectedCompanyRef.current:', selectedCompanyRef.current);
+
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
@@ -142,6 +153,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: createCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.CREATE_USER_COMPANY);
   // Info: (20241111 - Liz) 選擇公司 API
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
+  // Info: (20241113 - Liz) 更新公司 API
+  const { trigger: updateCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -260,11 +273,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     // Deprecated: (20241108 - Liz)
     // eslint-disable-next-line no-console
     console.log(
-      'userId:',
+      '執行 isProfileFetchNeeded, 確認目前資料: localStorage 存的 userId:',
       userId,
-      'expiredAt:',
+      ' / localStorage 存的 expiredAt:',
       expiredAt,
-      'isUserAuthAvailable:',
+      ' / user context 是否有 userAuth 資料:',
       isUserAuthAvailable
     );
 
@@ -276,7 +289,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         // Deprecated: (20241108 - Liz)
         // eslint-disable-next-line no-console
-        console.log('isProfileFetchNeeded 並且 expiredAt 過期，執行 signOut');
+        console.log(
+          '執行 isProfileFetchNeeded 並且 !isUserAuthAvailable && userId && expiredAt 並且 expiredAt 過期，執行 signOut'
+        );
         signOut();
         return false;
       }
@@ -284,11 +299,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Info: (20240822-Tzuhan) 如果 state 中有用戶資料，且 localStorage 中沒有記錄，則應該重新獲取 profile
     if (isUserAuthAvailable && (!userId || !expiredAt)) {
+      // Deprecated: (20241108 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 isProfileFetchNeeded 並且 isUserAuthAvailable && (!userId || !expiredAt)');
       return true;
     }
 
     // Info: (20240822-Tzuhan) 如果 state 和 localStorage 中都沒有用戶資料，則應該重新獲取 profile
     if (!isUserAuthAvailable && (!userId || !expiredAt)) {
+      // Deprecated: (20241108 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 isProfileFetchNeeded 並且 !isUserAuthAvailable && (!userId || !expiredAt');
       return true;
     }
 
@@ -417,7 +438,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
-    if (!isProfileFetchNeeded()) return;
+    if (!isProfileFetchNeeded()) {
+      // Deprecated: (20241113 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('isProfileFetchNeeded 為 false, 不需要重新獲取使用者資料');
+      return;
+    }
 
     setIsAuthLoading(true);
 
@@ -437,7 +463,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Deprecated: (20241001 - Liz)
     // eslint-disable-next-line no-console
-    console.log('getStatusInfo:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
+    console.log('getStatusInfo data:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
 
     if (getStatusInfoSuccess && statusInfo) {
       handleProcessData(statusInfo);
@@ -456,7 +482,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsAuthLoading(true);
       const response = await agreementAPI({
-        params: { userId: userAuth?.id },
+        params: { userId: userAuthRef.current?.id },
         body: { agreementHash: hash },
       });
       setUserAgreeResponse(response);
@@ -504,7 +530,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const { success, data: userRole } = await createRoleAPI({
-        params: { userId: userAuth?.id },
+        params: { userId: userAuthRef.current?.id },
         body: { roleId },
       });
 
@@ -527,11 +553,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241101 - Liz) 選擇角色的功能
   const selectRole = async (roleId: number) => {
-    setSelectedRole(null);
-
     try {
       const { success, data: userRole } = await selectRoleAPI({
-        params: { userId: userAuth?.id },
+        params: { userId: userAuthRef.current?.id },
         body: { roleId },
       });
 
@@ -540,10 +564,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return userRole;
       }
 
-      setSelectedRole(null);
       return null;
     } catch (error) {
-      setSelectedRole(null);
       return null;
     }
   };
@@ -575,14 +597,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const getUserRoleList = async () => {
     try {
       const { data: userRoleList, success } = await userRoleListAPI({
-        params: { userId: userAuth?.id },
+        params: { userId: userAuthRef.current?.id },
       });
 
       if (success && userRoleList) {
-        // Deprecated: (20241111 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 USER_ROLE_LIST 成功, userRoleList:', userRoleList);
-
         return userRoleList;
       }
 
@@ -601,11 +619,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }: {
     name: string;
     taxId: string;
-    tag: CompanyTag;
+    tag: COMPANY_TAG;
   }) => {
     try {
       const { success, code, error } = await createCompanyAPI({
-        params: { userId: userAuth?.id },
+        params: { userId: userAuthRef.current?.id },
         body: { name, taxId, tag },
       });
 
@@ -621,22 +639,43 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241111 - Liz) 選擇公司的功能
   const selectCompany = async (companyId: number) => {
-    setSelectedCompany(null);
-
     try {
-      const { success, data: userCompanyList } = await selectCompanyAPI({
-        params: { userId: userAuth?.id },
+      const { success, data: userCompany } = await selectCompanyAPI({
+        params: { userId: userAuthRef.current?.id },
         body: { companyId },
       });
 
-      if (success && userCompanyList) {
-        setSelectedCompany(userCompanyList);
-        return userCompanyList;
+      if (success) {
+        setSelectedCompany(userCompany);
+        return userCompany;
       }
-      setSelectedCompany(null);
       return null;
     } catch (error) {
-      setSelectedCompany(null);
+      return null;
+    }
+  };
+
+  // Info: (20241113 - Liz) 更新公司的功能(標籤 / 設為置頂)
+  const updateCompany = async ({
+    companyId,
+    action,
+    tag,
+  }: {
+    companyId: number;
+    action: string;
+    tag: COMPANY_TAG;
+  }) => {
+    try {
+      const { success, data: companyAndRole } = await updateCompanyAPI({
+        params: { companyId },
+        body: { action, tag },
+      });
+
+      if (success && companyAndRole) {
+        return companyAndRole;
+      }
+      return null;
+    } catch (error) {
       return null;
     }
   };
@@ -727,6 +766,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedRole: selectedRoleRef.current,
       createCompany,
       selectCompany,
+      updateCompany,
       selectedCompany: selectedCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
