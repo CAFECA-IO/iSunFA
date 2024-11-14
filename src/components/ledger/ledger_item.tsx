@@ -15,18 +15,17 @@ export interface ILedgerBeta {
   particulars: string;
   no: string;
   accountingTitle: string;
-  creditAmount: number[];
-  debitAmount: number[];
-  balance: number[];
+  creditAmount: number;
+  debitAmount: number;
+  balance: number;
 }
 
 interface ILedgerItemProps {
-  voucher: ILedgerBeta;
+  ledger: ILedgerBeta; // 傳入單個 ledger 作為 prop
 }
 
-const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
-  const { voucherDate, voucherNumber, voucherType, particulars, creditAmount, debitAmount } =
-    voucher;
+const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
+  const { voucherDate, voucherNumber, voucherType, particulars } = ledger;
 
   const [isChecked, setIsChecked] = useState(false);
 
@@ -73,48 +72,77 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
 
   const displayedAccountingCode = (
     <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      <p className="m-0 flex items-center">{voucher.no}</p>
+      <p className="m-0 flex items-center">{ledger.no}</p>
     </div>
   );
   const displayedAccountingName = (
     <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      <p className="m-0 flex items-center">{voucher.accountingTitle}</p>
+      <p className="m-0 flex items-center">{ledger.accountingTitle}</p>
     </div>
   );
 
+  // const displayedCredit = (
+  //   <div>
+  //     {ledgerItemsData.map((ledger) => (
+  //       <div
+  //         key={ledger.id}
+  //         className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary"
+  //       >
+  //         {/* Info: (20240920 - Julian) credit */}
+  //         <p className="m-0 flex items-center text-text-neutral-primary">
+  //           {numberWithCommas(ledger.creditAmount)}
+  //         </p>
+  //       </div>
+  //     ))}
+  //   </div>
+  // );
+
+  //  使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
   const displayedCredit = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {/* Info: (20240920 - Julian) credit */}
-      {creditAmount.map((cre) => (
-        <p key={cre} className="m-0 flex items-center text-text-neutral-primary">
-          {numberWithCommas(cre)}
-        </p>
-      ))}
+      <p className="m-0 flex items-center text-text-neutral-primary">
+        {numberWithCommas(ledger.creditAmount)}
+      </p>
     </div>
   );
+  // const displayedDebit = (
+  //   <div>
+  //     {ledgerItemsData.map((ledger) => (
+  //       <div
+  //         key={ledger.id}
+  //         className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary"
+  //       >
+  //         {/* Info: (20240920 - Julian) debit */}
+  //         <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
+  //       </div>
+  //     ))}
+  //   </div>
+  // );
+   const displayedDebit = (
+     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
+       <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
+     </div>
+   );
 
-  const displayedDebit = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {debitAmount.map((de) => (
-        <p key={de} className="text-text-neutral-primary">
-          {numberWithCommas(de)}
-        </p>
-      ))}
-    </div>
-  );
-
-  const displayedBalance = (
-    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {voucher.balance.map((bal) => (
-        <p
-          key={`${bal}-${voucher.voucherNumber}`}
-          className="align-middle text-text-neutral-primary"
-        >
-          {numberWithCommas(bal)}
-        </p>
-      ))}
-    </div>
-  );
+  // const displayedBalance = (
+  //   <div>
+  //     {ledgerItemsData.map((ledger) => (
+  //       <div
+  //         key={ledger.id}
+  //         className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary"
+  //       >
+  //         <p className="align-middle text-text-neutral-primary">
+  //           {numberWithCommas(ledger.balance)}
+  //         </p>
+  //       </div>
+  //     ))}
+  //   </div>
+  // );
+   const displayedBalance = (
+     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
+       <p className="align-middle text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
+     </div>
+   );
 
   return (
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">

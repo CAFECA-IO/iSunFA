@@ -118,7 +118,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     trigger: createVoucher,
     success: createSuccess,
     isLoading: isCreating,
-  } = APIHandler(APIName.VOUCHER_CREATE);
+  } = APIHandler(APIName.VOUCHER_POST_V2);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {

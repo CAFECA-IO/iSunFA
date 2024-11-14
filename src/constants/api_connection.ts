@@ -907,4 +907,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LEDGER_LIST,
   }),
+  [APIName.VOUCHER_POST_V2]: createConfig({
+    name: APIName.VOUCHER_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.VOUCHER_POST_V2,
+  }),
 };
