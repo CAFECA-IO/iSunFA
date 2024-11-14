@@ -9,6 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import AccountTitleSection from '@/components/account_settings/account_title_section';
 import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
+import { TitleFormType } from '@/constants/accounting_setting';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -46,6 +47,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   const [searchWord, setSearchWord] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
+  const [formType, setFormType] = useState<TitleFormType>(TitleFormType.add);
   const [selectedAccountTitle, setSelectedAccountTitle] = useState<IAccount | null>(null);
 
   const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,11 +114,13 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
           <AccountTitleSection
             accountTitleList={filteredAccountList}
             isLoading={isLoading ?? true}
+            setFormType={setFormType}
             setSelectedAccountTitle={setSelectedAccountTitle}
           />
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
           <AddNewTitleSection
             accountTitleList={accountList}
+            formType={formType}
             selectedAccountTitle={selectedAccountTitle}
           />
         </div>

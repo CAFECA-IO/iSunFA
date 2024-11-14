@@ -625,7 +625,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const { success, data: userCompanyList } = await selectCompanyAPI({
-        query: { companyId },
+        params: { userId: userAuth?.id },
+        body: { companyId },
       });
 
       if (success && userCompanyList) {
