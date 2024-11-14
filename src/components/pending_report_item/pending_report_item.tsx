@@ -1,3 +1,5 @@
+// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
+
 import React, { useEffect, useState } from 'react';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { countdown, timestampToString, truncateString } from '@/lib/utils/common';

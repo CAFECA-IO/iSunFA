@@ -5,27 +5,27 @@ import { TranslateFunction } from '@/interfaces/locale';
 import { INTERVAL_NUMBER_ANIMATION } from '@/constants/display';
 
 const NumberAnimationSection = () => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('landing_page');
 
   const numberBlockContent = [
     {
       image: '/elements/lightening_1.png',
       alt: 'lighting_1',
-      description: 'common:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_1',
+      description: 'landing_page:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_1',
       targetNumber: 150,
       unit: 'X',
     },
     {
       image: '/elements/clock.png',
       alt: 'clock',
-      description: 'common:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_2',
+      description: 'landing_page:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_2',
       targetNumber: 85,
       unit: '%',
     },
     {
       image: '/elements/robot_hand.png',
       alt: 'robot_hand',
-      description: 'common:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_3',
+      description: 'landing_page:LANDING_PAGE.NUMBER_BLOCK_DESCRIPTION_3',
       targetNumber: 24,
       unit: 'hrs',
     },

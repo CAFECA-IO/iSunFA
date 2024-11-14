@@ -1,3 +1,5 @@
+// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
+
 import html2canvas from 'html2canvas';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/button/button';

@@ -1,3 +1,5 @@
+// Deprecated: (20241114 - Liz) 這是 Alpha 版本的元件，目前沒有使用到，翻譯也已拔除。
+
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';

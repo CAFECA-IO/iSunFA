@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { TranslateFunction } from '@/interfaces/locale';
 
 const FeatureSection = () => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('landing_page');
 
   const animeRef31 = useRef(null);
   const [isAnimeRef31Visible, setIsAnimeRef31Visible] = useState(false);
@@ -50,20 +50,20 @@ const FeatureSection = () => {
     {
       image: '/elements/bulb.svg',
       alt: 'bulb icon',
-      title: 'common:LANDING_PAGE.HERO_TITLE_1',
-      description: 'common:LANDING_PAGE.HERO_CONTENT_1',
+      title: 'landing_page:LANDING_PAGE.HERO_TITLE_1',
+      description: 'landing_page:LANDING_PAGE.HERO_CONTENT_1',
     },
     {
       image: '/elements/server.svg',
       alt: 'server icon',
-      title: 'common:LANDING_PAGE.HERO_TITLE_2',
-      description: 'common:LANDING_PAGE.HERO_CONTENT_2',
+      title: 'landing_page:LANDING_PAGE.HERO_TITLE_2',
+      description: 'landing_page:LANDING_PAGE.HERO_CONTENT_2',
     },
     {
       image: '/elements/shield.svg',
       alt: 'shield icon',
-      title: 'common:LANDING_PAGE.HERO_TITLE_3',
-      description: 'common:LANDING_PAGE.HERO_CONTENT_3',
+      title: 'landing_page:LANDING_PAGE.HERO_TITLE_3',
+      description: 'landing_page:LANDING_PAGE.HERO_CONTENT_3',
     },
   ];
 
@@ -86,7 +86,7 @@ const FeatureSection = () => {
       <div className="flex flex-col items-center space-y-3 px-4 pt-20 text-center md:space-y-10 md:pt-20 lg:mb-40 lg:h-450px lg:space-y-16 lg:px-20 lg:py-20">
         <div className="flex flex-col">
           <h3 className="text-h5 font-bold leading-h5 text-navy-blue-25 md:text-h1 md:leading-h1">
-            {t('common:LANDING_PAGE.FEATURES_SUBTITLE')}
+            {t('landing_page:LANDING_PAGE.FEATURES_SUBTITLE')}
           </h3>
         </div>
         <div className="flex justify-center pr-1/10">

@@ -1,3 +1,5 @@
+// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
+
 import NavBar from '@/components/nav_bar/nav_bar';
 import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';

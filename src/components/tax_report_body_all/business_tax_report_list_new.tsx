@@ -1,3 +1,5 @@
+// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
+
 import Skeleton from '@/components/skeleton/skeleton';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';

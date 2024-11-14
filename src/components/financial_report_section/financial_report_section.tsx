@@ -1,3 +1,5 @@
+// Info: (20241114 - Liz) common:PLUGIN 翻譯已拔除，請重新加入翻譯在非 common 檔案
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import APIHandler from '@/lib/utils/api_handler';

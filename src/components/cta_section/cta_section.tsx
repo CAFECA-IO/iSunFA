@@ -9,7 +9,7 @@ import { UserContext } from '@/contexts/user_context';
 import { FaArrowRight } from 'react-icons/fa6';
 
 const CTASection = () => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('landing_page');
 
   const animeRef1 = useRef(null);
   const [isAnimeRef1Visible, setIsAnimeRef1Visible] = useState(false);
@@ -33,18 +33,18 @@ const CTASection = () => {
         <div className="ml-10">
           <div className="flex flex-col md:space-y-5">
             <h1 className="text-h4 font-bold tracking-wider text-orange-400 md:text-6xl lg:text-7xl">
-              {t('common:LANDING_PAGE.MAIN_TITLE')}
+              {t('landing_page:LANDING_PAGE.MAIN_TITLE')}
             </h1>
             <h1 className="text-h6 font-bold tracking-widest text-navy-blue-25 md:text-2xl lg:text-6xl">
-              {t('common:LANDING_PAGE.MAIN_SUBTITLE_1')}
+              {t('landing_page:LANDING_PAGE.MAIN_SUBTITLE_1')}
             </h1>
           </div>
           <ol className="mt-8 max-w-md list-disc space-y-2 text-base tracking-widest text-navy-blue-25 md:max-w-xl lg:mt-10 lg:max-w-2xl lg:text-base">
-            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
-            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
-            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
-            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
-            <li>{t('common:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
+            <li>{t('landing_page:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_1')}</li>
+            <li>{t('landing_page:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_2')}</li>
+            <li>{t('landing_page:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_3')}</li>
+            <li>{t('landing_page:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_4')}</li>
+            <li>{t('landing_page:LANDING_PAGE.MAIN_SUBTITLE_2_POINT_5')}</li>
           </ol>
         </div>
 
@@ -56,7 +56,7 @@ const CTASection = () => {
             variant="default"
             className="flex w-full space-x-3 text-base leading-6 tracking-normal text-button-text-secondary hover:text-button-text-invert lg:w-fit"
           >
-            <p>{t('common:NAV_BAR.TRY_NOW')}</p>
+            <p>{t('landing_page:NAV_BAR.TRY_NOW')}</p>
             <FaArrowRight size={16} />
           </Button>
         </Link>
