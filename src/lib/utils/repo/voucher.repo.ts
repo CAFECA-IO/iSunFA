@@ -7,6 +7,7 @@ import type { ILineItem } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
+  IGetOneVoucherResponse,
   IVoucherDataForSavingToDB,
   IVoucherEntity,
   IVoucherFromPrismaIncludeJournalLineItems,
@@ -611,7 +612,7 @@ export async function postVoucherV2({
               frequence: revertEvent.frequency,
               startDate: revertEvent.startDate,
               endDate: revertEvent.endDate,
-              daysOfWeek: revertEvent.dateOfWeek,
+              daysOfWeek: revertEvent.daysOfWeek,
               monthsOfYear: revertEvent.monthsOfYear,
               createdAt: nowInSecond,
               updatedAt: nowInSecond,
@@ -682,4 +683,78 @@ export async function getOneVoucherByIdWithoutInclude(voucherId: number) {
     );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
+}
+
+export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucherResponse | null> {
+  let voucher: IGetOneVoucherResponse | null = null;
+  try {
+    voucher = await prisma.voucher.findUnique({
+      where: {
+        id: voucherId,
+      },
+      include: {
+        issuer: true,
+        voucherCertificates: {
+          include: {
+            certificate: {
+              include: {
+                invoices: true,
+                file: true,
+                UserCertificate: true,
+              },
+            },
+          },
+        },
+        counterparty: true,
+        originalVouchers: {
+          include: {
+            event: true,
+            resultVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        resultVouchers: {
+          include: {
+            event: true,
+            originalVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        assetVouchers: {
+          include: {
+            asset: true,
+          },
+        },
+        lineItems: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'get accounting setting in getAccountingSetting failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related get accounting setting in getAccountingSetting in accounting_setting.repo.ts failed'
+    );
+  }
+  return voucher;
 }

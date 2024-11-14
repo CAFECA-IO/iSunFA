@@ -19,7 +19,7 @@ export function initEventEntity(
     createdAt?: number;
     updatedAt?: number;
     deletedAt?: number | null;
-    dateOfWeek?: number[];
+    daysOfWeek?: number[];
     monthsOfYear?: number[];
     associateVouchers?: {
       originalVoucher: IVoucherEntity;
@@ -35,7 +35,7 @@ export function initEventEntity(
     frequency: dto.frequency,
     startDate: dto.startDate,
     endDate: dto.endDate,
-    dateOfWeek: dto.dateOfWeek || [],
+    daysOfWeek: dto.daysOfWeek || [],
     monthsOfYear: dto.monthsOfYear || [],
     createdAt: dto.createdAt || nowInSecond,
     updatedAt: dto.updatedAt || nowInSecond,
