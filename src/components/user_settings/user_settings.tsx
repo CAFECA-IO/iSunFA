@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { LocaleKey } from '@/constants/normal_setting';
 import UserInfo from '@/components/user_settings/user_info';
 import UserInfoForm from '@/components/user_settings/user_info_form';
@@ -61,20 +61,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting }) => {
       });
     }
   };
-
-  // ToDo: (20241114 - tzuhan) move to user Context
-  // Info: (20241114 - tzuhan) @Jacky IUserSetting 是不是少了 deleteAt
-  useEffect(() => {
-    // if (userSetting?.deleteAt) {
-    toastHandler({
-      id: ToastId.USER_DELETE_WARNING,
-      type: ToastType.WARNING,
-      content: t('setting:USER.DELETE_WARNING'),
-      closeable: true,
-    });
-    // }
-  }, []);
-  // }, [userSetting?.deleteAt]);
 
   return (
     <>
