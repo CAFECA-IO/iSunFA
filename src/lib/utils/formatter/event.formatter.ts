@@ -10,7 +10,11 @@ import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
  * @note please check eventEntityValidator for how to parse the data
  */
 export function parsePrismaEventToEventEntity(dto: PrismaEvent): IEventEntity {
-  const { data, success, error } = eventEntityValidator.safeParse(dto);
+  const newDto = {
+    frequency: dto.frequence,
+    ...dto,
+  };
+  const { data, success, error } = eventEntityValidator.safeParse(newDto);
 
   if (!success) {
     throw new FormatterError('EventEntity format prisma data error', {

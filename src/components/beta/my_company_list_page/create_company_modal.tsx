@@ -2,52 +2,55 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 
 interface CreateCompanyModalProps {
   isModalOpen: boolean;
   toggleModal: () => void;
-  setIsCallingAPI?: React.Dispatch<React.SetStateAction<boolean>>;
+  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const CreateCompanyModal = ({
   isModalOpen,
   toggleModal,
-  setIsCallingAPI,
+  setRefreshKey,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['company']);
+  const { createCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [tag, setTag] = useState<CompanyTag>(CompanyTag.ALL);
+  const [tag, setTag] = useState<COMPANY_TAG>(COMPANY_TAG.ALL);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const { createCompany } = useUserCtx();
-  const { toastHandler } = useModalContext();
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+    // Info: (20241114 - Liz) 防止重複點擊
+    if (isLoading) return;
 
-    if (setIsCallingAPI) {
-      setIsCallingAPI((prevState) => !prevState);
-    }
+    // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
+    setIsLoading(true);
 
     try {
       const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
 
       if (success) {
+        // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
         setCompanyName('');
         setTaxId('');
-        setTag(CompanyTag.ALL);
+        setTag(COMPANY_TAG.ALL);
         toggleModal();
+
+        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
       } else {
+        // Info: (20241114 - Liz) 新增公司失敗時顯示錯誤訊息
         toastHandler({
           id: 'create-company-failed',
           type: ToastType.ERROR,
@@ -65,10 +68,8 @@ const CreateCompanyModal = ({
       // eslint-disable-next-line no-console
       console.log('CreateCompanyModal handleSubmit error:', error);
     } finally {
-      setIsLoading(false); // API 回傳後解除 loading 狀態
-      if (setIsCallingAPI) {
-        setIsCallingAPI((prevState) => !prevState);
-      }
+      // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
+      setIsLoading(false);
     }
   };
 
@@ -129,7 +130,7 @@ const CreateCompanyModal = ({
 
               {isDropdownOpen && (
                 <div className="absolute inset-0 top-full z-10 flex h-max w-full translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-                  {Object.values(CompanyTag).map((item) => (
+                  {Object.values(COMPANY_TAG).map((item) => (
                     <button
                       key={item}
                       type="button"

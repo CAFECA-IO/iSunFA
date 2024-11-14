@@ -84,7 +84,6 @@ export enum APIName {
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = 'VOUCHER_LIST_GET_BY_ACCOUNT_V2',
   JOURNAL_GET_BY_ID = 'JOURNAL_GET_BY_ID',
   JOURNAL_LIST = 'JOURNAL_LIST',
-  // JOURNAL_UPDATE = 'JOURNAL_UPDATE', // Info: (20240723 - Tzuhan)
   JOURNAL_DELETE = 'JOURNAL_DELETE',
   REPORT_LIST = 'REPORT_LIST',
   REPORT_GET_BY_ID = 'REPORT_GET_BY_ID',
@@ -101,12 +100,12 @@ export enum APIName {
   FILE_GET = 'FILE_GET',
   COMPANY_GET_BY_ID = 'COMPANY_GET_BY_ID',
   COMPANY_DELETE = 'COMPANY_DELETE',
-  COMPANY_UPDATE = 'COMPANY_UPDATE',
   USER_ROLE_LIST = 'USER_ROLE_LIST',
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
   CREATE_USER_COMPANY = 'CREATE_USER_COMPANY',
   LIST_USER_COMPANY = 'LIST_USER_COMPANY',
+  COMPANY_UPDATE = 'COMPANY_UPDATE',
   ROLE_LIST = 'ROLE_LIST',
   ROLE_GET_BY_ID = 'ROLE_GET_BY_ID',
   ROLE_DELETE = 'ROLE_DELETE',
@@ -212,7 +211,6 @@ export enum APIPath {
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
   JOURNAL_GET_BY_ID = `${apiPrefix}/company/:companyId/journal/:journalId`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
-  // JOURNAL_UPDATE = `${apiPrefix}/company/:companyId/journal/:journalId`, // Info: (20240720 - Tzuhan)
   JOURNAL_DELETE = `${apiPrefix}/company/:companyId/journal/:journalId`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefix}/company/:companyId/report/:reportId`,
@@ -229,7 +227,7 @@ export enum APIPath {
   FILE_GET = `${apiPrefix}/company/:companyId/file/:fileId`,
   COMPANY_GET_BY_ID = `${apiPrefix}/company/:companyId`,
   COMPANY_DELETE = `${apiPrefix}/company/:companyId`,
-  COMPANY_UPDATE = `${apiPrefix}/company/:companyId`,
+  COMPANY_UPDATE = `${apiPrefixV2}/company/:companyId`,
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
@@ -475,12 +473,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.ASSET_MANAGEMENT_UPDATE,
   }),
-  // Info: (20240720 - Tzuhan)
-  // JOURNAL_UPDATE: createConfig({
-  //   name: APIName.JOURNAL_UPDATE,
-  //   method: HttpMethod.PUT,
-  //   path: APIPath.JOURNAL_UPDATE,
-  // }),
   JOURNAL_DELETE: createConfig({
     name: APIName.JOURNAL_DELETE,
     method: HttpMethod.DELETE,

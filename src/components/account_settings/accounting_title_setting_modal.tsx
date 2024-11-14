@@ -8,6 +8,8 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import AccountTitleSection from '@/components/account_settings/account_title_section';
+import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
+import { TitleFormType } from '@/constants/accounting_setting';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -45,7 +47,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   const [searchWord, setSearchWord] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
-  const [addAccountCode, setAddAccountCode] = useState<string>('');
+  const [formType, setFormType] = useState<TitleFormType>(TitleFormType.add);
+  const [selectedAccountTitle, setSelectedAccountTitle] = useState<IAccount | null>(null);
 
   const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchWord(e.target.value);
@@ -74,7 +77,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
       <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-720px">
         {/* Info: (20241108 - Julian) Title */}
         <h1 className="text-center text-xl font-bold text-text-neutral-primary">
-          Accounting Title Setting
+          {t('setting:ACCOUNTING_SETTING_MODAL.MODAL_TITLE')}
         </h1>
 
         {/* Info: (20241108 - Julian) Close button */}
@@ -88,7 +91,9 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
         {/* Info: (20241108 - Julian) Search */}
         <div className="flex flex-col items-start gap-8px">
-          <p className="text-sm font-semibold text-input-text-primary">Search Accounting Title</p>
+          <p className="text-sm font-semibold text-input-text-primary">
+            {t('setting:ACCOUNTING_SETTING_MODAL.SEARCH_ACCOUNTING_TITLE')}
+          </p>
           <div className="flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px placeholder:text-input-text-input-placeholder">
             <input
               id="accounting-title-search-input"
@@ -109,12 +114,15 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
           <AccountTitleSection
             accountTitleList={filteredAccountList}
             isLoading={isLoading ?? true}
-            setAddAccountCode={setAddAccountCode}
+            setFormType={setFormType}
+            setSelectedAccountTitle={setSelectedAccountTitle}
           />
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
-          <div className="flex flex-col rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
-            Add New Title Section: {addAccountCode}
-          </div>
+          <AddNewTitleSection
+            accountTitleList={accountList}
+            formType={formType}
+            selectedAccountTitle={selectedAccountTitle}
+          />
         </div>
       </div>
     </div>

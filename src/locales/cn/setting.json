@@ -76,10 +76,16 @@
     "TAX_SETTING_TITLE": "税务设定",
     "TAX_SALES": "税（销售）",
     "TAX_PURCHASE": "税（消费）",
+    "TAX_OPTION_TAXABLE": "应税",
+    "TAX_OPTION_ZERO_TAX_RATE": "零税率",
+    "TAX_OPTION_TAX_FREE": "免税",
     "TAX_RETURN_PERIODICITY": "税务申报周期",
     "CURRENCY_SETTING_TITLE": "货币设定",
     "ACCOUNTING_SETTING_TITLE": "会计设定",
     "PERIOD_SETTINGS_SUBTITLE": "期间设定",
+    "EVERY": "每",
+    "MONTH": "月",
+    "WEEK": "周",
     "FISCAL_YEAR": "会计年度",
     "FISCAL_YEAR_PERIOD": "会计年度期间",
     "GENERATE_REPORT_1": "报告将在结束日期后",
@@ -90,6 +96,11 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "导入会计科目",
     "IMPORT_FILE": "上传档案",
     "MANUAL_ACCOUNT_OPENING": "手动开户",
+    "SAVE_BTN": "保存"
+  },
+  "ACCOUNTING_SETTING_MODAL": {
+    "MODAL_TITLE": "会计科目设定",
+    "SEARCH_ACCOUNTING_TITLE": "搜寻会计科目",
     "ACC_TYPE_ASSET": "资产",
     "ACC_TYPE_LIABILITY": "负债",
     "ACC_TYPE_EQUITY": "权益",
@@ -98,7 +109,33 @@
     "ACC_TYPE_COST": "成本",
     "ACC_TYPE_EXPENSE": "费用",
     "ACC_TYPE_NON_OPERATING": "营业外收支",
-    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他综合损益"
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他综合损益",
+    "ADD_NEW_TITLE": "新增科目",
+    "EDIT_TITLE": "编辑会计科目",
+    "CATEGORY_TYPE": "主类别",
+    "SUBCATEGORY_TYPE": "次类别",
+    "TITLE_NAME": "科目名称",
+    "TITLE_CODE": "科目编号",
+    "TITLE_NOTE": "科目备注",
+    "DROPMENU_PLACEHOLDER": "请选择...",
+    "TITLE_NAME_PLACEHOLDER": "输入此会计科目的名称。",
+    "TITLE_NOTE_PLACEHOLDER": "输入此会计科目的描述。",
+    "CLEAR_ALL_BTN": "全部清除",
+    "ADD_BTN": "新增",
+    "SAVE_BTN": "保存"
+  },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "手动开户",
+    "SUBCATEGORY_TYPE": "类别",
+    "TITLE_NAME": "科目名称",
+    "TITLE_CODE": "科目编号",
+    "BEGINNING_DEBIT": "初始借方",
+    "BEGINNING_CREDIT": "初始贷方",
+    "DROPMENU_PLACEHOLDER": "请选择...",
+    "NAME_PLACEHOLDER": "输入名称",
+    "ADD_LIST_BTN": "新增清单",
+    "SUBMIT_BTN": "提交",
+    "NO_ACCOUNTING_FOUND": "找不到会计科目。"
   },
   "IP": {
     "INFO": "登录设备与 IP 信息",
@@ -108,5 +145,10 @@
     "ADDRESS": "登录地址",
     "DETECT_DIFFERENT_IP_LOGIN": "检测到来自不同 IP 地址的登录。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "请验证您的帐户安全性以防止数据外泄。"
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "用户设置更新成功。",
+    "DELETE_WARNING": "此账户将在三个工作日内被删除。",
+    "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。"
   }
 }

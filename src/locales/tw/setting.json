@@ -76,10 +76,16 @@
     "TAX_SETTING_TITLE": "稅務設定",
     "TAX_SALES": "稅（銷售）",
     "TAX_PURCHASE": "稅（消費）",
+    "TAX_OPTION_TAXABLE": "應稅",
+    "TAX_OPTION_ZERO_TAX_RATE": "零稅率",
+    "TAX_OPTION_TAX_FREE": "免稅",
     "TAX_RETURN_PERIODICITY": "稅務申報週期",
     "CURRENCY_SETTING_TITLE": "貨幣設定",
     "ACCOUNTING_SETTING_TITLE": "會計設定",
     "PERIOD_SETTINGS_SUBTITLE": "期間設定",
+    "EVERY": "每",
+    "MONTH": "月",
+    "WEEK": "週",
     "FISCAL_YEAR": "會計年度",
     "FISCAL_YEAR_PERIOD": "會計年度期間",
     "GENERATE_REPORT_1": "報告將在結束日期後",
@@ -90,6 +96,11 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
     "IMPORT_FILE": "上傳檔案",
     "MANUAL_ACCOUNT_OPENING": "手動開戶",
+    "SAVE_BTN": "保存"
+  },
+  "ACCOUNTING_SETTING_MODAL": {
+    "MODAL_TITLE": "會計科目設定",
+    "SEARCH_ACCOUNTING_TITLE": "搜尋會計科目",
     "ACC_TYPE_ASSET": "資產",
     "ACC_TYPE_LIABILITY": "負債",
     "ACC_TYPE_EQUITY": "權益",
@@ -98,7 +109,33 @@
     "ACC_TYPE_COST": "成本",
     "ACC_TYPE_EXPENSE": "費用",
     "ACC_TYPE_NON_OPERATING": "營業外收支",
-    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他綜合損益"
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "其他綜合損益",
+    "ADD_NEW_TITLE": "新增科目",
+    "EDIT_TITLE": "編輯會計科目",
+    "CATEGORY_TYPE": "主類別",
+    "SUBCATEGORY_TYPE": "次類別",
+    "TITLE_NAME": "科目名稱",
+    "TITLE_CODE": "科目編號",
+    "TITLE_NOTE": "科目備註",
+    "DROPMENU_PLACEHOLDER": "請選擇...",
+    "TITLE_NAME_PLACEHOLDER": "輸入此會計科目的名稱。",
+    "TITLE_NOTE_PLACEHOLDER": "輸入此會計科目的描述。",
+    "CLEAR_ALL_BTN": "全部清除",
+    "ADD_BTN": "新增",
+    "SAVE_BTN": "保存"
+  },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "手動開戶",
+    "SUBCATEGORY_TYPE": "類別",
+    "TITLE_NAME": "科目名稱",
+    "TITLE_CODE": "科目編號",
+    "BEGINNING_DEBIT": "初始借方",
+    "BEGINNING_CREDIT": "初始貸方",
+    "DROPMENU_PLACEHOLDER": "請選擇...",
+    "NAME_PLACEHOLDER": "輸入名稱",
+    "ADD_LIST_BTN": "新增清單",
+    "SUBMIT_BTN": "提交",
+    "NO_ACCOUNTING_FOUND": "找不到會計科目。"
   },
   "IP": {
     "INFO": "登入裝置與 IP 資訊",
@@ -108,5 +145,10 @@
     "ADDRESS": "登入地址",
     "DETECT_DIFFERENT_IP_LOGIN": "偵測到來自不同 IP 位址的登入。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "請驗證您的帳戶安全性以防止資料外洩。"
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "使用者設定更新成功。",
+    "DELETE_WARNING": "此帳戶將在三個工作天內被刪除。",
+    "DELETE_HINT": "請確保資料備份。如需取消刪除過程，請前往設定頁面。"
   }
 }

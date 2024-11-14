@@ -240,7 +240,7 @@ describe('company/[companyId]/voucher integration test', () => {
           reverseVouchers: [
             {
               voucherId: 1001,
-              lineItemIdBeReversed: 10000000,
+              lineItemIdBeReversed: 1000,
               lineItemIdReverseOther: 0,
               amount: 100,
             },
@@ -274,7 +274,7 @@ describe('company/[companyId]/voucher integration test', () => {
 
       const associateVoucher = await prisma.accociateVoucher.findFirst({
         where: {
-          originalVoucherId: req.body.reverseVouchers[0].voucherId,
+          originalVoucherId: req.body.reverseVouchers[0].voucherId || 1001,
         },
       });
 

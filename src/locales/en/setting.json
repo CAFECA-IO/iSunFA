@@ -76,10 +76,16 @@
     "TAX_SETTING_TITLE": "Tax Settings",
     "TAX_SALES": "Tax (Sales)",
     "TAX_PURCHASE": "Tax (Purchase)",
+    "TAX_OPTION_TAXABLE": "Taxable",
+    "TAX_OPTION_ZERO_TAX_RATE": "Zero-Tax-Rate",
+    "TAX_OPTION_TAX_FREE": "Tax-Free",
     "TAX_RETURN_PERIODICITY": "Tax Return Periodicity",
     "CURRENCY_SETTING_TITLE": "Currency Settings",
     "ACCOUNTING_SETTING_TITLE": "Accounting Settings",
     "PERIOD_SETTINGS_SUBTITLE": "Period settings",
+    "EVERY": "Every",
+    "MONTH": "Month",
+    "WEEK": "Week",
     "FISCAL_YEAR": "Fiscal Year",
     "FISCAL_YEAR_PERIOD": "Fiscal year period",
     "GENERATE_REPORT_1": "The reports are generated",
@@ -90,6 +96,11 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "Accounting Import",
     "IMPORT_FILE": "Import file",
     "MANUAL_ACCOUNT_OPENING": "Manual account opening",
+    "SAVE_BTN": "Save"
+  },
+  "ACCOUNTING_SETTING_MODAL": {
+    "MODAL_TITLE": "Accounting Title Setting",
+    "SEARCH_ACCOUNTING_TITLE": "Search Accounting Title",
     "ACC_TYPE_ASSET": "Asset",
     "ACC_TYPE_LIABILITY": "Liability",
     "ACC_TYPE_EQUITY": "Equity",
@@ -98,7 +109,33 @@
     "ACC_TYPE_COST": "Cost",
     "ACC_TYPE_EXPENSE": "Expense",
     "ACC_TYPE_NON_OPERATING": "Non-operating",
-    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income"
+    "ACC_TYPE_OTHER_COMPREHENSIVE_INCOME": "Other Comprehensive Income",
+    "ADD_NEW_TITLE": "Add New Title",
+    "EDIT_TITLE": "Edit Accounting Title",
+    "CATEGORY_TYPE": "Category Type",
+    "SUBCATEGORY_TYPE": "Subcategory Type",
+    "TITLE_NAME": "Title Name",
+    "TITLE_CODE": "Title Code",
+    "TITLE_NOTE": "Title Note",
+    "DROPMENU_PLACEHOLDER": "Please select...",
+    "TITLE_NAME_PLACEHOLDER": "Enter a name for this accounting title.",
+    "TITLE_NOTE_PLACEHOLDER": "Enter a description for this accounting title.",
+    "CLEAR_ALL_BTN": "Clear All",
+    "ADD_BTN": "Add",
+    "SAVE_BTN": "Save"
+  },
+  "MANUAL_ACCOUNT_OPENING_MODAL": {
+    "MODAL_TITLE": "Manual Account Opening",
+    "SUBCATEGORY_TYPE": "Subcategory Type",
+    "TITLE_NAME": "Title Name",
+    "TITLE_CODE": "Title Code",
+    "BEGINNING_DEBIT": "Beginning Debit",
+    "BEGINNING_CREDIT": "Beginning Credit",
+    "DROPMENU_PLACEHOLDER": "Please select...",
+    "NAME_PLACEHOLDER": "Enter name",
+    "ADD_LIST_BTN": "Add List",
+    "SUBMIT_BTN": "Submit",
+    "NO_ACCOUNTING_FOUND": "No Account Title Found."
   },
   "IP": {
     "INFO": "Login device & IP information",
@@ -108,5 +145,10 @@
     "ADDRESS": "Login address",
     "DETECT_DIFFERENT_IP_LOGIN": "Login detected from a different IP address.",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "Please verify your account security to prevent data leakage."
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "User settings updated successfully.",
+    "DELETE_WARNING": "This account will be deleted in three business days.",
+    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page."
   }
 }

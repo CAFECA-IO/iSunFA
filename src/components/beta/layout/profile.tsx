@@ -10,10 +10,6 @@ const Profile = () => {
 
   const userAvatarSrc = userAuth?.imageId || '/images/fake_user_avatar.png';
 
-  // Deprecated: (20241105 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('userAvatarSrc', userAvatarSrc);
-
   const {
     targetRef: profileRef,
     componentVisible: isDropdownOpen,

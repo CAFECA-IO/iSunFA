@@ -11,10 +11,12 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { IUserActionLog } from '@/interfaces/user_action_log';
 
 interface IPModalProps {
   userId: number;
   toggleModal: () => void;
+  userActionLogs: IPaginatedData<IUserActionLog[]> | null;
 }
 
 const dummyData: IPaginatedData<{
@@ -65,11 +67,11 @@ const dummyData: IPaginatedData<{
   sort: [{ sortBy: SortBy.DATE, sortOrder: SortOrder.DESC }],
 };
 
-const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal }) => {
+const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, userActionLogs }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { toastHandler } = useModalContext();
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [page, setPage] = useState(userActionLogs?.page ?? 0);
+  const [totalPages, setTotalPages] = useState(userActionLogs?.totalPages ?? 0);
   const { success, data: resData } = APIHandler<
     IPaginatedData<{
       ips: { time: number; device: string; address: string; abnormal: boolean }[];

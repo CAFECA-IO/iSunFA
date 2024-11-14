@@ -22,4 +22,6 @@ export enum ToastId {
   COMPANY_SETTING_GET_ERROR = 'toast-company-setting-get-error',
   COMPANY_SETTING_UPDATE_SUCCESS = 'toast-company-setting-update-success',
   COMPANY_SETTING_UPDATE_ERROR = 'toast-company-setting-update-error',
+  USER_SETTING_UPDATE_SUCCESS = 'toast-user-setting-update-success',
+  USER_DELETE_WARNING = 'toast-user-delete-warning',
 }
