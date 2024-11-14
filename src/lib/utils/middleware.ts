@@ -60,7 +60,7 @@ export async function logUserAction<T extends APIName>(
     userAgent: req.headers['user-agent'] as string,
     apiEndpoint: APIPath[apiName as keyof typeof APIPath],
     httpMethod: req.method || '',
-    requestPayload: req.body,
+    requestPayload: req.body || '',
     statusMessage,
   });
 }
@@ -114,7 +114,6 @@ export async function withRequestValidation<T extends APIName, U>(
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
     }
   }
-
   await logUserAction(session, apiName, req, statusMessage);
 
   return { statusMessage, payload };

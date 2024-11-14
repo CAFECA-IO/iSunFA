@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { FileFolder, UploadType } from '@/constants/file';
 import { nullSchema } from '@/lib/utils/zod_schema/common';
 
-const filePostBodySchema = z.object({
+const filePostQuerySchema = z.object({
   type: z.nativeEnum(UploadType),
   targetId: z.string(),
 });
@@ -73,9 +73,9 @@ export const IFileBetaValidator = z.object({
 
 export const filePostSchema = {
   input: {
-    querySchema: nullSchema,
-    bodySchema: filePostBodySchema,
+    querySchema: filePostQuerySchema,
+    bodySchema: nullSchema,
   },
-  outputSchema: fileSchema,
+  outputSchema: fileSchema.nullable(),
   frontend: nullSchema,
 };

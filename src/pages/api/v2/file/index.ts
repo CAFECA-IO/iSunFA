@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IFile, IFileBeta } from '@/interfaces/file';
+import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
@@ -38,11 +38,12 @@ async function handleFileUpload(
   const fileName = fileForSave.newFilename;
   const fileMimeType = fileForSave.mimetype || 'image/jpeg';
   const fileSize = fileForSave.size;
-  const targetIdNum = convertStringToNumber(targetId);
+  const targetIdNum = type !== UploadType.ROOM ? convertStringToNumber(targetId) : -1;
   let fileUrl = '';
 
   switch (type) {
     case UploadType.KYC:
+    case UploadType.ROOM:
     case UploadType.INVOICE: {
       const localUrl = generateFilePathWithBaseUrlPlaceholder(
         fileName,
@@ -51,7 +52,6 @@ async function handleFileUpload(
       fileUrl = localUrl || '';
       break;
     }
-    case UploadType.ROOM:
     case UploadType.COMPANY:
     case UploadType.USER:
     case UploadType.PROJECT: {
@@ -79,6 +79,13 @@ async function handleFileUpload(
   }
 
   const fileId = fileInDB.id;
+  const returnFile: IFileBeta = {
+    id: fileId,
+    name: fileName,
+    size: fileSize,
+    url: fileUrl,
+    existed: true,
+  };
 
   switch (type) {
     case UploadType.COMPANY: {
@@ -95,11 +102,7 @@ async function handleFileUpload(
     }
     case UploadType.KYC:
     case UploadType.ROOM: {
-      const roomFile: IFileBeta = {
-        ...fileInDB,
-        existed: true,
-      };
-      roomManager.addFileToRoom(targetId, roomFile);
+      roomManager.addFileToRoom(targetId, returnFile);
       break;
     }
     case UploadType.INVOICE: {
@@ -108,10 +111,7 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  return {
-    fileId,
-    fileName: fileInDB.name,
-  };
+  return returnFile;
 }
 
 function extractKeyAndIvFromFields(fields: formidable.Fields) {
@@ -131,11 +131,14 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
   };
 }
 
-const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, IFile> = async ({ body, req }) => {
+const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, IFileBeta> = async ({
+  query,
+  req,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IFile | null = null;
+  let payload: IFileBeta | null = null;
 
-  const { type, targetId } = body;
+  const { type, targetId } = query;
 
   const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
   const { files, fields } = parsedForm;
@@ -146,7 +149,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, IFile> = async ({ b
     statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
     loggerBack.info(`API POST File: No file uploaded`);
   } else {
-    const { fileId, fileName } = await handleFileUpload(
+    const returnFile = await handleFileUpload(
       type,
       file,
       targetId,
@@ -154,7 +157,7 @@ const handlePostRequest: IHandleRequest<APIName.FILE_UPLOAD, IFile> = async ({ b
       encryptedSymmetricKey,
       iv
     );
-    payload = { id: fileId, name: fileName, size: file[0].size, existed: true };
+    payload = returnFile;
     statusMessage = STATUS_MESSAGE.CREATED;
   }
 
@@ -165,17 +168,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IFile | null }>;
+  ) => Promise<{ statusMessage: string; payload: IFileBeta | null }>;
 } = {
   POST: (req, res) => withRequestValidation(APIName.FILE_UPLOAD, req, res, handlePostRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IFile | null>>
+  res: NextApiResponse<IResponseData<IFileBeta | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IFile | null = null;
+  let payload: IFileBeta | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -188,7 +191,7 @@ export default async function handler(
     const error = _error as Error;
     statusMessage = error.message;
   } finally {
-    const { httpCode, result } = formatApiResponse<IFile | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IFileBeta | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

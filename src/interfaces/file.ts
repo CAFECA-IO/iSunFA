@@ -10,6 +10,9 @@ export interface IFile {
 }
 
 export interface IFileBeta extends IFile {
+  id: number;
+  name: string;
+  size: number;
   url: string;
 }
 
