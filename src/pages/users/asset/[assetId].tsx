@@ -40,14 +40,13 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
       assetId: params.assetId,
       ...(await serverSideTranslations(locale as string, [
         'common',
-        'report_401',
         'journal',
-        'kyc',
         'project',
         'setting',
         'terms',
         'salary',
         'asset',
+        'dashboard',
       ])),
     },
   };
