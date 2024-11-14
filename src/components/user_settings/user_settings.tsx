@@ -1,27 +1,80 @@
-import React from 'react';
-import { useUserCtx } from '@/contexts/user_context';
-import { DEFAULT_AVATAR_URL } from '@/constants/display';
+import React, { useEffect, useState } from 'react';
 import { LocaleKey } from '@/constants/normal_setting';
 import UserInfo from '@/components/user_settings/user_info';
 import UserInfoForm from '@/components/user_settings/user_info_form';
+import APIHandler from '@/lib/utils/api_handler';
+import { IUserSetting } from '@/interfaces/user_setting';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
+import { useTranslation } from 'react-i18next';
 
-interface UserSettingsProps {}
+interface UserSettingsProps {
+  userSetting: IUserSetting | null;
+}
 
-const UserSettings: React.FC<UserSettingsProps> = () => {
+const UserSettings: React.FC<UserSettingsProps> = ({ userSetting }) => {
+  const { t } = useTranslation(['setting', 'common']);
   const { userAuth } = useUserCtx();
-  const userId = userAuth?.id ?? 1;
-  const username = userAuth?.name ?? 'Joyce';
-  const email = userAuth?.email ?? 'Test01@gmail.com';
+  const { id: userId, name: username, email, imageId } = userAuth!;
   const loginDevice = 'Macos Chrome';
   const loginIP = '211.22.118.145';
-  const imageId = userAuth?.imageId ?? DEFAULT_AVATAR_URL;
 
-  const [firstName, setFirstName] = React.useState('');
-  const [lastName, setLastName] = React.useState('');
-  const [country, setCountry] = React.useState<LocaleKey | null>(null);
-  const [language, setLanguage] = React.useState<LocaleKey>(LocaleKey.en);
-  const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
-  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [firstName, setFirstName] = useState<string>(userSetting?.personalInfo.firstName || '');
+  const [lastName, setLastName] = useState<string>(userSetting?.personalInfo.lastName || '');
+  const [country, setCountry] = useState<LocaleKey | null>(null);
+  const [language, setLanguage] = useState<LocaleKey>(
+    (userSetting?.personalInfo.country as LocaleKey) || LocaleKey.en
+  ); // Info: (20241114 - tzuhan) @Jacky 這裡也需要改成 LocalKey
+  const [countryCode, setCountryCode] = useState<LocaleKey>(LocaleKey.en); // Info: (20241114 - tzuhan) @Jacky 這裡也需要提供 countryCode
+  const [phoneNumber, setPhoneNumber] = useState<string>(userSetting?.personalInfo.phone || '');
+  const { toastHandler } = useModalContext();
+  const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
+
+  const updateUseSetting = async () => {
+    if (!userSetting) return;
+    const { success } = await updateUserSettingAPI({
+      params: { userId },
+      body: {
+        ...userSetting,
+        notificationSetting: {
+          ...userSetting.notificationSetting,
+        },
+        personalInfo: {
+          ...userSetting.personalInfo,
+          firstName,
+          lastName,
+          country,
+          language,
+          phone: phoneNumber,
+        },
+      },
+    });
+    if (success) {
+      toastHandler({
+        id: ToastId.USER_SETTING_UPDATE_SUCCESS, // ToDo:  (20241114 - tzuhan) 跟設計師確認更新成功或失敗的UI
+        type: ToastType.SUCCESS,
+        content: t('setting:USER.UPDATE_SUCCESS'),
+        closeable: true,
+      });
+    }
+  };
+
+  // ToDo: (20241114 - tzuhan) move to user Context
+  // Info: (20241114 - tzuhan) @Jacky IUserSetting 是不是少了 deleteAt
+  useEffect(() => {
+    // if (userSetting?.deleteAt) {
+    toastHandler({
+      id: ToastId.USER_DELETE_WARNING,
+      type: ToastType.WARNING,
+      content: t('setting:USER.DELETE_WARNING'),
+      closeable: true,
+    });
+    // }
+  }, []);
+  // }, [userSetting?.deleteAt]);
 
   return (
     <>
@@ -34,6 +87,7 @@ const UserSettings: React.FC<UserSettingsProps> = () => {
         imageId={imageId}
       />
       <UserInfoForm
+        userSetting={userSetting}
         firstName={firstName}
         setFirstName={setFirstName}
         lastName={lastName}
@@ -46,6 +100,7 @@ const UserSettings: React.FC<UserSettingsProps> = () => {
         setCountryCode={setCountryCode}
         phoneNumber={phoneNumber}
         setPhoneNumber={setPhoneNumber}
+        onSubmit={updateUseSetting}
       />
     </>
   );
