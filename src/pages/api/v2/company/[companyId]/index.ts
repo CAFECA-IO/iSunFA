@@ -65,7 +65,7 @@ const handlePutRequest: IHandleRequest<
   const { userId } = session;
   switch (action) {
     case CompanyUpdateAction.UPDATE_TAG: {
-      const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
+      const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
       if (admin && tag) {
         const updatedCompanyAndRole = await updateCompanyTagById(admin.id, tag);
         statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;

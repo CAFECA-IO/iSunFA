@@ -17,7 +17,7 @@ import admins from '@/seed_json/admin.json';
 import { deleteCompanyByIdForTesting } from '@/lib/utils/repo/company.repo';
 import { FileFolder } from '@/constants/file';
 import { createFile, deleteFileByIdForTesting } from '@/lib/utils/repo/file.repo';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 
 describe('Admin Repository Additional Tests', () => {
   const testAdminId = 1000;
@@ -124,7 +124,7 @@ describe('Admin Repository Additional Tests', () => {
 
   describe('updateCompanyTagById', () => {
     it('should update the company tag by admin ID', async () => {
-      const newTag = CompanyTag.ALL;
+      const newTag = COMPANY_TAG.ALL;
       const updatedCompany = await updateCompanyTagById(testAdminId, newTag);
       expect(updatedCompany).toBeDefined();
       expect(updatedCompany.tag).toBe(newTag);
