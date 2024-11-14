@@ -30,4 +30,6 @@ export enum ToastId {
   ACCOUNTING_UPDATE_ERROR = 'toast-accounting-update-error',
   ACCOUNTING_DELETE_SUCCESS = 'toast-accounting-delete-success',
   ACCOUNTING_DELETE_ERROR = 'toast-accounting-delete-error',
+  ASSET_DELETE_SUCCESS = 'toast-asset-delete-success',
+  ASSET_DELETE_ERROR = 'toast-asset-delete-error',
 }

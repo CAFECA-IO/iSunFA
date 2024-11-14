@@ -1,10 +1,12 @@
 import React from 'react';
+import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { AssetStatus } from '@/constants/asset';
 import { numberWithCommas, timestampToYMD } from '@/lib/utils/common';
 import { IAssetItemUI } from '@/interfaces/asset';
 import { checkboxStyle } from '@/constants/display';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IAssetItemProps {
   assetData: IAssetItemUI;
@@ -132,7 +134,10 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
     );
 
   return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+    <Link
+      href={`${ISUNFA_ROUTE.ASSET_LIST}/${assetId}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
       {/* Info: (20240920 - Julian) Select */}
       <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
         <div className="relative top-20px px-8px">
@@ -158,7 +163,7 @@ const AssetItem: React.FC<IAssetItemProps> = ({ assetData, selectHandler, isChec
       <div className="table-cell px-8px text-right align-middle">{displayedResidual}</div>
       {/* Info: (20240925 - Julian) Remaining Useful Life */}
       <div className="table-cell px-8px text-right align-middle">{displayedRemainingLife}</div>
-    </div>
+    </Link>
   );
 };
 
