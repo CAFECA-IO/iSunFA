@@ -16,7 +16,7 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
-import { CompanyTag } from '@/constants/company';
+import { COMPANY_TAG } from '@/constants/company';
 
 export async function listAdminByCompanyId(companyId: number): Promise<
   (Admin & {
@@ -592,7 +592,7 @@ export async function createCompanyAndRole(
   taxId: string,
   name: string,
   imageFileId: number,
-  tag: CompanyTag = CompanyTag.ALL,
+  tag: COMPANY_TAG = COMPANY_TAG.ALL,
   email?: string
 ): Promise<{
   company: Company & { imageFile: File | null };
@@ -719,7 +719,7 @@ export async function setCompanyToTop(userId: number, companyId: number) {
 
 export async function updateCompanyTagById(
   adminId: number,
-  tag: CompanyTag
+  tag: COMPANY_TAG
 ): Promise<{
   company: Company & { imageFile: File | null };
   role: Role;
