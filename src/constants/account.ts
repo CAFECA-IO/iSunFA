@@ -35,6 +35,19 @@ export enum AccountType {
   OTHER = 'other',
 }
 
+// Info: (20241112 - Julian) 11/11 和 Anna 確認的會計科目類型，目前用於 Account Setting
+export enum AccountTypeBeta {
+  ASSET = 'asset', // Info: (20241112 - Julian) 資產
+  LIABILITY = 'liability', // Info: (20241112 - Julian) 負債
+  EQUITY = 'equity', // Info: (20241112 - Julian) 權益
+  REVENUE = 'revenue', // Info: (20241112 - Julian) 銷貨收入
+  INCOME = 'income', // Info: (20241112 - Julian) 其他收益
+  COST = 'cost', // Info: (20241112 - Julian) 成本
+  EXPENSE = 'expense', // Info: (20241112 - Julian) 費用
+  NON_OPERATING = 'non_operating', // Info: (20241112 - Julian) 營業外收支
+  OTHER_COMPREHENSIVE_INCOME = 'other_comprehensive_income', // Info: (20241112 - Julian) 其他綜合損益
+}
+
 export enum VoucherType {
   RECEIVE = 'receive',
   EXPENSE = 'expense',
@@ -824,6 +837,18 @@ export const SPECIAL_ACCOUNTS: {
     forUser: true,
     parentCode: '2200',
     rootCode: '2200',
+    level: 3,
+  },
+  ACCOUNT_PAYABLE: {
+    system: 'IFRS',
+    type: AccountType.LIABILITY,
+    debit: false,
+    liquidity: true,
+    code: '2171',
+    name: '應付帳款',
+    forUser: true,
+    parentCode: '2170',
+    rootCode: '2170',
     level: 3,
   },
 };
