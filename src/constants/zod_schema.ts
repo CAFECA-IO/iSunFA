@@ -79,6 +79,8 @@ import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
 import { nullAPISchema } from '@/lib/utils/zod_schema/common';
 import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { roomDeleteSchema, roomGetSchema, roomPostSchema } from '@/lib/utils/zod_schema/room';
+import { fileDeleteSchema, fileGetSchema, filePostSchema } from '@/lib/utils/zod_schema/file';
+import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -206,6 +208,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.INVOICE_CREATE]: nullAPISchema,
   [APIName.INVOICE_UPDATE]: nullAPISchema,
   [APIName.INVOICE_GET_BY_ID]: nullAPISchema,
+  [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: nullAPISchema,
   [APIName.ASK_AI_RESULT]: nullAPISchema,
   [APIName.ASK_AI_V2]: nullAPISchema,
@@ -222,10 +225,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.REPORT_GENERATE]: nullAPISchema,
   [APIName.STATUS_INFO_GET]: nullAPISchema,
   [APIName.ACCOUNT_LIST]: nullAPISchema,
-  [APIName.FILE_UPLOAD]: nullAPISchema,
+  [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.PUBLIC_FILE_UPLOAD]: nullAPISchema,
-  [APIName.FILE_DELETE]: nullAPISchema,
-  [APIName.FILE_GET]: nullAPISchema,
+  [APIName.FILE_DELETE]: fileDeleteSchema,
+  [APIName.FILE_GET]: fileGetSchema,
   [APIName.ROLE_GET_BY_ID]: nullAPISchema,
   [APIName.ROLE_DELETE]: nullAPISchema,
   [APIName.ROLE_UPDATE]: nullAPISchema,

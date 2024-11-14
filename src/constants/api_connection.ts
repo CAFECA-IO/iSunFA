@@ -67,6 +67,7 @@ export enum APIName {
   INVOICE_CREATE = 'INVOICE_CREATE',
   INVOICE_UPDATE = 'INVOICE_UPDATE',
   INVOICE_GET_BY_ID = 'INVOICE_GET_BY_ID',
+  IMAGE_GET_BY_ID = 'IMAGE_GET_BY_ID',
   ASK_AI_STATUS = 'ASK_AI_STATUS',
   ASK_AI_RESULT = 'ASK_AI_RESULT',
   ASK_AI_V2 = 'ASK_AI_V2',
@@ -193,6 +194,7 @@ export enum APIPath {
   INVOICE_CREATE = `${apiPrefix}/company/:companyId/invoice`,
   INVOICE_UPDATE = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
   INVOICE_GET_BY_ID = `${apiPrefix}/company/:companyId/invoice/:invoiceId`,
+  IMAGE_GET_BY_ID = `${apiPrefixV2}/image/:imageId`,
   ASK_AI_STATUS = `${apiPrefix}/company/:companyId/ask_ai/:resultId/status`,
   ASK_AI_RESULT = `${apiPrefix}/company/:companyId/ask_ai/:resultId`,
   ASK_AI_V2 = `${apiPrefixV2}/company/:companyId/ask_ai`,
@@ -375,6 +377,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.INVOICE_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.INVOICE_GET_BY_ID,
+  }),
+  [APIName.IMAGE_GET_BY_ID]: createConfig({
+    name: APIName.IMAGE_GET_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.IMAGE_GET_BY_ID,
   }),
   [APIName.ASK_AI_STATUS]: createConfig({
     name: APIName.ASK_AI_STATUS,
