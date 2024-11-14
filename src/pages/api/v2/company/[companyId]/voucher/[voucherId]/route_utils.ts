@@ -494,3 +494,351 @@ export const voucherAPIGetOneUtils = {
     };
   },
 };
+
+export const voucherAPIPutUtils = {
+  /**
+   * Info: (20241025 - Murky)
+   * @description throw StatusMessage as Error, but it can log the errorMessage
+   * @param logger - pino Logger
+   * @param options - errorMessage and statusMessage
+   * @param options.errorMessage - string, message you want to log
+   * @param options.statusMessage - string, status message you want to throw
+   * @throws Error - statusMessage
+   */
+  throwErrorAndLog: (
+    logger: Logger,
+    {
+      errorMessage,
+      statusMessage,
+    }: {
+      errorMessage: string;
+      statusMessage: string;
+    }
+  ) => {
+    logger.error(errorMessage);
+    throw new Error(statusMessage);
+  },
+
+  /**
+   * Info: (20241113 - Murky)
+   * @description 創造用來比對兩個 lineItem 是否相同的 key, 只比較
+   * - amount
+   * - debit
+   * - accountId
+   * - 不比較 id, description, voucherId, createdAt, updatedAt, deletedAt
+   */
+  createLineItemComparisonKey: (lineItem: ILineItemEntity) => {
+    const key = `${lineItem.accountId}-${lineItem.debit}-${lineItem.amount}`;
+    return key;
+  },
+
+  isLineItemEntitiesSame: (
+    lineItems1: ILineItemEntity[],
+    lineItems2: ILineItemEntity[]
+  ): boolean => {
+    if (lineItems1.length !== lineItems2.length) return false;
+
+    const lineItemKeyMap1 = lineItems1.map(voucherAPIPutUtils.createLineItemComparisonKey).sort();
+    const lineItemKeyMap2 = lineItems2.map(voucherAPIPutUtils.createLineItemComparisonKey).sort();
+
+    const isSame = lineItemKeyMap1.every((key, index) => key === lineItemKeyMap2[index]);
+    return isSame;
+  },
+
+  initAccountEntity: (account: PrismaAccount) => {
+    const accountEntity = parsePrismaAccountToAccountEntity(account);
+    return accountEntity;
+  },
+
+  /**
+   * Info: (20241112 - Murky)
+   * @description init lineItem entity from lineItem
+   */
+  initLineItemEntity: (lineItem: PrismaLineItem) => {
+    const lineItemEntity = parsePrismaLineItemToLineItemEntity(lineItem);
+    return lineItemEntity;
+  },
+
+  initLineItemWithAccountEntity: (
+    lineItem: PrismaLineItem & {
+      account: PrismaAccount;
+    }
+  ) => {
+    const lineItemEntity = voucherAPIPutUtils.initLineItemEntity(lineItem);
+    const accountEntity = voucherAPIPutUtils.initAccountEntity(lineItem.account);
+    const newLineItem = Object.assign(lineItemEntity, { account: accountEntity });
+    return newLineItem;
+  },
+
+  /**
+   * Info: (20241114 - Murky)
+   * @description 取得兩組id中應該被刪除與應該被新增的id
+   * @param originalIds - number[], 原本的id
+   * @param newIds - number[], 新的id
+   * @returns { idNeedToBeRemoved: number[], idNeedToBeAdded: number[] }
+   * - idNeedToBeRemoved - number[], 原本有的id, 但新的id沒有, 要被刪掉
+   * - idNeedToBeAdded - number[], 新的id有, 但原本的id沒有, 要被新增
+   */
+  getDifferentIds: (originalIds: number[], newIds: number[]) => {
+    const originalSet = new Set(originalIds);
+    const newSet = new Set(newIds);
+
+    const idNeedToBeRemoved: number[] = [];
+    const idNeedToBeAdded: number[] = [];
+
+    originalSet.forEach((id) => {
+      if (!newSet.has(id)) {
+        idNeedToBeRemoved.push(id);
+      }
+    });
+
+    newSet.forEach((id) => {
+      if (!originalSet.has(id)) {
+        idNeedToBeAdded.push(id);
+      }
+    });
+
+    return {
+      idNeedToBeRemoved,
+      idNeedToBeAdded,
+    };
+  },
+
+  getDifferentAssetId: (options: { originalAssetIds: number[]; newAssetIds: number[] }) => {
+    const { idNeedToBeRemoved, idNeedToBeAdded } = voucherAPIPutUtils.getDifferentIds(
+      options.originalAssetIds,
+      options.newAssetIds
+    );
+    return {
+      assetIdsNeedToBeRemoved: idNeedToBeRemoved,
+      assetIdsNeedToBeAdded: idNeedToBeAdded,
+    };
+  },
+
+  getDifferentCertificateId: (options: {
+    originalCertificateIds: number[];
+    newCertificateIds: number[];
+  }) => {
+    const { idNeedToBeRemoved, idNeedToBeAdded } = voucherAPIPutUtils.getDifferentIds(
+      options.originalCertificateIds,
+      options.newCertificateIds
+    );
+    return {
+      certificateIdsNeedToBeRemoved: idNeedToBeRemoved,
+      certificateIdsNeedToBeAdded: idNeedToBeAdded,
+    };
+  },
+
+  constructNewLineItemReverseRelationship: (
+    newLineItems: ILineItemEntity[],
+    reverseVouchers: {
+      amount: number;
+      voucherId: number;
+      lineItemIdBeReversed: number;
+      lineItemIdReverseOther: number;
+    }[]
+  ) => {
+    /**
+     * Info: (20241114 - Murky)
+     * @description 從database拿出來, 要被反轉的是 lineItemIdBeReversed (只需要id), 反轉的是 lineItemIdReverseOther
+     */
+    const reversePairs: {
+      lineItemIdBeReversed: number;
+      lineItemReverseOther: ILineItemEntity;
+      amount: number;
+      voucherId: number;
+    }[] = [];
+
+    reverseVouchers.forEach((reverseVoucher) => {
+      const lineItemReverseOther = newLineItems[reverseVoucher.lineItemIdReverseOther];
+      reversePairs.push({
+        lineItemIdBeReversed: reverseVoucher.lineItemIdBeReversed,
+        lineItemReverseOther,
+        amount: reverseVoucher.amount,
+        voucherId: reverseVoucher.voucherId,
+      });
+    });
+
+    return reversePairs;
+  },
+
+  constructOldLineItemReverseRelationship: (voucherFromPrisma: IGetOneVoucherResponse) => {
+    const reversePairs: {
+      eventId: number;
+      lineItemIdBeReversed: number;
+      lineItemReverseOther: ILineItemEntity;
+      amount: number;
+      voucherId: number;
+    }[] = [];
+
+    voucherFromPrisma.lineItems.forEach((lineItem) => {
+      const lineItemReverseOther = voucherAPIPutUtils.initLineItemEntity(lineItem);
+      lineItem.originalLineItem.forEach((originLineItem) => {
+        const lineItemIdBeReversed = originLineItem.resultLineItemId;
+        const { eventId } = originLineItem.accociateVoucher;
+        reversePairs.push({
+          eventId,
+          lineItemIdBeReversed,
+          lineItemReverseOther,
+          amount: originLineItem.amount,
+          voucherId: originLineItem.resultLineItem.voucherId,
+        });
+      });
+    });
+    return reversePairs;
+  },
+
+  createReverseLineItemKey: (lineItemRelationPair: {
+    lineItemIdBeReversed: number;
+    lineItemReverseOther: ILineItemEntity;
+    amount: number;
+    voucherId: number;
+  }) => {
+    const { lineItemIdBeReversed, lineItemReverseOther, amount, voucherId } = lineItemRelationPair;
+    const key = `${lineItemIdBeReversed}-${lineItemReverseOther.accountId}-${lineItemReverseOther.debit}-${lineItemReverseOther.amount}-${amount}-${voucherId}`;
+    return key;
+  },
+
+  getNewReverseLineItemMap: (
+    reversePairs: {
+      lineItemIdBeReversed: number;
+      lineItemReverseOther: ILineItemEntity;
+      amount: number;
+      voucherId: number;
+    }[]
+  ) => {
+    const reverseLineItemMap: Map<
+      string,
+      {
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      }
+    > = new Map();
+
+    reversePairs.forEach((pair) => {
+      const key = voucherAPIPutUtils.createReverseLineItemKey(pair);
+      reverseLineItemMap.set(key, pair);
+    });
+
+    return reverseLineItemMap;
+  },
+
+  getOldReverseLineItemMap: (
+    reversePairs: {
+      eventId: number;
+      lineItemIdBeReversed: number;
+      lineItemReverseOther: ILineItemEntity;
+      amount: number;
+      voucherId: number;
+    }[]
+  ) => {
+    const reverseLineItemMap: Map<
+      string,
+      {
+        eventId: number;
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      }
+    > = new Map();
+
+    reversePairs.forEach((pair) => {
+      const key = voucherAPIPutUtils.createReverseLineItemKey(pair);
+      reverseLineItemMap.set(key, pair);
+    });
+
+    return reverseLineItemMap;
+  },
+
+  /**
+   * Info: (20241114 - Murky)
+   * @description 這邊只做1對1的
+   */
+  getDifferentReverseRelationship: (
+    originalReversePairs: {
+      eventId: number;
+      lineItemIdBeReversed: number;
+      lineItemReverseOther: ILineItemEntity;
+      amount: number;
+      voucherId: number;
+    }[],
+    newReversePairs: {
+      lineItemIdBeReversed: number;
+      lineItemReverseOther: ILineItemEntity;
+      amount: number;
+      voucherId: number;
+    }[]
+  ) => {
+    const originalReverseMap = voucherAPIPutUtils.getOldReverseLineItemMap(originalReversePairs);
+    const newReverseMap = voucherAPIPutUtils.getNewReverseLineItemMap(newReversePairs);
+
+    const reverseRelationNeedToBeRemovedMap: Map<
+      string,
+      {
+        eventId: number;
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      }
+    > = new Map();
+
+    const reverseRelationNeedToBeAddedMap: Map<
+      string,
+      {
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      }
+    > = new Map();
+
+    originalReverseMap.forEach((pair, key) => {
+      if (!newReverseMap.has(key)) {
+        const newKey = voucherAPIPutUtils.createLineItemComparisonKey(pair.lineItemReverseOther);
+        reverseRelationNeedToBeRemovedMap.set(newKey, pair);
+      }
+    });
+
+    newReverseMap.forEach((pair, key) => {
+      if (!originalReverseMap.has(key)) {
+        const newKey = voucherAPIPutUtils.createLineItemComparisonKey(pair.lineItemReverseOther);
+        reverseRelationNeedToBeAddedMap.set(newKey, pair);
+      }
+    });
+
+    const reverseRelationNeedToBeReplace: {
+      eventId: number;
+      original: {
+        eventId: number;
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      };
+      new: {
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      };
+    }[] = [];
+
+    reverseRelationNeedToBeRemovedMap.forEach((originalPair, key) => {
+      if (reverseRelationNeedToBeAddedMap.has(key)) {
+        const newPair = reverseRelationNeedToBeAddedMap.get(key);
+        if (newPair) {
+          reverseRelationNeedToBeReplace.push({
+            eventId: originalPair.eventId,
+            original: originalPair,
+            new: newPair,
+          });
+        }
+      }
+    });
+    return reverseRelationNeedToBeReplace;
+  },
+};

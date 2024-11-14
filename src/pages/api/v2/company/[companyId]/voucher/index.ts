@@ -334,7 +334,7 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     // });
 
     // Info: (20241025 - Murky) Is xxx exist
-    // const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
+    const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
     // const isRecurringInfoExist = postUtils.isItemExist(recurringInfo);
     const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
@@ -343,6 +343,17 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     const isVoucherInfoExist = postUtils.isItemExist(voucherInfo);
     const isVoucherEditable = true;
 
+    // Info: (20241114 - Murky) 檢查 certificateIds 是否都存在
+    if (isCertificateIdsHasItems) {
+      // Info: (20241111 - Murky) 檢查是不是所有的certificate都存在, 不存在就throw error
+      const isAllCertificateExist = postUtils.areAllCertificatesExistById(certificateIds);
+      if (!isAllCertificateExist) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: `when post voucher with certificateIds, all certificate need to exist in database`,
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+    }
     // Info: (20241025 - Murky) Early throw error if lineItems is empty and voucherInfo is empty
     if (!isLineItemsHasItems) {
       postUtils.throwErrorAndLog(loggerBack, {
