@@ -5,6 +5,8 @@ import { FiEdit3, FiLink, FiMail } from 'react-icons/fi';
 import { TbUserCircle } from 'react-icons/tb';
 import { Button } from '@/components/button/button';
 import IPModal from '@/components/user_settings/ip_modal';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { IUserActionLog } from '@/interfaces/user_action_log';
 
 interface UserInfoProps {
   userId: number;
@@ -13,6 +15,7 @@ interface UserInfoProps {
   loginDevice: string;
   loginIP: string;
   imageId: string;
+  userActionLogs: IPaginatedData<IUserActionLog[]> | null;
 }
 
 const UserInfo: React.FC<UserInfoProps> = ({
@@ -22,6 +25,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   loginDevice,
   loginIP,
   imageId,
+  userActionLogs,
 }) => {
   const { t } = useTranslation(['setting', 'common']);
   const [isIPModalOpen, setIsIPModalOpen] = useState(false);
@@ -32,7 +36,9 @@ const UserInfo: React.FC<UserInfoProps> = ({
 
   return (
     <div className="bg-brand-gradient flex items-center gap-lv-7 rounded-md p-4 shadow-normal_setting_brand">
-      {isIPModalOpen && <IPModal userId={userId} toggleModal={toggleIPModal} />}
+      {isIPModalOpen && (
+        <IPModal userId={userId} toggleModal={toggleIPModal} userActionLogs={userActionLogs} />
+      )}
       <Image
         alt="avatar"
         src={imageId}

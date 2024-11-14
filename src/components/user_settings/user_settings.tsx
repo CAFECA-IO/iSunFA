@@ -10,17 +10,20 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'react-i18next';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { IUserActionLog } from '@/interfaces/user_action_log';
 
 interface UserSettingsProps {
   userSetting: IUserSetting | null;
+  userActionLogs: IPaginatedData<IUserActionLog[]> | null;
 }
 
-const UserSettings: React.FC<UserSettingsProps> = ({ userSetting }) => {
+const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { userAuth } = useUserCtx();
   const { id: userId, name: username, email, imageId } = userAuth!;
-  const loginDevice = 'Macos Chrome';
-  const loginIP = '211.22.118.145';
+  const loginDevice = userActionLogs ? userActionLogs.data[0].userAgent : '';
+  const loginIP = userActionLogs ? userActionLogs.data[0].ipAddress : '';
 
   const [firstName, setFirstName] = useState<string>(userSetting?.personalInfo.firstName || '');
   const [lastName, setLastName] = useState<string>(userSetting?.personalInfo.lastName || '');
@@ -71,6 +74,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting }) => {
         loginDevice={loginDevice}
         loginIP={loginIP}
         imageId={imageId}
+        userActionLogs={userActionLogs}
       />
       <UserInfoForm
         userSetting={userSetting}
