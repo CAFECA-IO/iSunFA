@@ -50,26 +50,27 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyToEdit }: Co
     <section className="flex flex-auto flex-col gap-8px">
       {companyList.map((myCompany) => {
         const isCompanySelected = myCompany.company.id === selectedCompany?.id;
-        const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
-
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(
-          'isCompanySelected:',
-          isCompanySelected,
-          '這個按鈕是 myCompany.company.id:',
-          myCompany.company.id,
-          'user context 目前存的狀態 selectedCompany?.id:',
-          selectedCompany?.id,
-          '按下去會傳給選擇公司 api 的 companyId:',
-          companyId
-        );
 
         // Info: (20241113 - Liz) call Select Company API
         const handleConnect = async () => {
           if (isLoading) return;
 
           setIsLoading(true);
+
+          const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
+
+          // Deprecated: (20241113 - Liz)
+          // eslint-disable-next-line no-console
+          console.log(
+            '這個公司原本是否已經被選擇 isCompanySelected:',
+            isCompanySelected,
+            '這個按鈕是 myCompany.company.id:',
+            myCompany.company.id,
+            'user context 目前存的狀態 selectedCompany?.id:',
+            selectedCompany?.id,
+            '按下去會傳給選擇公司 api 的 companyId:',
+            companyId
+          );
 
           try {
             const data = selectCompany(companyId);
