@@ -34,6 +34,7 @@ import { getOneVoucherByIdWithoutInclude, postVoucherV2 } from '@/lib/utils/repo
 import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
 import { getOneAssetByIdWithoutInclude } from '@/lib/utils/repo/asset.repo';
+import { getOneCertificateByIdWithoutInclude } from '@/lib/utils/repo/certificate.repo';
 /**
  * Info: (20241025 - Murky)
  * @description all function need for voucher Post
@@ -59,6 +60,16 @@ export const voucherAPIPostUtils = {
 
   isItemExist: <T>(item: T | undefined | null): item is T => {
     return item !== undefined && item !== null;
+  },
+
+  isCounterPartyExistById: async (counterPartyId: number) => {
+    const counterParty = await getCounterpartyById(counterPartyId);
+    return !!counterParty;
+  },
+
+  isCertificateExistById: async (certificateId: number) => {
+    const certificate = await getOneCertificateByIdWithoutInclude(certificateId);
+    return !!certificate;
   },
 
   /**
@@ -450,6 +461,12 @@ export const voucherAPIPostUtils = {
       monthsOfYear,
     });
     return revertEvent;
+  },
+  areAllCertificatesExistById: async (certificateIds: number[]): Promise<boolean> => {
+    const results = await Promise.all(
+      certificateIds.map(async (id) => voucherAPIPostUtils.isCertificateExistById(id))
+    );
+    return results.every((result) => result === true);
   },
 
   /**
