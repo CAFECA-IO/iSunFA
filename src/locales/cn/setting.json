@@ -145,5 +145,10 @@
     "ADDRESS": "登录地址",
     "DETECT_DIFFERENT_IP_LOGIN": "检测到来自不同 IP 地址的登录。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "请验证您的帐户安全性以防止数据外泄。"
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "用户设置更新成功。",
+    "DELETE_WARNING": "此账户将在三个工作日内被删除。",
+    "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。"
   }
 }

@@ -145,5 +145,10 @@
     "ADDRESS": "Login address",
     "DETECT_DIFFERENT_IP_LOGIN": "Login detected from a different IP address.",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "Please verify your account security to prevent data leakage."
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "User settings updated successfully.",
+    "DELETE_WARNING": "This account will be deleted in three business days.",
+    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page."
   }
 }

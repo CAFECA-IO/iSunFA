@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import { APIName } from '@/constants/api_connection';
@@ -13,6 +14,8 @@ import PhoneNumberInput from '@/components/user_settings/phone_number_input';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface CompanyEditModalProps {
   companyAndRole: ICompanyAndRole;
@@ -21,6 +24,7 @@ interface CompanyEditModalProps {
 
 const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, toggleModal }) => {
   const { t } = useTranslation(['setting', 'common', 'company']);
+  const router = useRouter();
   const [companyName, setCompanyName] = React.useState('');
   const [businessTaxId, setBusinessTaxId] = React.useState('');
   const [taxSerialNumber, setTaxSerialNumber] = React.useState('');
@@ -29,11 +33,13 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
   const [country, setCountry] = React.useState<LocaleKey | null>(null);
   const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
   const [phoneNumber, setPhoneNumber] = React.useState('');
-  const { toastHandler } = useModalContext();
+  const { toastHandler, messageModalVisibilityHandler, messageModalDataHandler } =
+    useModalContext();
   const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
     APIName.COMPANY_SETTING_GET
   );
   const { trigger: updateCompanySettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
+  const { trigger: deleteCompanyAPI } = APIHandler(APIName.COMPANY_DELETE);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -74,6 +80,31 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
         });
       }
     }
+  };
+
+  const procedureOfDelete = () => {
+    if (!companyAndRole) return;
+    messageModalVisibilityHandler();
+    deleteCompanyAPI({
+      params: {
+        companyId: companyAndRole.company.id,
+      },
+    });
+
+    router.push(ISUNFA_ROUTE.DASHBOARD);
+  };
+
+  const deleteCompanyClickHandler = () => {
+    if (!companyAndRole) return;
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: t('company:DELETE.TITLE'),
+      content: t('company:DELETE.WARNING'),
+      backBtnStr: t('common:COMMON.CANCEL'),
+      submitBtnStr: t('setting:SETTING.REMOVE'),
+      submitBtnFunction: procedureOfDelete,
+    });
+    messageModalVisibilityHandler();
   };
 
   const getCompanySetting = async () => {
@@ -224,7 +255,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({ companyAndRole, tog
               variant="errorBorderless"
               className="justify-start p-0"
             >
-              <p className="flex gap-2">
+              <p className="flex cursor-pointer gap-2" onClick={deleteCompanyClickHandler}>
                 <Image src="/icons/trash.svg" width={16} height={16} alt="notice_icon" />
                 <span>{t('company:EDIT.REMOVE_THIS_COMPANY')}</span>
               </p>
