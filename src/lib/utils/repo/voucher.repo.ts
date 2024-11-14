@@ -242,13 +242,13 @@ export async function getLatestVoucherNoInPrisma(
       },
     });
 
-    // 格式化日期為 YYYYMMDD
+    // Info: (20241114 - Murky) 格式化日期為 YYYYMMDD
     const formattedDate =
       `${startOfDay.getFullYear()}`.padStart(4, '0') +
       `${startOfDay.getMonth() + 1}`.padStart(2, '0') +
       `${startOfDay.getDate()}`.padStart(2, '0');
 
-    const latestNo = result?.no.slice(-3) || '000'; // 取最後三位數字作為流水號
+    const latestNo = result?.no.slice(-3) || '000'; // Info: (20241114 - Murky) 取最後三位數字作為流水號
     const newVoucherNo = String(Number(latestNo) + 1).padStart(3, '0');
 
     return `${formattedDate}${newVoucherNo}`;
@@ -455,7 +455,7 @@ export async function updateVoucherByJournalIdInPrisma(
 export async function countUnpostedVoucher(companyId: number) {
   const missingCertificatesCount = await prisma.voucher.count({
     where: {
-      companyId, // 指定公司 ID
+      companyId, // Info: (20241114 - Murky) 指定公司 ID
       NOT: {
         voucherCertificates: {
           some: {},
@@ -939,7 +939,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
           include: {
             account: true,
             originalLineItem: {
-              // 指的是這個lineItem是 original
+              // Info: (20241114 - Murky) 指的是這個lineItem是 original
               include: {
                 resultLineItem: {
                   include: {
