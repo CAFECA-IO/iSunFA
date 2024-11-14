@@ -31,7 +31,7 @@ const LedgerPage = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'journal'])),
+    ...(await serverSideTranslations(locale, ['common', 'journal', 'filter_section_type'])),
     locale,
   },
 });

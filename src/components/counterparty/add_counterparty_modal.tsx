@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
@@ -9,6 +9,7 @@ import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
@@ -29,11 +30,23 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
+  const { selectedCompany } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
+
+  const {
+    trigger: addCounterpartyTrigger,
+    success,
+    error,
+  } = APIHandler(
+    APIName.COUNTERPARTY_ADD,
+    { params: { companyId: selectedCompany?.id } },
+    false,
+    true
+  );
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -103,54 +116,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   // const disabled = !inputName || !inputTaxId || !inputType;
   const disabled = !(inputName && inputTaxId && inputType);
 
-  // Info: (20241112 - Anna) 使用 APIHandler 呼叫 COUNTERPARTY_ADD API
-  const addCounterparty = async (counterpartyData: {
-    name: string;
-    taxId: string;
-    type: CounterpartyType;
-    note: string;
-  }) => {
-    // Info: (20241113 - Anna) 將 CounterpartyType 轉換為 string 類型
-       const apiData = {
-         ...counterpartyData,
-         type: counterpartyData.type.toString(), // Info: (20241113 - Anna) 轉換 type 為 string
-       };
-
-    // eslint-disable-next-line no-console
-    console.log('Attempting to add counterparty with data:', apiData); // Info: (20241113 - Anna) 確認方法是否有被呼叫
-
-    try {
-      const { trigger: addCounterpartyTrigger } = APIHandler(
-        APIName.COUNTERPARTY_ADD,
-        {
-          body: apiData, // Info: (20241113 - Anna) 傳遞轉換後的 apiData
-          params: { companyId: 10000016 }, // Todo: Info: (20241113 - Anna) 如果為 null，使用一個預設值
-        },
-        false,
-        true
-      );
-
-      const response = await addCounterpartyTrigger();
-      // eslint-disable-next-line no-console
-      console.log('API Response:', response);
-
-      if (response && response.success) {
-        // eslint-disable-next-line no-console
-        console.log('Counterparty created successfully:', response.data);
-        return true;
-      } else {
-        // eslint-disable-next-line no-console
-        console.error('Failed to create counterparty:', response?.error || 'No error message');
-        return false;
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error in API call:', error);
-      return false;
-    }
-  };
-
-  const addNewCounterParterHandler = async (event: React.FormEvent<HTMLFormElement>) => {
+  const addNewCounterPartyHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (disabled) {
@@ -159,28 +125,30 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
       const counterpartyData = {
         name: inputName,
         taxId: inputTaxId,
-        type: inputType as CounterpartyType, // Info: (20241113 - Anna) 確保為 CounterpartyType 類型
+        type: inputType as CounterpartyType,
         note: inputNote || '',
       };
 
-      const success = await addCounterparty(counterpartyData); // Info: (20241113 - Anna) 呼叫 API 並接收成功/失敗狀態
-      // eslint-disable-next-line no-console
-      console.log('API Request Success:', success); //  Info: (20241113 - Anna) 確認API請求返回的結果
-      if (success) {
-        // eslint-disable-next-line no-console
-        console.log('Saving data and closing modal');
-        onSave(counterpartyData); // Info: (20241113 - Anna) 呼叫 onSave 時保留 CounterpartyType 類型
-        // eslint-disable-next-line no-console
-        console.log('onSave function:', onSave);
-        onClose(); // Info: (20241113 - Anna) 關閉彈窗
-        // eslint-disable-next-line no-console
-        console.log('onClose function:', onClose);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('Failed to save data');
-      }
+      const apiData = {
+        ...counterpartyData,
+        type: counterpartyData.type.toString(),
+      };
+
+      await addCounterpartyTrigger({ body: apiData });
     }
   };
+
+  useEffect(() => {
+    if (success) {
+      // eslint-disable-next-line no-console
+      console.log('Counterparty created successfully.');
+      onSave({ name: inputName, taxId: inputTaxId, type: inputType!, note: inputNote });
+      onClose();
+    } else if (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to create counterparty:', error);
+    }
+  }, [success, error, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -197,7 +165,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
           {t('certificate:COUNTERPARTY.ADD_NEW')}
         </h2>
         <form
-          onSubmit={addNewCounterParterHandler}
+          onSubmit={addNewCounterPartyHandler}
           className="flex w-full flex-col gap-4 text-sm text-input-text-primary"
         >
           <div className="flex flex-col gap-4">

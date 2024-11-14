@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
@@ -6,32 +6,31 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
-import { useUserCtx } from '@/contexts/user_context';
-// import { VoucherType } from '@/constants/account';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { ILedgerPayload, MOCK_RESPONSE as LEDGER_DATA_RESPONSE } from '@/interfaces/ledger';
+import { ILedgerPayload } from '@/interfaces/ledger';
 import Image from 'next/image';
 import { SkeletonList } from '@/components/skeleton/skeleton';
-import { IDatePeriod } from '@/interfaces/date_period';
 
 interface LedgerListProps {
-  selectedDateRange: IDatePeriod | null; // Info: (20241104 - Anna) 接收來自上層的日期範圍
+  // selectedDateRange: IDatePeriod | null; // Info: (20241104 - Anna) 接收來自上層的日期範圍
+  ledgerData: ILedgerPayload | null; // 🌟 接收 API 數據
+  totalDebitAmount: number; // 🌟 顯示總借方金額
+  totalCreditAmount: number; // 🌟 顯示總貸方金額
 }
 
-const LedgerList: React.FunctionComponent<LedgerListProps> = ({ selectedDateRange }) => {
+const LedgerList: React.FunctionComponent<LedgerListProps> = ({
+  ledgerData,
+  totalDebitAmount,
+  totalCreditAmount,
+}) => {
   const { t } = useTranslation('common');
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  const [totalDebitAmount, setTotalDebitAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
-  const [totalCreditAmount, setTotalCreditAmount] = useState<number>(0); // Info: (20241101 - Anna) 初始值設為 0
-
-  const { selectedCompany, isAuthLoading } = useUserCtx(); // (20241101 - Anna) 從 useUserCtx 取得 companyId
-
-  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>([]);
+  const [voucherList] = useState<ILedgerBeta[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // (20241101 - Anna) 動態 totalPages 狀態
+  const [totalPages] = useState(1);
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
@@ -72,66 +71,10 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ selectedDateRang
     </div>
   );
 
-  /* Info: (20241104 - Anna) 新增狀態和參考變量以追蹤首次加載和日期範圍 */
-  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
-
-  /* Info: (20241104 - Anna) 包裝API請求函式的useCallback，並添加日期檢查 */
-  const fetchLedgerData = useCallback(async () => {
-    if (
-      isAuthLoading ||
-      !selectedCompany?.id ||
-      !selectedDateRange ||
-      selectedDateRange.endTimeStamp === 0
-    ) {
-      return;
-    }
-
-    if (
-      prevSelectedDateRange.current &&
-      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
-      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp &&
-      hasFetchedOnce
-    ) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Todo: (20241101 - Anna) 暫時使用 MOCK_RESPONSE，模擬 API 回傳的數據
-    const data: ILedgerPayload = LEDGER_DATA_RESPONSE;
-
-    const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
-      id: item.id,
-      date: item.voucherDate,
-      voucherNo: item.voucherNumber,
-      voucherType: item.voucherType,
-      note: item.particulars,
-      accounting: [{ code: item.no, name: item.accountingTitle }],
-      credit: [item.creditAmount],
-      debit: [item.debitAmount],
-      balance: [item.balance],
-    }));
-
-    setVoucherList(transformedData);
-    setTotalPages(data.items.totalPages);
-    setTotalDebitAmount(data.total.totalDebitAmount);
-    setTotalCreditAmount(data.total.totalCreditAmount);
-
-    setHasFetchedOnce(true); /* Info: (20241104 - Anna) 設置為已加載 */
-    setIsLoading(false); /* Info: (20241104 - Anna) 停止加載狀態 */
-    prevSelectedDateRange.current = selectedDateRange; /* Info: (20241104 - Anna) 更新日期範圍 */
-  }, [isAuthLoading, selectedCompany?.id, selectedDateRange, hasFetchedOnce]);
-
-  /* Info: (20241104 - Anna) 當選擇日期範圍更改時觸發數據加載 */
-  useEffect(() => {
-    if (!selectedDateRange) return;
-    fetchLedgerData();
-  }, [fetchLedgerData, selectedDateRange]);
-
   // Info: (20241101 - Anna) 根據狀態來渲染不同的內容
-  if (!hasFetchedOnce && !isLoading) {
+  if (!ledgerData) {
+    // eslint-disable-next-line no-console
+    console.log('Ledger data is null or undefined');
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
@@ -141,7 +84,8 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ selectedDateRang
         </div>
       </div>
     );
-  } else if (isLoading) {
+  }
+  if (!ledgerData.items || !ledgerData.items.data || ledgerData.items.data.length === 0) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
         <SkeletonList count={5} />
@@ -150,9 +94,22 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ selectedDateRang
   }
 
   //  Info: (20241101 - Anna)  顯示數據
-  const displayedVoucherList = voucherList.map((voucher) => {
-    return <LedgerItem key={voucher.id} voucher={voucher} />;
-  });
+  const displayedVoucherList = ledgerData
+    ? ledgerData.items.data.map((voucher) => {
+        // 將 creditAmount 和 debitAmount 和 balance轉為數組
+        const modifiedVoucher = {
+          ...voucher,
+          creditAmount: Array.isArray(voucher.creditAmount)
+            ? voucher.creditAmount
+            : [voucher.creditAmount],
+          debitAmount: Array.isArray(voucher.debitAmount)
+            ? voucher.debitAmount
+            : [voucher.debitAmount],
+          balance: Array.isArray(voucher.balance) ? voucher.balance : [voucher.balance],
+        };
+        return <LedgerItem key={voucher.id} voucher={modifiedVoucher} />;
+      })
+    : null;
 
   return (
     <div className="flex flex-col">
@@ -187,12 +144,12 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ selectedDateRang
             <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            {voucherList.some((voucher) => voucher.debit.some((d) => d !== 0)) && (
+            {voucherList.some((voucher) => voucher.debitAmount.some((d) => d !== 0)) && (
               <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
                 {displayedDebit}
               </div>
             )}
-            {voucherList.some((voucher) => voucher.credit.some((c) => c !== 0)) && (
+            {voucherList.some((voucher) => voucher.creditAmount.some((c) => c !== 0)) && (
               <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
                 {displayedCredit}
               </div>

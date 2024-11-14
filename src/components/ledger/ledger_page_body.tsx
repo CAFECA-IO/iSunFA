@@ -8,27 +8,32 @@ import { useTranslation } from 'next-i18next';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { ILedgerPayload } from '@/interfaces/ledger';
+import { useUserCtx } from '@/contexts/user_context';
 
 const LedgerPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
+  const { selectedCompany } = useUserCtx();
 
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
     forUser: true,
-    sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
-    sortOrder: 'asc',
+    // sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
+    // sortOrder: 'asc',
   };
 
   // Info: (20241104 - Anna) API call to fetch account data
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
-    {
-      params: { companyId: 10000007 },
-      query: queryCondition,
-    },
-    false,
-    true
-  );
+  const { trigger: getAccountList, data: accountTitleList } = selectedCompany?.id
+    ? APIHandler<IPaginatedAccount>(
+        APIName.LEDGER_LIST,
+        {
+          params: { companyId: selectedCompany.id },
+          query: queryCondition,
+        },
+        false,
+        true
+      )
+    : { trigger: () => {}, data: null }; // 如果没有 selectedCompany，不發起 API 請求
 
   // Info: (20241105 - Anna) 定義各類別的會計科目選項
   // Info: (20241105 - Anna) 從 src/constants/account.ts 的 export enum AccountType 而來，只留下有科目的類別
@@ -51,6 +56,67 @@ const LedgerPageBody = () => {
     endTimeStamp: 0,
   });
 
+  const [selectedStartAccountNo, setSelectedStartAccountNo] = useState<string>('');
+  const [selectedEndAccountNo, setSelectedEndAccountNo] = useState<string>('');
+
+  // 🌟 新增的 state，儲存從 API 拿的總借貸金額
+  const [totalDebitAmount, setTotalDebitAmount] = useState(0);
+  const [totalCreditAmount, setTotalCreditAmount] = useState(0);
+
+  const { trigger: fetchLedgerData, data: ledgerData } = selectedCompany?.id
+    ? APIHandler<ILedgerPayload>(
+        APIName.LEDGER_LIST, // 使用LEDGER_LIST API
+        {
+          params: { companyId: selectedCompany.id },
+          query: {
+            startDate: selectedDateRange.startTimeStamp,
+            endDate: selectedDateRange.endTimeStamp,
+            startAccountNo: selectedStartAccountNo,
+            endAccountNo: selectedEndAccountNo,
+            labelType: selectedReportType,
+            page: 1,
+            pageSize: 10,
+          },
+        },
+        false,
+        true
+      )
+    : { trigger: () => {}, data: null }; // 如果没有 selectedCompany，不發起 API 請求
+
+  useEffect(() => {
+    // 确保 startDate 和 endDate 是有效的
+    if (selectedDateRange.startTimeStamp && selectedDateRange.endTimeStamp) {
+      // eslint-disable-next-line no-console
+      console.log('Fetching ledger data with params:', {
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        startAccountNo: selectedStartAccountNo,
+        endAccountNo: selectedEndAccountNo,
+        labelType: selectedReportType.toLowerCase(), // 确保传递的是小写的值
+      });
+      fetchLedgerData(); // 发起请求
+    }
+  }, [selectedDateRange, selectedStartAccountNo, selectedEndAccountNo, selectedReportType]);
+
+  // 🌟 更新 ledgerData 並計算借貸總金額
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('Fetched ledger data:', ledgerData);
+    if (ledgerData && ledgerData.total) {
+      // eslint-disable-next-line no-console
+      console.log('Ledger data updated:', ledgerData);
+      setTotalDebitAmount(ledgerData.total.totalDebitAmount);
+      setTotalCreditAmount(ledgerData.total.totalCreditAmount);
+    }
+  }, [ledgerData]);
+
+  // 當日期範圍更改時調用api
+  useEffect(() => {
+    if (selectedDateRange.startTimeStamp && selectedDateRange.endTimeStamp) {
+      fetchLedgerData();
+    }
+  }, [selectedDateRange]);
+
   useEffect(() => {
     getAccountList({ query: { ...queryCondition } });
   }, []);
@@ -58,7 +124,7 @@ const LedgerPageBody = () => {
   useEffect(() => {
     if (accountTitleList) {
       // eslint-disable-next-line no-console
-      // console.log('API Response:', accountTitleList); // Info: (20241105 - Anna) 查看原始資料
+      console.log('Account title list received:', accountTitleList); // Info: (20241105 - Anna) 查看原始資料
       // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
       const assets: string[] = [];
       const liabilities: string[] = [];
@@ -208,7 +274,12 @@ const LedgerPageBody = () => {
             expenseOptions={expenseOptions}
             incomeOptions={incomeOptions}
             otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
-            onRangeSelected={() => {}}
+            onRangeSelected={(startAccountNo, endAccountNo) => {
+              // eslint-disable-next-line no-console
+              console.log('Selected Account Range:', startAccountNo, endAccountNo);
+              setSelectedStartAccountNo(startAccountNo);
+              setSelectedEndAccountNo(endAccountNo);
+            }}
             // onRangeSelected={(from, to) => {
             //   // eslint-disable-next-line no-console
             //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
@@ -217,7 +288,11 @@ const LedgerPageBody = () => {
         </div>
 
         <div className="h-px w-full bg-neutral-100"></div>
-        <LedgerList selectedDateRange={selectedDateRange} />
+        <LedgerList
+          ledgerData={ledgerData || null} // 如果 ledgerData 是 undefined，傳遞 null
+          totalDebitAmount={totalDebitAmount}
+          totalCreditAmount={totalCreditAmount}
+        />
       </div>
     </div>
   );

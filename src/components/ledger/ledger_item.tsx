@@ -9,16 +9,14 @@ import { EventType, VoucherType } from '@/constants/account';
 // Info: (20241004 - Anna) temp interface
 export interface ILedgerBeta {
   id: number;
-  date: number;
-  voucherNo: string;
+  voucherDate: number;
+  voucherNumber: string;
   voucherType: VoucherType | EventType;
-  note: string;
-  accounting: {
-    code: string;
-    name: string;
-  }[];
-  credit: number[];
-  debit: number[];
+  particulars: string;
+  no: string;
+  accountingTitle: string;
+  creditAmount: number[];
+  debitAmount: number[];
   balance: number[];
 }
 
@@ -27,7 +25,8 @@ interface ILedgerItemProps {
 }
 
 const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
-  const { date, voucherNo, voucherType, note, accounting, credit, debit } = voucher;
+  const { voucherDate, voucherNumber, voucherType, particulars, creditAmount, debitAmount } =
+    voucher;
 
   const [isChecked, setIsChecked] = useState(false);
 
@@ -44,7 +43,7 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
 
   const displayedDate = (
     <div className="flex h-full items-center justify-center py-4">
-      <CalendarIcon timestamp={date} />
+      <CalendarIcon timestamp={voucherDate} />
     </div>
   );
 
@@ -52,49 +51,41 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
     voucherType === VoucherType.RECEIVE ? (
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px">
         <FaDownload size={14} className="text-surface-state-error-dark" />
-        <p className="text-sm text-text-state-error-solid">{voucherNo}</p>
+        <p className="text-sm text-text-state-error-solid">{voucherNumber}</p>
       </div>
     ) : voucherType === VoucherType.EXPENSE ? (
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px">
         <FaUpload size={14} className="text-surface-state-success-dark" />
-        <p className="text-sm text-text-state-success-solid">{voucherNo}</p>
+        <p className="text-sm text-text-state-success-solid">{voucherNumber}</p>
       </div>
     ) : (
       <div className="relative mx-auto flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px">
         <FiRepeat size={14} className="text-surface-brand-secondary" />
-        <p className="text-sm text-badge-text-secondary-solid">{voucherNo}</p>
+        <p className="text-sm text-badge-text-secondary-solid">{voucherNumber}</p>
       </div>
     );
 
   const displayedNote = (
     <p className="flex h-full items-center justify-start px-1 font-normal text-text-neutral-tertiary">
-      {note}
+      {particulars}
     </p>
   );
 
   const displayedAccountingCode = (
     <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      {accounting.map((account) => (
-        <div key={account.code}>
-          <p className="m-0 flex items-center">{account.code}</p>
-        </div>
-      ))}
+      <p className="m-0 flex items-center">{voucher.no}</p>
     </div>
   );
   const displayedAccountingName = (
     <div className="flex h-full items-center justify-center font-normal text-neutral-600">
-      {accounting.map((account) => (
-        <div key={account.code}>
-          <p className="m-0 flex items-center">{account.name}</p>
-        </div>
-      ))}
+      <p className="m-0 flex items-center">{voucher.accountingTitle}</p>
     </div>
   );
 
   const displayedCredit = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       {/* Info: (20240920 - Julian) credit */}
-      {credit.map((cre) => (
+      {creditAmount.map((cre) => (
         <p key={cre} className="m-0 flex items-center text-text-neutral-primary">
           {numberWithCommas(cre)}
         </p>
@@ -104,7 +95,7 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
 
   const displayedDebit = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      {debit.map((de) => (
+      {debitAmount.map((de) => (
         <p key={de} className="text-text-neutral-primary">
           {numberWithCommas(de)}
         </p>
@@ -115,7 +106,10 @@ const LedgerItem = React.memo(({ voucher }: ILedgerItemProps) => {
   const displayedBalance = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       {voucher.balance.map((bal) => (
-        <p key={`${bal}-${voucher.voucherNo}`} className="align-middle text-text-neutral-primary">
+        <p
+          key={`${bal}-${voucher.voucherNumber}`}
+          className="align-middle text-text-neutral-primary"
+        >
           {numberWithCommas(bal)}
         </p>
       ))}

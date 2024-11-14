@@ -9,9 +9,14 @@ import { ICounterparty } from '@/interfaces/counterparty';
 interface CounterpartyListProps {
   counterparties: ICounterparty[];
   searchQuery: string; // Info: (20241106 - Anna) 接收來自上層的搜尋關鍵字
+  handleSave: () => void; // 新增 handleSave 屬性
 }
 
-const CounterpartyList: React.FC<CounterpartyListProps> = ({ counterparties, searchQuery }) => {
+const CounterpartyList: React.FC<CounterpartyListProps> = ({
+  counterparties,
+  searchQuery,
+  handleSave,
+}) => {
   const { t } = useTranslation(['common', 'certificate']);
 
   // Info: (20241106 - Anna) 將 CounterPartyList 的狀態類型設為 ICounterPartyEntity[]
@@ -28,6 +33,10 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({ counterparties, sea
     setSortOrder: setDateSort,
   });
 
+  // Info: (20241113 - Anna) 確認傳入的 `counterparties` 是否正確
+  // eslint-disable-next-line no-console
+  console.log('Received counterparties:', counterparties);
+
   // Info: (20241112 - Anna) 過濾資料並計算頁數
   const filteredCounterparties = searchQuery
     ? counterparties.filter(
@@ -42,9 +51,13 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({ counterparties, sea
   }, [filteredCounterparties]);
 
   // Info: (20241112 - Anna) 根據當前頁碼進行分頁
-  const displayedCounterPartyList = filteredCounterparties
-    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    .map((counterparty) => <CounterpartyItem key={counterparty.id} counterparty={counterparty} />);
+  const displayedCounterPartyList = filteredCounterparties.map((counterparty) => (
+    <CounterpartyItem
+      key={counterparty.id}
+      counterparty={counterparty}
+      handleSave={handleSave} // 傳遞給 CounterpartyItem
+    />
+  ));
 
   if (!filteredCounterparties.length) {
     return (

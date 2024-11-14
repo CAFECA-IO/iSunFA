@@ -17,6 +17,7 @@ import { MessageType } from '@/interfaces/message_modal';
 interface EditCounterPartyModalProps {
   onClose: () => void;
   onSave: (counterpartyData: {
+    id: number;
     name: string;
     taxId: string;
     type: CounterpartyType;
@@ -87,7 +88,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
           className="flex w-full gap-8px px-12px py-8px text-left text-sm hover:bg-dropdown-surface-menu-background-secondary"
         >
           <p className="text-dropdown-text-secondary">
-            {t(`certificate:COUNTERPARTY.${type.toUpperCase()}`)}
+            {t(`certificate:COUNTERPARTY.${optionType.toUpperCase()}`)}
           </p>
         </button>
       );
@@ -121,20 +122,72 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
 
   const disabled = !inputName || !inputTaxId || !inputType;
 
+  const {
+    trigger: editCounterpartyTrigger,
+    success,
+    error: editError, // 🌟更名 `error` 為 `editError`
+  } = APIHandler(
+    APIName.COUNTERPARTY_UPDATE,
+    {
+      params: { companyId: selectedCompany?.id, counterpartyId },
+      body: { name: inputName, taxId: inputTaxId, type: inputType, note: inputNote },
+    },
+    false,
+    true
+  );
+
+  const {
+    trigger: deleteCounterpartyTrigger,
+    success: deleteSuccess,
+    error: deleteError,
+  } = APIHandler(
+    APIName.COUNTERPARTY_DELETE,
+    {
+      params: { companyId: selectedCompany?.id || 0, counterpartyId },
+    },
+    false,
+    true
+  );
+  // 🌟 使用 useEffect 來監聽 success 狀態，自動更新列表
+  useEffect(() => {
+    if (success) {
+      onSave({
+        id: counterpartyId,
+        name: inputName,
+        taxId: inputTaxId,
+        type: inputType,
+        note: inputNote,
+      });
+      onClose();
+    } else if (editError) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to update counterparty:', editError);
+    }
+  }, [success, editError, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
+
+  // 🌟 新增 useEffect 監聽 deleteSuccess 狀態，自動更新列表
+  useEffect(() => {
+    if (deleteSuccess) {
+      // 回傳空資料表示該項目已刪除
+      onSave({ id: counterpartyId, name: '', taxId: '', type: CounterpartyType.BOTH, note: '' });
+      onClose();
+    } else if (deleteError) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to delete counterparty:', deleteError);
+    }
+  }, [deleteSuccess, deleteError, onSave, onClose, counterpartyId]);
+
   // Info:(20241111 - Anna) 添加 deleteCounterpartyHandler 函數以處理刪除交易夥伴
   const deleteCounterpartyHandler = () => {
     messageModalDataHandler({
       title: '刪除交易夥伴',
       content: '您確定要刪除這個交易夥伴嗎？',
-      notes: inputName, // 🌟 傳遞交易夥伴名稱
+      notes: inputName,
       messageType: MessageType.WARNING,
       submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: async () => {
         try {
-          await APIHandler(APIName.COUNTERPARTY_DELETE, {
-            params: { companyId: selectedCompany?.id || 0, counterpartyId },
-          });
-          onClose();
+          await deleteCounterpartyTrigger(); // 🌟 呼叫 deleteCounterpartyTrigger 以執行刪除
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Error deleting counterparty:', error);
@@ -160,13 +213,19 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   // };
 
   const editCounterparty = async () => {
-    if (!hasChanges) return; // Info: (20241111 - Anna)  判斷是否有更動
+    if (!hasChanges) return; // 判斷是否有更動
     try {
-      await APIHandler(APIName.COUNTERPARTY_UPDATE, {
-        body: { name: inputName, taxId: inputTaxId, type: inputType, note: inputNote },
-        params: { companyId: selectedCompany?.id || 0 },
-      });
-      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote });
+      const response = await editCounterpartyTrigger();
+      if (response.success) {
+        onSave({
+          id: counterpartyId,
+          name: inputName,
+          taxId: inputTaxId,
+          type: inputType,
+          note: inputNote,
+        });
+        onClose();
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error updating counterparty:', error);

@@ -27,31 +27,80 @@ const CounterpartyPageBody = () => {
   const { trigger: getCounterpartyList } = APIHandler(
     APIName.COUNTERPARTY_LIST,
     {
-      params: { companyId: selectedCompany?.id || 10000001 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
+      params: { companyId: selectedCompany?.id },
       query: queryCondition,
     },
     false,
     true
   );
+  const fetchCounterpartyData = async () => {
+    if (!selectedCompany?.id) {
+      // eslint-disable-next-line no-console
+      console.error('公司 ID 不存在，無法呼叫 API');
+      return;
+    }
+
+    try {
+      // eslint-disable-next-line no-console
+      console.log('Fetching counterparty data...');
+      const response = await getCounterpartyList({
+        params: { companyId: selectedCompany.id },
+        query: queryCondition,
+      });
+      // 檢查 response 的結構
+      // eslint-disable-next-line no-console
+      console.log('完整的 response:', response);
+
+      // 檢查 response.success 是否為 true
+      if (!response.success) {
+        // eslint-disable-next-line no-console
+        console.error('API response 不成功:', response);
+        return;
+      }
+
+      // 檢查 response.data 是否有正確的結構
+      const responseData = response.data as { data: ICounterparty[] };
+      //  const responseData = response.data as { data: { data: ICounterparty[] } };
+
+      if (Array.isArray(responseData.data)) {
+        // eslint-disable-next-line no-console
+        console.log('成功取得交易夥伴列表:', responseData.data);
+        setCounterparties(responseData.data);
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('responseData 結構不正確:', responseData);
+      }
+
+      // if (!responseData.data || !Array.isArray(responseData.data.data)) {
+      //   // eslint-disable-next-line no-console
+      //   console.error('responseData 結構不正確:', responseData);
+      //   return;
+      // }
+
+      // 若以上檢查都通過，則設定交易夥伴列表
+      // eslint-disable-next-line no-console
+      // console.log('成功取得交易夥伴列表:', responseData.data.data);
+      // setCounterparties(responseData.data.data);
+
+      //   const responseData = response.data as { data: { data: ICounterparty[] } };
+      //   if (response.success && Array.isArray(responseData.data.data)) {
+      //     // eslint-disable-next-line no-console
+      //     console.log('成功取得交易夥伴列表:', responseData.data.data);
+      //     setCounterparties(responseData.data.data); // 設定交易夥伴列表
+      //   } else {
+      //     // eslint-disable-next-line no-console
+      //     console.error('取回交易夥伴列表失敗', response);
+      //   }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching data:', error);
+    }
+  };
 
   // Info: (20241112 - Anna) 呼叫 API 並儲存回傳資料到狀態
   useEffect(() => {
-    const fetchCounterpartyData = async () => {
-      // eslint-disable-next-line no-console
-      console.log('Fetching counterparty data...'); // Info: (20241112 - Anna)  調試信息
-      const response = await getCounterpartyList({ query: { ...queryCondition } });
-      if (response.success && Array.isArray(response.data)) {
-        // eslint-disable-next-line no-console
-        console.log('Fetched data:', response.data); // Info: (20241112 - Anna) 確認 API 回應資料
-        setCounterparties(response.data as ICounterparty[]);
-      } else {
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch data', response); // Info: (20241112 - Anna) 如果失敗，輸出錯誤
-      }
-    };
-
-    fetchCounterpartyData(); // 執行 API 請求
-  }, []); // 空的依賴陣列避免無限循環
+    fetchCounterpartyData();
+  }, [selectedCompany]);
 
   const handleModalOpen = () => {
     setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal
@@ -61,9 +110,11 @@ const CounterpartyPageBody = () => {
     setIsModalOpen(false); // Info: (20241106 - Anna)  Function to close the modal
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Info: (20241106 - Anna) Handle the data from the modal
     setIsModalOpen(false); // Info: (20241106 - Anna) Close modal after saving
+    setSearchQuery(''); // Info: (20241113 - Anna) 清空搜尋條件
+    await fetchCounterpartyData(); // Info: (20241113 - Anna) 重新加載交易夥伴列表
   };
 
   return (
@@ -82,7 +133,11 @@ const CounterpartyPageBody = () => {
           </Button>
         </div>
         {/* Info: (20241112 - Anna) 傳入 API 資料到 CounterpartyList */}
-        <CounterpartyList searchQuery={searchQuery} counterparties={counterparties} />
+        <CounterpartyList
+          searchQuery={searchQuery}
+          counterparties={counterparties}
+          handleSave={handleSave}
+        />
       </div>
       {isModalOpen && ( // Info: (20241106 - Anna) Render modal if open
         <AddCounterPartyModal onClose={handleModalClose} onSave={handleSave} />
