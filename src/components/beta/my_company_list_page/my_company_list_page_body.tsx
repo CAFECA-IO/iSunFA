@@ -65,9 +65,11 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyToEdit }: Co
           companyId
         );
 
-        // Info: (20241113 - Liz) 執行 selectCompany api
+        // Info: (20241113 - Liz) call Select Company API
         const handleConnect = async () => {
-          setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+          if (isLoading) return;
+
+          setIsLoading(true);
 
           try {
             const data = selectCompany(companyId);
@@ -75,12 +77,14 @@ const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyToEdit }: Co
             // Deprecated: (20241113 - Liz)
             // eslint-disable-next-line no-console
             console.log('執行 selectCompany api 回傳:', data);
+
+            // ToDo: (20241114 - Liz) 選擇公司成功後的相關處理
           } catch (error) {
             // Deprecated: (20241113 - Liz)
             // eslint-disable-next-line no-console
             console.log('CompanyList handleConnect error:', error);
           } finally {
-            setIsLoading(false); // API 回傳後解除 loading 狀態
+            setIsLoading(false);
           }
         };
 
@@ -132,12 +136,11 @@ const MyCompanyListPageBody = () => {
   const { userAuth } = useUserCtx();
   const userId = userAuth?.id;
 
-  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
-  const [isCallingAPI, setIsCallingAPI] = useState(false);
+  const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
+  const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
   const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<ICompany | null>(null);
-
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
@@ -160,8 +163,9 @@ const MyCompanyListPageBody = () => {
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
-        {!isCallingAPI && userId && (
+        {userId && (
           <FilterSection<ICompanyAndRole[]>
+            key={refreshKey}
             disableDateSearch
             className="flex-auto"
             params={{ userId }}
@@ -193,7 +197,7 @@ const MyCompanyListPageBody = () => {
       </section>
 
       {isNoData && <NoData />}
-      {!isNoData && !isCallingAPI && userId && (
+      {!isNoData && (
         <>
           <CompanyList
             companyList={companyList}
@@ -212,14 +216,14 @@ const MyCompanyListPageBody = () => {
       <CreateCompanyModal
         isModalOpen={isCreateCompanyModalOpen}
         toggleModal={toggleCreateCompanyModal}
-        setIsCallingAPI={setIsCallingAPI}
+        setRefreshKey={setRefreshKey}
       />
 
       <ChangeTagModal
         companyToEdit={companyToEdit}
         isModalOpen={isChangeTagModalOpen}
         toggleModal={toggleChangeTagModal}
-        setIsCallingAPI={setIsCallingAPI}
+        setRefreshKey={setRefreshKey}
       />
     </main>
   );

@@ -9,14 +9,14 @@ interface ChangeTagModalProps {
   companyToEdit: ICompany | null;
   isModalOpen: boolean;
   toggleModal: () => void;
-  setIsCallingAPI?: React.Dispatch<React.SetStateAction<boolean>>;
+  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const ChangeTagModal = ({
   companyToEdit,
   isModalOpen,
   toggleModal,
-  setIsCallingAPI,
+  setRefreshKey,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['company']);
   const { updateCompany } = useUserCtx();
@@ -31,13 +31,14 @@ const ChangeTagModal = ({
 
   // Info: (20241113 - Liz) 打 API 變更公司的 tag
   const handleChangeTag = async () => {
+    // Info: (20241114 - Liz) 防止重複點擊
+    if (isLoading) return;
+
+    // Info: (20241114 - Liz) 如果沒有選擇要編輯的公司就不執行
     if (!companyToEdit) return;
 
-    setIsLoading(true); // 開始 API 請求時設為 loading 狀態
-
-    if (setIsCallingAPI) {
-      setIsCallingAPI((prevState) => !prevState);
-    }
+    // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
+    setIsLoading(true);
 
     try {
       const data = await updateCompany({
@@ -47,9 +48,11 @@ const ChangeTagModal = ({
       });
 
       if (data) {
-        // Info: (20241113 - Liz) 更新成功後清空表單並關閉 modal
+        // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
         setTag(COMPANY_TAG.ALL);
         toggleModal();
+
+        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
 
         // Deprecated: (20241113 - Liz)
         // eslint-disable-next-line no-console
@@ -64,10 +67,8 @@ const ChangeTagModal = ({
       // eslint-disable-next-line no-console
       console.log('ChangeTagModal handleChangeTag error:', error);
     } finally {
-      setIsLoading(false); // API 回傳後解除 loading 狀態
-      if (setIsCallingAPI) {
-        setIsCallingAPI((prevState) => !prevState);
-      }
+      // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
+      setIsLoading(false);
     }
   };
 

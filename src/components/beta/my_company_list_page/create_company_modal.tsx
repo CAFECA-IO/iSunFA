@@ -9,15 +9,17 @@ import { ToastType, ToastPosition } from '@/interfaces/toastify';
 interface CreateCompanyModalProps {
   isModalOpen: boolean;
   toggleModal: () => void;
-  setIsCallingAPI?: React.Dispatch<React.SetStateAction<boolean>>;
+  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const CreateCompanyModal = ({
   isModalOpen,
   toggleModal,
-  setIsCallingAPI,
+  setRefreshKey,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['company']);
+  const { createCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState('');
   const [taxId, setTaxId] = useState('');
@@ -25,29 +27,30 @@ const CreateCompanyModal = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { createCompany } = useUserCtx();
-  const { toastHandler } = useModalContext();
-
   const toggleDropdown = () => {
     setIsDropdownOpen((prevState) => !prevState);
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true); // 開始 API 請求時設為 loading 狀態
+    // Info: (20241114 - Liz) 防止重複點擊
+    if (isLoading) return;
 
-    if (setIsCallingAPI) {
-      setIsCallingAPI((prevState) => !prevState);
-    }
+    // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
+    setIsLoading(true);
 
     try {
       const { success, code, errorMsg } = await createCompany({ name: companyName, taxId, tag });
 
       if (success) {
+        // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
         setCompanyName('');
         setTaxId('');
         setTag(COMPANY_TAG.ALL);
         toggleModal();
+
+        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
       } else {
+        // Info: (20241114 - Liz) 新增公司失敗時顯示錯誤訊息
         toastHandler({
           id: 'create-company-failed',
           type: ToastType.ERROR,
@@ -65,10 +68,8 @@ const CreateCompanyModal = ({
       // eslint-disable-next-line no-console
       console.log('CreateCompanyModal handleSubmit error:', error);
     } finally {
-      setIsLoading(false); // API 回傳後解除 loading 狀態
-      if (setIsCallingAPI) {
-        setIsCallingAPI((prevState) => !prevState);
-      }
+      // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
+      setIsLoading(false);
     }
   };
 
