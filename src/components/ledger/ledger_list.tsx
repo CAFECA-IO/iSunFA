@@ -28,7 +28,17 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
   const [totalPages] = useState(1);
 
   // 提取 ledgerData.items.data，並設置默認值為空數組，避免 undefined 或 null 引發錯誤
-  const ledgerItemsData = ledgerData?.items?.data ?? [];
+  // const ledgerItemsData = ledgerData?.items?.data ?? [];
+
+  // 確保 ledgerItemsData 是一個有效的陣列
+   const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
+
+  // eslint-disable-next-line no-console
+  console.log(ledgerItemsData);
+  // eslint-disable-next-line no-console
+  console.log('Ledger items data:', ledgerItemsData);
+  // eslint-disable-next-line no-console
+  console.log('Ledger items data length:', ledgerItemsData.length);
 
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
@@ -76,7 +86,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
         <SkeletonList count={5} />
       </div>
     );
-  } else if (!loading && ledgerData?.items.data.length === 0) {
+  } else if (!loading && (!ledgerItemsData || ledgerItemsData.length === 0)) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
@@ -89,8 +99,17 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
   }
 
   // 渲染有效的憑證數據列表
+  // const displayedLedgerList = ledgerItemsData.map((ledger) => {
+  //   return <LedgerItem key={ledger.id} ledger={ledger} />;
+  // });
   const displayedLedgerList = ledgerItemsData.map((ledger) => {
-    return <LedgerItem key={ledger.id} ledger={ledger} />;
+    const { id = '', creditAmount = 0, debitAmount = 0, balance = 0 } = ledger || {};
+    return (
+      <LedgerItem
+        key={id}
+        ledger={{ ...ledger, creditAmount, debitAmount, balance }} // 確保每個欄位有預設值
+      />
+    );
   });
 
   return (

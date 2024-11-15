@@ -11,6 +11,15 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
 
+// Info: (20241105 - Anna) 定義完整的 API 回應結構
+interface ILedgerApiResponse {
+  powerby: string;
+  success: boolean;
+  code: string;
+  message: string;
+  payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
+}
+
 const LedgerPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
   const { selectedCompany } = useUserCtx();
@@ -65,7 +74,8 @@ const LedgerPageBody = () => {
     data: ledgerData,
     isLoading,
   } = selectedCompany?.id
-    ? APIHandler<ILedgerPayload>(
+    ? //  接收 API 響應時，先解構或轉換 ledgerData 來提取 payload 的內容
+      APIHandler<ILedgerApiResponse>(
         APIName.LEDGER_LIST,
         {
           params: { companyId: selectedCompany.id },
@@ -209,6 +219,11 @@ const LedgerPageBody = () => {
     setSelectedReportType(type);
   };
 
+useEffect(() => {
+  // eslint-disable-next-line no-console
+  console.log('Ledger data after API call:', ledgerData);
+}, [ledgerData]);
+
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
@@ -300,7 +315,7 @@ const LedgerPageBody = () => {
 
         <div className="h-px w-full bg-neutral-100"></div>
         <LedgerList
-          ledgerData={ledgerData || null} // 如果 ledgerData 是 undefined，傳遞 null
+          ledgerData={ledgerData?.payload || null} // 如果 ledgerData 是 undefined，傳遞 null
           loading={!!isLoading} // 使用 !! 確保 loading 是 boolean
         />
       </div>
