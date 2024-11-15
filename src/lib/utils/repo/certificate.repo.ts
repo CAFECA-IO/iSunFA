@@ -14,3 +14,13 @@ export async function countMissingCertificate(companyId: number) {
 
   return missingCertificatesCount;
 }
+
+export async function getOneCertificateByIdWithoutInclude(certificateId: number) {
+  const certificate = await prisma.certificate.findUnique({
+    where: {
+      id: certificateId,
+    },
+  });
+
+  return certificate;
+}

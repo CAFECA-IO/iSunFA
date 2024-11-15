@@ -43,6 +43,7 @@ export type IAPIName =
   | 'INVOICE_CREATE'
   | 'INVOICE_UPDATE'
   | 'INVOICE_GET_BY_ID'
+  | 'IMAGE_GET_BY_ID'
   | 'ASK_AI_STATUS'
   | 'ASK_AI_RESULT'
   | 'VOUCHER_CREATE'

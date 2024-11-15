@@ -13,7 +13,10 @@
     "STATUS_DONATED": "已捐赠",
     "STATUS_SCRAPPED": "已报废",
     "STATUS_MISSING": "已遗失",
-    "STATUS_NORMAL": "使用中"
+    "STATUS_NORMAL": "使用中",
+    "EXPORT_ASSET_LIST_WARNING_TITLE": "警告",
+    "EXPORT_ASSET_LIST_WARNING_CONTENT": "请至少选择一个资产以导出。",
+    "OK_BTN": "好"
   },
   "STATUS_SETTING_MODAL": {
     "TITLE": "状态设定",

@@ -85,6 +85,14 @@ export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [EventType.TRANSFER]: VoucherType.TRANSFER,
 };
 
+export const VOUCHER_TYPE_TO_EVENT_TYPE_MAP: {
+  [key in VoucherType]: EventType;
+} = {
+  [VoucherType.RECEIVE]: EventType.INCOME,
+  [VoucherType.EXPENSE]: EventType.PAYMENT,
+  [VoucherType.TRANSFER]: EventType.TRANSFER,
+};
+
 export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];
 
 export const EVENT_TYPE = {
@@ -837,6 +845,18 @@ export const SPECIAL_ACCOUNTS: {
     forUser: true,
     parentCode: '2200',
     rootCode: '2200',
+    level: 3,
+  },
+  ACCOUNT_PAYABLE: {
+    system: 'IFRS',
+    type: AccountType.LIABILITY,
+    debit: false,
+    liquidity: true,
+    code: '2171',
+    name: '應付帳款',
+    forUser: true,
+    parentCode: '2170',
+    rootCode: '2170',
     level: 3,
   },
 };

@@ -24,6 +24,7 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
+// import { encryptFile, importPublicKey } from '@/lib/utils/crypto'; // TODO:(20241113 - tzuhan) encrypt file
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
@@ -40,7 +41,7 @@ const MobileUploadPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
   // Info: (20241023 - tzuhan) @Murky, <...> 裡面是 public file upload API 期望的回傳格式，希望回傳 fileId
-  const { trigger: uploadFileAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
+  const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const [selectedFile, setSelectedFile] = useState<IFileUIBetaWithFile | null>(null);
@@ -107,7 +108,7 @@ const MobileUploadPage: React.FC = () => {
 
         const { success, data: filedId } = await uploadFileAPI({
           query: {
-            type: UploadType.MOBILE_UPLOAD,
+            type: UploadType.ROOM,
             token: token as string,
           },
           body: formData,
