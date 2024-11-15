@@ -61,7 +61,7 @@ const CompanyList = ({
 
 const MyCompanyListPageBody = () => {
   const { t } = useTranslation(['company']);
-  const { userAuth } = useUserCtx();
+  const { userAuth, deleteCompany } = useUserCtx();
   const userId = userAuth?.id;
 
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
@@ -83,11 +83,32 @@ const MyCompanyListPageBody = () => {
     setIsDeleteModalOpen((prev) => !prev);
   };
 
+  // Info: (20241115 - Liz) 打 API 刪除公司
+  const handleDeleteCompany = async () => {
+    if (!companyToDelete) return;
+
+    try {
+      const data = await deleteCompany(companyToDelete.company.id);
+
+      if (data) {
+        setRefreshKey((prev) => prev + 1);
+      } else {
+        // Deprecated: (20241115 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('刪除公司失敗');
+      }
+    } catch (error) {
+      // Deprecated: (20241115 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('MyCompanyListPageBody handleDeleteCompany error:', error);
+    }
+  };
+
   const messageModalData: IMessageModal = {
     title: 'Delete the Company',
     content: 'Are you sure you want to Delete the Company?',
     submitBtnStr: 'Delete',
-    submitBtnFunction: () => {}, // ToDo: (20241114 - Liz) call Delete Company API
+    submitBtnFunction: handleDeleteCompany,
     messageType: MessageType.WARNING,
     backBtnFunction: toggleDeleteModal,
     backBtnStr: 'Cancel',
