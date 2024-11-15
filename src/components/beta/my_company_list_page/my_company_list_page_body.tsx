@@ -92,6 +92,16 @@ const MyCompanyListPageBody = () => {
 
       if (data) {
         setRefreshKey((prev) => prev + 1);
+        // Deprecated: (20241115 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(
+          '刪除公司成功, api return data:',
+          data,
+          'refreshKey:',
+          refreshKey,
+          'companyToDelete:',
+          companyToDelete
+        );
       } else {
         // Deprecated: (20241115 - Liz)
         // eslint-disable-next-line no-console
@@ -118,6 +128,9 @@ const MyCompanyListPageBody = () => {
     setCompanyList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
+    // Deprecated: (20241115 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('handleApiResponse resData:', resData);
   };
 
   return (
