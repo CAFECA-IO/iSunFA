@@ -7,11 +7,11 @@ import EditCounterPartyModal from '@/components/counterparty/edit_counterparty_m
 
 interface ICounterpartyItemProps {
   counterparty: ICounterparty; // Info: (20241106 - Anna) 符合 ICounterparty 資料格式
-  handleSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void; // 🌟 新增 handleSave 作為屬性
+  handleSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void; // Info: (20241115 - Anna) 新增 handleSave 作為屬性
 }
 
 const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterpartyItemProps) => {
-  // 🌟 添加 handleSave 解構
+  // Info: (20241115 - Anna)  添加 handleSave 解構
   // eslint-disable-next-line no-console
   console.log('Rendering CounterpartyItem with data:', counterparty);
   const { name, type, note, taxId, id: counterpartyId } = counterparty; // Info: (20241110 - Anna) 使用符合 ICounterparty 的屬性名稱，將 id 重命名為 counterpartyId

@@ -125,7 +125,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   const {
     trigger: editCounterpartyTrigger,
     success,
-    error: editError, // 🌟更名 `error` 為 `editError`
+    error: editError, // Info: (20241115 - Anna) 更名 `error` 為 `editError`
   } = APIHandler(
     APIName.COUNTERPARTY_UPDATE,
     {
@@ -148,7 +148,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     false,
     true
   );
-  // 🌟 使用 useEffect 來監聽 success 狀態，自動更新列表
+  // Info: (20241115 - Anna) 使用 useEffect 來監聽 success 狀態，自動更新列表
   useEffect(() => {
     if (success) {
       onSave({
@@ -165,7 +165,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     }
   }, [success, editError, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
 
-  // 🌟 新增 useEffect 監聽 deleteSuccess 狀態，自動更新列表
+  // Info: (20241115 - Anna) 新增 useEffect 監聽 deleteSuccess 狀態，自動更新列表
   useEffect(() => {
     if (deleteSuccess) {
       // 回傳空資料表示該項目已刪除
@@ -187,7 +187,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
       submitBtnStr: t('setting:SETTING.REMOVE'),
       submitBtnFunction: async () => {
         try {
-          await deleteCounterpartyTrigger(); // 🌟 呼叫 deleteCounterpartyTrigger 以執行刪除
+          await deleteCounterpartyTrigger(); // Info: (20241115 - Anna) 呼叫 deleteCounterpartyTrigger 以執行刪除
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Error deleting counterparty:', error);
