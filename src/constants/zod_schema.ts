@@ -177,9 +177,6 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.AGREE_TO_TERMS]: nullAPISchema,
   [APIName.CREATE_CHALLENGE]: nullAPISchema,
-  [APIName.SIGN_UP]: nullAPISchema,
-  [APIName.SIGN_IN]: nullAPISchema,
-  [APIName.SIGN_OUT]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
   [APIName.USER_GET_BY_ID]: nullAPISchema,
   [APIName.USER_UPDATE]: nullAPISchema,

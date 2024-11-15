@@ -84,6 +84,7 @@ const CompanyList = () => {
     <div className="flex justify-center gap-40px">
       {COMPANY_LIST.map((companyAndRole) => (
         <button
+          key={companyAndRole.company.id}
           type="button"
           onClick={handleSelectCompany}
           className="h-100px w-100px overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"

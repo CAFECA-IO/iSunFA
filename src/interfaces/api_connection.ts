@@ -6,9 +6,6 @@ import { ICertificate } from '@/interfaces/certificate';
 export type IAPIName =
   | 'AGREE_TO_TERMS'
   | 'CREATE_CHALLENGE'
-  | 'SIGN_UP'
-  | 'SIGN_IN'
-  | 'SIGN_OUT'
   | 'EMAIL'
   | 'USER_GET_BY_ID'
   | 'USER_UPDATE'
