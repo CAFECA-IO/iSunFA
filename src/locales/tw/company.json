@@ -41,10 +41,12 @@
     "CODE": "程式碼",
     "CANCEL": "取消",
     "SUBMIT": "提交",
+    "SAVE": "儲存",
+    "CONNECT": "連結",
     "CHANGE_WORK_TAG": "變更標籤",
     "DELETE": "刪除",
-    "SAVE": "儲存",
-    "CONNECT": "連結"
+    "DELETE_MESSAGE_TITLE": "刪除公司",
+    "DELETE_MESSAGE_CONTENT": "您確定要刪除此公司嗎？"
   },
   "DELETE": {
     "TITLE": "移除公司",

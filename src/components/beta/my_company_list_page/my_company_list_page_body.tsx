@@ -115,13 +115,13 @@ const MyCompanyListPageBody = () => {
   };
 
   const messageModalData: IMessageModal = {
-    title: 'Delete the Company',
-    content: 'Are you sure you want to Delete the Company?',
-    submitBtnStr: 'Delete',
+    title: t('company:PAGE_BODY.DELETE_MESSAGE_TITLE'),
+    content: t('company:PAGE_BODY.DELETE_MESSAGE_CONTENT'),
+    submitBtnStr: t('company:PAGE_BODY.DELETE'),
     submitBtnFunction: handleDeleteCompany,
     messageType: MessageType.WARNING,
     backBtnFunction: toggleDeleteModal,
-    backBtnStr: 'Cancel',
+    backBtnStr: t('company:PAGE_BODY.CANCEL'),
   };
 
   const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
