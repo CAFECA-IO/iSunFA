@@ -41,8 +41,12 @@
     "CODE": "代码",
     "CANCEL": "取消",
     "SUBMIT": "提交",
+    "SAVE": "保存",
+    "CONNECT": "连接",
     "CHANGE_WORK_TAG": "更改标签",
-    "SAVE": "保存"
+    "DELETE": "删除",
+    "DELETE_MESSAGE_TITLE": "删除公司",
+    "DELETE_MESSAGE_CONTENT": "您确定要删除此公司吗？"
   },
   "DELETE": {
     "TITLE": "删除公司",

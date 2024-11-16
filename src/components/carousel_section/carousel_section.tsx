@@ -6,27 +6,27 @@ import Card from '@/components/card/card';
 import { TranslateFunction } from '@/interfaces/locale';
 
 const CarouselSection = () => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('landing_page');
   const carouselItems = [
     {
-      title: 'common:LANDING_PAGE.CAROUSEL_TITLE_1',
-      content: 'common:LANDING_PAGE.CAROUSEL_CONTENT_1',
+      title: 'landing_page:LANDING_PAGE.CAROUSEL_TITLE_1',
+      content: 'landing_page:LANDING_PAGE.CAROUSEL_CONTENT_1',
     },
     {
-      title: 'common:LANDING_PAGE.CAROUSEL_TITLE_2',
-      content: 'common:LANDING_PAGE.CAROUSEL_CONTENT_2',
+      title: 'landing_page:LANDING_PAGE.CAROUSEL_TITLE_2',
+      content: 'landing_page:LANDING_PAGE.CAROUSEL_CONTENT_2',
     },
     {
-      title: 'common:LANDING_PAGE.CAROUSEL_TITLE_3',
-      content: 'common:LANDING_PAGE.CAROUSEL_CONTENT_3',
+      title: 'landing_page:LANDING_PAGE.CAROUSEL_TITLE_3',
+      content: 'landing_page:LANDING_PAGE.CAROUSEL_CONTENT_3',
     },
     {
-      title: 'common:LANDING_PAGE.CAROUSEL_TITLE_4',
-      content: 'common:LANDING_PAGE.CAROUSEL_CONTENT_4',
+      title: 'landing_page:LANDING_PAGE.CAROUSEL_TITLE_4',
+      content: 'landing_page:LANDING_PAGE.CAROUSEL_CONTENT_4',
     },
     {
-      title: 'common:LANDING_PAGE.CAROUSEL_TITLE_5',
-      content: 'common:LANDING_PAGE.CAROUSEL_CONTENT_5',
+      title: 'landing_page:LANDING_PAGE.CAROUSEL_TITLE_5',
+      content: 'landing_page:LANDING_PAGE.CAROUSEL_CONTENT_5',
     },
   ];
 

@@ -9,7 +9,7 @@ import { TranslateFunction } from '@/interfaces/locale';
 import { FiSend } from 'react-icons/fi';
 
 function ContactForm() {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('landing_page');
 
   // Info: (20240318 - Shirley) 是否顯示動畫 & 顯示哪個動畫
   const [showAnim, setShowAnim] = useState(false);
@@ -147,19 +147,19 @@ function ContactForm() {
               height={100}
               alt="loading_animation"
             />
-            <p className="text-sm">{t('common:CONTACT_US.SENDING')}</p>
+            <p className="text-sm">{t('landing_page:CONTACT_US.SENDING')}</p>
           </div>
         ) : animation === FormAnimation.SUCCESS ? (
           /* Info: (20230731 - Shirley) Success animation */
           <div className="flex flex-col items-center space-y-10">
             <Image src="/animations/success.gif" width={150} height={150} alt="loading_animation" />
-            <p className="text-sm">{t('common:CONTACT_US.SUCCESS')}</p>
+            <p className="text-sm">{t('landing_page:CONTACT_US.SUCCESS')}</p>
           </div>
         ) : animation === FormAnimation.ERROR ? (
           /* Info: (20230731 - Shirley) Error animation */
           <div className="flex flex-col items-center">
             <Image src="/animations/error.gif" width={100} height={100} alt="error_animation" />
-            <p className="text-sm">{t('common:CONTACT_US.ERROR')}</p>
+            <p className="text-sm">{t('landing_page:CONTACT_US.ERROR')}</p>
             <Button
               id="retry-btn"
               type="button"
@@ -167,7 +167,7 @@ function ContactForm() {
               onClick={retryHandler}
               className="mt-6 px-10 py-3"
             >
-              {t('common:CONTACT_US.TRY_AGAIN')}
+              {t('landing_page:CONTACT_US.TRY_AGAIN')}
             </Button>
           </div>
         ) : null}
@@ -185,10 +185,10 @@ function ContactForm() {
       <div className="flex flex-col">
         {/* Info: (tzuhan - 20240513) remove arbitrary value? @Shirley  */}
         <h1 className="justify-center text-5xl font-semibold leading-52px tracking-tighter text-orange-400">
-          {t('common:CONTACT_US.TITLE')}
+          {t('landing_page:CONTACT_US.TITLE')}
         </h1>
         <p className="mt-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25">
-          {t('common:CONTACT_US.DESCRIPTION')}
+          {t('landing_page:CONTACT_US.DESCRIPTION')}
         </p>
       </div>
       <div className="mt-12">
@@ -197,7 +197,7 @@ function ContactForm() {
             htmlFor="Name"
             className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
           >
-            {t('common:CONTACT_US.NAME')}
+            {t('landing_page:CONTACT_US.NAME')}
             <span className="text-red-500">*</span>
           </label>
           <input
@@ -214,7 +214,7 @@ function ContactForm() {
             htmlFor="Email"
             className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
           >
-            {t('common:CONTACT_US.EMAIL')} <span className="text-red-500">*</span>
+            {t('landing_page:CONTACT_US.EMAIL')} <span className="text-red-500">*</span>
           </label>
           <input
             id="Email"
@@ -225,7 +225,7 @@ function ContactForm() {
             required
           />
           {!emailValid && (
-            <p className="mt-1 text-xs text-red-500"> {t('common:CONTACT_US.EMAIL_VERIFY')}</p>
+            <p className="mt-1 text-xs text-red-500">{t('landing_page:CONTACT_US.EMAIL_VERIFY')}</p>
           )}
         </div>
         <div className="mt-4 flex flex-col pb-4">
@@ -233,7 +233,7 @@ function ContactForm() {
             htmlFor="Phone"
             className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
           >
-            {t('common:CONTACT_US.PHONE')}
+            {t('landing_page:CONTACT_US.PHONE')}
           </label>
           <input
             id="Phone"
@@ -249,7 +249,7 @@ function ContactForm() {
             htmlFor="Message"
             className="pb-2 text-base font-medium leading-6 tracking-normal text-navy-blue-25"
           >
-            {t('common:CONTACT_US.MESSAGE')} <span className="text-red-500">*</span>
+            {t('landing_page:CONTACT_US.MESSAGE')} <span className="text-red-500">*</span>
           </label>
           <textarea
             id="Message"
@@ -258,14 +258,14 @@ function ContactForm() {
             rows={3}
             value={inputMessage}
             className="min-h-120px rounded border border-solid border-navy-blue-600 bg-navy-blue-400 px-4 py-2.5 text-xl leading-7 tracking-tight text-navy-blue-200 outline-none"
-            placeholder={t('common:CONTACT_US.MESSAGE_PLACEHOLDER')}
+            placeholder={t('landing_page:CONTACT_US.MESSAGE_PLACEHOLDER')}
             required
           ></textarea>
         </div>
         <div className="mt-4 flex w-full justify-end">
           <Button type="submit" className="space-x-3" variant="default">
             <span className="text-base font-semibold leading-6 tracking-normal">
-              {t('common:CONTACT_US.SUBMIT')}
+              {t('landing_page:CONTACT_US.SUBMIT')}
             </span>
             <span>
               <FiSend size={20} />

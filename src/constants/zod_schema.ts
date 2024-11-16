@@ -185,9 +185,6 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.AGREE_TO_TERMS]: nullAPISchema,
   [APIName.CREATE_CHALLENGE]: nullAPISchema,
-  [APIName.SIGN_UP]: nullAPISchema,
-  [APIName.SIGN_IN]: nullAPISchema,
-  [APIName.SIGN_OUT]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
@@ -264,4 +261,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.IP_LIST]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
+  [APIName.SIGN_IN]: nullAPISchema,
+  [APIName.SIGN_OUT]: nullAPISchema,
 };

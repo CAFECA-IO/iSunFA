@@ -54,6 +54,7 @@ interface UserContextType {
     action: string;
     tag: COMPANY_TAG;
   }) => Promise<ICompanyAndRole | null>;
+  deleteCompany: (companyId: number) => Promise<ICompany | null>;
 
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -92,6 +93,7 @@ export const UserContext = createContext<UserContextType>({
   selectedCompany: null,
   selectCompany: async () => null,
   updateCompany: async () => null,
+  deleteCompany: async () => null,
 
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -155,6 +157,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
   // Info: (20241113 - Liz) 更新公司 API
   const { trigger: updateCompanyAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
+  // Info: (20241115 - Liz) 刪除公司 API
+  const { trigger: deleteCompanyAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -680,6 +684,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Info: (20241115 - Liz) 刪除公司的功能
+  const deleteCompany = async (companyId: number) => {
+    try {
+      const { success, data: company } = await deleteCompanyAPI({
+        params: { companyId },
+      });
+
+      if (success && company) {
+        return company;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
   const throttledGetStatusInfo = useCallback(
     throttle(() => {
       getStatusInfo();
@@ -767,6 +787,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       createCompany,
       selectCompany,
       updateCompany,
+      deleteCompany,
       selectedCompany: selectedCompanyRef.current,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,

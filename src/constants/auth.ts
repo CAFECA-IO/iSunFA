@@ -68,7 +68,6 @@ export const AUTH_CHECK = {
 
   [APIName.AGREE_TO_TERMS]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_CHALLENGE]: [AuthFunctionsKeysNew.user],
-  [APIName.SIGN_UP]: [AuthFunctionsKeysNew.user],
   [APIName.SIGN_IN]: [AuthFunctionsKeysNew.user],
   [APIName.SIGN_OUT]: [AuthFunctionsKeysNew.user],
   [APIName.EMAIL]: [AuthFunctionsKeysNew.user],

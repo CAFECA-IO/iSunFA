@@ -37,7 +37,7 @@ export async function checkUserAdmin(session: ISessionData, req: NextApiRequest)
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
   let isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
   if (isAuth) {
-    const admin = await getAdminByCompanyIdAndUserId(session.companyId, session.userId);
+    const admin = await getAdminByCompanyIdAndUserId(session.userId, session.companyId);
     isAuth = !!admin;
   }
 

@@ -152,8 +152,8 @@ export async function getOwnerByCompanyId(
 }
 
 export async function getAdminByCompanyIdAndUserId(
-  companyId: number,
-  userId: number
+  userId: number,
+  companyId: number
 ): Promise<
   | (Admin & { company: Company; user: User & { userAgreements: UserAgreement[] }; role: Role })
   | null
