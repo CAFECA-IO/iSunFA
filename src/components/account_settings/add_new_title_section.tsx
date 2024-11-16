@@ -246,12 +246,26 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   );
 
   const addBtnClickHandler = async () => {
-    createNewAccount({ params: { companyId } });
+    if (selectSubcategory) {
+      createNewAccount({
+        params: { companyId },
+        body: {
+          code: selectSubcategory.id,
+          name: titleName,
+        },
+      });
+    }
   };
 
   const updateBtnClickHandler = async () => {
-    if (selectedAccountTitle) {
-      updateNewAccount({ params: { companyId, accountId: selectedAccountTitle.id } });
+    if (selectSubcategory) {
+      updateNewAccount({
+        params: { companyId, accountId: selectSubcategory.id },
+        body: {
+          code: selectSubcategory.code,
+          name: titleName,
+        },
+      });
     }
   };
 

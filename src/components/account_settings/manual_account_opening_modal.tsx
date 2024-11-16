@@ -9,6 +9,8 @@ import APIHandler from '@/lib/utils/api_handler';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_COMPANY_ID } from '@/constants/config';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IManualAccountOpeningModalProps {
   isModalVisible: boolean;
@@ -37,7 +39,7 @@ const defaultManualAccountOpeningItem: IManualAccountOpeningItem = {
   id: 0,
   subcategory: null,
   titleName: '',
-  titleCode: '',
+  titleCode: '-',
   beginningAmount: 0,
   isDebit: null,
 };
@@ -53,14 +55,11 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   setAmount,
 }) => {
   const { t } = useTranslation('common');
-  const { id, subcategory, titleName, titleCode, beginningAmount, isDebit } = data;
+  const { id, subcategory, titleName, titleCode, isDebit } = data;
 
-  const debitValue = isDebit !== null && isDebit ? beginningAmount : 0;
-  const creditValue = isDebit !== null && !isDebit ? beginningAmount : 0;
-
-  const [nameInputValue, setNameInputValue] = useState(titleName);
-  const [debitInputValue, setDebitInputValue] = useState(debitValue);
-  const [creditInputValue, setCreditInputValue] = useState(creditValue);
+  const [nameInputValue, setNameInputValue] = useState<string>(titleName);
+  const [debitInputValue, setDebitInputValue] = useState<string>('');
+  const [creditInputValue, setCreditInputValue] = useState<string>('');
 
   const subcategoryPlaceholder = subcategory
     ? `${subcategory.code} ${subcategory.name}`
@@ -83,11 +82,19 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
     setTitleName(e.target.value);
   };
   const changeDebitAmountHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDebitInputValue(Number(e.target.value));
+    // Info: (20241115 - Julian) 限制只能輸入數字，並去掉開頭 0
+    const debitNum = parseInt(e.target.value, 10);
+    const debitValue = Number.isNaN(debitNum) ? 0 : debitNum;
+
+    setDebitInputValue(debitValue.toString());
     setAmount(Number(e.target.value), true);
   };
   const changeCreditAmountHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCreditInputValue(Number(e.target.value));
+    // Info: (20241115 - Julian) 限制只能輸入數字，並去掉開頭 0
+    const creditNum = parseInt(e.target.value, 10);
+    const creditValue = Number.isNaN(creditNum) ? 0 : creditNum;
+
+    setCreditInputValue(creditValue.toString());
     setAmount(Number(e.target.value), false);
   };
 
@@ -150,7 +157,8 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
           id="manual-account-code-input"
           type="text"
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-          placeholder={titleCode}
+          value={titleCode}
+          readOnly
           disabled
         />
       </div>
@@ -158,11 +166,9 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
       <div className={`${tableCellStyle} border-r`}>
         <input
           id="manual-account-debit-input"
-          type="number"
-          onWheel={(e) => e.currentTarget.blur()} // Info: (20241112 - Julian) 防止滾輪滾動
+          type="string"
           value={debitInputValue}
           onChange={changeDebitAmountHandler}
-          min={0}
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
           placeholder="0"
           disabled={debitDisabled}
@@ -172,11 +178,9 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
       <div className={`${tableCellStyle}`}>
         <input
           id="manual-account-credit-input"
-          type="number"
-          onWheel={(e) => e.currentTarget.blur()} // Info: (20241112 - Julian) 防止滾輪滾動
+          type="string"
           value={creditInputValue}
           onChange={changeCreditAmountHandler}
-          min={0}
           className="w-150px rounded-sm border border-input-stroke-input px-12px py-10px text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
           placeholder="0"
           disabled={creditDisabled}
@@ -193,6 +197,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const { t } = useTranslation('common');
 
   const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   // Info: (20241114 - Julian) 用來判斷是否展開 subcategory menu，以及展開的項目 index
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
@@ -202,6 +207,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const [manualAccountOpeningList, setManualAccountOpeningList] = useState<
     IManualAccountOpeningItem[]
   >([defaultManualAccountOpeningItem]);
+  // Info: (20241114 - Julian) 用來判斷是否進行到開帳的步驟
+  const [isStartOpening, setIsStartOpening] = useState<boolean>(false);
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
@@ -212,12 +219,29 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     sortOrder: 'asc',
   };
 
+  // Info: (20241115 - Julian) 取得會計科目列表
   const { trigger: getAccountList, data: accountList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
     { params: { companyId }, query: queryCondition },
     false,
     true
   );
+
+  // Info: (20241115 - Julian) 新增會計科目的 API
+  const {
+    trigger: createNewAccount,
+    isLoading: isCreatingAccount,
+    success: createAccountSuccess,
+    error: createAccountError,
+  } = APIHandler(APIName.CREATE_NEW_SUB_ACCOUNT);
+
+  // Info: (20241115 - Julian) 新增傳票的 API
+  const {
+    trigger: createNewVoucher,
+    isLoading: isCreatingVoucher,
+    success: createVoucherSuccess,
+    error: createVoucherError,
+  } = APIHandler(APIName.VOUCHER_CREATE);
 
   const subcategoryList = accountList?.data ?? [];
   // Info: (20241114 - Julian) 如果有 focusIndex，則代表有展開的 subcategory menu
@@ -234,15 +258,93 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   };
 
   const submitHandler = async () => {
+    /* Info: (20241115 - Julian) 手動開帳的步驟：
+    /* 1.如果有填 Title Name -> 先去 create new title
+    /* 2.再用 account title 去 create new account */
+
+    // ToDo: (20241115 - Julian) 先以 manualAccountOpeningList[0] 為例
+    if (manualAccountOpeningList[0].titleName !== '') {
+      createNewAccount({
+        params: { companyId },
+        body: {
+          code: manualAccountOpeningList[0].titleCode,
+          name: manualAccountOpeningList[0].titleName,
+        },
+      });
+    } else {
+      // Info: (20241115 - Julian) 如果 title name 是空的，則直接進行下一步
+      setIsStartOpening(true);
+    }
+
     // ToDo: (20241114 - Julian) For debug
     // eslint-disable-next-line no-console
     console.log(manualAccountOpeningList);
   };
 
   useEffect(() => {
+    if (!isCreatingAccount) {
+      if (createAccountSuccess) {
+        // Info: (20241115 - Julian) 如果 create new title 成功，則再 create new account
+        setIsStartOpening(true);
+      } else if (createAccountError) {
+        // Info: (20241115 - Julian) 如果 create new title 失敗，則提示錯誤訊息
+        toastHandler({
+          id: 'manual-account-opening-error',
+          type: ToastType.ERROR,
+          content: 'Failed to create new title, please try again.',
+          closeable: true,
+        });
+      }
+    }
+  }, [isCreatingAccount, createAccountSuccess, createAccountError]);
+
+  useEffect(() => {
+    if (isStartOpening) {
+      // Info: (20241115 - Julian) 進到開帳的步驟
+      createNewVoucher({
+        params: { companyId },
+        body: {
+          lineItems: [
+            {
+              accountId: manualAccountOpeningList[0].titleCode,
+              description: '',
+              debit: manualAccountOpeningList[0].isDebit,
+              amount: manualAccountOpeningList[0].beginningAmount,
+            },
+          ],
+        },
+      });
+    }
+  }, [isStartOpening]);
+
+  useEffect(() => {
+    if (!isCreatingVoucher) {
+      if (createVoucherSuccess) {
+        // Info: (20241115 - Julian) 如果 create new voucher 成功，則提示成功訊息
+        toastHandler({
+          id: 'manual-account-opening-success',
+          type: ToastType.SUCCESS,
+          content: 'Manual account opening success.',
+          closeable: true,
+        });
+        modalVisibilityHandler();
+      } else if (createVoucherError) {
+        // Info: (20241115 - Julian) 如果 create new voucher 失敗，則提示錯誤訊息
+        toastHandler({
+          id: 'manual-account-opening-error',
+          type: ToastType.ERROR,
+          content: 'Failed to create new voucher, please try again.',
+          closeable: true,
+        });
+      }
+    }
+  }, [createVoucherSuccess, createVoucherError, isCreatingVoucher]);
+
+  useEffect(() => {
     // Info: (20241114 - Julian) 如果 modal 關閉，則重置 manualAccountOpeningList
     if (!isModalVisible) {
       setManualAccountOpeningList([defaultManualAccountOpeningItem]);
+      setIsStartOpening(false);
     }
   }, [isModalVisible]);
 
