@@ -25,7 +25,12 @@ import {
   // WEEK_FULL_LIST,
   // MONTH_ABR_LIST,
 } from '@/constants/display';
-import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
+import {
+  VoucherType,
+  EventType,
+  EVENT_TYPE_TO_VOUCHER_TYPE_MAP,
+  VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
+} from '@/constants/account';
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
@@ -666,9 +671,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       actions,
       certificateIds: Object.values(certificates),
       voucherDate: date.startTimeStamp,
-      type,
+      type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
       note,
-      counterPartyId: counterparty?.companyId ?? '',
+      counterPartyId: counterparty?.companyId,
       lineItems,
       assetIds,
       reverseVouchers,

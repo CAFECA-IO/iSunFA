@@ -96,6 +96,8 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "Accounting Import",
     "IMPORT_FILE": "Import file",
     "MANUAL_ACCOUNT_OPENING": "Manual account opening",
+    "TOAST_UPDATE_SUCCESS": "Accounting setting updated successfully!",
+    "TOAST_UPDATE_FAIL": "Failed to update accounting setting! Please try again later.",
     "SAVE_BTN": "Save"
   },
   "ACCOUNTING_SETTING_MODAL": {
@@ -120,9 +122,19 @@
     "DROPMENU_PLACEHOLDER": "Please select...",
     "TITLE_NAME_PLACEHOLDER": "Enter a name for this accounting title.",
     "TITLE_NOTE_PLACEHOLDER": "Enter a description for this accounting title.",
+    "REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE": "Remove Accounting Title",
+    "REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT": "Are you sure you want to Remove the Accounting Title?",
+    "TOAST_ACCOUNT_TITLE_CREATE_SUCCESS": "Accounting title created successfully.",
+    "TOAST_ACCOUNT_TITLE_CREATE_FAIL": "Failed to create accounting title, please try again later.",
+    "TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS": "Accounting title updated successfully.",
+    "TOAST_ACCOUNT_TITLE_UPDATE_FAIL": "Failed to update accounting title, please try again later.",
+    "TOAST_ACCOUNT_TITLE_DELETE_SUCCESS": "Accounting title removed successfully.",
+    "TOAST_ACCOUNT_TITLE_DELETE_FAIL": "Failed to remove accounting title, please try again later.",
     "CLEAR_ALL_BTN": "Clear All",
+    "CANCEL_BTN": "Cancel",
     "ADD_BTN": "Add",
-    "SAVE_BTN": "Save"
+    "SAVE_BTN": "Save",
+    "DELETE_BTN": "Yes, Delete Account"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "Manual Account Opening",
@@ -134,6 +146,7 @@
     "DROPMENU_PLACEHOLDER": "Please select...",
     "NAME_PLACEHOLDER": "Enter name",
     "ADD_LIST_BTN": "Add List",
+    "CANCEL_BTN": "Cancel",
     "SUBMIT_BTN": "Submit",
     "NO_ACCOUNTING_FOUND": "No Account Title Found."
   },
@@ -145,5 +158,10 @@
     "ADDRESS": "Login address",
     "DETECT_DIFFERENT_IP_LOGIN": "Login detected from a different IP address.",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "Please verify your account security to prevent data leakage."
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "User settings updated successfully.",
+    "DELETE_WARNING": "This account will be deleted in three business days.",
+    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page."
   }
 }

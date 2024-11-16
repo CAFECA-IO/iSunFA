@@ -45,5 +45,9 @@
     "DELETE": "刪除",
     "SAVE": "儲存",
     "CONNECT": "連結"
+  },
+  "DELETE": {
+    "TITLE": "移除公司",
+    "WARNING": "您確定要移除公司嗎？"
   }
 }

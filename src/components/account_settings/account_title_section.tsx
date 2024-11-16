@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { IAccount } from '@/interfaces/accounting_account';
+import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { useTranslation } from 'next-i18next';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import Skeleton from '@/components/skeleton/skeleton';
 import { FiPlusCircle } from 'react-icons/fi';
 import { AccountTypeBeta } from '@/constants/account';
 import { TitleFormType } from '@/constants/accounting_setting';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { useModalContext } from '@/contexts/modal_context';
+import { useUserCtx } from '@/contexts/user_context';
+import { MessageType } from '@/interfaces/message_modal';
+import { FREE_COMPANY_ID } from '@/constants/config';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IAccountingTitleSettingModalProps {
   accountTitleList: IAccount[];
@@ -28,6 +36,7 @@ interface IAccountThirdLayerItemProps {
   titleCode: string;
   titleName: string;
   clickHandler: () => void;
+  deleteHandler: () => void;
 }
 
 // Info: (20241111 - Julian) 會計科目的第三層項目(最底層)
@@ -36,7 +45,23 @@ const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
   titleCode,
   titleName,
   clickHandler,
+  deleteHandler,
 }) => {
+  const { t } = useTranslation('common');
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+
+  const deleteBtnClickHandler = () => {
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: t('setting:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE'),
+      content: t('setting:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT'),
+      backBtnStr: t('setting:ACCOUNTING_SETTING_MODAL.CANCEL_BTN'),
+      submitBtnStr: t('setting:ACCOUNTING_SETTING_MODAL.DELETE_BTN'),
+      submitBtnFunction: deleteHandler,
+    });
+    messageModalVisibilityHandler();
+  };
+
   return (
     <div
       className={`mt-4px flex w-full items-center rounded-full px-8px py-4px hover:cursor-pointer ${isActive ? 'bg-surface-brand-primary-30' : 'hover:bg-surface-brand-primary-10'}`}
@@ -52,7 +77,11 @@ const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
         <p className="truncate">{titleName}</p>
       </div>
       {/* Info: (20241111 - Julian) 刪除按鈕 */}
-      <button type="button" className="shrink-0 text-icon-surface-single-color-primary">
+      <button
+        type="button"
+        className="shrink-0 text-icon-surface-single-color-primary"
+        onClick={deleteBtnClickHandler}
+      >
         <RiDeleteBinLine />
       </button>
     </div>
@@ -66,6 +95,20 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   childList,
   setSelectedAccountTitle,
 }) => {
+  const { t } = useTranslation('common');
+  const { selectedCompany } = useUserCtx();
+  const { toastHandler } = useModalContext();
+
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+
+  const {
+    trigger: deleteAccount,
+    isLoading,
+    success,
+    error,
+  } = APIHandler<IPaginatedAccount>(APIName.DELETE_ACCOUNT_BY_ID);
+
+  // Info: (20241114 - Julian) 用 useOuterClick 來判斷是否展開
   const {
     targetRef,
     componentVisible: isExpanded,
@@ -87,16 +130,44 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
     </button>
   ) : null;
 
+  useEffect(() => {
+    if (!isLoading) {
+      if (success) {
+        // Info: (20241114 - Julian) 刪除成功時，顯示成功訊息
+        toastHandler({
+          id: ToastId.ACCOUNTING_DELETE_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_SUCCESS'),
+          closeable: true,
+        });
+      } else if (error) {
+        // Info: (20241114 - Julian) 刪除失敗時，顯示錯誤訊息
+        toastHandler({
+          id: ToastId.ACCOUNTING_DELETE_ERROR,
+          type: ToastType.ERROR,
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_DELETE_FAIL'),
+          closeable: true,
+        });
+      }
+    }
+  }, [success, isLoading, error]);
+
   const displayChildList =
     childList.length > 0
       ? childList.map((child) => {
           // Info: (20241111 - Julian) 如果 activeChild 存在，且 activeChild 的 id 等於 child 的 id，則 isActive 為 true
           const isActive = activeChild ? activeChild.id === child.id : false;
 
+          // Info: (20241114 - Julian) 點擊子項目時，將 activeChild 設為該子項目，並將 formType 設為 edit
           const clickChildHandler = () => {
             setActiveChild(child); // Info: (20241113 - Julian) 將 activeChild 設為該子項目
             setFormType(TitleFormType.edit); // Info: (20241113 - Julian) 將 formType 設為 edit
             setSelectedAccountTitle(child); // Info: (20241113 - Julian)  將 title 傳到右邊的 <AddNewTitleSection />
+          };
+
+          // Info: (20241114 - Julian) 點擊刪除按鈕時，觸發刪除事件
+          const deleteAccountHandler = async () => {
+            deleteAccount({ params: { companyId, accountId: child.id } });
           };
           return (
             <AccountThirdLayerItem
@@ -105,6 +176,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
               titleCode={child.code}
               titleName={child.name}
               clickHandler={clickChildHandler}
+              deleteHandler={deleteAccountHandler}
             />
           );
         })

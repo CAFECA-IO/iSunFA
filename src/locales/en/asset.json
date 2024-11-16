@@ -13,7 +13,10 @@
     "STATUS_DONATED": "Donated",
     "STATUS_SCRAPPED": "Scrapped",
     "STATUS_MISSING": "Missing",
-    "STATUS_NORMAL": "Normal"
+    "STATUS_NORMAL": "Normal",
+    "EXPORT_ASSET_LIST_WARNING_TITLE": "Warning",
+    "EXPORT_ASSET_LIST_WARNING_CONTENT": "Please select at least one asset to export.",
+    "OK_BTN": "OK"
   },
   "STATUS_SETTING_MODAL": {
     "TITLE": "Status Setting",

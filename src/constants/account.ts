@@ -85,6 +85,14 @@ export const EVENT_TYPE_TO_VOUCHER_TYPE_MAP: {
   [EventType.TRANSFER]: VoucherType.TRANSFER,
 };
 
+export const VOUCHER_TYPE_TO_EVENT_TYPE_MAP: {
+  [key in VoucherType]: EventType;
+} = {
+  [VoucherType.RECEIVE]: EventType.INCOME,
+  [VoucherType.EXPENSE]: EventType.PAYMENT,
+  [VoucherType.TRANSFER]: EventType.TRANSFER,
+};
+
 export const MISSING_CODE_MARKERS = ['!', '@', '#', '$', '%'];
 
 export const EVENT_TYPE = {

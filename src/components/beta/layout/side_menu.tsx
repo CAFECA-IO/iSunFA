@@ -263,7 +263,7 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
                 />
 
                 <Caption caption="Company setting" />
-                <SubMenuItem linkText="Accounting Setting" href={ISUNFA_ROUTE.EXAMPLE} />
+                <SubMenuItem linkText="Accounting Setting" href={ISUNFA_ROUTE.ACCOUNTING_SETTING} />
                 <SubMenuItem linkText="Clients/Suppliers Management" />
               </div>
             </PanelLayout>

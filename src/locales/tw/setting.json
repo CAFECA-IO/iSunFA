@@ -96,6 +96,8 @@
     "ACCOUNTING_IMPORT_SUBTITLE": "導入會計科目",
     "IMPORT_FILE": "上傳檔案",
     "MANUAL_ACCOUNT_OPENING": "手動開戶",
+    "TOAST_UPDATE_SUCCESS": "會計設定更新成功！",
+    "TOAST_UPDATE_FAIL": "無法更新會計設定！請稍後重試。",
     "SAVE_BTN": "保存"
   },
   "ACCOUNTING_SETTING_MODAL": {
@@ -120,9 +122,19 @@
     "DROPMENU_PLACEHOLDER": "請選擇...",
     "TITLE_NAME_PLACEHOLDER": "輸入此會計科目的名稱。",
     "TITLE_NOTE_PLACEHOLDER": "輸入此會計科目的描述。",
+    "REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE": "刪除會計科目",
+    "REMOVE_ACCOUNT_TITLE_MESSAGE_CONTENT": "您確定要刪除這個會計科目嗎？",
+    "TOAST_ACCOUNT_TITLE_CREATE_SUCCESS": "會計科目創建成功。",
+    "TOAST_ACCOUNT_TITLE_CREATE_FAIL": "無法創建會計科目，請稍後重試。",
+    "TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS": "會計科目更新成功。",
+    "TOAST_ACCOUNT_TITLE_UPDATE_FAIL": "無法更新會計科目，請稍後重試。",
+    "TOAST_ACCOUNT_TITLE_DELETE_SUCCESS": "會計科目刪除成功。",
+    "TOAST_ACCOUNT_TITLE_DELETE_FAIL": "無法刪除會計科目，請稍後重試。",
     "CLEAR_ALL_BTN": "全部清除",
+    "CANCEL_BTN": "取消",
     "ADD_BTN": "新增",
-    "SAVE_BTN": "保存"
+    "SAVE_BTN": "保存",
+    "DELETE_BTN": "是的，刪除科目"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手動開戶",
@@ -134,6 +146,7 @@
     "DROPMENU_PLACEHOLDER": "請選擇...",
     "NAME_PLACEHOLDER": "輸入名稱",
     "ADD_LIST_BTN": "新增清單",
+    "CANCEL_BTN": "取消",
     "SUBMIT_BTN": "提交",
     "NO_ACCOUNTING_FOUND": "找不到會計科目。"
   },
@@ -145,5 +158,10 @@
     "ADDRESS": "登入地址",
     "DETECT_DIFFERENT_IP_LOGIN": "偵測到來自不同 IP 位址的登入。",
     "VERIFY_YOUR_ACCOUNT_SECURITY": "請驗證您的帳戶安全性以防止資料外洩。"
+  },
+  "USER": {
+    "UPDATE_SUCCESS": "使用者設定更新成功。",
+    "DELETE_WARNING": "此帳戶將在三個工作天內被刪除。",
+    "DELETE_HINT": "請確保資料備份。如需取消刪除過程，請前往設定頁面。"
   }
 }

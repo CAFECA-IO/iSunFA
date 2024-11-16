@@ -13,7 +13,7 @@ import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/vouche
 //   }),
 // }));
 
-describe('voucherAPIPostUtils', () => {
+describe('voucherAPIGetOneUtils', () => {
   let fakeVoucherFromPrisma: IGetOneVoucherResponse;
   beforeEach(() => {
     fakeVoucherFromPrisma = {
@@ -410,6 +410,7 @@ describe('voucherAPIPostUtils', () => {
           createdAt: 1,
           updatedAt: 1,
           deletedAt: null,
+          originalLineItem: [],
           account: {
             id: 10000603,
             companyId: 1002,
@@ -438,6 +439,7 @@ describe('voucherAPIPostUtils', () => {
           createdAt: 1,
           updatedAt: 1,
           deletedAt: null,
+          originalLineItem: [],
           account: {
             id: 10000981,
             companyId: 1002,

@@ -53,6 +53,8 @@ export const ISUNFA_ROUTE = {
   USERS_FINANCIAL_REPORTS_INCOME_STATEMENT: `/users/reports/financials?report_type=${FinancialReportTypesKey.comprehensive_income_statement}`,
   USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
   UPLOAD: `mobile_upload`,
+
+  ACCOUNTING_SETTING: '/users/setting/accounting_setting',
 };
 
 export const EXTERNAL_API = {

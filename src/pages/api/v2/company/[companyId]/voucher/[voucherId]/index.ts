@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
@@ -18,12 +18,17 @@ import { IAssetEntity } from '@/interfaces/asset';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileEntity } from '@/interfaces/file';
 import { ICertificateEntity } from '@/interfaces/certificate';
-import { voucherAPIGetOneUtils as getUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import {
+  voucherAPIGetOneUtils as getUtils,
+  voucherAPIPutUtils as putUtils,
+} from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+import { putVoucherWithoutCreateNew } from '@/lib/utils/repo/voucher.repo';
 
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
@@ -126,12 +131,189 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
   const { userId } = session;
-  const mockPutVoucherId = 1000;
 
-  // ToDo: (20240927 - Murky) Remember to add auth check
-  if (query && body) {
+  const { voucherId } = query;
+  const {
+    actions,
+    certificateIds,
+    lineItems,
+    recurringInfo,
+    assetIds,
+    reverseVouchers: reverseVouchersInfo,
+    counterPartyId,
+    ...voucherInfo
+  } = body;
+
+  try {
+    const voucherFromPrisma: IGetOneVoucherResponse =
+      await getUtils.getVoucherFromPrisma(voucherId);
+
+    // Info: (20241113 - Murky) 變了不用新增reverse voucher，只要更新原本的voucher
+    // const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+    // const originIssuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
+    // const originCounterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
+    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
+
+    const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
+    // Info: (20241113 - Murky)
+    const originLineItems: (ILineItemEntity & { account: IAccountEntity })[] =
+      getUtils.initLineItemEntities(voucherFromPrisma);
+
+    // Info: (20241113 - Murky) 不知道怎麼處理
+    // const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
+    // const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
+
+    // Info: (20241114 - Murky) 下面是新來的voucher
+
+    const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
+    const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
+    const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
+    const isAssetIdsHasItems = postUtils.isArrayHasItems(assetIds);
+    // const isReverseVouchersInfoHasItems = postUtils.isArrayHasItems(reverseVouchersInfo);
+    const isVoucherInfoExist = postUtils.isItemExist(voucherInfo);
+    // const isVoucherEditable = true;
+
+    // Info: (20241025 - Murky) Early throw error if lineItems is empty and voucherInfo is empty
+    if (!isLineItemsHasItems) {
+      putUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'lineItems is required when post voucher',
+        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
+    if (!isVoucherInfoExist) {
+      putUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'voucherInfo is required when post voucher',
+        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
+    if (isCounterPartyIdExist) {
+      const isCounterPartyExist = postUtils.isCounterPartyExistById(counterPartyId);
+      if (!isCounterPartyExist) {
+        putUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: `when post voucher with counterPartyId, counterParty need to exist in database`,
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+    }
+
+    // Info: (20241114 - Murky) 檢查是不是所有的asset都存在, 不存在就throw error
+    if (isAssetIdsHasItems) {
+      const isAllAssetExist = postUtils.areAllAssetsExistById(assetIds);
+
+      if (!isAllAssetExist) {
+        putUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: `when post voucher with assetIds, all asset need to exist in database`,
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+    }
+
+    // Info: (20241025 - Murky) 檢查是不是所有的revertVoucher都存在, 不存在就throw error
+    const revertVoucherIds = reverseVouchersInfo.map((reverseVoucher) => reverseVoucher.voucherId);
+    const isAllRevertVoucherExist = postUtils.areAllVouchersExistById(revertVoucherIds);
+    if (!isAllRevertVoucherExist) {
+      putUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `when post voucher with reverseVouchersInfo, all reverseVoucher need to exist in database`,
+        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
+    // Info: (20241111 - Murky) 只要檢查被Reverse 的lineItems, Reverse 別人的lineItems還沒有被建立起來
+    const revertLineItemIds = reverseVouchersInfo.map(
+      (reverseVoucher) => reverseVoucher.lineItemIdBeReversed
+    );
+    const isAllRevertLineItemExist = postUtils.areAllLineItemsExistById(revertLineItemIds);
+    if (!isAllRevertLineItemExist) {
+      postUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: `when post voucher with reverseVouchersInfo, all reverseLineItem need to exist in database`,
+        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
+    // Info: (20241114 - Murky) 檢查 certificateIds 是否都存在
+    if (isCertificateIdsHasItems) {
+      // Info: (20241111 - Murky) 檢查是不是所有的certificate都存在, 不存在就throw error
+      const isAllCertificateExist = postUtils.areAllCertificatesExistById(certificateIds);
+      if (!isAllCertificateExist) {
+        postUtils.throwErrorAndLog(loggerBack, {
+          errorMessage: `when post voucher with certificateIds, all certificate need to exist in database`,
+          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+        });
+      }
+    }
+
+    // Info: (20241111 - Murky) Init Company and Issuer Entity, For Voucher Meta Data and check if they exist in database
+    const issuer = await postUtils.initIssuerFromPrisma(userId);
+
+    const newLineItemEntities: ILineItemEntity[] = postUtils.initLineItemEntities(lineItems);
+
+    /**
+     * Info: (20241113 - Murky)
+     * @description 決定是不是要新增一張新的voucher, 只有在line items有動到amount, accountId, debit的時候才需要新增
+     */
+    const isNewVoucherNeeded = putUtils.isLineItemEntitiesSame(
+      originLineItems,
+      newLineItemEntities
+    );
+
+    // Info: (20241113 - Murky) 如果同時修改藍色與非藍色區域
+    // 要同時除存在原本的voucher與新增一張reverse voucher, 新增voucher有會有新的 非藍色區域
+    if (isNewVoucherNeeded) {
+      putUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Please use post + delete to update lineItem',
+        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
+      });
+    }
+
+    // ToDo: (20241114 - Murky) delete asset voucher associate if asset is different
+
+    const { assetIdsNeedToBeRemoved, assetIdsNeedToBeAdded } = putUtils.getDifferentAssetId({
+      originalAssetIds: asset.map((a) => a.id),
+      newAssetIds: assetIds,
+    });
+
+    // ToDo: (20241114 - Murky) delete associate lineItem if revert lineItem is different
+
+    const newLineItemReverseRelations = putUtils.constructNewLineItemReverseRelationship(
+      newLineItemEntities,
+      reverseVouchersInfo
+    );
+    const oldLineItemReverseRelations =
+      putUtils.constructOldLineItemReverseRelationship(voucherFromPrisma);
+
+    const reverseRelationNeedToBeReplace = putUtils.getDifferentReverseRelationship(
+      oldLineItemReverseRelations,
+      newLineItemReverseRelations
+    );
+
+    const { certificateIdsNeedToBeRemoved, certificateIdsNeedToBeAdded } =
+      putUtils.getDifferentCertificateId({
+        originalCertificateIds: certificates.map((c) => c.id),
+        newCertificateIds: certificateIds,
+      });
+
+    const updatedVoucher = await putVoucherWithoutCreateNew(voucherId, {
+      issuerId: issuer.id,
+      counterPartyId,
+      voucherInfo,
+      certificateOptions: {
+        certificateIdsNeedToBeRemoved,
+        certificateIdsNeedToBeAdded,
+      },
+      assetOptions: {
+        assetIdsNeedToBeRemoved,
+        assetIdsNeedToBeAdded,
+      },
+      reverseRelationNeedToBeReplace,
+    });
+
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = mockPutVoucherId;
+    payload = updatedVoucher.id;
+  } catch (_error) {
+    const error = _error as Error;
+    loggerError(userId, 'Voucher Put handlePutRequest', error.message).error(error);
   }
 
   return {

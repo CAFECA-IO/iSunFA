@@ -45,5 +45,9 @@
     "DELETE": "删除",
     "SAVE": "保存",
     "CONNECT": "连接"
+  },
+  "DELETE": {
+    "TITLE": "删除公司",
+    "WARNING": "您确定要删除公司吗？"
   }
 }

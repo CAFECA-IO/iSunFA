@@ -45,5 +45,9 @@
     "DELETE": "Delete",
     "SAVE": "Save",
     "CONNECT": "Connect"
+  },
+  "DELETE": {
+    "TITLE": "Remove the Company",
+    "WARNING": "Are you sure you want to Remove the Company?"
   }
 }

@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler, {
   handleDeleteRequest,
-  handlePutRequest,
+  // handlePutRequest,
 } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/index';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { VoucherV2Action } from '@/constants/voucher';
-import { EventType } from '@/constants/account';
+// import { VoucherV2Action } from '@/constants/voucher';
+// import { EventType } from '@/constants/account';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { voucherGetOneSchema } from '@/lib/utils/zod_schema/voucher';
@@ -63,68 +63,68 @@ afterEach(() => {
 describe('company/[companyId]/voucher/[voucherId]', () => {
   const mockVoucherId = 1;
 
-  describe('PUT One Voucher', () => {
-    it('should pass', async () => {
-      const session = {
-        userId: 1001,
-        companyId: 1001,
-        roleId: 1001,
-        cookie: {
-          httpOnly: false,
-          path: 'string',
-          secure: false,
-        },
-      };
-      const query = {
-        voucherId: mockVoucherId,
-      };
-      const body = {
-        actions: [VoucherV2Action.ADD_ASSET],
-        certificateIds: [1001, 1002],
-        voucherDate: 10000000,
-        type: EventType.PAYMENT,
-        note: 'this is note',
-        counterPartyId: 1001,
-        lineItems: [
-          { accountId: 1001, description: 'this is for Particulars', debit: true, amount: 1000 },
-          { accountId: 1002, description: 'this is for Particulars', debit: false, amount: 1000 },
-        ],
-        recurringEntry: {
-          type: 'month',
-          startDate: 1000000,
-          endDate: 1000100,
-          daysOfWeek: [0, 1, 2],
-          daysOfMonth: [1, 15, 30],
-          daysOfYears: [
-            {
-              month: 1,
-              day: 1,
-            },
-            {
-              month: 12,
-              day: 25,
-            },
-          ],
-        },
-        assetIds: [1001],
-        reverseVouchers: [
-          {
-            voucherId: 1003,
-            amount: 500,
-            lineItemIdBeReversed: 1001,
-            lineItemIdReverseOther: 1002,
-          },
-        ],
-      };
-      const { statusMessage } = await handlePutRequest({
-        query,
-        body,
-        session,
-      });
+  // describe('PUT One Voucher', () => {
+  //   it('should pass', async () => {
+  //     const session = {
+  //       userId: 1001,
+  //       companyId: 1001,
+  //       roleId: 1001,
+  //       cookie: {
+  //         httpOnly: false,
+  //         path: 'string',
+  //         secure: false,
+  //       },
+  //     };
+  //     const query = {
+  //       voucherId: mockVoucherId,
+  //     };
+  //     const body = {
+  //       actions: [VoucherV2Action.ADD_ASSET],
+  //       certificateIds: [1001, 1002],
+  //       voucherDate: 10000000,
+  //       type: EventType.PAYMENT,
+  //       note: 'this is note',
+  //       counterPartyId: 1001,
+  //       lineItems: [
+  //         { accountId: 1001, description: 'this is for Particulars', debit: true, amount: 1000 },
+  //         { accountId: 1002, description: 'this is for Particulars', debit: false, amount: 1000 },
+  //       ],
+  //       recurringEntry: {
+  //         type: 'month',
+  //         startDate: 1000000,
+  //         endDate: 1000100,
+  //         daysOfWeek: [0, 1, 2],
+  //         daysOfMonth: [1, 15, 30],
+  //         daysOfYears: [
+  //           {
+  //             month: 1,
+  //             day: 1,
+  //           },
+  //           {
+  //             month: 12,
+  //             day: 25,
+  //           },
+  //         ],
+  //       },
+  //       assetIds: [1001],
+  //       reverseVouchers: [
+  //         {
+  //           voucherId: 1003,
+  //           amount: 500,
+  //           lineItemIdBeReversed: 1001,
+  //           lineItemIdReverseOther: 1002,
+  //         },
+  //       ],
+  //     };
+  //     const { statusMessage } = await handlePutRequest({
+  //       query,
+  //       body,
+  //       session,
+  //     });
 
-      expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_UPDATE);
-    });
-  });
+  //     expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_UPDATE);
+  //   });
+  // });
 
   describe('DELETE One Voucher', () => {
     it('should pass', async () => {

@@ -3,7 +3,7 @@ import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/
 import prisma from '@/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import type { ILineItem } from '@/interfaces/line_item';
+import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
 import { PUBLIC_COMPANY_ID } from '@/constants/company';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
 import {
@@ -18,6 +18,8 @@ import type { ICompanyEntity } from '@/interfaces/company';
 import type { IEventEntity } from '@/interfaces/event';
 import { IUserEntity } from '@/interfaces/user';
 import { assert } from 'console';
+import { EventType } from '@/constants/account';
+import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -240,13 +242,13 @@ export async function getLatestVoucherNoInPrisma(
       },
     });
 
-    // 格式化日期為 YYYYMMDD
+    // Info: (20241114 - Murky) 格式化日期為 YYYYMMDD
     const formattedDate =
       `${startOfDay.getFullYear()}`.padStart(4, '0') +
       `${startOfDay.getMonth() + 1}`.padStart(2, '0') +
       `${startOfDay.getDate()}`.padStart(2, '0');
 
-    const latestNo = result?.no.slice(-3) || '000'; // 取最後三位數字作為流水號
+    const latestNo = result?.no.slice(-3) || '000'; // Info: (20241114 - Murky) 取最後三位數字作為流水號
     const newVoucherNo = String(Number(latestNo) + 1).padStart(3, '0');
 
     return `${formattedDate}${newVoucherNo}`;
@@ -453,7 +455,7 @@ export async function updateVoucherByJournalIdInPrisma(
 export async function countUnpostedVoucher(companyId: number) {
   const missingCertificatesCount = await prisma.voucher.count({
     where: {
-      companyId, // 指定公司 ID
+      companyId, // Info: (20241114 - Murky) 指定公司 ID
       NOT: {
         voucherCertificates: {
           some: {},
@@ -663,6 +665,200 @@ export async function postVoucherV2({
   return voucherCreated;
 }
 
+export async function putVoucherWithoutCreateNew(
+  voucherId: number,
+  options: {
+    issuerId: number;
+    counterPartyId?: number;
+    voucherInfo: {
+      type: EventType;
+      note: string;
+      voucherDate: number;
+    };
+    certificateOptions: {
+      certificateIdsNeedToBeRemoved: number[];
+      certificateIdsNeedToBeAdded: number[];
+    };
+    assetOptions: {
+      assetIdsNeedToBeRemoved: number[];
+      assetIdsNeedToBeAdded: number[];
+    };
+    reverseRelationNeedToBeReplace: {
+      eventId: number;
+      original: {
+        eventId: number;
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      };
+      new: {
+        lineItemIdBeReversed: number;
+        lineItemReverseOther: ILineItemEntity;
+        amount: number;
+        voucherId: number;
+      };
+    }[];
+  }
+) {
+  const nowInSecond = getTimestampNow();
+  const {
+    issuerId,
+    counterPartyId = PUBLIC_COUNTER_PARTY.id,
+    voucherInfo,
+    certificateOptions,
+    assetOptions,
+    reverseRelationNeedToBeReplace,
+  } = options;
+
+  const voucherUpdated = await prisma.$transaction(async (tx) => {
+    const voucher = await tx.voucher.update({
+      where: {
+        id: voucherId,
+      },
+      data: {
+        issuer: {
+          connect: {
+            id: issuerId,
+          },
+        },
+        counterparty: {
+          connect: {
+            id: counterPartyId,
+          },
+        },
+        type: voucherInfo.type,
+        note: voucherInfo.note,
+        date: voucherInfo.voucherDate,
+        updatedAt: nowInSecond,
+      },
+    });
+
+    if (certificateOptions.certificateIdsNeedToBeRemoved.length > 0) {
+      await tx.voucherCertificate.deleteMany({
+        where: {
+          voucherId,
+          certificateId: {
+            in: certificateOptions.certificateIdsNeedToBeRemoved,
+          },
+        },
+      });
+    }
+
+    if (certificateOptions.certificateIdsNeedToBeAdded.length > 0) {
+      await tx.voucherCertificate.createMany({
+        data: certificateOptions.certificateIdsNeedToBeAdded.map((certificateId) => ({
+          voucherId,
+          certificateId,
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        })),
+      });
+    }
+
+    if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
+      await tx.assetVoucher.deleteMany({
+        where: {
+          voucherId,
+          assetId: {
+            in: assetOptions.assetIdsNeedToBeRemoved,
+          },
+        },
+      });
+    }
+
+    if (assetOptions.assetIdsNeedToBeAdded.length > 0) {
+      await tx.assetVoucher.createMany({
+        data: assetOptions.assetIdsNeedToBeAdded.map((assetId) => ({
+          voucherId,
+          assetId,
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        })),
+      });
+    }
+
+    if (reverseRelationNeedToBeReplace.length > 0) {
+      await Promise.all(
+        reverseRelationNeedToBeReplace.map(async (reverseRelation) => {
+          const { eventId, original, new: newRelation } = reverseRelation;
+          const associateLineItemBeDelete = await tx.accociateLineItem.findFirst({
+            where: {
+              originalLineItemId: original.lineItemIdBeReversed,
+              resultLineItemId: original.lineItemReverseOther.id,
+            },
+          });
+
+          if (associateLineItemBeDelete) {
+            await tx.accociateLineItem.delete({
+              where: {
+                id: associateLineItemBeDelete.id,
+              },
+            });
+          }
+
+          const associateVoucherBeDelete = await tx.accociateVoucher.findFirst({
+            where: {
+              originalVoucherId: original.voucherId,
+              resultVoucherId: voucherId,
+            },
+          });
+
+          if (associateVoucherBeDelete) {
+            await tx.accociateVoucher.delete({
+              where: {
+                id: associateVoucherBeDelete.id,
+              },
+            });
+          }
+
+          await tx.accociateVoucher.create({
+            data: {
+              originalVoucher: {
+                connect: {
+                  id: newRelation.voucherId,
+                },
+              },
+              resultVoucher: {
+                connect: {
+                  id: voucherId,
+                },
+              },
+              event: {
+                connect: {
+                  id: eventId,
+                },
+              },
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+              associateLineItems: {
+                create: {
+                  originalLineItem: {
+                    connect: {
+                      id: newRelation.lineItemIdBeReversed,
+                    },
+                  },
+                  resultLineItem: {
+                    connect: {
+                      id: newRelation.lineItemReverseOther.id,
+                    },
+                  },
+                  debit: newRelation.lineItemReverseOther.debit,
+                  amount: newRelation.amount,
+                  createdAt: nowInSecond,
+                  updatedAt: nowInSecond,
+                },
+              },
+            },
+          });
+        })
+      );
+    }
+    return voucher;
+  });
+  return voucherUpdated;
+}
+
 export async function getOneVoucherByIdWithoutInclude(voucherId: number) {
   try {
     const voucher = await prisma.voucher.findUnique({
@@ -742,6 +938,21 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
         lineItems: {
           include: {
             account: true,
+            originalLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 original
+              include: {
+                resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -757,4 +968,33 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
     );
   }
   return voucher;
+}
+
+export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {
+  try {
+    const voucher = await prisma.voucher.findUnique({
+      where: {
+        id: voucherId,
+      },
+      include: {
+        lineItems: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    return voucher;
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'get one voucher with line item and account in getOneVoucherWithLineItemAndAccountV2 failed',
+      error as Error
+    );
+    logError.error(
+      'Prisma related get one voucher with line item and account in getOneVoucherWithLineItemAndAccountV2 in voucher.repo.ts failed'
+    );
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
 }

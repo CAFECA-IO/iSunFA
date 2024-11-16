@@ -7,7 +7,7 @@ import {
   getAdminById,
 } from '@/lib/utils/repo/admin.repo';
 import { AuthFunctionsNew } from '@/interfaces/auth';
-import { AUTH_CHECK } from '@/constants/auth';
+import { AUTH_CHECK, AUTH_WHITELIST } from '@/constants/auth';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { ISessionData } from '@/interfaces/session_data';
 import { convertStringToNumber } from '@/lib/utils/common';
@@ -110,6 +110,24 @@ export async function checkProjectCompanyMatch(session: ISessionData, req: NextA
   }
 
   return isAuth;
+}
+
+export function isWhitelisted(apiName: APIName, req: NextApiRequest): boolean {
+  const whitelistConditions = AUTH_WHITELIST[apiName as keyof typeof AUTH_WHITELIST];
+  if (!whitelistConditions) return false;
+
+  if (whitelistConditions.query) {
+    const queryMatches = Object.entries(whitelistConditions.query).every(
+      ([key, value]) => req.query[key] === value
+    );
+    if (!queryMatches) return false;
+  }
+
+  loggerBack.info(
+    `Auth check passed for whitelisted API: ${apiName} and query: ${JSON.stringify(req.query)}`
+  );
+
+  return true;
 }
 
 // Info: (20240729 - Jacky) 檢查函數的映射表

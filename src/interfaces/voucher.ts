@@ -19,6 +19,7 @@ import {
   Invoice as PrismaInvoice,
   File as PrismaFile,
   UserCertificate as PrismaUserCertificate,
+  AccociateLineItem as PrismaAssociateLineItem,
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
@@ -692,5 +693,13 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
   })[];
   lineItems: (PrismaLineItem & {
     account: PrismaAccount;
+    originalLineItem: (PrismaAssociateLineItem & {
+      resultLineItem: PrismaLineItem & {
+        account: PrismaAccount;
+      };
+      accociateVoucher: PrismaAssociateVoucher & {
+        event: PrismaEvent;
+      };
+    })[];
   })[];
 };

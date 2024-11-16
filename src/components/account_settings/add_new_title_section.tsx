@@ -13,6 +13,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IAddNewTitleSectionProps {
   accountTitleList: IAccount[];
@@ -37,6 +38,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     trigger: createNewAccount,
     isLoading: isCreating,
     success: createSuccess,
+    error: createError,
   } = APIHandler(APIName.CREATE_NEW_SUB_ACCOUNT);
 
   // Info: (20241112 - Julian) 更新會計科目的 API
@@ -44,6 +46,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     trigger: updateNewAccount,
     isLoading: isUpdating,
     success: updateSuccess,
+    error: updateError,
   } = APIHandler<IPaginatedAccount>(APIName.UPDATE_ACCOUNT_INFO_BY_ID);
 
   const {
@@ -112,28 +115,52 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   };
 
   useEffect(() => {
-    if (createSuccess && !isCreating) {
-      toastHandler({
-        id: 'create-accounting-title',
-        type: ToastType.SUCCESS,
-        content: 'Accounting title created successfully!',
-        closeable: true,
-      });
-      clearAllHandler();
+    if (!isCreating) {
+      if (createSuccess) {
+        // Info: (20241112 - Julian) 顯示新增成功訊息，並清空表單
+        toastHandler({
+          id: ToastId.ACCOUNTING_CREATE_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_SUCCESS'),
+          closeable: true,
+        });
+
+        clearAllHandler();
+      } else if (createError) {
+        // Info: (20241112 - Julian) 顯示新增失敗訊息
+        toastHandler({
+          id: ToastId.ACCOUNTING_CREATE_ERROR,
+          type: ToastType.ERROR,
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_CREATE_FAIL'),
+          closeable: true,
+        });
+      }
     }
-  }, [createSuccess, isCreating]);
+  }, [createSuccess, isCreating, createError]);
 
   useEffect(() => {
-    if (updateSuccess && !isUpdating) {
-      toastHandler({
-        id: 'update-accounting-title',
-        type: ToastType.SUCCESS,
-        content: 'Accounting title updated successfully!',
-        closeable: true,
-      });
-      clearAllHandler();
+    if (!isUpdating) {
+      if (updateSuccess) {
+        // Info: (20241112 - Julian) 顯示更新成功訊息，並清空表單
+        toastHandler({
+          id: ToastId.ACCOUNTING_UPDATE_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_SUCCESS'),
+          closeable: true,
+        });
+
+        clearAllHandler();
+      } else if (updateError) {
+        // Info: (20241112 - Julian) 顯示更新失敗訊息
+        toastHandler({
+          id: ToastId.ACCOUNTING_UPDATE_ERROR,
+          type: ToastType.ERROR,
+          content: t('setting:ACCOUNTING_SETTING_MODAL.TOAST_ACCOUNT_TITLE_UPDATE_FAIL'),
+          closeable: true,
+        });
+      }
     }
-  }, [createSuccess, isCreating]);
+  }, [updateSuccess, isUpdating, updateError]);
 
   useEffect(() => {
     // Info: (20241112 - Julian) 連動左邊的 <AccountTitleSection />，如果有選擇的會計科目，則將其顯示在表單中
@@ -144,6 +171,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       setTitleName(formType === TitleFormType.add ? '' : selectedAccountTitle.name);
       // Info: (20241113 - Julian) 如果是新增，則代碼為空；如果是編輯，則代碼為原本的代碼
       setTitleCode(formType === TitleFormType.add ? '-' : selectedAccountTitle.code);
+      // Info: (20241113 - Julian) 如果是新增，則備註為空；如果是編輯，則備註為原本的備註
       // ToDo: (20241113 - Julian) IAcount 的 note 欄位還沒有實作
       //  setTitleNote(selectedAccountTitle.note);
     }
@@ -231,7 +259,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     formType === TitleFormType.add ? (
       // ToDo: (20241113 - Julian) Create API
       <Button
-        type="submit"
+        type="button"
         variant="default"
         disabled={submitDisabled}
         onClick={addBtnClickHandler}
@@ -241,7 +269,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     ) : (
       // ToDo: (20241113 - Julian) Update API
       <Button
-        type="submit"
+        type="button"
         variant="default"
         disabled={submitDisabled}
         onClick={updateBtnClickHandler}
@@ -251,7 +279,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     );
 
   return (
-    <form className="flex flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
+    <div className="flex flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
       {/* Info: (20241112 - Julian) Title */}
       <div className="flex items-center gap-8px">
         <Image src="/icons/add_accounting_title.svg" width={16} height={16} alt="add_icon" />
@@ -353,7 +381,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
         </Button>
         {submitBtn}
       </div>
-    </form>
+    </div>
   );
 };
 
