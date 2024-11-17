@@ -21,9 +21,9 @@ interface ILedgerApiResponse {
 }
 
 enum ReportType {
-  General = 'General',
-  Detailed = 'Detailed',
-  GeneralAndDetailed = 'General & Detailed',
+  General = 'general',
+  Detailed = 'detailed',
+  All = 'all',
 }
 
 const LedgerPageBody = () => {
@@ -271,8 +271,8 @@ const LedgerPageBody = () => {
                 id="input-general-detailed"
                 name="ledger-type"
                 className={radioButtonStyle}
-                checked={selectedReportType === ReportType.GeneralAndDetailed}
-                onChange={() => handleReportTypeChange(ReportType.GeneralAndDetailed)}
+                checked={selectedReportType === ReportType.All}
+                onChange={() => handleReportTypeChange(ReportType.All)}
               />
               <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
             </label>
