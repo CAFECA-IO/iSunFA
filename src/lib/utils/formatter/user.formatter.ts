@@ -16,6 +16,7 @@ export function formatUser(
     email: user.email ?? '',
     imageId: user?.imageFile?.url ?? '',
     agreementList,
+    deletedAt: user.deletedAt ?? 0,
   };
 
   return formattedUser;

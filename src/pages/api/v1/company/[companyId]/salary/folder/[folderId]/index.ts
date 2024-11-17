@@ -12,7 +12,7 @@ function checkInput(name: string): boolean {
 }
 
 async function checkAuth(userId: number, companyId: number): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
   return !!admin;
 }
 
