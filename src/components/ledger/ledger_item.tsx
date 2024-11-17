@@ -118,11 +118,11 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
   //     ))}
   //   </div>
   // );
-   const displayedDebit = (
-     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-       <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
-     </div>
-   );
+  const displayedDebit = (
+    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
+      <p className="text-text-neutral-primary">{numberWithCommas(ledger.debitAmount)}</p>
+    </div>
+  );
 
   // const displayedBalance = (
   //   <div>
@@ -138,11 +138,11 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
   //     ))}
   //   </div>
   // );
-   const displayedBalance = (
-     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-       <p className="align-middle text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
-     </div>
-   );
+  const displayedBalance = (
+    <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
+      <p className="align-middle text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
+    </div>
+  );
 
   return (
     <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">

@@ -8,17 +8,17 @@ import { useTranslation } from 'next-i18next';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ILedgerPayload } from '@/interfaces/ledger';
+// import { ILedgerPayload } from '@/interfaces/ledger';
 import { useUserCtx } from '@/contexts/user_context';
 
 // Info: (20241105 - Anna) 定義完整的 API 回應結構
-interface ILedgerApiResponse {
-  powerby: string;
-  success: boolean;
-  code: string;
-  message: string;
-  payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
-}
+// interface ILedgerApiResponse {
+//   powerby: string;
+//   success: boolean;
+//   code: string;
+//   message: string;
+//   payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
+// }
 
 const LedgerPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
@@ -69,64 +69,63 @@ const LedgerPageBody = () => {
   const [selectedStartAccountNo, setSelectedStartAccountNo] = useState<string>('');
   const [selectedEndAccountNo, setSelectedEndAccountNo] = useState<string>('');
 
-  const {
-    trigger: fetchLedgerData,
-    data: ledgerData,
-    isLoading,
-  } = selectedCompany?.id
-    ? //  接收 API 響應時，先解構或轉換 ledgerData 來提取 payload 的內容
-      APIHandler<ILedgerApiResponse>(
-        APIName.LEDGER_LIST,
-        {
-          params: { companyId: selectedCompany.id },
-          query: {
-            startDate: selectedDateRange.startTimeStamp,
-            endDate: selectedDateRange.endTimeStamp,
-            startAccountNo: selectedStartAccountNo,
-            endAccountNo: selectedEndAccountNo,
-            labelType: selectedReportType,
-            page: 1,
-            pageSize: 10,
-          },
-        },
-        false,
-        true
-      )
-    : { trigger: () => {}, data: null, isLoading: false }; // 如果没有 selectedCompany，不發起 API 請求
+  // const {
+  //   trigger: fetchLedgerData,
+  //   data: ledgerData,
+  // } = selectedCompany?.id
+  //   ? //  接收 API 響應時，先解構或轉換 ledgerData 來提取 payload 的內容
+  //     APIHandler<ILedgerApiResponse>(
+  //       APIName.LEDGER_LIST,
+  //       {
+  //         params: { companyId: selectedCompany.id },
+  //         query: {
+  //           startDate: selectedDateRange.startTimeStamp,
+  //           endDate: selectedDateRange.endTimeStamp,
+  //           startAccountNo: selectedStartAccountNo,
+  //           endAccountNo: selectedEndAccountNo,
+  //           labelType: selectedReportType,
+  //           page: 1,
+  //           pageSize: 10,
+  //         },
+  //       },
+  //       false,
+  //       true
+  //     )
+  //   : { trigger: () => {}, data: null, isLoading: false }; // 如果没有 selectedCompany，不發起 API 請求
 
-  useEffect(() => {
-    if (
-      selectedCompany?.id &&
-      selectedDateRange.startTimeStamp &&
-      selectedDateRange.endTimeStamp &&
-      selectedReportType
-    ) {
-      const query = {
-        startDate: selectedDateRange.startTimeStamp,
-        endDate: selectedDateRange.endTimeStamp,
-        startAccountNo: selectedStartAccountNo || null, // 若為選填，使用 null 表示不填
-        endAccountNo: selectedEndAccountNo || null,
-        labelType: selectedReportType.toLowerCase(), // 確保傳遞的是小寫的值
-      };
+  // useEffect(() => {
+  //   if (
+  //     selectedCompany?.id &&
+  //     selectedDateRange.startTimeStamp &&
+  //     selectedDateRange.endTimeStamp &&
+  //     selectedReportType
+  //   ) {
+  //     const query = {
+  //       startDate: selectedDateRange.startTimeStamp,
+  //       endDate: selectedDateRange.endTimeStamp,
+  //       startAccountNo: selectedStartAccountNo || null, // 若為選填，使用 null 表示不填
+  //       endAccountNo: selectedEndAccountNo || null,
+  //       labelType: selectedReportType.toLowerCase(), // 確保傳遞的是小寫的值
+  //     };
 
-      const params = { companyId: selectedCompany.id };
+      // const params = { companyId: selectedCompany.id };
 
-      // eslint-disable-next-line no-console
-      console.log('Fetching ledger data with params and query:', {
-        params,
-        query,
-      });
+      // // eslint-disable-next-line no-console
+      // console.log('Fetching ledger data with params and query:', {
+      //   params,
+      //   query,
+      // });
 
-      fetchLedgerData(); // 使用 trigger 來調用 API 請求
-    }
-  }, [
-    selectedCompany,
-    selectedDateRange,
-    selectedReportType,
-    selectedStartAccountNo,
-    selectedEndAccountNo,
-    selectedReportType,
-  ]);
+  //     fetchLedgerData(); // 使用 trigger 來調用 API 請求
+  //   }
+  // }, [
+  //   selectedCompany,
+  //   selectedDateRange,
+  //   selectedReportType,
+  //   selectedStartAccountNo,
+  //   selectedEndAccountNo,
+  //   selectedReportType,
+  // ]);
 
   useEffect(() => {
     getAccountList({ query: { ...queryCondition } });
@@ -219,10 +218,10 @@ const LedgerPageBody = () => {
     setSelectedReportType(type);
   };
 
-useEffect(() => {
-  // eslint-disable-next-line no-console
-  console.log('Ledger data after API call:', ledgerData);
-}, [ledgerData]);
+  // useEffect(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('Ledger data after API call:', ledgerData);
+  // }, [ledgerData]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
@@ -315,8 +314,11 @@ useEffect(() => {
 
         <div className="h-px w-full bg-neutral-100"></div>
         <LedgerList
-          ledgerData={ledgerData?.payload || null} // 如果 ledgerData 是 undefined，傳遞 null
-          loading={!!isLoading} // 使用 !! 確保 loading 是 boolean
+          // ledgerData={ledgerData?.payload || null} // 如果 ledgerData 是 undefined，傳遞 null
+          selectedDateRange={selectedDateRange}
+          selectedReportType={selectedReportType} // Info: (20241117 - Anna)
+          selectedStartAccountNo={selectedStartAccountNo} // Info: (20241117 - Anna)
+          selectedEndAccountNo={selectedEndAccountNo} // Info: (20241117 - Anna)
         />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import LedgerItem, { ILedgerBeta } from '@/components/ledger/ledger_item';
 import Pagination from '@/components/pagination/pagination';
@@ -6,64 +6,62 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { checkboxStyle } from '@/constants/display';
 import { SortOrder } from '@/constants/sort';
 import { useGlobalCtx } from '@/contexts/global_context';
+import { useUserCtx } from '@/contexts/user_context';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { ILedgerPayload } from '@/interfaces/ledger';
 import Image from 'next/image';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { IDatePeriod } from '@/interfaces/date_period';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface LedgerListProps {
-  ledgerData: ILedgerPayload | null; // 接收 API 數據
-  loading: boolean; // 接收父组件傳遞的loading狀態
+  selectedDateRange: IDatePeriod | null;
+  selectedReportType: 'General' | 'Detailed' | 'General & Detailed'; // Info: (20241117 - Anna) 接收父層的搜尋條件
+  selectedStartAccountNo: string; // Info: (20241117 - Anna) 接收父層的搜尋條件
+  selectedEndAccountNo: string; // Info: (20241117 - Anna) 接收父層的搜尋條件
 }
 
-const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, loading }) => {
+const LedgerList: React.FunctionComponent<LedgerListProps> = ({
+  selectedDateRange,
+  selectedReportType,
+  selectedStartAccountNo,
+  selectedEndAccountNo,
+}) => {
   const { t } = useTranslation('common');
   const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
-
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
-  const [ledgerList] = useState<ILedgerBeta[]>([]);
+  const [totalDebitAmount, setTotalDebitAmount] = useState<number>(0);
+  const [totalCreditAmount, setTotalCreditAmount] = useState<number>(0);
+  const { selectedCompany, isAuthLoading } = useUserCtx();
+
+  const [voucherList, setVoucherList] = useState<ILedgerBeta[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
 
-  // 提取 ledgerData.items.data，並設置默認值為空數組，避免 undefined 或 null 引發錯誤
-  // const ledgerItemsData = ledgerData?.items?.data ?? [];
-
-  // 確保 ledgerItemsData 是一個有效的陣列
-   const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
-
-  // eslint-disable-next-line no-console
-  console.log(ledgerItemsData);
-  // eslint-disable-next-line no-console
-  console.log('Ledger items data:', ledgerItemsData);
-  // eslint-disable-next-line no-console
-  console.log('Ledger items data length:', ledgerItemsData.length);
-
-  // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [creditSort, setCreditSort] = useState<null | SortOrder>(null);
   const [debitSort, setDebitSort] = useState<null | SortOrder>(null);
 
-  // Info: (20240920 - Julian) css string
   const tableCellStyles = 'text-center align-middle';
   const sideBorderStyles = 'border-r border-b border-stroke-neutral-quaternary';
 
-  // Info: (20240920 - Julian) 日期排序按鈕
   const displayedDate = SortingButton({
     string: t('journal:VOUCHER.VOUCHER_DATE'),
     sortOrder: dateSort,
     setSortOrder: setDateSort,
   });
 
-  // Info: (20240920 - Julian) credit 排序按鈕
   const displayedCredit = SortingButton({
     string: t('journal:JOURNAL.CREDIT'),
     sortOrder: creditSort,
     setSortOrder: setCreditSort,
   });
 
-  // Info: (20240920 - Julian) debit 排序按鈕
   const displayedDebit = SortingButton({
     string: t('journal:JOURNAL.DEBIT'),
     sortOrder: debitSort,
@@ -72,21 +70,83 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
 
   const displayedSelectArea = (
     <div className="ml-auto flex items-center gap-24px">
-      {/* Info: (20241004 - Anna) Export button */}
       <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled={false} />
-      {/* Info: (20241004 - Anna) PrintButton */}
       <PrintButton onClick={() => {}} disabled={false} />
     </div>
   );
 
-  // Info: (20241101 - Anna) 根據狀態來渲染不同的內容
-  if (loading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
-        <SkeletonList count={5} />
-      </div>
-    );
-  } else if (!loading && (!ledgerItemsData || ledgerItemsData.length === 0)) {
+  const fetchLedgerData = useCallback(async () => {
+    if (
+      isAuthLoading ||
+      !selectedCompany?.id ||
+      !selectedDateRange ||
+      selectedDateRange.endTimeStamp === 0
+    ) {
+      return;
+    }
+
+    if (
+      prevSelectedDateRange.current &&
+      prevSelectedDateRange.current.startTimeStamp === selectedDateRange.startTimeStamp &&
+      prevSelectedDateRange.current.endTimeStamp === selectedDateRange.endTimeStamp
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+
+  try {
+    const { data } = await APIHandler<ILedgerPayload>(APIName.LEDGER_LIST, {
+      params: { companyId: selectedCompany.id },
+      query: {
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        startAccountNo: selectedStartAccountNo,
+        endAccountNo: selectedEndAccountNo,
+        labelType: selectedReportType,
+        page: currentPage,
+        pageSize: 10,
+      },
+    }).trigger();
+
+    if (!data) {
+      throw new Error('No data returned from the API');
+    }
+    const transformedData: ILedgerBeta[] = data.items.data.map((item) => ({
+      id: item.id,
+      voucherDate: item.voucherDate,
+      voucherNumber: item.voucherNumber,
+      voucherType: item.voucherType,
+      particulars: item.particulars,
+      no: item.no,
+      accountingTitle: item.accountingTitle,
+      creditAmount: item.creditAmount,
+      debitAmount: item.debitAmount,
+      balance: item.balance,
+    }));
+
+    setVoucherList(transformedData);
+    setTotalPages(data.items.totalPages);
+    setTotalDebitAmount(data.total.totalDebitAmount);
+    setTotalCreditAmount(data.total.totalCreditAmount);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching ledger data:', error);
+    setVoucherList([]);
+    setTotalDebitAmount(0);
+    setTotalCreditAmount(0);
+  } finally {
+    setIsLoading(false);
+    prevSelectedDateRange.current = selectedDateRange;
+  }
+  }, [isAuthLoading, selectedCompany?.id, selectedDateRange, currentPage, selectedReportType]);
+
+  useEffect(() => {
+    if (!selectedDateRange) return;
+    fetchLedgerData();
+  }, [fetchLedgerData, selectedDateRange]);
+
+  if (!voucherList.length && !isLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <Image src="/elements/empty.png" alt="No data image" width={120} height={135} />
@@ -98,18 +158,16 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
     );
   }
 
-  // 渲染有效的憑證數據列表
-  // const displayedLedgerList = ledgerItemsData.map((ledger) => {
-  //   return <LedgerItem key={ledger.id} ledger={ledger} />;
-  // });
-  const displayedLedgerList = ledgerItemsData.map((ledger) => {
-    const { id = '', creditAmount = 0, debitAmount = 0, balance = 0 } = ledger || {};
+  if (isLoading) {
     return (
-      <LedgerItem
-        key={id}
-        ledger={{ ...ledger, creditAmount, debitAmount, balance }} // 確保每個欄位有預設值
-      />
+      <div className="flex h-screen w-full items-center justify-center bg-surface-neutral-main-background">
+        <SkeletonList count={5} />
+      </div>
     );
+  }
+
+  const displayedVoucherList = voucherList.map((voucher) => {
+    return <LedgerItem key={voucher.id} ledger={voucher} />;
   });
 
   return (
@@ -145,12 +203,12 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
             <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
               {t('journal:VOUCHER.NOTE')}
             </div>
-            {ledgerList.some((ledger) => ledger.debitAmount !== 0) && (
+            {voucherList.some((voucher) => voucher.debitAmount !== 0) && (
               <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
                 {displayedDebit}
               </div>
             )}
-            {ledgerList.some((ledger) => ledger.creditAmount !== 0) && (
+            {voucherList.some((voucher) => voucher.creditAmount !== 0) && (
               <div className={`table-cell ${tableCellStyles} ${sideBorderStyles}`}>
                 {displayedCredit}
               </div>
@@ -164,7 +222,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
         </div>
 
         {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedLedgerList}</div>
+        <div className="table-row-group">{displayedVoucherList}</div>
       </div>
 
       <div className="h-px w-full bg-neutral-100"></div>
@@ -177,13 +235,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
           {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {formatNumber(ledgerData?.total?.totalDebitAmount || 0)}
+          {formatNumber(totalDebitAmount)}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base">
           {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
         </div>
         <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle text-base text-neutral-600">
-          {formatNumber(ledgerData?.total?.totalCreditAmount || 0)}
+          {formatNumber(totalCreditAmount)}
         </div>
       </div>
 
