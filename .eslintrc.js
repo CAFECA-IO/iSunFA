@@ -141,10 +141,12 @@ module.exports = {
     'no-eval': 'error',
     'no-new-func': 'error',
     'react/no-is-mounted': 'off',
+    // 'react-hooks/rules-of-hooks': 'error', // Info: (20241117 - Liz) 檢查 Hooks 使用規則, 請不要刪除, 開發的時候我們可以打開使用, 等到 build 的時候再註解掉
+    // 'react-hooks/exhaustive-deps': 'warn', // Info: (20241117 - Liz) 檢查 effect 的依賴, 請不要刪除, 開發的時候我們可以打開使用, 等到 build 的時候再註解掉
   },
 
   // 整合 prettier 和解決 prettier 衝突問題
-  plugins: ['tailwindcss', '@babel', 'prettier', 'react'],
+  plugins: ['tailwindcss', '@babel', 'prettier', 'react', 'react-hooks'],
   settings: {
     tailwindcss: {
       // These are the default values but feel free to customize
