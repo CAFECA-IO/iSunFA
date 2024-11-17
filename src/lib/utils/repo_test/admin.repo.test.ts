@@ -132,19 +132,19 @@ describe('Admin Repository Additional Tests', () => {
   });
   describe('getAdminByCompanyIdAndUserId', () => {
     it('should return an admin by company ID and user ID', async () => {
-      const admin = await getAdminByCompanyIdAndUserId(testCompanyId, testUserId);
+      const admin = await getAdminByCompanyIdAndUserId(testUserId, testCompanyId);
       expect(admin).toBeDefined();
       expect(admin?.company.id).toBe(testCompanyId);
       expect(admin?.user.id).toBe(testUserId);
     });
 
     it('should return null if the admin is not found', async () => {
-      const admin = await getAdminByCompanyIdAndUserId(-1, testUserId);
+      const admin = await getAdminByCompanyIdAndUserId(testUserId, -1);
       expect(admin).toBeNull();
     });
 
     it('should return null if the user ID is invalid', async () => {
-      const admin = await getAdminByCompanyIdAndUserId(testCompanyId, -1);
+      const admin = await getAdminByCompanyIdAndUserId(-1, testCompanyId);
       expect(admin).toBeNull();
     });
   });

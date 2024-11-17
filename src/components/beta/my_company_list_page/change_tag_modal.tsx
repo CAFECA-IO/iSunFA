@@ -2,26 +2,26 @@ import React, { useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompany } from '@/interfaces/company';
+import { ICompanyAndRole } from '@/interfaces/company';
 import { COMPANY_TAG } from '@/constants/company';
 
 interface ChangeTagModalProps {
-  companyToEdit: ICompany | null;
+  companyToEdit: ICompanyAndRole;
   isModalOpen: boolean;
-  toggleModal: () => void;
+  setCompanyToEdit: React.Dispatch<React.SetStateAction<ICompanyAndRole | undefined>>;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const ChangeTagModal = ({
   companyToEdit,
   isModalOpen,
-  toggleModal,
+  setCompanyToEdit,
   setRefreshKey,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['company']);
   const { updateCompany } = useUserCtx();
 
-  const [tag, setTag] = useState<COMPANY_TAG>(COMPANY_TAG.ALL);
+  const [tag, setTag] = useState<COMPANY_TAG>(companyToEdit.tag);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,20 +29,21 @@ const ChangeTagModal = ({
     setIsDropdownOpen((prevState) => !prevState);
   };
 
+  const closeChangeTagModal = () => {
+    setCompanyToEdit(undefined);
+  };
+
   // Info: (20241113 - Liz) 打 API 變更公司的 tag
   const handleChangeTag = async () => {
     // Info: (20241114 - Liz) 防止重複點擊
     if (isLoading) return;
-
-    // Info: (20241114 - Liz) 如果沒有選擇要編輯的公司就不執行
-    if (!companyToEdit) return;
 
     // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
     setIsLoading(true);
 
     try {
       const data = await updateCompany({
-        companyId: companyToEdit.id,
+        companyId: companyToEdit.company.id,
         action: 'updateTag',
         tag,
       });
@@ -50,7 +51,7 @@ const ChangeTagModal = ({
       if (data) {
         // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
         setTag(COMPANY_TAG.ALL);
-        toggleModal();
+        closeChangeTagModal();
 
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
 
@@ -79,7 +80,7 @@ const ChangeTagModal = ({
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('company:PAGE_BODY.CHANGE_WORK_TAG')}
           </h1>
-          <button type="button" onClick={toggleModal}>
+          <button type="button" onClick={closeChangeTagModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -95,7 +96,7 @@ const ChangeTagModal = ({
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={companyToEdit?.name}
+              value={companyToEdit.company.name}
             />
           </div>
 
@@ -142,7 +143,7 @@ const ChangeTagModal = ({
         <section className="flex justify-end gap-12px px-20px py-16px">
           <button
             type="button"
-            onClick={toggleModal}
+            onClick={closeChangeTagModal}
             className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
           >
             {t('company:PAGE_BODY.CANCEL')}

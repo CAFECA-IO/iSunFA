@@ -18,21 +18,28 @@ const userActionLogQuerySchema = z.object({
 });
 
 // Info: (20241015 - Jacky) User action log output schema
-const userActionLogOutputSchema = z.object({
-  id: z.number().int(),
-  sessionId: z.string(),
-  userId: z.number().int(),
-  actionType: z.nativeEnum(UserActionLogActionType),
-  actionDescription: z.string(),
-  actionTime: z.number().int(),
-  ipAddress: z.string(),
-  userAgent: z.string(),
-  apiEndpoint: z.string(),
-  httpMethod: z.string(),
-  requestPayload: z.record(z.string(), z.string()),
-  httpStatusCode: z.number().int(),
-  statusMessage: z.string(),
-});
+const userActionLogOutputSchema = z
+  .object({
+    id: z.number().int(),
+    sessionId: z.string(),
+    userId: z.number().int(),
+    actionType: z.nativeEnum(UserActionLogActionType),
+    actionDescription: z.string(),
+    actionTime: z.number().int(),
+    ipAddress: z.string(),
+    userAgent: z.string(),
+    apiEndpoint: z.string(),
+    httpMethod: z.string(),
+    requestPayload: z.record(z.string(), z.string()),
+    httpStatusCode: z.number().int(),
+    statusMessage: z.string(),
+  })
+  .transform((data) => {
+    return {
+      ...data,
+      normal: true,
+    };
+  });
 
 // Info: (20241015 - Jacky) Paginated user action log schema
 const paginatedUserActionLogSchema = paginatedDataSchema(userActionLogOutputSchema);

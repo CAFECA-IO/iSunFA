@@ -29,7 +29,7 @@ export async function checkAdmin(req: NextApiRequest, res: NextApiResponse) {
   if (typeof companyId !== 'number' || typeof userId !== 'number') {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
   if (!admin) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -40,7 +40,7 @@ export async function checkUserAdmin(params: {
   userId: number;
   companyId: number;
 }): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(params.companyId, params.userId);
+  const admin = await getAdminByCompanyIdAndUserId(params.userId, params.companyId);
   return !!admin;
 }
 
