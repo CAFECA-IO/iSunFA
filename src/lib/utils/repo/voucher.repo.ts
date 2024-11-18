@@ -812,7 +812,8 @@ export async function putVoucherWithoutCreateNew(
         }
       }
 
-      reverseRelationNeedToBeReplace.values().forEach((reverseRelation) => {
+      const reverseRelationList = reverseRelationNeedToBeReplace.values();
+      reverseRelationList.forEach((reverseRelation) => {
         const { eventId, original, new: newRelations } = reverseRelation;
         original.forEach(async (originalRelation) => {
           await tx.accociateLineItem.deleteMany({
