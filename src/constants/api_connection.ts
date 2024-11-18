@@ -908,7 +908,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.ASSET_LIST_EXPORT]: createConfig({
     name: APIName.ASSET_LIST_EXPORT,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.ASSET_LIST_EXPORT,
   }),
   [APIName.FILE_EXPORT]: createConfig({
@@ -920,5 +920,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LEDGER_LIST,
     method: HttpMethod.GET,
     path: APIPath.LEDGER_LIST,
+  }),
+  [APIName.VOUCHER_POST_V2]: createConfig({
+    name: APIName.VOUCHER_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.VOUCHER_POST_V2,
   }),
 };

@@ -21,7 +21,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   containerClassName = '',
   className = '',
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'filter_section_type']);
   const {
     targetRef: menuRef,
     componentVisible: menuVisibility,
@@ -36,7 +36,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
     // Info: (20241015 - Anna) 在這裡使用containerClassName屬性
     <div className={`flex w-full flex-col gap-8px lg:w-200px ${containerClassName}`}>
       <p className="text-sm font-semibold text-input-text-primary">
-        {t(`common:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
+        {t(`filter_section_type:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
       </p>
       {/* Info: (20241015 - Anna) 在這裡使用className屬性 */}
       <div
@@ -45,7 +45,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
       >
         <p className="flex-1 truncate text-input-text-input-placeholder">
           {selectedValue
-            ? t(`common:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
+            ? t(`filter_section_type:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
             : selectedValue}
         </p>
         <div className="flex h-20px w-20px items-center justify-center">
@@ -66,7 +66,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
                 onClick={() => onChange(option)}
                 className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
               >
-                {t(`common:FILTER_SECTION_TYPE.${option.toUpperCase()}`)}
+                {t(`filter_section_type:FILTER_SECTION_TYPE.${option.toUpperCase()}`)}
               </li>
             ))}
           </ul>

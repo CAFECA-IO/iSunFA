@@ -8,6 +8,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 // import { useUserCtx } from '@/contexts/user_context'; // ToDo: (20241018 - Liz) 準備串接真實資料
+import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 
 interface SideMenuProps {
   toggleOverlay?: () => void;
@@ -23,6 +24,7 @@ interface SubMenuItemProps {
   disabled?: boolean;
   isCompanyNeeded?: boolean;
   toggleOverlay?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; // Info: (20241117 - Anna) 可選
 }
 
 interface PanelLayoutProps {
@@ -98,6 +100,7 @@ const SubMenuItem = ({
   disabled = false,
   isCompanyNeeded = false,
   toggleOverlay = () => {},
+  onClick, // Info: (20241117 - Anna) 接收 onClick
 }: SubMenuItemProps) => {
   const { toastHandler } = useModalContext();
 
@@ -138,6 +141,9 @@ const SubMenuItem = ({
         },
       });
     }
+     if (onClick) {
+       onClick(e); // Info: (20241117 - Anna) 明確使用 onClick
+     }
   };
 
   return (
@@ -153,15 +159,27 @@ const SubMenuItem = ({
 
 const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
+  const [isModalVisible, setIsModalVisible] = useState(false); // Info: (20241117 - Anna) 新增狀態用於控制 Modal 顯示
 
   const toggleSideMenu = () => {
     setIsSideMenuOpen((prev) => !prev);
   };
 
+const toggleModalVisibility = () => {
+  // Info: (20241117 - Anna) 新增控制 Modal 的顯示函數
+  setIsModalVisible((prev) => !prev);
+};
+
   return (
     <div className="z-100 h-full bg-surface-neutral-main-background">
       {isSideMenuOpen ? (
         <section className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
+          {/* Info: (20241117 - Anna) Embed Code Modal */}
+          <EmbedCodeModal
+            isModalVisible={isModalVisible}
+            modalVisibilityHandler={toggleModalVisibility}
+          />
+
           {/* Side Menu Icon */}
           <div>
             <button type="button" onClick={toggleSideMenu} className="p-10px">
@@ -241,7 +259,14 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
                 <SubMenuItem linkText="Trial Balance" />
 
                 <Caption caption="Embed code" />
-                <SubMenuItem linkText="Generate Embed Code" />
+                <SubMenuItem
+                  linkText="Generate Embed Code"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault(); // Info: (20241117 - Anna) 阻止頁面跳轉
+                    toggleModalVisibility(); // Info: (20241117 - Anna) 顯示彈跳視窗
+                  }}
+                />
               </div>
             </PanelLayout>
 
@@ -278,7 +303,7 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
             </Link>
           </div>
 
-          {/* Side Menu Footer */}
+          {/* // Info: (20241118 - Anna) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
 
