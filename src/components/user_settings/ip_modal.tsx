@@ -47,6 +47,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   };
 
   const getUserActions = async () => {
+    if (isLoading) return;
     try {
       setIsLoading(true);
       const { success, data, code } = await getUserActionLogAPI({
@@ -77,8 +78,10 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   };
 
   useEffect(() => {
-    if (!isLoading) getUserActions();
-  }, [isLoading, page]);
+    if (!isLoading) {
+      getUserActions();
+    }
+  }, [page]);
 
   return (
     <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -146,7 +149,9 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
             <Pagination
               className="mt-4"
               currentPage={page}
-              setCurrentPage={setPage}
+              setCurrentPage={(newPage) => {
+                if (newPage !== page) setPage(newPage);
+              }}
               totalPages={totalPages}
             />
           </div>
