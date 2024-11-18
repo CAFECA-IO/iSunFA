@@ -1,5 +1,3 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-restricted-syntax */
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
@@ -814,10 +812,9 @@ export async function putVoucherWithoutCreateNew(
         }
       }
 
-      for (const reverseRelation of reverseRelationNeedToBeReplace.values()) {
+      reverseRelationNeedToBeReplace.values().forEach((reverseRelation) => {
         const { eventId, original, new: newRelations } = reverseRelation;
-
-        for (const originalRelation of original) {
+        original.forEach(async (originalRelation) => {
           await tx.accociateLineItem.deleteMany({
             where: {
               originalLineItemId: originalRelation.lineItemIdBeReversed,
@@ -831,9 +828,9 @@ export async function putVoucherWithoutCreateNew(
               resultVoucherId: voucherId,
             },
           });
-        }
+        });
 
-        for (const newRelation of newRelations) {
+        newRelations.forEach(async (newRelation) => {
           await tx.accociateVoucher.create({
             data: {
               originalVoucher: {
@@ -873,8 +870,8 @@ export async function putVoucherWithoutCreateNew(
               },
             },
           });
-        }
-      }
+        });
+      });
 
       return voucher;
     });
