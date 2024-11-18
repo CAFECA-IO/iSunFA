@@ -1,6 +1,9 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
+import { Voucher as PrismaVoucher } from '@prisma/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
@@ -683,22 +686,25 @@ export async function putVoucherWithoutCreateNew(
       assetIdsNeedToBeRemoved: number[];
       assetIdsNeedToBeAdded: number[];
     };
-    reverseRelationNeedToBeReplace: {
-      eventId: number;
-      original: {
+    reverseRelationNeedToBeReplace: Map<
+      string,
+      {
         eventId: number;
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
-      };
-      new: {
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
-      };
-    }[];
+        original: {
+          eventId: number;
+          lineItemIdBeReversed: number;
+          lineItemReverseOther: ILineItemEntity;
+          amount: number;
+          voucherId: number;
+        }[];
+        new: {
+          lineItemIdBeReversed: number;
+          lineItemReverseOther: ILineItemEntity;
+          amount: number;
+          voucherId: number;
+        }[];
+      }
+    >;
   }
 ) {
   const nowInSecond = getTimestampNow();
@@ -711,107 +717,123 @@ export async function putVoucherWithoutCreateNew(
     reverseRelationNeedToBeReplace,
   } = options;
 
-  const voucherUpdated = await prisma.$transaction(async (tx) => {
-    const voucher = await tx.voucher.update({
-      where: {
-        id: voucherId,
-      },
-      data: {
-        issuer: {
-          connect: {
-            id: issuerId,
-          },
-        },
-        counterparty: {
-          connect: {
-            id: counterPartyId,
-          },
-        },
-        type: voucherInfo.type,
-        note: voucherInfo.note,
-        date: voucherInfo.voucherDate,
-        updatedAt: nowInSecond,
-      },
-    });
-
-    if (certificateOptions.certificateIdsNeedToBeRemoved.length > 0) {
-      await tx.voucherCertificate.deleteMany({
+  let voucherUpdated: PrismaVoucher | null = null;
+  try {
+    voucherUpdated = await prisma.$transaction(async (tx) => {
+      const voucher = await tx.voucher.update({
         where: {
-          voucherId,
-          certificateId: {
-            in: certificateOptions.certificateIdsNeedToBeRemoved,
+          id: voucherId,
+        },
+        data: {
+          issuer: {
+            connect: {
+              id: issuerId,
+            },
           },
+          counterparty: {
+            connect: {
+              id: counterPartyId,
+            },
+          },
+          type: voucherInfo.type,
+          note: voucherInfo.note,
+          date: voucherInfo.voucherDate,
+          updatedAt: nowInSecond,
         },
       });
-    }
 
-    if (certificateOptions.certificateIdsNeedToBeAdded.length > 0) {
-      await tx.voucherCertificate.createMany({
-        data: certificateOptions.certificateIdsNeedToBeAdded.map((certificateId) => ({
-          voucherId,
-          certificateId,
-          createdAt: nowInSecond,
-          updatedAt: nowInSecond,
-        })),
-      });
-    }
-
-    if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
-      await tx.assetVoucher.deleteMany({
-        where: {
-          voucherId,
-          assetId: {
-            in: assetOptions.assetIdsNeedToBeRemoved,
-          },
-        },
-      });
-    }
-
-    if (assetOptions.assetIdsNeedToBeAdded.length > 0) {
-      await tx.assetVoucher.createMany({
-        data: assetOptions.assetIdsNeedToBeAdded.map((assetId) => ({
-          voucherId,
-          assetId,
-          createdAt: nowInSecond,
-          updatedAt: nowInSecond,
-        })),
-      });
-    }
-
-    if (reverseRelationNeedToBeReplace.length > 0) {
-      await Promise.all(
-        reverseRelationNeedToBeReplace.map(async (reverseRelation) => {
-          const { eventId, original, new: newRelation } = reverseRelation;
-          const associateLineItemBeDelete = await tx.accociateLineItem.findFirst({
+      if (certificateOptions.certificateIdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.voucherCertificate.deleteMany({
             where: {
-              originalLineItemId: original.lineItemIdBeReversed,
-              resultLineItemId: original.lineItemReverseOther.id,
+              voucherId,
+              certificateId: {
+                in: certificateOptions.certificateIdsNeedToBeRemoved,
+              },
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.assetVoucher.deleteMany({
+            where: {
+              voucherId,
+              assetId: {
+                in: assetOptions.assetIdsNeedToBeRemoved,
+              },
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (certificateOptions.certificateIdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.voucherCertificate.createMany({
+            data: certificateOptions.certificateIdsNeedToBeAdded.map((certificateId) => ({
+              voucherId,
+              certificateId,
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            })),
+          });
+        } catch (error) {
+          loggerBack.error(
+            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (assetOptions.assetIdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.assetVoucher.createMany({
+            data: assetOptions.assetIdsNeedToBeAdded.map((assetId) => ({
+              voucherId,
+              assetId,
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            })),
+          });
+        } catch (error) {
+          loggerBack.error(
+            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      for (const reverseRelation of reverseRelationNeedToBeReplace.values()) {
+        const { eventId, original, new: newRelations } = reverseRelation;
+
+        for (const originalRelation of original) {
+          await tx.accociateLineItem.deleteMany({
+            where: {
+              originalLineItemId: originalRelation.lineItemIdBeReversed,
+              resultLineItemId: originalRelation.lineItemReverseOther.id,
             },
           });
 
-          if (associateLineItemBeDelete) {
-            await tx.accociateLineItem.delete({
-              where: {
-                id: associateLineItemBeDelete.id,
-              },
-            });
-          }
-
-          const associateVoucherBeDelete = await tx.accociateVoucher.findFirst({
+          await tx.accociateVoucher.deleteMany({
             where: {
-              originalVoucherId: original.voucherId,
+              originalVoucherId: originalRelation.voucherId,
               resultVoucherId: voucherId,
             },
           });
+        }
 
-          if (associateVoucherBeDelete) {
-            await tx.accociateVoucher.delete({
-              where: {
-                id: associateVoucherBeDelete.id,
-              },
-            });
-          }
-
+        for (const newRelation of newRelations) {
           await tx.accociateVoucher.create({
             data: {
               originalVoucher: {
@@ -851,11 +873,17 @@ export async function putVoucherWithoutCreateNew(
               },
             },
           });
-        })
-      );
-    }
-    return voucher;
-  });
+        }
+      }
+
+      return voucher;
+    });
+  } catch (error) {
+    loggerBack.error(
+      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+      error as Error
+    );
+  }
   return voucherUpdated;
 }
 
@@ -942,6 +970,21 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
               // Info: (20241114 - Murky) 指的是這個lineItem是 original
               include: {
                 resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
+            resultLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 result
+              include: {
+                originalLineItem: {
                   include: {
                     account: true,
                   },
