@@ -1,16 +1,14 @@
 import { listTrialBalance } from '@/lib/utils/repo/trial_balance.repo';
-import { SortOrder } from '@/constants/sort';
-import { SortBy } from '@/constants/journal';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 describe('Trial Balance Repository', () => {
   describe('listTrialBalance', () => {
     it('should return a paginated list of trial balance items', async () => {
       const params = {
-        companyId: 1002, // Info: (20241105 - Shirley) 假設存在的公司 ID
-        startDate: 1729380068,
+        companyId: 1002,
+        startDate: 0,
         endDate: 1730762468,
-        sortBy: SortBy.CREATED_AT,
-        sortOrder: SortOrder.DESC,
+        sortOption: `${SortBy.MIDTERM_DEBIT_AMOUNT}:${SortOrder.ASC}`,
         page: 1,
         pageSize: 10,
       };
@@ -28,12 +26,13 @@ describe('Trial Balance Repository', () => {
         expect(Array.isArray(items.data)).toBe(true);
         expect(items.data.length).toBeLessThanOrEqual(params.pageSize);
         expect(items.page).toBe(params.page);
-        expect(items.totalPages).toBeGreaterThanOrEqual(0);
+        if (items.totalPages) {
+          expect(items.totalPages).toBeGreaterThanOrEqual(1);
+        }
         expect(items.totalCount).toBeGreaterThanOrEqual(0);
         expect(items.pageSize).toBe(params.pageSize);
         expect(typeof items.hasNextPage).toBe('boolean');
         expect(typeof items.hasPreviousPage).toBe('boolean');
-        expect(items.sort).toEqual([{ sortBy: params.sortBy, sortOrder: params.sortOrder }]);
 
         expect(total).toBeDefined();
         expect(total.beginningCreditAmount).toBeGreaterThanOrEqual(0);
@@ -49,12 +48,11 @@ describe('Trial Balance Repository', () => {
 
     it('should handle page number less than 1 and return null', async () => {
       const params = {
-        companyId: 1002, // Info: (20241105 - Shirley) 假設存在的公司 ID
+        companyId: 1002,
         startDate: 1609459200,
         endDate: 1640995200,
-        sortBy: SortBy.CREATED_AT,
-        sortOrder: SortOrder.DESC,
-        page: 0, // Info: (20241105 - Shirley) 無效的頁數
+        sortOption: `${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.DESC}`,
+        page: 0,
         pageSize: 10,
       };
 
@@ -62,15 +60,14 @@ describe('Trial Balance Repository', () => {
       expect(result).toBeNull();
     });
 
-    it('should return all items when pageSize is infinity', async () => {
+    it('should return trial balance items sorted by multiple sorting criteria', async () => {
       const params = {
-        companyId: 1002, // Info: (20241105 - Shirley) 假設存在的公司 ID
-        startDate: 1609459200,
-        endDate: 1640995200,
-        sortBy: SortBy.CREATED_AT,
-        sortOrder: SortOrder.DESC,
+        companyId: 1002,
+        startDate: 1729380068,
+        endDate: 1730762468,
+        sortOption: `${SortBy.ENDING_DEBIT_AMOUNT}:${SortOrder.ASC}-${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.DESC}`,
         page: 1,
-        pageSize: 'infinity' as const,
+        pageSize: 10,
       };
 
       const trialBalance = await listTrialBalance(params);
@@ -79,10 +76,56 @@ describe('Trial Balance Repository', () => {
       expect(trialBalance).not.toBeNull();
 
       if (trialBalance) {
-        expect(trialBalance.items.data.length).toBe(trialBalance.items.totalCount);
-        expect(trialBalance.items.pageSize).toBe(trialBalance.items.totalCount);
-        expect(trialBalance.items.hasNextPage).toBe(false);
-        expect(trialBalance.items.hasPreviousPage).toBe(false);
+        const { items } = trialBalance;
+        const expectedSort = [
+          { sortBy: SortBy.ENDING_DEBIT_AMOUNT, sortOrder: SortOrder.ASC },
+          { sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.DESC },
+        ];
+        expect(items.sort).toEqual(expectedSort);
+      }
+    });
+
+    it('should handle invalid sortOption and return default sorting', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1609459200,
+        endDate: 1640995200,
+        sortOption: 'invalid_sort_option',
+        page: 1,
+        pageSize: 10,
+      };
+
+      const trialBalance = await listTrialBalance(params);
+      expect(trialBalance).toBeDefined();
+      expect(trialBalance).not.toBeNull();
+
+      if (trialBalance) {
+        const { items } = trialBalance;
+        const defaultSort = [{ sortBy: SortBy.BEGINNING_CREDIT_AMOUNT, sortOrder: SortOrder.DESC }];
+        expect(items.sort).toEqual(defaultSort);
+      }
+    });
+
+    it('should handle pageSize of 0 and return all items', async () => {
+      const params = {
+        companyId: 1002,
+        startDate: 1729380068,
+        endDate: 1730762468,
+        sortOption: `${SortBy.BEGINNING_CREDIT_AMOUNT}:${SortOrder.DESC}`,
+        page: 1,
+        pageSize: 0,
+      };
+
+      const trialBalance = await listTrialBalance(params);
+
+      expect(trialBalance).toBeDefined();
+      expect(trialBalance).not.toBeNull();
+
+      if (trialBalance) {
+        const { items } = trialBalance;
+        expect(items.pageSize).toBe(items.totalCount);
+        expect(items.hasNextPage).toBe(false);
+        expect(items.hasPreviousPage).toBe(false);
       }
     });
   });
