@@ -13,8 +13,8 @@ import Image from 'next/image';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 
 interface LedgerListProps {
-  ledgerData: ILedgerPayload | null; // 接收 API 數據
-  loading: boolean; // 接收父组件傳遞的loading狀態
+  ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
+  loading: boolean; // Info: (20241118 - Anna) 接收父组件傳遞的loading狀態
 }
 
 const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, loading }) => {
@@ -27,16 +27,19 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
 
-  // 提取 ledgerData.items.data，並設置默認值為空數組，避免 undefined 或 null 引發錯誤
+  // Info: (20241118 - Anna) 提取 ledgerData.items.data，並設置默認值為空數組，避免 undefined 或 null 引發錯誤
   // const ledgerItemsData = ledgerData?.items?.data ?? [];
 
-  // 確保 ledgerItemsData 是一個有效的陣列
+  // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
   const ledgerItemsData = Array.isArray(ledgerData?.items?.data) ? ledgerData.items.data : [];
 
+  // Deprecate: (20241118 - Anna) debug
   // eslint-disable-next-line no-console
   console.log(ledgerItemsData);
+  // Deprecate: (20241118 - Anna) debug
   // eslint-disable-next-line no-console
   console.log('Ledger items data:', ledgerItemsData);
+  // Deprecate: (20241118 - Anna) debug
   // eslint-disable-next-line no-console
   console.log('Ledger items data length:', ledgerItemsData.length);
 
@@ -98,7 +101,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({ ledgerData, load
     );
   }
 
-  // 渲染有效的憑證數據列表
+  // Info: (20241118 - Anna) 渲染有效的憑證數據列表
   // const displayedLedgerList = ledgerItemsData.map((ledger) => {
   //   return <LedgerItem key={ledger.id} ledger={ledger} />;
   // });
