@@ -69,6 +69,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
   const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + cur.amount : acc), 0);
 
+  // Info: (20241118 - Julian) If note is empty, display '-'
+  const noteText = note !== '' ? note : '-';
+
   // Info: (20241014 - Julian) Destructuring payableInfo or receivingInfo
   const {
     total: payableAmount,
@@ -200,7 +203,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   );
 
   const isDisplayNote = !isLoading ? (
-    <p className="text-input-text-primary">{note}</p>
+    <p className="text-input-text-primary">{noteText}</p>
   ) : (
     <Skeleton width={200} height={24} rounded />
   );

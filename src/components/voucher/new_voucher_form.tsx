@@ -528,9 +528,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   }, [temporaryAssetList]);
 
-  const typeToggleHandler = () => {
-    setTypeVisible(!typeVisible);
-  };
+  const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
   const counterSearchToggleHandler = () => {
     setIsSearchCounterparty(!isSearchCounterparty);
@@ -617,7 +615,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setType(aiType);
     setNote(aiNote);
     setCounterparty(aiCounterParty);
-    // ToDo: (20241021 - Julian) 等 API 格式確認後再處理
     const aiLineItemsUI = aiLineItems.map((item) => {
       return {
         ...item,
@@ -679,6 +676,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       reverseVouchers,
     };
 
+    clearTemporaryAssetHandler();
+    clearReverseListHandler();
     createVoucher({ params: { companyId }, body });
   };
 
