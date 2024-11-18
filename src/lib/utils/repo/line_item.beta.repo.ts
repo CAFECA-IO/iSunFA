@@ -9,9 +9,9 @@ import {
 } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortBy } from '@/constants/journal';
-import { SortOrder } from '@/constants/sort';
+import { SortOrder, SortBy as BetaSortBy } from '@/constants/sort';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
-import { ILineItem, ILineItemIncludeAccount } from '@/interfaces/line_item';
+import { IGetLineItemByAccount, ILineItem, ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { loggerError } from '@/lib/utils/logger_back';
@@ -305,4 +305,169 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
   }
 
   return result;
+}
+
+export async function listLineItemsByAccount({
+  accountId,
+  companyId,
+  startDate,
+  endDate,
+  page = DEFAULT_PAGE_NUMBER,
+  pageSize = DEFAULT_PAGE_LIMIT,
+  sortOption = [],
+  searchQuery = undefined,
+  isDeleted = undefined,
+}: {
+  accountId: number;
+  companyId: number;
+  startDate: number;
+  endDate: number;
+  page?: number;
+  pageSize?: number;
+  sortOption: { sortBy: BetaSortBy; sortOrder: SortOrder }[];
+  searchQuery?: string;
+  isDeleted?: boolean;
+}): Promise<IPaginatedData<IGetLineItemByAccount[]>> {
+  let lineItems: IGetLineItemByAccount[] = [];
+
+  const startDateInSecond = setTimestampToDayStart(startDate);
+  const endDateInSecond = setTimestampToDayEnd(endDate);
+
+  const deletedAtQuery: Prisma.LineItemWhereInput = isDeleted
+    ? { AND: [{ deletedAt: { not: null } }, { deletedAt: { not: 0 } }] }
+    : isDeleted === false
+      ? { OR: [{ deletedAt: { equals: 0 } }, { deletedAt: { equals: null } }] }
+      : {
+          OR: [{ deletedAt: { equals: undefined } }],
+        };
+
+  const searchQueryArray: Prisma.LineItemWhereInput = {
+    OR: [
+      { description: { contains: searchQuery, mode: 'insensitive' } },
+      // { account: { code: { contains: searchQuery, mode: 'insensitive' } } },
+      // { account: { name: { contains: searchQuery, mode: 'insensitive' } } },
+      { voucher: { no: { contains: searchQuery, mode: 'insensitive' } } },
+    ],
+  };
+
+  const where: Prisma.LineItemWhereInput = {
+    account: {
+      id: accountId,
+    },
+    voucher: {
+      companyId,
+      date: {
+        gte: startDateInSecond,
+        lte: endDateInSecond,
+      },
+    },
+    AND: [deletedAtQuery, searchQueryArray],
+  };
+
+  const totalCount = await prisma.lineItem.count({ where });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  if (totalPages > 0 && (page < 1 || page > totalPages)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  // Deprecate: (20241113 - Murky) incomplete
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const orderBy = sortOption.reduce((acc: { [key: string]: any }, { sortBy, sortOrder }) => {
+    switch (sortBy) {
+      case BetaSortBy.DATE:
+        acc.voucher = acc.voucher || {};
+        acc.voucher = {
+          ...acc.voucher,
+          date: sortOrder,
+        };
+        break;
+      case BetaSortBy.AMOUNT:
+        acc.amount = sortOrder;
+        break;
+      case BetaSortBy.DATE_CREATED:
+        acc.createdAt = sortOrder;
+        break;
+      case BetaSortBy.DATE_UPDATED:
+        acc.updatedAt = sortOrder;
+        break;
+      case BetaSortBy.VOUCHER_NUMBER:
+        acc.voucher = acc.voucher || {};
+        acc.voucher = {
+          ...acc.voucher,
+          no: sortOrder,
+        };
+        break;
+      default:
+        break;
+    }
+    return acc;
+  }, {});
+  const skip = pageToOffset(page, pageSize);
+
+  try {
+    /**
+     * Info: (20241113 - Murky)
+     * @describe get lineItems and its reversed lineItem by account Id
+     */
+    lineItems = await prisma.lineItem.findMany({
+      where,
+      orderBy,
+      include: {
+        account: true,
+        voucher: {
+          include: {
+            originalVouchers: {
+              include: {
+                resultVoucher: {
+                  include: {
+                    lineItems: {
+                      where: {
+                        account: {
+                          id: accountId,
+                        },
+                      },
+                      include: {
+                        account: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      take: pageSize + 1,
+      skip,
+    });
+  } catch (error) {
+    const logError = loggerError(0, 'Find many line items in listLineItems failed', error as Error);
+    logError.error('Prisma find many line items in listLineItems in line_item.beta.repo.ts failed');
+  }
+
+  const hasNextPage = lineItems.length > pageSize;
+  const hasPreviousPage = page > 1;
+
+  if (lineItems.length > pageSize) {
+    lineItems.pop();
+  }
+
+  // const sort: {
+  //   sortBy: string; // Info: (20240812 - Murky) 排序欄位的鍵
+  //   sortOrder: string; // Info: (20240812 - Murky) 排序欄位的值
+  // }[] = [{ sortBy, sortOrder }];
+
+  const paginatedLineItemList = {
+    data: lineItems,
+    page,
+    totalPages,
+    totalCount,
+    pageSize,
+    hasNextPage,
+    hasPreviousPage,
+    sort: sortOption,
+  };
+  return paginatedLineItemList;
 }

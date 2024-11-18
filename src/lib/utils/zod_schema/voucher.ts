@@ -468,7 +468,7 @@ const voucherGetOneOutputValidatorV2 = z
           id: certificate.id,
           name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),
           companyId: certificate.companyId,
-          voucherNo: certificate.voucherNo,
+          voucherNo: data.no,
           unRead: !isRead,
           uploader: data.issuer.name,
           invoice: {

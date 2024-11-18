@@ -8,7 +8,7 @@ import { getFolderList } from '@/lib/utils/repo/folder.repo';
 import { IFolder } from '@/interfaces/folder';
 
 async function checkAuth(userId: number, companyId: number): Promise<boolean> {
-  const admin = await getAdminByCompanyIdAndUserId(companyId, userId);
+  const admin = await getAdminByCompanyIdAndUserId(userId, companyId);
   return !!admin;
 }
 

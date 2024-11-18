@@ -335,19 +335,19 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   return (
     <div className="overflow-y-auto px-40px pb-32px pt-10px">
       <div className="flex justify-end gap-2 p-4">
-        <Button id="download-voucher-btn" type="button" variant="tertiary" className="p-2">
+        <Button id="download-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
           <MdOutlineFileDownload size={16} />
         </Button>
         <Button
           id="delete-voucher-btn"
           type="button"
           variant="tertiary"
-          className="p-2"
+          size={'defaultSquare'}
           onClick={deleteClickHandler}
         >
           <FiTrash2 size={16} />
         </Button>
-        <Button id="edit-voucher-btn" type="button" variant="tertiary" className="p-2">
+        <Button id="edit-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
           <FiEdit size={16} />
         </Button>
       </div>

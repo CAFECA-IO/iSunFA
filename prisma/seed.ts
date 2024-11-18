@@ -38,6 +38,12 @@ import accountingSettings from '@/seed_json/accounting_setting.json';
 import userSettings from '@/seed_json/user_setting.json';
 import companySettings from '@/seed_json/company_setting.json';
 import userActionLogs from '@/seed_json/user_action_log.json';
+import invoice from '@/seed_json/invoice.json';
+
+// Info: (20241112 - Murky) Associate Related
+import associateLineItems from '@/seed_json/associate_line_item.json';
+import associateVouchers from '@/seed_json/associate_voucher.json';
+import event from '@/seed_json/event.json';
 
 const prisma = new PrismaClient();
 
@@ -221,6 +227,7 @@ async function createVoucherCertificate() {
 }
 
 async function createLineItem(lineItem: {
+  id: number;
   amount: number;
   description: string;
   accountCode: string;
@@ -240,29 +247,42 @@ async function createLineItem(lineItem: {
   if (!account) {
     throw new Error(`Account with code ${lineItem.accountCode} not found`);
   }
-  await prisma.lineItem.create({
-    data: {
-      amount: lineItem.amount,
-      description: lineItem.description,
-      debit: lineItem.debit,
-      createdAt: lineItem.createdAt,
-      updatedAt: lineItem.updatedAt,
-      account: {
-        connect: {
-          id: account.id,
-        },
+  await prisma.lineItem.createMany({
+    data: [
+      {
+        id: lineItem.id,
+        amount: lineItem.amount,
+        description: lineItem.description,
+        debit: lineItem.debit,
+        createdAt: lineItem.createdAt,
+        updatedAt: lineItem.updatedAt,
+        accountId: account.id,
+        voucherId: lineItem.voucherId,
       },
-      voucher: {
-        connect: {
-          id: lineItem.voucherId,
-        },
-      },
-    },
+    ],
   });
 }
 
 async function createLineItems() {
   await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
+}
+
+async function createAssociateLineItem() {
+  await prisma.accociateLineItem.createMany({
+    data: associateLineItems,
+  });
+}
+
+async function createAssociateVoucher() {
+  await prisma.accociateVoucher.createMany({
+    data: associateVouchers,
+  });
+}
+
+async function createEvent() {
+  await prisma.event.createMany({
+    data: event,
+  });
 }
 
 async function createAsset() {
@@ -304,6 +324,12 @@ async function createCompanySetting() {
 async function createUserActionLog() {
   await prisma.userActionLog.createMany({
     data: userActionLogs,
+  });
+}
+
+async function createInvoice() {
+  await prisma.invoice.createMany({
+    data: invoice,
   });
 }
 
@@ -373,6 +399,11 @@ async function main() {
   await createSalaryRecord();
   await createVoucherSalaryRecordFolder();
   await createAssetVoucher();
+
+  await createEvent();
+  await createAssociateVoucher();
+  await createAssociateLineItem();
+  await createInvoice();
 }
 
 main()

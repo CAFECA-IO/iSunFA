@@ -5,8 +5,10 @@ import { LocaleKey } from '@/constants/normal_setting';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
 import SelectLauguageDropdown from '@/components/user_settings/select_language_dropdown';
 import PhoneNumberInput from '@/components/user_settings/phone_number_input';
+import { IUserSetting } from '@/interfaces/user_setting';
 
 interface UserInfoFormProps {
+  userSetting: IUserSetting | null;
   firstName: string;
   setFirstName: React.Dispatch<React.SetStateAction<string>>;
   lastName: string;
@@ -19,9 +21,11 @@ interface UserInfoFormProps {
   setCountryCode: React.Dispatch<React.SetStateAction<LocaleKey>>;
   phoneNumber: string;
   setPhoneNumber: React.Dispatch<React.SetStateAction<string>>;
+  onSubmit: () => void;
 }
 
 const UserInfoForm: React.FC<UserInfoFormProps> = ({
+  userSetting,
   firstName,
   setFirstName,
   lastName,
@@ -34,10 +38,11 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
   setCountryCode,
   phoneNumber,
   setPhoneNumber,
+  onSubmit,
 }) => {
   const { t } = useTranslation(['setting', 'common']);
   return (
-    <form className="flex flex-col gap-lv-7">
+    <form className="flex flex-col gap-lv-7" onSubmit={onSubmit}>
       <div className="grid grid-cols-2 gap-lv-7">
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
@@ -83,7 +88,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
         <Button type="button" variant="secondaryBorderless">
           {t('common:COMMON.CANCEL')}
         </Button>
-        <Button type="submit" variant="default">
+        <Button type="submit" variant="default" disabled={!userSetting}>
           {t('common:COMMON.SAVE')}
         </Button>
       </div>

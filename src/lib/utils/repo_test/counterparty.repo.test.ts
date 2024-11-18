@@ -82,7 +82,7 @@ describe('Counterparty Repository', () => {
     it('should update the details of a counterparty', async () => {
       const newName = 'Updated Counterparty';
       const newTaxId = '987654321';
-      const newType = 'customer';
+      const newType = CounterpartyType.CLIENT;
       const newNote = 'Updated Note';
       const updatedCounterparty = await updateCounterpartyById(
         Counterparties[1].id,

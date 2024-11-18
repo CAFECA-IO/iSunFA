@@ -4,10 +4,10 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Layout from '@/components/beta/layout/layout';
-import AccountingSettingPageBody from '@/components/accounting_setting/accounting_setting_page_body';
+import AccountingSettingPageBody from '@/components/account_settings/accounting_setting_page_body';
 
 const AccountingSettingPage: React.FC = () => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation();
 
   return (
     <>
@@ -30,13 +30,9 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
     ...(await serverSideTranslations(locale, [
       'common',
       'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
       'setting',
-      'terms',
       'asset',
+      'dashboard',
     ])),
     locale,
   },

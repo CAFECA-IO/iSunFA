@@ -138,7 +138,10 @@
     "CONTENT": "上传您想要传票关联的发票",
     "NO_FILE": "没有上传中的文件",
     "REMAIN": "剩下 {{count}} 文件",
-    "FAILED": "上传失败"
+    "FAILED": "上传失败",
+    "LOADING": "上传中...",
+    "URL": "网址",
+    "FOR_MOBILE": "用于手机上传文件"
   },
   "CREATE": {
     "FAILED": "创建失败"

@@ -14,14 +14,15 @@ import loggerBack from '@/lib/utils/logger_back';
  * @throws {FormatterError} 當傳入的 dto 無法通過 Zod 驗證時，拋出錯誤，包含錯誤訊息及細節。
  */
 export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherEntity {
-  const newDto = Object.assign(dto, {
+  const newDto = {
     originalEvents: [],
     resultEvents: [],
     lineItems: [],
     certificates: [],
     readByUsers: [],
     asset: [],
-  });
+    ...dto,
+  };
 
   const { data, success, error } = voucherEntityValidator.safeParse(newDto);
 

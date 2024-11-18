@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -132,7 +133,10 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   );
 
   return (
-    <div className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10">
+    <Link
+      href={`/users/accounting/${voucher.id}`}
+      className="table-row font-medium hover:cursor-pointer hover:bg-surface-brand-primary-10"
+    >
       {/* Info: (20240920 - Julian) Select */}
       <div className={`${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center`}>
         <div className="relative top-20px px-8px">
@@ -160,7 +164,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
       <div className="table-cell">{displayedCounterparty}</div>
       {/* Info: (20240920 - Julian) Issuer */}
       <div className="table-cell">{displayedIssuer}</div>
-    </div>
+    </Link>
   );
 };
 

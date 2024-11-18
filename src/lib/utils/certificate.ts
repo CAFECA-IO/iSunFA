@@ -29,7 +29,7 @@ export function initCertificateEntity(
   const certificateEntity: ICertificateEntity = {
     id: dto.id ?? 0,
     companyId: dto.companyId,
-    voucherNo: dto.voucherNo,
+    // voucherNo: dto.voucherNo,
     aiResultId: dto.aiResultId,
     aiStatus: dto.aiStatus,
     createdAt: dto?.createdAt || nowInSecond,

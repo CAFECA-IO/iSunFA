@@ -28,21 +28,21 @@ async function handleGetRequest(
   const session = await getSession(req, res);
   const { userId, companyId, roleId } = session || {};
 
-  if (userId) {
+  if (userId > 0) {
     const getUser = await getUserById(userId);
     if (getUser) {
       payload.user = formatUser(getUser);
     }
   }
 
-  if (companyId) {
+  if (companyId > 0) {
     const getCompany = await getCompanyById(companyId);
     if (getCompany) {
       payload.company = formatCompany(getCompany);
     }
   }
 
-  if (roleId) {
+  if (roleId > 0) {
     const getRole = await getRoleById(roleId);
     if (getRole) {
       payload.role = getRole;

@@ -1,17 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { FiSend } from 'react-icons/fi';
 import Toggle from '@/components/toggle/toggle';
+import APIHandler from '@/lib/utils/api_handler';
+import { IUserSetting } from '@/interfaces/user_setting';
+import { APIName } from '@/constants/api_connection';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
+import { useModalContext } from '@/contexts/modal_context';
 
-interface NoticeSettingsProps {}
+interface NoticeSettingsProps {
+  userSetting: IUserSetting | null;
+}
 
-const NoticeSettings: React.FC<NoticeSettingsProps> = () => {
+const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   const { t } = useTranslation(['setting', 'common']);
+  const { toastHandler } = useModalContext();
+  const [isLoading, setIsLoading] = useState(false);
+  const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
 
-  const [enableSystemNotifications, setEnableSystemNotifications] = React.useState(false);
-  const [enableUpdatesNotifications, setEnableUpdatesNotifications] = React.useState(false);
-  const [enableEmailNotifications, setEnableEmailNotifications] = React.useState(false);
+  const [enableSystemNotifications, setEnableSystemNotifications] = useState(
+    userSetting?.notificationSetting.systemNotification ?? false
+  );
+  const [enableUpdatesNotifications, setEnableUpdatesNotifications] = useState(
+    userSetting?.notificationSetting.updateAndSubscriptionNotification ?? false
+  );
+  const [enableEmailNotifications, setEnableEmailNotifications] = useState(
+    userSetting?.notificationSetting.emailNotification ?? false
+  );
+
+  const updateUseSetting = async () => {
+    if (!userSetting) return;
+    setIsLoading(true);
+    const { success } = await updateUserSettingAPI({
+      params: { userId: userSetting?.userId },
+      body: {
+        ...userSetting,
+        notificationSetting: {
+          ...userSetting.notificationSetting,
+          systemNotification: enableSystemNotifications,
+          updateAndSubscriptionNotification: enableUpdatesNotifications,
+          emailNotification: enableEmailNotifications,
+        },
+        personalInfo: {
+          ...userSetting.personalInfo,
+        },
+      },
+    });
+    if (success) {
+      toastHandler({
+        id: ToastId.USER_SETTING_UPDATE_SUCCESS, // ToDo:  (20241114 - tzuhan) 跟設計師確認更新成功或失敗的UI
+        type: ToastType.SUCCESS,
+        content: t('setting:USER.UPDATE_SUCCESS'),
+        closeable: true,
+      });
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    if (!isLoading) updateUseSetting();
+  }, [isLoading, enableSystemNotifications, enableUpdatesNotifications, enableEmailNotifications]);
 
   return (
     <div>

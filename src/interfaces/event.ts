@@ -42,7 +42,7 @@ export interface IEventEntity {
    * Info: (20241023 - Murky)
    * @description 0~6, 0 is Sunday, which day of week this event happened repeatedly, empty if not repeated
    */
-  dateOfWeek: number[];
+  daysOfWeek: number[];
 
   /**
    * Info: (20241023 - Murky)

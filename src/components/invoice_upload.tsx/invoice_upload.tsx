@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useModalContext } from '@/contexts/modal_context';
 import APIHandler from '@/lib/utils/api_handler';
-import { IFile, IFileUIBeta } from '@/interfaces/file';
+import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { APIName } from '@/constants/api_connection';
 import UploadArea from '@/components/upload_area/upload_area';
@@ -35,7 +35,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   const { selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
-  const { trigger: uploadFileAPI } = APIHandler<IFile>(APIName.FILE_UPLOAD);
+  const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
 
   const handleUploadCancelled = useCallback(() => {

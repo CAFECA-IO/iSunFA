@@ -94,7 +94,7 @@ export const handleGetRequest: IHandleRequest<
   const mockCertificate: ICertificateItem = {
     id: 1,
     companyId: 1003,
-    voucherNo: '',
+    // voucherNo: '',
     invoice: mockInvoice,
     file: mockInvoiceFile,
     uploader: mockUploader,

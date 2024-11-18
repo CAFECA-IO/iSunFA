@@ -44,17 +44,9 @@ const CreateRolePage = () => {
         const systemRoles = await getSystemRoleList();
         const userRoles = await getUserRoleList();
 
-        // Deprecated: (20241108 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('systemRoles:', systemRoles, 'userRoles:', userRoles);
-
         if (systemRoles && userRoles) {
           const unique = findUniqueRolesOptimized(systemRoles, userRoles);
           setUniqueRoles(unique);
-
-          // Deprecated: (20241108 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('unique:', unique);
         }
       } catch (error) {
         // Deprecated: (20241108 - Liz)

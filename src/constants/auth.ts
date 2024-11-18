@@ -1,4 +1,5 @@
 import { APIName } from '@/constants/api_connection';
+import { UploadType } from './file';
 
 export enum AuthFunctionsKeysNew {
   user = 'user',
@@ -8,6 +9,10 @@ export enum AuthFunctionsKeysNew {
   CompanyAdminMatch = 'CompanyAdminMatch',
   projectCompanyMatch = 'projectCompanyMatch',
 }
+
+export const AUTH_WHITELIST = {
+  [APIName.FILE_UPLOAD]: { query: { type: UploadType.ROOM } },
+};
 
 // ToDo: (20241111 - Jacky) Add more auth functions
 export const AUTH_CHECK = {
@@ -63,12 +68,13 @@ export const AUTH_CHECK = {
 
   [APIName.AGREE_TO_TERMS]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_CHALLENGE]: [AuthFunctionsKeysNew.user],
-  [APIName.SIGN_UP]: [AuthFunctionsKeysNew.user],
   [APIName.SIGN_IN]: [AuthFunctionsKeysNew.user],
   [APIName.SIGN_OUT]: [AuthFunctionsKeysNew.user],
   [APIName.EMAIL]: [AuthFunctionsKeysNew.user],
+  [APIName.USER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.USER_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.USER_UPDATE]: [AuthFunctionsKeysNew.user],
+  [APIName.USER_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_ADD]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_GET]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: [AuthFunctionsKeysNew.user],
@@ -92,6 +98,7 @@ export const AUTH_CHECK = {
   [APIName.INVOICE_CREATE]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.INVOICE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.IMAGE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_STATUS]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_V2]: [AuthFunctionsKeysNew.user],

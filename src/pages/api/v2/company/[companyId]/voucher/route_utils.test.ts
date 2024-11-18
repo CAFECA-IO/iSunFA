@@ -89,9 +89,9 @@ describe('voucherAPIPostUtils', () => {
 
   describe('initLineItemFromPrisma', () => {
     it('should get default line item and init ILineItemEntity', async () => {
-      const lineItem = await postUtils.initLineItemFromPrisma(10000000);
+      const lineItem = await postUtils.initLineItemFromPrisma(1000);
       expect(lineItem).toBeDefined();
-      expect(lineItem.id).toBe(10000000);
+      expect(lineItem.id).toBe(1000);
     });
   });
 
@@ -113,7 +113,7 @@ describe('voucherAPIPostUtils', () => {
 
   describe('isLineItemExistById', () => {
     it('should return true if line item exist', async () => {
-      const isExist = await postUtils.isLineItemExistById(10000000);
+      const isExist = await postUtils.isLineItemExistById(1000);
 
       expect(isExist).toBe(true);
     });
@@ -465,7 +465,7 @@ describe('voucherAPIPostUtils', () => {
       };
 
       fakeReversedLineItem = {
-        id: 10000000,
+        id: 1000,
         description: 'fake Reversed description',
         amount: 1000,
         debit: true,
@@ -510,7 +510,7 @@ describe('voucherAPIPostUtils', () => {
         frequency: EventEntityFrequency.ONCE,
         startDate: 1,
         endDate: 1,
-        dateOfWeek: [],
+        daysOfWeek: [],
         monthsOfYear: [],
         createdAt: 1,
         updatedAt: 1,

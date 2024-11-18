@@ -1,6 +1,11 @@
 import { ReactNode, useState } from 'react';
 import Header from '@/components/beta/layout/header';
 import SideMenu from '@/components/beta/layout/side_menu';
+// import { useModalContext } from '@/contexts/modal_context';
+// import { ToastId } from '@/constants/toast_id';
+// import { ToastType } from '@/interfaces/toastify';
+// import { useUserCtx } from '@/contexts/user_context';
+// import { useTranslation } from 'react-i18next';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,6 +20,22 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   const toggleOverlay = () => {
     setIsOverlayVisible((prev) => !prev);
   };
+
+  /** ToDo: (20241114 - tzuhan) IUser 目前沒有提供deletedAt
+  const { t } = useTranslation(['setting', 'common']);
+  const { toastHandler } = useModalContext();
+  const { userAuth } = useUserCtx();
+  useEffect(() => {
+    if (userAuth?.deletedAt) {
+      toastHandler({
+        id: ToastId.USER_DELETE_WARNING,
+        type: ToastType.WARNING,
+        content: t('setting:USER.DELETE_WARNING'),
+        closeable: true,
+      });
+    }
+  }, [userAuth?.deletedAt]);
+*/
 
   return (
     <div className="flex h-screen overflow-hidden">

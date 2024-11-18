@@ -13,7 +13,10 @@
     "STATUS_DONATED": "已捐贈",
     "STATUS_SCRAPPED": "已報廢",
     "STATUS_MISSING": "已遺失",
-    "STATUS_NORMAL": "使用中"
+    "STATUS_NORMAL": "使用中",
+    "EXPORT_ASSET_LIST_WARNING_TITLE": "警告",
+    "EXPORT_ASSET_LIST_WARNING_CONTENT": "請至少選擇一個資產以匯出。",
+    "OK_BTN": "好"
   },
   "STATUS_SETTING_MODAL": {
     "TITLE": "狀態設定",

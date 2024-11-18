@@ -11,7 +11,11 @@ import { certificateEntityValidator } from '@/lib/utils/zod_schema/certificate';
 export function parsePrismaCertificateToCertificateEntity(
   dto: PrismCertificate
 ): ICertificateEntity {
-  const { data, success, error } = certificateEntityValidator.safeParse(dto);
+  const newDto = {
+    voucherNo: null,
+    ...dto,
+  };
+  const { data, success, error } = certificateEntityValidator.safeParse(newDto);
 
   if (!success) {
     throw new FormatterError('parsePrismaCertificateToCertificateEntity', {

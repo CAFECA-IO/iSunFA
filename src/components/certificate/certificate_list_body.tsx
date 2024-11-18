@@ -1,25 +1,20 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
-import useStateRef from 'react-usestateref';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { CERTIFICATE_USER_INTERACT_OPERATION, InvoiceTabs } from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
-import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { IFileUIBeta } from '@/interfaces/file';
-import { ProgressStatus } from '@/constants/account';
 import { DEFAULT_PAGE_LIMIT, FREE_COMPANY_ID } from '@/constants/config';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
 import SelectionToolbar, {
@@ -27,18 +22,14 @@ import SelectionToolbar, {
 } from '@/components/selection_tool_bar/selection_tool_bar';
 import Certificate from '@/components/certificate/certificate';
 import CertificateEditModal from '@/components/certificate/certificate_edit_modal';
-import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
-import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
-import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CertificateExportModal from '@/components/certificate/certificate_export_modal';
+import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
+import { getPusherInstance } from '@/lib/utils/pusher_client';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 interface CertificateListBodyProps {}
-
-const sanitizeFileName = (fileName: string): string => {
-  return encodeURIComponent(fileName);
-};
 
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate', 'common']);
@@ -48,11 +39,9 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: encryptAPI } = APIHandler<string>(APIName.ENCRYPT);
   const { trigger: updateCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_PUT_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<void>(APIName.CERTIFICATE_DELETE_V2);
-  const [token, setToken, tokenRef] = useStateRef<string | undefined>(undefined);
-  const [showQRCode, setShowQRCode] = useState<boolean>(false);
+
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<{
@@ -71,10 +60,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
-  const [mobileUploadFiles, setMobileUploadFiles] = useState<{
-    [name: string]: IFileUIBeta;
-  }>({});
-  const [desktopUploadFiles, setDesktopUploadFiles] = useState<IFileUIBeta[]>([]);
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
@@ -402,79 +387,31 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, companyId]
   );
 
-  const mobileUploadFileHandler = useCallback(
-    async (message: { token: string; file: IFileUIBeta }) => {
-      const { token: receivedToken, file } = message;
-      // Deprecated: (20241011 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(
-        `pusher got message, (token(${tokenRef.current})===_token${receivedToken})?${tokenRef.current === receivedToken} message:`,
-        message
+  const handleNewCertificatesComing = useCallback(
+    (message: { certificates: ICertificate[] }) => {
+      const { certificates: newCertificates } = message;
+
+      const newCertificatesUI: { [id: string]: ICertificateUI } = newCertificates.reduce(
+        (acc, certificate) => {
+          acc[certificate.id] = {
+            ...certificate,
+            isSelected: false,
+            unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
+            actions: !certificate.voucherNo
+              ? [
+                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+                ]
+              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+          };
+          return acc;
+        },
+        {} as { [id: string]: ICertificateUI }
       );
-
-      if (receivedToken === tokenRef.current) {
-        const files = {
-          ...mobileUploadFiles,
-        };
-        files[sanitizeFileName(file.name)] = { ...file };
-        if (file.status === ProgressStatus.SUCCESS) {
-          files[sanitizeFileName(file.name)].progress = 50;
-          files[sanitizeFileName(file.name)].status = ProgressStatus.IN_PROGRESS;
-        }
-        setMobileUploadFiles(files);
-        // Deprecated: (20241011 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`mobileUploadFiles:`, mobileUploadFiles);
-      }
-    },
-    [tokenRef, setMobileUploadFiles, mobileUploadFiles]
-  );
-
-  const certificateCreatedHandler = useCallback(
-    (message: { certificate: ICertificate }) => {
-      const { certificate: newCertificate } = message;
-      if (
-        (newCertificate.voucherNo && activeTab === InvoiceTabs.WITHOUT_VOUCHER) ||
-        (!newCertificate.voucherNo && activeTab === InvoiceTabs.WITH_VOUCHER) ||
-        newCertificate.companyId !== companyId
-      ) {
-        return;
-      }
-
-      const newCertificates = {
-        ...certificates,
-      };
-      newCertificates[message.certificate.id] = {
-        ...message.certificate,
-        isSelected: false,
-        unRead: true, // Info: (20241022 - tzuhan) @Murky, 目前 unRead 是在這裡設置的，之後應該要改成後端推送
-        actions: !message.certificate.voucherNo
-          ? [
-              CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-              CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-            ]
-          : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-      };
-      setCertificates(newCertificates);
+      setCertificates((prev) => ({ ...newCertificatesUI, ...prev }));
     },
     [companyId, certificates, activeTab]
   );
-
-  const getToken = useCallback(async () => {
-    if (!tokenRef.current) {
-      const res = await encryptAPI({ body: { companyId } });
-      if (res.success && res.data) {
-        setToken(res.data);
-      } else {
-        setToken('');
-      }
-    }
-  }, [tokenRef, companyId, setToken]);
-
-  const toggleQRCode = useCallback(() => {
-    getToken();
-    setShowQRCode((prev) => !prev);
-  }, []);
 
   useEffect(() => {
     setOtherSorts([
@@ -484,20 +421,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, [amountSort, voucherSort]);
 
   useEffect(() => {
-    getToken();
-  }, [getToken]);
-
-  useEffect(() => {
     const pusher = getPusherInstance();
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
-
-    channel.bind(CERTIFICATE_EVENT.UPLOAD, mobileUploadFileHandler);
-    // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
-    channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
+    channel.bind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
 
     return () => {
-      channel.unbind(CERTIFICATE_EVENT.UPLOAD, mobileUploadFileHandler);
-      channel.unbind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);
+      channel.unbind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
       pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
     };
   }, []);
@@ -523,26 +452,25 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           onDelete={handleDeleteItem}
         />
       )}
-      {showQRCode && !!token && (
+      {/* {showQRCode && (
         <CertificateQRCodeModal
-          isOpen={showQRCode}
-          onClose={() => setShowQRCode((prev) => !prev)}
-          isOnTopOfModal={false}
-          token={tokenRef.current!}
+          handleRoomCreate={handleRoomCreate}
+          toggleModal={() => setShowQRCode((prev) => !prev)}
         />
-      )}
+      )} */}
       {/* Info: (20240919 - tzuhan) Main Content */}
       <div
         className={`flex grow flex-col gap-4 ${certificates && Object.values(certificates).length > 0 ? 'overflow-y-scroll' : ''} `}
       >
         {/* Info: (20240919 - tzuhan) Upload Area */}
-        <InvoiceUpload
+        {/* <InvoiceUpload
           isDisabled={false}
           withScanner
           toggleQRCode={toggleQRCode}
           setFiles={setDesktopUploadFiles}
           showErrorMessage={false}
-        />
+        /> */}
+        <CertificateFileUpload />
         {/* Info: (20240919 - tzuhan) Tabs */}
         <Tabs
           tabs={Object.values(InvoiceTabs)}
@@ -624,12 +552,12 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           </div>
         )}
       </div>
-      {/* Info: (20240926- tzuhan) Floating Upload Popup */}
-      <FloatingUploadPopup
+      {/* Deprecated: (20241111 - tzuhan) Floating Upload Popup */}
+      {/* <FloatingUploadPopup
         companyId={companyId}
         mobileUploadFiles={Object.values(mobileUploadFiles)}
         desktopUploadFiles={desktopUploadFiles}
-      />
+      /> */}
     </>
   );
 };

@@ -37,25 +37,18 @@ const lineItemGetByAccountFrontendValidatorV2 = paginatedDataSchema(
 const lineItemGetByAccountOutputValidatorV2 = paginatedDataSchema(
   z.lazy(() =>
     z.object({
-      ...voucherEntityValidator.shape,
-      lineItems: z
-        .array(
-          z.object({
-            ...lineItemEntityValidator.shape,
-            id: z.number(),
-            account: accountEntityValidator,
-          })
-        )
-        .min(1),
+      ...lineItemEntityValidator.shape,
+      id: z.number(),
+      account: accountEntityValidator,
+      voucher: voucherEntityValidator,
     })
   )
 ).transform((data) => {
-  const reverseItems = data.data.map((voucher) => {
+  const reverseItems = data.data.map((lineItem) => {
     // Info: (20241111 - Murky) [Warning] 需要確保每個voucher都只會回一筆lineItem
-    const [lineItem] = voucher.lineItems;
     return {
-      voucherId: voucher.id,
-      voucherNo: voucher.no,
+      voucherId: lineItem.voucher.id,
+      voucherNo: lineItem.voucher.no,
       amount: lineItem.amount,
       description: lineItem.description,
       debit: lineItem.debit,

@@ -2,24 +2,25 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import Pagination from '@/components/pagination/pagination';
 import { TbSquarePlus2, TbCodeCircle } from 'react-icons/tb';
-import { BsThreeDotsVertical } from 'react-icons/bs';
-import { IoArrowForward } from 'react-icons/io5';
+
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import ChangeTagModal from '@/components/beta/my_company_list_page/change_tag_modal';
-import WorkTag from '@/components/beta/my_company_list_page/company_tag';
 import FilterSection from '@/components/filter_section/filter_section';
+import CompanyItem from '@/components/beta/my_company_list_page/company_item';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ICompanyAndRole } from '@/interfaces/company';
 import { useTranslation } from 'react-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT_FOR_COMPANY_LIST } from '@/constants/config';
-import { CANCEL_COMPANY_ID } from '@/constants/company';
+import MessageModal from '@/components/message_modal/message_modal';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface CompanyListProps {
   companyList: ICompanyAndRole[];
-  toggleChangeTagModal: () => void;
-  setCompanyName: Dispatch<SetStateAction<string>>;
+  toggleDeleteModal: () => void;
+  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
 }
 
 const NoData = () => {
@@ -37,115 +38,107 @@ const NoData = () => {
   );
 };
 
-const CompanyList = ({ companyList, toggleChangeTagModal, setCompanyName }: CompanyListProps) => {
-  const { selectCompany, selectedCompany } = useUserCtx();
-
-  // ToDo: (20241111 - Liz) connect to the API to change the tag
-  const handleChangeTag = (companyName: string) => {
-    setCompanyName(companyName);
-    toggleChangeTagModal();
-  };
-
+const CompanyList = ({
+  companyList,
+  toggleDeleteModal,
+  setCompanyToEdit,
+  setCompanyToDelete,
+}: CompanyListProps) => {
   return (
     <section className="flex flex-auto flex-col gap-8px">
-      {companyList.map((myCompany) => {
-        const isCompanySelected = myCompany.company.id === selectedCompany?.id;
-        const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
-
-        const handleConnect = () => {
-          selectCompany(companyId);
-        };
-
-        return (
-          <div
-            key={myCompany.company.id}
-            className="flex items-center justify-between gap-120px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
-          >
-            <Image
-              src={myCompany.company.imageId}
-              alt={myCompany.company.name}
-              width={60}
-              height={60}
-              className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
-            ></Image>
-
-            <div className="flex flex-auto items-center gap-8px">
-              <p className="text-base font-medium text-text-neutral-solid-dark">
-                {myCompany.company.name}
-              </p>
-              <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
-            </div>
-
-            <div className="flex w-90px justify-center">
-              <WorkTag
-                type={myCompany.tag}
-                handleChangeTag={() => handleChangeTag(myCompany.company.name)}
-              />
-            </div>
-
-            <button
-              type="button"
-              className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
-              onClick={handleConnect}
-            >
-              <p className="text-sm font-medium">{isCompanySelected ? ' Cancel' : 'Connect'}</p>
-              <IoArrowForward size={16} />
-            </button>
-          </div>
-        );
-      })}
+      {companyList.map((myCompany) => (
+        <CompanyItem
+          key={myCompany.company.id}
+          myCompany={myCompany}
+          toggleDeleteModal={toggleDeleteModal}
+          setCompanyToEdit={setCompanyToEdit}
+          setCompanyToDelete={setCompanyToDelete}
+        />
+      ))}
     </section>
   );
 };
 
 const MyCompanyListPageBody = () => {
   const { t } = useTranslation(['company']);
-
-  const { userAuth } = useUserCtx();
-  // Deprecated: (20241111 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('(in MyCompanyListPageBody) userAuth:', userAuth);
-
+  const { userAuth, deleteCompany } = useUserCtx();
   const userId = userAuth?.id;
 
+  const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
+
   const [isCreateCompanyModalOpen, setIsCreateCompanyModalOpen] = useState(false);
-  const [isCallingAPI, setIsCallingAPI] = useState(false);
-
-  const [isChangeTagModalOpen, setIsChangeTagModalOpen] = useState(false);
-  const [companyName, setCompanyName] = useState<string>('');
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [companyToEdit, setCompanyToEdit] = useState<ICompanyAndRole | undefined>();
+  const [companyToDelete, setCompanyToDelete] = useState<ICompanyAndRole | undefined>();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
 
-  // Deprecated: (20241111 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('totalPage:', totalPage, 'currentPage:', currentPage, 'companyList:', companyList);
-
   const isNoData = companyList.length === 0;
 
-  const toggleChangeTagModal = () => {
-    setIsChangeTagModalOpen((prev) => !prev);
-  };
   const toggleCreateCompanyModal = () => {
     setIsCreateCompanyModalOpen((prev) => !prev);
+  };
+  const toggleDeleteModal = () => {
+    setIsDeleteModalOpen((prev) => !prev);
+  };
+
+  // Info: (20241115 - Liz) 打 API 刪除公司
+  const handleDeleteCompany = async () => {
+    if (!companyToDelete) return;
+
+    try {
+      const data = await deleteCompany(companyToDelete.company.id);
+
+      if (data) {
+        setRefreshKey((prev) => prev + 1);
+        // Deprecated: (20241115 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(
+          '刪除公司成功, api return data:',
+          data,
+          'refreshKey:',
+          refreshKey,
+          'companyToDelete:',
+          companyToDelete
+        );
+      } else {
+        // Deprecated: (20241115 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('刪除公司失敗');
+      }
+    } catch (error) {
+      // Deprecated: (20241115 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('MyCompanyListPageBody handleDeleteCompany error:', error);
+    }
+  };
+
+  const messageModalData: IMessageModal = {
+    title: t('company:PAGE_BODY.DELETE_MESSAGE_TITLE'),
+    content: t('company:PAGE_BODY.DELETE_MESSAGE_CONTENT'),
+    submitBtnStr: t('company:PAGE_BODY.DELETE'),
+    submitBtnFunction: handleDeleteCompany,
+    messageType: MessageType.WARNING,
+    backBtnFunction: toggleDeleteModal,
+    backBtnStr: t('company:PAGE_BODY.CANCEL'),
   };
 
   const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
     setCompanyList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
-
-    // Deprecated: (20241111 - Liz)
+    // Deprecated: (20241115 - Liz)
     // eslint-disable-next-line no-console
-    console.log('(handleApiResponse) resData:', resData);
+    console.log('handleApiResponse resData:', resData);
   };
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
-        {!isCallingAPI && userId && (
+        {userId && (
           <FilterSection<ICompanyAndRole[]>
+            key={refreshKey}
             disableDateSearch
             className="flex-auto"
             params={{ userId }}
@@ -177,12 +170,13 @@ const MyCompanyListPageBody = () => {
       </section>
 
       {isNoData && <NoData />}
-      {!isNoData && !isCallingAPI && userId && (
+      {!isNoData && (
         <>
           <CompanyList
             companyList={companyList}
-            toggleChangeTagModal={toggleChangeTagModal}
-            setCompanyName={setCompanyName}
+            toggleDeleteModal={toggleDeleteModal}
+            setCompanyToEdit={setCompanyToEdit}
+            setCompanyToDelete={setCompanyToDelete}
           />
           <Pagination
             totalPages={totalPage}
@@ -192,18 +186,29 @@ const MyCompanyListPageBody = () => {
         </>
       )}
 
-      {/* // Info: (20241108 - Liz)  Modals */}
+      {/* // Info: (20241108 - Liz) Modals */}
       <CreateCompanyModal
         isModalOpen={isCreateCompanyModalOpen}
         toggleModal={toggleCreateCompanyModal}
-        setIsCallingAPI={setIsCallingAPI}
+        setRefreshKey={setRefreshKey}
       />
 
-      <ChangeTagModal
-        companyName={companyName}
-        isModalOpen={isChangeTagModalOpen}
-        toggleModal={toggleChangeTagModal}
-      />
+      {companyToEdit && (
+        <ChangeTagModal
+          companyToEdit={companyToEdit}
+          isModalOpen={!!companyToEdit}
+          setCompanyToEdit={setCompanyToEdit}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {companyToDelete && (
+        <MessageModal
+          messageModalData={messageModalData}
+          isModalVisible={isDeleteModalOpen}
+          modalVisibilityHandler={toggleDeleteModal}
+        />
+      )}
     </main>
   );
 };

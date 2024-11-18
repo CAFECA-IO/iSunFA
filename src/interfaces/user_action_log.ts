@@ -14,4 +14,5 @@ export interface IUserActionLog {
   requestPayload: Record<string, string>;
   httpStatusCode: number;
   statusMessage: string;
+  normal: boolean;
 }
