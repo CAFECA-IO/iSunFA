@@ -21,7 +21,7 @@ export interface ILedgerBeta {
 }
 
 interface ILedgerItemProps {
-  ledger: ILedgerBeta; // 傳入單個 ledger 作為 prop
+  ledger: ILedgerBeta; // Info: (20241118 - Anna) 傳入單個 ledger 作為 prop
 }
 
 const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
@@ -97,7 +97,7 @@ const LedgerItem = React.memo(({ ledger }: ILedgerItemProps) => {
   //   </div>
   // );
 
-  //  使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
+  // Info: (20241118 - Anna) 使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
   const displayedCredit = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       <p className="m-0 flex items-center text-text-neutral-primary">
