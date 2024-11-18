@@ -47,13 +47,16 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = () => {
-    setIsPrinting(true); // Info: (20241112 - Anna) 開啟列印模式
-    window.print(); // Info: (20241112 - Anna) 觸發列印
-  };
+    // setIsPrinting(true); // Info: (20241118 - Anna) 開啟列印模式
+    // setTimeout(() => {
+    //   window.print(); // Info: (20241118 - Anna) 觸發瀏覽器列印
+    //   setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+    // }, 500); // Info: (20241118 - Anna) 等待渲染完成後再列印
 
-  // Info: (20241112 - Anna) 動態應用分頁樣式
-  const printContainerClass = isPrinting ? 'mx-auto w-a4-width origin-top overflow-x-auto' : '';
-  const printContentClass = isPrinting ? 'relative h-a4-height overflow-hidden' : '';
+    // window.print(); // Info: (20241118 - Anna) 預覽PDF
+
+    setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
+  };
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
@@ -247,6 +250,36 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
       window.removeEventListener('afterprint', handleAfterPrint);
     };
   }, []);
+
+useEffect(() => {
+  if (isPrinting) {
+    const observer = new MutationObserver(() => {
+      // Info: (20241118 - Anna) 檢查所有需要的 ID 是否渲染完成
+      const requiredIds = ['#1', '#2', '#3', '#4', '#5'];
+      const allRendered = requiredIds.every((id) => document.querySelector(id));
+
+      if (allRendered) {
+        observer.disconnect(); // Info: (20241118 - Anna) 停止監控
+        window.print(); // Info: (20241118 - Anna) 所有節點渲染完成後觸發列印
+        setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
+      }
+    });
+
+    // Info: (20241118 - Anna) 監控目標節點的變化
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Info: (20241118 - Anna) 返回清理函數以移除監控器
+    return () => {
+      observer.disconnect(); // Info: (20241118 - Anna) 確保監控器被清理
+    };
+  }
+
+  // Info: (20241118 - Anna) 如果 `isPrinting` 為假，則返回空清理函數，滿足 ESLint 的要求
+  return () => {};
+}, [isPrinting]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -486,7 +519,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
   );
 
   const ItemSummary = (
-    <div id="1" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="1" className="relative overflow-y-hidden">
       {/* Info: (20240723 - Shirley) watermark logo */}
       <div className="relative right-0 top-16 z-0">
         <Image
@@ -546,7 +579,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ItemDetail = (
-    <div id="2" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="2" className={`relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
@@ -591,7 +624,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const ProportionalTable = (
-    <div id="3" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="3" className={`relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產負債比例表</p>
@@ -643,7 +676,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const AssetItem = (
-    <div id="4" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="4" className={`relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>資產分布圖</p>
@@ -696,7 +729,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
   const TurnoverDay = (
-    <div id="5" className={`${printContentClass} relative overflow-y-hidden`}>
+    <div id="5" className={`relative overflow-y-hidden`}>
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>應收帳款週轉天數</p>
@@ -759,21 +792,33 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     </div>
   );
 
+  // Info: (20241118 - Anna) 如果正在列印，僅渲染列印模式的內容
+  if (isPrinting) {
+    return (
+      <div className="mx-auto w-full origin-top overflow-x-auto print:block">
+        <BalanceSheetA4Template reportFinancial={reportFinancial} curDate={curDate}>
+          {ItemSummary}
+          {ItemDetail}
+          {ProportionalTable}
+          {AssetItem}
+          {TurnoverDay}
+        </BalanceSheetA4Template>
+      </div>
+    );
+  }
+
   return (
-    <div className={`${printContainerClass} mx-auto w-full origin-top overflow-x-auto`}>
-      <hr className="mb-40px break-before-page" />
-      <BalanceSheetA4Template reportFinancial={reportFinancial} curDate={curDate}>
-        {displayedSelectArea}
-        {ItemSummary}
-        <hr className="break-before-page" />
-        {ItemDetail}
-        <hr className="break-before-page" />
-        {ProportionalTable}
-        <hr className="mb-16px mt-32px break-before-page" />
-        {AssetItem}
-        <hr className="break-before-page" />
-        {TurnoverDay}
-      </BalanceSheetA4Template>
+    <div className="mx-auto w-full origin-top overflow-x-auto">
+      {displayedSelectArea}
+      {ItemSummary}
+      <hr className="break-before-page" />
+      {ItemDetail}
+      <hr className="break-before-page" />
+      {ProportionalTable}
+      <hr className="mb-16px mt-32px break-before-page" />
+      {AssetItem}
+      <hr className="break-before-page" />
+      {TurnoverDay}
     </div>
   );
 };

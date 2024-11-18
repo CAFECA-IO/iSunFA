@@ -39,14 +39,19 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <SideMenu toggleOverlay={toggleOverlay} />
+      {/* Info: (20241118 - Anna) 不要列印<SideMenu>  */}
+      <SideMenu toggleOverlay={toggleOverlay} className="print:hidden" />
 
       <div className="relative flex flex-auto flex-col bg-surface-neutral-main-background">
-        <Header isDashboard={isDashboard} pageTitle={pageTitle} goBackUrl={goBackUrl} />
-
+        {/* Info: (20241118 - Anna) 不要列印<Header> */}
+        <Header
+          isDashboard={isDashboard}
+          pageTitle={pageTitle}
+          goBackUrl={goBackUrl}
+          className="print:hidden"
+        />
         {/* // Info: (20241018 - Liz) Overlay with backdrop-blur */}
         {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
-
         {/* // Info: (20241018 - Liz) Content Body */}
         <main className="h-full overflow-y-auto overflow-x-hidden px-20px py-32px screen1280:px-56px">
           {children}

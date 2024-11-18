@@ -10,11 +10,15 @@ interface HeaderProps {
   isDashboard: boolean;
   pageTitle?: string;
   goBackUrl?: string;
+  className?: string; // Info: (20241118 - Anna) 因為列印功能會需要用到
 }
 
-const Header = ({ isDashboard, pageTitle, goBackUrl }: HeaderProps) => {
+// Info: (20241118 - Anna) 因為列印功能會需要用到className
+const Header = ({ isDashboard, pageTitle, goBackUrl, className }: HeaderProps) => {
   return (
-    <header className="flex items-center gap-24px px-20px pb-8px pt-32px screen1280:px-56px">
+    <header
+      className={`flex items-center gap-24px px-20px pb-8px pt-32px screen1280:px-56px ${className || ''}`}
+    >
       {isDashboard ? <Search /> : <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />}
 
       <section className="flex flex-none items-center gap-16px">

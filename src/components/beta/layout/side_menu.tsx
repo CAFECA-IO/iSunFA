@@ -12,6 +12,7 @@ import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 
 interface SideMenuProps {
   toggleOverlay?: () => void;
+  className?: string; // Info: (20241118 - Anna) 因為列印功能會需要用到
 }
 
 interface CaptionProps {
@@ -157,7 +158,7 @@ const SubMenuItem = ({
   );
 };
 
-const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
+const SideMenu = ({ toggleOverlay, className }: SideMenuProps) => {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [isModalVisible, setIsModalVisible] = useState(false); // Info: (20241117 - Anna) 新增狀態用於控制 Modal 顯示
 
@@ -165,13 +166,14 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
     setIsSideMenuOpen((prev) => !prev);
   };
 
-const toggleModalVisibility = () => {
-  // Info: (20241117 - Anna) 新增控制 Modal 的顯示函數
-  setIsModalVisible((prev) => !prev);
-};
+  const toggleModalVisibility = () => {
+    // Info: (20241117 - Anna) 新增控制 Modal 的顯示函數
+    setIsModalVisible((prev) => !prev);
+  };
 
+  // Info: (20241118 - Anna) 因為列印功能會需要用到className
   return (
-    <div className="z-100 h-full bg-surface-neutral-main-background">
+    <div className={`z-100 h-full bg-surface-neutral-main-background ${className || ''}`}>
       {isSideMenuOpen ? (
         <section className="relative flex h-full w-max flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu">
           {/* Info: (20241117 - Anna) Embed Code Modal */}
