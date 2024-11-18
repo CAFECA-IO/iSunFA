@@ -160,6 +160,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
       });
       onClose();
     } else if (editError) {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Failed to update counterparty:', editError);
     }
@@ -168,16 +169,17 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   // Info: (20241115 - Anna) 新增 useEffect 監聽 deleteSuccess 狀態，自動更新列表
   useEffect(() => {
     if (deleteSuccess) {
-      // 回傳空資料表示該項目已刪除
+      // Info: (20241118 - Anna) 回傳空資料表示該項目已刪除
       onSave({ id: counterpartyId, name: '', taxId: '', type: CounterpartyType.BOTH, note: '' });
       onClose();
     } else if (deleteError) {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Failed to delete counterparty:', deleteError);
     }
   }, [deleteSuccess, deleteError, onSave, onClose, counterpartyId]);
 
-  // Info:(20241111 - Anna) 添加 deleteCounterpartyHandler 函數以處理刪除交易夥伴
+  // Info: (20241111 - Anna) 添加 deleteCounterpartyHandler 函數以處理刪除交易夥伴
   const deleteCounterpartyHandler = () => {
     messageModalDataHandler({
       title: '刪除交易夥伴',
@@ -189,6 +191,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         try {
           await deleteCounterpartyTrigger(); // Info: (20241115 - Anna) 呼叫 deleteCounterpartyTrigger 以執行刪除
         } catch (error) {
+          // Deprecate: (20241118 - Anna) debug
           // eslint-disable-next-line no-console
           console.error('Error deleting counterparty:', error);
         }
@@ -213,7 +216,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   // };
 
   const editCounterparty = async () => {
-    if (!hasChanges) return; // 判斷是否有更動
+    if (!hasChanges) return; // Info: (20241118 - Anna) 判斷是否有更動
     try {
       const response = await editCounterpartyTrigger();
       if (response.success) {
@@ -227,6 +230,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         onClose();
       }
     } catch (error) {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Error updating counterparty:', error);
     }
