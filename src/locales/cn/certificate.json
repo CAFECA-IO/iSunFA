@@ -102,7 +102,8 @@
     "ENTER_NUMBER": "输入编号",
     "PARTNER_TYPE": "合作伙伴类型",
     "NOTE": "备注",
-    "ENTER_TEXT": "输入文字"
+    "ENTER_TEXT": "输入文字",
+    "EDIT_NEW": "编辑客户/供应商"
   },
   "LABEL": {
     "NEW": "新增"

@@ -5,19 +5,47 @@ import type { TrialBalanceItem } from '@/interfaces/trial_balance';
 import CollapseButton from '@/components/button/collapse_button';
 
 interface ITrialBalanceItemProps {
-  voucher: TrialBalanceItem;
+  account: TrialBalanceItem;
   totalExpanded: boolean; // Info: (20241029 - Anna) Receive expanded state from parent
+  // selectedDateRange: IDatePeriod | null; // Info: (20241107 - Anna) 接收日期範圍作為 prop
 }
 
-const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanceItemProps) => {
+const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanceItemProps) => {
   const [isChecked, setIsChecked] = useState(false);
   // Info: (20241025 - Anna) 新增狀態來追蹤按鈕展開狀態
   const [localIsExpanded, setLocalIsExpanded] = useState(totalExpanded); // Info: (20241029 - Anna) 使用解構的 totalExpanded 作為初始值
+  // const { selectedCompany } = useUserCtx();
+  // const companyId = selectedCompany?.id;
 
   // Info: (20241029 - Anna) Update local isExpanded when parent state changes
   useEffect(() => {
     setLocalIsExpanded(totalExpanded);
   }, [totalExpanded]);
+
+  // Info: (20241107 - Anna) 設定 API 參數與請求方法
+  // const fetchTrialBalanceData = useCallback(async () => {
+  //   if (!companyId || !selectedDateRange) return;
+  //   const response = await APIHandler<TrialBalanceItem[]>(APIName.TRIAL_BALANCE_LIST, {
+  //     params: { companyId },
+  //     query: {
+  //       startDate: selectedDateRange.startTimeStamp,
+  //       endDate: selectedDateRange.endTimeStamp,
+  //       page: 1,
+  //       pageSize: 10,
+  //     },
+  //   });
+  //    if (response.success && response.data) {
+  //      // eslint-disable-next-line no-console
+  //      console.log(response.data); // For debugging or future use
+  //    }
+  // }, [companyId, selectedDateRange]);
+
+  // Info: (20241107 - Anna) 當日期範圍變更時，重新請求 API
+  // useEffect(() => {
+  //   if (selectedDateRange) {
+  //     fetchTrialBalanceData();
+  //   }
+  // }, [fetchTrialBalanceData, selectedDateRange]);
 
   const displayedCheckbox = (
     <div className="relative px-8px py-6">
@@ -33,10 +61,10 @@ const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanc
   const displayedAccountingCode = (
     <div className="ml-2 flex h-full items-center justify-start font-normal text-neutral-600">
       <div className="flex items-center justify-between">
-        <p className="m-0 flex items-center">{voucher.no}</p>
-        {/* Info: (20241025 - Anna) 在 voucher.no 右側加入 CollapseButton */}
-        {/* Info: (20241025 - Anna) 只有當 voucher.subAccounts 有數據時才顯示 CollapseButton */}
-        {voucher.subAccounts.length > 0 && (
+        <p className="m-0 flex items-center">{account.no}</p>
+        {/* Info: (20241025 - Anna) 在 account.no 右側加入 CollapseButton */}
+        {/* Info: (20241025 - Anna) 只有當 account.subAccounts 有數據時才顯示 CollapseButton */}
+        {account.subAccounts.length > 0 && (
           <CollapseButton
             onClick={() => setLocalIsExpanded(!localIsExpanded)} // Info: (20241029 - Anna) 使用 localIsExpanded
             isCollapsed={!localIsExpanded}
@@ -48,7 +76,7 @@ const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanc
   const displayedAccountingName = (
     <div className="flex h-full items-center justify-center font-normal text-neutral-600">
       <div>
-        <p className="m-0 flex items-center">{voucher.accountingTitle}</p>
+        <p className="m-0 flex items-center">{account.accountingTitle}</p>
       </div>
     </div>
   );
@@ -56,40 +84,40 @@ const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanc
   const displayedBeginningDebitAmount = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       <p className="m-0 flex items-center text-neutral-600">
-        {numberWithCommas(voucher.beginningDebitAmount)}
+        {numberWithCommas(account.beginningDebitAmount)}
       </p>
     </div>
   );
 
   const displayedBeginningCreditAmount = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-neutral-600">{numberWithCommas(voucher.beginningCreditAmount)}</p>
+      <p className="text-neutral-600">{numberWithCommas(account.beginningCreditAmount)}</p>
     </div>
   );
   const displayedMidtermDebitAmount = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       <p className="m-0 flex items-center text-neutral-600">
-        {numberWithCommas(voucher.midtermDebitAmount)}
+        {numberWithCommas(account.midtermDebitAmount)}
       </p>
     </div>
   );
 
   const displayedMidtermCreditAmount = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-neutral-600">{numberWithCommas(voucher.midtermCreditAmount)}</p>
+      <p className="text-neutral-600">{numberWithCommas(account.midtermCreditAmount)}</p>
     </div>
   );
   const displayedEndingDebitAmount = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
       <p className="m-0 flex items-center text-neutral-600">
-        {numberWithCommas(voucher.endingDebitAmount)}
+        {numberWithCommas(account.endingDebitAmount)}
       </p>
     </div>
   );
 
   const displayedEndingCreditAmount = (
     <div className="flex h-full items-center justify-end font-normal text-text-neutral-tertiary">
-      <p className="text-neutral-600">{numberWithCommas(voucher.endingCreditAmount)}</p>
+      <p className="text-neutral-600">{numberWithCommas(account.endingCreditAmount)}</p>
     </div>
   );
 
@@ -140,7 +168,7 @@ const TrialBalanceItemRow = React.memo(({ voucher, totalExpanded }: ITrialBalanc
       </div>
       {/* Info: (20241025 - Anna) 如果展開，新增子科目表格 */}
       {localIsExpanded &&
-        voucher.subAccounts.map((subAccount) => (
+        account.subAccounts.map((subAccount) => (
           <div key={subAccount.id} className="table-row h-20px font-normal">
             <div className="table-cell w-32px text-center">{displayedCheckbox}</div>
             <div className="table-cell w-50px text-center align-middle">

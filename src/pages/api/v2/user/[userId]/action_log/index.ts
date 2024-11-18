@@ -8,7 +8,6 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { listUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
-import { UserActionLogActionType } from '@/constants/user_action_log';
 import { UserActionLog } from '@prisma/client';
 
 // ToDo: (20240924 - Jacky) Implement the logic to get the user action logs data from the database
@@ -19,8 +18,15 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<UserActionLog[]> | null = null;
 
-  const { userId } = query;
-  const listedUserActionLog = await listUserActionLog(userId, UserActionLogActionType.LOGIN);
+  const { userId, actionType, page, pageSize, startDateInSecond, endDateInSecond } = query;
+  const listedUserActionLog = await listUserActionLog(
+    userId,
+    actionType,
+    page,
+    pageSize,
+    startDateInSecond,
+    endDateInSecond
+  );
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
   payload = listedUserActionLog;
   return { statusMessage, payload };

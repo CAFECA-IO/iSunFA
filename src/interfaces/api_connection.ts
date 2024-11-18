@@ -124,10 +124,10 @@ export type IAPIName =
   | 'UPDATE_ASSET_V2'
   | 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE'
   | 'TRIAL_BALANCE_LIST'
-  | 'IP_LIST'
   | 'ASSET_LIST_EXPORT'
   | 'FILE_EXPORT'
-  | 'LEDGER_LIST';
+  | 'LEDGER_LIST'
+  | 'VOUCHER_POST_V2';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

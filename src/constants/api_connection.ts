@@ -147,7 +147,6 @@ export enum APIName {
   UPDATE_ASSET_V2 = 'UPDATE_ASSET_V2',
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
-  IP_LIST = 'IP_LIST',
   ASSET_LIST_EXPORT = 'ASSET_LIST_EXPORT',
   FILE_EXPORT = 'FILE_EXPORT',
   LEDGER_LIST = 'LEDGER_LIST',
@@ -276,7 +275,6 @@ export enum APIPath {
   UPDATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
-  IP_LIST = `${apiPrefixV2}/user/:userId/ip`,
   ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   LEDGER_LIST = `${apiPrefixV2}/company/:companyId/ledger`,
@@ -901,14 +899,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.TRIAL_BALANCE_LIST,
   }),
-  [APIName.IP_LIST]: createConfig({
-    name: APIName.IP_LIST,
-    method: HttpMethod.GET,
-    path: APIPath.IP_LIST,
-  }),
   [APIName.ASSET_LIST_EXPORT]: createConfig({
     name: APIName.ASSET_LIST_EXPORT,
-    method: HttpMethod.GET,
+    method: HttpMethod.POST,
     path: APIPath.ASSET_LIST_EXPORT,
   }),
   [APIName.FILE_EXPORT]: createConfig({
@@ -920,5 +913,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LEDGER_LIST,
     method: HttpMethod.GET,
     path: APIPath.LEDGER_LIST,
+  }),
+  [APIName.VOUCHER_POST_V2]: createConfig({
+    name: APIName.VOUCHER_POST_V2,
+    method: HttpMethod.POST,
+    path: APIPath.VOUCHER_POST_V2,
   }),
 };
