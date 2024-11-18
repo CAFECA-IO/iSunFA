@@ -11,7 +11,7 @@ describe('countUnpostedVoucher', () => {
   });
 
   it('should return 0 if there are no unposted vouchers', async () => {
-    const companyId = 1002;
+    const companyId = -1002;
     const mockCount = 0;
 
     const result = await countUnpostedVoucher(companyId);

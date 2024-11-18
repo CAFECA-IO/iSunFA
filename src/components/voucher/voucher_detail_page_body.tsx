@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
@@ -350,9 +351,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         >
           <FiTrash2 size={16} />
         </Button>
-        <Button id="edit-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
-          <FiEdit size={16} />
-        </Button>
+        <Link href={`/users/accounting/${voucherId}/editing`}>
+          <Button id="edit-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
+            <FiEdit size={16} />
+          </Button>
+        </Link>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
       <CertificateSelection

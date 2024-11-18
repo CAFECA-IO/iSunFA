@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -20,9 +20,14 @@ import { AssetModalType } from '@/interfaces/asset_modal';
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
   lineItems: ILineItemBeta[];
+  defaultAssetList?: IAssetDetails[];
 }
 
-const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems }) => {
+const AssetSection: React.FC<IAssetSectionProps> = ({
+  isShowAssetHint,
+  lineItems,
+  defaultAssetList = [],
+}) => {
   const { t } = useTranslation('common');
   const { selectedCompany } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
@@ -32,6 +37,11 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
   const { trigger, success, isLoading, data, error } = APIHandler<IAssetDetails>(
     APIName.DELETE_ASSET_V2
   );
+
+  const [assetList, setAssetList] = useState<IAssetDetails[]>([
+    ...defaultAssetList,
+    ...temporaryAssetList,
+  ]);
 
   // Info: (20241025 - Julian) 根據 lineItems 取得資產類別的會計科目
   const assetAccountList = lineItems
@@ -71,9 +81,17 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
     }
   }, [success, data, isLoading]);
 
+  useEffect(() => {
+    if (defaultAssetList && defaultAssetList.length > 0) {
+      // Info:(20241118 - Julian) Combine defaultAssetList and temporaryAssetList
+      const newAssetList = [...defaultAssetList, ...temporaryAssetList];
+      setAssetList(newAssetList);
+    }
+  }, [defaultAssetList, temporaryAssetList]);
+
   const displayedAssetList =
-    temporaryAssetList.length > 0 ? (
-      temporaryAssetList.map((asset) => {
+    assetList.length > 0 ? (
+      assetList.map((asset) => {
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({
