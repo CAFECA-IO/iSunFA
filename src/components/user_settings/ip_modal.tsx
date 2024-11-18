@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-
 import Pagination from '@/components/pagination/pagination';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -10,111 +9,76 @@ import { IoCloseOutline } from 'react-icons/io5';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
-import { SortBy, SortOrder } from '@/constants/sort';
 import { IUserActionLog } from '@/interfaces/user_action_log';
+import { timestampToString } from '@/lib/utils/common';
+import { ActionType } from '@/constants/display';
 
 interface IPModalProps {
   userId: number;
   toggleModal: () => void;
-  userActionLogs: IPaginatedData<IUserActionLog[]> | null;
+  pageData: IPaginatedData<IUserActionLog[]> | null;
 }
 
-const dummyData: IPaginatedData<{
-  ips: { time: number; device: string; address: string; abnormal: boolean }[];
-  detectAbnormal: boolean;
-}> = {
-  data: {
-    ips: [
-      {
-        time: 1632912000000,
-        device: 'Macos Chrome',
-        address: 'Taiwan.Taipei 211.22.118.145',
-        abnormal: false,
-      },
-      {
-        time: 1632912000000,
-        device: 'Macos Chrome',
-        address: 'Taiwan.Taipei 211.22.118.145',
-        abnormal: false,
-      },
-      {
-        time: 1632912000000,
-        device: 'Macos Chrome',
-        address: 'Taiwan.Taipei 211.22.118.145',
-        abnormal: false,
-      },
-      {
-        time: 1632912000000,
-        device: 'Smart Phone',
-        address: 'England.London 21.11.22.109',
-        abnormal: true,
-      },
-      {
-        time: 1632912000000,
-        device: 'Macos Chrome',
-        address: 'Taiwan.Taipei 211.22.118.145',
-        abnormal: false,
-      },
-    ],
-    detectAbnormal: true,
-  },
-  totalPages: 1,
-  page: 1,
-  totalCount: 5,
-  pageSize: 5,
-  hasNextPage: false,
-  hasPreviousPage: false,
-  sort: [{ sortBy: SortBy.DATE, sortOrder: SortOrder.DESC }],
-};
-
-const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, userActionLogs }) => {
+const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { toastHandler } = useModalContext();
-  const [page, setPage] = useState(userActionLogs?.page ?? 0);
-  const [totalPages, setTotalPages] = useState(userActionLogs?.totalPages ?? 0);
-  const { success, data: resData } = APIHandler<
-    IPaginatedData<{
-      ips: { time: number; device: string; address: string; abnormal: boolean }[];
-      detectAbnormal: boolean;
-    }>
-  >(APIName.IP_LIST, { params: { userId } }, true);
-  const [ips, setIps] = useState<
-    { time: number; device: string; address: string; abnormal: boolean }[]
-  >([]);
-
-  const warningContent = (
-    <div className="flex flex-col items-start gap-2">
-      <p className="text-text-state-error">{t('setting:IP.DETECT_DIFFERENT_IP_LOGIN')}</p>
-      <p>{t('setting:IP.VERIFY_YOUR_ACCOUNT_SECURITY')}</p>
-    </div>
+  const { trigger: getUserActionLogAPI } = APIHandler<IPaginatedData<IUserActionLog[]>>(
+    APIName.USER_ACTION_LOG_LIST
   );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [page, setPage] = useState(pageData?.page ?? 1);
+  const [totalPages, setTotalPages] = useState(pageData?.totalPages ?? 1);
+  const [userActionLogs, setUserActionLogs] = useState<IUserActionLog[]>(pageData?.data ?? []);
 
-  const handleApiResponse = (
-    data: IPaginatedData<{
-      ips: { time: number; device: string; address: string; abnormal: boolean }[];
-      detectAbnormal: boolean;
-    }>
-  ) => {
-    setTotalPages(data.totalPages);
-    setIps(data.data.ips);
-    if (data.data.detectAbnormal) {
+  const handleAbnormal = () => {
+    const warningContent = (
+      <div className="flex flex-col items-start gap-2">
+        <p className="text-text-state-error">{t('setting:IP.DETECT_DIFFERENT_IP_LOGIN')}</p>
+        <p>{t('setting:IP.VERIFY_YOUR_ACCOUNT_SECURITY')}</p>
+      </div>
+    );
+
+    toastHandler({
+      id: ToastId.IP_ABNORMAL,
+      type: ToastType.WARNING,
+      content: warningContent,
+      closeable: true,
+    });
+  };
+
+  const getUserActions = async () => {
+    try {
+      setIsLoading(true);
+      const { success, data, code } = await getUserActionLogAPI({
+        params: { userId },
+        query: { page, actionType: ActionType.login, pageSize: 6 },
+      });
+      if (success && data) {
+        setPage(data.page);
+        setTotalPages(data.totalPages);
+        setUserActionLogs(data.data);
+        const abnormal = data.data.some((d) => d.normal === false);
+        if (abnormal) {
+          handleAbnormal();
+        }
+      } else {
+        throw new Error(code);
+      }
+    } catch (error) {
       toastHandler({
-        id: ToastId.IP_ABNORMAL,
-        type: ToastType.WARNING,
-        content: warningContent,
+        id: ToastId.USER_SETTING_ERROR,
+        type: ToastType.ERROR,
+        content: (error as Error).message,
         closeable: true,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    /** ToDo: (20241107 - tzuhan) Uncomment this code block after API is ready
-    if (success && resData) {
-      handleApiResponse(resData);
-    }
-    */
-    handleApiResponse(dummyData);
-  }, [success, resData]);
+    if (!isLoading) getUserActions();
+  }, [isLoading, page]);
 
   return (
     <main className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -152,22 +116,24 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, userActionLogs }
                 </div>
               </div>
               <div className="table-row-group">
-                {ips.map((ip, index) => (
+                {userActionLogs.map((userActionLog, index) => (
                   <div
                     className="group table-row text-center text-xs leading-none text-text-brand-secondary-lv2 hover:bg-surface-brand-primary-10"
-                    key={`${ip.device}-${index + 1}`}
+                    key={`${userActionLog.userAgent}-${index + 1}`}
                   >
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
-                      <div className="px-lv-4 py-lv-3">{ip.time}</div>
+                      <div className="px-lv-4 py-lv-3">
+                        {timestampToString(userActionLog.actionTime).date}
+                      </div>
                     </div>
                     <div className="relative table-cell border-b border-r border-stroke-neutral-quaternary align-middle">
-                      <div className="px-lv-4 py-lv-3">{ip.device}</div>
+                      <div className="px-lv-4 py-lv-3">{userActionLog.userAgent}</div>
                     </div>
                     <div className="relative table-cell border-b border-stroke-neutral-quaternary">
                       <div
-                        className={`px-lv-4 py-lv-3 ${ip.abnormal ? 'text-text-state-error' : ''}`}
+                        className={`px-lv-4 py-lv-3 ${userActionLog.normal === false ? 'text-text-state-error' : ''}`}
                       >
-                        {ip.address}
+                        {userActionLog.ipAddress}
                       </div>
                     </div>
                   </div>

@@ -160,8 +160,12 @@
     "VERIFY_YOUR_ACCOUNT_SECURITY": "Please verify your account security to prevent data leakage."
   },
   "USER": {
-    "UPDATE_SUCCESS": "User settings updated successfully.",
-    "DELETE_WARNING": "This account will be deleted in three business days.",
-    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page."
+    "UPDATE_SUCCESS": "Your information has been successfully updated.",
+    "UPDATE_ERROR": "There was an error saving the data, please resubmit your request.",
+    "DELETE_WARNING": "This account will be deleted in {{days}} business days.",
+    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page.",
+    "DELETE_ERROR": "There was an error deleting the data, please try again.",
+    "SETTING": "Setting",
+    "DELETE_CANCEL": "Cancel the deletion process"
   }
 }
