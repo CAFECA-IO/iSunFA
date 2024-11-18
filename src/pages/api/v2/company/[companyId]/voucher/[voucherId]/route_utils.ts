@@ -636,7 +636,8 @@ export const voucherAPIPutUtils = {
       voucherId: number;
       lineItemIdBeReversed: number;
       lineItemIdReverseOther: number;
-    }[]
+    }[],
+    originLineItems: ILineItemEntity[]
   ) => {
     /**
      * Info: (20241114 - Murky)
@@ -650,7 +651,15 @@ export const voucherAPIPutUtils = {
     }[] = [];
 
     reverseVouchers.forEach((reverseVoucher) => {
+      if (!newLineItems[reverseVoucher.lineItemIdReverseOther]) return;
+
       const lineItemReverseOther = newLineItems[reverseVoucher.lineItemIdReverseOther];
+      lineItemReverseOther.id =
+        originLineItems.find((originLineItem) => {
+          const originalKey = voucherAPIPutUtils.createLineItemComparisonKey(originLineItem);
+          const newKey = voucherAPIPutUtils.createLineItemComparisonKey(lineItemReverseOther);
+          return originalKey === newKey;
+        })?.id || 0;
       reversePairs.push({
         lineItemIdBeReversed: reverseVoucher.lineItemIdBeReversed,
         lineItemReverseOther,
@@ -673,15 +682,15 @@ export const voucherAPIPutUtils = {
 
     voucherFromPrisma.lineItems.forEach((lineItem) => {
       const lineItemReverseOther = voucherAPIPutUtils.initLineItemEntity(lineItem);
-      lineItem.originalLineItem.forEach((originLineItem) => {
-        const lineItemIdBeReversed = originLineItem.resultLineItemId;
-        const { eventId } = originLineItem.accociateVoucher;
+      lineItem.resultLineItem.forEach((result) => {
+        // const lineItemIdBeReversed = result.resultLineItemId;
+        const { eventId } = result.accociateVoucher;
         reversePairs.push({
           eventId,
-          lineItemIdBeReversed,
+          lineItemIdBeReversed: result.originalLineItemId,
           lineItemReverseOther,
-          amount: originLineItem.amount,
-          voucherId: originLineItem.resultLineItem.voucherId,
+          amount: result.amount,
+          voucherId: result.originalLineItem.voucherId,
         });
       });
     });
@@ -694,8 +703,8 @@ export const voucherAPIPutUtils = {
     amount: number;
     voucherId: number;
   }) => {
-    const { lineItemIdBeReversed, lineItemReverseOther, amount, voucherId } = lineItemRelationPair;
-    const key = `${lineItemIdBeReversed}-${lineItemReverseOther.accountId}-${lineItemReverseOther.debit}-${lineItemReverseOther.amount}-${amount}-${voucherId}`;
+    const { lineItemReverseOther, amount } = lineItemRelationPair;
+    const key = `${lineItemReverseOther.accountId}-${lineItemReverseOther.debit}-${lineItemReverseOther.amount}-${amount}`;
     return key;
   },
 
@@ -714,12 +723,17 @@ export const voucherAPIPutUtils = {
         lineItemReverseOther: ILineItemEntity;
         amount: number;
         voucherId: number;
-      }
+      }[]
     > = new Map();
 
     reversePairs.forEach((pair) => {
       const key = voucherAPIPutUtils.createReverseLineItemKey(pair);
-      reverseLineItemMap.set(key, pair);
+
+      if (!reverseLineItemMap.has(key)) {
+        reverseLineItemMap.set(key, []);
+      }
+
+      reverseLineItemMap.get(key)!.push(pair);
     });
 
     return reverseLineItemMap;
@@ -742,12 +756,16 @@ export const voucherAPIPutUtils = {
         lineItemReverseOther: ILineItemEntity;
         amount: number;
         voucherId: number;
-      }
+      }[]
     > = new Map();
 
     reversePairs.forEach((pair) => {
       const key = voucherAPIPutUtils.createReverseLineItemKey(pair);
-      reverseLineItemMap.set(key, pair);
+
+      if (!reverseLineItemMap.has(key)) {
+        reverseLineItemMap.set(key, []);
+      }
+      reverseLineItemMap.get(key)!.push(pair);
     });
 
     return reverseLineItemMap;
@@ -774,71 +792,53 @@ export const voucherAPIPutUtils = {
   ) => {
     const originalReverseMap = voucherAPIPutUtils.getOldReverseLineItemMap(originalReversePairs);
     const newReverseMap = voucherAPIPutUtils.getNewReverseLineItemMap(newReversePairs);
-
-    const reverseRelationNeedToBeRemovedMap: Map<
+    const reverseRelationNeedToBeReplaceMap: Map<
       string,
       {
         eventId: number;
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
+        original: {
+          eventId: number;
+          lineItemIdBeReversed: number;
+          lineItemReverseOther: ILineItemEntity;
+          amount: number;
+          voucherId: number;
+        }[];
+        new: {
+          lineItemIdBeReversed: number;
+          lineItemReverseOther: ILineItemEntity;
+          amount: number;
+          voucherId: number;
+        }[];
       }
     > = new Map();
 
-    const reverseRelationNeedToBeAddedMap: Map<
-      string,
-      {
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
+    originalReverseMap.forEach((originalPair, key) => {
+      if (!reverseRelationNeedToBeReplaceMap.has(key)) {
+        reverseRelationNeedToBeReplaceMap.set(key, {
+          eventId: originalPair[0].eventId,
+          original: [],
+          new: [],
+        });
       }
-    > = new Map();
 
-    originalReverseMap.forEach((pair, key) => {
-      if (!newReverseMap.has(key)) {
-        const newKey = voucherAPIPutUtils.createLineItemComparisonKey(pair.lineItemReverseOther);
-        reverseRelationNeedToBeRemovedMap.set(newKey, pair);
+      originalPair.forEach((pair) => {
+        reverseRelationNeedToBeReplaceMap.get(key)!.original.push(pair);
+      });
+    });
+
+    newReverseMap.forEach((newPair, key) => {
+      if (reverseRelationNeedToBeReplaceMap.has(key)) {
+        newPair.forEach((pair) => {
+          reverseRelationNeedToBeReplaceMap.get(key)!.new.push(pair);
+        });
       }
     });
 
-    newReverseMap.forEach((pair, key) => {
-      if (!originalReverseMap.has(key)) {
-        const newKey = voucherAPIPutUtils.createLineItemComparisonKey(pair.lineItemReverseOther);
-        reverseRelationNeedToBeAddedMap.set(newKey, pair);
+    reverseRelationNeedToBeReplaceMap.forEach((value, key) => {
+      if (value.original.length === 0) {
+        reverseRelationNeedToBeReplaceMap.delete(key);
       }
     });
-
-    const reverseRelationNeedToBeReplace: {
-      eventId: number;
-      original: {
-        eventId: number;
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
-      };
-      new: {
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
-      };
-    }[] = [];
-
-    reverseRelationNeedToBeRemovedMap.forEach((originalPair, key) => {
-      if (reverseRelationNeedToBeAddedMap.has(key)) {
-        const newPair = reverseRelationNeedToBeAddedMap.get(key);
-        if (newPair) {
-          reverseRelationNeedToBeReplace.push({
-            eventId: originalPair.eventId,
-            original: originalPair,
-            new: newPair,
-          });
-        }
-      }
-    });
-    return reverseRelationNeedToBeReplace;
+    return reverseRelationNeedToBeReplaceMap;
   },
 };

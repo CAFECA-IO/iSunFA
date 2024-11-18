@@ -736,7 +736,7 @@ export const voucherPutSchema = {
     querySchema: voucherPutQueryValidatorV2,
     bodySchema: voucherPostBodyValidatorV2,
   },
-  outputSchema: voucherEntityValidator,
+  outputSchema: z.number(),
   frontend: voucherNullSchema,
 };
 

@@ -253,7 +253,7 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
      * Info: (20241113 - Murky)
      * @description 決定是不是要新增一張新的voucher, 只有在line items有動到amount, accountId, debit的時候才需要新增
      */
-    const isNewVoucherNeeded = putUtils.isLineItemEntitiesSame(
+    const isNewVoucherNeeded = !putUtils.isLineItemEntitiesSame(
       originLineItems,
       newLineItemEntities
     );
@@ -278,8 +278,10 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
 
     const newLineItemReverseRelations = putUtils.constructNewLineItemReverseRelationship(
       newLineItemEntities,
-      reverseVouchersInfo
+      reverseVouchersInfo,
+      originLineItems
     );
+
     const oldLineItemReverseRelations =
       putUtils.constructOldLineItemReverseRelationship(voucherFromPrisma);
 
@@ -310,7 +312,7 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
     });
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = updatedVoucher.id;
+    payload = updatedVoucher?.id || null;
   } catch (_error) {
     const error = _error as Error;
     loggerError(userId, 'Voucher Put handlePutRequest', error.message).error(error);

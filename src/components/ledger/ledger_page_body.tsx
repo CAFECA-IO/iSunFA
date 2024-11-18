@@ -8,27 +8,27 @@ import { useTranslation } from 'next-i18next';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { ILedgerPayload } from '@/interfaces/ledger';
+import { useUserCtx } from '@/contexts/user_context';
+
+// Info: (20241105 - Anna) 定義完整的 API 回應結構
+interface ILedgerApiResponse {
+  powerby: string;
+  success: boolean;
+  code: string;
+  message: string;
+  payload: ILedgerPayload; // Info: (20241105 - Anna) 這裡的 payload 使用 ILedgerPayload 類型
+}
+
+enum ReportType {
+  General = 'general',
+  Detailed = 'detailed',
+  All = 'all',
+}
 
 const LedgerPageBody = () => {
   const { t } = useTranslation(['common', 'journal']);
-
-  const queryCondition = {
-    limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
-    forUser: true,
-    sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
-    sortOrder: 'asc',
-  };
-
-  // Info: (20241104 - Anna) API call to fetch account data
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
-    {
-      params: { companyId: 10000007 },
-      query: queryCondition,
-    },
-    false,
-    true
-  );
+  const { selectedCompany } = useUserCtx();
 
   // Info: (20241105 - Anna) 定義各類別的會計科目選項
   // Info: (20241105 - Anna) 從 src/constants/account.ts 的 export enum AccountType 而來，只留下有科目的類別
@@ -42,93 +42,188 @@ const LedgerPageBody = () => {
   const [otherComprehensiveIncomeOptions, setOtherComprehensiveIncomeOptions] = useState<string[]>(
     []
   );
-
-  const [selectedReportType, setSelectedReportType] = useState<
-    'General' | 'Detailed' | 'General & Detailed'
-  >('General');
+  const [selectedReportType, setSelectedReportType] = useState<ReportType>(ReportType.General);
   const [selectedDateRange, setSelectedDateRange] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
+  const [selectedStartAccountNo, setSelectedStartAccountNo] = useState<string>('');
+  const [selectedEndAccountNo, setSelectedEndAccountNo] = useState<string>('');
+  const [ledgerData, setLedgerData] = useState<ILedgerApiResponse | null>(null);
+
+  const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
+  const { trigger: fetchLedgerDataAPI, isLoading } = APIHandler<ILedgerApiResponse>(
+    APIName.LEDGER_LIST
+  );
 
   useEffect(() => {
-    getAccountList({ query: { ...queryCondition } });
-  }, []);
+    if (
+      selectedCompany?.id &&
+      selectedDateRange.startTimeStamp &&
+      selectedDateRange.endTimeStamp &&
+      selectedReportType
+    ) {
+      const query = {
+        startDate: selectedDateRange.startTimeStamp,
+        endDate: selectedDateRange.endTimeStamp,
+        startAccountNo: selectedStartAccountNo || null, // Info: (20241118 - Anna) 若為選填，使用 null 表示不填
+        endAccountNo: selectedEndAccountNo || null,
+        labelType: selectedReportType.toLowerCase(), // Info: (20241118 - Anna) 確保傳遞的是小寫的值
+      };
 
-  useEffect(() => {
-    if (accountTitleList) {
+      const params = { companyId: selectedCompany.id };
+
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
-      // console.log('API Response:', accountTitleList); // Info: (20241105 - Anna) 查看原始資料
-      // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
-      const assets: string[] = [];
-      const liabilities: string[] = [];
-      const equities: string[] = [];
-      const revenues: string[] = [];
-      const costs: string[] = [];
-      const expenses: string[] = [];
-      const incomes: string[] = [];
-      const otherComprehensiveIncomes: string[] = [];
-
-      // Info: (20241105 - Anna) 遍歷 accountTitleList.data，依據 type 將科目分類
-      accountTitleList.data.forEach((account) => {
-        const accountName = `${account.code} ${account.name}`;
-        switch (account.type) {
-          case 'asset':
-            assets.push(accountName);
-            break;
-          case 'liability':
-            liabilities.push(accountName);
-            break;
-          case 'equity':
-            equities.push(accountName);
-            break;
-          case 'revenue':
-            revenues.push(accountName);
-            break;
-          case 'cost':
-            costs.push(accountName);
-            break;
-          case 'expense':
-            expenses.push(accountName);
-            break;
-          case 'income':
-            incomes.push(accountName);
-            break;
-          case 'otherComprehensiveIncome':
-            otherComprehensiveIncomes.push(accountName);
-            break;
-          default:
-            break;
-        }
+      console.log('Fetching ledger data with params and query:', {
+        params,
+        query,
       });
 
-      // Info: (20241105 - Anna) 更新各類別的選項狀態
-      setAssetOptions(assets);
-      setLiabilityOptions(liabilities);
-      setEquityOptions(equities);
-      setRevenueOptions(revenues);
-      setCostOptions(costs);
-      setExpenseOptions(expenses);
-      setIncomeOptions(incomes);
-      setOtherComprehensiveIncomeOptions(otherComprehensiveIncomes);
+      const fetchLedgerData = async () => {
+        const startAccountNo = selectedStartAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號
+        const endAccountNo = selectedEndAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號
 
-      // Info: (20241105 - Anna) 印出各類別的會計科目
-      // eslint-disable-next-line no-console
-      // console.log('Assets:', assets);
-      // console.log('Liabilities:', liabilities);
-      // console.log('Equities:', equities);
-      // console.log('Revenues:', revenues);
-      // console.log('Costs:', costs);
-      // console.log('Expenses:', expenses);
-      // console.log('Incomes:', incomes);
-      // console.log('GainsOrLosses:', gainsOrLosses);
-      // console.log('OtherComprehensiveIncomes:', otherComprehensiveIncomes);
-      // console.log('CashFlows:', cashFlows);
-      // console.log('Others:', others);
+        const { data } = await fetchLedgerDataAPI({
+          params: { companyId: selectedCompany.id },
+          query: {
+            startDate: selectedDateRange.startTimeStamp,
+            endDate: selectedDateRange.endTimeStamp,
+            startAccountNo,
+            endAccountNo,
+            labelType: selectedReportType,
+            page: 1,
+            pageSize: 10,
+          },
+        });
+
+        setLedgerData(data);
+      };
+
+      fetchLedgerData();
     }
-  }, [accountTitleList]);
+  }, [
+    selectedCompany,
+    selectedDateRange,
+    selectedReportType,
+    selectedStartAccountNo,
+    selectedEndAccountNo,
+  ]);
 
-  const handleReportTypeChange = (type: 'General' | 'Detailed' | 'General & Detailed') => {
+  // Info: (20241117 - Liz) 取得會計科目列表
+  useEffect(() => {
+    if (!selectedCompany) return;
+
+    const getAccountList = async () => {
+      const { data: accountTitleList } = await getAccountListAPI({
+        params: { companyId: selectedCompany.id },
+        query: {
+          limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
+          forUser: true,
+          sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
+          sortOrder: 'asc',
+        },
+      });
+
+      if (accountTitleList) {
+        // Deprecated: (20241105 - Anna) 查看原始資料
+        // eslint-disable-next-line no-console
+        console.log('Account title list received:', accountTitleList);
+
+        // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
+        const assets: string[] = [];
+        const liabilities: string[] = [];
+        const equities: string[] = [];
+        const revenues: string[] = [];
+        const costs: string[] = [];
+        const expenses: string[] = [];
+        const incomes: string[] = [];
+        const otherComprehensiveIncomes: string[] = [];
+
+        // Info: (20241105 - Anna) 遍歷 accountTitleList.data，依據 type 將科目分類
+        accountTitleList.data.forEach((account) => {
+          const accountName = `${account.code} ${account.name}`;
+          switch (account.type) {
+            case 'asset':
+              assets.push(accountName);
+              break;
+            case 'liability':
+              liabilities.push(accountName);
+              break;
+            case 'equity':
+              equities.push(accountName);
+              break;
+            case 'revenue':
+              revenues.push(accountName);
+              break;
+            case 'cost':
+              costs.push(accountName);
+              break;
+            case 'expense':
+              expenses.push(accountName);
+              break;
+            case 'income':
+              incomes.push(accountName);
+              break;
+            case 'otherComprehensiveIncome':
+              otherComprehensiveIncomes.push(accountName);
+              break;
+            default:
+              break;
+          }
+        });
+
+        // Info: (20241105 - Anna) 更新各類別的選項狀態
+        setAssetOptions(assets);
+        setLiabilityOptions(liabilities);
+        setEquityOptions(equities);
+        setRevenueOptions(revenues);
+        setCostOptions(costs);
+        setExpenseOptions(expenses);
+        setIncomeOptions(incomes);
+        setOtherComprehensiveIncomeOptions(otherComprehensiveIncomes);
+
+        // Info: (20241105 - Anna) 印出各類別的會計科目
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Assets:', assets);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Liabilities:', liabilities);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Equities:', equities);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Revenues:', revenues);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Costs:', costs);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Expenses:', expenses);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Incomes:', incomes);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        // console.log('GainsOrLosses:', gainsOrLosses);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('OtherComprehensiveIncomes:', otherComprehensiveIncomes);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        // console.log('CashFlows:', cashFlows);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        // console.log('Others:', others);
+      }
+    };
+
+    getAccountList();
+  }, [selectedCompany]);
+
+  const handleReportTypeChange = (type: ReportType) => {
     setSelectedReportType(type);
   };
 
@@ -160,8 +255,8 @@ const LedgerPageBody = () => {
                 id="input-general"
                 name="ledger-type"
                 className={radioButtonStyle}
-                checked={selectedReportType === 'General'}
-                onChange={() => handleReportTypeChange('General')}
+                checked={selectedReportType === ReportType.General}
+                onChange={() => handleReportTypeChange(ReportType.General)}
               />
               <p className="text-sm">{t('journal:LEDGER.GENERAL')}</p>
             </label>
@@ -174,8 +269,8 @@ const LedgerPageBody = () => {
                 id="input-detailed"
                 name="ledger-type"
                 className={radioButtonStyle}
-                checked={selectedReportType === 'Detailed'}
-                onChange={() => handleReportTypeChange('Detailed')}
+                checked={selectedReportType === ReportType.Detailed}
+                onChange={() => handleReportTypeChange(ReportType.Detailed)}
               />
               <p className="text-sm">{t('journal:LEDGER.DETAILED')}</p>
             </label>
@@ -188,8 +283,8 @@ const LedgerPageBody = () => {
                 id="input-general-detailed"
                 name="ledger-type"
                 className={radioButtonStyle}
-                checked={selectedReportType === 'General & Detailed'}
-                onChange={() => handleReportTypeChange('General & Detailed')}
+                checked={selectedReportType === ReportType.All}
+                onChange={() => handleReportTypeChange(ReportType.All)}
               />
               <p className="text-sm">{t('journal:LEDGER.GENERAL_DETAILED')}</p>
             </label>
@@ -208,16 +303,26 @@ const LedgerPageBody = () => {
             expenseOptions={expenseOptions}
             incomeOptions={incomeOptions}
             otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
-            onRangeSelected={() => {}}
+            onRangeSelected={(startAccountNo, endAccountNo) => {
+              // Deprecate: (20241118 - Anna) debug
+              // eslint-disable-next-line no-console
+              console.log('Selected Account Range:', startAccountNo, endAccountNo);
+              setSelectedStartAccountNo(startAccountNo);
+              setSelectedEndAccountNo(endAccountNo);
+            }}
             // onRangeSelected={(from, to) => {
-            //   // eslint-disable-next-line no-console
+                 // Deprecate: (20241118 - Anna) debug
+                 // eslint-disable-next-line no-console
             //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
             // }}
           />
         </div>
 
         <div className="h-px w-full bg-neutral-100"></div>
-        <LedgerList selectedDateRange={selectedDateRange} />
+        <LedgerList
+          ledgerData={ledgerData?.payload || null} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
+          loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
+        />
       </div>
     </div>
   );

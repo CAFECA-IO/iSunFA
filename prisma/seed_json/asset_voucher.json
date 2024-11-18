@@ -12,5 +12,12 @@
     "voucherId": 1001,
     "createdAt": 1612137600,
     "updatedAt": 1612137600
+  },
+  {
+    "id": 3,
+    "assetId": 1,
+    "voucherId": 1002,
+    "createdAt": 1612137600,
+    "updatedAt": 1612137600
   }
 ]
