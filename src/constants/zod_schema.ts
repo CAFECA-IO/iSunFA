@@ -81,6 +81,12 @@ import { ledgerListSchema } from '@/lib/utils/zod_schema/ledger';
 import { roomDeleteSchema, roomGetSchema, roomPostSchema } from '@/lib/utils/zod_schema/room';
 import { fileDeleteSchema, fileGetSchema, filePostSchema } from '@/lib/utils/zod_schema/file';
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
+import {
+  userDeleteSchema,
+  userGetSchema,
+  userListSchema,
+  userPutSchema,
+} from '@/lib/utils/zod_schema/user';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -179,12 +185,11 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.AGREE_TO_TERMS]: nullAPISchema,
   [APIName.CREATE_CHALLENGE]: nullAPISchema,
-  [APIName.SIGN_UP]: nullAPISchema,
-  [APIName.SIGN_IN]: nullAPISchema,
-  [APIName.SIGN_OUT]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
-  [APIName.USER_GET_BY_ID]: nullAPISchema,
-  [APIName.USER_UPDATE]: nullAPISchema,
+  [APIName.USER_LIST]: userListSchema,
+  [APIName.USER_GET_BY_ID]: userGetSchema,
+  [APIName.USER_UPDATE]: userPutSchema,
+  [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.COMPANY_ADD]: nullAPISchema,
   [APIName.COMPANY_GET]: nullAPISchema,
   [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
@@ -256,4 +261,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.IP_LIST]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
+  [APIName.SIGN_IN]: nullAPISchema,
+  [APIName.SIGN_OUT]: nullAPISchema,
 };

@@ -5,10 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 interface WorkTagProps {
   tag: COMPANY_TAG;
-  onClinkCompanyTag: () => void;
 }
 
-const CompanyTag = ({ tag, onClinkCompanyTag }: WorkTagProps) => {
+const CompanyTag = ({ tag }: WorkTagProps) => {
   const { t } = useTranslation(['company']);
 
   let backgroundColor = '';
@@ -42,14 +41,12 @@ const CompanyTag = ({ tag, onClinkCompanyTag }: WorkTagProps) => {
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClinkCompanyTag}
+    <div
       className={`flex w-max items-center gap-1px rounded-full p-6px text-xs font-medium ${backgroundColor} ${textColor}`}
     >
       {icon}
       <p className="px-4px capitalize">{t(`company:TAG.${tag.toUpperCase()}`)}</p>
-    </button>
+    </div>
   );
 };
 

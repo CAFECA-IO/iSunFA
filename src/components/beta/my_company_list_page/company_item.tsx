@@ -1,0 +1,161 @@
+import { Dispatch, SetStateAction, useState } from 'react';
+import Image from 'next/image';
+import { ICompanyAndRole } from '@/interfaces/company';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import { IoArrowForward } from 'react-icons/io5';
+import { FiTag, FiTrash2 } from 'react-icons/fi';
+import CompanyTag from '@/components/beta/my_company_list_page/company_tag';
+import { CANCEL_COMPANY_ID } from '@/constants/company';
+import { useTranslation } from 'react-i18next';
+import { useUserCtx } from '@/contexts/user_context';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+
+interface ICompanyItemProps {
+  myCompany: ICompanyAndRole;
+  toggleDeleteModal: () => void;
+  setCompanyToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  setCompanyToDelete: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+}
+
+const CompanyItem = ({
+  myCompany,
+  toggleDeleteModal,
+  setCompanyToEdit,
+  setCompanyToDelete,
+}: ICompanyItemProps) => {
+  const { t } = useTranslation(['company']);
+  const { selectCompany, selectedCompany } = useUserCtx();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isCompanySelected = myCompany.company.id === selectedCompany?.id;
+  const {
+    targetRef: optionsDropdownRef,
+    componentVisible: isOptionsDropdownOpen,
+    setComponentVisible: setIsOptionsDropdownOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const toggleOptionsDropdown = () => {
+    setIsOptionsDropdownOpen((prev) => !prev);
+  };
+
+  const openChangeTagModal = () => {
+    setCompanyToEdit(myCompany);
+    toggleOptionsDropdown();
+  };
+
+  const openDeleteCompanyModal = () => {
+    setCompanyToDelete(myCompany);
+    toggleDeleteModal();
+    toggleOptionsDropdown();
+  };
+
+  // Info: (20241113 - Liz) call Select Company API
+  const handleConnect = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    const companyId = isCompanySelected ? CANCEL_COMPANY_ID : myCompany.company.id;
+
+    // Deprecated: (20241113 - Liz)
+    // eslint-disable-next-line no-console
+    console.log(
+      '這個公司原本是否已經被選擇 isCompanySelected:',
+      isCompanySelected,
+      '這個按鈕是 myCompany.company.id:',
+      myCompany.company.id,
+      'user context 目前存的狀態 selectedCompany?.id:',
+      selectedCompany?.id,
+      '按下去會傳給選擇公司 api 的 companyId:',
+      companyId
+    );
+
+    try {
+      const data = selectCompany(companyId);
+
+      // Deprecated: (20241113 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('執行 selectCompany api 回傳:', data);
+
+      // ToDo: (20241114 - Liz) 選擇公司成功後的相關處理
+    } catch (error) {
+      // Deprecated: (20241113 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('CompanyList handleConnect error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div
+      key={myCompany.company.id}
+      className="flex items-center justify-between gap-60px rounded-xxs bg-surface-neutral-surface-lv2 px-24px py-8px shadow-Dropshadow_XS"
+    >
+      <Image
+        src={myCompany.company.imageId}
+        alt={myCompany.company.name}
+        width={60}
+        height={60}
+        className="flex-none rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS"
+      ></Image>
+
+      <div className="flex flex-auto items-center gap-8px">
+        <p className="text-base font-medium text-text-neutral-solid-dark">
+          {myCompany.company.name}
+        </p>
+
+        <div className="relative flex items-center">
+          <button type="button" onClick={toggleOptionsDropdown}>
+            <BsThreeDotsVertical size={16} className="text-icon-surface-single-color-primary" />
+          </button>
+
+          {isOptionsDropdownOpen && (
+            <div
+              ref={optionsDropdownRef}
+              className="absolute left-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS"
+            >
+              <button
+                type="button"
+                onClick={openChangeTagModal}
+                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+              >
+                <FiTag size={16} className="text-icon-surface-single-color-primary" />
+                <p>{t('company:PAGE_BODY.CHANGE_WORK_TAG')}</p>
+              </button>
+
+              <button
+                type="button"
+                className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+                onClick={openDeleteCompanyModal}
+              >
+                <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
+                <p>{t('company:PAGE_BODY.DELETE')}</p>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex w-90px justify-center">
+        <CompanyTag tag={myCompany.tag} />
+      </div>
+
+      <div className="flex w-120px items-center justify-end">
+        <button
+          type="button"
+          className="flex items-center gap-4px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-16px py-8px text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover"
+          onClick={handleConnect}
+          disabled={isLoading}
+        >
+          <p className="text-sm font-medium">
+            {isCompanySelected ? t('company:PAGE_BODY.CANCEL') : t('company:PAGE_BODY.CONNECT')}
+          </p>
+          <IoArrowForward size={16} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CompanyItem;

@@ -280,6 +280,10 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     searchKey?: string
     // isDeleted?: boolean // Info: (20240806 - Murky)
   ) => {
+    // Deprecated: (20241115 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('執行 getAccountListHandler, 會打 API: getAccountList');
+
     getAccountList({
       params: { companyId },
       query: {

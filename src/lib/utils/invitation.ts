@@ -11,7 +11,7 @@ export async function useInvitation(
 ): Promise<IAdmin | null> {
   let admin = null;
   if (userId > 0) {
-    const getAdmin = await getAdminByCompanyIdAndUserId(invitation.companyId, userId);
+    const getAdmin = await getAdminByCompanyIdAndUserId(userId, invitation.companyId);
     if (!getAdmin) {
       const formattedInvitation = formatInvitation(invitation);
       admin = await createAdminByInvitation(userId, formattedInvitation);
