@@ -9,7 +9,7 @@ import { ICounterparty } from '@/interfaces/counterparty';
 interface CounterpartyListProps {
   counterparties: ICounterparty[];
   searchQuery: string; // Info: (20241106 - Anna) 接收來自上層的搜尋關鍵字
-  handleSave: () => void; // 新增 handleSave 屬性
+  handleSave: () => void; // Info: (20241118 - Anna) 新增 handleSave 屬性
 }
 
 const CounterpartyList: React.FC<CounterpartyListProps> = ({
@@ -21,10 +21,10 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
 
   // Info: (20241106 - Anna) 將 CounterPartyList 的狀態類型設為 ICounterPartyEntity[]
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // (20241101 - Anna) 動態 totalPages 狀態
+  const [totalPages, setTotalPages] = useState(1); // Info: (20241101 - Anna) 動態 totalPages 狀態
   // Info: (20240920 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
-  const itemsPerPage = 10; // (20241112 - Anna) 每頁顯示的項目數量
+  const itemsPerPage = 10; // Info: (20241112 - Anna) 每頁顯示的項目數量
 
   // Info: (20241106 - Anna) 排序按鈕
   const displayedDate = SortingButton({
@@ -55,7 +55,7 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
     <CounterpartyItem
       key={counterparty.id}
       counterparty={counterparty}
-      handleSave={handleSave} // 傳遞給 CounterpartyItem
+      handleSave={handleSave} // Info: (20241118 - Anna) 傳遞給 CounterpartyItem
     />
   ));
 
