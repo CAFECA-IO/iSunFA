@@ -1,9 +1,8 @@
-/* eslint-disable */
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ITrialBalanceTotal, MOCK_RESPONSE, TrialBalanceItem } from '@/interfaces/trial_balance';
+import { ITrialBalanceTotal, TrialBalanceItem } from '@/interfaces/trial_balance';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
@@ -17,7 +16,7 @@ export const handleGetRequest: IHandleRequest<
     items: IPaginatedData<TrialBalanceItem[]>;
     total: ITrialBalanceTotal;
   }
-> = async ({ query }: any) => {
+> = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: {
     currencyAlias: string;
