@@ -696,8 +696,9 @@ describe('voucher/:voucherId', () => {
 
     describe('getPayableReceivableInfoFromVoucher', () => {
       it('should return payable receivable info from voucher', () => {
-        // Info: (20241112 - Murky) fakeVoucherFromPrisma 是反轉別人的分錄
-        // 所以只有resultEventEntities，沒有originalEventEntities的結果
+        /* Info: (20241112 - Murky) fakeVoucherFromPrisma 是反轉別人的分錄
+         * 所以只有resultEventEntities，沒有originalEventEntities的結果
+         */
         const resultEventEntities =
           voucherAPIGetOneUtils.initResultEventEntities(fakeVoucherFromPrisma);
         const result =
@@ -978,7 +979,7 @@ describe('voucher/:voucherId', () => {
           voucherId: 1000,
           amount: 100,
           lineItemIdBeReversed: 1001,
-          lineItemIdReverseOther: 1, // id 1 in fakePayLintItemEntities
+          lineItemIdReverseOther: 1, // Info: (20241118 - Murky) id 1 in fakePayLintItemEntities
         },
       ];
       const originalLineItem = [
@@ -1022,7 +1023,7 @@ describe('voucher/:voucherId', () => {
             voucherId: 1000,
             amount: 100,
             lineItemIdBeReversed: 1001,
-            lineItemReverseOther: fakePayLineItemEntities[0], // id 1 in fakePayLineItemEntities
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
           },
         ];
         const result = putUtils.createReverseLineItemKey(reverseVouchers[0]);
@@ -1038,7 +1039,7 @@ describe('voucher/:voucherId', () => {
             voucherId: 1000,
             amount: 100,
             lineItemIdBeReversed: 1001,
-            lineItemReverseOther: fakePayLineItemEntities[0], // id 1 in fakePayLineItemEntities
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
           },
         ];
         const result = putUtils.getNewReverseLineItemMap(reverseVouchers);
@@ -1054,7 +1055,7 @@ describe('voucher/:voucherId', () => {
             voucherId: 1000,
             amount: 100,
             lineItemIdBeReversed: 1001,
-            lineItemReverseOther: fakePayLineItemEntities[0], // id 1 in fakePayLineItemEntities
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
           },
         ];
 
@@ -1071,7 +1072,7 @@ describe('voucher/:voucherId', () => {
             voucherId: 1010,
             amount: 100,
             lineItemIdBeReversed: 1010,
-            lineItemReverseOther: fakePayLineItemEntities[0], // id 1 in fakePayLineItemEntities
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
           },
         ];
 
@@ -1081,7 +1082,7 @@ describe('voucher/:voucherId', () => {
             voucherId: 1000,
             amount: 100,
             lineItemIdBeReversed: 1001,
-            lineItemReverseOther: fakePayLineItemEntities[0], // id 1 in fakePayLineItemEntities
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
           },
         ];
 
