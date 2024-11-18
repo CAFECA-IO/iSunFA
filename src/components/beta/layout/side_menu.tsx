@@ -303,7 +303,7 @@ const toggleModalVisibility = () => {
             </Link>
           </div>
 
-          {/* Side Menu Footer */}
+          {/* // Info: (20241118 - Anna) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
 
