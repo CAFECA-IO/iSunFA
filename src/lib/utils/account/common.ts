@@ -178,6 +178,54 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   return updatedAccount;
 }
 
+// Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmountsByDFS` 的差別在於保留公司自訂會計科目
+function updateAccountAmountByDFSForTrialBalance(
+  account: IAccountNode,
+  lineItemsMap: Map<number, number>
+) {
+  let newAmount = lineItemsMap.get(account.id) || 0;
+
+  const updatedChildren = account.children.map((child) => {
+    const childAccount = updateAccountAmountByDFSForTrialBalance(child, lineItemsMap);
+
+    // Info: (20240702 - Murky) 如果parent和child的debit方向不同，則child的amount要取負值
+    // 例如：Parent 是 機具設備淨額，Child 是 機具設備成本 and 累計折舊－機具設備，則機具設備淨額 = 機具設備成本 - 累計折舊
+    newAmount += account.debit === child.debit ? childAccount.amount : -childAccount.amount;
+
+    return childAccount;
+  });
+
+  // Info: (20240702 - Murky) Copy child to prevent call by reference
+  const updatedAccount: IAccountNode = {
+    id: account.id,
+    amount: newAmount,
+    companyId: account.companyId,
+    system: account.system,
+    type: account.type,
+    debit: account.debit,
+    liquidity: account.liquidity,
+    code: account.code,
+    name: account.name,
+    forUser: account.forUser,
+    parentCode: account.parentCode,
+    rootCode: account.rootCode,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt,
+    level: account.level,
+    deletedAt: account.deletedAt,
+    children: updatedChildren,
+  };
+
+  // updatedAccount.amount = newAmount; // Info: (20240801 - Murky)
+
+  // Info: (20240702 - Murky)刪除children中公司自行建立的account
+  // updatedAccount.children = updatedAccount.children.filter(
+  //   (child) => child.companyId === PUBLIC_COMPANY_ID
+  // );
+
+  return updatedAccount;
+}
+
 export function updateAccountAmountsInSingleTree(
   accounts: IAccountNode,
   lineItemsMap: Map<number, number>
@@ -186,9 +234,29 @@ export function updateAccountAmountsInSingleTree(
   return updatedIAccountNode;
 }
 
+// Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmountsInSingleTree` 的差別在於保留公司自訂會計科目
+export function updateAccountAmountsInSingleTreeForTrialBalance(
+  accounts: IAccountNode,
+  lineItemsMap: Map<number, number>
+) {
+  return updateAccountAmountByDFSForTrialBalance(accounts, lineItemsMap);
+}
+
 export function updateAccountAmounts(forest: IAccountNode[], lineItemsMap: Map<number, number>) {
   const updatedForest = forest.map((account) => {
     return updateAccountAmountsInSingleTree(account, lineItemsMap);
+  });
+
+  return updatedForest;
+}
+
+// Info: (20241114 - Shirley) 用於Trial Balance，跟 `updateAccountAmounts` 的差別在於保留公司自訂會計科目
+export function updateAccountAmountsForTrialBalance(
+  forest: IAccountNode[],
+  lineItemsMap: Map<number, number>
+) {
+  const updatedForest = forest.map((account) => {
+    return updateAccountAmountsInSingleTreeForTrialBalance(account, lineItemsMap);
   });
 
   return updatedForest;

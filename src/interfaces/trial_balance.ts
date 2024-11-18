@@ -1,5 +1,49 @@
 import { IPaginatedData } from '@/interfaces/pagination';
 
+// Info: (20241118 - Shirley) 在計算試算表過程會用到的資料結構
+export interface LineItemTemp {
+  id: number;
+  amount: number;
+  description: string;
+  debit: boolean;
+  accountId: number;
+  voucherId: number;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number | null;
+  voucher: {
+    id: number;
+    date: number;
+  };
+}
+
+// Info: (20241118 - Shirley) 在計算試算表過程會用到的資料結構
+export interface AccountWithSubTemp {
+  id: number;
+  code: string;
+  name: string;
+  subAccounts: AccountWithSubTemp[];
+  lineItem: LineItemTemp[];
+}
+
+// Info: (20241118 - Shirley) 在計算試算表過程會用到的資料結構
+export interface AccountForResult {
+  id: number;
+  no: string;
+  accountingTitle: string;
+  beginningCreditAmount: number;
+  beginningDebitAmount: number;
+  midtermCreditAmount: number;
+  midtermDebitAmount: number;
+  endingCreditAmount: number;
+  endingDebitAmount: number;
+  subAccounts: AccountForResult[];
+  createAt: number;
+  updateAt: number;
+
+  parentCode: string;
+}
+
 export interface TrialBalanceItem {
   id: number;
   no: string;
@@ -31,9 +75,11 @@ export interface ITrialBalanceData {
   total: ITrialBalanceTotal;
 }
 
+export interface IPaginatedTrialBalance extends IPaginatedData<TrialBalanceItem[]> {}
+
 export interface ITrialBalancePayload {
   currencyAlias: string;
-  items: IPaginatedData<TrialBalanceItem[]>;
+  items: IPaginatedTrialBalance;
   total: ITrialBalanceTotal;
 }
 
