@@ -67,6 +67,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         prevSelectedDateRange.current = selectedDateRange;
       }
     } catch (error) {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('Error fetching trial balance data:', error);
     } finally {
