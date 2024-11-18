@@ -10,7 +10,7 @@ const userActionLogNullSchema = z.union([z.object({}), z.string()]);
 // Info: (20241015 - Jacky) User action log query schema
 const userActionLogQuerySchema = z.object({
   userId: zodStringToNumber,
-  actionType: z.string(),
+  actionType: z.nativeEnum(UserActionLogActionType),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   startDateInSecond: zodStringToNumber.optional(),
