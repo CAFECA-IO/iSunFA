@@ -1,87 +1,111 @@
 import React, { useState, useEffect } from 'react';
 import CounterpartyList from '@/components/counterparty/counterparty_list';
 import SearchInput from '@/components/filter_section/search_input';
-import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 import { Button } from '@/components/button/button';
 import { MdPersonAddAlt1 } from 'react-icons/md';
+import { useUserCtx } from '@/contexts/user_context';
+import { ICounterparty } from '@/interfaces/counterparty';
 
 const CounterpartyPageBody = () => {
+  const { selectedCompany } = useUserCtx();
+
+  // Info: (20241112 - Anna) 新增用於儲存 API 回傳資料的狀態，並定義 counterpartyList 為 ICounterparty 型別的陣列
+  const [counterparties, setCounterparties] = useState<ICounterparty[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
+  const [isModalOpen, setIsModalOpen] = useState(false); // Info: (20241106 - Anna) State to handle modal visibility
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
     forUser: true,
-    sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
-    sortOrder: 'asc',
+    // sortBy: 'code', // Info: (20241105 - Anna) 依 code 排序
+    // sortOrder: 'asc',
   };
 
-  // Info: (20241104 - Anna) API call to fetch account data
-  const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
+  // Info: (20241112 - Anna) 使用 APIHandler 來呼叫 COUNTERPARTY_LIST API
+  const { trigger: getCounterpartyList } = APIHandler(
+    APIName.COUNTERPARTY_LIST,
     {
-      params: { companyId: 10000007 },
+      params: { companyId: selectedCompany?.id },
       query: queryCondition,
     },
     false,
     true
   );
-
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
-  const [isModalOpen, setIsModalOpen] = useState(false); // Info: (20241106 - Anna) State to handle modal visibility
-
-  useEffect(() => {
-    getAccountList({ query: { ...queryCondition } });
-  }, []);
-
-  useEffect(() => {
-    if (accountTitleList) {
+  const fetchCounterpartyData = async () => {
+    if (!selectedCompany?.id) {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
-      // console.log('API Response:', accountTitleList); // Info: (20241105 - Anna) 查看原始資料
-      // Info: (20241105 - Anna) 初始化臨時陣列來分類不同類型的會計科目
-      const assets: string[] = [];
-      const liabilities: string[] = [];
-      const equities: string[] = [];
-      const revenues: string[] = [];
-      const costs: string[] = [];
-      const expenses: string[] = [];
-      const incomes: string[] = [];
-      const otherComprehensiveIncomes: string[] = [];
-
-      // Info: (20241105 - Anna) 遍歷 accountTitleList.data，依據 type 將科目分類
-      accountTitleList.data.forEach((account) => {
-        const accountName = `${account.code} ${account.name}`;
-        switch (account.type) {
-          case 'asset':
-            assets.push(accountName);
-            break;
-          case 'liability':
-            liabilities.push(accountName);
-            break;
-          case 'equity':
-            equities.push(accountName);
-            break;
-          case 'revenue':
-            revenues.push(accountName);
-            break;
-          case 'cost':
-            costs.push(accountName);
-            break;
-          case 'expense':
-            expenses.push(accountName);
-            break;
-          case 'income':
-            incomes.push(accountName);
-            break;
-          case 'otherComprehensiveIncome':
-            otherComprehensiveIncomes.push(accountName);
-            break;
-          default:
-            break;
-        }
-      });
+      console.error('公司 ID 不存在，無法呼叫 API');
+      return;
     }
-  }, [accountTitleList]);
+
+    try {
+      // Deprecate: (20241118 - Anna) debug
+      // eslint-disable-next-line no-console
+      console.log('Fetching counterparty data...');
+      const response = await getCounterpartyList({
+        params: { companyId: selectedCompany.id },
+        query: queryCondition,
+      });
+      // Deprecate: (20241118 - Anna) 檢查 response 的結構
+      // eslint-disable-next-line no-console
+      console.log('完整的 response:', response);
+
+      // Info: (20241118 - Anna) 檢查 response.success 是否為 true
+      if (!response.success) {
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.error('API response 不成功:', response);
+        return;
+      }
+
+      // Info: (20241118 - Anna) 檢查 response.data 是否有正確的結構
+      const responseData = response.data as { data: ICounterparty[] };
+      //  const responseData = response.data as { data: { data: ICounterparty[] } };
+
+      if (Array.isArray(responseData.data)) {
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('成功取得交易夥伴列表:', responseData.data);
+        setCounterparties(responseData.data);
+      } else {
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.error('responseData 結構不正確:', responseData);
+      }
+
+      // if (!responseData.data || !Array.isArray(responseData.data.data)) {
+      //   // eslint-disable-next-line no-console
+      //   console.error('responseData 結構不正確:', responseData);
+      //   return;
+      // }
+
+      // 若以上檢查都通過，則設定交易夥伴列表
+      // eslint-disable-next-line no-console
+      // console.log('成功取得交易夥伴列表:', responseData.data.data);
+      // setCounterparties(responseData.data.data);
+
+      //   const responseData = response.data as { data: { data: ICounterparty[] } };
+      //   if (response.success && Array.isArray(responseData.data.data)) {
+      //     // eslint-disable-next-line no-console
+      //     console.log('成功取得交易夥伴列表:', responseData.data.data);
+      //     setCounterparties(responseData.data.data); // 設定交易夥伴列表
+      //   } else {
+      //     // eslint-disable-next-line no-console
+      //     console.error('取回交易夥伴列表失敗', response);
+      //   }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  // Info: (20241112 - Anna) 呼叫 API 並儲存回傳資料到狀態
+  useEffect(() => {
+    fetchCounterpartyData();
+  }, [selectedCompany]);
 
   const handleModalOpen = () => {
     setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal
@@ -91,9 +115,11 @@ const CounterpartyPageBody = () => {
     setIsModalOpen(false); // Info: (20241106 - Anna)  Function to close the modal
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Info: (20241106 - Anna) Handle the data from the modal
     setIsModalOpen(false); // Info: (20241106 - Anna) Close modal after saving
+    setSearchQuery(''); // Info: (20241113 - Anna) 清空搜尋條件
+    await fetchCounterpartyData(); // Info: (20241113 - Anna) 重新加載交易夥伴列表
   };
 
   return (
@@ -111,7 +137,12 @@ const CounterpartyPageBody = () => {
             Add New
           </Button>
         </div>
-        <CounterpartyList searchQuery={searchQuery} />
+        {/* Info: (20241112 - Anna) 傳入 API 資料到 CounterpartyList */}
+        <CounterpartyList
+          searchQuery={searchQuery}
+          counterparties={counterparties}
+          handleSave={handleSave}
+        />
       </div>
       {isModalOpen && ( // Info: (20241106 - Anna) Render modal if open
         <AddCounterPartyModal onClose={handleModalClose} onSave={handleSave} />
