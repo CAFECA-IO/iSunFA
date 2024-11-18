@@ -34,7 +34,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   };
 
   useEffect(() => {
-    if (userAuth?.deletedAt) {
+    if (userAuth && userAuth?.deletedAt) {
       const warningContent = (
         <div className="flex justify-between">
           <div className="flex flex-col items-start gap-2">
