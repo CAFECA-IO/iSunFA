@@ -14,9 +14,13 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { IUserActionLog } from '@/interfaces/user_action_log';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastId } from '@/constants/toast_id';
+import { ToastType } from '@/interfaces/toastify';
 
 const GeneralSettingsPage: React.FC = () => {
   const { t } = useTranslation(['setting', 'common']);
+  const { toastHandler } = useModalContext();
   const { userAuth } = useUserCtx();
   const [userSetting, setUserSetting] = useState<IUserSetting | null>(null);
   const [userActionLogs, setUserActionLogs] = useState<IPaginatedData<IUserActionLog[]> | null>(
@@ -29,16 +33,34 @@ const GeneralSettingsPage: React.FC = () => {
   );
 
   const getUserSetting = async () => {
-    const { success, data } = await getUserSettingAPI({ params: { userId: userAuth?.id } });
-    if (success && data) {
-      setUserSetting(data);
+    try {
+      const { success, data } = await getUserSettingAPI({ params: { userId: userAuth?.id } });
+      if (success && data) {
+        setUserSetting(data);
+      }
+    } catch (error) {
+      toastHandler({
+        id: ToastId.USER_SETTING_ERROR,
+        type: ToastType.ERROR,
+        content: (error as Error).message,
+        closeable: true,
+      });
     }
   };
 
   const getUserActions = async () => {
-    const { success, data } = await getUserActionLogAPI({ params: { userId: userAuth?.id } });
-    if (success && data) {
-      setUserActionLogs(data);
+    try {
+      const { success, data } = await getUserActionLogAPI({ params: { userId: userAuth?.id } });
+      if (success && data) {
+        setUserActionLogs(data);
+      }
+    } catch (error) {
+      toastHandler({
+        id: ToastId.USER_SETTING_ERROR,
+        type: ToastType.ERROR,
+        content: (error as Error).message,
+        closeable: true,
+      });
     }
   };
 

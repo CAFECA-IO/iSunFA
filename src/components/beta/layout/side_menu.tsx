@@ -258,7 +258,7 @@ const SideMenu = ({ toggleOverlay }: SideMenuProps) => {
                 <SubMenuItem
                   linkText="General Setting"
                   href={ISUNFA_ROUTE.GENERAL_SETTING}
-                  isCompanyNeeded
+                  isCompanyNeeded={false} // ToDo: (20241118 - tzuhan) change back to true after @liz using real data
                   toggleOverlay={toggleOverlay}
                 />
 

@@ -21,7 +21,6 @@ interface UserSettingsProps {
 const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { userAuth } = useUserCtx();
-  const { id: userId, name: username, email, imageId } = userAuth!;
   const loginDevice = userActionLogs ? userActionLogs.data[0].userAgent : '';
   const loginIP = userActionLogs ? userActionLogs.data[0].ipAddress : '';
 
@@ -39,7 +38,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
   const updateUseSetting = async () => {
     if (!userSetting) return;
     const { success } = await updateUserSettingAPI({
-      params: { userId },
+      params: { userId: userAuth?.id },
       body: {
         ...userSetting,
         notificationSetting: {
@@ -68,12 +67,12 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
   return (
     <>
       <UserInfo
-        userId={userId}
-        username={username}
-        email={email}
+        userId={userAuth?.id ?? 1}
+        username={userAuth?.name ?? ''}
+        email={userAuth?.email ?? ''}
         loginDevice={loginDevice}
         loginIP={loginIP}
-        imageId={imageId}
+        imageId={userAuth?.imageId ?? ''}
         userActionLogs={userActionLogs}
       />
       <UserInfoForm

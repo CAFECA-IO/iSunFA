@@ -26,7 +26,7 @@ export const ISUNFA_ROUTE = {
   FINANCIAL_NEWS_PAGE: '/beta/latest_news_page/financial_news_page',
   SYSTEM_NEWS_PAGE: '/beta/latest_news_page/system_news_page',
   MATCH_NEWS_PAGE: '/beta/latest_news_page/match_news_page',
-  GENERAL_SETTING: '/users/setting/general_setting',
+  GENERAL_SETTING: '/users/setting/general',
 
   DASHBOARD_V1: '/users/v1/dashboard',
   KYC: '/users/kyc',

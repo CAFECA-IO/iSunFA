@@ -34,4 +34,5 @@ export enum ToastId {
   ASSET_DELETE_ERROR = 'toast-asset-delete-error',
   USER_SETTING_UPDATE_SUCCESS = 'toast-user-setting-update-success',
   USER_DELETE_WARNING = 'toast-user-delete-warning',
+  USER_SETTING_ERROR = 'toast-user-setting-error',
 }
