@@ -701,6 +701,14 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
         event: PrismaEvent;
       };
     })[];
+    resultLineItem: (PrismaAssociateLineItem & {
+      originalLineItem: PrismaLineItem & {
+        account: PrismaAccount;
+      };
+      accociateVoucher: PrismaAssociateVoucher & {
+        event: PrismaEvent;
+      };
+    })[];
   })[];
 };
 

@@ -160,8 +160,9 @@
     "VERIFY_YOUR_ACCOUNT_SECURITY": "请验证您的帐户安全性以防止数据外泄。"
   },
   "USER": {
-    "UPDATE_SUCCESS": "用户设置更新成功。",
-    "DELETE_WARNING": "此账户将在三个工作日内被删除。",
-    "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。"
+    "UPDATE_SUCCESS": "您的信息已成功更新。",
+    "UPDATE_ERROR": "保存数据时发生错误，请重新提交您的请求。",
+    "DELETE_ERROR": "删除数据时发生错误，请重试。",
+    "DELETE_CANCEL": "取消刪除流程"
   }
 }

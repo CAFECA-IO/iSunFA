@@ -41,10 +41,8 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
       ...(await serverSideTranslations(locale as string, [
         'common',
         'journal',
-        'project',
         'setting',
         'terms',
-        'salary',
         'asset',
         'dashboard',
       ])),

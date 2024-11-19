@@ -21,7 +21,6 @@ interface UserSettingsProps {
 const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs }) => {
   const { t } = useTranslation(['setting', 'common']);
   const { userAuth } = useUserCtx();
-  const { id: userId, name: username, email, imageId } = userAuth!;
   const loginDevice = userActionLogs ? userActionLogs.data[0].userAgent : '';
   const loginIP = userActionLogs ? userActionLogs.data[0].ipAddress : '';
 
@@ -38,28 +37,39 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
 
   const updateUseSetting = async () => {
     if (!userSetting) return;
-    const { success } = await updateUserSettingAPI({
-      params: { userId },
-      body: {
-        ...userSetting,
-        notificationSetting: {
-          ...userSetting.notificationSetting,
+    try {
+      const { success } = await updateUserSettingAPI({
+        params: { userId: userAuth?.id },
+        body: {
+          ...userSetting,
+          notificationSetting: {
+            ...userSetting.notificationSetting,
+          },
+          personalInfo: {
+            ...userSetting.personalInfo,
+            firstName,
+            lastName,
+            country,
+            language,
+            phone: phoneNumber,
+          },
         },
-        personalInfo: {
-          ...userSetting.personalInfo,
-          firstName,
-          lastName,
-          country,
-          language,
-          phone: phoneNumber,
-        },
-      },
-    });
-    if (success) {
+      });
+      if (success) {
+        toastHandler({
+          id: ToastId.USER_SETTING_UPDATE_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('setting:USER.UPDATE_SUCCESS'),
+          closeable: true,
+        });
+      } else {
+        throw new Error(t('setting:USER.UPDATE_ERROR'));
+      }
+    } catch (error) {
       toastHandler({
-        id: ToastId.USER_SETTING_UPDATE_SUCCESS, // ToDo:  (20241114 - tzuhan) 跟設計師確認更新成功或失敗的UI
-        type: ToastType.SUCCESS,
-        content: t('setting:USER.UPDATE_SUCCESS'),
+        id: ToastId.USER_SETTING_UPDATE_SUCCESS,
+        type: ToastType.ERROR,
+        content: t('setting:USER.UPDATE_ERROR'),
         closeable: true,
       });
     }
@@ -68,12 +78,12 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, userActionLogs
   return (
     <>
       <UserInfo
-        userId={userId}
-        username={username}
-        email={email}
+        userId={userAuth?.id ?? 1}
+        username={userAuth?.name ?? ''}
+        email={userAuth?.email ?? ''}
         loginDevice={loginDevice}
         loginIP={loginIP}
-        imageId={imageId}
+        imageId={userAuth?.imageId ?? ''}
         userActionLogs={userActionLogs}
       />
       <UserInfoForm

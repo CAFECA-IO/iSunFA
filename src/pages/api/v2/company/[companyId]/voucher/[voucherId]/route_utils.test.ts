@@ -1,6 +1,21 @@
+import { AccountType } from '@/constants/account';
+import { IAccountEntity } from '@/interfaces/accounting_account';
+import { ILineItemEntity } from '@/interfaces/line_item';
 import { IGetOneVoucherResponse } from '@/interfaces/voucher';
-import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
-
+import {
+  voucherAPIGetOneUtils,
+  voucherAPIPutUtils as putUtils,
+} from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import {
+  // Asset as PrismaAsset,
+  // AssetVoucher as PrismaAssetVoucher,
+  Account as PrismaAccount,
+  LineItem as PrismaLineItem,
+  // Certificate as PrismaCertificate,
+  // Invoice as PrismaInvoice,
+  // File as PrismaFile,
+  // UserCertificate as PrismaUserCertificate,
+} from '@prisma/client';
 // Info: (20240927 - Murky) Comment if you want to check validateRequest related info
 // jest.mock('../../../../../../lib/utils/logger_back', () => ({
 //   loggerRequest: jest.fn().mockReturnValue({
@@ -13,7 +28,7 @@ import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/vouche
 //   }),
 // }));
 
-describe('voucherAPIGetOneUtils', () => {
+describe('voucher/:voucherId', () => {
   let fakeVoucherFromPrisma: IGetOneVoucherResponse;
   beforeEach(() => {
     fakeVoucherFromPrisma = {
@@ -411,6 +426,7 @@ describe('voucherAPIGetOneUtils', () => {
           updatedAt: 1,
           deletedAt: null,
           originalLineItem: [],
+          resultLineItem: [],
           account: {
             id: 10000603,
             companyId: 1002,
@@ -439,7 +455,130 @@ describe('voucherAPIGetOneUtils', () => {
           createdAt: 1,
           updatedAt: 1,
           deletedAt: null,
-          originalLineItem: [],
+          originalLineItem: [
+            {
+              id: 1000,
+              accociateVoucherId: 1000,
+              originalLineItemId: 1001,
+              resultLineItemId: 1007,
+              debit: true,
+              amount: 100,
+              createdAt: 1731343518,
+              updatedAt: 1731343518,
+              deletedAt: null,
+              resultLineItem: {
+                id: 1007,
+                amount: 100,
+                description: '償還應付帳款-應付帳款',
+                debit: true,
+                accountId: 10000981,
+                voucherId: 1002,
+                createdAt: 1,
+                updatedAt: 1,
+                deletedAt: null,
+                account: {
+                  id: 10000981,
+                  companyId: 1002,
+                  system: 'IFRS',
+                  type: 'liability',
+                  debit: false,
+                  liquidity: true,
+                  code: '2171',
+                  name: '應付帳款',
+                  forUser: true,
+                  parentCode: '2170',
+                  rootCode: '2170',
+                  createdAt: 0,
+                  updatedAt: 0,
+                  level: 3,
+                  deletedAt: null,
+                },
+              },
+              accociateVoucher: {
+                id: 1000,
+                eventId: 1000,
+                originalVoucherId: 1002,
+                resultVoucherId: 1000,
+                createdAt: 1731343518,
+                updatedAt: 1731343518,
+                deletedAt: null,
+                event: {
+                  id: 1000,
+                  eventType: 'revert',
+                  frequence: 'once',
+                  startDate: 1731343518,
+                  endDate: 1731343518,
+                  daysOfWeek: [],
+                  monthsOfYear: [],
+                  createdAt: 1731343518,
+                  updatedAt: 1731343518,
+                  deletedAt: null,
+                },
+              },
+            },
+          ],
+          resultLineItem: [
+            {
+              id: 1000,
+              accociateVoucherId: 1000,
+              originalLineItemId: 1001,
+              resultLineItemId: 1007,
+              debit: true,
+              amount: 100,
+              createdAt: 1731343518,
+              updatedAt: 1731343518,
+              deletedAt: null,
+              originalLineItem: {
+                id: 1007,
+                amount: 100,
+                description: '償還應付帳款-應付帳款',
+                debit: true,
+                accountId: 10000981,
+                voucherId: 1002,
+                createdAt: 1,
+                updatedAt: 1,
+                deletedAt: null,
+                account: {
+                  id: 10000981,
+                  companyId: 1002,
+                  system: 'IFRS',
+                  type: 'liability',
+                  debit: false,
+                  liquidity: true,
+                  code: '2171',
+                  name: '應付帳款',
+                  forUser: true,
+                  parentCode: '2170',
+                  rootCode: '2170',
+                  createdAt: 0,
+                  updatedAt: 0,
+                  level: 3,
+                  deletedAt: null,
+                },
+              },
+              accociateVoucher: {
+                id: 1000,
+                eventId: 1000,
+                originalVoucherId: 1002,
+                resultVoucherId: 1000,
+                createdAt: 1731343518,
+                updatedAt: 1731343518,
+                deletedAt: null,
+                event: {
+                  id: 1000,
+                  eventType: 'revert',
+                  frequence: 'once',
+                  startDate: 1731343518,
+                  endDate: 1731343518,
+                  daysOfWeek: [],
+                  monthsOfYear: [],
+                  createdAt: 1731343518,
+                  updatedAt: 1731343518,
+                  deletedAt: null,
+                },
+              },
+            },
+          ],
           account: {
             id: 10000981,
             companyId: 1002,
@@ -461,108 +600,498 @@ describe('voucherAPIGetOneUtils', () => {
       ],
     };
   });
+  describe('voucherAPIGetOneUtils', () => {
+    beforeEach(() => {});
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
-  describe('getVoucherFromPrisma', () => {
-    it('should return voucher from prisma', () => {
-      const voucherId = 1002;
-      const result = voucherAPIGetOneUtils.getVoucherFromPrisma(voucherId);
-      expect(result).toBeDefined();
+    describe('getVoucherFromPrisma', () => {
+      it('should return voucher from prisma', () => {
+        const voucherId = 1002;
+        const result = voucherAPIGetOneUtils.getVoucherFromPrisma(voucherId);
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe('getAccountingSettingFromPrisma', () => {
+      it('should return accounting setting from prisma', () => {
+        const companyId = 1001;
+        const result = voucherAPIGetOneUtils.getAccountingSettingFromPrisma(companyId);
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe('initIssuerEntity', () => {
+      it('should return issuer entity', () => {
+        const issuerEntity = voucherAPIGetOneUtils.initIssuerEntity(fakeVoucherFromPrisma);
+        expect(issuerEntity).toBeDefined();
+        expect(issuerEntity.id).toEqual(1000);
+      });
+    });
+
+    describe('initCounterPartyEntity', () => {
+      it('should return counter party entity', () => {
+        const counterPartyEntity =
+          voucherAPIGetOneUtils.initCounterPartyEntity(fakeVoucherFromPrisma);
+        expect(counterPartyEntity).toBeDefined();
+        expect(counterPartyEntity.id).toEqual(1000);
+      });
+    });
+
+    describe('initOriginalEventEntities', () => {
+      it('should return original event entities', () => {
+        const originalEventEntities =
+          voucherAPIGetOneUtils.initOriginalEventEntities(fakeVoucherFromPrisma);
+        expect(originalEventEntities).toBeDefined();
+        expect(originalEventEntities.length).toBeGreaterThan(0);
+        expect(originalEventEntities[0].associateVouchers.length).toBeGreaterThan(0);
+        expect(originalEventEntities[0].associateVouchers[0].originalVoucher).toBeDefined();
+        expect(originalEventEntities[0].associateVouchers[0].resultVoucher).toBeDefined();
+      });
+    });
+
+    describe('initResultEventEntities', () => {
+      it('should return result event entities', () => {
+        const resultEventEntities =
+          voucherAPIGetOneUtils.initResultEventEntities(fakeVoucherFromPrisma);
+        expect(resultEventEntities).toBeDefined();
+        expect(resultEventEntities.length).toBeGreaterThan(0);
+        expect(resultEventEntities[0].associateVouchers.length).toBeGreaterThan(0);
+        expect(resultEventEntities[0].associateVouchers[0].originalVoucher).toBeDefined();
+        expect(resultEventEntities[0].associateVouchers[0].resultVoucher).toBeDefined();
+      });
+    });
+
+    describe('initAssetEntities', () => {
+      it('should return asset entities', () => {
+        const assetEntities = voucherAPIGetOneUtils.initAssetEntities(fakeVoucherFromPrisma);
+        expect(assetEntities).toBeDefined();
+        expect(assetEntities.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('initLineItemEntities', () => {
+      it('should return line item entities', () => {
+        const lineItemEntities = voucherAPIGetOneUtils.initLineItemEntities(fakeVoucherFromPrisma);
+        expect(lineItemEntities).toBeDefined();
+        expect(lineItemEntities.length).toBeGreaterThan(0);
+        expect(lineItemEntities[0].account).toBeDefined();
+      });
+    });
+
+    describe('initCertificateEntities', () => {
+      it('should return certificate entities', () => {
+        const certificateEntities =
+          voucherAPIGetOneUtils.initCertificateEntities(fakeVoucherFromPrisma);
+        expect(certificateEntities).toBeDefined();
+        expect(certificateEntities.length).toBeGreaterThan(0);
+        expect(certificateEntities[0].file).toBeDefined();
+        expect(certificateEntities[0].invoice).toBeDefined();
+        expect(certificateEntities[0].userCertificates).toBeDefined();
+        expect(certificateEntities[0].userCertificates.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('getPayableReceivableInfoFromVoucher', () => {
+      it('should return payable receivable info from voucher', () => {
+        /* Info: (20241112 - Murky) fakeVoucherFromPrisma 是反轉別人的分錄
+         * 所以只有resultEventEntities，沒有originalEventEntities的結果
+         */
+        const resultEventEntities =
+          voucherAPIGetOneUtils.initResultEventEntities(fakeVoucherFromPrisma);
+        const result =
+          voucherAPIGetOneUtils.getPayableReceivableInfoFromVoucher(resultEventEntities);
+        expect(result).toBeDefined();
+        expect(result.payableInfo).toBeDefined();
+        expect(result.receivingInfo).toBeUndefined();
+      });
     });
   });
 
-  describe('getAccountingSettingFromPrisma', () => {
-    it('should return accounting setting from prisma', () => {
-      const companyId = 1001;
-      const result = voucherAPIGetOneUtils.getAccountingSettingFromPrisma(companyId);
-      expect(result).toBeDefined();
-    });
-  });
+  describe('voucherAPIPutUtils', () => {
+    let fakeLineItemFromPrisma: PrismaLineItem & {
+      account: PrismaAccount;
+    };
+    let fakeLineItemEntity1: ILineItemEntity;
+    // let fakeLineItemEntity2: ILineItemEntity;
 
-  describe('initIssuerEntity', () => {
-    it('should return issuer entity', () => {
-      const issuerEntity = voucherAPIGetOneUtils.initIssuerEntity(fakeVoucherFromPrisma);
-      expect(issuerEntity).toBeDefined();
-      expect(issuerEntity.id).toEqual(1000);
-    });
-  });
+    let fakeBuyLintItemEntities: (ILineItemEntity & {
+      account: IAccountEntity;
+    })[];
 
-  describe('initCounterPartyEntity', () => {
-    it('should return counter party entity', () => {
-      const counterPartyEntity =
-        voucherAPIGetOneUtils.initCounterPartyEntity(fakeVoucherFromPrisma);
-      expect(counterPartyEntity).toBeDefined();
-      expect(counterPartyEntity.id).toEqual(1000);
-    });
-  });
+    let fakePayLineItemEntities: (ILineItemEntity & {
+      account: IAccountEntity;
+    })[];
 
-  describe('initOriginalEventEntities', () => {
-    it('should return original event entities', () => {
-      const originalEventEntities =
-        voucherAPIGetOneUtils.initOriginalEventEntities(fakeVoucherFromPrisma);
-      expect(originalEventEntities).toBeDefined();
-      expect(originalEventEntities.length).toBeGreaterThan(0);
-      expect(originalEventEntities[0].associateVouchers.length).toBeGreaterThan(0);
-      expect(originalEventEntities[0].associateVouchers[0].originalVoucher).toBeDefined();
-      expect(originalEventEntities[0].associateVouchers[0].resultVoucher).toBeDefined();
-    });
-  });
+    beforeEach(() => {
+      fakeLineItemFromPrisma = {
+        id: 1007,
+        amount: 100,
+        description: '償還應付帳款-應付帳款',
+        debit: true,
+        accountId: 10000981,
+        voucherId: 1002,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        // originalLineItem: [],
+        account: {
+          id: 10000981,
+          companyId: 1002,
+          system: 'IFRS',
+          type: 'liability',
+          debit: false,
+          liquidity: true,
+          code: '2171',
+          name: '應付帳款',
+          forUser: true,
+          parentCode: '2170',
+          rootCode: '2170',
+          createdAt: 0,
+          updatedAt: 0,
+          level: 3,
+          deletedAt: null,
+        },
+      };
 
-  describe('initResultEventEntities', () => {
-    it('should return result event entities', () => {
-      const resultEventEntities =
-        voucherAPIGetOneUtils.initResultEventEntities(fakeVoucherFromPrisma);
-      expect(resultEventEntities).toBeDefined();
-      expect(resultEventEntities.length).toBeGreaterThan(0);
-      expect(resultEventEntities[0].associateVouchers.length).toBeGreaterThan(0);
-      expect(resultEventEntities[0].associateVouchers[0].originalVoucher).toBeDefined();
-      expect(resultEventEntities[0].associateVouchers[0].resultVoucher).toBeDefined();
-    });
-  });
+      fakeLineItemEntity1 = {
+        id: 1001,
+        amount: 500,
+        description: '購買存貨-應付帳款',
+        debit: false,
+        accountId: 10000981,
+        voucherId: 1000,
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+      };
 
-  describe('initAssetEntities', () => {
-    it('should return asset entities', () => {
-      const assetEntities = voucherAPIGetOneUtils.initAssetEntities(fakeVoucherFromPrisma);
-      expect(assetEntities).toBeDefined();
-      expect(assetEntities.length).toBeGreaterThan(0);
-    });
-  });
+      // fakeLineItemEntity2 = {
+      //   id: 1006,
+      //   amount: 100,
+      //   description: '償還應付帳款-銀行現金',
+      //   debit: false,
+      //   accountId: 10000603,
+      //   voucherId: 1002,
+      //   createdAt: 1,
+      //   updatedAt: 1,
+      //   deletedAt: null,
+      // };
 
-  describe('initLineItemEntities', () => {
-    it('should return line item entities', () => {
-      const lineItemEntities = voucherAPIGetOneUtils.initLineItemEntities(fakeVoucherFromPrisma);
-      expect(lineItemEntities).toBeDefined();
-      expect(lineItemEntities.length).toBeGreaterThan(0);
-      expect(lineItemEntities[0].account).toBeDefined();
+      fakeBuyLintItemEntities = [
+        {
+          id: 1001,
+          amount: 500,
+          description: '購買存貨-應付帳款',
+          debit: false,
+          accountId: 10000981,
+          voucherId: 1000,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+          account: {
+            id: 10000981,
+            companyId: 1002,
+            system: 'IFRS',
+            type: AccountType.LIABILITY,
+            debit: false,
+            liquidity: true,
+            code: '2171',
+            name: '應付帳款',
+            forUser: true,
+            parentCode: '2170',
+            rootCode: '2170',
+            createdAt: 0,
+            updatedAt: 0,
+            level: 3,
+            deletedAt: null,
+          },
+        },
+        {
+          id: 1002,
+          amount: 1500,
+          description: '購買存貨-商品存貨',
+          debit: true,
+          accountId: 10001099,
+          voucherId: 1000,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+          account: {
+            id: 10001099,
+            companyId: 1002,
+            system: 'IFRS',
+            type: AccountType.ASSET,
+            debit: true,
+            liquidity: true,
+            code: '1301',
+            name: '商品存貨',
+            forUser: true,
+            parentCode: '1300',
+            rootCode: '130X',
+            createdAt: 0,
+            updatedAt: 0,
+            level: 4,
+            deletedAt: null,
+          },
+        },
+        {
+          id: 1000,
+          amount: 1000,
+          description: '購買存貨-銀行現金',
+          debit: false,
+          accountId: 10000603,
+          voucherId: 1000,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+          account: {
+            id: 10000603,
+            companyId: 1002,
+            system: 'IFRS',
+            type: AccountType.ASSET,
+            debit: true,
+            liquidity: true,
+            code: '1103',
+            name: '銀行存款',
+            forUser: true,
+            parentCode: '1100',
+            rootCode: '1100',
+            createdAt: 0,
+            updatedAt: 0,
+            level: 3,
+            deletedAt: null,
+          },
+        },
+      ];
+      fakePayLineItemEntities = [
+        {
+          id: 1006,
+          amount: 100,
+          description: '償還應付帳款-銀行現金',
+          debit: false,
+          accountId: 10000603,
+          voucherId: 1002,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+          // originalLineItem: [],
+          account: {
+            id: 10000603,
+            companyId: 1002,
+            system: 'IFRS',
+            type: AccountType.ASSET,
+            debit: true,
+            liquidity: true,
+            code: '1103',
+            name: '銀行存款',
+            forUser: true,
+            parentCode: '1100',
+            rootCode: '1100',
+            createdAt: 0,
+            updatedAt: 0,
+            level: 3,
+            deletedAt: null,
+          },
+        },
+        {
+          id: 1007,
+          amount: 100,
+          description: '償還應付帳款-應付帳款',
+          debit: true,
+          accountId: 10000981,
+          voucherId: 1002,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+          // originalLineItem: [],
+          account: {
+            id: 10000981,
+            companyId: 1002,
+            system: 'IFRS',
+            type: AccountType.LIABILITY,
+            debit: false,
+            liquidity: true,
+            code: '2171',
+            name: '應付帳款',
+            forUser: true,
+            parentCode: '2170',
+            rootCode: '2170',
+            createdAt: 0,
+            updatedAt: 0,
+            level: 3,
+            deletedAt: null,
+          },
+        },
+      ];
     });
-  });
 
-  describe('initCertificateEntities', () => {
-    it('should return certificate entities', () => {
-      const certificateEntities =
-        voucherAPIGetOneUtils.initCertificateEntities(fakeVoucherFromPrisma);
-      expect(certificateEntities).toBeDefined();
-      expect(certificateEntities.length).toBeGreaterThan(0);
-      expect(certificateEntities[0].file).toBeDefined();
-      expect(certificateEntities[0].invoice).toBeDefined();
-      expect(certificateEntities[0].userCertificates).toBeDefined();
-      expect(certificateEntities[0].userCertificates.length).toBeGreaterThan(0);
+    describe('createLineItemComparisonKey', () => {
+      it('should return line item comparison key', () => {
+        const result = putUtils.createLineItemComparisonKey(fakeLineItemEntity1);
+        expect(result).toBeDefined();
+        // Info: (20241115 - Murky) accountId, lineItem debit and line item amount
+        expect(result).toEqual('10000981-false-500');
+      });
     });
-  });
 
-  describe('getPayableReceivableInfoFromVoucher', () => {
-    it('should return payable receivable info from voucher', () => {
-      // Info: (20241112 - Murky) fakeVoucherFromPrisma 是反轉別人的分錄
-      // 所以只有resultEventEntities，沒有originalEventEntities的結果
-      const resultEventEntities =
-        voucherAPIGetOneUtils.initResultEventEntities(fakeVoucherFromPrisma);
-      const result = voucherAPIGetOneUtils.getPayableReceivableInfoFromVoucher(resultEventEntities);
-      expect(result).toBeDefined();
-      expect(result.payableInfo).toBeDefined();
-      expect(result.receivingInfo).toBeUndefined();
+    describe('isLineItemEntitiesSame', () => {
+      it('should return true if line item entities are same', () => {
+        const result = putUtils.isLineItemEntitiesSame(
+          fakeBuyLintItemEntities,
+          fakeBuyLintItemEntities
+        );
+        expect(result).toBeTruthy();
+      });
+
+      it('should return false if line item entities are different', () => {
+        const result = putUtils.isLineItemEntitiesSame(
+          fakeBuyLintItemEntities,
+          fakePayLineItemEntities
+        );
+        expect(result).toBeFalsy();
+      });
+    });
+
+    describe('initLineItemWithAccountEntity', () => {
+      it('should return line item with account entity', () => {
+        const result = putUtils.initLineItemWithAccountEntity(fakeLineItemFromPrisma);
+        expect(result).toBeDefined();
+        expect(result.account).toBeDefined();
+      });
+    });
+
+    describe('getDifferentIds', () => {
+      const fakeIds1 = [1, 2, 3, 4];
+      const fakeIds2 = [1, 2, 5, 6];
+      it('should return different ids', () => {
+        const { idNeedToBeRemoved, idNeedToBeAdded } = putUtils.getDifferentIds(fakeIds1, fakeIds2);
+        expect(idNeedToBeRemoved.sort()).toEqual([3, 4].sort());
+        expect(idNeedToBeAdded.sort()).toEqual([5, 6].sort());
+      });
+    });
+
+    describe('constructNewLineItemReverseRelationship', () => {
+      const reverseVouchers = [
+        {
+          voucherId: 1000,
+          amount: 100,
+          lineItemIdBeReversed: 1001,
+          lineItemIdReverseOther: 1, // Info: (20241118 - Murky) id 1 in fakePayLintItemEntities
+        },
+      ];
+      const originalLineItem = [
+        {
+          id: 1001,
+          amount: 500,
+          description: '購買存貨-應付帳款',
+          debit: false,
+          accountId: 10000981,
+          voucherId: 1000,
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
+      ];
+      it('should return new line item reverse relationship', () => {
+        const result = putUtils.constructNewLineItemReverseRelationship(
+          fakePayLineItemEntities,
+          reverseVouchers,
+          originalLineItem
+        );
+        expect(result).toBeDefined();
+        expect(result.length).toBeGreaterThan(0);
+        expect(result[0].lineItemReverseOther).toEqual(fakePayLineItemEntities[1]);
+      });
+    });
+
+    describe('constructOldLineItemReverseRelationship', () => {
+      it('should return old line item reverse relationship', () => {
+        const result = putUtils.constructOldLineItemReverseRelationship(fakeVoucherFromPrisma);
+        expect(result).toBeDefined();
+        expect(result.length).toBeGreaterThan(0);
+        expect(result[0].eventId).toBe(1000);
+      });
+    });
+
+    describe('createReverseLineItemKey', () => {
+      it('should return reverse line item key', () => {
+        const reverseVouchers = [
+          {
+            voucherId: 1000,
+            amount: 100,
+            lineItemIdBeReversed: 1001,
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
+          },
+        ];
+        const result = putUtils.createReverseLineItemKey(reverseVouchers[0]);
+        expect(result).toBeDefined();
+        expect(result).toEqual('10000603-false-100-100');
+      });
+    });
+
+    describe('getNewReverseLineItemMap', () => {
+      it('should return new reverse line item map', () => {
+        const reverseVouchers = [
+          {
+            voucherId: 1000,
+            amount: 100,
+            lineItemIdBeReversed: 1001,
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
+          },
+        ];
+        const result = putUtils.getNewReverseLineItemMap(reverseVouchers);
+        expect(result.has('10000603-false-100-100')).toBeTruthy();
+      });
+    });
+
+    describe('getOldReverseLineItemMap', () => {
+      it('should return old reverse line item map', () => {
+        const reverseVouchers = [
+          {
+            eventId: 1000,
+            voucherId: 1000,
+            amount: 100,
+            lineItemIdBeReversed: 1001,
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
+          },
+        ];
+
+        const result = putUtils.getOldReverseLineItemMap(reverseVouchers);
+        expect(result.has('10000603-false-100-100')).toBeTruthy();
+      });
+    });
+
+    describe('getReverseLineItemMap', () => {
+      it('should return reverse line item map', () => {
+        const originalReversePairs = [
+          {
+            eventId: 1010,
+            voucherId: 1010,
+            amount: 100,
+            lineItemIdBeReversed: 1010,
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
+          },
+        ];
+
+        const newReversePairs = [
+          {
+            eventId: 1000,
+            voucherId: 1000,
+            amount: 100,
+            lineItemIdBeReversed: 1001,
+            lineItemReverseOther: fakePayLineItemEntities[0], // Info: (20241118 - Murky) id 1 in fakePayLineItemEntities
+          },
+        ];
+
+        const result = putUtils.getDifferentReverseRelationship(
+          originalReversePairs,
+          newReversePairs
+        );
+        expect(result.get('10000603-false-100-100')).toBeDefined();
+      });
     });
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
@@ -7,10 +7,18 @@ import { RxCross1 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface AddCounterPartyModalProps {
   onClose: () => void;
-  onSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void;
+  onSave: (counterpartyData: {
+    name: string;
+    taxId: string;
+    type: CounterpartyType;
+    note: string;
+  }) => void;
   name?: string;
   taxId?: string;
 }
@@ -22,11 +30,23 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
+  const { selectedCompany } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
   const [inputNote, setInputNote] = useState<string>('');
   const [showHint, setShowHint] = useState(false);
+
+  const {
+    trigger: addCounterpartyTrigger,
+    success,
+    error,
+  } = APIHandler(
+    APIName.COUNTERPARTY_ADD,
+    { params: { companyId: selectedCompany?.id } },
+    false,
+    true
+  );
 
   const { targetRef: typeRef, setComponentVisible: setIsTypeSelecting } =
     useOuterClick<HTMLDivElement>(false);
@@ -46,6 +66,9 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     (type) => {
       const accountClickHandler = () => {
         setInputType(type);
+        // Deprecate: (20241118 - Anna) debug
+        // eslint-disable-next-line no-console
+        console.log('Selected Type:', type); // Info: (20241113 - Anna) 確認選擇的類型是否正確
         setTypeMenuOpen(false);
         setIsTypeSelecting(false);
       };
@@ -90,16 +113,45 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
     setInputNote(event.target.value);
   };
 
-  const disabled = !inputName || !inputTaxId || !inputType;
+  // Info: (20241113 - Anna) 檢查是否有未填寫的欄位
+  // const disabled = !inputName || !inputTaxId || !inputType;
+  const disabled = !(inputName && inputTaxId && inputType);
 
-  const addNewCounterParterHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  const addNewCounterPartyHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (disabled) {
       setShowHint(true);
     } else {
-      onSave({ name: inputName, taxId: inputTaxId, type: inputType, note: inputNote || '' });
+      const counterpartyData = {
+        name: inputName,
+        taxId: inputTaxId,
+        type: inputType as CounterpartyType,
+        note: inputNote || '',
+      };
+
+      const apiData = {
+        ...counterpartyData,
+        type: counterpartyData.type.toString(),
+      };
+
+      await addCounterpartyTrigger({ body: apiData });
     }
   };
+
+  useEffect(() => {
+    if (success) {
+      // Deprecate: (20241118 - Anna) debug
+      // eslint-disable-next-line no-console
+      console.log('Counterparty created successfully.');
+      onSave({ name: inputName, taxId: inputTaxId, type: inputType!, note: inputNote });
+      onClose();
+    } else if (error) {
+      // Deprecate: (20241118 - Anna) debug
+      // eslint-disable-next-line no-console
+      console.error('Failed to create counterparty:', error);
+    }
+  }, [success, error, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -116,7 +168,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
           {t('certificate:COUNTERPARTY.ADD_NEW')}
         </h2>
         <form
-          onSubmit={addNewCounterParterHandler}
+          onSubmit={addNewCounterPartyHandler}
           className="flex w-full flex-col gap-4 text-sm text-input-text-primary"
         >
           <div className="flex flex-col gap-4">
@@ -163,7 +215,7 @@ const AddCounterPartyModal: React.FC<AddCounterPartyModalProps> = ({
             {/* Info: (20240924 - tzuhan) Partner Type */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="font-semibold">
-                {t('journal:ADD_ASSET_MODAL.ASSET_TYPE')}
+                {t('certificate:COUNTERPARTY.PARTNER_TYPE')}
                 <span className="text-text-state-error">*</span>
               </p>
               <div ref={typeRef} className="relative w-full">
