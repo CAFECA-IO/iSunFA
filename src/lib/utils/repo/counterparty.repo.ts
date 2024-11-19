@@ -184,3 +184,27 @@ export async function deleteCounterpartyForTesting(id: number): Promise<Counterp
 
   return deletedCounterparty;
 }
+
+export async function fuzzySearchCounterpartyByName(name: string, companyId: number) {
+  let counterparty: Counterparty | null = null;
+
+  const counterpartyName = name || '';
+
+  try {
+    const counterparties: Counterparty[] = await prisma.$queryRaw`
+      SELECT * FROM public."counterparty"
+      WHERE company_id = ${companyId}
+      ORDER BY SIMILARITY(name, ${counterpartyName}) DESC
+      LIMIT 1;
+    `;
+    [counterparty] = counterparties;
+  } catch (error) {
+    const logError = loggerError(
+      0,
+      'Fuzzy search counterparty by name in fuzzySearchCounterpartyByName failed',
+      error as Error
+    );
+    logError.error('Prisma fuzzy search counterparty by name in counterparty.repo.ts failed');
+  }
+  return counterparty;
+}

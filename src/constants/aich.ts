@@ -1,3 +1,8 @@
+import { AICH_URI } from '@/constants/config';
+
+const apiVersionV2 = 'v2';
+const apiPrefixV2 = `${AICH_URI}/api/${apiVersionV2}`;
+
 export enum AICH_APIS_TYPES {
   UPLOAD_OCR = 'upload_ocr',
   GET_OCR_RESULT_ID = 'get_ocr_result_id',
@@ -18,3 +23,9 @@ export enum AI_TYPE {
   VOUCHER = 'voucher',
   HELP = 'help',
 }
+
+export const AICH_PATH = {
+  [AI_TYPE.CERTIFICATE]: `${apiPrefixV2}/certificate`,
+  [AI_TYPE.VOUCHER]: `${apiPrefixV2}/voucher`,
+  [AI_TYPE.HELP]: `${apiPrefixV2}/help`,
+};

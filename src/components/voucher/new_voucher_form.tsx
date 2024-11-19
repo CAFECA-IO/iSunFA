@@ -12,7 +12,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import AssetSection from '@/components/voucher/asset_section';
 import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
+import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
@@ -46,6 +46,7 @@ import { VoucherV2Action } from '@/constants/voucher';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
+import { IAIResultVoucher } from '@/interfaces/voucher';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -54,22 +55,11 @@ import { ToastType } from '@/interfaces/toastify';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
-// ToDo: (20241021 - Julian) 確認完後移動到 interfaces
-interface IAIResultVoucher {
-  voucherDate: number;
-  type: string;
-  note: string;
-  counterParty?: ICounterparty; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
-  lineItemsInfo: {
-    lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
-  };
-}
-
 const dummyAIResult: IAIResultVoucher = {
   voucherDate: 0,
   type: '',
   note: '',
-  lineItemsInfo: { lineItems: [] },
+  lineItems: [],
 };
 
 interface NewVoucherFormProps {
@@ -131,7 +121,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     type: aiType,
     note: aiNote,
     counterParty: aiCounterParty,
-    lineItemsInfo: { lineItems: aiLineItems },
+    lineItems: aiLineItems,
   } = resultData ?? dummyAIResult;
 
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
