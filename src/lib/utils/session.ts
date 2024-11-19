@@ -13,6 +13,8 @@ const options = {
 // export const getSession = nextSession<ISessionData>(options);
 // Deprecate: (20241119 - Luphia) dummy session for development
 const env = process.env.NODE_ENV;
+// Deprecate: (20241119 - Luphia) dummy session for development
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const dummyGetSession = async (req: NextApiRequest, res: NextApiResponse) => {
   const sessionData: ISessionData = {
     id: 'dummy',
@@ -28,6 +30,7 @@ const dummyGetSession = async (req: NextApiRequest, res: NextApiResponse) => {
   };
   return sessionData;
 };
+// Deprecate: (20241119 - Luphia) dummy session for development
 export const getSession = env === 'development' ? dummyGetSession : nextSession<ISessionData>(options);
 
 export async function setSession(
