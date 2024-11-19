@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-// import { useModalContext } from '@/contexts/modal_context';
 import AvatarSVG from '@/components/avatar_svg/avatar_svg';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
 import { useUserCtx } from '@/contexts/user_context';
-// import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
 import { signIn } from 'next-auth/react';
 import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
+
+// ToDo: (20241119 - Liz) Beta version 不支援 Apple 登入
+const IS_APPLE_LOGIN_ENABLED = false;
 
 const Loader = () => {
   return (
@@ -83,19 +84,25 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
               className="flex items-center justify-center gap-15px rounded-sm bg-white p-15px"
             >
               <Image src="/icons/google_logo.svg" alt="google_logo" width="24" height="24"></Image>
-              <p className="text-xl font-medium text-gray-500">Log In with Google</p>
+              <p className="text-xl font-medium text-gray-500">
+                {t('dashboard:LOGIN.LOG_IN_WITH_GOOGLE')}
+              </p>
             </button>
 
             {/* // Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
-            <button
-              type="button"
-              onClick={() => signIn('apple')}
-              className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
-              disabled
-            >
-              <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
-              <p className="text-xl font-medium text-white">Log In with Apple</p>
-            </button>
+            {IS_APPLE_LOGIN_ENABLED && (
+              <button
+                type="button"
+                onClick={() => signIn('apple')}
+                className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px"
+                disabled
+              >
+                <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
+                <p className="text-xl font-medium text-white">
+                  {t('dashboard:LOGIN.LOG_IN_WITH_APPLE')}
+                </p>
+              </button>
+            )}
           </div>
         </div>
       )}

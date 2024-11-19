@@ -1,4 +1,9 @@
 {
+  "LOGIN": {
+    "LOG_IN_WITH_GOOGLE": "使用 Google 登录",
+    "LOG_IN_WITH_APPLE": "使用 Apple 登录"
+  },
+
   "DASHBOARD": {
     "DASHBOARD": "仪表板",
     "TO_DO_LIST": "待办事项",

@@ -1,4 +1,9 @@
 {
+  "LOGIN": {
+    "LOG_IN_WITH_GOOGLE": "Log In with Google",
+    "LOG_IN_WITH_APPLE": "Log In with Apple"
+  },
+
   "DASHBOARD": {
     "DASHBOARD": "Dashboard",
     "TO_DO_LIST": "To-do List",

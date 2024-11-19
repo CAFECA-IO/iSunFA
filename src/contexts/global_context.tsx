@@ -216,12 +216,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
 
-  // const [isTermsOfServiceConfirmModalVisible, setIsTermsOfServiceConfirmModalVisible] =
-  //   useState(false);
-
-  // const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
-  //   useState(false);
-
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);

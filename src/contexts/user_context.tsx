@@ -323,7 +323,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return company;
   };
 
-  // Info: (20241101 - Liz) 此函數處理「使用者的角色資訊」
+  // Info: (20241101 - Liz) 此函數處理角色資訊:
   const processRoleInfo = (role: IRole) => {
     if (!role || Object.keys(role).length === 0) {
       setSelectedRole(null);
@@ -391,7 +391,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
-  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者和公司資訊。
+  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者、公司、角色資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
@@ -435,6 +435,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [router.pathname]);
   // ===============================================================================
 
+  // Info: (20241119 - Liz) 簽署使用者同意條款和隱私政策的功能
   const handleUserAgree = async (hash: Hash) => {
     setIsAuthLoading(true);
 
@@ -618,7 +619,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241113 - Liz) 更新公司的功能(標籤 / 設為置頂)
+  // Info: (20241113 - Liz) 更新公司的功能(變更標籤)
   const updateCompany = async ({
     companyId,
     action,
