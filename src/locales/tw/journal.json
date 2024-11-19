@@ -299,5 +299,8 @@
     "PARTICULARS": "摘要",
     "AMOUNT": "金額",
     "REVERSE_AMOUNT": "沖銷金額"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "編輯傳票"
   }
 }

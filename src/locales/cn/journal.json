@@ -299,5 +299,8 @@
     "PARTICULARS": "摘要",
     "AMOUNT": "金额",
     "REVERSE_AMOUNT": "冲销金额"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "编辑传票"
   }
 }
