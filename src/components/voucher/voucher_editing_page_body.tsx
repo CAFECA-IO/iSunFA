@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
@@ -370,23 +369,23 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
-  const {
-    trigger: updateVoucher,
-    success: updateSuccess,
-    isLoading: isUpdating,
-  } = APIHandler(APIName.VOUCHER_UPDATE);
+  // const {
+  //   trigger: updateVoucher,
+  //   success: updateSuccess,
+  //   isLoading: isUpdating,
+  // } = APIHandler(APIName.VOUCHER_UPDATE);
 
   // Info: (20241118 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
-  const {
-    trigger: deleteVoucher,
-    success: deleteSuccess,
-    isLoading: isDeleting,
-  } = APIHandler(APIName.VOUCHER_DELETE_V2);
-  const {
-    trigger: createNewVoucher,
-    success: createNewSuccess,
-    isLoading: isCreating,
-  } = APIHandler(APIName.VOUCHER_CREATE);
+  // const {
+  //   trigger: deleteVoucher,
+  //   success: deleteSuccess,
+  //   isLoading: isDeleting,
+  // } = APIHandler(APIName.VOUCHER_DELETE_V2);
+  // const {
+  //   trigger: createNewVoucher,
+  //   success: createNewSuccess,
+  //   isLoading: isCreating,
+  // } = APIHandler(APIName.VOUCHER_CREATE);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -415,7 +414,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     note: voucherNote,
     lineItemsInfo: { lineItems: voucherLineItems },
     certificates: voucherCertificates,
-    reverseVoucherIds: reverseVouchers,
+    reverseVoucherIds: reverseVoucherList,
     counterParty: voucherCounterParty,
     assets: voucherAssets,
   } = voucherData ?? defaultVoucherDetail;
@@ -464,6 +463,8 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
   const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
+  // Deprecated: (20241118 - Julian) implement later
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
@@ -494,6 +495,8 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
+  // Deprecated: (20241118 - Julian) implement later
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedCertificates, setSelectedCertificates] = useState<{
     [id: string]: ICertificateUI;
   }>({});
@@ -513,7 +516,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   // Info: (20241118 - Julian) 將 reverse voucher 與 line item 掛鉤
   useEffect(() => {
     if (isReverseLoading === false && reverseData && reverseData.length > 0) {
-      const reverseVoucherList = reverseVouchers
+      const reverseList = reverseVoucherList
         .map((reverseVoucher) => {
           const reverseDetail = reverseData.find(
             (item) => item.lineItemBeReversedId === reverseVoucher.id
@@ -523,15 +526,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         .filter((item) => item !== undefined) as IReverseItem[];
 
       const lineItemsWithReverse = lineItems.map((lineItem) => {
-        return {
-          ...lineItem,
-          reverseList: reverseVoucherList,
-        };
+        return { ...lineItem, reverseList };
       });
 
       setLineItems(lineItemsWithReverse);
     }
-  }, [reverseVouchers, reverseData, isReverseLoading]);
+  }, [reverseVoucherList, reverseData, isReverseLoading]);
 
   // Info: (20241108 - Julian) 需要交易對象的時候才拿 counterparty list
   useEffect(() => {
@@ -803,13 +803,13 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterParty);
 
   // Info: (20240926 - Julian) type 字串轉換
-  const translateType = (voucherType: string) => {
-    const typeStr = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType];
+  const translateType = (typeStr: string) => {
+    const eventTypeToVoucherType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[typeStr as EventType];
 
-    if (typeStr) {
-      return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
+    if (eventTypeToVoucherType) {
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${eventTypeToVoucherType.toUpperCase()}`);
     } else {
-      return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
     }
   };
 
@@ -892,6 +892,8 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       //       :
       [];
 
+    // Deprecated: (20241118 - Julian) implement later
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const body = {
       actions,
       certificateIds: Object.values(certificates),
@@ -911,7 +913,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       reverseVouchers,
     };
 
-    //createVoucher({ params: { companyId }, body });
+    // createVoucher({ params: { companyId }, body });
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -976,9 +978,9 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       ref={typeRef}
       className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu"
     >
-      {Object.values(VoucherType).map((voucherType) => {
+      {Object.values(VoucherType).map((v) => {
         const typeClickHandler = () => {
-          setType(voucherType);
+          setType(v);
           setTypeVisible(false);
         };
 
