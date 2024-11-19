@@ -70,7 +70,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const {
     getAccountListHandler,
     temporaryAssetList,
@@ -82,6 +82,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     useModalContext();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const userId = userAuth?.id ?? -1;
+
+  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
   const {
@@ -440,7 +443,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       //     break;
       // }
     },
-    [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetList]
+    [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetListByUser]
   );
 
   useHotkeys('tab', handleTabPress);
@@ -513,10 +516,10 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // }, [recurringArray]);
 
   useEffect(() => {
-    if (isAssetRequired && temporaryAssetList.length > 0) {
+    if (isAssetRequired && temporaryAssetListByUser.length > 0) {
       setIsShowAssetHint(false);
     }
-  }, [temporaryAssetList]);
+  }, [temporaryAssetListByUser]);
 
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
@@ -581,7 +584,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     // setRecurringPeriod(default30DayPeriodInSec);
     // setRecurringUnit(RecurringUnit.MONTH);
     // setRecurringArray([]);
-    clearTemporaryAssetHandler();
+    clearTemporaryAssetHandler(userId);
     clearReverseListHandler();
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
@@ -632,8 +635,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     // Info: (20241105 - Julian) 如果沒有新增資產，就回傳空陣列
     const assetIds =
-      isAssetRequired && temporaryAssetList.length > 0
-        ? temporaryAssetList.map((asset) => asset.id)
+      isAssetRequired && temporaryAssetListByUser.length > 0
+        ? temporaryAssetListByUser.map((asset) => asset.id)
         : [];
 
     // Info: (20241105 - Julian) 如果有反轉傳票，則取得反轉傳票的資訊並加入 reverseVouchers，否則回傳空陣列
@@ -666,7 +669,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       reverseVouchers,
     };
 
-    clearTemporaryAssetHandler();
+    clearTemporaryAssetHandler(userId);
     clearReverseListHandler();
     createVoucher({ params: { companyId }, body });
   };
@@ -703,7 +706,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
-    } else if (isAssetRequired && temporaryAssetList.length === 0) {
+    } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
       // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
       setIsShowAssetHint(true);
       if (assetRef.current) assetRef.current.scrollIntoView();

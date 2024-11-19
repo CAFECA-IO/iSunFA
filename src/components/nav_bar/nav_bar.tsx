@@ -470,10 +470,7 @@ const NavBar = () => {
             </Link>
             <div className="my-auto flex flex-col justify-center self-stretch rounded-xs bg-badge-surface-soft-primary px-1 text-badge-text-primary-solid">
               <div className="flex flex-col justify-center rounded-xs px-0.1rem py-1">
-                <div className="justify-center px-1 text-xs">
-                  {t('common:COMMON.V')}
-                  {version}
-                </div>
+                <div className="justify-center px-1 text-xs">v{version}</div>
               </div>
             </div>
           </div>
