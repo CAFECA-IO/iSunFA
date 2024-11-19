@@ -55,7 +55,7 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
 
 export const fetchResultIdFromAICH = async (key: AI_TYPE, body: object) => {
   const aichPath = AICH_PATH[key];
-  const response = await fetch(aichPath, {
+  const response = await fetch(`${aichPath}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

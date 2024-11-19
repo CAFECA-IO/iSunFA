@@ -1,7 +1,7 @@
 import { AICH_URI } from '@/constants/config';
 
-const apiVersionV2 = 'v2';
-const apiPrefixV2 = `${AICH_URI}/api/${apiVersionV2}`;
+const apiVersion = 'v2';
+const aichPrefix = `${AICH_URI}/api/${apiVersion}`;
 
 export enum AICH_APIS_TYPES {
   UPLOAD_OCR = 'upload_ocr',
@@ -25,7 +25,7 @@ export enum AI_TYPE {
 }
 
 export const AICH_PATH = {
-  [AI_TYPE.CERTIFICATE]: `${apiPrefixV2}/certificate`,
-  [AI_TYPE.VOUCHER]: `${apiPrefixV2}/voucher`,
-  [AI_TYPE.HELP]: `${apiPrefixV2}/help`,
+  [AI_TYPE.CERTIFICATE]: `${aichPrefix}/certificate`,
+  [AI_TYPE.VOUCHER]: `${aichPrefix}/voucher`,
+  [AI_TYPE.HELP]: `${aichPrefix}/help`,
 };
