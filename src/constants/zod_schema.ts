@@ -87,6 +87,7 @@ import { fileDeleteSchema, fileGetSchema, filePostSchema } from '@/lib/utils/zod
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 import {
   userDeleteSchema,
+  userDeletionPutSchema,
   userGetSchema,
   userListSchema,
   userPutSchema,
@@ -193,6 +194,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
   [APIName.USER_UPDATE]: userPutSchema,
+  [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
   [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.COMPANY_ADD]: nullAPISchema,
   [APIName.COMPANY_GET]: nullAPISchema,

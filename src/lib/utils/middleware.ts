@@ -64,18 +64,27 @@ export async function logUserAction<T extends APIName>(
   req: NextApiRequest,
   statusMessage: string
 ) {
-  await createUserActionLog({
-    sessionId: session.id || '',
-    userId: session.userId || 555,
-    actionType: UserActionLogActionType.API,
-    actionDescription: apiName,
-    ipAddress: (req.headers['x-forwarded-for'] as string) || '',
-    userAgent: (req.headers['user-agent'] as string) || '',
-    apiEndpoint: APIPath[apiName as keyof typeof APIPath],
-    httpMethod: req.method || '',
-    requestPayload: req.body || '',
-    statusMessage,
-  });
+  try {
+    const userActionLog = {
+      sessionId: session.id || '',
+      userId: session.userId || 555,
+      actionType: UserActionLogActionType.API,
+      actionDescription: apiName,
+      ipAddress: (req.headers['x-forwarded-for'] as string) || '',
+      userAgent: (req.headers['user-agent'] as string) || '',
+      apiEndpoint: APIPath[apiName as keyof typeof APIPath],
+      httpMethod: req.method || '',
+      requestPayload: req.body || '',
+      statusMessage,
+    };
+    await createUserActionLog(userActionLog);
+  } catch (error) {
+    loggerError(
+      session.userId,
+      `Failed to log user action for ${apiName} in middleware.ts`,
+      error as Error
+    );
+  }
 }
 
 // TODO: (20241111 - Shirley) separate middleware according to different functionality
