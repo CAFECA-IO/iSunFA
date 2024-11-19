@@ -64,13 +64,7 @@ interface UserContextType {
     credentials: PublicKeyCredential | null;
   }>;
 
-  userAgreeResponse: {
-    success: boolean;
-    data: null;
-    code: string;
-    error: Error | null;
-  } | null;
-  handleUserAgree: (hash: Hash) => Promise<void>;
+  handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
 }
 
@@ -102,8 +96,7 @@ export const UserContext = createContext<UserContextType>({
     return { isRegistered: false, credentials: null };
   },
 
-  userAgreeResponse: null,
-  handleUserAgree: async () => {},
+  handleUserAgree: async () => false,
   authenticateUser: async () => {},
 });
 
@@ -128,12 +121,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
   const [, setIsAgreePrivacyPolicy, isAgreePrivacyPolicyRef] = useStateRef(false);
-  const [, setUserAgreeResponse, userAgreeResponseRef] = useStateRef<{
-    success: boolean;
-    data: null;
-    code: string;
-    error: Error | null;
-  } | null>(null);
+
   const isRouteChanging = useRef(false);
 
   const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
@@ -322,117 +310,82 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ===============================================================================
-  // Info: (20241001 - Liz) 此函數根據使用者的協議列表，更新使用者是否同意了服務條款和隱私政策。
-  // 它會將結果存入狀態變數 setIsAgreeTermsOfService 和 setIsAgreePrivacyPolicy。
-  const updateUserAgreements = (user: IUser) => {
-    const hasAgreedToTerms = user.agreementList.includes(Hash.HASH_FOR_TERMS_OF_SERVICE);
-    const hasAgreedToPrivacy = user.agreementList.includes(Hash.HASH_FOR_PRIVACY_POLICY);
-
-    setIsAgreeTermsOfService(hasAgreedToTerms);
-    setIsAgreePrivacyPolicy(hasAgreedToPrivacy);
-  };
 
   // Info: (20241001 - Liz) 此函數處理公司資訊:
-  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，並標記成功選擇公司。
-  // 若公司資料不存在，會將公司資訊設為空，並標記為未選擇公司。
+  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedCompany)，最後回傳公司資訊。
+  // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
   const processCompanyInfo = (company: ICompany) => {
-    if (company && Object.keys(company).length > 0) {
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 processCompanyInfo 並且 company 存在:', company);
-
-      setSelectedCompany(company);
-      return true;
-    } else {
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 processCompanyInfo 並且 company 不存在:', company);
-
+    if (!company || Object.keys(company).length === 0) {
       setSelectedCompany(null);
-      return false;
+      return null;
     }
+    setSelectedCompany(company);
+    return company;
   };
 
   // Info: (20241101 - Liz) 此函數處理「使用者的角色資訊」
   const processRoleInfo = (role: IRole) => {
-    if (role && Object.keys(role).length > 0) {
-      // Deprecated: (20241029 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 processRoleInfo 並且 role 存在:', role);
-
-      setSelectedRole(role.name);
-
-      return true;
-    } else {
-      // Deprecated: (20241029 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 processRoleInfo 並且 role 不存在:', role);
-
+    if (!role || Object.keys(role).length === 0) {
       setSelectedRole(null);
-
-      return false;
+      return null;
     }
+    setSelectedRole(role.name);
+    return role;
   };
 
   // Info: (20241001 - Liz) 此函數處理使用者資訊:
+  // 如果使用者資料不存在，會回傳 null。
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
-  // 它還會將使用者的 userId 和過期時間儲存在 localStorage 中，
-  // 接著它會呼叫 updateUserAgreements 函數更新使用者的協議狀態，
-  // 最後回傳 true。
-  // 如果使用者資料不存在，會回傳 false。
+  // 並且將使用者的 userId 和過期時間儲存在 localStorage 中，最後回傳使用者資訊。
   const processUserInfo = (user: IUser) => {
-    if (user && Object.keys(user).length > 0) {
-      setUserAuth(user);
-      setUsername(user.name);
-      setIsSignIn(true);
-      setIsSignInError(false);
+    if (!user || Object.keys(user).length === 0) return null;
 
-      localStorage.setItem('userId', user.id.toString());
-      localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
-
-      updateUserAgreements(user);
-
-      // Deprecated: (20241004 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('呼叫 processUserInfo 並且 user 存在:', user);
-
-      return true;
-    } else {
-      // clearStates(); // Deprecated: (20241009 - Liz)
-      // redirectToLoginPage(); // Deprecated: (20241009 - Liz)
-      return false;
-    }
+    setUserAuth(user);
+    setUsername(user.name);
+    setIsSignIn(true);
+    setIsSignInError(false);
+    localStorage.setItem('userId', user.id.toString());
+    localStorage.setItem('expired_at', (Date.now() + EXPIRATION_TIME).toString());
+    return user;
   };
 
   // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
   // 它會呼叫 processUserInfo, processCompanyInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
   const handleProcessData = (statusInfo: { user: IUser; company: ICompany; role: IRole }) => {
-    const isProcessedUser = processUserInfo(statusInfo.user);
-    const isProcessedCompany = processCompanyInfo(statusInfo.company);
-    const isProcessedRole = processRoleInfo(statusInfo.role);
+    const processedUser = processUserInfo(statusInfo.user);
+    const processedRole = processRoleInfo(statusInfo.role);
+    const processedCompany = processCompanyInfo(statusInfo.company);
 
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(
-      'isProcessedUser: ',
-      isProcessedUser,
-      'isProcessedCompany: ',
-      isProcessedCompany,
-      'isProcessedRole',
-      isProcessedRole
-    );
-
-    if (!isProcessedUser) {
+    if (!processedUser) {
       clearStates();
       redirectToLoginPage();
-    } else if (!isProcessedRole) {
-      goToSelectRolePage();
-    } else if (!isProcessedCompany) {
-      goToDashboard();
-    } else {
-      goBackToOriginalPath();
+      return;
     }
+
+    // Info: (20241117 - Liz) 檢查是否已經同意服務條款和隱私政策
+    const hasAgreedToTermsOfService = processedUser.agreementList.includes(
+      Hash.HASH_FOR_TERMS_OF_SERVICE
+    );
+    const hasAgreedToPrivacyPolicy = processedUser.agreementList.includes(
+      Hash.HASH_FOR_PRIVACY_POLICY
+    );
+    setIsAgreeTermsOfService(hasAgreedToTermsOfService);
+    setIsAgreePrivacyPolicy(hasAgreedToPrivacyPolicy);
+    const hasAgreedToAll = hasAgreedToTermsOfService && hasAgreedToPrivacyPolicy;
+
+    if (!hasAgreedToAll) return;
+
+    if (!processedRole) {
+      goToSelectRolePage();
+      return;
+    }
+
+    if (!processedCompany) {
+      goToDashboard();
+      return;
+    }
+    goBackToOriginalPath();
   };
 
   // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
@@ -483,27 +436,33 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // ===============================================================================
 
   const handleUserAgree = async (hash: Hash) => {
+    setIsAuthLoading(true);
+
     try {
-      setIsAuthLoading(true);
       const response = await agreementAPI({
         params: { userId: userAuthRef.current?.id },
         body: { agreementHash: hash },
       });
-      setUserAgreeResponse(response);
-      setIsAuthLoading(false);
+
+      if (!response.success && response.error) {
+        throw new Error(response.error.message);
+      }
+
       if (hash === Hash.HASH_FOR_TERMS_OF_SERVICE) {
         setIsAgreeTermsOfService(true);
       }
       if (hash === Hash.HASH_FOR_PRIVACY_POLICY) {
         setIsAgreePrivacyPolicy(true);
       }
+
+      return response.success;
     } catch (error) {
-      setUserAgreeResponse({
-        success: false,
-        data: null,
-        code: '',
-        error: error as Error,
-      });
+      // Deprecated: (20241116 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('Error handling user agreement:', error);
+      return false;
+    } finally {
+      setIsAuthLoading(false);
     }
   };
 
@@ -795,7 +754,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       checkIsRegistered,
       handleUserAgree,
       authenticateUser,
-      userAgreeResponse: userAgreeResponseRef.current,
     }),
     [
       credentialRef.current,

@@ -107,7 +107,7 @@ const UserRole = ({
 };
 
 const SelectRolePage = () => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['dashboard']);
   const { signOut, userAuth, getUserRoleList } = useUserCtx();
   const router = useRouter();
   const [userRoleList, setUserRoleList] = useState<IUserRole[]>([]);
@@ -138,7 +138,7 @@ const SelectRolePage = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:SELECT_ROLE_PAGE.SELECT_ROLE_TITLE')} - iSunFA</title>
+        <title>{t('dashboard:SELECT_ROLE_PAGE.SELECT_ROLE_TITLE')} - iSunFA</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -206,7 +206,7 @@ const SelectRolePage = () => {
 export const getServerSideProps = async ({ locale }: ILocale) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale as string, ['common'])),
+      ...(await serverSideTranslations(locale as string, ['dashboard'])),
     },
   };
 };

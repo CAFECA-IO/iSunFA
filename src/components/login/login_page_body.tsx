@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useModalContext } from '@/contexts/modal_context';
+// import { useModalContext } from '@/contexts/modal_context';
 import AvatarSVG from '@/components/avatar_svg/avatar_svg';
 import { ILoginPageProps } from '@/interfaces/page_props';
 import { Provider } from '@/constants/provider';
 import { useUserCtx } from '@/contexts/user_context';
-import { ToastType } from '@/interfaces/toastify';
+// import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
 import { FiHome } from 'react-icons/fi';
 import I18n from '@/components/i18n/i18n';
 import { signIn } from 'next-auth/react';
+import LoginConfirmModal from '@/components/login_confirm_modal/login_confirm_modal';
 
 const Loader = () => {
   return (
@@ -21,21 +22,8 @@ const Loader = () => {
 
 const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('dashboard');
-  const { toastHandler } = useModalContext();
-  const { isAuthLoading, authenticateUser, userAgreeResponse } = useUserCtx();
-
-  useEffect(() => {
-    if (userAgreeResponse) {
-      if (!userAgreeResponse.success) {
-        toastHandler({
-          id: `user-agree-error`,
-          type: ToastType.ERROR,
-          content: `${t('dashboard:COMMON.ERROR')}: ${userAgreeResponse.code}`,
-          closeable: true,
-        });
-      }
-    }
-  }, [userAgreeResponse]);
+  const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy } =
+    useUserCtx();
 
   const googleAuthSignIn = () => {
     authenticateUser(Provider.GOOGLE, {
@@ -43,6 +31,27 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
       action,
     });
   };
+
+  const [isTermsOfServiceConfirmModalVisible, setIsTermsOfServiceConfirmModalVisible] =
+    useState<boolean>(false);
+
+  const [isPrivacyPolicyConfirmModalVisible, setIsPrivacyPolicyConfirmModalVisible] =
+    useState<boolean>(false);
+
+  const toggleTermsOfServiceConfirmModal = (visibility: boolean) => {
+    setIsTermsOfServiceConfirmModalVisible(visibility);
+  };
+
+  const togglePrivacyPolicyConfirmModal = (visibility: boolean) => {
+    setIsPrivacyPolicyConfirmModalVisible(visibility);
+  };
+
+  useEffect(() => {
+    if (!isSignIn) return;
+
+    setIsTermsOfServiceConfirmModalVisible(!isAgreeTermsOfService);
+    setIsPrivacyPolicyConfirmModalVisible(isAgreeTermsOfService && !isAgreePrivacyPolicy);
+  }, [isSignIn, isAgreeTermsOfService, isAgreePrivacyPolicy]);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -90,6 +99,30 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
           </div>
         </div>
       )}
+
+      {/* Modal */}
+      <LoginConfirmModal
+        id="terms-of-service"
+        isModalVisible={isTermsOfServiceConfirmModalVisible}
+        modalData={{
+          title: t('terms:MODAL.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          content: 'terms_of_service',
+          buttonText: t('terms:MODAL.AGREE_TO_OUR_TERMS_OF_SERVICE'),
+        }}
+        toggleTermsOfServiceConfirmModal={toggleTermsOfServiceConfirmModal}
+        togglePrivacyPolicyConfirmModal={togglePrivacyPolicyConfirmModal}
+      />
+      <LoginConfirmModal
+        id="privacy-policy"
+        isModalVisible={isPrivacyPolicyConfirmModalVisible}
+        modalData={{
+          title: t('terms:MODAL.PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN'),
+          content: 'privacy_policy',
+          buttonText: t('terms:MODAL.AGREE_TO_OUR_PRIVACY_POLICY'),
+        }}
+        toggleTermsOfServiceConfirmModal={toggleTermsOfServiceConfirmModal}
+        togglePrivacyPolicyConfirmModal={togglePrivacyPolicyConfirmModal}
+      />
     </div>
   );
 
