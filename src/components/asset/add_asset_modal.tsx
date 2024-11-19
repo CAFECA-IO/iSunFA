@@ -43,8 +43,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { t } = useTranslation(['common', 'journal']);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
+
+  const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const userId = userAuth?.id ?? -1;
 
   const { assetAccountList, modalType, assetData } = defaultData;
 
@@ -305,15 +308,10 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     };
 
     // Info: (20241028 - Julian) 新增資產只需 companyId
-    const addParams = {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-    };
+    const addParams = { companyId };
 
     // Info: (20241028 - Julian) 更新資產需 assetId
-    const updateParams = {
-      companyId: selectedCompany?.id ?? FREE_COMPANY_ID,
-      assetId: assetData?.id,
-    };
+    const updateParams = { companyId, assetId: assetData?.id };
 
     trigger({
       params: modalType === AssetModalType.ADD ? addParams : updateParams,
@@ -328,7 +326,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           // Info: (20241028 - Julian) 新增資產的處理
           case AssetModalType.ADD:
             // Info: (20241025 - Julian) 新增資產至暫存
-            addTemporaryAssetHandler(assetResult);
+            addTemporaryAssetHandler(userId, assetResult);
 
             // Info: (20241025 - Julian) 顯示成功 toast 訊息
             toastHandler({

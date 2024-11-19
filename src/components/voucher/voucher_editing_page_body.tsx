@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
@@ -45,6 +46,9 @@ import { FREE_COMPANY_ID } from '@/constants/config';
 import { IVoucherDetailForFrontend /* , defaultVoucherDetail  */ } from '@/interfaces/voucher';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
+import { IAssetDetails } from '@/interfaces/asset';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { ToastType } from '@/interfaces/toastify';
 
 // ToDo: (20241118 - Julian) For debug, remove later
 const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -73,7 +77,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
     {
       id: 1000,
       assetName: 'Bank',
-      assetNumber: '1103',
+      assetNumber: 'A-000010',
       assetType: 'asset',
       depreciationStart: 1672531200,
       depreciationMethod: 'straight-line',
@@ -317,17 +321,22 @@ const dummyAIResult: IAIResultVoucher = {
 
 const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const { t } = useTranslation('common');
+  const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const {
     getAccountListHandler,
     temporaryAssetList,
     clearTemporaryAssetHandler,
     clearReverseListHandler,
   } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const userId = userAuth?.id ?? -1;
+
+  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
   const {
@@ -369,23 +378,23 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
-  // const {
-  //   trigger: updateVoucher,
-  //   success: updateSuccess,
-  //   isLoading: isUpdating,
-  // } = APIHandler(APIName.VOUCHER_UPDATE);
+  const {
+    trigger: updateVoucher,
+    success: updateSuccess,
+    isLoading: isUpdating,
+  } = APIHandler(APIName.VOUCHER_UPDATE);
 
   // Info: (20241118 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
-  // const {
-  //   trigger: deleteVoucher,
-  //   success: deleteSuccess,
-  //   isLoading: isDeleting,
-  // } = APIHandler(APIName.VOUCHER_DELETE_V2);
-  // const {
-  //   trigger: createNewVoucher,
-  //   success: createNewSuccess,
-  //   isLoading: isCreating,
-  // } = APIHandler(APIName.VOUCHER_CREATE);
+  const {
+    trigger: deleteVoucher,
+    success: deleteSuccess,
+    isLoading: isDeleting,
+  } = APIHandler(APIName.VOUCHER_DELETE_V2);
+  const {
+    trigger: createNewVoucher,
+    success: createNewSuccess,
+    isLoading: isCreating,
+  } = APIHandler(APIName.VOUCHER_CREATE);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -447,6 +456,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const [type, setType] = useState<string>(defaultType);
   const [note, setNote] = useState<string>(voucherNote);
   const [lineItems, setLineItems] = useState<ILineItemUI[]>(defaultLineItems);
+  const [assetList, setAssetList] = useState<IAssetDetails[]>([...voucherAssets]);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
   const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
@@ -495,23 +505,17 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
-  // Deprecated: (20241118 - Julian) implement later
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedCertificates, setSelectedCertificates] = useState<{
-    [id: string]: ICertificateUI;
-  }>({});
-
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
     useState<ICertificateUI[]>(defaultCertificateUI);
 
-  //   useEffect(() => {
-  //     const storedCertificates = localStorage.getItem('selectedCertificates');
-  //     if (storedCertificates) {
-  //       setSelectedCertificates(JSON.parse(storedCertificates));
-  //       localStorage.removeItem('selectedCertificates');
-  //     }
-  //   }, []);
+  useEffect(() => {
+    const storedCertificates = localStorage.getItem('selectedCertificates');
+    if (storedCertificates) {
+      setCertificates(JSON.parse(storedCertificates));
+      localStorage.removeItem('selectedCertificates');
+    }
+  }, []);
 
   // Info: (20241118 - Julian) 將 reverse voucher 與 line item 掛鉤
   useEffect(() => {
@@ -532,6 +536,14 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       setLineItems(lineItemsWithReverse);
     }
   }, [reverseVoucherList, reverseData, isReverseLoading]);
+
+  // Info: (20241119 - Julian) 更新 asset 列表
+  useEffect(() => {
+    if (temporaryAssetListByUser && temporaryAssetListByUser.length > 0) {
+      const newAssetList = [...voucherAssets, ...temporaryAssetListByUser];
+      setAssetList(newAssetList);
+    }
+  }, [temporaryAssetList]);
 
   // Info: (20241108 - Julian) 需要交易對象的時候才拿 counterparty list
   useEffect(() => {
@@ -571,7 +583,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         body: { certificateId: selectedIds[0] },
       });
     }
-  }, [selectedCertificates, selectedIds]);
+  }, [selectedCertificatesUI, selectedIds]);
 
   useEffect(() => {
     if (!isAskingAI) {
@@ -604,7 +616,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const handleOpenSelectorModal = useCallback(() => {
     setSelectedIds(selectedCertificatesUI.map((item) => item.id));
     setOpenSelectorModal(true);
-  }, [selectedCertificates]);
+  }, [selectedCertificatesUI]);
 
   // Info: (20241018 - Tzuhan) 選擇憑證返回上一步
   const handleBack = useCallback(() => {
@@ -639,7 +651,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       );
       setCertificates(certificatesData);
     },
-    [selectedCertificates]
+    [selectedCertificatesUI]
   );
 
   // Info: (20241004 - Julian) Type 下拉選單
@@ -725,7 +737,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         ToNext();
       }
     },
-    [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetList]
+    [formRef, date, counterparty, isCounterpartyRequired, assetList]
   );
 
   useHotkeys('tab', handleTabPress);
@@ -779,10 +791,10 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   }, [counterparty]);
 
   useEffect(() => {
-    if (isAssetRequired && temporaryAssetList.length > 0) {
+    if (isAssetRequired && assetList.length > 0) {
       setIsShowAssetHint(false);
     }
-  }, [temporaryAssetList]);
+  }, [assetList]);
 
   const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
@@ -827,7 +839,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     setType(VoucherType.EXPENSE);
     setNote('');
     setCounterparty(undefined);
-    clearTemporaryAssetHandler();
+    clearTemporaryAssetHandler(userId);
     clearReverseListHandler();
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
@@ -861,59 +873,90 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     setLineItems(aiLineItemsUI);
   };
 
+  // Info: (20241119 - Julian) 逐一比對 line item 是否有異動
+  const isLineItemsEqual = (arr1: ILineItemBeta[], arr2: ILineItemBeta[]) => {
+    if (arr1.length !== arr2.length) return false;
+
+    for (let i = 0; i < arr1.length; i += 1) {
+      if (arr1[i].id !== arr2[i].id) return false;
+      if (arr1[i].description !== arr2[i].description) return false;
+      if (arr1[i].debit !== arr2[i].debit) return false;
+      if (arr1[i].amount !== arr2[i].amount) return false;
+      if (arr1[i].account?.id !== arr2[i].account?.id) return false;
+    }
+
+    return true;
+  };
+
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
     if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
+    const resultCertificates = Object.values(certificates);
+    const resultDate = date.startTimeStamp;
+    const resultType = VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType];
+    const resultNote = note;
+    const resultCounterpartyId = counterparty?.companyId;
+    const resultLineItems = lineItems.map((lineItem) => {
+      return {
+        accountId: lineItem.account?.id ?? '',
+        amount: lineItem.amount,
+        debit: lineItem.debit,
+        description: lineItem.description,
+      };
+    });
+
     // Info: (20241105 - Julian) 如果沒有新增資產，就回傳空陣列
-    const assetIds =
-      isAssetRequired && temporaryAssetList.length > 0
-        ? temporaryAssetList.map((asset) => asset.id)
-        : [];
+    const resultAssetIds =
+      isAssetRequired && assetList.length > 0 ? assetList.map((asset) => asset.id) : [];
 
     // Info: (20241105 - Julian) 如果有反轉傳票，則取得反轉傳票的資訊並加入 reverseVouchers，否則回傳空陣列
-    const reverseVouchers: {
-      voucherId: number;
-      lineItemIdBeReversed: number;
-      lineItemIdReverseOther: number;
-      amount: number;
-    }[] =
-      // isReverseRequired && reverses.length > 0
-      //   ? reverses.map((reverse) => {
-      //       return {
-      //         voucherId: reverse.voucherId,
-      //         lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
-      //         lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
-      //         amount: reverse.amount,
-      //       };
-      //     })
-      //       :
-      [];
+    // const reverseVouchers: {
+    //   voucherId: number;
+    //   lineItemIdBeReversed: number;
+    //   lineItemIdReverseOther: number;
+    //   amount: number;
+    // }[] =
+    // isReverseRequired && reverses.length > 0
+    //   ? reverses.map((reverse) => {
+    //       return {
+    //         voucherId: reverse.voucherId,
+    //         lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+    //         lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
+    //         amount: reverse.amount,
+    //       };
+    //     })
+    //       :[];
 
     // Deprecated: (20241118 - Julian) implement later
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const body = {
       actions,
-      certificateIds: Object.values(certificates),
-      voucherDate: date.startTimeStamp,
-      type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
-      note,
-      counterPartyId: counterparty?.companyId,
-      lineItems: lineItems.map((lineItem) => {
-        return {
-          accountId: lineItem.account?.id ?? '',
-          amount: lineItem.amount,
-          debit: lineItem.debit,
-          description: lineItem.description,
-        };
-      }),
-      assetIds,
-      reverseVouchers,
+      certificateIds: resultCertificates,
+      voucherDate: resultDate,
+      type: resultType,
+      note: resultNote,
+      counterPartyId: resultCounterpartyId,
+      lineItems: resultLineItems,
+      assetIds: resultAssetIds,
+      //  reverseVouchers,
     };
 
-    // createVoucher({ params: { companyId }, body });
+    //  console.log('body', body);
+
+    // Info: (20241119 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
+    const isOnlyUpdateVoucher = isLineItemsEqual(voucherLineItems, lineItems);
+
+    if (isOnlyUpdateVoucher) {
+      // Info: (20241119 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
+      updateVoucher({ params: { companyId, voucherId }, body });
+    } else {
+      // Info: (20241119 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
+      deleteVoucher({ params: { companyId, voucherId } });
+      createNewVoucher({ params: { companyId }, body });
+    }
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -937,7 +980,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
-    } else if (isAssetRequired && temporaryAssetList.length === 0) {
+    } else if (isAssetRequired && assetList.length === 0) {
       // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
       setIsShowAssetHint(true);
       if (assetRef.current) assetRef.current.scrollIntoView();
@@ -957,21 +1000,37 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     }
   };
 
-  //   useEffect(() => {
-  //     if (isCreating === false) {
-  //       if (createSuccess) {
-  //         router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241108 - Julian) Should be replaced by voucher detail page
-  //       } else {
-  //         toastHandler({
-  //           // ToDo: (20241108 - Julian) i18n
-  //           id: 'create-voucher-fail',
-  //           type: ToastType.ERROR,
-  //           content: 'Failed to create voucher, please try again later.',
-  //           closeable: true,
-  //         });
-  //       }
-  //     }
-  //   }, [createSuccess, isCreating]);
+  // Info: (20241119 - Julian) PUT 的成功與失敗處理
+  useEffect(() => {
+    if (isUpdating === false) {
+      if (updateSuccess) {
+        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241119 - Julian) Should be replaced by voucher detail page
+      } else {
+        toastHandler({
+          id: 'update-voucher-fail',
+          type: ToastType.ERROR,
+          content: 'Failed to update voucher, please try again later.',
+          closeable: true,
+        });
+      }
+    }
+  }, [updateSuccess, isUpdating]);
+
+  // Info: (20241119 - Julian) DELETE && POST 的成功與失敗處理
+  useEffect(() => {
+    if (isDeleting === false && isCreating === false) {
+      if (deleteSuccess && createNewSuccess) {
+        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241119 - Julian) Should be replaced by voucher detail page
+      } else {
+        toastHandler({
+          id: 'delete-voucher-fail',
+          type: ToastType.ERROR,
+          content: 'Failed to update voucher, please try again later.',
+          closeable: true,
+        });
+      }
+    }
+  }, [deleteSuccess, isDeleting, createNewSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
     <div
@@ -1082,9 +1141,9 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   }, []);
 
   useEffect(() => {
-    setSelectedCertificatesUI(Object.values(selectedCertificates));
-    setSelectedIds(Object.keys(selectedCertificates).map(Number));
-  }, [selectedCertificates]);
+    setSelectedCertificatesUI(Object.values(certificates).filter((item) => item.isSelected));
+    setSelectedIds(Object.keys(certificates).map(Number));
+  }, [certificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
