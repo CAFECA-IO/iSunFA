@@ -11,7 +11,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
 import { IUserActionLog } from '@/interfaces/user_action_log';
 import { timestampToString } from '@/lib/utils/common';
-import { ActionType } from '@/constants/display';
+import { UserActionLogActionType } from '@/constants/user_action_log';
 
 interface IPModalProps {
   userId: number;
@@ -52,7 +52,7 @@ const IPModal: React.FC<IPModalProps> = ({ userId, toggleModal, pageData }) => {
       setIsLoading(true);
       const { success, data, code } = await getUserActionLogAPI({
         params: { userId },
-        query: { page, actionType: ActionType.login, pageSize: 6 },
+        query: { page, actionType: UserActionLogActionType.LOGIN, pageSize: 6 },
       });
       if (success && data) {
         setPage(data.page);

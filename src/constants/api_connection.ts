@@ -31,6 +31,7 @@ export enum APIName {
   USER_LIST = 'USER_LIST',
   USER_GET_BY_ID = 'USER_GET_BY_ID',
   USER_UPDATE = 'USER_UPDATE',
+  USER_DELETION_UPDATE = 'USER_DELETION_UPDATE',
   USER_DELETE = 'USER_DELETE',
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   COMPANY_PENDING_TASK_GET = 'COMPANY_PENDING_TASK_GET',
@@ -161,6 +162,7 @@ export enum APIPath {
   USER_LIST = `${apiPrefixV2}/user`,
   USER_GET_BY_ID = `${apiPrefixV2}/user/:userId`,
   USER_UPDATE = `${apiPrefixV2}/user/:userId`,
+  USER_DELETION_UPDATE = `${apiPrefixV2}/user/:userId/deletion`,
   USER_DELETE = `${apiPrefixV2}/user/:userId`,
   USER_PENDING_TASK_GET = `${apiPrefix}/user/:userId/pending_task`,
   COMPANY_PENDING_TASK_GET = `${apiPrefix}/company/:companyId/pending_task`,
@@ -342,6 +344,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.USER_UPDATE,
     method: HttpMethod.PUT,
     path: APIPath.USER_UPDATE,
+  }),
+  [APIName.USER_DELETION_UPDATE]: createConfig({
+    name: APIName.USER_DELETION_UPDATE,
+    method: HttpMethod.PUT,
+    path: APIPath.USER_DELETION_UPDATE,
   }),
   [APIName.USER_DELETE]: createConfig({
     name: APIName.USER_DELETE,
