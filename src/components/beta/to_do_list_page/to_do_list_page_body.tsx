@@ -1,9 +1,12 @@
+import { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import { FiSearch, FiEdit, FiTrash2, FiShare2 } from 'react-icons/fi';
 import { IoAdd } from 'react-icons/io5';
 import { Button } from '@/components/button/button';
 import { ITodoEvent } from '@/interfaces/todo';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
+import CreateTodoModal from '@/components/beta/to_do_list_page/create_todo_modal';
 
 // ToDo: (20241106 - Liz) 使用共用元件代替 Search
 // import FilterSection from '@/components/filter_section/filter_section';
@@ -171,11 +174,13 @@ const TO_DO_LIST: ITodoEvent[] = [
 ];
 
 const NoData = () => {
+  const { t } = useTranslation('dashboard');
+
   return (
     <div className="flex flex-auto flex-col items-center justify-center gap-16px border-2 border-lime-300">
       <Image src={'/images/empty.svg'} alt="no_data" width={120} height={134.787}></Image>
 
-      <p>No pending tasks</p>
+      <p>{t('dashboard:TO_DO_LIST_PAGE.NO_PENDING_TASKS')}</p>
     </div>
   );
 };
@@ -220,20 +225,25 @@ const ToDoEvent = ({ toDoEvent }: { toDoEvent: ITodoEvent }) => {
 };
 
 const ToDoList = ({ toDoEvents }: { toDoEvents: ITodoEvent[] }) => {
+  const { t } = useTranslation('dashboard');
+
   return (
     <div className="overflow-hidden rounded-md border shadow-Dropshadow_XS">
       <section className="flex items-center divide-x-2 divide-stroke-neutral-quaternary bg-surface-brand-secondary-5">
         <div className="w-120px px-16px py-8px text-center text-xs font-medium text-text-brand-secondary-lv2">
-          Deadline
+          {t('dashboard:TO_DO_LIST_PAGE.DEADLINE')}
         </div>
+
         <div className="grow px-16px py-8px text-center text-xs font-medium text-text-brand-secondary-lv2">
-          Event Name
+          {t('dashboard:TO_DO_LIST_PAGE.EVENT_NAME')}
         </div>
+
         <div className="w-160px px-16px py-8px text-center text-xs font-medium text-text-brand-secondary-lv2">
-          Affiliated Company
+          {t('dashboard:TO_DO_LIST_PAGE.PARTNER_TYPE')}
         </div>
+
         <div className="w-160px px-16px py-8px text-center text-xs font-medium text-text-brand-secondary-lv2">
-          Action
+          {t('dashboard:TO_DO_LIST_PAGE.ACTION')}
         </div>
       </section>
 
@@ -245,13 +255,16 @@ const ToDoList = ({ toDoEvents }: { toDoEvents: ITodoEvent[] }) => {
 };
 
 const ToDoListPageBody = () => {
+  const { t } = useTranslation('dashboard');
   const isNoData = TO_DO_LIST.length === 0;
 
-  const handleAddEvent = () => {
-    // Deprecated: (20241106 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('Add Event');
-  };
+  // ToDo: (20241119 - Liz) 這邊的 refreshKey 是用來刷新 FilterSection 的，等後續有共用元件再替換
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
+
+  const [isCreateTodoModalOpen, setIsCreateTodoModalOpen] = useState(false);
+  const toggleCreateCompanyModal = () => setIsCreateTodoModalOpen((prev) => !prev);
+
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
@@ -267,22 +280,29 @@ const ToDoListPageBody = () => {
           </button>
         </div>
 
-        <Button variant="tertiary" size="default" onClick={handleAddEvent}>
+        <Button variant="tertiary" size="default" onClick={toggleCreateCompanyModal}>
           <IoAdd size={20} />
-          <p>Add Event</p>
+          <p>{t('dashboard:TO_DO_LIST_PAGE.ADD_EVENT')}</p>
         </Button>
       </section>
 
       <section className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
           <Image src={'/icons/event_list.svg'} width={16} height={16} alt="event_list"></Image>
-          <h3>Event List</h3>
+          <h3>{t('dashboard:TO_DO_LIST_PAGE.EVENT_LIST')}</h3>
         </div>
 
         <div className="h-1px grow bg-divider-stroke-lv-1"></div>
       </section>
 
       {isNoData ? <NoData /> : <ToDoList toDoEvents={TO_DO_LIST} />}
+
+      {/* Modal */}
+      <CreateTodoModal
+        isModalOpen={isCreateTodoModalOpen}
+        toggleModal={toggleCreateCompanyModal}
+        setRefreshKey={setRefreshKey}
+      />
     </main>
   );
 };

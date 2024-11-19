@@ -29,3 +29,9 @@ export interface ITodoEvent {
   deletedAt: number;
   userTodoCompanies: ICompany[];
 }
+
+export enum PARTNER_TYPE {
+  CUSTOMER = 'Customer',
+  VENDOR = 'Vendor',
+  BOTH = 'Both',
+}

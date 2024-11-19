@@ -20,12 +20,13 @@ export const ISUNFA_ROUTE = {
   CREATE_ROLE: '/users/create_role',
   SELECT_ROLE: '/users/select_role',
   DASHBOARD: '/users/dashboard',
-  BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
   MY_COMPANY_LIST_PAGE: '/users/my_company_list_page',
+  TO_DO_LIST_PAGE: '/users/to_do_list_page',
   LATEST_NEWS_PAGE: '/beta/latest_news_page',
   FINANCIAL_NEWS_PAGE: '/beta/latest_news_page/financial_news_page',
   SYSTEM_NEWS_PAGE: '/beta/latest_news_page/system_news_page',
   MATCH_NEWS_PAGE: '/beta/latest_news_page/match_news_page',
+  BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
   GENERAL_SETTING: '/users/setting/general',
 
   DASHBOARD_V1: '/users/v1/dashboard',
@@ -39,7 +40,6 @@ export const ISUNFA_ROUTE = {
   CERTIFICATE_LIST: '/users/accounting/certificate_list',
   ASSET_LIST: '/users/asset',
 
-  // SELECT_COMPANY: '/users/select_company',
   JOURNAL_LIST: '/users/accounting/journal_list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',

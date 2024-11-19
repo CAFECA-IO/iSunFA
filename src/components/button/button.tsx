@@ -38,6 +38,7 @@ const buttonVariants = cva(
         extraSmall: 'px-2 py-1',
         defaultSquare: 'p-10px w-44px h-44px',
         smallSquare: 'p-10px w-36px h-36px',
+        placeholderInput: 'px-12px py-10px', // Info: (20241119 - Liz) 像是 DatePicker 就有用到這個尺寸當作 Input 的尺寸
       },
     },
     defaultVariants: {

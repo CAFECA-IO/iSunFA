@@ -66,7 +66,7 @@ const PopulateDates = ({
   setComponentVisible,
   type,
 }: IPopulateDatesParams) => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('date_picker');
 
   // Info: (2020417 - Shirley) 用於日期選取的樣式
   const beforeStyle =
@@ -204,7 +204,7 @@ const DatePicker = ({
   disabled,
   datePickerHandler,
 }: IDatePickerProps) => {
-  const { t }: { t: TranslateFunction } = useTranslation('common');
+  const { t }: { t: TranslateFunction } = useTranslation('date_picker');
 
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
 
@@ -367,8 +367,8 @@ const DatePicker = ({
 
   const defaultPeriodText =
     type === DatePickerType.TEXT_DATE
-      ? t('common:DATE_PICKER.SELECT_DATE')
-      : t('common:DATE_PICKER.SELECT_PERIOD');
+      ? t('date_picker:DATE_PICKER.SELECT_DATE')
+      : t('date_picker:DATE_PICKER.SELECT_PERIOD');
 
   // Info: (20240417 - Shirley) 顯示時間區間
   const displayedPeriod =
@@ -376,7 +376,7 @@ const DatePicker = ({
       ? type === DatePickerType.TEXT_DATE || type === DatePickerType.ICON_DATE
         ? `${timestampToString(period.startTimeStamp).date}`
         : `${timestampToString(period.startTimeStamp).date} ${t(
-            'common:DATE_PICKER.TO'
+            'date_picker:DATE_PICKER.TO'
           )} ${timestampToString(period.endTimeStamp).date}`
       : defaultPeriodText;
 
@@ -414,6 +414,7 @@ const DatePicker = ({
         disabled={disabled}
         type="button"
         variant={'tertiaryOutline'}
+        size={'placeholderInput'}
         onClick={openCalenderHandler}
         className={cn(
           'group flex w-full items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background p-3 text-input-text-input-placeholder hover:cursor-pointer group-hover:text-button-text-primary-hover',
@@ -466,7 +467,7 @@ const DatePicker = ({
             onClick={todayClickHandler}
             className="w-full p-1 text-sm"
           >
-            {t('common:DATE_PICKER.TODAY')}
+            {t('date_picker:DATE_PICKER.TODAY')}
           </Button>
 
           <div className="flex w-full items-center justify-between">

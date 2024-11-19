@@ -1,4 +1,9 @@
 {
+  "LOGIN": {
+    "LOG_IN_WITH_GOOGLE": "使用 Google 登录",
+    "LOG_IN_WITH_APPLE": "使用 Apple 登录"
+  },
+
   "DASHBOARD": {
     "DASHBOARD": "仪表板",
     "TO_DO_LIST": "待办事项",
@@ -28,7 +33,9 @@
   "COMMON": {
     "ERROR": "错误",
     "START": "开始",
-    "PREVIEW": "预览"
+    "PREVIEW": "预览",
+    "CANCEL": "取消",
+    "CREATE": "新增"
   },
 
   "HEADER": {
@@ -77,6 +84,23 @@
   },
 
   "TO_DO_LIST_PAGE": {
-    "TO_DO_LIST_TITLE": "待办事项"
+    "TO_DO_LIST_TITLE": "待办事项",
+    "ADD_EVENT": "新增事件",
+    "EVENT_LIST": "事件列表",
+    "ACTION": "操作",
+    "NO_PENDING_TASKS": "没有待办事项",
+    "ADD_NEW_EVENT": "新增事件",
+    "EVENT_NAME": "事件名称",
+    "ENTER_NAME": "输入名称",
+    "DEADLINE": "截止日期",
+    "PARTNER_TYPE": "合作伙伴类型",
+    "NOTE": "备注",
+    "ENTER_TEXT": "输入文字"
+  },
+
+  "PARTNER_TYPE": {
+    "CUSTOMER": "客户",
+    "VENDOR": "供应商",
+    "BOTH": "两者都是"
   }
 }

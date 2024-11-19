@@ -3,6 +3,7 @@ import MoreLink from '@/components/beta/dashboard/more_link';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { PiLinkBold } from 'react-icons/pi';
 import { useTranslation } from 'next-i18next';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const ToDoListNotLink = () => {
   const { t } = useTranslation('dashboard');
@@ -35,7 +36,7 @@ const ToDoListEmpty = () => {
         <h3 className="text-xl font-bold text-text-neutral-secondary">
           {t('dashboard:DASHBOARD.TO_DO_LIST')}
         </h3>
-        <MoreLink href={'/'} />
+        <MoreLink href={ISUNFA_ROUTE.TO_DO_LIST_PAGE} />
       </div>
 
       <div className="flex items-center justify-between">
@@ -75,7 +76,7 @@ const ToDoListHasPlan = () => {
         <h3 className="text-xl font-bold text-text-neutral-secondary">
           {t('dashboard:DASHBOARD.TO_DO_LIST')}
         </h3>
-        <MoreLink href={'/'} />
+        <MoreLink href={ISUNFA_ROUTE.TO_DO_LIST_PAGE} />
       </div>
 
       <div className="flex items-center justify-between">
