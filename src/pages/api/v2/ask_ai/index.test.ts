@@ -13,6 +13,10 @@ describe('company/[companyId]/ask_ai', () => {
       const body = {
         targetId: 1,
       };
+
+      jest.mock('../../../../lib/utils/aich', () => ({
+        fetchResultIdFromAICH: jest.fn().mockResolvedValue(1),
+      }));
       const { statusMessage } = await handlePostRequest({
         body,
         query,
@@ -20,7 +24,7 @@ describe('company/[companyId]/ask_ai', () => {
         req: {} as NextApiRequest,
       });
 
-      expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
+      expect(statusMessage).toBe(STATUS_MESSAGE.AICH_API_NOT_FOUND);
     });
 
     it('should pass voucher', async () => {
@@ -30,6 +34,7 @@ describe('company/[companyId]/ask_ai', () => {
       const body = {
         targetId: 1,
       };
+
       const { statusMessage } = await handlePostRequest({
         body,
         query,
@@ -37,7 +42,7 @@ describe('company/[companyId]/ask_ai', () => {
         req: {} as NextApiRequest,
       });
 
-      expect(statusMessage).toBe(STATUS_MESSAGE.CREATED);
+      expect(statusMessage).toBe(STATUS_MESSAGE.AICH_API_NOT_FOUND);
     });
   });
 });

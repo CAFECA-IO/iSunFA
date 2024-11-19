@@ -9,6 +9,7 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IAskResult } from '@/interfaces/ask_ai';
 import { AI_TYPE } from '@/constants/aich';
 import { fetchResultIdFromAICH } from '@/lib/utils/aich';
+import loggerBack from '@/lib/utils/logger_back';
 
 const handleCertificateRequest = async (key: AI_TYPE, targetId: number) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -16,13 +17,19 @@ const handleCertificateRequest = async (key: AI_TYPE, targetId: number) => {
 
   const certificate = { fileId: targetId };
 
-  const resultId = await fetchResultIdFromAICH(key, certificate);
-  statusMessage = STATUS_MESSAGE.CREATED;
-  payload = {
-    reason: key,
-    resultId,
-    progressStatus: ProgressStatus.IN_PROGRESS,
-  };
+  try {
+    const resultId = await fetchResultIdFromAICH(key, certificate);
+
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = {
+      reason: key,
+      resultId,
+      progressStatus: ProgressStatus.IN_PROGRESS,
+    };
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.AICH_API_NOT_FOUND;
+    loggerBack.error(error);
+  }
 
   return { statusMessage, payload };
 };
@@ -33,14 +40,19 @@ const handleVoucherRequest = async (key: AI_TYPE, targetId: number) => {
 
   const voucher = { certificateId: targetId };
 
-  const resultId = await fetchResultIdFromAICH(key, voucher);
+  try {
+    const resultId = await fetchResultIdFromAICH(key, voucher);
 
-  statusMessage = STATUS_MESSAGE.CREATED;
-  payload = {
-    reason: key,
-    resultId,
-    progressStatus: ProgressStatus.IN_PROGRESS,
-  };
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = {
+      reason: key,
+      resultId,
+      progressStatus: ProgressStatus.IN_PROGRESS,
+    };
+  } catch (error) {
+    statusMessage = STATUS_MESSAGE.AICH_API_NOT_FOUND;
+    loggerBack.error(error);
+  }
 
   return { statusMessage, payload };
 };
