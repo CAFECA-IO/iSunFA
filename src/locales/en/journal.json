@@ -299,5 +299,8 @@
     "PARTICULARS": "Particulars",
     "AMOUNT": "Amount",
     "REVERSE_AMOUNT": "Reverse Amount"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "Edit Voucher"
   }
 }

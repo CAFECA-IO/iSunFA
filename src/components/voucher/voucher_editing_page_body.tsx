@@ -1,30 +1,27 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/router';
+import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { BiSave } from 'react-icons/bi';
 import { FiSearch } from 'react-icons/fi';
-import { useTranslation } from 'next-i18next';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useHotkeys } from 'react-hotkeys-hook';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-// import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
 import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
+import {
+  ILineItemBeta,
+  ILineItemUI,
+  IReverseItem,
+  initialVoucherLine,
+} from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
-import {
-  // checkboxStyle,
-  inputStyle,
-  default30DayPeriodInSec,
-  // WEEK_FULL_LIST,
-  // MONTH_ABR_LIST,
-} from '@/constants/display';
+import { inputStyle, default30DayPeriodInSec } from '@/constants/display';
 import {
   VoucherType,
   EventType,
@@ -44,13 +41,259 @@ import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
 import { FREE_COMPANY_ID } from '@/constants/config';
-import { ISUNFA_ROUTE } from '@/constants/url';
-import { ToastType } from '@/interfaces/toastify';
+// import { ToastType } from '@/interfaces/toastify';
+import { IVoucherDetailForFrontend /* , defaultVoucherDetail  */ } from '@/interfaces/voucher';
+import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+import { CurrencyType } from '@/constants/currency';
 
-// enum RecurringUnit {
-//   MONTH = 'month',
-//   WEEK = 'week',
-// }
+// ToDo: (20241118 - Julian) For debug, remove later
+const defaultVoucherDetail: IVoucherDetailForFrontend = {
+  id: 1000,
+  voucherDate: 1704134230,
+  type: 'payment',
+  note: '',
+  counterParty: {
+    id: 1000,
+    companyId: 1000,
+    name: 'ABC Corp',
+  },
+  payableInfo: {
+    total: 1000,
+    alreadyHappened: 100,
+    remain: 900,
+  },
+  receivingInfo: undefined,
+  reverseVoucherIds: [
+    {
+      id: 1002,
+      voucherNo: '20240101003',
+    },
+  ],
+  assets: [
+    {
+      id: 1000,
+      assetName: 'Bank',
+      assetNumber: '1103',
+      assetType: 'asset',
+      depreciationStart: 1672531200,
+      depreciationMethod: 'straight-line',
+      usefulLife: 5,
+      relatedVouchers: [],
+      currencyAlias: CurrencyType.TWD,
+      acquisitionDate: 1672531200,
+      purchasePrice: 1000,
+      accumulatedDepreciation: 0,
+      residualValue: 0,
+      remainingLife: 5,
+      assetStatus: 'active',
+      createdAt: 1672531200,
+      updatedAt: 1672531200,
+      deletedAt: null,
+    },
+  ],
+  certificates: [
+    {
+      id: 1000,
+      name: 'Invoice-00000001',
+      companyId: 1000,
+      voucherNo: '20240101001',
+      unRead: true,
+      uploader: 'Updated Test_User_1',
+      invoice: {
+        id: 1000,
+        isComplete: true,
+        inputOrOutput: InvoiceTransactionDirection.OUTPUT,
+        date: 1,
+        no: '1',
+        currencyAlias: CurrencyType.TWD,
+        priceBeforeTax: 1000,
+        taxType: InvoiceTaxType.TAXABLE,
+        taxRatio: 5,
+        taxPrice: 50,
+        totalPrice: 1050,
+        type: InvoiceType.SALES_SPECIAL_TAX_CALCULATION,
+        deductible: true,
+        createdAt: 1,
+        updatedAt: 1,
+        counterParty: {
+          id: 1000,
+          companyId: 1000,
+          name: 'ABC Corp',
+          taxId: '123456789',
+          type: 'SUPPLIER',
+          note: 'Preferred supplier',
+          createdAt: 1622548800,
+          updatedAt: 1625130800,
+        },
+      },
+      file: {
+        id: 1000,
+        name: '100000.jpg',
+        url: 'https://example.com/uploads/100000.jpg',
+        size: 1024.5,
+        existed: true,
+      },
+      createdAt: 1672531200,
+      updatedAt: 1672531200,
+    },
+  ],
+  lineItemsInfo: {
+    lineItems: [
+      {
+        id: 10000280,
+        description: '償還應付帳款-銀行現金',
+        debit: false,
+        amount: 100,
+        account: {
+          id: 10000603,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: true,
+          liquidity: true,
+          name: '銀行存款',
+          code: '1103',
+          type: 'asset',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 10000281,
+        description: '購買存貨-機具設備成本',
+        debit: false,
+        amount: 500,
+        account: {
+          id: 10000981,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: false,
+          liquidity: true,
+          name: '機具設備成本',
+          code: '1701',
+          type: 'liability',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 10000285,
+        description: '購買存貨-銀行現金',
+        debit: false,
+        amount: 1000,
+        account: {
+          id: 10000603,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: true,
+          liquidity: true,
+          name: '銀行存款',
+          code: '1103',
+          type: 'asset',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 10000286,
+        description: '償還應付帳款-應付帳款',
+        debit: true,
+        amount: 100,
+        account: {
+          id: 10000981,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: false,
+          liquidity: true,
+          name: '應付帳款',
+          code: '2171',
+          type: 'liability',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 10000287,
+        description: '購買存貨-商品存貨',
+        debit: true,
+        amount: 1500,
+        account: {
+          id: 10001099,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: true,
+          liquidity: true,
+          name: '商品存貨',
+          code: '1301',
+          type: 'asset',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 1000,
+        description: '購買存貨-銀行現金',
+        debit: false,
+        amount: 1000,
+        account: {
+          id: 10000603,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: true,
+          liquidity: true,
+          name: '銀行存款',
+          code: '1103',
+          type: 'asset',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 1001,
+        description: '購買存貨-應付帳款',
+        debit: false,
+        amount: 500,
+        account: {
+          id: 10000981,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: false,
+          liquidity: true,
+          name: '應付帳款',
+          code: '2171',
+          type: 'liability',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+      {
+        id: 1002,
+        description: '購買存貨-商品存貨',
+        debit: true,
+        amount: 1500,
+        account: {
+          id: 10001099,
+          companyId: 1002,
+          system: 'IFRS',
+          debit: true,
+          liquidity: true,
+          name: '商品存貨',
+          code: '1301',
+          type: 'asset',
+          createdAt: 0,
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      },
+    ],
+  },
+};
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
@@ -72,24 +315,17 @@ const dummyAIResult: IAIResultVoucher = {
   lineItemsInfo: { lineItems: [] },
 };
 
-interface NewVoucherFormProps {
-  selectedData: { [id: string]: ICertificateUI };
-}
-
-const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
+const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   const { t } = useTranslation('common');
-  const router = useRouter();
 
   const { selectedCompany } = useUserCtx();
   const {
     getAccountListHandler,
     temporaryAssetList,
     clearTemporaryAssetHandler,
-    reverseList,
     clearReverseListHandler,
   } = useAccountingCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
-    useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
 
@@ -119,11 +355,37 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     isLoading: isCounterpartyLoading,
   } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
 
-  const {
-    trigger: createVoucher,
-    success: createSuccess,
-    isLoading: isCreating,
-  } = APIHandler(APIName.VOUCHER_POST_V2);
+  const { data: reverseData, isLoading: isReverseLoading } = APIHandler<IReverseItem[]>(
+    APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
+    { params: { companyId, voucherId } },
+    true
+  );
+
+  // Info: (20241118 - Julian) 取得 Voucher 資料
+  const { data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
+    APIName.VOUCHER_GET_BY_ID_V2,
+    { params: { companyId, voucherId } },
+    true
+  );
+
+  // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
+  // const {
+  //   trigger: updateVoucher,
+  //   success: updateSuccess,
+  //   isLoading: isUpdating,
+  // } = APIHandler(APIName.VOUCHER_UPDATE);
+
+  // Info: (20241118 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
+  // const {
+  //   trigger: deleteVoucher,
+  //   success: deleteSuccess,
+  //   isLoading: isDeleting,
+  // } = APIHandler(APIName.VOUCHER_DELETE_V2);
+  // const {
+  //   trigger: createNewVoucher,
+  //   success: createNewSuccess,
+  //   isLoading: isCreating,
+  // } = APIHandler(APIName.VOUCHER_CREATE);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -145,22 +407,46 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     0
   );
 
-  // Info: (20241105 - Julian) 從 useAccountingCtx 取得反轉傳票
-  const reverses = Object.values(reverseList).flatMap((reverse) => reverse);
+  // Info: (20241118 - Julian) 將 API 回傳的資料轉換成 UI 顯示用的格式
+  const {
+    voucherDate,
+    type: voucherType,
+    note: voucherNote,
+    lineItemsInfo: { lineItems: voucherLineItems },
+    certificates: voucherCertificates,
+    reverseVoucherIds: reverseVoucherList,
+    counterParty: voucherCounterParty,
+    assets: voucherAssets,
+  } = voucherData ?? defaultVoucherDetail;
 
-  // Info: (20241004 - Julian) 通用項目
-  const [date, setDate] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [type, setType] = useState<string>(VoucherType.EXPENSE);
-  const [note, setNote] = useState<string>('');
+  const defaultDate: IDatePeriod = {
+    startTimeStamp: voucherDate,
+    endTimeStamp: voucherDate,
+  };
 
-  // Info: (20241004 - Julian) 週期性分錄相關 state
-  // const [isRecurring, setIsRecurring] = useState<boolean>(false);
-  // const [recurringPeriod, setRecurringPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  // const [recurringUnit, setRecurringUnit] = useState<RecurringUnit>(RecurringUnit.MONTH);
-  // const [recurringArray, setRecurringArray] = useState<number[]>([]);
+  const defaultType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType] || voucherType;
 
-  // Info: (20241004 - Julian) 傳票列
-  const [voucherLineItems, setLineItems] = useState<ILineItemUI[]>([initialVoucherLine]);
+  const defaultLineItems: ILineItemUI[] = voucherLineItems.map((lineItem) => {
+    return {
+      ...lineItem,
+      isReverse: false,
+      reverseList: [],
+    };
+  });
+
+  const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
+    return {
+      ...certificate,
+      isSelected: false,
+      actions: [],
+    };
+  });
+
+  // Info: (20241118 - Julian) State
+  const [date, setDate] = useState<IDatePeriod>(defaultDate);
+  const [type, setType] = useState<string>(defaultType);
+  const [note, setNote] = useState<string>(voucherNote);
+  const [lineItems, setLineItems] = useState<ILineItemUI[]>(defaultLineItems);
 
   // Info: (20241004 - Julian) 傳票列驗證條件
   const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
@@ -177,18 +463,25 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
   const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
+  // Deprecated: (20241118 - Julian) implement later
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
   const [counterKeyword, setCounterKeyword] = useState<string>('');
-  const [counterparty, setCounterparty] = useState<ICounterparty | undefined>(undefined);
+  const [counterparty, setCounterparty] = useState<
+    | {
+        id: number;
+        companyId: number;
+        name: string;
+      }
+    | undefined
+  >(voucherCounterParty);
   const [filteredCounterparty, setFilteredCounterparty] = useState<ICounterparty[]>([]);
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
   const [isShowCounterHint, setIsShowCounterHint] = useState<boolean>(false);
-  // const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
-  // const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
   const [isShowReverseHint, setIsShowReverseHint] = useState<boolean>(false);
 
@@ -201,8 +494,44 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
 
+  // Info: (20241118 - Julian) 選擇憑證相關 state
+  // Deprecated: (20241118 - Julian) implement later
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedCertificates, setSelectedCertificates] = useState<{
+    [id: string]: ICertificateUI;
+  }>({});
+
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+  const [selectedCertificatesUI, setSelectedCertificatesUI] =
+    useState<ICertificateUI[]>(defaultCertificateUI);
+
+  //   useEffect(() => {
+  //     const storedCertificates = localStorage.getItem('selectedCertificates');
+  //     if (storedCertificates) {
+  //       setSelectedCertificates(JSON.parse(storedCertificates));
+  //       localStorage.removeItem('selectedCertificates');
+  //     }
+  //   }, []);
+
+  // Info: (20241118 - Julian) 將 reverse voucher 與 line item 掛鉤
+  useEffect(() => {
+    if (isReverseLoading === false && reverseData && reverseData.length > 0) {
+      const reverseList = reverseVoucherList
+        .map((reverseVoucher) => {
+          const reverseDetail = reverseData.find(
+            (item) => item.lineItemBeReversedId === reverseVoucher.id
+          );
+          return reverseDetail;
+        })
+        .filter((item) => item !== undefined) as IReverseItem[];
+
+      const lineItemsWithReverse = lineItems.map((lineItem) => {
+        return { ...lineItem, reverseList };
+      });
+
+      setLineItems(lineItemsWithReverse);
+    }
+  }, [reverseVoucherList, reverseData, isReverseLoading]);
 
   // Info: (20241108 - Julian) 需要交易對象的時候才拿 counterparty list
   useEffect(() => {
@@ -224,7 +553,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         };
       });
       setCertificates(updatedData);
-      setSelectedCertificates(
+      setSelectedCertificatesUI(
         Object.values(updatedData).filter((item) => item.isSelected) as ICertificateUI[]
       );
     },
@@ -232,7 +561,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   );
 
   useEffect(() => {
-    if (selectedCertificates.length > 0 && selectedIds.length > 0) {
+    if (selectedCertificatesUI.length > 0 && selectedIds.length > 0) {
       // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
       setAiState(AIState.WORKING);
       // Info: (20241021 - Julian) 呼叫 ask AI
@@ -271,14 +600,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   }, [isAIWorking, resultData, analyzeSuccess, isAskingAI]);
 
-  useEffect(() => {
-    const isReverse = reverses.length > 0;
-    setIsReverseRequired(isReverse);
-  }, [reverseList]);
-
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
-    setSelectedIds(selectedCertificates.map((item) => item.id));
+    setSelectedIds(selectedCertificatesUI.map((item) => item.id));
     setOpenSelectorModal(true);
   }, [selectedCertificates]);
 
@@ -306,7 +630,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         (acc, item) => {
           acc[item.id] = {
             ...item,
-            isSelected: selectedCertificates.some((selectedItem) => selectedItem.id === item.id),
+            isSelected: selectedCertificatesUI.some((selectedItem) => selectedItem.id === item.id),
             actions: [],
           };
           return acc;
@@ -338,13 +662,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     componentVisible: isSearchCounterparty,
     setComponentVisible: setIsSearchCounterparty,
   } = useOuterClick<HTMLDivElement>(false);
-
-  // Info: (20241007 - Julian) Recurring 下拉選單
-  // const {
-  //   targetRef: recurringRef,
-  //   componentVisible: isRecurringMenuOpen,
-  //   setComponentVisible: setRecurringMenuOpen,
-  // } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20241107 - Julian) ============ 熱鍵設置 ============
   const formRef = useRef<HTMLFormElement>(null);
@@ -407,48 +724,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       } else {
         ToNext();
       }
-
-      // switch (currentIndex) {
-      //   case dateIndex:
-      //     if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
-      //       focusableElements[voucherTypeIndex]?.focus();
-      //     } else ToNext();
-      //     break;
-      //   case voucherTypeIndex:
-      //     console.log('voucherTypeIndex');
-      //     ToNext();
-      //     break;
-      //   case noteIndex:
-      //     console.log('noteIndex');
-      //     ToNext();
-      //     break;
-      //   case counterpartyIndex:
-      //     console.log('counterpartyIndex');
-      //     // Info: (20241107 - Julian) 如果需填入交易對象，但交易對象未選擇，則聚焦到交易對象欄位
-      //     if (isCounterpartyRequired && !counterparty) {
-      //       focusableElements[counterpartyIndex]?.click();
-      //     } else {
-      //       ToNext();
-      //     }
-      //     break;
-      //   case assetIndex:
-      //     console.log('assetIndex');
-      //     // Info: (20241107 - Julian) 如果需填入資產，但資產為空，則聚焦到資產欄位
-      //     if (isAssetRequired && temporaryAssetList.length === 0) {
-      //       focusableElements[assetIndex]?.focus();
-      //     } else {
-      //       ToNext();
-      //     }
-      //     break;
-      //   case accountTitleIndex:
-      //     console.log('accountTitleIndex');
-      //     ToNext();
-      //     break;
-      //   default:
-      //     console.log('default');
-      //     focusableElements[0]?.focus();
-      //     break;
-      // }
     },
     [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetList]
   );
@@ -489,11 +764,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   }, [counterpartyData, isCounterpartyLoading]);
 
-  // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
-  // useEffect(() => {
-  //   setRecurringArray([]);
-  // }, [recurringUnit]);
-
   // Info: (20241007 - Julian) 日期未選擇時顯示提示
   useEffect(() => {
     if (date.startTimeStamp !== 0 && date.endTimeStamp !== 0) {
@@ -507,20 +777,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setIsShowCounterHint(false);
     }
   }, [counterparty]);
-
-  // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
-  // useEffect(() => {
-  //   if (isRecurring && recurringPeriod.startTimeStamp !== 0 && recurringPeriod.endTimeStamp !== 0) {
-  //     setIsShowRecurringPeriodHint(false);
-  //   }
-  // }, [isRecurring, recurringPeriod]);
-
-  // Info: (20241007 - Julian) 週期未選擇時顯示提示
-  // useEffect(() => {
-  //   if (isRecurring && recurringArray.length > 0) {
-  //     setIsShowRecurringArrayHint(false);
-  //   }
-  // }, [recurringArray]);
 
   useEffect(() => {
     if (isAssetRequired && temporaryAssetList.length > 0) {
@@ -543,25 +799,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setCounterKeyword(e.target.value);
   };
 
-  // const recurringToggleHandler = () => {
-  //   setIsRecurring(!isRecurring);
-  // };
-
-  // const recurringUnitToggleHandler = () => {
-  //   setRecurringMenuOpen(!isRecurringMenuOpen);
-  // };
-
   // Info: (20241018 - Julian) 欄位顯示
   const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterParty);
 
   // Info: (20240926 - Julian) type 字串轉換
-  const translateType = (voucherType: string) => {
-    const typeStr = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType];
+  const translateType = (typeStr: string) => {
+    const eventTypeToVoucherType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[typeStr as EventType];
 
-    if (typeStr) {
-      return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
+    if (eventTypeToVoucherType) {
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${eventTypeToVoucherType.toUpperCase()}`);
     } else {
-      return t(`journal:ADD_NEW_VOUCHER.TYPE_${voucherType.toUpperCase()}`);
+      return t(`journal:ADD_NEW_VOUCHER.TYPE_${typeStr.toUpperCase()}`);
     }
   };
 
@@ -573,24 +821,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     }
   };
 
-  // const translateUnit = (unit: RecurringUnit) => {
-  //   if (unit === RecurringUnit.WEEK) {
-  //     return t(`common:COMMON.WEEK`);
-  //   } else {
-  //     return t(`common:COMMON.YEAR`);
-  //   }
-  // };
-
   // Info: (20241004 - Julian) 清空表單
   const clearAllHandler = () => {
     setDate(default30DayPeriodInSec);
     setType(VoucherType.EXPENSE);
     setNote('');
     setCounterparty(undefined);
-    // setIsRecurring(false);
-    // setRecurringPeriod(default30DayPeriodInSec);
-    // setRecurringUnit(RecurringUnit.MONTH);
-    // setRecurringArray([]);
     clearTemporaryAssetHandler();
     clearReverseListHandler();
     setLineItems([initialVoucherLine]);
@@ -631,15 +867,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
-    const lineItems = voucherLineItems.map((lineItem) => {
-      return {
-        accountId: lineItem.account?.id ?? '',
-        amount: lineItem.amount,
-        debit: lineItem.debit,
-        description: lineItem.description,
-      };
-    });
-
     // Info: (20241105 - Julian) 如果沒有新增資產，就回傳空陣列
     const assetIds =
       isAssetRequired && temporaryAssetList.length > 0
@@ -653,17 +880,20 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       lineItemIdReverseOther: number;
       amount: number;
     }[] =
-      isReverseRequired && reverses.length > 0
-        ? reverses.map((reverse) => {
-            return {
-              voucherId: reverse.voucherId,
-              lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
-              lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
-              amount: reverse.amount,
-            };
-          })
-        : [];
+      // isReverseRequired && reverses.length > 0
+      //   ? reverses.map((reverse) => {
+      //       return {
+      //         voucherId: reverse.voucherId,
+      //         lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+      //         lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
+      //         amount: reverse.amount,
+      //       };
+      //     })
+      //       :
+      [];
 
+    // Deprecated: (20241118 - Julian) implement later
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const body = {
       actions,
       certificateIds: Object.values(certificates),
@@ -671,14 +901,19 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
       note,
       counterPartyId: counterparty?.companyId,
-      lineItems,
+      lineItems: lineItems.map((lineItem) => {
+        return {
+          accountId: lineItem.account?.id ?? '',
+          amount: lineItem.amount,
+          debit: lineItem.debit,
+          description: lineItem.description,
+        };
+      }),
       assetIds,
       reverseVouchers,
     };
 
-    clearTemporaryAssetHandler();
-    clearReverseListHandler();
-    createVoucher({ params: { companyId }, body });
+    // createVoucher({ params: { companyId }, body });
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -693,17 +928,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     } else if (isCounterpartyRequired && !counterparty) {
       setIsShowCounterHint(true);
       if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
-      // } else if (
-      //   // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
-      //   isRecurring &&
-      //   (recurringPeriod.startTimeStamp === 0 || recurringPeriod.endTimeStamp === 0)
-      // ) {
-      //   setIsShowRecurringPeriodHint(true);
-      //   router.push('#voucher-recurring');
-      // } else if (isRecurring && recurringArray.length === 0) {
-      //   // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
-      //   setIsShowRecurringArrayHint(true);
-      //   router.push('#voucher-recurring');
     } else if (
       isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
       isTotalNotEqual || // Info: (20241004 - Julian) 借貸金額需相等
@@ -717,7 +941,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
       setIsShowAssetHint(true);
       if (assetRef.current) assetRef.current.scrollIntoView();
-    } else if (isReverseRequired && reverses.length === 0) {
+    } else if (isReverseRequired /* && reverses.length === 0 */) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位
       setIsShowReverseHint(true);
     } else {
@@ -727,38 +951,36 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
       setIsShowCounterHint(false);
-      // setIsShowRecurringPeriodHint(false);
-      // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
       setIsShowReverseHint(false);
       setFlagOfSubmit(!flagOfSubmit);
     }
   };
 
-  useEffect(() => {
-    if (isCreating === false) {
-      if (createSuccess) {
-        router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241108 - Julian) Should be replaced by voucher detail page
-      } else {
-        toastHandler({
-          // ToDo: (20241108 - Julian) i18n
-          id: 'create-voucher-fail',
-          type: ToastType.ERROR,
-          content: 'Failed to create voucher, please try again later.',
-          closeable: true,
-        });
-      }
-    }
-  }, [createSuccess, isCreating]);
+  //   useEffect(() => {
+  //     if (isCreating === false) {
+  //       if (createSuccess) {
+  //         router.push(ISUNFA_ROUTE.VOUCHER_LIST); // ToDo: (20241108 - Julian) Should be replaced by voucher detail page
+  //       } else {
+  //         toastHandler({
+  //           // ToDo: (20241108 - Julian) i18n
+  //           id: 'create-voucher-fail',
+  //           type: ToastType.ERROR,
+  //           content: 'Failed to create voucher, please try again later.',
+  //           closeable: true,
+  //         });
+  //       }
+  //     }
+  //   }, [createSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
     <div
       ref={typeRef}
       className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu"
     >
-      {Object.values(VoucherType).map((voucherType) => {
+      {Object.values(VoucherType).map((v) => {
         const typeClickHandler = () => {
-          setType(voucherType);
+          setType(v);
           setTypeVisible(false);
         };
 
@@ -782,7 +1004,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       ref={counterpartyInputRef}
       value={counterKeyword}
       onChange={counterKeywordChangeHandler}
-      placeholder={getCounterpartyStr(counterparty)}
+      placeholder={`${counterparty?.id} - ${counterparty?.name}`}
       className="w-full truncate bg-transparent text-input-text-input-filled outline-none"
     />
   ) : (
@@ -791,7 +1013,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     >
       {isShowAnalysisPreview
         ? getCounterpartyStr(aiCounterParty)
-        : getCounterpartyStr(counterparty)}
+        : `${counterparty?.id} - ${counterparty?.name}`}
     </p>
   );
 
@@ -831,134 +1053,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     </div>
   ) : null;
 
-  // const recurringUnitMenu = (
-  //   <div
-  //     ref={recurringRef}
-  //     className={`absolute left-0 top-12 ${isRecurringMenuOpen ? 'flex' : 'hidden'} w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px`}
-  //   >
-  //     {Object.values(RecurringUnit).map((unit) => {
-  //       const recurringUnitClickHandler = () => {
-  //         setRecurringUnit(unit);
-  //         setRecurringMenuOpen(false);
-  //       };
-  //       return (
-  //         <button
-  //           key={unit}
-  //           type="button"
-  //           className="py-8px hover:bg-dropdown-surface-menu-background-secondary"
-  //           onClick={recurringUnitClickHandler}
-  //         >
-  //           {translateUnit(unit)}
-  //         </button>
-  //       );
-  //     })}
-  //   </div>
-  // );
-
-  // const recurringUnitCheckboxes =
-  //   recurringUnit === RecurringUnit.WEEK
-  //     ? Array.from({ length: 7 }, (_, i) => {
-  //         const week = i;
-  //         const weekChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //           if (e.target.checked) {
-  //             setRecurringArray([...recurringArray, week]);
-  //           } else {
-  //             setRecurringArray(recurringArray.filter((item) => item !== week));
-  //           }
-  //         };
-  //         // Info: (20241007 - Julian) 檢查 Array 是否有該值
-  //         const weekChecked = recurringArray.includes(week);
-
-  //         return (
-  //           <div key={week} className="flex items-center gap-8px whitespace-nowrap">
-  //             <input
-  //               type="checkbox"
-  //               id={`week-${week}`}
-  //               checked={weekChecked}
-  //               className={checkboxStyle}
-  //               onChange={weekChangeHandler}
-  //             />
-  //             <label htmlFor={`week-${week}`}>{t(WEEK_FULL_LIST[week])}</label>
-  //           </div>
-  //         );
-  //       })
-  //     : Array.from({ length: 12 }, (_, i) => {
-  //         const month = i + 1;
-  //         const monthChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //           if (e.target.checked) {
-  //             setRecurringArray([...recurringArray, month]);
-  //           } else {
-  //             setRecurringArray(recurringArray.filter((item) => item !== month));
-  //           }
-  //         };
-  //         // Info: (20241007 - Julian) 檢查 Array 是否有該值
-  //         const monthChecked = recurringArray.includes(month);
-
-  //         return (
-  //           <div key={month} className="flex items-center gap-8px whitespace-nowrap">
-  //             <input
-  //               type="checkbox"
-  //               id={`month-${month}`}
-  //               checked={monthChecked}
-  //               className={checkboxStyle}
-  //               onChange={monthChangeHandler}
-  //             />
-  //             <label htmlFor={`month-${month}`}>{t(MONTH_ABR_LIST[i])}</label>
-  //           </div>
-  //         );
-  //       });
-
-  // ToDo: (20241104 - Julian) 預計移到其他地方
-  // const displayedRecurring =  (
-  //   <div id="voucher-recurring" className="col-span-2 grid grid-cols-6 gap-16px">
-  //     {/* Info: (20241007 - Julian) switch */}
-  //     <div className="col-span-2 flex items-center gap-16px whitespace-nowrap text-switch-text-primary">
-  //       <Toggle
-  //         id="recurring-toggle"
-  //         initialToggleState={isRecurring}
-  //         getToggledState={recurringToggleHandler}
-  //       />
-  //       <p>{t('journal:ADD_NEW_VOUCHER.RECURRING_ENTRY')}</p>
-  //     </div>
-  //     {/* Info: (20241007 - Julian) recurring period */}
-  //     <div className={`${isRecurring ? 'block' : 'hidden'} col-span-4`}>
-  //       <DatePicker
-  //         type={DatePickerType.TEXT_PERIOD}
-  //         period={recurringPeriod}
-  //         setFilteredPeriod={setRecurringPeriod}
-  //         datePickerClassName="w-full"
-  //         btnClassName={isShowRecurringPeriodHint ? inputStyle.ERROR : ''}
-  //       />
-  //     </div>
-  //     {/* Info: (20241007 - Julian) recurring unit */}
-  //     <div
-  //       className={`${isRecurring ? 'flex' : 'hidden'} col-start-3 col-end-7 items-center gap-24px`}
-  //     >
-  //       {/* Info: (20241007 - Julian) recurring unit block */}
-  //       <div className="flex items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-  //         <p className="px-12px py-10px text-input-text-input-placeholder">
-  //           {t('journal:ADD_NEW_VOUCHER.EVERY')}
-  //         </p>
-  //         <div
-  //           onClick={recurringUnitToggleHandler}
-  //           className="relative flex flex-1 items-center justify-between px-12px py-10px text-input-text-input-filled hover:cursor-pointer"
-  //         >
-  //           <p className="w-50px">{translateUnit(recurringUnit)}</p>
-  //           <FaChevronDown />
-  //           {/* Info: (20240926 - Julian) recurring unit dropdown */}
-  //           {recurringUnitMenu}
-  //         </div>
-  //       </div>
-  //       {/* Info: (20241007 - Julian) recurring unit checkbox */}
-  //       <div
-  //         className={`flex items-center gap-12px overflow-x-auto ${isShowRecurringArrayHint ? inputStyle.ERROR : inputStyle.NORMAL}`}
-  //       >
-  //         {recurringUnitCheckboxes}
-  //       </div>
-  //     </div>
-  //   </div>
-  // )
-
   const certificateCreatedHandler = useCallback((message: { certificate: ICertificate }) => {
     const newCertificates = {
       ...certificates,
@@ -988,9 +1082,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, []);
 
   useEffect(() => {
-    setSelectedCertificates(Object.values(selectedData));
-    setSelectedIds(Object.keys(selectedData).map(Number));
-  }, [selectedData]);
+    setSelectedCertificatesUI(Object.values(selectedCertificates));
+    setSelectedIds(Object.keys(selectedCertificates).map(Number));
+  }, [selectedCertificates]);
 
   return (
     <div className="relative flex flex-col items-center gap-40px p-40px">
@@ -1019,7 +1113,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       />
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
       <CertificateSelection
-        selectedCertificates={selectedCertificates}
+        selectedCertificates={selectedCertificatesUI}
         setOpenModal={handleOpenSelectorModal}
         isSelectable
         isDeletable
@@ -1104,12 +1198,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             {counterpartyDropMenu}
           </div>
         )}
-        {/* Info: (20241007 - Julian) Recurring */}
-
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
           <div ref={assetRef} className="col-span-2 flex flex-col">
-            <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
+            <AssetSection
+              isShowAssetHint={isShowAssetHint}
+              lineItems={lineItems}
+              defaultAssetList={voucherAssets}
+            />
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
@@ -1128,7 +1224,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             ) : null}
             <div ref={voucherLineRef} className="col-span-2">
               <VoucherLineBlock
-                lineItems={voucherLineItems}
+                lineItems={lineItems}
                 setLineItems={setLineItems}
                 flagOfClear={flagOfClear}
                 flagOfSubmit={flagOfSubmit}
@@ -1169,4 +1265,4 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   );
 };
 
-export default NewVoucherForm;
+export default VoucherEditingPageBody;

@@ -8,9 +8,11 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 // import { numberWithCommas } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { ILineItemBeta } from '@/interfaces/line_item';
 
 interface IVoucherLineItemProps {
   id: number;
+  data: ILineItemBeta;
   flagOfClear: boolean;
   flagOfSubmit: boolean;
   accountIsNull: boolean;
@@ -25,6 +27,7 @@ interface IVoucherLineItemProps {
 
 const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   id,
+  data,
   flagOfClear,
   flagOfSubmit,
   accountIsNull,
@@ -96,6 +99,24 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setComponentVisible: setIsAccountEditing,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20241118 - Julian) 設定預設值
+  useEffect(() => {
+    const { account, description, debit: isDebit, amount } = data;
+
+    // Info: (20241118 - Julian) default
+    const defaultAccountTitle = account
+      ? `${account.code} ${account.name}`
+      : t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING');
+
+    const defaultDebit = isDebit ? amount : 0;
+    const defaultCredit = isDebit ? 0 : amount;
+
+    setAccountTitle(defaultAccountTitle);
+    setParticulars(description);
+    setDebitInput(defaultDebit.toString());
+    setCreditInput(defaultCredit.toString());
+  }, [data]);
+
   useEffect(() => {
     getAccountList({
       query: {
@@ -159,8 +180,9 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setAmountStyle(inputStyle.NORMAL);
   }, [debitInput, creditInput]);
 
-  const isDebitDisabled = creditInput !== '';
-  const isCreditDisabled = debitInput !== '';
+  // Info: (20241118 - Julian) 若借方金額不為 0，則禁用貸方金額輸入；反之亦然
+  const isDebitDisabled = creditInput !== '0' && creditInput !== '';
+  const isCreditDisabled = debitInput !== '0' && debitInput !== '';
 
   const accountSearchHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);

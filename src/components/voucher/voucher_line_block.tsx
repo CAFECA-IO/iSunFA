@@ -203,6 +203,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
             <VoucherLineItem
               key={`${lineItem.id}-voucher-line`}
               id={lineItem.id}
+              data={lineItem}
               deleteHandler={deleteVoucherLine}
               accountTitleHandler={accountTitleHandler}
               particularsChangeHandler={particularsChangeHandler}
