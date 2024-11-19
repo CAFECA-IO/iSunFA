@@ -33,7 +33,9 @@
   "COMMON": {
     "ERROR": "錯誤",
     "START": "開始",
-    "PREVIEW": "預覽"
+    "PREVIEW": "預覽",
+    "CANCEL": "取消",
+    "SUBMIT": "提交"
   },
 
   "HEADER": {
@@ -82,6 +84,23 @@
   },
 
   "TO_DO_LIST_PAGE": {
-    "TO_DO_LIST_TITLE": "待辦事項"
+    "TO_DO_LIST_TITLE": "待辦事項",
+    "ADD_EVENT": "新增事件",
+    "EVENT_LIST": "事件列表",
+    "ACTION": "操作",
+    "NO_PENDING_TASKS": "沒有待辦事項",
+    "ADD_NEW_EVENT": "新增事件",
+    "EVENT_NAME": "事件名稱",
+    "ENTER_NAME": "輸入名稱",
+    "DEADLINE": "截止日期",
+    "PARTNER_TYPE": "合作夥伴類型",
+    "NOTE": "備註",
+    "ENTER_TEXT": "輸入文字"
+  },
+
+  "PARTNER_TYPE": {
+    "CUSTOMER": "客戶",
+    "VENDOR": "供應商",
+    "BOTH": "兩者都是"
   }
 }
