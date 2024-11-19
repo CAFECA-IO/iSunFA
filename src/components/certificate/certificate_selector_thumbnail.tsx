@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificatePreviewModal from '@/components/certificate/certificate_preview_modal';
+import { DEFAULT_CERTIFICATE_IMAGE_URL } from '@/constants/display';
 
 interface CertificateSelectorThumbnailProps {
   certificate: ICertificateUI;
@@ -50,7 +51,7 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
       >
         <div className={`relative h-136px w-85px ${!isSelected || !isSelectable ? 'group' : ''}`}>
           <Image
-            src={certificate.file.url}
+            src={certificate.file?.url ?? DEFAULT_CERTIFICATE_IMAGE_URL}
             alt="AI"
             width={85}
             height={136}
