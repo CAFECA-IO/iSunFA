@@ -2,7 +2,7 @@ import { IEventEntity } from '@/interfaces/event';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
 import { Logger } from 'pino';
-import { IGetOneVoucherResponse } from '@/interfaces/voucher';
+import { IGetOneVoucherResponse, IVoucherEntity } from '@/interfaces/voucher';
 import loggerBack from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
@@ -30,6 +30,15 @@ import { parsePrismaInvoiceToInvoiceEntity } from '@/lib/utils/formatter/invoice
 import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaCertificateToCertificateEntity } from '@/lib/utils/formatter/certificate.formatter';
+import { initEventEntity } from '@/lib/utils/event';
+import { EventEntityFrequency, EventEntityType } from '@/constants/event';
+import { initVoucherEntity } from '@/lib/utils/voucher';
+import { JOURNAL_EVENT } from '@/constants/journal';
+import { parsePrismaAssociateLineItemToEntity } from '@/lib/utils/formatter/associate_line_item.formatter';
+import { parsePrismaAssociateVoucherToEntity } from '@/lib/utils/formatter/associate_voucher.formatter';
+import { IAssociateLineItemEntity } from '@/interfaces/associate_line_item';
+import { IAssociateVoucherEntity } from '@/interfaces/associate_voucher';
+import { IAccountEntity } from '@/interfaces/accounting_account';
 
 export const voucherAPIGetOneUtils = {
   /**
@@ -841,4 +850,147 @@ export const voucherAPIPutUtils = {
     });
     return reverseRelationNeedToBeReplaceMap;
   },
+};
+
+export const voucherAPIDeleteUtils = {
+  /**
+   * Info: (20241118 - Murky)
+   * @description reverse credit and debit of lineItem,
+   *  so it can strike a balance for original voucher
+   */
+  getDeleteVersionReverseLineItemPairs: (
+    lineItemEntities: (ILineItemEntity & {
+      account: IAccountEntity;
+      resultLineItems: (IAssociateLineItemEntity & {
+        associateVoucher: IAssociateVoucherEntity & {
+          event: IEventEntity;
+        };
+        originalLineItem: ILineItemEntity & {
+          account: IAccountEntity;
+        };
+      })[];
+    })[]
+  ) => {
+    const reverseLineItems = lineItemEntities.map((lineItem) => {
+      const newLineItem = { ...lineItem };
+      newLineItem.debit = !lineItem.debit;
+      return {
+        originLineItem: lineItem,
+        newDeleteReverseLineItem: newLineItem,
+      };
+    });
+    return reverseLineItems;
+  },
+
+  initOriginalLineItemEntities: (voucher: IGetOneVoucherResponse) => {
+    const lineItemsDto = voucher.lineItems;
+    const lineItems = lineItemsDto.map((dto) => {
+      const lineItemEntity = parsePrismaLineItemToLineItemEntity(dto);
+      const accountEntity = parsePrismaAccountToAccountEntity(dto.account);
+      const resultLineItems = dto.resultLineItem.map((result) => {
+        const resultAssociateLineItem = parsePrismaAssociateLineItemToEntity(result);
+        const originalLineItem = parsePrismaLineItemToLineItemEntity(result.originalLineItem);
+        const originalAccount = parsePrismaAccountToAccountEntity(result.originalLineItem.account);
+        const associateEvent = parsePrismaEventToEventEntity(result.accociateVoucher.event);
+        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.accociateVoucher);
+
+        const newResultAssociateLineItem: IAssociateLineItemEntity & {
+          associateVoucher: IAssociateVoucherEntity & {
+            event: IEventEntity;
+          };
+          originalLineItem: ILineItemEntity & {
+            account: IAccountEntity;
+          };
+        } = {
+          ...resultAssociateLineItem,
+          originalLineItem: {
+            ...originalLineItem,
+            account: originalAccount,
+          },
+          associateVoucher: {
+            ...associateVoucher,
+            event: associateEvent,
+          },
+        };
+
+        return newResultAssociateLineItem;
+      });
+      const newLineItem = {
+        ...lineItemEntity,
+        account: accountEntity,
+        resultLineItems,
+      };
+      return newLineItem;
+    });
+    return lineItems;
+  },
+
+  initDeleteVoucherEntity: (options: {
+    nowInSecond: number;
+    voucherBeenDeleted: IVoucherEntity;
+    deleteVersionLineItems: ILineItemEntity[];
+  }) => {
+    const { nowInSecond, voucherBeenDeleted, deleteVersionLineItems } = options;
+    const voucher = initVoucherEntity({
+      issuerId: voucherBeenDeleted.issuerId,
+      counterPartyId: voucherBeenDeleted.counterPartyId,
+      companyId: voucherBeenDeleted.companyId,
+      status: JOURNAL_EVENT.UPLOADED,
+      editable: false,
+      no: voucherBeenDeleted.no,
+      date: nowInSecond,
+      type: voucherBeenDeleted.type,
+      lineItems: deleteVersionLineItems,
+    });
+    return voucher;
+  },
+
+  initDeleteEventEntity: (options: {
+    nowInSecond: number;
+    voucherBeenDeleted: IVoucherEntity;
+    voucherDeleteOther: IVoucherEntity;
+  }) => {
+    const { nowInSecond, voucherBeenDeleted, voucherDeleteOther } = options;
+    const eventEntity = initEventEntity({
+      eventType: EventEntityType.DELETE,
+      frequency: EventEntityFrequency.ONCE,
+      startDate: nowInSecond,
+      endDate: nowInSecond,
+      createdAt: nowInSecond,
+      updatedAt: nowInSecond,
+      associateVouchers: [
+        {
+          originalVoucher: voucherBeenDeleted,
+          resultVoucher: voucherDeleteOther,
+        },
+      ],
+    });
+    return eventEntity;
+  },
+
+  deepCopyVoucherEntity: (voucherEntity: IVoucherEntity) => {
+    const voucher = initVoucherEntity({
+      ...voucherEntity,
+    });
+    return voucher;
+  },
+
+  isReverseEventNeeded: (voucher: IGetOneVoucherResponse) => {
+    const isReverseNeeded = voucher.lineItems.some((lineItem) => {
+      return !!lineItem.resultLineItem.length;
+    });
+    return isReverseNeeded;
+  },
+
+  isAssetEventNeeded: (voucher: IGetOneVoucherResponse) => {
+    return !!voucher.assetVouchers.length;
+  },
+
+  // initDeleteVoucherEntity: (options: {
+  //   nowInSecond: number;
+  //   lineItems: ILineItemEntity[];
+
+  // }) => {
+  //   return voucher;
+  // }
 };
