@@ -191,6 +191,7 @@ export async function fuzzySearchCounterpartyByName(name: string, companyId: num
   const counterpartyName = name || '';
 
   try {
+    // Info: (20241119 - Luphia) be mindful of the risks associated with raw queries
     const counterparties: Counterparty[] = await prisma.$queryRaw`
       SELECT * FROM public."counterparty"
       WHERE company_id = ${companyId}
