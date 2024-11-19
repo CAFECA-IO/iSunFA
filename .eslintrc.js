@@ -2,15 +2,15 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     parser: '@babel/eslint-parser',
-    ecmaVersion: 2020, // 支援 ECMAScript2020
-    sourceType: 'module', // 使用 ECMAScript ****module
+    ecmaVersion: 2020, // Info: (20241118 - Anna) 支援 ECMAScript2020
+    sourceType: 'module', // Info: (20241118 - Anna) 使用 ECMAScript ****module
     ecmaFeatures: {
-      jsx: true, // 支援 JSX
+      jsx: true, // Info: (20241118 - Anna) 支援 JSX
       experimentalObjectRestSpread: true,
     },
     project: './tsconfig.eslint.json',
   },
-  // 加上 ts 相關規則
+  // Info: (20241118 - Anna) 加上 ts 相關規則
   overrides: [
     {
       files: ['*.ts', '*.tsx', '**/*.ts', '**/*.tsx'],
@@ -54,7 +54,7 @@ module.exports = {
         'react/jsx-curly-brace-presence': 'off',
         'import/prefer-default-export': 'off',
         '@typescript-eslint/quotes': 'off',
-        // 關閉 Airbnb 排版相關的規則
+        // Info: (20241118 - Anna) 關閉 Airbnb 排版相關的規則
         'react/jsx-closing-bracket-location': 'off',
         'react/jsx-closing-tag-location': 'off',
         'react/jsx-curly-spacing': 'off',
@@ -125,7 +125,7 @@ module.exports = {
     'react/jsx-curly-brace-presence': 'off',
     'import/prefer-default-export': 'off',
     '@typescript-eslint/quotes': 'off',
-    // 關閉 Airbnb 排版相關的規則
+    // Info: (20241118 - Anna) 關閉 Airbnb 排版相關的規則
     'react/jsx-closing-bracket-location': 'off',
     'react/jsx-closing-tag-location': 'off',
     'react/jsx-curly-spacing': 'off',
@@ -145,11 +145,11 @@ module.exports = {
     // 'react-hooks/exhaustive-deps': 'warn', // Info: (20241117 - Liz) 檢查 effect 的依賴, 請不要刪除, 開發的時候我們可以打開使用, 等到 build 的時候再註解掉
   },
 
-  // 整合 prettier 和解決 prettier 衝突問題
+  // Info: (20241118 - Anna) 整合 prettier 和解決 prettier 衝突問題
   plugins: ['tailwindcss', '@babel', 'prettier', 'react', 'react-hooks'],
   settings: {
     tailwindcss: {
-      // These are the default values but feel free to customize
+      // Info: (20241118 - Anna) These are the default values but feel free to customize
       callees: ['classnames', 'clsx', 'ctl'],
       config: 'tailwind.config.ts',
       cssFiles: ['**/*.css', '!**/node_modules', '!**/.*', '!**/dist', '!**/build'],
@@ -169,6 +169,6 @@ module.exports = {
       },
     },
   },
-  // 讓 eslint 知道我們在使用 jest ，這樣在跑 test.js 時 eslint 就不會報 jest 關鍵字的錯誤了
+  // Info: (20241118 - Anna) 讓 eslint 知道我們在使用 jest ，這樣在跑 test.js 時 eslint 就不會報 jest 關鍵字的錯誤了
   env: { browser: true, node: true, es6: true, jest: true },
 };

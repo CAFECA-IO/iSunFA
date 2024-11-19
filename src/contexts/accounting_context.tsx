@@ -135,10 +135,10 @@ interface IAccountingContext {
   excludeUploadIdentifier: (OCRs: IOCR[], pendingOCRs: IOCRItem[]) => IOCRItem[];
 
   // Info: (20241025 - Julian) 暫存的資產列表 (用於新增資產顯示)
-  temporaryAssetList: IAssetDetails[];
-  addTemporaryAssetHandler: (asset: IAssetDetails) => void;
-  deleteTemporaryAssetHandler: (assetId: number) => void;
-  clearTemporaryAssetHandler: () => void;
+  temporaryAssetList: { [key: number]: IAssetDetails[] };
+  addTemporaryAssetHandler: (userId: number, asset: IAssetDetails) => void;
+  deleteTemporaryAssetHandler: (userId: number, assetNumber: string) => void;
+  clearTemporaryAssetHandler: (userId: number) => void;
 
   // Info: (20241105 - Julian) 反轉分錄列表
   reverseList: {
@@ -192,7 +192,7 @@ const initialAccountingContext: IAccountingContext = {
   pendingOCRListFromBrowser: [],
   excludeUploadIdentifier: () => [],
 
-  temporaryAssetList: [],
+  temporaryAssetList: {},
   addTemporaryAssetHandler: () => {},
   deleteTemporaryAssetHandler: () => {},
   clearTemporaryAssetHandler: () => {},
@@ -259,7 +259,9 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [pendingOCRListFromBrowser, setPendingOCRListFromBrowser] = useState<IOCRItem[]>([]);
   const [unprocessedOCRs, setUnprocessedOCRs] = useState<IOCR[]>([]);
 
-  const [temporaryAssetList, setTemporaryAssetList] = useState<IAssetDetails[]>([]);
+  const [temporaryAssetList, setTemporaryAssetList] = useState<{ [key: string]: IAssetDetails[] }>(
+    {}
+  );
 
   const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
 
@@ -744,19 +746,34 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     [voucherPreview]
   );
 
-  // Info: (20241025 - Julian) 新增項目到暫存資產列表
-  const addTemporaryAssetHandler = (asset: IAssetDetails) => {
-    setTemporaryAssetList((prev) => [...prev, asset]);
+  // Info: (20241119 - Julian) 將 Asset list 與 user id 綁定，用於新增資產顯示
+  const addTemporaryAssetHandler = (userId: number, asset: IAssetDetails) => {
+    setTemporaryAssetList((prev) => {
+      return {
+        ...prev,
+        [userId]: [...(prev[userId] ?? []), asset],
+      };
+    });
   };
 
-  // Info: (20241025 - Julian) 刪除暫存資產列表中的項目
-  const deleteTemporaryAssetHandler = (assetId: number) => {
-    setTemporaryAssetList((prev) => prev.filter((asset) => asset.id !== assetId));
+  // Info: (20241119 - Julian) 刪除該用戶暫存在資產列表中的項目
+  const deleteTemporaryAssetHandler = (userId: number, assetNumber: string) => {
+    setTemporaryAssetList((prev) => {
+      return {
+        ...prev,
+        [userId]: prev[userId]?.filter((asset) => asset.assetNumber !== assetNumber),
+      };
+    });
   };
 
-  // Info: (20241025 - Julian) 清空暫存資產列表
-  const clearTemporaryAssetHandler = () => {
-    setTemporaryAssetList([]);
+  // Info: (20241119 - Julian) 清空該用戶暫存在資產列表
+  const clearTemporaryAssetHandler = (userId: number) => {
+    setTemporaryAssetList((prev) => {
+      return {
+        ...prev,
+        [userId]: [],
+      };
+    });
   };
 
   // Info: (20241105 - Julian) 新增反轉分錄列表

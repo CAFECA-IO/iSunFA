@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import { Button } from '@/components/button/button';
 import CreateCompanyModal from '@/components/beta/my_company_list_page/create_company_modal';
 import CompanyListModal from '@/components/company_settings/company_list_modal';
 
@@ -36,30 +35,28 @@ const CompanySettings: React.FC<CompanySettingsProps> = () => {
         </div>
         <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
-      <Button
+      <button
         id="setting-add-company"
         type="button"
-        variant="linkBorderless"
-        className="mb-lv-7 justify-start p-0"
+        className="group mb-lv-7 inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-text-neutral-link hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
         onClick={toggleCreateCompanyModal}
       >
         <p className="flex gap-2">
           <Image src="/icons/plus.svg" width={16} height={16} alt="notice_icon" />
           <span>{t('setting:NORMAL.ADD_A_COMPANY')}</span>
         </p>
-      </Button>
-      <Button
+      </button>
+      <button
         id="setting-list-company"
         type="button"
-        variant="linkBorderless"
-        className="justify-start p-0"
+        className="group inline-flex items-center justify-start whitespace-nowrap rounded-xs border-none font-medium text-text-neutral-link hover:text-button-text-primary-hover focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:text-button-text-disable disabled:opacity-100"
         onClick={toggleCompanyListModal}
       >
         <p className="flex gap-2">
           <Image src="/icons/notification-text.svg" width={16} height={16} alt="notice_icon" />
           <span>{t('setting:NORMAL.VIEW_ALL_COMPANIES')}</span>
         </p>
-      </Button>
+      </button>
     </div>
   );
 };

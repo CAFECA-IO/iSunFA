@@ -37,7 +37,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   return (
     <div className="bg-brand-gradient flex items-center gap-lv-7 rounded-md p-4 shadow-normal_setting_brand">
       {isIPModalOpen && (
-        <IPModal userId={userId} toggleModal={toggleIPModal} userActionLogs={userActionLogs} />
+        <IPModal userId={userId} toggleModal={toggleIPModal} pageData={userActionLogs} />
       )}
       <Image
         alt="avatar"

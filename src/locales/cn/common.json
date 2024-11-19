@@ -95,13 +95,9 @@
     "M": "月",
     "Y": "年",
     "D": "日",
-    "V": "v",
     "OR": "或",
     "ERROR_CODE": "错误代码: {{code}}",
     "CANCEL": "取消",
-    "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "第一次登录时，请阅读并同意",
-    "AGREE_TO_OUR_TERMS_OF_SERVICE": "同意我们的服务条款",
-    "AGREE_TO_OUR_PRIVACY_POLICY": "同意我们的隐私权政策",
     "ALPHA_TEST_REMINDER": "Alpha 版本的资料只用于测试",
     "TYPE": "类型",
     "EMPLOYEE": "员工",
@@ -343,5 +339,10 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上传文件: <{{name}}> 时出现错误"
+  },
+  "USER": {
+    "DELETE_WARNING": "此账户将在 {{days}} 个工作日内被删除。",
+    "DELETE_HINT": "请确保数据备份。如需取消删除过程，请前往设置页面。",
+    "SETTING": "设定"
   }
 }

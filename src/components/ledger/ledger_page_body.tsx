@@ -66,13 +66,14 @@ const LedgerPageBody = () => {
       const query = {
         startDate: selectedDateRange.startTimeStamp,
         endDate: selectedDateRange.endTimeStamp,
-        startAccountNo: selectedStartAccountNo || null, // 若為選填，使用 null 表示不填
+        startAccountNo: selectedStartAccountNo || null, // Info: (20241118 - Anna) 若為選填，使用 null 表示不填
         endAccountNo: selectedEndAccountNo || null,
-        labelType: selectedReportType.toLowerCase(), // 確保傳遞的是小寫的值
+        labelType: selectedReportType.toLowerCase(), // Info: (20241118 - Anna) 確保傳遞的是小寫的值
       };
 
       const params = { companyId: selectedCompany.id };
 
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.log('Fetching ledger data with params and query:', {
         params,
@@ -183,26 +184,37 @@ const LedgerPageBody = () => {
         setOtherComprehensiveIncomeOptions(otherComprehensiveIncomes);
 
         // Info: (20241105 - Anna) 印出各類別的會計科目
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Assets:', assets);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Liabilities:', liabilities);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Equities:', equities);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Revenues:', revenues);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Costs:', costs);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Expenses:', expenses);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('Incomes:', incomes);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         // console.log('GainsOrLosses:', gainsOrLosses);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('OtherComprehensiveIncomes:', otherComprehensiveIncomes);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         // console.log('CashFlows:', cashFlows);
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         // console.log('Others:', others);
       }
@@ -292,13 +304,15 @@ const LedgerPageBody = () => {
             incomeOptions={incomeOptions}
             otherComprehensiveIncomeOptions={otherComprehensiveIncomeOptions}
             onRangeSelected={(startAccountNo, endAccountNo) => {
+              // Deprecate: (20241118 - Anna) debug
               // eslint-disable-next-line no-console
               console.log('Selected Account Range:', startAccountNo, endAccountNo);
               setSelectedStartAccountNo(startAccountNo);
               setSelectedEndAccountNo(endAccountNo);
             }}
             // onRangeSelected={(from, to) => {
-            //   // eslint-disable-next-line no-console
+                 // Deprecate: (20241118 - Anna) debug
+                 // eslint-disable-next-line no-console
             //   console.log(`Selected From: ${from}, To: ${to}`); // Info: (20241104 - Anna) Confirm data flow here if needed
             // }}
           />
@@ -306,8 +320,8 @@ const LedgerPageBody = () => {
 
         <div className="h-px w-full bg-neutral-100"></div>
         <LedgerList
-          ledgerData={ledgerData?.payload || null} // 如果 ledgerData 是 undefined，傳遞 null
-          loading={!!isLoading} // 使用 !! 確保 loading 是 boolean
+          ledgerData={ledgerData?.payload || null} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
+          loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
         />
       </div>
     </div>

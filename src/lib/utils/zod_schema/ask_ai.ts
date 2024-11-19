@@ -1,4 +1,4 @@
-import { VoucherType } from '@/constants/account';
+import { ProgressStatus, VoucherType } from '@/constants/account';
 import { AI_TYPE } from '@/constants/aich';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { z, ZodRawShape } from 'zod';
@@ -76,6 +76,20 @@ const IAIResultVoucherSchema = z
   })
   .strict(); // Info: (20241107 - Murky) strict可以過濾掉多餘的key
 
+const askAIPostQuerySchema = z.object({
+  reason: z.nativeEnum(AI_TYPE),
+});
+
+const askAIPostBodySchema = z.object({
+  targetId: z.number().int(),
+});
+
+const askAIPostOutputSchema = z.object({
+  reason: z.nativeEnum(AI_TYPE),
+  resultId: z.string(),
+  progressStatus: z.nativeEnum(ProgressStatus),
+});
+
 const askAIGetResultOutputV2Schema = z
   .union([
     z.null(), // Info: (20241107 - Murky) IHandleRequest 預設可能會回傳null
@@ -148,4 +162,13 @@ export const askAIGetResultV2Schema = {
   },
   outputSchema: askAIGetResultOutputV2Schema,
   frontend: askAIGetResultFrontendV2Schema,
+};
+
+export const askAiPostSchema = {
+  input: {
+    querySchema: askAIPostQuerySchema,
+    bodySchema: askAIPostBodySchema,
+  },
+  outputSchema: askAIPostOutputSchema,
+  frontend: nullSchema,
 };

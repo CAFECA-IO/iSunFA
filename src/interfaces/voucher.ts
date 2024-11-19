@@ -23,7 +23,7 @@ import {
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/company';
-import type { ICounterPartyEntity } from '@/interfaces/counterparty';
+import type { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
@@ -701,5 +701,21 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
         event: PrismaEvent;
       };
     })[];
+    resultLineItem: (PrismaAssociateLineItem & {
+      originalLineItem: PrismaLineItem & {
+        account: PrismaAccount;
+      };
+      accociateVoucher: PrismaAssociateVoucher & {
+        event: PrismaEvent;
+      };
+    })[];
   })[];
 };
+
+export interface IAIResultVoucher {
+  voucherDate: number;
+  type: string;
+  note: string;
+  counterParty?: ICounterparty;
+  lineItems: ILineItemBeta[];
+}

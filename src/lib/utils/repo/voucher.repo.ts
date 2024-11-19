@@ -1,6 +1,7 @@
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
+import { Prisma, Voucher as PrismaVoucher } from '@prisma/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
@@ -20,6 +21,9 @@ import { IUserEntity } from '@/interfaces/user';
 import { assert } from 'console';
 import { EventType } from '@/constants/account';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
+import { IAccountEntity } from '@/interfaces/accounting_account';
+import { IAssociateLineItemEntity } from '@/interfaces/associate_line_item';
+import { IAssociateVoucherEntity } from '@/interfaces/associate_voucher';
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -683,22 +687,25 @@ export async function putVoucherWithoutCreateNew(
       assetIdsNeedToBeRemoved: number[];
       assetIdsNeedToBeAdded: number[];
     };
-    reverseRelationNeedToBeReplace: {
-      eventId: number;
-      original: {
+    reverseRelationNeedToBeReplace: Map<
+      string,
+      {
         eventId: number;
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
-      };
-      new: {
-        lineItemIdBeReversed: number;
-        lineItemReverseOther: ILineItemEntity;
-        amount: number;
-        voucherId: number;
-      };
-    }[];
+        original: {
+          eventId: number;
+          lineItemIdBeReversed: number;
+          lineItemReverseOther: ILineItemEntity;
+          amount: number;
+          voucherId: number;
+        }[];
+        new: {
+          lineItemIdBeReversed: number;
+          lineItemReverseOther: ILineItemEntity;
+          amount: number;
+          voucherId: number;
+        }[];
+      }
+    >;
   }
 ) {
   const nowInSecond = getTimestampNow();
@@ -711,108 +718,127 @@ export async function putVoucherWithoutCreateNew(
     reverseRelationNeedToBeReplace,
   } = options;
 
-  const voucherUpdated = await prisma.$transaction(async (tx) => {
-    const voucher = await tx.voucher.update({
-      where: {
-        id: voucherId,
-      },
-      data: {
-        issuer: {
-          connect: {
-            id: issuerId,
-          },
-        },
-        counterparty: {
-          connect: {
-            id: counterPartyId,
-          },
-        },
-        type: voucherInfo.type,
-        note: voucherInfo.note,
-        date: voucherInfo.voucherDate,
-        updatedAt: nowInSecond,
-      },
-    });
-
-    if (certificateOptions.certificateIdsNeedToBeRemoved.length > 0) {
-      await tx.voucherCertificate.deleteMany({
+  let voucherUpdated: PrismaVoucher | null = null;
+  try {
+    voucherUpdated = await prisma.$transaction(async (tx) => {
+      const voucher = await tx.voucher.update({
         where: {
-          voucherId,
-          certificateId: {
-            in: certificateOptions.certificateIdsNeedToBeRemoved,
+          id: voucherId,
+        },
+        data: {
+          issuer: {
+            connect: {
+              id: issuerId,
+            },
           },
+          counterparty: {
+            connect: {
+              id: counterPartyId,
+            },
+          },
+          type: voucherInfo.type,
+          note: voucherInfo.note,
+          date: voucherInfo.voucherDate,
+          updatedAt: nowInSecond,
         },
       });
-    }
 
-    if (certificateOptions.certificateIdsNeedToBeAdded.length > 0) {
-      await tx.voucherCertificate.createMany({
-        data: certificateOptions.certificateIdsNeedToBeAdded.map((certificateId) => ({
-          voucherId,
-          certificateId,
-          createdAt: nowInSecond,
-          updatedAt: nowInSecond,
-        })),
-      });
-    }
-
-    if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
-      await tx.assetVoucher.deleteMany({
-        where: {
-          voucherId,
-          assetId: {
-            in: assetOptions.assetIdsNeedToBeRemoved,
-          },
-        },
-      });
-    }
-
-    if (assetOptions.assetIdsNeedToBeAdded.length > 0) {
-      await tx.assetVoucher.createMany({
-        data: assetOptions.assetIdsNeedToBeAdded.map((assetId) => ({
-          voucherId,
-          assetId,
-          createdAt: nowInSecond,
-          updatedAt: nowInSecond,
-        })),
-      });
-    }
-
-    if (reverseRelationNeedToBeReplace.length > 0) {
-      await Promise.all(
-        reverseRelationNeedToBeReplace.map(async (reverseRelation) => {
-          const { eventId, original, new: newRelation } = reverseRelation;
-          const associateLineItemBeDelete = await tx.accociateLineItem.findFirst({
+      if (certificateOptions.certificateIdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.voucherCertificate.deleteMany({
             where: {
-              originalLineItemId: original.lineItemIdBeReversed,
-              resultLineItemId: original.lineItemReverseOther.id,
+              voucherId,
+              certificateId: {
+                in: certificateOptions.certificateIdsNeedToBeRemoved,
+              },
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.assetVoucher.deleteMany({
+            where: {
+              voucherId,
+              assetId: {
+                in: assetOptions.assetIdsNeedToBeRemoved,
+              },
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (certificateOptions.certificateIdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.voucherCertificate.createMany({
+            data: certificateOptions.certificateIdsNeedToBeAdded.map((certificateId) => ({
+              voucherId,
+              certificateId,
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            })),
+          });
+        } catch (error) {
+          loggerBack.error(
+            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (assetOptions.assetIdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.assetVoucher.createMany({
+            data: assetOptions.assetIdsNeedToBeAdded.map((assetId) => ({
+              voucherId,
+              assetId,
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            })),
+          });
+        } catch (error) {
+          loggerBack.error(
+            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      const reverseRelationList = reverseRelationNeedToBeReplace.values();
+
+      const reverseJobs: Promise<Prisma.BatchPayload | unknown>[] = [];
+      Array.from(reverseRelationList).forEach((reverseRelation) => {
+        const { eventId, original, new: newRelations } = reverseRelation;
+        original.forEach(async (originalRelation) => {
+          const deleteAssociateLineItemJob = tx.accociateLineItem.deleteMany({
+            where: {
+              originalLineItemId: originalRelation.lineItemIdBeReversed,
+              resultLineItemId: originalRelation.lineItemReverseOther.id,
             },
           });
 
-          if (associateLineItemBeDelete) {
-            await tx.accociateLineItem.delete({
-              where: {
-                id: associateLineItemBeDelete.id,
-              },
-            });
-          }
-
-          const associateVoucherBeDelete = await tx.accociateVoucher.findFirst({
+          const deleteAssociateVoucherJob = tx.accociateVoucher.deleteMany({
             where: {
-              originalVoucherId: original.voucherId,
+              originalVoucherId: originalRelation.voucherId,
               resultVoucherId: voucherId,
             },
           });
+          reverseJobs.push(deleteAssociateLineItemJob, deleteAssociateVoucherJob);
+        });
 
-          if (associateVoucherBeDelete) {
-            await tx.accociateVoucher.delete({
-              where: {
-                id: associateVoucherBeDelete.id,
-              },
-            });
-          }
-
-          await tx.accociateVoucher.create({
+        newRelations.forEach(async (newRelation) => {
+          const createAssociateVoucherJob = tx.accociateVoucher.create({
             data: {
               originalVoucher: {
                 connect: {
@@ -851,11 +877,20 @@ export async function putVoucherWithoutCreateNew(
               },
             },
           });
-        })
-      );
-    }
-    return voucher;
-  });
+
+          reverseJobs.push(createAssociateVoucherJob);
+        });
+      });
+      await Promise.all(reverseJobs);
+
+      return voucher;
+    });
+  } catch (error) {
+    loggerBack.error(
+      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+      error as Error
+    );
+  }
   return voucherUpdated;
 }
 
@@ -953,6 +988,21 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                 },
               },
             },
+            resultLineItem: {
+              // Info: (20241114 - Murky) 指的是這個lineItem是 result
+              include: {
+                originalLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                accociateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -997,4 +1047,214 @@ export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {
     );
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
+}
+
+/**
+ * Info: (20241119 - Murky)
+ * @todo 之後需要把create的邏輯拆分開來
+ */
+export async function deleteVoucherByCreateReverseVoucher(options: {
+  nowInSecond: number;
+  companyId: number;
+  issuerId: number;
+  voucherDeleteOtherEntity: IVoucherEntity;
+  deleteVersionOriginVoucher: IVoucherEntity;
+  deleteEvent: IEventEntity;
+  deleteVersionReverseLineItemPairs: {
+    originLineItem: ILineItemEntity & {
+      account: IAccountEntity;
+      resultLineItems: (IAssociateLineItemEntity & {
+        associateVoucher: IAssociateVoucherEntity & {
+          event: IEventEntity;
+        };
+        originalLineItem: ILineItemEntity & {
+          account: IAccountEntity;
+        };
+      })[];
+    };
+    newDeleteReverseLineItem: ILineItemEntity & {
+      account: IAccountEntity;
+      resultLineItems: (IAssociateLineItemEntity & {
+        associateVoucher: IAssociateVoucherEntity & {
+          event: IEventEntity;
+        };
+        originalLineItem: ILineItemEntity & {
+          account: IAccountEntity;
+        };
+      })[];
+    };
+  }[];
+}) {
+  const {
+    nowInSecond,
+    companyId,
+    issuerId,
+    voucherDeleteOtherEntity,
+    deleteVersionOriginVoucher,
+    deleteEvent,
+    deleteVersionReverseLineItemPairs,
+  } = options;
+
+  const result = await prisma.$transaction(async (tx) => {
+    const newVoucherNo = await getLatestVoucherNoInPrisma(companyId, {
+      voucherDate: voucherDeleteOtherEntity.date,
+    });
+
+    const newVoucher = await tx.voucher.create({
+      data: {
+        no: newVoucherNo,
+        date: voucherDeleteOtherEntity.date,
+        type: voucherDeleteOtherEntity.type,
+        note: voucherDeleteOtherEntity.note,
+        status: voucherDeleteOtherEntity.status,
+        editable: voucherDeleteOtherEntity.editable,
+        createdAt: nowInSecond,
+        updatedAt: nowInSecond,
+        deletedAt: null,
+        company: {
+          connect: {
+            id: companyId,
+          },
+        },
+        issuer: {
+          connect: {
+            id: issuerId,
+          },
+        },
+        counterparty: {
+          connect: {
+            id: voucherDeleteOtherEntity.counterPartyId,
+          },
+        },
+        lineItems: {
+          create: voucherDeleteOtherEntity.lineItems.map((lineItem) => ({
+            amount: lineItem.amount,
+            description: lineItem.description,
+            debit: lineItem.debit,
+            account: {
+              connect: {
+                id: lineItem.accountId,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          })),
+        },
+        assetVouchers: {
+          create: voucherDeleteOtherEntity.asset.map((asset) => ({
+            asset: {
+              connect: {
+                id: asset.id,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+          })),
+        },
+      },
+    });
+
+    const newDeletedEvent = await tx.event.create({
+      data: {
+        eventType: deleteEvent.eventType,
+        frequence: deleteEvent.frequency,
+        startDate: deleteEvent.startDate,
+        endDate: deleteEvent.endDate,
+        daysOfWeek: deleteEvent.daysOfWeek,
+        monthsOfYear: deleteEvent.monthsOfYear,
+        createdAt: nowInSecond,
+        updatedAt: nowInSecond,
+        associateVouchers: {
+          create: {
+            originalVoucher: {
+              connect: {
+                id: deleteVersionOriginVoucher.id,
+              },
+            },
+            resultVoucher: {
+              connect: {
+                id: newVoucher.id,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+            associateLineItems: {
+              create: deleteVersionReverseLineItemPairs.map((lineItemPair) => ({
+                originalLineItem: {
+                  connect: {
+                    id: lineItemPair.originLineItem.id,
+                  },
+                },
+                resultLineItem: {
+                  connect: {
+                    id: lineItemPair.newDeleteReverseLineItem.id,
+                  },
+                },
+                debit: lineItemPair.newDeleteReverseLineItem.debit,
+                amount: lineItemPair.newDeleteReverseLineItem.amount,
+                createdAt: nowInSecond,
+                updatedAt: nowInSecond,
+              })),
+            },
+          },
+        },
+      },
+    });
+
+    const transactionJobs: Promise<Prisma.BatchPayload | unknown>[] = [];
+
+    deleteVersionReverseLineItemPairs.forEach((lineItemPair) => {
+      const { newDeleteReverseLineItem } = lineItemPair;
+      newDeleteReverseLineItem.resultLineItems.forEach((resultLineItem) => {
+        const createAssociateVoucherJob = tx.accociateVoucher.create({
+          data: {
+            originalVoucher: {
+              connect: {
+                id: resultLineItem.associateVoucher.originalVoucherId,
+              },
+            },
+            resultVoucher: {
+              connect: {
+                id: newVoucher.id,
+              },
+            },
+            event: {
+              connect: {
+                id: resultLineItem.associateVoucher.eventId,
+              },
+            },
+            createdAt: nowInSecond,
+            updatedAt: nowInSecond,
+            associateLineItems: {
+              create: {
+                originalLineItem: {
+                  connect: {
+                    id: resultLineItem.originalLineItemId,
+                  },
+                },
+                resultLineItem: {
+                  connect: {
+                    id: resultLineItem.id,
+                  },
+                },
+                debit: resultLineItem.debit,
+                amount: resultLineItem.amount,
+                createdAt: nowInSecond,
+                updatedAt: nowInSecond,
+              },
+            },
+          },
+        });
+        transactionJobs.push(createAssociateVoucherJob);
+      });
+    });
+
+    await Promise.all(transactionJobs);
+
+    return {
+      voucherId: newVoucher.id,
+      eventId: newDeletedEvent.id,
+    };
+  });
+  return result;
 }

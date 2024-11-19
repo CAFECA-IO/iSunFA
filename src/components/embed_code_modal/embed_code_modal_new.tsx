@@ -118,10 +118,12 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           },
         });
       } catch (error) {
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.error('Error generating report:', generateError);
       }
     } else {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.warn('No company selected for report generation');
     }

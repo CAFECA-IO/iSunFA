@@ -74,6 +74,7 @@ export const AUTH_CHECK = {
   [APIName.USER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.USER_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.USER_UPDATE]: [AuthFunctionsKeysNew.user],
+  [APIName.USER_DELETION_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_ADD]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_GET]: [AuthFunctionsKeysNew.user],
@@ -144,6 +145,5 @@ export const AUTH_CHECK = {
   [APIName.DELETE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: [AuthFunctionsKeysNew.user],
-  [APIName.IP_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.LEDGER_LIST]: [AuthFunctionsKeysNew.user],
 };

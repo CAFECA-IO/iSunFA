@@ -95,13 +95,9 @@
     "M": "M",
     "Y": "Y",
     "D": "D",
-    "V": "v",
     "OR": "OR",
     "ERROR_CODE": "Error Code: {{code}}",
     "CANCEL": "Cancel",
-    "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "Please read and agree the first time you login",
-    "AGREE_TO_OUR_TERMS_OF_SERVICE": "Agree to our Terms of Service",
-    "AGREE_TO_OUR_PRIVACY_POLICY": "Agree to our Privacy Policy",
     "ALPHA_TEST_REMINDER": "The data used in the Alpha version is for testing purposes only.",
     "TYPE": "Type",
     "EMPLOYEE": "Employee",
@@ -343,5 +339,10 @@
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error"
+  },
+  "USER": {
+    "DELETE_WARNING": "This account will be deleted in {{days}} business days.",
+    "DELETE_HINT": "Please ensure data backup. To cancel the deletion process, please go to the settings page.",
+    "SETTING": "Setting"
   }
 }

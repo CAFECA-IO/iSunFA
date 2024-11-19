@@ -123,19 +123,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   // Info: (20241104 - Julian) 取得會計科目以呼叫 API
   const { lineItemIndex } = modalData;
 
-  const rawReverseData: IReverseItemUI[] = []; // ToDo: (20241105 - Julian) Call API to get reverse data
-
-  const defaultUIReverseList: IReverseItemUI[] = rawReverseData.map((reverse) => {
-    return {
-      ...reverse,
-      lineItemIndex: modalData.lineItemIndex,
-      reverseAmount: 0,
-      isSelected: false,
-    };
-  });
-
-  const [uiReverseItemList, setUiReverseItemList] =
-    useState<IReverseItemUI[]>(defaultUIReverseList);
+  const [uiReverseItemList, setUiReverseItemList] = useState<IReverseItemUI[]>([]);
   // Info: (20241104 - Julian) Select All
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
   const [selectCount, setSelectCount] = useState<number>(0);
@@ -252,7 +240,9 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         );
       })
     ) : (
-      <div className="col-start-1 col-end-15 text-center text-lg">No Reverse Item Found</div>
+      <div className="col-start-1 col-end-15 text-center text-lg">
+        {t('journal:REVERSE_MODAL.NOT_FOUND')}
+      </div>
     );
 
   const isDisplayModal = isModalVisible ? (

@@ -298,6 +298,10 @@
     "ACCOUNTING": "会计科目",
     "PARTICULARS": "摘要",
     "AMOUNT": "金额",
-    "REVERSE_AMOUNT": "冲销金额"
+    "REVERSE_AMOUNT": "冲销金额",
+    "NOT_FOUND": "查无冲销项目"
+  },
+  "EDIT_VOUCHER": {
+    "PAGE_TITLE": "编辑传票"
   }
 }

@@ -1,15 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import handler, {
-  handleDeleteRequest,
-  // handlePutRequest,
-} from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/index';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import handler from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/index';
+// import { STATUS_MESSAGE } from '@/constants/status_code';
 // import { VoucherV2Action } from '@/constants/voucher';
 // import { EventType } from '@/constants/account';
 import prisma from '@/client';
 import { UserActionLogActionType } from '@/constants/user_action_log';
 import { voucherGetOneSchema } from '@/lib/utils/zod_schema/voucher';
 
+// jest.mock('.prisma/client/index-browser.js', () => jest.requireActual('.prisma/client'));
 jest.mock('../../../../../../../lib/utils/session.ts', () => ({
   getSession: jest.fn().mockResolvedValue({
     userId: 1001,
@@ -60,100 +58,6 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-describe('company/[companyId]/voucher/[voucherId]', () => {
-  const mockVoucherId = 1;
-
-  // describe('PUT One Voucher', () => {
-  //   it('should pass', async () => {
-  //     const session = {
-  //       userId: 1001,
-  //       companyId: 1001,
-  //       roleId: 1001,
-  //       cookie: {
-  //         httpOnly: false,
-  //         path: 'string',
-  //         secure: false,
-  //       },
-  //     };
-  //     const query = {
-  //       voucherId: mockVoucherId,
-  //     };
-  //     const body = {
-  //       actions: [VoucherV2Action.ADD_ASSET],
-  //       certificateIds: [1001, 1002],
-  //       voucherDate: 10000000,
-  //       type: EventType.PAYMENT,
-  //       note: 'this is note',
-  //       counterPartyId: 1001,
-  //       lineItems: [
-  //         { accountId: 1001, description: 'this is for Particulars', debit: true, amount: 1000 },
-  //         { accountId: 1002, description: 'this is for Particulars', debit: false, amount: 1000 },
-  //       ],
-  //       recurringEntry: {
-  //         type: 'month',
-  //         startDate: 1000000,
-  //         endDate: 1000100,
-  //         daysOfWeek: [0, 1, 2],
-  //         daysOfMonth: [1, 15, 30],
-  //         daysOfYears: [
-  //           {
-  //             month: 1,
-  //             day: 1,
-  //           },
-  //           {
-  //             month: 12,
-  //             day: 25,
-  //           },
-  //         ],
-  //       },
-  //       assetIds: [1001],
-  //       reverseVouchers: [
-  //         {
-  //           voucherId: 1003,
-  //           amount: 500,
-  //           lineItemIdBeReversed: 1001,
-  //           lineItemIdReverseOther: 1002,
-  //         },
-  //       ],
-  //     };
-  //     const { statusMessage } = await handlePutRequest({
-  //       query,
-  //       body,
-  //       session,
-  //     });
-
-  //     expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_UPDATE);
-  //   });
-  // });
-
-  describe('DELETE One Voucher', () => {
-    it('should pass', async () => {
-      const query = {
-        voucherId: mockVoucherId,
-      };
-      const body = {};
-
-      const session = {
-        userId: 1001,
-        companyId: 1001,
-        roleId: 1001,
-        cookie: {
-          httpOnly: false,
-          path: 'string',
-          secure: false,
-        },
-      };
-      const { statusMessage } = await handleDeleteRequest({
-        query,
-        body,
-        session,
-      });
-
-      expect(statusMessage).toBe(STATUS_MESSAGE.SUCCESS_DELETE);
-    });
-  });
-});
-
 describe('company/[companyId]/voucher/voucherId integration test', () => {
   let req: jest.Mocked<NextApiRequest>;
   let res: jest.Mocked<NextApiResponse>;
@@ -185,6 +89,156 @@ describe('company/[companyId]/voucher/voucherId integration test', () => {
       const apiResponse = res.json.mock.calls[0][0];
       const { success } = outputValidator.safeParse(apiResponse.payload);
       expect(success).toBe(true);
+    });
+  });
+
+  describe('Put one voucher', () => {
+    it('should return data match frontend validator', async () => {
+      req = {
+        headers: {},
+        query: {
+          voucherId: '1002',
+        },
+        method: 'PUT',
+        json: jest.fn(),
+        body: {
+          actions: [],
+          certificateIds: [1001],
+          voucherDate: 1,
+          type: 'payment',
+          note: '',
+          lineItems: [
+            {
+              // Info: (20241118 - Murky) id: 1000
+              description: '償還應付帳款-銀行現金',
+              amount: 100,
+              debit: false,
+              accountId: 10000603,
+            },
+            {
+              // Info: (20241118 - Murky) id: 1001
+              description: '償還應付帳款-應付帳款',
+              amount: 100,
+              debit: true,
+              accountId: 10000981,
+            },
+          ],
+          assetIds: [2],
+          counterPartyId: 1001,
+          reverseVouchers: [
+            {
+              voucherId: 1001,
+              lineItemIdBeReversed: 1000,
+              lineItemIdReverseOther: 1,
+              amount: 100,
+            },
+          ],
+        },
+      } as unknown as jest.Mocked<NextApiRequest>;
+
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as jest.Mocked<NextApiResponse>;
+
+      // const outputValidator = voucherGetOneSchema.frontend;
+
+      // try {
+      await handler(req, res);
+      // } catch (error) {
+      // console.log('error', error);
+      // }
+      const apiResponse = res.json.mock.calls[0][0];
+      expect(apiResponse.payload).toBe(1002);
+
+      const voucher = await prisma.voucher.findFirst({
+        where: {
+          id: 1000,
+        },
+      });
+
+      const assetVoucherRelationship = await prisma.assetVoucher.findFirst({
+        where: {
+          voucherId: 1002,
+        },
+      });
+
+      const certificateVoucherRelationship = await prisma.voucherCertificate.findFirst({
+        where: {
+          voucherId: 1002,
+        },
+      });
+      const associateVoucher = await prisma.accociateVoucher.findFirst({
+        where: {
+          resultVoucherId: 1002,
+        },
+      });
+
+      const newAssociateLineItem = await prisma.accociateLineItem.findFirst({
+        where: {
+          originalLineItemId: 1000,
+        },
+      });
+
+      const oldAssociateLineItem = await prisma.accociateLineItem.findFirst({
+        where: {
+          originalLineItemId: 1001,
+        },
+      });
+
+      req = {
+        headers: {},
+        query: {
+          voucherId: '1002',
+        },
+        method: 'PUT',
+        json: jest.fn(),
+        body: {
+          actions: [],
+          certificateIds: [1002],
+          voucherDate: 1672531200,
+          type: 'payment',
+          note: '',
+          lineItems: [
+            {
+              // Info: (20241118 - Murky) id: 1000
+              description: '償還應付帳款-銀行現金',
+              amount: 100,
+              debit: false,
+              accountId: 10000603,
+            },
+            {
+              // Info: (20241118 - Murky) id: 1001
+              description: '償還應付帳款-應付帳款',
+              amount: 100,
+              debit: true,
+              accountId: 10000981,
+            },
+          ],
+          assetIds: [1],
+          counterPartyId: 1000,
+          reverseVouchers: [
+            {
+              voucherId: 1000,
+              lineItemIdBeReversed: 1001,
+              lineItemIdReverseOther: 1,
+              amount: 100,
+            },
+          ],
+        },
+      } as unknown as jest.Mocked<NextApiRequest>;
+      await handler(req, res);
+      expect(voucher).not.toBeNull();
+      expect(voucher?.counterPartyId).toBe(1000);
+      expect(assetVoucherRelationship).not.toBeNull();
+      expect(assetVoucherRelationship?.assetId).toBe(2);
+      expect(certificateVoucherRelationship).not.toBeNull();
+      expect(certificateVoucherRelationship?.certificateId).toBe(1001);
+      expect(associateVoucher).not.toBeNull();
+      expect(associateVoucher?.originalVoucherId).toBe(1001);
+
+      expect(newAssociateLineItem).not.toBeNull();
+      expect(oldAssociateLineItem).toBeNull();
     });
   });
 });

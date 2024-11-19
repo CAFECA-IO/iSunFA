@@ -23,18 +23,18 @@ export enum DISPLAY_LIST_VIEW_TYPE {
 }
 
 export const MONTH_LIST = [
-  'common:DATE_PICKER.JAN',
-  'common:DATE_PICKER.FEB',
-  'common:DATE_PICKER.MAR',
-  'common:DATE_PICKER.APR',
-  'common:DATE_PICKER.MAY',
-  'common:DATE_PICKER.JUN',
-  'common:DATE_PICKER.JUL',
-  'common:DATE_PICKER.AUG',
-  'common:DATE_PICKER.SEP',
-  'common:DATE_PICKER.OCT',
-  'common:DATE_PICKER.NOV',
-  'common:DATE_PICKER.DEC',
+  'date_picker:DATE_PICKER.JAN',
+  'date_picker:DATE_PICKER.FEB',
+  'date_picker:DATE_PICKER.MAR',
+  'date_picker:DATE_PICKER.APR',
+  'date_picker:DATE_PICKER.MAY',
+  'date_picker:DATE_PICKER.JUN',
+  'date_picker:DATE_PICKER.JUL',
+  'date_picker:DATE_PICKER.AUG',
+  'date_picker:DATE_PICKER.SEP',
+  'date_picker:DATE_PICKER.OCT',
+  'date_picker:DATE_PICKER.NOV',
+  'date_picker:DATE_PICKER.DEC',
 ];
 
 export const MONTH_FULL_NAME = [
@@ -83,38 +83,38 @@ export const MONTH_FULL_LIST_SHORT = [
 ];
 
 export const MONTH_ABR_LIST = [
-  'common:DATE_PICKER.JAN_ABR',
-  'common:DATE_PICKER.FEB_ABR',
-  'common:DATE_PICKER.MAR_ABR',
-  'common:DATE_PICKER.APR_ABR',
-  'common:DATE_PICKER.MAY_ABR',
-  'common:DATE_PICKER.JUN_ABR',
-  'common:DATE_PICKER.JUL_ABR',
-  'common:DATE_PICKER.AUG_ABR',
-  'common:DATE_PICKER.SEP_ABR',
-  'common:DATE_PICKER.OCT_ABR',
-  'common:DATE_PICKER.NOV_ABR',
-  'common:DATE_PICKER.DEC_ABR',
+  'date_picker:DATE_PICKER.JAN_ABR',
+  'date_picker:DATE_PICKER.FEB_ABR',
+  'date_picker:DATE_PICKER.MAR_ABR',
+  'date_picker:DATE_PICKER.APR_ABR',
+  'date_picker:DATE_PICKER.MAY_ABR',
+  'date_picker:DATE_PICKER.JUN_ABR',
+  'date_picker:DATE_PICKER.JUL_ABR',
+  'date_picker:DATE_PICKER.AUG_ABR',
+  'date_picker:DATE_PICKER.SEP_ABR',
+  'date_picker:DATE_PICKER.OCT_ABR',
+  'date_picker:DATE_PICKER.NOV_ABR',
+  'date_picker:DATE_PICKER.DEC_ABR',
 ];
 
 export const WEEK_LIST = [
-  'common:DATE_PICKER.SUN',
-  'common:DATE_PICKER.MON',
-  'common:DATE_PICKER.TUE',
-  'common:DATE_PICKER.WED',
-  'common:DATE_PICKER.THU',
-  'common:DATE_PICKER.FRI',
-  'common:DATE_PICKER.SAT',
+  'date_picker:DATE_PICKER.SUN',
+  'date_picker:DATE_PICKER.MON',
+  'date_picker:DATE_PICKER.TUE',
+  'date_picker:DATE_PICKER.WED',
+  'date_picker:DATE_PICKER.THU',
+  'date_picker:DATE_PICKER.FRI',
+  'date_picker:DATE_PICKER.SAT',
 ];
 
 export const WEEK_FULL_LIST = [
-  'common:DATE_PICKER.SUNDAY',
-  'common:DATE_PICKER.MONDAY',
-  'common:DATE_PICKER.TUESDAY',
-  'common:DATE_PICKER.WEDNESDAY',
-  'common:DATE_PICKER.THURSDAY',
-  'common:DATE_PICKER.FRIDAY',
-  'common:DATE_PICKER.SATURDAY',
+  'date_picker:DATE_PICKER.SUNDAY',
+  'date_picker:DATE_PICKER.MONDAY',
+  'date_picker:DATE_PICKER.TUESDAY',
+  'date_picker:DATE_PICKER.WEDNESDAY',
+  'date_picker:DATE_PICKER.THURSDAY',
+  'date_picker:DATE_PICKER.FRIDAY',
+  'date_picker:DATE_PICKER.SATURDAY',
 ];
 
 export const default30DayPeriodInSec = {
@@ -150,6 +150,7 @@ export enum SortOptions {
 
 export const DEFAULT_AVATAR_URL = '/elements/avatar.png';
 export const DEFAULT_COMPANY_IMAGE_URL = '/elements/example_company_image.png';
+export const DEFAULT_CERTIFICATE_IMAGE_URL = '/elements/avatar_default.svg';
 
 export enum DatePickerAlign {
   LEFT = 'left',

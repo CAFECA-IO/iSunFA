@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FiEdit, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -20,11 +20,16 @@ import { AssetModalType } from '@/interfaces/asset_modal';
 interface IAssetSectionProps {
   isShowAssetHint: boolean;
   lineItems: ILineItemBeta[];
+  defaultAssetList?: IAssetDetails[];
 }
 
-const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems }) => {
+const AssetSection: React.FC<IAssetSectionProps> = ({
+  isShowAssetHint,
+  lineItems,
+  defaultAssetList = [],
+}) => {
   const { t } = useTranslation('common');
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const { addAssetModalVisibilityHandler, addAssetModalDataHandler } = useGlobalCtx();
   const { deleteTemporaryAssetHandler, temporaryAssetList } = useAccountingCtx();
   const { toastHandler } = useModalContext();
@@ -32,6 +37,14 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
   const { trigger, success, isLoading, data, error } = APIHandler<IAssetDetails>(
     APIName.DELETE_ASSET_V2
   );
+
+  const userId = userAuth?.id ?? -1;
+  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
+
+  const [assetList, setAssetList] = useState<IAssetDetails[]>([
+    ...defaultAssetList,
+    ...temporaryAssetListByUser,
+  ]);
 
   // Info: (20241025 - Julian) 根據 lineItems 取得資產類別的會計科目
   const assetAccountList = lineItems
@@ -58,7 +71,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
     if (!isLoading) {
       if (success && data) {
         // Info: (20241025 - Julian) 確定 API 刪除成功後，更新畫面
-        deleteTemporaryAssetHandler(data.id);
+        deleteTemporaryAssetHandler(userId, data.assetNumber);
       } else if (error) {
         // Info: (20241025 - Julian) 刪除失敗後，提示使用者
         toastHandler({
@@ -71,9 +84,24 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
     }
   }, [success, data, isLoading]);
 
+  useEffect(() => {
+    // Info: (20241119 - Julian) 更新 assetList
+    const newTemporaryAssetList = temporaryAssetList[userId] ?? [];
+    setAssetList([...defaultAssetList, ...newTemporaryAssetList]);
+  }, [temporaryAssetList]);
+
   const displayedAssetList =
-    temporaryAssetList.length > 0 ? (
-      temporaryAssetList.map((asset) => {
+    assetList.length > 0 ? (
+      assetList.map((asset) => {
+        const editClickHandler = () => {
+          addAssetModalDataHandler({
+            modalType: AssetModalType.EDIT,
+            assetAccountList,
+            assetData: asset,
+          });
+          addAssetModalVisibilityHandler();
+        };
+
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({
@@ -95,7 +123,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({ isShowAssetHint, lineItems
               <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber}</p>
             </div>
             <div className="flex items-center gap-16px">
-              <Button type="button" variant="secondaryBorderless" size={'defaultSquare'}>
+              <Button
+                type="button"
+                variant="secondaryBorderless"
+                size={'defaultSquare'}
+                onClick={editClickHandler}
+              >
                 <FiEdit size={20} />
               </Button>
               <Button

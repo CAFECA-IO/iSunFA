@@ -285,7 +285,7 @@ const SideMenu = ({ toggleOverlay, className }: SideMenuProps) => {
                 <SubMenuItem
                   linkText="General Setting"
                   href={ISUNFA_ROUTE.GENERAL_SETTING}
-                  isCompanyNeeded
+                  isCompanyNeeded={false} // ToDo: (20241118 - tzuhan) change back to true after @liz using real data
                   toggleOverlay={toggleOverlay}
                 />
 
@@ -305,7 +305,7 @@ const SideMenu = ({ toggleOverlay, className }: SideMenuProps) => {
             </Link>
           </div>
 
-          {/* Side Menu Footer */}
+          {/* // Info: (20241118 - Anna) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
 

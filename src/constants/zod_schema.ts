@@ -1,5 +1,9 @@
 import { APIName } from '@/constants/api_connection';
-import { askAIGetResultV2Schema, askAIPostValidatorV2 } from '@/lib/utils/zod_schema/ask_ai';
+import {
+  askAIGetResultV2Schema,
+  askAiPostSchema,
+  askAIPostValidatorV2,
+} from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
   certificateGetOneSchema,
@@ -83,6 +87,7 @@ import { fileDeleteSchema, fileGetSchema, filePostSchema } from '@/lib/utils/zod
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 import {
   userDeleteSchema,
+  userDeletionPutSchema,
   userGetSchema,
   userListSchema,
   userPutSchema,
@@ -189,6 +194,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
   [APIName.USER_UPDATE]: userPutSchema,
+  [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
   [APIName.USER_DELETE]: userDeleteSchema,
   [APIName.COMPANY_ADD]: nullAPISchema,
   [APIName.COMPANY_GET]: nullAPISchema,
@@ -216,7 +222,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: nullAPISchema,
   [APIName.ASK_AI_RESULT]: nullAPISchema,
-  [APIName.ASK_AI_V2]: nullAPISchema,
+  [APIName.ASK_AI_V2]: askAiPostSchema,
   [APIName.VOUCHER_CREATE]: nullAPISchema,
   [APIName.VOUCHER_UPDATE]: nullAPISchema,
   [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
@@ -259,7 +265,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.DELETE_ASSET_V2]: nullAPISchema,
   [APIName.UPDATE_ASSET_V2]: nullAPISchema,
   [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
-  [APIName.IP_LIST]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,

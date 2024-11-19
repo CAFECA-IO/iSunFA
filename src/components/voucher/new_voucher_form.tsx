@@ -12,7 +12,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import AssetSection from '@/components/voucher/asset_section';
 import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
+import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
@@ -46,6 +46,7 @@ import { VoucherV2Action } from '@/constants/voucher';
 import { FREE_COMPANY_ID } from '@/constants/config';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
+import { IAIResultVoucher } from '@/interfaces/voucher';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -54,22 +55,11 @@ import { ToastType } from '@/interfaces/toastify';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
-// ToDo: (20241021 - Julian) 確認完後移動到 interfaces
-interface IAIResultVoucher {
-  voucherDate: number;
-  type: string;
-  note: string;
-  counterParty?: ICounterparty; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
-  lineItemsInfo: {
-    lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
-  };
-}
-
 const dummyAIResult: IAIResultVoucher = {
   voucherDate: 0,
   type: '',
   note: '',
-  lineItemsInfo: { lineItems: [] },
+  lineItems: [],
 };
 
 interface NewVoucherFormProps {
@@ -80,7 +70,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedCompany } = useUserCtx();
+  const { selectedCompany, userAuth } = useUserCtx();
   const {
     getAccountListHandler,
     temporaryAssetList,
@@ -92,6 +82,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     useModalContext();
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
+  const userId = userAuth?.id ?? -1;
+
+  const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
   const {
@@ -131,7 +124,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     type: aiType,
     note: aiNote,
     counterParty: aiCounterParty,
-    lineItemsInfo: { lineItems: aiLineItems },
+    lineItems: aiLineItems,
   } = resultData ?? dummyAIResult;
 
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
@@ -450,7 +443,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       //     break;
       // }
     },
-    [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetList]
+    [formRef, date, counterparty, isCounterpartyRequired, temporaryAssetListByUser]
   );
 
   useHotkeys('tab', handleTabPress);
@@ -523,14 +516,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // }, [recurringArray]);
 
   useEffect(() => {
-    if (isAssetRequired && temporaryAssetList.length > 0) {
+    if (isAssetRequired && temporaryAssetListByUser.length > 0) {
       setIsShowAssetHint(false);
     }
-  }, [temporaryAssetList]);
+  }, [temporaryAssetListByUser]);
 
-  const typeToggleHandler = () => {
-    setTypeVisible(!typeVisible);
-  };
+  const typeToggleHandler = () => setTypeVisible(!typeVisible);
 
   const counterSearchToggleHandler = () => {
     setIsSearchCounterparty(!isSearchCounterparty);
@@ -593,7 +584,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     // setRecurringPeriod(default30DayPeriodInSec);
     // setRecurringUnit(RecurringUnit.MONTH);
     // setRecurringArray([]);
-    clearTemporaryAssetHandler();
+    clearTemporaryAssetHandler(userId);
     clearReverseListHandler();
     setLineItems([initialVoucherLine]);
     setFlagOfClear(!flagOfClear);
@@ -617,7 +608,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setType(aiType);
     setNote(aiNote);
     setCounterparty(aiCounterParty);
-    // ToDo: (20241021 - Julian) 等 API 格式確認後再處理
     const aiLineItemsUI = aiLineItems.map((item) => {
       return {
         ...item,
@@ -645,8 +635,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     // Info: (20241105 - Julian) 如果沒有新增資產，就回傳空陣列
     const assetIds =
-      isAssetRequired && temporaryAssetList.length > 0
-        ? temporaryAssetList.map((asset) => asset.id)
+      isAssetRequired && temporaryAssetListByUser.length > 0
+        ? temporaryAssetListByUser.map((asset) => asset.id)
         : [];
 
     // Info: (20241105 - Julian) 如果有反轉傳票，則取得反轉傳票的資訊並加入 reverseVouchers，否則回傳空陣列
@@ -679,6 +669,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       reverseVouchers,
     };
 
+    clearTemporaryAssetHandler(userId);
+    clearReverseListHandler();
     createVoucher({ params: { companyId }, body });
   };
 
@@ -714,7 +706,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     ) {
       setFlagOfSubmit(!flagOfSubmit);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
-    } else if (isAssetRequired && temporaryAssetList.length === 0) {
+    } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
       // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位
       setIsShowAssetHint(true);
       if (assetRef.current) assetRef.current.scrollIntoView();

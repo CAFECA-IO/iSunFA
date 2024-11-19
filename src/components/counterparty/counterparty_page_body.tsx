@@ -35,38 +35,43 @@ const CounterpartyPageBody = () => {
   );
   const fetchCounterpartyData = async () => {
     if (!selectedCompany?.id) {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.error('公司 ID 不存在，無法呼叫 API');
       return;
     }
 
     try {
+      // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
       console.log('Fetching counterparty data...');
       const response = await getCounterpartyList({
         params: { companyId: selectedCompany.id },
         query: queryCondition,
       });
-      // 檢查 response 的結構
+      // Deprecate: (20241118 - Anna) 檢查 response 的結構
       // eslint-disable-next-line no-console
       console.log('完整的 response:', response);
 
-      // 檢查 response.success 是否為 true
+      // Info: (20241118 - Anna) 檢查 response.success 是否為 true
       if (!response.success) {
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.error('API response 不成功:', response);
         return;
       }
 
-      // 檢查 response.data 是否有正確的結構
+      // Info: (20241118 - Anna) 檢查 response.data 是否有正確的結構
       const responseData = response.data as { data: ICounterparty[] };
       //  const responseData = response.data as { data: { data: ICounterparty[] } };
 
       if (Array.isArray(responseData.data)) {
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.log('成功取得交易夥伴列表:', responseData.data);
         setCounterparties(responseData.data);
       } else {
+        // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.error('responseData 結構不正確:', responseData);
       }
