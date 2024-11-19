@@ -1538,7 +1538,7 @@ COMMIT;
 ALTER TABLE account ADD COLUMN parent_id INTEGER;
 ALTER TABLE account ADD COLUMN root_id INTEGER;
 
--- 13. 根據 code 匹配 parent_code 和 root_code 的 id，設定 parent_id 和 root_id 的值
+-- 13. 將預設會計科目跟自訂會計科目，根據 code 匹配 parent_code 和 root_code 的 id，設定 parent_id 和 root_id 的值
 UPDATE account
 SET parent_id = sub.parent_id,
     root_id = sub.root_id
@@ -1552,35 +1552,19 @@ FROM (
 ) AS sub
 WHERE account.id = sub.account_id;
 
--- 14. 根據相同的規則為自訂會計科目設定 parent_id 和 root_id 的值
--- 假設自訂會計科目也在 account 表中，並使用相同的 parent_code 和 root_code
-UPDATE account
-SET parent_id = sub.parent_id,
-    root_id = sub.root_id
-FROM (
-    SELECT a.id AS account_id,
-           p.id AS parent_id,
-           r.id AS root_id
-    FROM account a
-    LEFT JOIN account p ON a.parent_code = p.code
-    LEFT JOIN account r ON a.root_code = r.code
-    WHERE a.is_custom = TRUE -- 假設有一個標記自訂會計科目的欄位
-) AS sub
-WHERE account.id = sub.account_id;
-
--- 15. 新增 note 選填欄位
+-- 14. 新增 note 選填欄位
 ALTER TABLE account ADD COLUMN note VARCHAR(255);
 
--- 16. 移除 code 的 unique 限制
-ALTER TABLE account DROP CONSTRAINT account_code_key;
+-- 15. 移除 code 的 unique 限制
+DROP INDEX "account_code_key";
 
--- 17. 修改 parent 和 child 關係，改用 id 引用
+-- 16. 修改 parent 和 child 關係，改用 id 引用
 -- 移除原有的外鍵約束
 ALTER TABLE line_item DROP CONSTRAINT line_item_account_id_fkey;
 ALTER TABLE account DROP CONSTRAINT account_parent_code_fkey;
 ALTER TABLE account DROP CONSTRAINT account_root_code_fkey;
 
--- 重新建立外鍵約束，使用 parent_id 和 root_id 引用 id
+-- 重新建立外鍵約束，並且使用 parent_id 和 root_id 引用 id
 ALTER TABLE line_item 
     ADD CONSTRAINT line_item_account_id_fkey 
     FOREIGN KEY (account_id) 
