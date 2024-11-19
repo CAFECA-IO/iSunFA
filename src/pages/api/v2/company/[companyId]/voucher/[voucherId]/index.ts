@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
@@ -21,6 +21,7 @@ import { ICertificateEntity } from '@/interfaces/certificate';
 import {
   voucherAPIGetOneUtils as getUtils,
   voucherAPIPutUtils as putUtils,
+  voucherAPIDeleteUtils as deleteUtils,
 } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
 import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -28,7 +29,10 @@ import { IHandleRequest } from '@/interfaces/handleRequest';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
-import { putVoucherWithoutCreateNew } from '@/lib/utils/repo/voucher.repo';
+import {
+  deleteVoucherByCreateReverseVoucher,
+  putVoucherWithoutCreateNew,
+} from '@/lib/utils/repo/voucher.repo';
 
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
@@ -325,6 +329,13 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
   };
 };
 
+/**
+ * Info: (20241118 - Murky)
+ * @todo
+ * - Copy 一模一樣的 lineItem然後反過來
+ * - 前一筆的asset 也要加上去 assetVoucher
+ * - revert事件除了delete 這張的關係， 這張reverse 以前的voucher也要多加上這層關係
+ */
 export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, number> = async ({
   query,
   session,
@@ -335,19 +346,72 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const { userId } = session;
-  const mockDeleteVoucherId = 1002;
+  const { userId, companyId } = session;
+  try {
+    const nowInSecond = getTimestampNow();
+    const { voucherId } = query;
+    const voucherFromPrisma: IGetOneVoucherResponse =
+      await getUtils.getVoucherFromPrisma(voucherId);
 
-  // ToDo: (20240927 - Murky) Remember to add auth check
-  if (query) {
+    const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+    const originLineItems = deleteUtils.initOriginalLineItemEntities(voucherFromPrisma);
+
+    // const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
+    // const counterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
+    // const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
+    // const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
+    const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
+    // const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
+
+    // Info: (20241119 - Murky) 需要多加reverse voucher嗎？
+    // const isReverseEventNeeded = deleteUtils.isReverseEventNeeded(voucherFromPrisma);
+
+    // Info: (20241119 - Murky) 需要多加asset voucher嗎？
+    const isAssetVoucherNeeded = deleteUtils.isAssetEventNeeded(voucherFromPrisma);
+
+    // ToDo: (20241118 - Murky) 先組合出要刪除的voucherEntity
+    const deleteVersionReverseLineItemPairs =
+      deleteUtils.getDeleteVersionReverseLineItemPairs(originLineItems);
+
+    const voucherDeleteOtherEntity = deleteUtils.initDeleteVoucherEntity({
+      nowInSecond,
+      voucherBeenDeleted: originVoucher,
+      deleteVersionLineItems: deleteVersionReverseLineItemPairs.map(
+        (pair) => pair.newDeleteReverseLineItem
+      ),
+    });
+
+    if (isAssetVoucherNeeded) {
+      voucherDeleteOtherEntity.asset = asset;
+    }
+
+    const deleteVersionOriginVoucher = deleteUtils.deepCopyVoucherEntity(originVoucher);
+
+    // Info: (20241119 - Murky) 這邊lineIt{em不用塞在voucher裡面
+    const deleteEvent: IEventEntity = deleteUtils.initDeleteEventEntity({
+      nowInSecond,
+      voucherBeenDeleted: deleteVersionOriginVoucher,
+      voucherDeleteOther: voucherDeleteOtherEntity,
+    });
+
+    const { voucherId: newVoucherId } = await deleteVoucherByCreateReverseVoucher({
+      nowInSecond,
+      companyId,
+      issuerId: userId,
+      voucherDeleteOtherEntity,
+      deleteVersionOriginVoucher,
+      deleteEvent,
+      deleteVersionReverseLineItemPairs,
+    });
+    payload = newVoucherId;
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-    payload = mockDeleteVoucherId;
+  } catch (_error) {
+    const error = _error as Error;
+    loggerError(userId, 'Voucher Delete handleDeleteRequest', error.message).error(error);
   }
-
   return {
     statusMessage,
     payload,
-    userId,
   };
 };
 
