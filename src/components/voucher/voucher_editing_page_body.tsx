@@ -11,12 +11,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import AssetSection from '@/components/voucher/asset_section';
 import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
-import {
-  ILineItemBeta,
-  ILineItemUI,
-  IReverseItem,
-  initialVoucherLine,
-} from '@/interfaces/line_item';
+import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { useUserCtx } from '@/contexts/user_context';
@@ -42,7 +37,6 @@ import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { VoucherV2Action } from '@/constants/voucher';
 import { FREE_COMPANY_ID } from '@/constants/config';
-// import { ToastType } from '@/interfaces/toastify';
 import { IVoucherDetailForFrontend /* , defaultVoucherDetail  */ } from '@/interfaces/voucher';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
@@ -335,7 +329,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
   const companyId = selectedCompany?.id ?? FREE_COMPANY_ID;
   const userId = userAuth?.id ?? -1;
-
   const temporaryAssetListByUser = temporaryAssetList[userId] ?? [];
 
   // Info: (20241108 - Julian) POST ASK AI
@@ -363,12 +356,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     data: counterpartyData,
     isLoading: isCounterpartyLoading,
   } = APIHandler<IPaginatedData<ICounterparty[]>>(APIName.COUNTERPARTY_LIST);
-
-  const { data: reverseData, isLoading: isReverseLoading } = APIHandler<IReverseItem[]>(
-    APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2,
-    { params: { companyId, voucherId } },
-    true
-  );
 
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
@@ -423,16 +410,11 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     note: voucherNote,
     lineItemsInfo: { lineItems: voucherLineItems },
     certificates: voucherCertificates,
-    reverseVoucherIds: reverseVoucherList,
     counterParty: voucherCounterParty,
     assets: voucherAssets,
   } = voucherData ?? defaultVoucherDetail;
 
-  const defaultDate: IDatePeriod = {
-    startTimeStamp: voucherDate,
-    endTimeStamp: voucherDate,
-  };
-
+  const defaultDate: IDatePeriod = { startTimeStamp: voucherDate, endTimeStamp: voucherDate };
   const defaultType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType] || voucherType;
 
   const defaultLineItems: ILineItemUI[] = voucherLineItems.map((lineItem) => {
@@ -518,24 +500,24 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   }, []);
 
   // Info: (20241118 - Julian) 將 reverse voucher 與 line item 掛鉤
-  useEffect(() => {
-    if (isReverseLoading === false && reverseData && reverseData.length > 0) {
-      const reverseList = reverseVoucherList
-        .map((reverseVoucher) => {
-          const reverseDetail = reverseData.find(
-            (item) => item.lineItemBeReversedId === reverseVoucher.id
-          );
-          return reverseDetail;
-        })
-        .filter((item) => item !== undefined) as IReverseItem[];
+  // useEffect(() => {
+  //   if (isReverseLoading === false && reverseData && reverseData.length > 0) {
+  //     const reverseList = reverseVoucherList
+  //       .map((reverseVoucher) => {
+  //         const reverseDetail = reverseData.find(
+  //           (item) => item.lineItemBeReversedId === reverseVoucher.id
+  //         );
+  //         return reverseDetail;
+  //       })
+  //       .filter((item) => item !== undefined) as IReverseItem[];
 
-      const lineItemsWithReverse = lineItems.map((lineItem) => {
-        return { ...lineItem, reverseList };
-      });
+  //     const lineItemsWithReverse = lineItems.map((lineItem) => {
+  //       return { ...lineItem, reverseList };
+  //     });
 
-      setLineItems(lineItemsWithReverse);
-    }
-  }, [reverseVoucherList, reverseData, isReverseLoading]);
+  //     setLineItems(lineItemsWithReverse);
+  //   }
+  // }, [reverseVoucherList, reverseData, isReverseLoading]);
 
   // Info: (20241119 - Julian) 更新 asset 列表
   useEffect(() => {
@@ -912,6 +894,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     const resultAssetIds =
       isAssetRequired && assetList.length > 0 ? assetList.map((asset) => asset.id) : [];
 
+    // ToDo: (20241119 - Julian) 等待 API 調整完再處理
     // Info: (20241105 - Julian) 如果有反轉傳票，則取得反轉傳票的資訊並加入 reverseVouchers，否則回傳空陣列
     // const reverseVouchers: {
     //   voucherId: number;
@@ -919,19 +902,17 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     //   lineItemIdReverseOther: number;
     //   amount: number;
     // }[] =
-    // isReverseRequired && reverses.length > 0
-    //   ? reverses.map((reverse) => {
-    //       return {
-    //         voucherId: reverse.voucherId,
-    //         lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
-    //         lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
-    //         amount: reverse.amount,
-    //       };
-    //     })
-    //       :[];
+    //   isReverseRequired && reverses.length > 0
+    //     ? reverses.map((reverse) => {
+    //         return {
+    //           voucherId: reverse.voucherId,
+    //           lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
+    //           lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
+    //           amount: reverse.amount,
+    //         };
+    //       })
+    //     : [];
 
-    // Deprecated: (20241118 - Julian) implement later
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const body = {
       actions,
       certificateIds: resultCertificates,
@@ -941,10 +922,8 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       counterPartyId: resultCounterpartyId,
       lineItems: resultLineItems,
       assetIds: resultAssetIds,
-      //  reverseVouchers,
+      // reverseVouchers,
     };
-
-    //  console.log('body', body);
 
     // Info: (20241119 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
     const isOnlyUpdateVoucher = isLineItemsEqual(voucherLineItems, lineItems);
@@ -1314,6 +1293,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
             onKeyDown={(e) => {
               if (e.key === 'Enter') e.preventDefault();
             }}
+            disabled={isUpdating || isDeleting || isCreating} // Info: (20241119 - Julian) 防止重複送出
           >
             <p>{t('common:COMMON.SAVE')}</p>
             <BiSave size={20} />

@@ -93,6 +93,15 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
   const displayedAssetList =
     assetList.length > 0 ? (
       assetList.map((asset) => {
+        const editClickHandler = () => {
+          addAssetModalDataHandler({
+            modalType: AssetModalType.EDIT,
+            assetAccountList,
+            assetData: asset,
+          });
+          addAssetModalVisibilityHandler();
+        };
+
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({
@@ -114,7 +123,12 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
               <p className="text-xs text-file-uploading-text-disable">{asset.assetNumber}</p>
             </div>
             <div className="flex items-center gap-16px">
-              <Button type="button" variant="secondaryBorderless" size={'defaultSquare'}>
+              <Button
+                type="button"
+                variant="secondaryBorderless"
+                size={'defaultSquare'}
+                onClick={editClickHandler}
+              >
                 <FiEdit size={20} />
               </Button>
               <Button

@@ -175,7 +175,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setSelectedDepreciationMethod(assetData.depreciationMethod as DepreciationMethod);
       setInputNote(assetData.note ?? '');
     }
-  }, [assetData]);
+  }, [defaultData]);
 
   useEffect(() => {
     if (accountTitle !== t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')) {
@@ -540,7 +540,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 value={inputNo}
                 onChange={assetNoChangeHandler}
                 required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
+                disabled={modalType === AssetModalType.EDIT} // Info: (20241119 - Julian) 編輯時不能修改
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
               />
             </div>
             {/* Info: (20241015 - Julian) Asset name */}
@@ -556,7 +557,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 value={inputName}
                 onChange={nameChangeHandler}
                 required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
               />
             </div>
             {/* Info: (20241015 - Julian) Amount */}
@@ -569,7 +570,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 onChange={amountChangeHandler}
                 min={1}
                 required
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
               />
             </div>
             {/* Info: (20241015 - Julian) Total Price */}
@@ -590,7 +591,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   hasComma
                   required
                   min={1}
-                  className="flex-1 bg-transparent px-10px text-right outline-none"
+                  className="flex-1 bg-transparent px-10px text-right outline-none disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
                 />
                 <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
@@ -725,7 +726,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 placeholder={t('asset:ADD_ASSET_MODAL.NOTE_PLACEHOLDER')}
                 value={inputNote}
                 onChange={noteChangeHandler}
-                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder"
+                className="h-46px w-full rounded-sm border border-input-stroke-input px-12px outline-none placeholder:text-input-text-input-placeholder disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
               />
             </div>
           </div>
