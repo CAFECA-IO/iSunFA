@@ -71,7 +71,6 @@ async function voucherHandler(key: AI_TYPE, resultId: string, session: ISessionD
   let payload: APIResponse = DEFAULT_PAYLOAD;
 
   const { companyId } = session;
-  // Info: (20241004 - Murky) Simulate fetching data from an AI service
   const resultFromAI = await fetchResultFromAICH(key, resultId);
   if (resultFromAI) {
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -92,6 +91,8 @@ async function voucherHandler(key: AI_TYPE, resultId: string, session: ISessionD
 
     // Info: (20241004 - Murky) Populate the payload with voucher details
     payload = voucher;
+  } else {
+    statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
   }
 
   return {
