@@ -35,9 +35,15 @@ const userActionLogOutputSchema = z
     statusMessage: z.string(),
   })
   .transform((data) => {
+    const requestPayload =
+      typeof data.requestPayload === 'string'
+        ? { message: data.requestPayload }
+        : data.requestPayload;
+
     return {
       ...data,
       normal: true,
+      requestPayload,
     };
   });
 
