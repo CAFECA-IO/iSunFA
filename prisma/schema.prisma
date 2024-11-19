@@ -14,19 +14,22 @@ model Account {
   type       String // Info: (20240625 - Murky) ex "Asset"
   debit      Boolean // Info: (20240625 - Murky) true: debit, false: credit
   liquidity  Boolean
-  code       String  @unique
+  code       String
   name       String // Info: (20240625 - Murky) empty if is not sub account
   forUser    Boolean @map("for_user") // Info: (20240625 - Murky) is account the last layer of account tree
   parentCode String  @map("parent_code")
   rootCode   String  @map("root_code")
+  parentId   Int     @map("parent_id")
+  rootId     Int     @map("root_id")
   createdAt  Int     @map("created_at")
   updatedAt  Int     @map("updated_at")
   level      Int     @default(0)
   deletedAt  Int?    @map("deleted_at")
+  note       String?
 
   company  Company    @relation(fields: [companyId], references: [id])
-  parent   Account    @relation("Parent", fields: [parentCode], references: [code])
-  root     Account    @relation("Root", fields: [rootCode], references: [code])
+  parent   Account    @relation("Parent", fields: [parentId], references: [id])
+  root     Account    @relation("Root", fields: [rootId], references: [id])
   child    Account[]  @relation("Parent")
   leaf     Account[]  @relation("Root")
   lineItem LineItem[]
