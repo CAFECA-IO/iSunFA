@@ -17,7 +17,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { ActionType } from '@/constants/display';
+import { UserActionLogActionType } from '@/constants/user_action_log';
 
 const GeneralSettingsPage: React.FC = () => {
   const { t } = useTranslation(['setting', 'common']);
@@ -53,7 +53,7 @@ const GeneralSettingsPage: React.FC = () => {
     try {
       const { success, data } = await getUserActionLogAPI({
         params: { userId: userAuth?.id },
-        query: { actionType: ActionType.login },
+        query: { actionType: UserActionLogActionType.LOGIN },
       });
       if (success && data) {
         setUserActionLogs(data);

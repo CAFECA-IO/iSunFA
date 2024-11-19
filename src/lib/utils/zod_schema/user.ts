@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { filePrismaSchema } from '@/lib/utils/zod_schema/file';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { IUser } from '@/interfaces/user';
 
 const userGetQuerySchema = z.object({
   userId: zodStringToNumber,
@@ -24,17 +25,24 @@ export const userPrismaSchema = z.object({
   name: z.string(),
   email: z.string(),
   imageFile: filePrismaSchema,
-  agreementList: z.array(z.string()),
+  userAgreements: z.array(z.string()),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
-  deletedAt: z.number().int().default(0),
+  deletedAt: z.number().int().nullable(),
 });
 
 export const userOutputSchema = userPrismaSchema.transform((data) => {
-  return {
-    ...data,
+  const userImpl: IUser = {
+    id: data.id,
+    name: data.name,
+    email: data.email,
     imageId: data.imageFile.url,
+    agreementList: data.userAgreements,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    deletedAt: data.deletedAt ?? 0,
   };
+  return userImpl;
 });
 
 /**
@@ -77,6 +85,15 @@ export const userPutSchema = {
   input: {
     querySchema: userPutQuerySchema,
     bodySchema: userPutBodySchema,
+  },
+  outputSchema: userOutputSchema,
+  frontend: nullSchema,
+};
+
+export const userDeletionPutSchema = {
+  input: {
+    querySchema: userPutQuerySchema,
+    bodySchema: nullSchema,
   },
   outputSchema: userOutputSchema,
   frontend: nullSchema,

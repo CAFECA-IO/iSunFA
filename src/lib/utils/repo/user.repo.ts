@@ -130,6 +130,27 @@ export async function deleteUserById(
   return user;
 }
 
+export async function cancelDeleteUserById(
+  userId: number
+): Promise<User & { userAgreements: UserAgreement[]; imageFile: File | null }> {
+  const nowInSecond = getTimestampNow();
+  const user = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      updatedAt: nowInSecond,
+      deletedAt: null,
+    },
+    include: {
+      userAgreements: true,
+      imageFile: true,
+    },
+  });
+
+  return user;
+}
+
 // Info: (20240723 - Murky) Real delete for testing
 export async function deleteUserByIdForTesting(userId: number): Promise<User> {
   const where: Prisma.UserWhereUniqueInput = {
