@@ -14,7 +14,7 @@
   "ERROR_PAGE": {
     "HEAD_TITLE": "找不到頁面",
     "TITLE": "糟糕！",
-    "SUBTITLE": "看來你已經跌入網絡空間的深淵了 🕳️"
+    "SUBTITLE": "看來你已經跌入網路空間的深淵了 🕳️"
   },
 
   "DATE_PICKER": {
@@ -63,6 +63,7 @@
     "DEC_ABR": "十二月",
     "EVERY": "每"
   },
+
   "SORTING": {
     "SORT_BY": "排序方式",
     "NEWEST": "最新",
