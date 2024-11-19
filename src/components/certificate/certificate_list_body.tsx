@@ -34,7 +34,7 @@ interface CertificateListBodyProps {}
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate', 'common']);
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
+  const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
@@ -421,7 +421,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, [amountSort, voucherSort]);
 
   useEffect(() => {
-    const pusher = getPusherInstance();
+    const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
     channel.bind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
 

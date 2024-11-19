@@ -22,8 +22,6 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
-import { getPusherInstance } from '@/lib/utils/pusher_client';
 // import { encryptFile, importPublicKey } from '@/lib/utils/crypto'; // TODO:(20241113 - tzuhan) encrypt file
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
@@ -127,35 +125,6 @@ const MobileUploadPage: React.FC = () => {
           uploadingCertificate.progress = 0;
         }
 
-        const pusher = getPusherInstance();
-
-        const successPushAgain = pusher.send_event(
-          ROOM_EVENT.NEW_FILE,
-          {
-            files: [uploadingCertificate],
-          },
-          PRIVATE_CHANNEL.ROOM
-        );
-
-        if (successPushAgain === false) {
-          if (success) {
-            toastHandler({
-              id: ToastId.NOTIFY_WEB_ERROR,
-              type: ToastType.WARNING,
-              content: t('certificate:WARNING.SUCCESS_UPLOAD_BUT_NOTIFY_ERROR', {
-                name: certificate.name,
-              }),
-              closeable: true,
-            });
-          } else {
-            toastHandler({
-              id: ToastId.UPLOAD_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.UPLOAD_AND_NOTIFY', { name: certificate.name }),
-              closeable: true,
-            });
-          }
-        }
         setUploadedFiles((prev) => [...prev, uploadingCertificate]);
       });
     } catch (error) {
@@ -198,9 +167,6 @@ const MobileUploadPage: React.FC = () => {
     clearAllItems();
     if (router.isReady && query.token) {
       setToken(query.token as string);
-      // Info: (20241111- tzuhan) 1. pusher emit ROOM_EVENT.JOIN
-      const pusher = getPusherInstance();
-      pusher.send_event(ROOM_EVENT.JOIN, { token: query.token }, PRIVATE_CHANNEL.ROOM);
     }
   }, [router]);
 

@@ -15,9 +15,9 @@ import { ProgressStatus } from '@/constants/account';
 interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
-  const { selectedCompany } = useUserCtx();
+  const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id;
-  const pusher = getPusherInstance();
+  const pusher = getPusherInstance(userAuth?.id);
   const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [token, setToken] = useState<string | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
