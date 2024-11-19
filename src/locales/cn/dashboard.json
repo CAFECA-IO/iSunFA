@@ -33,7 +33,9 @@
   "COMMON": {
     "ERROR": "错误",
     "START": "开始",
-    "PREVIEW": "预览"
+    "PREVIEW": "预览",
+    "CANCEL": "取消",
+    "CREATE": "新增"
   },
 
   "HEADER": {

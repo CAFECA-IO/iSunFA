@@ -33,7 +33,9 @@
   "COMMON": {
     "ERROR": "Error",
     "START": "Start",
-    "PREVIEW": "Preview"
+    "PREVIEW": "Preview",
+    "CANCEL": "Cancel",
+    "CREATE": "Create"
   },
 
   "HEADER": {
