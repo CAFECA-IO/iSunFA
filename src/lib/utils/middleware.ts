@@ -65,18 +65,19 @@ export async function logUserAction<T extends APIName>(
   statusMessage: string
 ) {
   try {
-    await createUserActionLog({
-      sessionId: session.id,
+    const userActionLog = {
+      sessionId: session.id || '',
       userId: session.userId || 555,
       actionType: UserActionLogActionType.API,
       actionDescription: apiName,
-      ipAddress: req.headers['x-forwarded-for'] as string,
-      userAgent: req.headers['user-agent'] as string,
+      ipAddress: (req.headers['x-forwarded-for'] as string) || '',
+      userAgent: (req.headers['user-agent'] as string) || '',
       apiEndpoint: APIPath[apiName as keyof typeof APIPath],
       httpMethod: req.method || '',
       requestPayload: req.body || '',
       statusMessage,
-    });
+    };
+    await createUserActionLog(userActionLog);
   } catch (error) {
     loggerError(
       session.userId,

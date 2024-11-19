@@ -1,5 +1,8 @@
 import { AICH_URI } from '@/constants/config';
-import { AICH_APIS_TYPES } from '@/constants/aich';
+import { AI_TYPE, AICH_APIS_TYPES, AICH_PATH } from '@/constants/aich';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { ILineItemFromAICH } from '@/interfaces/line_item';
+import { fuzzySearchAccountByName } from './repo/account.repo';
 
 /**
  * Generates the URL for the given endpoint.
@@ -48,4 +51,58 @@ export function getAichUrl(endPoint: AICH_APIS_TYPES, aichResultId?: string): st
     default:
       throw new Error('Invalid AICH API Type');
   }
+}
+
+export const fetchResultIdFromAICH = async (key: AI_TYPE, body: object) => {
+  const aichPath = AICH_PATH[key];
+  const response = await fetch(`${aichPath}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  const { resultId } = data;
+  return resultId;
+};
+
+export const fetchResultFromAICH = async (key: AI_TYPE, aichResultId: string) => {
+  const aichPath = AICH_PATH[key];
+  const response = await fetch(`${aichPath}/${aichResultId}`);
+  if (!response.ok) {
+    return null;
+  }
+  const data = await response.json();
+  return data;
+};
+
+export async function formatLineItemsFromAICH(rawLineItems: ILineItemFromAICH[]) {
+  const lineItems = await Promise.all(
+    rawLineItems.map(async (rawLineItem) => {
+      const { lineItemIndex, account, description, debit, amount } = rawLineItem;
+      const accountInDB = await fuzzySearchAccountByName(account);
+
+      if (!accountInDB) {
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
+
+      const resultAccount = {
+        id: 0,
+        voucherId: 0,
+        lineItemIndex,
+        account: accountInDB,
+        description,
+        debit,
+        amount,
+        accountId: accountInDB?.id || 0,
+        createdAt: 0,
+        updatedAt: 0,
+        deletedAt: 0,
+      };
+
+      return resultAccount;
+    })
+  );
+  return lineItems;
 }

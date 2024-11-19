@@ -1,7 +1,7 @@
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
 import prisma from '@/client';
-import { Voucher as PrismaVoucher } from '@prisma/client';
+import { Prisma, Voucher as PrismaVoucher } from '@prisma/client';
 
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
@@ -813,26 +813,29 @@ export async function putVoucherWithoutCreateNew(
       }
 
       const reverseRelationList = reverseRelationNeedToBeReplace.values();
+
+      const reverseJobs: Promise<Prisma.BatchPayload | unknown>[] = [];
       Array.from(reverseRelationList).forEach((reverseRelation) => {
         const { eventId, original, new: newRelations } = reverseRelation;
         original.forEach(async (originalRelation) => {
-          await tx.accociateLineItem.deleteMany({
+          const deleteAssociateLineItemJob = tx.accociateLineItem.deleteMany({
             where: {
               originalLineItemId: originalRelation.lineItemIdBeReversed,
               resultLineItemId: originalRelation.lineItemReverseOther.id,
             },
           });
 
-          await tx.accociateVoucher.deleteMany({
+          const deleteAssociateVoucherJob = tx.accociateVoucher.deleteMany({
             where: {
               originalVoucherId: originalRelation.voucherId,
               resultVoucherId: voucherId,
             },
           });
+          reverseJobs.push(deleteAssociateLineItemJob, deleteAssociateVoucherJob);
         });
 
         newRelations.forEach(async (newRelation) => {
-          await tx.accociateVoucher.create({
+          const createAssociateVoucherJob = tx.accociateVoucher.create({
             data: {
               originalVoucher: {
                 connect: {
@@ -871,8 +874,11 @@ export async function putVoucherWithoutCreateNew(
               },
             },
           });
+
+          reverseJobs.push(createAssociateVoucherJob);
         });
       });
+      await Promise.all(reverseJobs);
 
       return voucher;
     });
