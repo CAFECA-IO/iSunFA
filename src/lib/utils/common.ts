@@ -831,3 +831,15 @@ export const formatTimestampByTZ = (
 
   return format.replace(/YYYY|MM|DD|HH|mm|ss/g, (match) => components[match]);
 };
+
+export const waterfallPromise = (
+  callbacks: Array<(input: unknown) => Promise<unknown>>,
+  initialArgs: unknown
+): Promise<unknown> => {
+  return callbacks.reduce<Promise<unknown>>(
+    (accumulator, callback) => {
+      return accumulator.then(callback);
+    },
+    Promise.resolve(initialArgs as unknown)
+  );
+};
