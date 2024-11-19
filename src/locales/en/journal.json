@@ -298,7 +298,8 @@
     "ACCOUNTING": "Accounting",
     "PARTICULARS": "Particulars",
     "AMOUNT": "Amount",
-    "REVERSE_AMOUNT": "Reverse Amount"
+    "REVERSE_AMOUNT": "Reverse Amount",
+    "NOT_FOUND": "No Reverse Item Found"
   },
   "EDIT_VOUCHER": {
     "PAGE_TITLE": "Edit Voucher"
