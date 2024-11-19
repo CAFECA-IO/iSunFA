@@ -53,9 +53,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({ selectedDateRange }
     //   setIsPrinting(false); // Info: (20241118 - Anna) 列印完成後退出列印模式
     // }, 500); // Info: (20241118 - Anna) 等待渲染完成後再列印
 
-     window.print(); // Info: (20241118 - Anna) 預覽PDF
+    //  window.print(); // Info: (20241118 - Anna) 預覽PDF
 
-    /// setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
+    setIsPrinting(true); // Info: (20241118 - Anna) 啟動列印模式 不會預覽PDF
   };
 
   // Info: (20241023 - Anna) 追蹤是否已經成功請求過一次 API
