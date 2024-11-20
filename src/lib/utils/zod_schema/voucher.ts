@@ -40,9 +40,11 @@ import {
 } from '@/lib/utils/zod_schema/certificate';
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
-import { lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
+import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 import { isUserReadCertificate } from '@/lib/utils/user_certificate';
 import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
+import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
+import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -398,6 +400,20 @@ const voucherGetOneOutputValidatorV2 = z
         ...iLineItemBodyValidatorV2.shape,
         id: z.number(),
         account: accountEntityValidator,
+        resultLineItems: z.array(
+          z.object({
+            ...IAssociateLineItemEntitySchema.shape,
+            associateVoucher: z.object({
+              ...IAssociateVoucherEntitySchema.shape,
+              originalVoucher: voucherEntityValidator,
+            }),
+            originalLineItem: z.object({
+              ...iLineItemBodyValidatorV2.shape,
+              id: z.number(),
+              account: accountEntityValidator,
+            }),
+          })
+        ),
       })
     ),
     payableInfo: z
@@ -511,27 +527,34 @@ const voucherGetOneOutputValidatorV2 = z
         };
         return certificateInstance;
       }),
-      lineItemsInfo: {
-        lineItems: data.lineItems.map((lineItem) => ({
-          id: lineItem.id,
-          description: lineItem.description,
-          debit: lineItem.debit,
-          amount: lineItem.amount,
-          account: {
-            id: lineItem.account.id,
-            companyId: lineItem.account.companyId,
-            system: lineItem.account.system,
-            debit: lineItem.account.debit,
-            liquidity: lineItem.account.liquidity,
-            name: lineItem.account.name,
-            code: lineItem.account.code,
-            type: lineItem.account.type,
-            createdAt: lineItem.account.createdAt,
-            updatedAt: lineItem.account.updatedAt,
-            deletedAt: lineItem.account.deletedAt,
-          },
+      lineItems: data.lineItems.map((lineItem) => ({
+        id: lineItem.id,
+        description: lineItem.description,
+        debit: lineItem.debit,
+        amount: lineItem.amount,
+        account: {
+          id: lineItem.account.id,
+          companyId: lineItem.account.companyId,
+          system: lineItem.account.system,
+          debit: lineItem.account.debit,
+          liquidity: lineItem.account.liquidity,
+          name: lineItem.account.name,
+          code: lineItem.account.code,
+          type: lineItem.account.type,
+          createdAt: lineItem.account.createdAt,
+          updatedAt: lineItem.account.updatedAt,
+          deletedAt: lineItem.account.deletedAt,
+        },
+        reverseList: lineItem.resultLineItems.map((resultLineItem) => ({
+          voucherId: resultLineItem.associateVoucher.originalVoucherId,
+          amount: resultLineItem.amount,
+          description: resultLineItem.originalLineItem.description,
+          debit: resultLineItem.debit,
+          account: resultLineItem.originalLineItem.account,
+          voucherNo: resultLineItem.associateVoucher.originalVoucher.no,
+          lineItemBeReversedId: resultLineItem.originalLineItemId,
         })),
-      },
+      })),
     };
 
     return voucherDetail;
@@ -577,9 +600,12 @@ const IVoucherDetailForFrontendValidator = z.object({
   ),
   assets: z.array(IAssetDetailsValidator),
   certificates: z.array(ICertificateValidator),
-  lineItemsInfo: z.object({
-    lineItems: z.array(ILineItemBetaValidator),
-  }),
+  lineItems: z.array(
+    z.object({
+      ...ILineItemBetaValidator.shape,
+      reverseList: z.array(IReverseItemValidator),
+    })
+  ),
 });
 
 export const voucherGetOneFrontendValidatorV2 = IVoucherDetailForFrontendValidator;

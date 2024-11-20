@@ -69,7 +69,7 @@ describe('company/[companyId]/voucher/voucherId integration test', () => {
       req = {
         headers: {},
         query: {
-          voucherId: '1000',
+          voucherId: '1002',
         },
         method: 'GET',
         json: jest.fn(),

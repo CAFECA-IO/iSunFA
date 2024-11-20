@@ -69,6 +69,8 @@ export const handleGetRequest: IHandleRequest<
    * - Get voucher with all needed in GetOneVoucherResponse
    * - Init every part of GetOneVoucherResponse
    * - Calculate payableInfo and receivingInfo
+   * @note line items 裡面也要提供Reverse lineItem, 需要什麼資料要看 src/components/voucher/reverse_item.tsx
+   * -  voucherNo, account, description, reverseAmount
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetOneVoucherResponse | null = null;
@@ -81,8 +83,7 @@ export const handleGetRequest: IHandleRequest<
       await getUtils.getVoucherFromPrisma(voucherId);
 
     const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
-    const lineItems: (ILineItemEntity & { account: IAccountEntity })[] =
-      getUtils.initLineItemEntities(voucherFromPrisma);
+    const lineItems = getUtils.initLineItemEntities(voucherFromPrisma);
     const accountSetting: PrismaAccountingSetting =
       await getUtils.getAccountingSettingFromPrisma(accountSettingCompanyId);
     const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
@@ -423,7 +424,7 @@ export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, numb
   };
 };
 
-type APIResponse = IVoucherDetailForFrontend | object | number | null;
+type APIResponse = IVoucherDetailForFrontend | number | null;
 
 const methodHandlers: {
   [key: string]: (

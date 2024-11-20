@@ -252,8 +252,49 @@ export const voucherAPIGetOneUtils = {
    */
   initLineItemEntities: (voucher: IGetOneVoucherResponse) => {
     const lineItemsDto = voucher.lineItems;
-    const lineItemEntities = lineItemsDto.map(voucherAPIGetOneUtils.initLineItemEntity);
-    return lineItemEntities;
+    const lineItems = lineItemsDto.map((dto) => {
+      const lineItemEntity = parsePrismaLineItemToLineItemEntity(dto);
+      const accountEntity = parsePrismaAccountToAccountEntity(dto.account);
+      const resultLineItems = dto.resultLineItem.map((result) => {
+        const resultAssociateLineItem = parsePrismaAssociateLineItemToEntity(result);
+        const originalLineItem = parsePrismaLineItemToLineItemEntity(result.originalLineItem);
+        const originalAccount = parsePrismaAccountToAccountEntity(result.originalLineItem.account);
+        const associateEvent = parsePrismaEventToEventEntity(result.accociateVoucher.event);
+        const associateVoucher = parsePrismaAssociateVoucherToEntity(result.accociateVoucher);
+        const originalVoucher = parsePrismaVoucherToVoucherEntity(
+          result.accociateVoucher.originalVoucher
+        );
+
+        const newResultAssociateLineItem: IAssociateLineItemEntity & {
+          associateVoucher: IAssociateVoucherEntity & {
+            event: IEventEntity;
+          };
+          originalLineItem: ILineItemEntity & {
+            account: IAccountEntity;
+          };
+        } = {
+          ...resultAssociateLineItem,
+          originalLineItem: {
+            ...originalLineItem,
+            account: originalAccount,
+          },
+          associateVoucher: {
+            ...associateVoucher,
+            event: associateEvent,
+            originalVoucher,
+          },
+        };
+
+        return newResultAssociateLineItem;
+      });
+      const newLineItem = {
+        ...lineItemEntity,
+        account: accountEntity,
+        resultLineItems,
+      };
+      return newLineItem;
+    });
+    return lineItems;
   },
 
   /**

@@ -1,7 +1,7 @@
 import { EventType, VoucherType } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { ILineItem, ILineItemBeta } from '@/interfaces/line_item';
-import type { ILineItemEntity } from '@/interfaces/line_item';
+import type { ILineItemEntity, IReverseItem } from '@/interfaces/line_item';
 import { IPayment } from '@/interfaces/payment';
 import {
   Prisma,
@@ -146,9 +146,9 @@ export interface IVoucherDetailForFrontend {
   }[];
   assets: IAssetDetails[];
   certificates: ICertificate[];
-  lineItemsInfo: {
-    lineItems: ILineItemBeta[];
-  };
+  lineItems: (ILineItemBeta & {
+    reverseList: IReverseItem[];
+  })[];
 }
 
 export const defaultVoucherDetail: IVoucherDetailForFrontend = {
@@ -173,9 +173,7 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
   reverseVoucherIds: [],
   assets: [],
   certificates: [],
-  lineItemsInfo: {
-    lineItems: [],
-  },
+  lineItems: [],
 };
 
 // Info: (20240926 - Julian) temp interface
@@ -707,6 +705,7 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
       };
       accociateVoucher: PrismaAssociateVoucher & {
         event: PrismaEvent;
+        originalVoucher: PrismaVoucher;
       };
     })[];
   })[];
