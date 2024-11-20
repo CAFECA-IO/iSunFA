@@ -45,9 +45,11 @@ const CreateTodoModal = ({ isModalOpen, toggleModal, setRefreshKey }: CreateTodo
 
   const handleSubmit = async () => {
     if (!userAuth) return;
-    if (!todoName || !deadline) {
+
+    const isDeadlineSelected = Object.values(deadline).every((value) => value !== 0);
+    if (!todoName || !isDeadlineSelected) {
       setNoDataForTodoName(!todoName);
-      setNoDataForDeadline(!deadline);
+      setNoDataForDeadline(!isDeadlineSelected);
       return;
     }
 
