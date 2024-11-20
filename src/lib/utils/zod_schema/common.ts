@@ -4,6 +4,8 @@ import { SortBy, SortOrder } from '@/constants/sort';
 
 export const zodStringToNumber = z.string().regex(/^\d+$/).transform(Number);
 
+export const zodStringToBoolean = z.string().transform((val) => val.toLowerCase() === 'true');
+
 export function zodStringToNumberWithDefault(defaultValue: number) {
   return z
     .string()
