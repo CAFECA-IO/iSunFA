@@ -97,7 +97,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     targetRef: accountRef,
     componentVisible: isAccountEditing,
     setComponentVisible: setIsAccountEditing,
-  } = useOuterClick<HTMLDivElement>(false);
+  } = useOuterClick<HTMLButtonElement>(false);
 
   // Info: (20241118 - Julian) 設定預設值
   useEffect(() => {
@@ -309,12 +309,13 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     <>
       {/* Info: (20240927 - Julian) Accounting */}
       <div className="relative col-span-3">
-        <div
+        <button
           id={`account-title-${id}`}
           ref={accountRef}
+          type="button"
           // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-          tabIndex={0}
+          // tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               setIsAccountEditing(true);
@@ -328,7 +329,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           <div className="h-20px w-20px">
             <FiBookOpen size={20} />
           </div>
-        </div>
+        </button>
         {/* Info: (20241001 - Julian) Accounting Menu */}
         {displayedAccountingMenu}
       </div>

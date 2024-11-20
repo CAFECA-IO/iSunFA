@@ -568,7 +568,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   }, [selectedCertificatesUI, selectedIds]);
 
   useEffect(() => {
-    if (!isAskingAI) {
+    if (isAskingAI === false) {
       if (askSuccess && askData) {
         // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
         getAIResult({
@@ -584,7 +584,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
   // Info: (20241021 - Julian) AI 分析結果
   useEffect(() => {
-    if (!isAskingAI && !isAIWorking) {
+    if (isAskingAI === false && isAIWorking === false) {
       if (resultData) {
         setAiState(AIState.FINISH);
       } else if (!resultData || !analyzeSuccess) {
@@ -655,7 +655,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     targetRef: counterpartyRef,
     componentVisible: isSearchCounterparty,
     setComponentVisible: setIsSearchCounterparty,
-  } = useOuterClick<HTMLDivElement>(false);
+  } = useOuterClick<HTMLButtonElement>(false);
 
   // Info: (20241107 - Julian) ============ 熱鍵設置 ============
   const formRef = useRef<HTMLFormElement>(null);
@@ -663,6 +663,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const handleTabPress = useCallback(
     (event: KeyboardEvent) => {
       event.preventDefault(); // Info: (20241107 - Julian) 阻止預設事件
+      event.stopPropagation(); // Info: (20241120 - Julian) 防止事件冒泡
 
       // Info: (20241107 - Julian) 獲取 form 元素中的所有 input, button 元素
       const elementsInForm =
@@ -680,7 +681,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       const noteIndex = focusableElements.findIndex((el) => el.id === 'voucher-note');
       const counterpartyIndex = focusableElements.findIndex(
         (el) => el.id === 'voucher-counterparty'
-      ); // Info: (20241108 - Julian) Div
+      );
       const assetIndex = focusableElements.findIndex((el) => el.id === 'voucher-asset');
       const accountTitleIndex = focusableElements.findIndex((el) =>
         el.id.includes('account-title')
@@ -715,6 +716,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
         } else {
           ToNext();
         }
+        // } else if (currentIndex >= formIndexOrder[4] && currentIndex < formIndexOrder[5]) {
+        //   if (isCounterpartyRequired && !counterparty) {
+        //     setIsShowCounterHint(true);
+        //   } else {
+        //     ToNext();
+        //   }
       } else {
         ToNext();
       }
@@ -1024,13 +1031,13 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
 
         return (
           <button
-            key={voucherType}
-            id={`type-${voucherType}`}
+            key={v}
+            id={`type-${v}`}
             type="button"
             className="px-12px py-8px text-left hover:bg-dropdown-surface-item-hover"
             onClick={typeClickHandler}
           >
-            {translateType(voucherType)}
+            {translateType(v)}
           </button>
         );
       })}
@@ -1218,11 +1225,12 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
               {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
               <span className="text-text-state-error">*</span>
             </p>
-            <div
+            <button
               id="voucher-counterparty"
+              type="button"
               // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-              tabIndex={0}
+              // tabIndex={0}
               ref={counterpartyRef}
               onClick={counterSearchToggleHandler}
               className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
@@ -1231,7 +1239,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
               <div className="h-20px w-20px">
                 <FiSearch size={20} />
               </div>
-            </div>
+            </button>
             {/* Info: (20241004 - Julian) Counterparty drop menu */}
             {counterpartyDropMenu}
           </div>

@@ -238,7 +238,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [selectedCertificates, selectedIds]);
 
   useEffect(() => {
-    if (!isAskingAI) {
+    if (isAskingAI === false) {
       if (askSuccess && askData) {
         // Info: (20241018 - Tzuhan) 呼叫 AI 分析 API
         getAIResult({
@@ -254,7 +254,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241021 - Julian) AI 分析結果
   useEffect(() => {
-    if (!isAskingAI && !isAIWorking) {
+    if (isAskingAI === false && isAIWorking === false) {
       if (resultData) {
         setAiState(AIState.FINISH);
       } else if (!resultData || !analyzeSuccess) {
@@ -330,7 +330,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     targetRef: counterpartyRef,
     componentVisible: isSearchCounterparty,
     setComponentVisible: setIsSearchCounterparty,
-  } = useOuterClick<HTMLDivElement>(false);
+  } = useOuterClick<HTMLButtonElement>(false);
 
   // Info: (20241007 - Julian) Recurring 下拉選單
   // const {
@@ -1079,11 +1079,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               {t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}
               <span className="text-text-state-error">*</span>
             </p>
-            <div
+            <button
               id="voucher-counterparty"
+              type="button"
               // Info: (20241108 - Julian) 透過 tabIndex 讓 div 可以被 focus
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-              tabIndex={0}
+              // tabIndex={0}
               ref={counterpartyRef}
               onClick={counterSearchToggleHandler}
               className={`flex w-full items-center justify-between gap-8px rounded-sm border bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-selected ${isSearchCounterparty ? 'border-input-stroke-selected' : isShowCounterHint ? inputStyle.ERROR : 'border-input-stroke-input text-input-text-input-filled'}`}
@@ -1092,7 +1093,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               <div className="h-20px w-20px">
                 <FiSearch size={20} />
               </div>
-            </div>
+            </button>
             {/* Info: (20241004 - Julian) Counterparty drop menu */}
             {counterpartyDropMenu}
           </div>
@@ -1152,6 +1153,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') e.preventDefault();
             }}
+            disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
           >
             <p>{t('common:COMMON.SAVE')}</p>
             <BiSave size={20} />

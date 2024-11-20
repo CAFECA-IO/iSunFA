@@ -87,7 +87,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     targetRef: accountRef,
     componentVisible: isAccountEditing,
     setComponentVisible: setIsAccountEditing,
-  } = useOuterClick<HTMLDivElement>(false);
+  } = useOuterClick<HTMLButtonElement>(false);
 
   // Info: (20241015 - Julian) Depreciation Method 下拉選單
   const {
@@ -152,6 +152,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       setIsShowDepreciationStartDateHint(false);
       setIsShowUsefulLifeHint(false);
       setIsLandCost(false);
+    } else {
+      // Info: (20241120 - Julian) 顯示 Modal 時，聚焦到第一個欄位
+      accountRef.current?.focus();
     }
   }, [isModalVisible]);
 
@@ -514,16 +517,18 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
-              <div ref={accountRef} className="relative w-full">
-                <div
+              <div className="relative w-full">
+                <button
+                  ref={accountRef}
+                  type="button"
                   onClick={accountEditingHandler}
-                  className={`flex items-center justify-between gap-8px rounded-sm border ${
+                  className={`flex w-full items-center justify-between gap-8px rounded-sm border ${
                     isShowTypeHint ? inputStyle.ERROR : inputStyle.NORMAL
                   } bg-input-surface-input-background px-12px py-10px hover:cursor-pointer`}
                 >
                   {isEditAccounting}
                   <FaChevronDown />
-                </div>
+                </button>
                 {displayedAccountingMenu}
               </div>
             </div>
