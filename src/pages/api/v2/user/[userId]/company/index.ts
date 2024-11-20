@@ -15,34 +15,54 @@ import {
   createCompanyAndRole,
   getCompanyAndRoleByTaxId,
   listCompanyAndRole,
+  listCompanyAndRoleSimple,
 } from '@/lib/utils/repo/admin.repo';
 import { Company, Role, File } from '@prisma/client';
 
 const handleGetRequest: IHandleRequest<
   APIName.LIST_USER_COMPANY,
-  IPaginatedData<
-    Array<{
+  | Array<{
       company: Company & { imageFile: File | null };
       role: Role;
       tag: string;
       order: number;
     }>
-  >
+  | IPaginatedData<
+      Array<{
+        company: Company & { imageFile: File | null };
+        role: Role;
+        tag: string;
+        order: number;
+      }>
+    >
 > = async ({ query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<
-    Array<{
-      company: Company & { imageFile: File | null };
-      role: Role;
-      tag: string;
-      order: number;
-    }>
-  > | null = null;
-  const { userId, pageSize, page, searchQuery } = query;
-
-  const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize, searchQuery);
-  statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-  payload = listedCompanyAndRole;
+  let payload:
+    | Array<{
+        company: Company & { imageFile: File | null };
+        role: Role;
+        tag: string;
+        order: number;
+      }>
+    | IPaginatedData<
+        Array<{
+          company: Company & { imageFile: File | null };
+          role: Role;
+          tag: string;
+          order: number;
+        }>
+      >
+    | null = null;
+  const { simple, userId, pageSize, page, searchQuery } = query;
+  if (simple) {
+    const listedCompanyAndRole = await listCompanyAndRoleSimple(userId);
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = listedCompanyAndRole;
+  } else {
+    const listedCompanyAndRole = await listCompanyAndRole(userId, page, pageSize, searchQuery);
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = listedCompanyAndRole;
+  }
 
   return { statusMessage, payload };
 };
@@ -103,7 +123,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null;
+    payload: ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null;
   }>;
 } = {
   GET: (req, res) => withRequestValidation(APIName.LIST_USER_COMPANY, req, res, handleGetRequest),
@@ -113,10 +133,13 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null>>
+  res: NextApiResponse<
+    IResponseData<ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null>
+  >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null = null;
+  let payload: ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null =
+    null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -131,7 +154,7 @@ export default async function handler(
     payload = null;
   } finally {
     const { httpCode, result } = formatApiResponse<
-      ICompanyAndRole | IPaginatedData<ICompanyAndRole[]> | null
+      ICompanyAndRole | ICompanyAndRole[] | IPaginatedData<ICompanyAndRole[]> | null
     >(statusMessage, payload);
     res.status(httpCode).json(result);
   }
