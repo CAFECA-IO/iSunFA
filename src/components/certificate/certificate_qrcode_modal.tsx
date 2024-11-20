@@ -69,14 +69,14 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
   return (
     <main className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
-        <section className="flex items-center justify-between py-16px pl-40px pr-20px">
+        <section className="relative">
           <h1 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary p-2 text-xl font-semibold text-card-text-title">
             <div className="text-xl font-semibold">{t('certificate:UPLOAD.URL')}</div>
             <div className="text-xs font-normal text-card-text-sub">
               {t('certificate:UPLOAD.FOR_MOBILE')}
             </div>
           </h1>
-          <button type="button" onClick={toggleQRCode}>
+          <button type="button" onClick={toggleQRCode} className="absolute right-24px top-24px">
             <IoCloseOutline size={24} />
           </button>
         </section>

@@ -32,7 +32,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   showErrorMessage,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const { selectedCompany } = useUserCtx();
+  const { userAuth, selectedCompany } = useUserCtx();
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
@@ -150,7 +150,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   );
 
   useEffect(() => {
-    const pusher = getPusherInstance();
+    const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
 
     channel.bind(CERTIFICATE_EVENT.CREATE, certificateCreatedHandler);

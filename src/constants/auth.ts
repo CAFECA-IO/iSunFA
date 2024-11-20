@@ -137,6 +137,7 @@ export const AUTH_CHECK = {
   [APIName.ZOD_EXAMPLE]: [AuthFunctionsKeysNew.user], // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.PUSHER]: [AuthFunctionsKeysNew.user],
+  [APIName.PUSHER_AUTH]: [AuthFunctionsKeysNew.user],
   [APIName.ENCRYPT]: [AuthFunctionsKeysNew.user],
   [APIName.DECRYPT]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_V2]: [AuthFunctionsKeysNew.user],

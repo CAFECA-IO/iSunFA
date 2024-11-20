@@ -1,3 +1,5 @@
+// Deprecated: (20241120 - tzuhan) Debugging purpose
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -22,9 +24,8 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { PiHouse } from 'react-icons/pi';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
-import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
-import { getPusherInstance } from '@/lib/utils/pusher_client';
-// import { encryptFile, importPublicKey } from '@/lib/utils/crypto'; // TODO:(20241113 - tzuhan) encrypt file
+import { encryptFile, importPublicKey } from '@/lib/utils/crypto';
+import { IV_LENGTH } from '@/constants/config';
 
 export interface IFileUIBetaWithFile extends IFileUIBeta {
   file: File;
@@ -34,17 +35,19 @@ const MobileUploadPage: React.FC = () => {
   const { t } = useTranslation(['certificate', 'common']);
   const router = useRouter();
   const { query } = router;
-  const [token, setToken] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [token, setToken] = useState<string | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<IFileUIBetaWithFile | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<IFileUIBetaWithFile[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [successUpload, setSuccessUpload] = useState<boolean>(false);
-  // Info: (20241023 - tzuhan) @Murky, <...> 裡面是 public file upload API 期望的回傳格式，希望回傳 fileId
+  const { trigger: fetchPublicKey } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
   const { trigger: uploadFileAPI } = APIHandler<number>(APIName.FILE_UPLOAD);
+  // Deprecated: (20241120 - tzuhan) Test upload file to server then server push notification
+  const { trigger: publicUploadAPI } = APIHandler<number>(APIName.PUBLIC_FILE_UPLOAD);
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const [selectedFile, setSelectedFile] = useState<IFileUIBetaWithFile | null>(null);
 
   const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -87,11 +90,37 @@ const MobileUploadPage: React.FC = () => {
     URL.revokeObjectURL(file.url);
   };
 
+  const encryptFileWithPublicKey = async (file: File) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const { success, data: publicKey } = await fetchPublicKey({
+        params: {
+          token,
+        },
+      });
+      if (success && publicKey) {
+        const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+        const { encryptedContent } = await encryptFile(
+          arrayBuffer,
+          await importPublicKey(publicKey),
+          iv
+        );
+        const encryptedFile = new File([encryptedContent], file.name, {
+          type: file.type,
+        });
+
+        return encryptedFile;
+      } else {
+        throw new Error('faile to get publicKey'); // ToDo: (20241120 - tuzhan) 轉成i18n
+      }
+    } catch (error) {
+      throw new Error('faile to encrypt file'); // ToDo: (20241120 - tuzhan) 轉成i18n
+    }
+  };
+
   const uploadFiles = async () => {
     setIsUploading(true);
     try {
-      // const certificatesPayload = [...selectedFilesRef.current];
-
       if (!token) {
         toastHandler({
           id: ToastId.TOKEN_NOT_PROVIDED,
@@ -101,63 +130,43 @@ const MobileUploadPage: React.FC = () => {
         });
         return;
       }
+      await Promise.all(
+        selectedFiles.map(async (fileUI) => {
+          // const encryptedFile = await encryptFileWithPublicKey(fileUI.file);
+          const formData = new FormData();
+          // formData.append('file', encryptedFile);
+          formData.append('file', fileUI.file);
 
-      selectedFiles.map(async (certificate) => {
-        const formData = new FormData();
-        formData.append('file', certificate.file);
+          // const { success, data: filedId } = await uploadFileAPI({
+          //   query: {
+          //     type: UploadType.ROOM,
+          //     targetId: token as string,
+          //   },
+          //   body: formData,
+          // });
 
-        const { success, data: filedId } = await uploadFileAPI({
-          query: {
-            type: UploadType.ROOM,
-            token: token as string,
-          },
-          body: formData,
-        });
+          const { success, data: fileId } = await publicUploadAPI({
+            query: {
+              type: UploadType.ROOM,
+              targetId: token as string,
+            },
+            body: formData,
+          });
 
-        const uploadingCertificate = {
-          ...certificate,
-        };
+          setUploadedFiles((prev) => [
+            ...prev,
+            {
+              ...fileUI,
+              id: success ? fileId : null,
+              progress: success ? 100 : 0,
+              status: success ? ProgressStatus.SUCCESS : ProgressStatus.FAILED,
+            },
+          ]);
+        })
+      );
 
-        if (success && filedId) {
-          uploadingCertificate.id = filedId;
-          uploadingCertificate.status = ProgressStatus.SUCCESS;
-          uploadingCertificate.progress = 100;
-        } else {
-          uploadingCertificate.status = ProgressStatus.FAILED;
-          uploadingCertificate.progress = 0;
-        }
-
-        const pusher = getPusherInstance();
-
-        const successPushAgain = pusher.send_event(
-          ROOM_EVENT.NEW_FILE,
-          {
-            files: [uploadingCertificate],
-          },
-          PRIVATE_CHANNEL.ROOM
-        );
-
-        if (successPushAgain === false) {
-          if (success) {
-            toastHandler({
-              id: ToastId.NOTIFY_WEB_ERROR,
-              type: ToastType.WARNING,
-              content: t('certificate:WARNING.SUCCESS_UPLOAD_BUT_NOTIFY_ERROR', {
-                name: certificate.name,
-              }),
-              closeable: true,
-            });
-          } else {
-            toastHandler({
-              id: ToastId.UPLOAD_CERTIFICATE_ERROR,
-              type: ToastType.ERROR,
-              content: t('certificate:ERROR.UPLOAD_AND_NOTIFY', { name: certificate.name }),
-              closeable: true,
-            });
-          }
-        }
-        setUploadedFiles((prev) => [...prev, uploadingCertificate]);
-      });
+      setIsUploading(false);
+      setSuccessUpload(true);
     } catch (error) {
       setSuccessUpload(false);
       setIsUploading(false);
@@ -198,9 +207,6 @@ const MobileUploadPage: React.FC = () => {
     clearAllItems();
     if (router.isReady && query.token) {
       setToken(query.token as string);
-      // Info: (20241111- tzuhan) 1. pusher emit ROOM_EVENT.JOIN
-      const pusher = getPusherInstance();
-      pusher.send_event(ROOM_EVENT.JOIN, { token: query.token }, PRIVATE_CHANNEL.ROOM);
     }
   }, [router]);
 
@@ -310,14 +316,13 @@ const MobileUploadPage: React.FC = () => {
                   className={`absolute left-0 top-0 h-50px w-50px ${selectedFile && selectedFile.url === file.url ? 'bg-black/50' : 'bg-transparent'}`}
                   onClick={() => handleSelectFile(file)}
                 ></div>
-                <Button
+                <button
                   type="button"
-                  variant={null}
                   className="absolute -right-8px top-0 h-16px w-16px -translate-y-1/2 rounded-full border border-stroke-neutral-solid-dark bg-surface-neutral-surface-lv2 p-0 text-stroke-neutral-solid-dark"
                   onClick={() => handleRemoveFile(file)}
                 >
-                  <RxCross2 size={10} />
-                </Button>
+                  <RxCross2 size={10} className="mx-auto" />
+                </button>
               </div>
             ))}
           </div>
@@ -364,7 +369,7 @@ const MobileUploadPage: React.FC = () => {
                     height={150}
                     alt="Success"
                   />
-                  <div>Compeleted</div>
+                  <div>{t('certificate:UPLOAD.COMPLETED')}</div>
                 </div>
                 <Button
                   type="button"
@@ -373,7 +378,7 @@ const MobileUploadPage: React.FC = () => {
                   className="mx-4 mb-4 flex items-center gap-2"
                 >
                   <PiHouse size={20} />
-                  <div>Back</div>
+                  <div>{t('certificate:UPLOAD.BACK')}</div>
                 </Button>
               </div>
             )}
@@ -386,18 +391,7 @@ const MobileUploadPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, [
-      'common',
-      'certificate',
-      'journal',
-      'kyc',
-      'project',
-      'report_401',
-      'salary',
-      'setting',
-      'terms',
-      'asset',
-    ])),
+    ...(await serverSideTranslations(locale, ['common', 'certificate'])),
     locale,
   },
 });

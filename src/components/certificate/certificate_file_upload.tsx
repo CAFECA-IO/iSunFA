@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { IFileUIBeta } from '@/interfaces/file';
+import Pusher, { Channel } from 'pusher-js';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
+import { FREE_COMPANY_ID } from '@/constants/config';
 import InvoiceUpload from '@/components/invoice_upload.tsx/invoice_upload';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import CertificateQRCodeModal from '@/components/certificate/certificate_qrcode_modal';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
-import { Channel } from 'pusher-js';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
@@ -15,11 +16,12 @@ import { ProgressStatus } from '@/constants/account';
 interface CertificateFileUploadProps {}
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
-  const { selectedCompany } = useUserCtx();
-  const companyId = selectedCompany?.id;
-  const pusher = getPusherInstance();
-  const [channel, setChannel] = useState<Channel | undefined>(undefined);
+  const { userAuth, selectedCompany } = useUserCtx();
   const [token, setToken] = useState<string | undefined>(undefined);
+  const companyId = selectedCompany?.id || FREE_COMPANY_ID;
+
+  const [pusher, setPusher] = useState<Pusher | undefined>(undefined);
+  const [channel, setChannel] = useState<Channel | undefined>(undefined);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadedFileCount, setUploadFileCount] = useState<number>(0);
@@ -102,7 +104,10 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
     setUploadFileCount(uploadCounts);
   }, [files]);
 
-  const handleNewFilesComing = useCallback(async () => {
+  const handleNewFilesComing = useCallback(async (data: { message: string }) => {
+    // Deprecated: (20241120 - tzuhan) Debugging purpose
+    // eslint-disable-next-line no-console
+    console.log(`handleNewFilesComing: data`, data);
     const { success: successGetNewFiles, data: newFiles } = await getRoomFilesAPI({
       query: { token },
     });
@@ -125,21 +130,24 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = () => {
 
   const handleRoomCreate = useCallback((roomToken: string) => {
     setToken(roomToken);
+    const pusherInstance = getPusherInstance(userAuth?.id);
+    setPusher(pusherInstance);
 
-    const c = pusher.subscribe(PRIVATE_CHANNEL.ROOM);
-    setChannel(c);
-    c.bind(ROOM_EVENT.JOIN, handleRoomJoin);
-    c.bind(ROOM_EVENT.DELETE, handleRoomDelete);
-    c.bind(ROOM_EVENT.NEW_FILE, handleNewFilesComing);
+    const privateChannel = pusherInstance.subscribe(`${PRIVATE_CHANNEL.ROOM}-${roomToken}`);
+    setChannel(privateChannel);
+    privateChannel.bind(ROOM_EVENT.JOIN, handleRoomJoin);
+    privateChannel.bind(ROOM_EVENT.DELETE, handleRoomDelete);
+    privateChannel.bind(ROOM_EVENT.NEW_FILE, handleNewFilesComing);
   }, []);
 
   useEffect(() => {
     return () => {
       if (channel) {
-        channel.unbind(ROOM_EVENT.JOIN, handleRoomJoin);
-        channel.unbind(ROOM_EVENT.DELETE, handleRoomDelete);
-        channel.unbind(ROOM_EVENT.NEW_FILE, handleNewFilesComing);
-        pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
+        channel.unbind_all();
+        channel.unsubscribe();
+      }
+      if (pusher) {
+        pusher.disconnect();
       }
     };
   }, []);

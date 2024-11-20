@@ -34,7 +34,7 @@ interface CertificateListBodyProps {}
 const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate', 'common']);
   const router = useRouter();
-  const { selectedCompany } = useUserCtx();
+  const { userAuth, selectedCompany } = useUserCtx();
   const companyId = selectedCompany?.id || FREE_COMPANY_ID;
   const params = { companyId: selectedCompany?.id };
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
@@ -387,6 +387,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, companyId]
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleNewCertificatesComing = useCallback(
     (message: { certificates: ICertificate[] }) => {
       const { certificates: newCertificates } = message;
@@ -421,13 +422,14 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, [amountSort, voucherSort]);
 
   useEffect(() => {
-    const pusher = getPusherInstance();
+    const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(PRIVATE_CHANNEL.CERTIFICATE);
     channel.bind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
 
     return () => {
-      channel.unbind(CERTIFICATE_EVENT.CREATE, handleNewCertificatesComing);
-      pusher.unsubscribe(PRIVATE_CHANNEL.CERTIFICATE);
+      channel.unbind_all();
+      channel.unsubscribe();
+      pusher.disconnect();
     };
   }, []);
 

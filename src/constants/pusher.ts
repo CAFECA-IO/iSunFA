@@ -1,9 +1,9 @@
 export enum PRIVATE_CHANNEL {
   NOTIFICATION = 'private-notification',
-  CERTIFICATE = 'certificate', // TODO: (20241009 - tzuhan) update to 'private-certificate',
+  CERTIFICATE = 'private-certificate',
   VOUCHER = 'private-voucher',
   REPORT = 'private-report',
-  ROOM = 'room', // TODO: (20241111 - tzuhan) update to 'private-room',
+  ROOM = 'private-room',
 }
 
 export enum CERTIFICATE_EVENT {
