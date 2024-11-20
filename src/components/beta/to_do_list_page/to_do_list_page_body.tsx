@@ -201,7 +201,7 @@ const ToDoEvent = ({ toDoEvent }: { toDoEvent: ITodoEvent }) => {
           <h5 className="text-center">No Company</h5>
         ) : (
           toDoEvent.userTodoCompanies.map((company) => (
-            <div className="flex items-center justify-center gap-8px">
+            <div key={company.id} className="flex items-center justify-center gap-8px">
               <Image src={company.imageId} width={24} height={24} alt="company_logo"></Image>
               <h5 className="truncate">{company.name}</h5>
             </div>

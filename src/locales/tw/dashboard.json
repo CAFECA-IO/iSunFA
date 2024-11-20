@@ -93,14 +93,9 @@
     "EVENT_NAME": "事件名稱",
     "ENTER_NAME": "輸入名稱",
     "DEADLINE": "截止日期",
-    "PARTNER_TYPE": "合作夥伴類型",
+    "AFFILIATED_COMPANY": "關聯公司",
     "NOTE": "備註",
-    "ENTER_TEXT": "輸入文字"
-  },
-
-  "PARTNER_TYPE": {
-    "CUSTOMER": "客戶",
-    "VENDOR": "供應商",
-    "BOTH": "兩者都是"
+    "ENTER_TEXT": "輸入文字",
+    "SELECT_COMPANY": "選擇公司"
   }
 }

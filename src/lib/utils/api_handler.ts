@@ -14,6 +14,7 @@ function checkInput(apiConfig: IAPIConfig, input?: IAPIInput) {
   return true;
 }
 
+// ToDo: (20241120 - Liz) 把 APIHandler 改成自訂 Hook (https://github.com/CAFECA-IO/iSunFA/issues/3291)
 function APIHandler<Data>(
   apiName: IAPIName,
   options: IAPIInput = {

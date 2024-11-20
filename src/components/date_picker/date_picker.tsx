@@ -87,7 +87,7 @@ const PopulateDates = ({
   };
 
   // Info: (20240417 - Shirley) 顯示月份中的每一天
-  const formatDaysInMonth = daysInMonth.map((el: Dates) => {
+  const formatDaysInMonth = daysInMonth.map((el: Dates, index) => {
     const date = el ? new Date(`${selectedYear}/${selectedMonth}/${el.date} 00:00:00`) : null;
 
     // Info: (20240417 - Shirley) 因為 selectTimeTwo 是 23:59:59，所以還原時間設置為 00:00:00
@@ -165,7 +165,7 @@ const PopulateDates = ({
 
     return (
       <button
-        key={el?.date}
+        key={el?.date || `${Date.now()}-${index}`}
         type="button"
         disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
         className={`relative z-10 flex h-35px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable md:h-35px ${isSelectedDateStyle} ${isSelectedPeriodStyle}`}
