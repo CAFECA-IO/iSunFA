@@ -1006,6 +1006,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
                 accociateVoucher: {
                   include: {
                     event: true,
+                    originalVoucher: true,
                   },
                 },
               },
