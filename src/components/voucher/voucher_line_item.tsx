@@ -8,11 +8,11 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 // import { numberWithCommas } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ILineItemBeta } from '@/interfaces/line_item';
+import { ILineItemUI } from '@/interfaces/line_item';
 
 interface IVoucherLineItemProps {
   id: number;
-  data: ILineItemBeta;
+  data: ILineItemUI;
   flagOfClear: boolean;
   flagOfSubmit: boolean;
   accountIsNull: boolean;

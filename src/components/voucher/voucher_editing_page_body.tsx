@@ -154,29 +154,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
     {
       id: 10000281,
@@ -196,29 +174,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
     {
       id: 10000285,
@@ -238,29 +194,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
     {
       id: 10000286,
@@ -322,29 +256,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
     {
       id: 1000,
@@ -364,29 +276,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
     {
       id: 1001,
@@ -406,29 +296,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
     {
       id: 1002,
@@ -448,29 +316,7 @@ const defaultVoucherDetail: IVoucherDetailForFrontend = {
         updatedAt: 0,
         deletedAt: null,
       },
-      reverseList: [
-        {
-          voucherId: 1000,
-          amount: 100,
-          description: '購買存貨-應付帳款',
-          debit: true,
-          account: {
-            id: 10000981,
-            companyId: 1002,
-            system: 'IFRS',
-            type: 'liability',
-            debit: false,
-            liquidity: true,
-            code: '2171',
-            name: '應付帳款',
-            createdAt: 0,
-            updatedAt: 0,
-            deletedAt: null,
-          },
-          voucherNo: 'VCH001',
-          lineItemBeReversedId: 1001,
-        },
-      ],
+      reverseList: [],
     },
   ],
 };
@@ -482,17 +328,15 @@ interface IAIResultVoucher {
   voucherDate: number;
   type: string;
   note: string;
-  counterParty?: ICounterparty; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ICounterparty (至少要有 company id 和 name)
-  lineItemsInfo: {
-    lineItems: ILineItemBeta[]; // ToDo: (20241018 - Julian) @Murky: 希望可以改成 ILineItemBeta[]
-  };
+  counterParty?: ICounterparty;
+  lineItems: ILineItemUI[];
 }
 
 const dummyAIResult: IAIResultVoucher = {
   voucherDate: 0,
   type: '',
   note: '',
-  lineItemsInfo: { lineItems: [] },
+  lineItems: [],
 };
 
 const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) => {
@@ -571,7 +415,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     type: aiType,
     note: aiNote,
     counterParty: aiCounterParty,
-    lineItemsInfo: { lineItems: aiLineItems },
+    lineItems: aiLineItems,
   } = resultData ?? dummyAIResult;
 
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
@@ -600,11 +444,7 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
   const defaultType = EVENT_TYPE_TO_VOUCHER_TYPE_MAP[voucherType as EventType] || voucherType;
 
   const defaultLineItems: ILineItemUI[] = voucherLineItems.map((lineItem) => {
-    return {
-      ...lineItem,
-      isReverse: false,
-      reverseList: [],
-    };
+    return { ...lineItem, isReverse: false, reverseList: lineItem.reverseList };
   });
 
   const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
@@ -680,26 +520,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       localStorage.removeItem('selectedCertificates');
     }
   }, []);
-
-  // Info: (20241118 - Julian) 將 reverse voucher 與 line item 掛鉤
-  // useEffect(() => {
-  //   if (isReverseLoading === false && reverseData && reverseData.length > 0) {
-  //     const reverseList = reverseVoucherList
-  //       .map((reverseVoucher) => {
-  //         const reverseDetail = reverseData.find(
-  //           (item) => item.lineItemBeReversedId === reverseVoucher.id
-  //         );
-  //         return reverseDetail;
-  //       })
-  //       .filter((item) => item !== undefined) as IReverseItem[];
-
-  //     const lineItemsWithReverse = lineItems.map((lineItem) => {
-  //       return { ...lineItem, reverseList };
-  //     });
-
-  //     setLineItems(lineItemsWithReverse);
-  //   }
-  // }, [reverseVoucherList, reverseData, isReverseLoading]);
 
   // Info: (20241119 - Julian) 更新 asset 列表
   useEffect(() => {
@@ -1083,25 +903,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
     const resultAssetIds =
       isAssetRequired && assetList.length > 0 ? assetList.map((asset) => asset.id) : [];
 
-    // ToDo: (20241119 - Julian) 等待 API 調整完再處理
-    // Info: (20241105 - Julian) 如果有反轉傳票，則取得反轉傳票的資訊並加入 reverseVouchers，否則回傳空陣列
-    // const reverseVouchers: {
-    //   voucherId: number;
-    //   lineItemIdBeReversed: number;
-    //   lineItemIdReverseOther: number;
-    //   amount: number;
-    // }[] =
-    //   isReverseRequired && reverses.length > 0
-    //     ? reverses.map((reverse) => {
-    //         return {
-    //           voucherId: reverse.voucherId,
-    //           lineItemIdBeReversed: reverse.voucherId, // ToDo: (20241105 - Julian) 白字藍底的 `reverse line item` 的 id
-    //           lineItemIdReverseOther: -1, // ToDo: (20241105 - Julian) 藍字白底的 `voucher line item` 的 id
-    //           amount: reverse.amount,
-    //         };
-    //       })
-    //     : [];
-
     const body = {
       actions,
       certificateIds: resultCertificates,
@@ -1111,7 +912,6 @@ const VoucherEditingPageBody: React.FC<{ voucherId: string }> = ({ voucherId }) 
       counterPartyId: resultCounterpartyId,
       lineItems: resultLineItems,
       assetIds: resultAssetIds,
-      // reverseVouchers,
     };
 
     // Info: (20241119 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT

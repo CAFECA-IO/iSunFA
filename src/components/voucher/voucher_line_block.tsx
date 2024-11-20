@@ -5,7 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
-import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
+import { ILineItemUI, IReverseItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { useGlobalCtx } from '@/contexts/global_context';
 import { IAccount } from '@/interfaces/accounting_account';
 import { inputStyle } from '@/constants/display';
@@ -33,7 +33,7 @@ interface IVoucherLineBlockProps {
 interface IVoucherLinePreviewProps {
   totalDebit: number;
   totalCredit: number;
-  lineItems: ILineItemBeta[];
+  lineItems: ILineItemUI[];
 }
 
 const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
@@ -54,6 +54,19 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   const { t } = useTranslation('common');
   const { selectReverseItemsModalVisibilityHandler, selectReverseDataHandler } = useGlobalCtx();
   const { reverseList, addReverseListHandler } = useAccountingCtx();
+
+  const defaultReverseList: IReverseItemUI[] = lineItems.flatMap((item) => {
+    const reverseVoucherList = item.reverseList || [];
+    const reverseListUI: IReverseItemUI[] = reverseVoucherList.map((reverseItem) => {
+      return {
+        ...reverseItem,
+        lineItemIndex: item.id,
+        isSelected: false,
+        reverseAmount: reverseItem.amount,
+      };
+    });
+    return reverseListUI;
+  });
 
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
@@ -107,22 +120,18 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   }, [lineItems]);
 
   useEffect(() => {
-    // Info: (20241105 - Julian) 將反轉分錄的資料掛在傳票列上
-    const reverseLineItems = lineItems.map((item) => {
-      const reverseVoucherList = reverseList[item.id];
-      return {
-        ...item,
-        reverseList: reverseVoucherList,
-      };
+    // Info: (20241120 - Julian) 把預設的反轉分錄列表丟進 reverseList 裡，讓使用者可以編輯
+    defaultReverseList.forEach((item) => {
+      addReverseListHandler(item.lineItemIndex, [item]);
     });
-    setLineItems(reverseLineItems);
-  }, [reverseList]);
+  }, [lineItems]);
 
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
       lineItems.map((lineItem) => {
-        // Info: (20241001 - Julian) 複製傳票列
-        const duplicateLineItem = { ...lineItem };
+        const duplicateLineItem = { ...lineItem }; // Info: (20241001 - Julian) 複製傳票列
+        // Info: (20241120 - Julian) 反轉分錄列表
+        const reverseListUI: IReverseItemUI[] = reverseList[lineItem.id] || [];
 
         const isShowReverse =
           (lineItem.account?.code === '2171' && lineItem.debit === true && lineItem.amount > 0) || // Info: (20241001 - Julian) 應付帳款
@@ -196,8 +205,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           selectReverseItemsModalVisibilityHandler();
         };
 
-        const reverseVoucherList = reverseList[lineItem.id];
-
         return (
           <>
             <VoucherLineItem
@@ -217,12 +224,12 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
             />
 
             {/* Info: (20241104 - Julian) 反轉分錄列表 */}
-            {isShowReverse && reverseVoucherList && reverseVoucherList.length > 0
-              ? reverseVoucherList.map((item) => {
+            {isShowReverse && reverseList && reverseListUI.length > 0
+              ? reverseListUI.map((item) => {
                   const removeReverse = () =>
                     addReverseListHandler(
                       lineItem.id,
-                      reverseVoucherList.filter(
+                      reverseListUI.filter(
                         (reverseItem) => reverseItem.voucherId !== item.voucherId
                       )
                     );
